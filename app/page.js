@@ -3,8 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Upload, X, FileText } from 'lucide-react';
 
-export default function EmployeeAssistant() {
-  const [mode, setMode] = useState('employee');
+export default function App() {
+  const [mode, setMode] = useState('ask');
   const [documents, setDocuments] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -111,11 +111,11 @@ export default function EmployeeAssistant() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+    <div style={{ minHeight: '100vh', background: '#0f1419' }}>
       {/* Header */}
       <div style={{ 
-        background: 'white', 
-        borderBottom: '1px solid #e5e7eb',
+        background: '#1a2332', 
+        borderBottom: '1px solid #2d3748',
         padding: '12px 16px'
       }}>
         <div style={{ 
@@ -123,14 +123,11 @@ export default function EmployeeAssistant() {
           margin: '0 auto',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'flex-end'
         }}>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
-            Employee Assistant
-          </h1>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
-              onClick={() => setMode('employee')}
+              onClick={() => setMode('ask')}
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
@@ -138,14 +135,15 @@ export default function EmployeeAssistant() {
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                background: mode === 'employee' ? '#2563eb' : '#f3f4f6',
-                color: mode === 'employee' ? 'white' : '#374151'
+                background: mode === 'ask' ? '#f7fafc' : '#2d3748',
+                color: mode === 'ask' ? '#0f1419' : '#a0aec0',
+                transition: 'all 0.2s'
               }}
             >
-              Employee
+              Ask
             </button>
             <button
-              onClick={() => setMode('owner')}
+              onClick={() => setMode('manage')}
               style={{
                 padding: '8px 16px',
                 borderRadius: '6px',
@@ -153,44 +151,43 @@ export default function EmployeeAssistant() {
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                background: mode === 'owner' ? '#2563eb' : '#f3f4f6',
-                color: mode === 'owner' ? 'white' : '#374151'
+                background: mode === 'manage' ? '#f7fafc' : '#2d3748',
+                color: mode === 'manage' ? '#0f1419' : '#a0aec0',
+                transition: 'all 0.2s'
               }}
             >
-              Owner
+              Manage
             </button>
           </div>
         </div>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
-        {mode === 'owner' ? (
+        {mode === 'manage' ? (
           <div style={{ 
-            background: 'white',
+            background: '#1a2332',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid #2d3748',
             padding: '24px'
           }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '24px' }}>
-              Owner Dashboard
-            </h2>
-
             {/* Document Upload */}
             <div>
               <label style={{ 
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: '500',
-                marginBottom: '8px'
+                marginBottom: '8px',
+                color: '#e2e8f0'
               }}>
-                Company Documents
+                Documents
               </label>
               <div style={{
-                border: '2px dashed #d1d5db',
+                border: '2px dashed #4a5568',
                 borderRadius: '8px',
                 padding: '32px',
                 textAlign: 'center',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                background: '#0f1419'
               }}>
                 <input
                   type="file"
@@ -204,13 +201,13 @@ export default function EmployeeAssistant() {
                   <Upload style={{ 
                     width: '48px', 
                     height: '48px', 
-                    color: '#9ca3af',
+                    color: '#718096',
                     margin: '0 auto 8px'
                   }} />
-                  <p style={{ fontSize: '14px', color: '#4b5563' }}>
-                    Upload SOPs, training docs, menus
+                  <p style={{ fontSize: '14px', color: '#cbd5e0' }}>
+                    Upload documents
                   </p>
-                  <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                  <p style={{ fontSize: '12px', color: '#718096', marginTop: '4px' }}>
                     .txt, .pdf, .md files
                   </p>
                 </label>
@@ -220,8 +217,8 @@ export default function EmployeeAssistant() {
             {/* Document List */}
             {documents.length > 0 && (
               <div style={{ marginTop: '24px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px' }}>
-                  Uploaded Documents ({documents.length})
+                <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#e2e8f0' }}>
+                  Uploaded ({documents.length})
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {documents.map((doc, idx) => (
@@ -230,14 +227,15 @@ export default function EmployeeAssistant() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       padding: '12px',
-                      background: '#f9fafb',
-                      borderRadius: '6px'
+                      background: '#0f1419',
+                      borderRadius: '6px',
+                      border: '1px solid #2d3748'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <FileText style={{ width: '16px', height: '16px', color: '#6b7280' }} />
+                        <FileText style={{ width: '16px', height: '16px', color: '#cbd5e0' }} />
                         <div>
-                          <p style={{ fontSize: '14px', fontWeight: '500' }}>{doc.name}</p>
-                          <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                          <p style={{ fontSize: '14px', fontWeight: '500', color: '#f7fafc' }}>{doc.name}</p>
+                          <p style={{ fontSize: '12px', color: '#718096' }}>
                             {new Date(doc.uploadedAt).toLocaleString()}
                           </p>
                         </div>
@@ -248,7 +246,7 @@ export default function EmployeeAssistant() {
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: '#ef4444',
+                          color: '#cbd5e0',
                           padding: '4px'
                         }}
                       >
@@ -262,9 +260,9 @@ export default function EmployeeAssistant() {
           </div>
         ) : (
           <div style={{
-            background: 'white',
+            background: '#1a2332',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb',
+            border: '1px solid #2d3748',
             height: 'calc(100vh - 140px)',
             display: 'flex',
             flexDirection: 'column'
@@ -281,14 +279,14 @@ export default function EmployeeAssistant() {
               {messages.length === 0 ? (
                 <div style={{ 
                   textAlign: 'center',
-                  color: '#9ca3af',
+                  color: '#718096',
                   marginTop: '80px'
                 }}>
-                  <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-                    Ask me anything about company procedures
+                  <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0' }}>
+                    Ask a question
                   </p>
-                  <p style={{ fontSize: '14px' }}>
-                    Use the mic or type your question
+                  <p style={{ fontSize: '14px', color: '#718096' }}>
+                    Press the mic or type
                   </p>
                 </div>
               ) : (
@@ -304,8 +302,9 @@ export default function EmployeeAssistant() {
                       maxWidth: '70%',
                       padding: '12px 16px',
                       borderRadius: '8px',
-                      background: msg.role === 'user' ? '#2563eb' : '#f3f4f6',
-                      color: msg.role === 'user' ? 'white' : '#111827'
+                      background: msg.role === 'user' ? '#f7fafc' : '#0f1419',
+                      color: msg.role === 'user' ? '#0f1419' : '#f7fafc',
+                      border: msg.role === 'user' ? 'none' : '1px solid #2d3748'
                     }}>
                       {msg.content}
                     </div>
@@ -317,28 +316,29 @@ export default function EmployeeAssistant() {
                   <div style={{
                     padding: '12px 16px',
                     borderRadius: '8px',
-                    background: '#f3f4f6'
+                    background: '#0f1419',
+                    border: '1px solid #2d3748'
                   }}>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <div style={{
                         width: '8px',
                         height: '8px',
                         borderRadius: '50%',
-                        background: '#9ca3af',
+                        background: '#718096',
                         animation: 'bounce 1s infinite'
                       }}></div>
                       <div style={{
                         width: '8px',
                         height: '8px',
                         borderRadius: '50%',
-                        background: '#9ca3af',
+                        background: '#718096',
                         animation: 'bounce 1s infinite 0.15s'
                       }}></div>
                       <div style={{
                         width: '8px',
                         height: '8px',
                         borderRadius: '50%',
-                        background: '#9ca3af',
+                        background: '#718096',
                         animation: 'bounce 1s infinite 0.3s'
                       }}></div>
                     </div>
@@ -350,10 +350,11 @@ export default function EmployeeAssistant() {
 
             {/* Input */}
             <div style={{
-              borderTop: '1px solid #e5e7eb',
+              borderTop: '1px solid #2d3748',
               padding: '16px',
               display: 'flex',
-              gap: '8px'
+              gap: '8px',
+              background: '#0f1419'
             }}>
               <button
                 onClick={toggleListening}
@@ -363,9 +364,10 @@ export default function EmployeeAssistant() {
                   borderRadius: '6px',
                   border: 'none',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
-                  background: isListening ? '#ef4444' : '#f3f4f6',
-                  color: isListening ? 'white' : '#374151',
-                  opacity: isLoading ? 0.5 : 1
+                  background: isListening ? '#f7fafc' : '#2d3748',
+                  color: isListening ? '#0f1419' : '#a0aec0',
+                  opacity: isLoading ? 0.5 : 1,
+                  transition: 'all 0.2s'
                 }}
               >
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
@@ -380,9 +382,12 @@ export default function EmployeeAssistant() {
                 style={{
                   flex: 1,
                   padding: '8px 12px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid #2d3748',
                   borderRadius: '6px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  background: '#1a2332',
+                  color: '#f7fafc',
+                  outline: 'none'
                 }}
               />
               <button
@@ -393,11 +398,12 @@ export default function EmployeeAssistant() {
                   borderRadius: '6px',
                   border: 'none',
                   cursor: (input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
-                  background: '#2563eb',
-                  color: 'white',
+                  background: '#f7fafc',
+                  color: '#0f1419',
                   fontSize: '14px',
                   fontWeight: '500',
-                  opacity: (input.trim() && !isLoading) ? 1 : 0.5
+                  opacity: (input.trim() && !isLoading) ? 1 : 0.5,
+                  transition: 'all 0.2s'
                 }}
               >
                 Send
@@ -411,6 +417,9 @@ export default function EmployeeAssistant() {
         @keyframes bounce {
           0%, 80%, 100% { transform: translateY(0); }
           40% { transform: translateY(-6px); }
+        }
+        input::placeholder {
+          color: #718096;
         }
       `}</style>
     </div>
