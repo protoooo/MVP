@@ -15,7 +15,8 @@
     "lucide-react": "^0.263.1",
     "@supabase/supabase-js": "^2.39.0",
     "@supabase/ssr": "^0.5.2",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "stripe": "^14.10.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
