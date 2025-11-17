@@ -68,7 +68,7 @@ export async function POST(request) {
       ? content.substring(0, 100000) + '\n\n[Content truncated...]'
       : content;
 
-    // Save to database
+    // Save to database - document is immediately ready to use
     const { data, error } = await supabase
       .from('documents')
       .insert({
@@ -92,7 +92,7 @@ export async function POST(request) {
 
     return NextResponse.json({ 
       document: data,
-      message: 'Document uploaded successfully'
+      message: 'PDF uploaded and ready to use'
     });
 
   } catch (error) {
