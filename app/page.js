@@ -113,16 +113,9 @@ export default function App() {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      height: '100vh',
       background: '#0f1419', 
       margin: 0, 
-      padding: 0,
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflow: 'hidden'
+      padding: 0
     }}>
       {/* Header */}
       <div style={{ 
