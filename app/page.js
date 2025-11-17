@@ -232,7 +232,13 @@ export default function App() {
 
               {documents.length > 0 && (
                 <div style={{ marginTop: '24px' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#e2e8f0' }}>
+                  <h3 style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '500', 
+                    marginBottom: '8px', 
+                    color: '#e2e8f0',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
                     Uploaded ({documents.length})
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -249,8 +255,17 @@ export default function App() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <FileText style={{ width: '16px', height: '16px', color: '#cbd5e0' }} />
                           <div>
-                            <p style={{ fontSize: '14px', fontWeight: '500', color: '#f7fafc' }}>{doc.name}</p>
-                            <p style={{ fontSize: '12px', color: '#718096' }}>
+                            <p style={{ 
+                              fontSize: '14px', 
+                              fontWeight: '500', 
+                              color: '#f7fafc',
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            }}>{doc.name}</p>
+                            <p style={{ 
+                              fontSize: '12px', 
+                              color: '#718096',
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                            }}>
                               {new Date(doc.uploadedAt).toLocaleString()}
                             </p>
                           </div>
