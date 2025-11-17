@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, X, FileText, LogOut, Edit2, Check, MessageSquare } from 'lucide-react';
+import { Upload, X, FileText, LogOut, Edit2, Check, MessageSquare, CreditCard } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import Auth from '../components/Auth';
+import SubscriptionPlans from '../components/SubscriptionPlans';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_FILES_PER_UPLOAD = 10;
@@ -24,6 +25,7 @@ export default function App() {
   const [editingBusinessName, setEditingBusinessName] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [error, setError] = useState(null);
+  const [usage, setUsage] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function App() {
       setUser(session?.user ?? null);
       if (session?.user) {
         await loadProfile(session.user.id);
+        await loadUsage();
       }
       setLoading(false);
     });
@@ -47,12 +50,25 @@ export default function App() {
       setUser(session?.user ?? null);
       if (session?.user) {
         await loadProfile(session.user.id);
+        await loadUsage();
       }
     } catch (err) {
       console.error('Error checking user:', err);
       setError('Failed to load user session');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUsage = async () => {
+    try {
+      const response = await fetch('/api/usage');
+      if (response.ok) {
+        const data = await response.json();
+        setUsage(data);
+      }
+    } catch (err) {
+      console.error('Error loading usage:', err);
     }
   };
 
@@ -182,6 +198,21 @@ export default function App() {
     }
   };
 
+  const handleManageBilling = async () => {
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST'
+      });
+      const { url, error } = await response.json();
+      
+      if (error) throw new Error(error);
+      if (url) window.location.href = url;
+    } catch (err) {
+      console.error('Billing portal error:', err);
+      alert('Unable to open billing portal. Make sure Stripe is configured.');
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setDocuments([]);
@@ -189,6 +220,7 @@ export default function App() {
     setConversations([]);
     setCurrentConversation(null);
     setProfile(null);
+    setUsage(null);
   };
 
   const scrollToBottom = () => {
@@ -260,6 +292,7 @@ export default function App() {
 
           const { document } = await response.json();
           setDocuments([document, ...documents]);
+          await loadUsage(); // Refresh usage after upload
         } else {
           const content = await file.text();
           const truncatedContent = content.length > 100000 
@@ -281,6 +314,7 @@ export default function App() {
           
           if (data) {
             setDocuments([data, ...documents]);
+            await loadUsage();
           }
         }
         
@@ -322,6 +356,7 @@ export default function App() {
       
       if (error) throw error;
       setDocuments(documents.filter(doc => doc.id !== docId));
+      await loadUsage();
     } catch (err) {
       console.error('Error deleting document:', err);
       alert('Failed to delete document');
@@ -465,6 +500,9 @@ export default function App() {
           role: 'assistant',
           content: assistantMessage.content
         });
+
+      // Refresh usage after API call
+      await loadUsage();
 
     } catch (error) {
       console.error('Chat error:', error);
@@ -781,6 +819,7 @@ export default function App() {
                   Settings
                 </h2>
 
+                {/* Business Name */}
                 <div style={{ marginBottom: '24px' }}>
                   <label style={{
                     display: 'block',
@@ -868,7 +907,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div>
+                {/* Account Email */}
+                <div style={{ marginBottom: '32px' }}>
                   <label style={{
                     display: 'block',
                     fontSize: '14px',
@@ -887,6 +927,181 @@ export default function App() {
                   }}>
                     {user.email}
                   </p>
+                </div>
+
+                {/* Usage Stats */}
+                {usage && (
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      marginBottom: '16px',
+                      color: '#f7fafc',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}>
+                      Current Usage
+                    </h3>
+                    
+                    <div style={{
+                      background: '#0f1419',
+                      border: '1px solid #2d3748',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', color: '#e2e8f0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            API Calls
+                          </span>
+                          <span style={{ fontSize: '14px', color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            {usage.usage.apiCalls.unlimited ? 'Unlimited' : `${usage.usage.apiCalls.used} / ${usage.usage.apiCalls.limit}`}
+                          </span>
+                        </div>
+                        {!usage.usage.apiCalls.unlimited && (
+                          <div style={{
+                            width: '100%',
+                            height: '8px',
+                            background: '#2d3748',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${(usage.usage.apiCalls.used / usage.usage.apiCalls.limit) * 100}%`,
+                              height: '100%',
+                              background: usage.usage.apiCalls.used >= usage.usage.apiCalls.limit ? '#f56565' : '#48bb78',
+                              borderRadius: '4px'
+                            }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', color: '#e2e8f0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            Documents
+                          </span>
+                          <span style={{ fontSize: '14px', color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            {usage.usage.documents.unlimited ? 'Unlimited' : `${usage.usage.documents.used} / ${usage.usage.documents.limit}`}
+                          </span>
+                        </div>
+                        {!usage.usage.documents.unlimited && (
+                          <div style={{
+                            width: '100%',
+                            height: '8px',
+                            background: '#2d3748',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${(usage.usage.documents.used / usage.usage.documents.limit) * 100}%`,
+                              height: '100%',
+                              background: usage.usage.documents.used >= usage.usage.documents.limit ? '#f56565' : '#48bb78',
+                              borderRadius: '4px'
+                            }} />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', color: '#e2e8f0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            Conversations
+                          </span>
+                          <span style={{ fontSize: '14px', color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                            {usage.usage.conversations.unlimited ? 'Unlimited' : `${usage.usage.conversations.used} / ${usage.usage.conversations.limit}`}
+                          </span>
+                        </div>
+                        {!usage.usage.conversations.unlimited && (
+                          <div style={{
+                            width: '100%',
+                            height: '8px',
+                            background: '#2d3748',
+                            borderRadius: '4px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${(usage.usage.conversations.used / usage.usage.conversations.limit) * 100}%`,
+                              height: '100%',
+                              background: usage.usage.conversations.used >= usage.usage.conversations.limit ? '#f56565' : '#48bb78',
+                              borderRadius: '4px'
+                            }} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{
+                      background: '#0f1419',
+                      border: '1px solid #2d3748',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <div style={{
+                        padding: '8px',
+                        background: '#2d3748',
+                        borderRadius: '6px'
+                      }}>
+                        <CreditCard size={20} style={{ color: '#a0aec0' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: '#f7fafc',
+                          marginBottom: '2px',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        }}>
+                          {usage.subscription.tier.charAt(0).toUpperCase() + usage.subscription.tier.slice(1)} Plan
+                        </p>
+                        <p style={{
+                          fontSize: '12px',
+                          color: '#a0aec0',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        }}>
+                          {usage.subscription.status === 'active' ? 'Active' : usage.subscription.status}
+                        </p>
+                      </div>
+                      {profile?.subscription_tier !== 'free' && profile?.stripe_customer_id && (
+                        <button
+                          onClick={handleManageBilling}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: '#2d3748',
+                            color: '#f7fafc',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}
+                        >
+                          Manage
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Subscription Plans */}
+                <div>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    marginBottom: '16px',
+                    color: '#f7fafc',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
+                    Subscription Plans
+                  </h3>
+                  <SubscriptionPlans 
+                    currentPlan={profile?.subscription_tier || 'free'}
+                    onUpgrade={() => loadUsage()}
+                  />
                 </div>
               </div>
             ) : mode === 'manage' ? (
