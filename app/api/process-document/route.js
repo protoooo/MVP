@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { chunkText, generateEmbeddingsBatch, estimateTokens } from '../../../lib/embeddings';
 
 export async function POST(request) {
   try {
@@ -41,54 +40,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    // Check if already processed
-    if (document.chunks_created) {
-      return NextResponse.json({ 
-        message: 'Document already processed',
-        chunkCount: document.chunk_count 
-      });
-    }
-
-    // Chunk the document
-    const chunks = chunkText(document.content, 1000, 200);
-    
-    if (chunks.length === 0) {
-      return NextResponse.json({ error: 'No content to process' }, { status: 400 });
-    }
-
-    // Generate embeddings for all chunks
-    const embeddings = await generateEmbeddingsBatch(chunks);
-
-    // Prepare chunk data for insertion
-    const chunkData = chunks.map((chunk, index) => ({
-      document_id: document.id,
-      business_id: document.business_id,
-      chunk_index: index,
-      content: chunk,
-      embedding: embeddings[index],
-      token_count: estimateTokens(chunk),
-    }));
-
-    // Insert chunks in batches
-    const batchSize = 50;
-    for (let i = 0; i < chunkData.length; i += batchSize) {
-      const batch = chunkData.slice(i, i + batchSize);
-      const { error: insertError } = await supabase
-        .from('document_chunks')
-        .insert(batch);
-
-      if (insertError) {
-        console.error('Error inserting chunks:', insertError);
-        throw insertError;
-      }
-    }
-
-    // Update document to mark as processed
+    // For now, just mark as processed without creating embeddings
+    // The simple approach in chat/route.js doesn't need embeddings
     const { error: updateError } = await supabase
       .from('documents')
       .update({
         chunks_created: true,
-        chunk_count: chunks.length,
+        chunk_count: 1, // Simple approach: treat whole document as one chunk
       })
       .eq('id', document.id);
 
@@ -98,8 +56,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      chunkCount: chunks.length,
-      message: `Document processed into ${chunks.length} chunks`,
+      message: 'Document processed successfully',
     });
 
   } catch (error) {
