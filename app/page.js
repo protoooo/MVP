@@ -942,4 +942,300 @@ export default function App() {
                         {uploadProgress.error ? (
                           <div style={{
                             padding: '12px',
-                            background:
+                            background: '#742a2a',
+                            color: '#feb2b2',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}>
+                            {uploadProgress.error}
+                          </div>
+                        ) : (
+                          <>
+                            <div style={{
+                              width: '100%',
+                              height: '8px',
+                              background: '#2d3748',
+                              borderRadius: '4px',
+                              overflow: 'hidden',
+                              marginBottom: '8px'
+                            }}>
+                              <div style={{
+                                width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                                height: '100%',
+                                background: '#48bb78',
+                                transition: 'width 0.3s ease',
+                                borderRadius: '4px'
+                              }} />
+                            </div>
+                            
+                            <p style={{ 
+                              fontSize: '13px', 
+                              color: '#a0aec0',
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                            }}>
+                              {uploadProgress.current} of {uploadProgress.total} files
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                        <Upload style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          color: '#718096',
+                          margin: '0 auto 8px'
+                        }} />
+                        <p style={{ 
+                          fontSize: '14px', 
+                          color: '#cbd5e0', 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                        }}>
+                          Click to upload documents
+                        </p>
+                        <p style={{ 
+                          fontSize: '12px', 
+                          color: '#718096', 
+                          marginTop: '4px', 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                        }}>
+                          {ALLOWED_FILE_TYPES.join(', ')} • Max 50MB each • Up to {MAX_FILES_PER_UPLOAD} files
+                        </p>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {documents.length > 0 && (
+                  <div style={{ marginTop: '24px' }}>
+                    <h3 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '500', 
+                      marginBottom: '8px', 
+                      color: '#e2e8f0',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}>
+                      Uploaded ({documents.length})
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {documents.map((doc) => (
+                        <div key={doc.id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px',
+                          background: '#0f1419',
+                          borderRadius: '6px',
+                          border: '1px solid #2d3748'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                            <FileText style={{ width: '16px', height: '16px', color: '#cbd5e0', flexShrink: 0 }} />
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <p style={{ 
+                                fontSize: '14px', 
+                                fontWeight: '500', 
+                                color: '#f7fafc',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}>{doc.name}</p>
+                              <p style={{ 
+                                fontSize: '12px', 
+                                color: '#718096',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                              }}>
+                                {new Date(doc.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#cbd5e0',
+                              padding: '4px',
+                              flexShrink: 0
+                            }}
+                          >
+                            <X style={{ width: '16px', height: '16px' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{
+                background: '#1a2332',
+                borderRadius: '8px',
+                border: '1px solid #2d3748',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
+                <div style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px'
+                }}>
+                  {messages.length === 0 ? (
+                    <div style={{ 
+                      textAlign: 'center',
+                      color: '#718096',
+                      marginTop: '80px'
+                    }}>
+                      <p style={{ 
+                        fontSize: '16px', 
+                        marginBottom: '8px', 
+                        color: '#a0aec0', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        Ask a question
+                      </p>
+                      <p style={{ 
+                        fontSize: '14px', 
+                        color: '#718096', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        Type your message below
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: '70%',
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          background: msg.role === 'user' ? '#f7fafc' : '#0f1419',
+                          color: msg.role === 'user' ? '#0f1419' : '#f7fafc',
+                          border: msg.role === 'user' ? 'none' : '1px solid #2d3748',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                          fontSize: '15px',
+                          lineHeight: '1.5'
+                        }}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {isLoading && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                      <div style={{
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        background: '#0f1419',
+                        border: '1px solid #2d3748'
+                      }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite'
+                          }}></div>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite 0.15s'
+                          }}></div>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: '#718096',
+                            animation: 'bounce 1s infinite 0.3s'
+                          }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <div style={{
+                  borderTop: '1px solid #2d3748',
+                  padding: '16px',
+                  display: 'flex',
+                  gap: '8px',
+                  background: '#0f1419',
+                  borderBottomLeftRadius: '8px',
+                  borderBottomRightRadius: '8px'
+                }}>
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask a question..."
+                    disabled={isLoading}
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      border: '1px solid #2d3748',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      background: '#1a2332',
+                      color: '#f7fafc',
+                      outline: 'none',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!input.trim() || isLoading}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: (input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
+                      background: '#f7fafc',
+                      color: '#0f1419',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      opacity: (input.trim() && !isLoading) ? 1 : 0.5,
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-6px); }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        input::placeholder {
+          color: #718096;
+        }
+      `}</style>
+    </div>
+  );
+}
