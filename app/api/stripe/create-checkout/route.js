@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { stripe, PLANS } from '../../../../lib/stripe';
+import { stripe, isStripeEnabled, PLANS } from '../../../../lib/stripe';
 
 export async function POST(request) {
   try {
+    // Check if Stripe is configured
+    if (!isStripeEnabled()) {
+      return NextResponse.json(
+        { error: 'Subscription features are not available. Contact support for enterprise options.' },
+        { status: 503 }
+      );
+    }
+
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
