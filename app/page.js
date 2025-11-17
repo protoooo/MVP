@@ -111,12 +111,13 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f1419' }}>
+    <div style={{ minHeight: '100vh', background: '#0f1419', margin: 0, padding: 0 }}>
       {/* Header */}
       <div style={{ 
         background: '#1a2332', 
         borderBottom: '1px solid #2d3748',
-        padding: '12px 16px'
+        padding: '12px 16px',
+        margin: 0
       }}>
         <div style={{ 
           maxWidth: '1200px', 
@@ -179,12 +180,13 @@ export default function App() {
                 fontSize: '14px',
                 fontWeight: '500',
                 marginBottom: '8px',
-                color: '#e2e8f0'
+                color: '#e2e8f0',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}>
                 Documents
               </label>
               <div style={{
-                border: '2px dashed #4a5568',
+                border: '1px solid #4a5568',
                 borderRadius: '8px',
                 padding: '32px',
                 textAlign: 'center',
@@ -206,10 +208,10 @@ export default function App() {
                     color: '#718096',
                     margin: '0 auto 8px'
                   }} />
-                  <p style={{ fontSize: '14px', color: '#cbd5e0' }}>
+                  <p style={{ fontSize: '14px', color: '#cbd5e0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     Upload documents
                   </p>
-                  <p style={{ fontSize: '12px', color: '#718096', marginTop: '4px' }}>
+                  <p style={{ fontSize: '12px', color: '#718096', marginTop: '4px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
                     .txt, .pdf, .md files
                   </p>
                 </label>
