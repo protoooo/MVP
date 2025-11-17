@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
-import { chunkText, generateEmbeddingsBatch, estimateTokens } from '../../../lib/embeddings';
 
 export async function POST(request) {
   try {
@@ -76,7 +75,9 @@ export async function POST(request) {
         business_id: profile.business_id,
         name: fileName || file.name,
         content: truncatedContent,
-        uploaded_by: user.id
+        uploaded_by: user.id,
+        chunks_created: true,
+        chunk_count: 1
       })
       .select()
       .single();
@@ -89,20 +90,9 @@ export async function POST(request) {
       );
     }
 
-    // Trigger background processing (don't wait for it)
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/process-document`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({ documentId: data.id }),
-    }).catch(err => console.error('Background processing error:', err));
-
     return NextResponse.json({ 
       document: data,
-      processing: true,
-      message: 'Document uploaded and processing started'
+      message: 'Document uploaded successfully'
     });
 
   } catch (error) {
