@@ -88,7 +88,21 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({ document: data });
+    // Trigger background processing (don't wait for it)
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/process-document`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || '',
+      },
+      body: JSON.stringify({ documentId: data.id }),
+    }).catch(err => console.error('Background processing error:', err));
+
+    return NextResponse.json({ 
+      document: data,
+      processing: true,
+      message: 'Document uploaded and processing started'
+    });
 
   } catch (error) {
     console.error('PDF upload error:', error);
