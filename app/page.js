@@ -5,6 +5,10 @@ import { Mic, MicOff, Upload, X, FileText, LogOut, Edit2, Check, MessageSquare, 
 import { supabase } from '../lib/supabase';
 import Auth from '../components/Auth';
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILES_PER_UPLOAD = 10;
+const ALLOWED_FILE_TYPES = ['.txt', '.pdf', '.md'];
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -17,8 +21,10 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [editingBusinessName, setEditingBusinessName] = useState(false);
   const [businessName, setBusinessName] = useState('');
+  const [error, setError] = useState(null);
   const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -38,82 +44,116 @@ export default function App() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user ?? null);
-    if (session?.user) {
-      await loadProfile(session.user.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      }
+    } catch (err) {
+      console.error('Error checking user:', err);
+      setError('Failed to load user session');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const loadProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*, businesses(name)')
-      .eq('id', userId)
-      .single();
-    
-    if (data) {
-      setProfile(data);
-      setBusinessName(data.businesses?.name || '');
-      await loadDocuments(data.business_id);
-      await loadConversations(data.business_id);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, businesses(name)')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setProfile(data);
+        setBusinessName(data.businesses?.name || '');
+        await loadDocuments(data.business_id);
+        await loadConversations(data.business_id);
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err);
+      setError('Failed to load profile data');
     }
   };
 
   const loadDocuments = async (businessId) => {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('business_id', businessId)
-      .order('created_at', { ascending: false });
-    
-    if (data) {
-      setDocuments(data);
+    try {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) setDocuments(data);
+    } catch (err) {
+      console.error('Error loading documents:', err);
     }
   };
 
   const loadConversations = async (businessId) => {
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('business_id', businessId)
-      .order('created_at', { ascending: false });
-    
-    if (data) {
-      setConversations(data);
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) setConversations(data);
+    } catch (err) {
+      console.error('Error loading conversations:', err);
     }
   };
 
   const loadMessages = async (conversationId) => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
-    
-    if (data) {
-      setMessages(data.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      })));
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setMessages(data.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })));
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
+      setError('Failed to load messages');
     }
   };
 
   const updateBusinessName = async () => {
-    if (!businessName.trim()) return;
+    if (!businessName.trim()) {
+      alert('Business name cannot be empty');
+      return;
+    }
     
-    const { error } = await supabase
-      .from('businesses')
-      .update({ name: businessName })
-      .eq('id', profile.business_id);
-    
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from('businesses')
+        .update({ name: businessName })
+        .eq('id', profile.business_id);
+      
+      if (error) throw error;
+      
       setProfile({
         ...profile,
         businesses: { name: businessName }
       });
       setEditingBusinessName(false);
+    } catch (err) {
+      console.error('Error updating business name:', err);
+      alert('Failed to update business name');
     }
   };
 
@@ -147,14 +187,18 @@ export default function App() {
         setIsListening(false);
       };
 
-      recognitionRef.current.onerror = () => setIsListening(false);
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
       recognitionRef.current.onend = () => setIsListening(false);
     }
   }, []);
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert('Speech recognition not supported');
+      alert('Speech recognition not supported in this browser');
       return;
     }
     if (isListening) {
@@ -168,64 +212,115 @@ export default function App() {
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     
-    for (const file of files) {
-      let content = '';
+    if (files.length > MAX_FILES_PER_UPLOAD) {
+      alert(`Maximum ${MAX_FILES_PER_UPLOAD} files allowed at once`);
+      return;
+    }
+
+    setUploadProgress({ current: 0, total: files.length });
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       
-      // Handle different file types
-      if (file.type === 'application/pdf') {
-        // For PDF, we'll use a simple text extraction
-        // In production, you'd want a proper PDF parser
-        const arrayBuffer = await file.arrayBuffer();
-        const text = new TextDecoder().decode(arrayBuffer);
-        content = text;
-      } else {
-        content = await file.text();
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`${file.name} is too large (max 5MB)`);
+        continue;
+      }
+
+      // Validate file type
+      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+      if (!ALLOWED_FILE_TYPES.includes(fileExt)) {
+        alert(`${file.name} is not an allowed file type. Allowed: ${ALLOWED_FILE_TYPES.join(', ')}`);
+        continue;
       }
       
-      const { data, error } = await supabase
-        .from('documents')
-        .insert({
-          business_id: profile.business_id,
-          name: file.name,
-          content: content,
-          uploaded_by: user.id
-        })
-        .select()
-        .single();
-      
-      if (data) {
-        setDocuments([data, ...documents]);
-      } else {
-        console.error('Error uploading document:', error);
+      try {
+        let content = '';
+        
+        // Handle different file types
+        if (file.type === 'application/pdf') {
+          // Simple text extraction for PDF
+          const arrayBuffer = await file.arrayBuffer();
+          const text = new TextDecoder().decode(arrayBuffer);
+          content = text;
+        } else {
+          content = await file.text();
+        }
+
+        // Limit content size
+        if (content.length > 100000) {
+          content = content.substring(0, 100000) + '\n\n[Content truncated...]';
+        }
+        
+        const { data, error } = await supabase
+          .from('documents')
+          .insert({
+            business_id: profile.business_id,
+            name: file.name,
+            content: content,
+            uploaded_by: user.id
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setDocuments([data, ...documents]);
+        }
+        
+        setUploadProgress({ current: i + 1, total: files.length });
+      } catch (err) {
+        console.error('Error uploading document:', err);
+        alert(`Failed to upload ${file.name}`);
       }
     }
+
+    setUploadProgress(null);
+    e.target.value = ''; // Reset file input
   };
 
   const handleDeleteDocument = async (docId) => {
-    const { error } = await supabase
-      .from('documents')
-      .delete()
-      .eq('id', docId);
-    
-    if (!error) {
+    if (!confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', docId);
+      
+      if (error) throw error;
       setDocuments(documents.filter(doc => doc.id !== docId));
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      alert('Failed to delete document');
     }
   };
 
   const createNewConversation = async () => {
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert({
-        business_id: profile.business_id,
-        title: 'New conversation'
-      })
-      .select()
-      .single();
-    
-    if (data) {
-      setCurrentConversation(data);
-      setMessages([]);
-      setConversations([data, ...conversations]);
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({
+          business_id: profile.business_id,
+          title: 'New conversation'
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setCurrentConversation(data);
+        setMessages([]);
+        setConversations([data, ...conversations]);
+      }
+    } catch (err) {
+      console.error('Error creating conversation:', err);
+      alert('Failed to create conversation');
     }
   };
 
@@ -235,39 +330,60 @@ export default function App() {
   };
 
   const deleteConversation = async (convId) => {
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .eq('id', convId);
-    
-    if (!error) {
+    if (!confirm('Are you sure you want to delete this conversation?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', convId);
+      
+      if (error) throw error;
+      
       setConversations(conversations.filter(c => c.id !== convId));
       if (currentConversation?.id === convId) {
         setCurrentConversation(null);
         setMessages([]);
       }
+    } catch (err) {
+      console.error('Error deleting conversation:', err);
+      alert('Failed to delete conversation');
     }
   };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+    if (input.length > 2000) {
+      alert('Message is too long (max 2000 characters)');
+      return;
+    }
 
     // Create conversation if none exists
     let conversationId = currentConversation?.id;
     if (!conversationId) {
-      const { data } = await supabase
-        .from('conversations')
-        .insert({
-          business_id: profile.business_id,
-          title: input.substring(0, 50)
-        })
-        .select()
-        .single();
-      
-      if (data) {
-        setCurrentConversation(data);
-        setConversations([data, ...conversations]);
-        conversationId = data.id;
+      try {
+        const { data } = await supabase
+          .from('conversations')
+          .insert({
+            business_id: profile.business_id,
+            title: input.substring(0, 50)
+          })
+          .select()
+          .single();
+        
+        if (data) {
+          setCurrentConversation(data);
+          setConversations([data, ...conversations]);
+          conversationId = data.id;
+        } else {
+          throw new Error('Failed to create conversation');
+        }
+      } catch (err) {
+        console.error('Error creating conversation:', err);
+        alert('Failed to create conversation');
+        return;
       }
     }
 
@@ -276,22 +392,26 @@ export default function App() {
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
+    setError(null);
 
     // Save user message to database
-    await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'user',
-        content: userMessage.content
-      });
+    try {
+      await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          role: 'user',
+          content: userMessage.content
+        });
+    } catch (err) {
+      console.error('Error saving user message:', err);
+    }
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': 'user-session'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           messages: newMessages,
@@ -301,8 +421,8 @@ export default function App() {
 
       const data = await response.json();
       
-      if (data.error) {
-        throw new Error(data.error.message);
+      if (!response.ok || data.error) {
+        throw new Error(data.error?.message || `Request failed with status ${response.status}`);
       }
 
       const assistantMessage = {
@@ -322,19 +442,26 @@ export default function App() {
         });
 
     } catch (error) {
+      console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
         content: `Error: ${error.message}`
       };
       setMessages([...newMessages, errorMessage]);
+      setError(error.message);
       
-      await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: errorMessage.content
-        });
+      // Save error message to database
+      try {
+        await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'assistant',
+            content: errorMessage.content
+          });
+      } catch (err) {
+        console.error('Error saving error message:', err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -349,9 +476,29 @@ export default function App() {
         justifyContent: 'center',
         background: '#0f1419'
       }}>
-        <p style={{ color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' }}>
-          Loading...
-        </p>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '3px solid #2d3748',
+            borderTop: '3px solid #f7fafc',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }} />
+          <p style={{ 
+            color: '#a0aec0', 
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+          }}>
+            Loading...
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -371,6 +518,38 @@ export default function App() {
       flexDirection: 'column',
       background: '#0f1419'
     }}>
+      {/* Error notification */}
+      {error && (
+        <div style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          background: '#f56565',
+          color: '#fff',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          zIndex: 1000,
+          maxWidth: '400px',
+          fontSize: '14px',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        }}>
+          {error}
+          <button
+            onClick={() => setError(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#fff',
+              marginLeft: '8px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ 
         background: '#1a2332', 
@@ -389,7 +568,7 @@ export default function App() {
           <div style={{ 
             fontSize: '14px', 
             color: '#f7fafc',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             fontWeight: '500'
           }}>
             {profile?.businesses?.name || 'Loading...'}
@@ -406,7 +585,7 @@ export default function App() {
                 fontWeight: '500',
                 background: mode === 'ask' ? '#2d3748' : 'transparent',
                 color: mode === 'ask' ? '#f7fafc' : '#a0aec0',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
             >
               Ask
@@ -422,7 +601,7 @@ export default function App() {
                 fontWeight: '500',
                 background: mode === 'manage' ? '#2d3748' : 'transparent',
                 color: mode === 'manage' ? '#f7fafc' : '#a0aec0',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
             >
               Manage
@@ -438,7 +617,7 @@ export default function App() {
                 fontWeight: '500',
                 background: mode === 'settings' ? '#2d3748' : 'transparent',
                 color: mode === 'settings' ? '#f7fafc' : '#a0aec0',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}
             >
               Settings
@@ -495,7 +674,7 @@ export default function App() {
                   color: '#f7fafc',
                   fontSize: '14px',
                   fontWeight: '500',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -531,7 +710,7 @@ export default function App() {
                     <p style={{
                       fontSize: '13px',
                       color: '#f7fafc',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
@@ -578,7 +757,7 @@ export default function App() {
                   fontWeight: '600',
                   marginBottom: '24px',
                   color: '#f7fafc',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                 }}>
                   Settings
                 </h2>
@@ -590,7 +769,7 @@ export default function App() {
                     fontWeight: '500',
                     marginBottom: '8px',
                     color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                   }}>
                     Business Name
                   </label>
@@ -610,7 +789,7 @@ export default function App() {
                             background: '#0f1419',
                             color: '#f7fafc',
                             outline: 'none',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                           }}
                         />
                         <button
@@ -627,7 +806,7 @@ export default function App() {
                             gap: '4px',
                             fontSize: '14px',
                             fontWeight: '500',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                           }}
                         >
                           <Check size={16} />
@@ -641,7 +820,7 @@ export default function App() {
                           padding: '8px 12px',
                           fontSize: '14px',
                           color: '#f7fafc',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                         }}>
                           {businessName}
                         </p>
@@ -659,7 +838,7 @@ export default function App() {
                             gap: '4px',
                             fontSize: '14px',
                             fontWeight: '500',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                           }}
                         >
                           <Edit2 size={16} />
@@ -677,7 +856,7 @@ export default function App() {
                     fontWeight: '500',
                     marginBottom: '8px',
                     color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                   }}>
                     Account Email
                   </label>
@@ -685,7 +864,7 @@ export default function App() {
                     padding: '8px 12px',
                     fontSize: '14px',
                     color: '#a0aec0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                   }}>
                     {user.email}
                   </p>
@@ -707,7 +886,7 @@ export default function App() {
                     fontWeight: '500',
                     marginBottom: '8px',
                     color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                   }}>
                     Documents
                   </label>
@@ -722,12 +901,13 @@ export default function App() {
                     <input
                       type="file"
                       multiple
-                      accept=".txt,.pdf,.md"
+                      accept={ALLOWED_FILE_TYPES.join(',')}
                       onChange={handleFileUpload}
                       style={{ display: 'none' }}
                       id="file-upload"
+                      disabled={!!uploadProgress}
                     />
-                    <label htmlFor="file-upload" style={{ cursor: 'pointer' }}>
+                    <label htmlFor="file-upload" style={{ cursor: uploadProgress ? 'not-allowed' : 'pointer' }}>
                       <Upload style={{ 
                         width: '48px', 
                         height: '48px', 
@@ -737,267 +917,17 @@ export default function App() {
                       <p style={{ 
                         fontSize: '14px', 
                         color: '#cbd5e0', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
                       }}>
-                        Upload documents
+                        {uploadProgress 
+                          ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
+                          : 'Upload documents'
+                        }
                       </p>
                       <p style={{ 
                         fontSize: '12px', 
                         color: '#718096', 
                         marginTop: '4px', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
                       }}>
-                        .txt, .pdf, .md files
-                      </p>
-                    </label>
-                  </div>
-                </div>
-
-                {documents.length > 0 && (
-                  <div style={{ marginTop: '24px' }}>
-                    <h3 style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '500', 
-                      marginBottom: '8px', 
-                      color: '#e2e8f0',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-                    }}>
-                      Uploaded ({documents.length})
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {documents.map((doc) => (
-                        <div key={doc.id} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '12px',
-                          background: '#0f1419',
-                          borderRadius: '6px',
-                          border: '1px solid #2d3748'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                            <FileText style={{ width: '16px', height: '16px', color: '#cbd5e0', flexShrink: 0 }} />
-                            <div style={{ minWidth: 0, flex: 1 }}>
-                              <p style={{ 
-                                fontSize: '14px', 
-                                fontWeight: '500', 
-                                color: '#f7fafc',
-                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}>{doc.name}</p>
-                              <p style={{ 
-                                fontSize: '12px', 
-                                color: '#718096',
-                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-                              }}>
-                                {new Date(doc.created_at).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#cbd5e0',
-                              padding: '4px',
-                              flexShrink: 0
-                            }}
-                          >
-                            <X style={{ width: '16px', height: '16px' }} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{
-                background: '#1a2332',
-                borderRadius: '8px',
-                border: '1px solid #2d3748',
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column'
-              }}>
-                {/* Messages */}
-                <div style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px'
-                }}>
-                  {messages.length === 0 ? (
-                    <div style={{ 
-                      textAlign: 'center',
-                      color: '#718096',
-                      marginTop: '80px'
-                    }}>
-                      <p style={{ 
-                        fontSize: '16px', 
-                        marginBottom: '8px', 
-                        color: '#a0aec0', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
-                      }}>
-                        Ask a question
-                      </p>
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#718096', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
-                      }}>
-                        Press the mic or type
-                      </p>
-                    </div>
-                  ) : (
-                    messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          display: 'flex',
-                          justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
-                        }}
-                      >
-                        <div style={{
-                          maxWidth: '70%',
-                          padding: '12px 16px',
-                          borderRadius: '8px',
-                          background: msg.role === 'user' ? '#f7fafc' : '#0f1419',
-                          color: msg.role === 'user' ? '#0f1419' : '#f7fafc',
-                          border: msg.role === 'user' ? 'none' : '1px solid #2d3748',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
-                          fontSize: '15px',
-                          lineHeight: '1.5'
-                        }}>
-                          {msg.content}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  {isLoading && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                      <div style={{
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        background: '#0f1419',
-                        border: '1px solid #2d3748'
-                      }}>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: '#718096',
-                            animation: 'bounce 1s infinite'
-                          }}></div>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: '#718096',
-                            animation: 'bounce 1s infinite 0.15s'
-                          }}></div>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            background: '#718096',
-                            animation: 'bounce 1s infinite 0.3s'
-                          }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input */}
-                <div style={{
-                  borderTop: '1px solid #2d3748',
-                  padding: '16px',
-                  display: 'flex',
-                  gap: '8px',
-                  background: '#0f1419',
-                  borderBottomLeftRadius: '8px',
-                  borderBottomRightRadius: '8px'
-                }}>
-                  <button
-                    onClick={toggleListening}
-                    disabled={isLoading}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      background: isListening ? '#f7fafc' : '#2d3748',
-                      color: isListening ? '#0f1419' : '#a0aec0',
-                      opacity: isLoading ? 0.5 : 1
-                    }}
-                  >
-                    {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-                  </button>
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder={isListening ? "Listening..." : "Ask a question..."}
-                    disabled={isLoading}
-                    style={{
-                      flex: 1,
-                      padding: '8px 12px',
-                      border: '1px solid #2d3748',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      background: '#1a2332',
-                      color: '#f7fafc',
-                      outline: 'none',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-                    }}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!input.trim() || isLoading}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      cursor: (input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
-                      background: '#f7fafc',
-                      color: '#0f1419',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      opacity: (input.trim() && !isLoading) ? 1 : 0.5,
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
-                    }}
-                  >
-                    Send
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes bounce {
-          0%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-6px); }
-        }
-        input::placeholder {
-          color: #718096;
-        }
-        @media (max-width: 768px) {
-          /* Hide sidebar on mobile, could add a toggle button */
-        }
-      `}</style>
-    </div>
-  );
-}
+                        {ALLOWED_FILE_TYPES.join(', ')} files (max 5MB each)
