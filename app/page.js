@@ -145,7 +145,8 @@ export default function App() {
                 fontSize: '14px',
                 fontWeight: '500',
                 background: mode === 'ask' ? '#2d3748' : 'transparent',
-                color: mode === 'ask' ? '#f7fafc' : '#a0aec0'
+                color: mode === 'ask' ? '#f7fafc' : '#a0aec0',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
               }}
             >
               Ask
@@ -160,7 +161,8 @@ export default function App() {
                 fontSize: '14px',
                 fontWeight: '500',
                 background: mode === 'manage' ? '#2d3748' : 'transparent',
-                color: mode === 'manage' ? '#f7fafc' : '#a0aec0'
+                color: mode === 'manage' ? '#f7fafc' : '#a0aec0',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
               }}
             >
               Manage
@@ -193,7 +195,7 @@ export default function App() {
                   fontWeight: '500',
                   marginBottom: '8px',
                   color: '#e2e8f0',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                 }}>
                   Documents
                 </label>
@@ -220,10 +222,19 @@ export default function App() {
                       color: '#718096',
                       margin: '0 auto 8px'
                     }} />
-                    <p style={{ fontSize: '14px', color: '#cbd5e0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                    <p style={{ 
+                      fontSize: '14px', 
+                      color: '#cbd5e0', 
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                    }}>
                       Upload documents
                     </p>
-                    <p style={{ fontSize: '12px', color: '#718096', marginTop: '4px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                    <p style={{ 
+                      fontSize: '12px', 
+                      color: '#718096', 
+                      marginTop: '4px', 
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                    }}>
                       .txt, .pdf, .md files
                     </p>
                   </label>
@@ -237,7 +248,7 @@ export default function App() {
                     fontWeight: '500', 
                     marginBottom: '8px', 
                     color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                   }}>
                     Uploaded ({documents.length})
                   </h3>
@@ -259,12 +270,12 @@ export default function App() {
                               fontSize: '14px', 
                               fontWeight: '500', 
                               color: '#f7fafc',
-                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                             }}>{doc.name}</p>
                             <p style={{ 
                               fontSize: '12px', 
                               color: '#718096',
-                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                             }}>
                               {new Date(doc.uploadedAt).toLocaleString()}
                             </p>
@@ -312,10 +323,19 @@ export default function App() {
                     color: '#718096',
                     marginTop: '80px'
                   }}>
-                    <p style={{ fontSize: '16px', marginBottom: '8px', color: '#a0aec0', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                    <p style={{ 
+                      fontSize: '16px', 
+                      marginBottom: '8px', 
+                      color: '#a0aec0', 
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                    }}>
                       Ask a question
                     </p>
-                    <p style={{ fontSize: '14px', color: '#718096', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                    <p style={{ 
+                      fontSize: '14px', 
+                      color: '#718096', 
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif' 
+                    }}>
                       Press the mic or type
                     </p>
                   </div>
@@ -334,7 +354,10 @@ export default function App() {
                         borderRadius: '8px',
                         background: msg.role === 'user' ? '#f7fafc' : '#0f1419',
                         color: msg.role === 'user' ? '#0f1419' : '#f7fafc',
-                        border: msg.role === 'user' ? 'none' : '1px solid #2d3748'
+                        border: msg.role === 'user' ? 'none' : '1px solid #2d3748',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+                        fontSize: '15px',
+                        lineHeight: '1.5'
                       }}>
                         {msg.content}
                       </div>
@@ -418,7 +441,8 @@ export default function App() {
                     fontSize: '14px',
                     background: '#1a2332',
                     color: '#f7fafc',
-                    outline: 'none'
+                    outline: 'none',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                   }}
                 />
                 <button
@@ -433,7 +457,8 @@ export default function App() {
                     color: '#0f1419',
                     fontSize: '14px',
                     fontWeight: '500',
-                    opacity: (input.trim() && !isLoading) ? 1 : 0.5
+                    opacity: (input.trim() && !isLoading) ? 1 : 0.5,
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif'
                   }}
                 >
                   Send
