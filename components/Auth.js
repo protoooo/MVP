@@ -62,8 +62,8 @@ export default function Auth() {
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '400px',
-        padding: '32px',
+        maxWidth: '380px',
+        padding: '32px 24px',
         background: '#1a2332',
         borderRadius: '8px',
         border: '1px solid #2d3748'
@@ -71,13 +71,25 @@ export default function Auth() {
         <h2 style={{
           fontSize: '24px',
           fontWeight: '600',
-          marginBottom: '24px',
+          marginBottom: '8px',
           color: '#f7fafc',
           textAlign: 'center',
           fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}>
           {mode === 'reset' ? 'Reset Password' : 'Employee Assistant'}
         </h2>
+
+        {mode !== 'reset' && (
+          <p style={{
+            fontSize: '14px',
+            color: '#a0aec0',
+            textAlign: 'center',
+            marginBottom: '24px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          }}>
+            {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
+          </p>
+        )}
 
         {message && (
           <div style={{
@@ -113,7 +125,7 @@ export default function Auth() {
               display: 'block',
               fontSize: '14px',
               fontWeight: '500',
-              marginBottom: '8px',
+              marginBottom: '6px',
               color: '#e2e8f0',
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}>
@@ -124,27 +136,29 @@ export default function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="you@example.com"
               style={{
                 width: '100%',
-                padding: '8px 12px',
+                padding: '10px 12px',
                 border: '1px solid #2d3748',
                 borderRadius: '6px',
                 fontSize: '14px',
                 background: '#0f1419',
                 color: '#f7fafc',
                 outline: 'none',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                boxSizing: 'border-box'
               }}
             />
           </div>
 
           {mode !== 'reset' && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <label style={{
                 display: 'block',
                 fontSize: '14px',
                 fontWeight: '500',
-                marginBottom: '8px',
+                marginBottom: '6px',
                 color: '#e2e8f0',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
               }}>
@@ -156,26 +170,20 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                placeholder={mode === 'signup' ? 'Min. 8 characters' : '••••••••'}
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
+                  padding: '10px 12px',
                   border: '1px solid #2d3748',
                   borderRadius: '6px',
                   fontSize: '14px',
                   background: '#0f1419',
                   color: '#f7fafc',
                   outline: 'none',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                  boxSizing: 'border-box'
                 }}
               />
-              <p style={{
-                fontSize: '12px',
-                color: '#718096',
-                marginTop: '4px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-              }}>
-                {mode === 'signup' && 'Minimum 8 characters'}
-              </p>
             </div>
           )}
 
@@ -184,16 +192,17 @@ export default function Auth() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: '10px 16px',
               borderRadius: '6px',
               border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
               background: '#f7fafc',
               color: '#0f1419',
               fontSize: '14px',
-              fontWeight: '500',
-              opacity: loading ? 0.5 : 1,
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontWeight: '600',
+              opacity: loading ? 0.7 : 1,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              transition: 'opacity 0.2s'
             }}
           >
             {loading ? 'Loading...' : 
@@ -203,7 +212,9 @@ export default function Auth() {
         </form>
 
         <div style={{
-          marginTop: '16px',
+          marginTop: '20px',
+          paddingTop: '20px',
+          borderTop: '1px solid #2d3748',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
@@ -222,8 +233,11 @@ export default function Auth() {
                 color: '#a0aec0',
                 fontSize: '14px',
                 cursor: 'pointer',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                transition: 'color 0.2s'
               }}
+              onMouseOver={(e) => e.target.style.color = '#cbd5e0'}
+              onMouseOut={(e) => e.target.style.color = '#a0aec0'}
             >
               {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
@@ -241,13 +255,22 @@ export default function Auth() {
               color: '#a0aec0',
               fontSize: '14px',
               cursor: 'pointer',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              transition: 'color 0.2s'
             }}
+            onMouseOver={(e) => e.target.style.color = '#cbd5e0'}
+            onMouseOut={(e) => e.target.style.color = '#a0aec0'}
           >
-            {mode === 'reset' ? 'Back to sign in' : 'Forgot password?'}
+            {mode === 'reset' ? '← Back to sign in' : 'Forgot password?'}
           </button>
         </div>
       </div>
+      
+      <style jsx>{`
+        input::placeholder {
+          color: #718096;
+        }
+      `}</style>
     </div>
   );
 }
