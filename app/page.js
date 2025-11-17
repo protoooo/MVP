@@ -5,7 +5,6 @@ import { Mic, MicOff, Upload, X, FileText } from 'lucide-react';
 
 export default function EmployeeAssistant() {
   const [mode, setMode] = useState('employee');
-  const [apiKey, setApiKey] = useState('');
   const [documents, setDocuments] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -70,7 +69,7 @@ export default function EmployeeAssistant() {
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || !apiKey) return;
+    if (!input.trim()) return;
 
     const userMessage = { role: 'user', content: input };
     setMessages([...messages, userMessage]);
@@ -78,38 +77,14 @@ export default function EmployeeAssistant() {
     setIsLoading(true);
 
     try {
-      const context = documents.map(doc => 
-        `Document: ${doc.name}\n${doc.content}`
-      ).join('\n\n---\n\n');
-
-      const systemPrompt = `You are an employee assistant for a retail/food service business. Your ONLY job is to answer questions based on the company documents provided below.
-
-CRITICAL RULES:
-1. ONLY answer based on the documents provided
-2. If the answer is not in the documents, respond with: "I don't have that information in the company docs. Please ask your manager."
-3. Be direct and concise - employees need quick answers
-4. Reference which document your answer comes from
-5. Never make up policies or procedures
-6. If you're unsure, say you don't know
-
-Company Documents:
-${context || 'No documents uploaded yet.'}`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...messages,
-            userMessage
-          ],
-          max_tokens: 500,
-          temperature: 0.3
+          messages: messages,
+          documents: documents
         })
       });
 
@@ -199,34 +174,6 @@ ${context || 'No documents uploaded yet.'}`;
             <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '24px' }}>
               Owner Dashboard
             </h2>
-            
-            {/* API Key */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ 
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginBottom: '8px'
-              }}>
-                OpenAI API Key
-              </label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-..."
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
-              />
-              <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
-                Stored locally, never shared
-              </p>
-            </div>
 
             {/* Document Upload */}
             <div>
@@ -410,15 +357,15 @@ ${context || 'No documents uploaded yet.'}`;
             }}>
               <button
                 onClick={toggleListening}
-                disabled={!apiKey}
+                disabled={isLoading}
                 style={{
                   padding: '10px',
                   borderRadius: '6px',
                   border: 'none',
-                  cursor: apiKey ? 'pointer' : 'not-allowed',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
                   background: isListening ? '#ef4444' : '#f3f4f6',
                   color: isListening ? 'white' : '#374151',
-                  opacity: apiKey ? 1 : 0.5
+                  opacity: isLoading ? 0.5 : 1
                 }}
               >
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
@@ -429,7 +376,7 @@ ${context || 'No documents uploaded yet.'}`;
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder={isListening ? "Listening..." : "Ask a question..."}
-                disabled={!apiKey || isLoading}
+                disabled={isLoading}
                 style={{
                   flex: 1,
                   padding: '8px 12px',
@@ -440,17 +387,17 @@ ${context || 'No documents uploaded yet.'}`;
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!apiKey || !input.trim() || isLoading}
+                disabled={!input.trim() || isLoading}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
                   border: 'none',
-                  cursor: (apiKey && input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
+                  cursor: (input.trim() && !isLoading) ? 'pointer' : 'not-allowed',
                   background: '#2563eb',
                   color: 'white',
                   fontSize: '14px',
                   fontWeight: '500',
-                  opacity: (apiKey && input.trim() && !isLoading) ? 1 : 0.5
+                  opacity: (input.trim() && !isLoading) ? 1 : 0.5
                 }}
               >
                 Send
