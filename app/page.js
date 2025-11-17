@@ -112,17 +112,22 @@ export default function App() {
 
   return (
     <div style={{ 
-      minHeight: '100vh', 
+      height: '100vh',
+      width: '100vw',
       background: '#0f1419', 
       margin: 0, 
-      padding: 0
+      padding: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
     }}>
       {/* Header */}
       <div style={{ 
         background: '#1a2332', 
         borderBottom: '1px solid #2d3748',
         padding: '12px 16px',
-        margin: 0
+        margin: 0,
+        flexShrink: 0
       }}>
         <div style={{ 
           maxWidth: '1200px', 
@@ -171,11 +176,13 @@ export default function App() {
       </div>
 
       <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
+        flex: 1,
+        overflow: 'auto',
         padding: '16px',
-        height: 'calc(100vh - 49px)',
-        overflowY: 'auto'
+        maxWidth: '1200px',
+        width: '100%',
+        margin: '0 auto',
+        boxSizing: 'border-box'
       }}>
         {mode === 'manage' ? (
           <div style={{ 
@@ -278,7 +285,7 @@ export default function App() {
             background: '#1a2332',
             borderRadius: '8px',
             border: '1px solid #2d3748',
-            height: 'calc(100vh - 140px)',
+            height: '100%',
             display: 'flex',
             flexDirection: 'column'
           }}>
