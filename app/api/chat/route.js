@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { generateEmbedding, generateQueryHash } from '../../../lib/embeddings';
 
-export const maxDuration = 60; // Set max duration to 60 seconds for Vercel/Railway
+export const maxDuration = 60;
 
 export async function POST(request) {
   try {
@@ -45,69 +44,24 @@ export async function POST(request) {
 
     const userQuery = lastMessage.content;
 
-    // Check cache first
-    const queryHash = generateQueryHash(userQuery, profile.business_id);
-    const { data: cachedResponse } = await supabase
-      .from('query_cache')
-      .select('*')
+    // Get all documents for context (simple approach without embeddings)
+    const { data: documents } = await supabase
+      .from('documents')
+      .select('name, content')
       .eq('business_id', profile.business_id)
-      .eq('query_hash', queryHash)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(5); // Limit to 5 most recent documents
 
-    if (cachedResponse) {
-      // Update cache access stats
-      await supabase
-        .from('query_cache')
-        .update({
-          accessed_at: new Date().toISOString(),
-          access_count: cachedResponse.access_count + 1,
-        })
-        .eq('id', cachedResponse.id);
-
-      return NextResponse.json({
-        choices: [{
-          message: {
-            role: 'assistant',
-            content: cachedResponse.response,
-          },
-        }],
-        cached: true,
-      });
-    }
-
-    // Generate embedding for the query
-    const queryEmbedding = await generateEmbedding(userQuery);
-
-    // Search for relevant chunks using vector similarity
-    const { data: relevantChunks, error: searchError } = await supabase
-      .rpc('match_document_chunks', {
-        query_embedding: queryEmbedding,
-        filter_business_id: profile.business_id,
-        match_threshold: 0.5, // Adjust this threshold as needed
-        match_count: 5, // Get top 5 most relevant chunks
-      });
-
-    if (searchError) {
-      console.error('Vector search error:', searchError);
-    }
-
-    // Build context from relevant chunks
+    // Build context from documents
     let context = '';
-    const chunksUsed = [];
-    
-    if (relevantChunks && relevantChunks.length > 0) {
-      context = 'Relevant information from your documents:\n\n';
-      relevantChunks.forEach((chunk, idx) => {
-        context += `[${idx + 1}] ${chunk.content}\n\n`;
-        chunksUsed.push({
-          id: chunk.id,
-          similarity: chunk.similarity,
-          preview: chunk.content.substring(0, 100),
-        });
+    if (documents && documents.length > 0) {
+      context = 'Here are relevant documents from your knowledge base:\n\n';
+      documents.forEach((doc, idx) => {
+        // Truncate each document to avoid token limits
+        const truncatedContent = doc.content.substring(0, 2000);
+        context += `[Document ${idx + 1}: ${doc.name}]\n${truncatedContent}\n\n`;
       });
-      context += '\nBased on the above information, please answer the following question:\n\n';
-    } else {
-      context = 'No specific documents found. Please answer based on general knowledge:\n\n';
+      context += 'Based on the above documents, please answer the following question:\n\n';
     }
 
     // Prepare messages for Claude with context
@@ -141,22 +95,6 @@ export async function POST(request) {
     const data = await response.json();
     const assistantResponse = data.content[0].text;
 
-    // Cache the response
-    try {
-      await supabase
-        .from('query_cache')
-        .insert({
-          business_id: profile.business_id,
-          query_hash: queryHash,
-          query_text: userQuery,
-          response: assistantResponse,
-          chunks_used: chunksUsed,
-        });
-    } catch (cacheError) {
-      console.error('Cache insert error:', cacheError);
-      // Don't fail the request if caching fails
-    }
-
     return NextResponse.json({
       choices: [{
         message: {
@@ -164,8 +102,7 @@ export async function POST(request) {
           content: assistantResponse,
         },
       }],
-      cached: false,
-      chunksUsed: chunksUsed.length,
+      documentsUsed: documents?.length || 0,
     });
 
   } catch (error) {
