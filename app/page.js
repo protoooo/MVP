@@ -697,6 +697,238 @@ export default function App() {
                     <p style={{
                       fontSize: '13px',
                       color: '#f7fafc',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1
+                    }}>
+                      {conv.title}
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conv.id);
+                      }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#718096',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            {mode === 'settings' ? (
+              <div style={{ 
+                background: '#1a2332',
+                borderRadius: '8px',
+                border: '1px solid #2d3748',
+                padding: '24px',
+                flex: 1,
+                overflow: 'auto'
+              }}>
+                <h2 style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  marginBottom: '24px',
+                  color: '#f7fafc',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                }}>
+                  Settings
+                </h2>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                    color: '#e2e8f0',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
+                    Business Name
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {editingBusinessName ? (
+                      <>
+                        <input
+                          type="text"
+                          value={businessName}
+                          onChange={(e) => setBusinessName(e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            border: '1px solid #2d3748',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            background: '#0f1419',
+                            color: '#f7fafc',
+                            outline: 'none',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}
+                        />
+                        <button
+                          onClick={updateBusinessName}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: '#f7fafc',
+                            color: '#0f1419',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}
+                        >
+                          <Check size={16} />
+                          Save
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{
+                          flex: 1,
+                          padding: '8px 12px',
+                          fontSize: '14px',
+                          color: '#f7fafc',
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        }}>
+                          {businessName}
+                        </p>
+                        <button
+                          onClick={() => setEditingBusinessName(true)}
+                          style={{
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: '#2d3748',
+                            color: '#f7fafc',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                          }}
+                        >
+                          <Edit2 size={16} />
+                          Edit
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                    color: '#e2e8f0',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
+                    Account Email
+                  </label>
+                  <p style={{
+                    padding: '8px 12px',
+                    fontSize: '14px',
+                    color: '#a0aec0',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            ) : mode === 'manage' ? (
+              <div style={{ 
+                background: '#1a2332',
+                borderRadius: '8px',
+                border: '1px solid #2d3748',
+                padding: '24px',
+                flex: 1,
+                overflow: 'auto'
+              }}>
+                <div>
+                  <label style={{ 
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                    color: '#e2e8f0',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                  }}>
+                    Documents
+                  </label>
+                  <div style={{
+                    border: '1px solid #4a5568',
+                    borderRadius: '8px',
+                    padding: '32px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: '#0f1419'
+                  }}>
+                    <input
+                      type="file"
+                      multiple
+                      accept={ALLOWED_FILE_TYPES.join(',')}
+                      onChange={handleFileUpload}
+                      style={{ display: 'none' }}
+                      id="file-upload"
+                      disabled={!!uploadProgress}
+                    />
+                    <label htmlFor="file-upload" style={{ cursor: uploadProgress ? 'not-allowed' : 'pointer' }}>
+                      <Upload style={{ 
+                        width: '48px', 
+                        height: '48px', 
+                        color: '#718096',
+                        margin: '0 auto 8px'
+                      }} />
+                      <p style={{ 
+                        fontSize: '14px', 
+                        color: '#cbd5e0', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        {uploadProgress 
+                          ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
+                          : 'Upload documents'
+                        }
+                      </p>
+                      <p style={{ 
+                        fontSize: '12px', 
+                        color: '#718096', 
+                        marginTop: '4px', 
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+                      }}>
+                        {ALLOWED_FILE_TYPES.join(', ')} files (max 5MB each)
+                      </p>
+                    </label>
+                  </div>
+                </div>
+
+                {documents.length > 0 && (
+                  <div style={{ marginTop: '24px' }}>
+                    <h3 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '500', 
+                      marginBottom: '8px', 
+                      color: '#e2e8f0',
                       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
                     }}>
                       Uploaded ({documents.length})
@@ -936,236 +1168,4 @@ export default function App() {
       `}</style>
     </div>
   );
-}inkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1
-                    }}>
-                      {conv.title}
-                    </p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteConversation(conv.id);
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#718096',
-                        padding: '4px',
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            {mode === 'settings' ? (
-              <div style={{ 
-                background: '#1a2332',
-                borderRadius: '8px',
-                border: '1px solid #2d3748',
-                padding: '24px',
-                flex: 1,
-                overflow: 'auto'
-              }}>
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  marginBottom: '24px',
-                  color: '#f7fafc',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                }}>
-                  Settings
-                </h2>
-
-                <div style={{ marginBottom: '24px' }}>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginBottom: '8px',
-                    color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                  }}>
-                    Business Name
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {editingBusinessName ? (
-                      <>
-                        <input
-                          type="text"
-                          value={businessName}
-                          onChange={(e) => setBusinessName(e.target.value)}
-                          style={{
-                            flex: 1,
-                            padding: '8px 12px',
-                            border: '1px solid #2d3748',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            background: '#0f1419',
-                            color: '#f7fafc',
-                            outline: 'none',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                          }}
-                        />
-                        <button
-                          onClick={updateBusinessName}
-                          style={{
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: '#f7fafc',
-                            color: '#0f1419',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                          }}
-                        >
-                          <Check size={16} />
-                          Save
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <p style={{
-                          flex: 1,
-                          padding: '8px 12px',
-                          fontSize: '14px',
-                          color: '#f7fafc',
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                        }}>
-                          {businessName}
-                        </p>
-                        <button
-                          onClick={() => setEditingBusinessName(true)}
-                          style={{
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: '#2d3748',
-                            color: '#f7fafc',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                          }}
-                        >
-                          <Edit2 size={16} />
-                          Edit
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginBottom: '8px',
-                    color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                  }}>
-                    Account Email
-                  </label>
-                  <p style={{
-                    padding: '8px 12px',
-                    fontSize: '14px',
-                    color: '#a0aec0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                  }}>
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-            ) : mode === 'manage' ? (
-              <div style={{ 
-                background: '#1a2332',
-                borderRadius: '8px',
-                border: '1px solid #2d3748',
-                padding: '24px',
-                flex: 1,
-                overflow: 'auto'
-              }}>
-                <div>
-                  <label style={{ 
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginBottom: '8px',
-                    color: '#e2e8f0',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                  }}>
-                    Documents
-                  </label>
-                  <div style={{
-                    border: '1px solid #4a5568',
-                    borderRadius: '8px',
-                    padding: '32px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: '#0f1419'
-                  }}>
-                    <input
-                      type="file"
-                      multiple
-                      accept={ALLOWED_FILE_TYPES.join(',')}
-                      onChange={handleFileUpload}
-                      style={{ display: 'none' }}
-                      id="file-upload"
-                      disabled={!!uploadProgress}
-                    />
-                    <label htmlFor="file-upload" style={{ cursor: uploadProgress ? 'not-allowed' : 'pointer' }}>
-                      <Upload style={{ 
-                        width: '48px', 
-                        height: '48px', 
-                        color: '#718096',
-                        margin: '0 auto 8px'
-                      }} />
-                      <p style={{ 
-                        fontSize: '14px', 
-                        color: '#cbd5e0', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
-                      }}>
-                        {uploadProgress 
-                          ? `Uploading ${uploadProgress.current}/${uploadProgress.total}...`
-                          : 'Upload documents'
-                        }
-                      </p>
-                      <p style={{ 
-                        fontSize: '12px', 
-                        color: '#718096', 
-                        marginTop: '4px', 
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
-                      }}>
-                        {ALLOWED_FILE_TYPES.join(', ')} files (max 5MB each)
-                      </p>
-                    </label>
-                  </div>
-                </div>
-
-                {documents.length > 0 && (
-                  <div style={{ marginTop: '24px' }}>
-                    <h3 style={{ 
-                      fontSize: '14px', 
-                      fontWeight: '500', 
-                      marginBottom: '8px', 
-                      color: '#e2e8f0',
-                      fontFamily: '-apple-system, Bl
+}
