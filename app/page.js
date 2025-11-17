@@ -5,9 +5,9 @@ import { Mic, MicOff, Upload, X, FileText, LogOut, Edit2, Check, MessageSquare }
 import { supabase } from '../lib/supabase';
 import Auth from '../components/Auth';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB - increased from 5MB
 const MAX_FILES_PER_UPLOAD = 10;
-const ALLOWED_FILE_TYPES = ['.txt', '.pdf', '.md'];
+const ALLOWED_FILE_TYPES = ['.txt', '.md']; // Removed PDF for now - requires special library
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -60,23 +60,54 @@ export default function App() {
 
   const loadProfile = async (userId) => {
     try {
-      const { data, error } = await supabase
+      // First check if profile exists
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*, businesses(name)')
+        .select('*')
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        // Profile might not exist yet, this is okay
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found yet, this is normal for new users');
+          setLoading(false);
+          return;
+        }
+        throw profileError;
+      }
       
-      if (data) {
-        setProfile(data);
-        setBusinessName(data.businesses?.name || '');
-        await loadDocuments(data.business_id);
-        await loadConversations(data.business_id);
+      if (profileData) {
+        // Load business name separately if we have a business_id
+        if (profileData.business_id) {
+          const { data: businessData } = await supabase
+            .from('businesses')
+            .select('name')
+            .eq('id', profileData.business_id)
+            .single();
+          
+          if (businessData) {
+            profileData.businesses = businessData;
+            setBusinessName(businessData.name || '');
+          }
+        }
+        
+        setProfile(profileData);
+        
+        if (profileData.business_id) {
+          await loadDocuments(profileData.business_id);
+          await loadConversations(profileData.business_id);
+        }
       }
     } catch (err) {
       console.error('Error loading profile:', err);
-      setError('Failed to load profile data');
+      // Don't set error state for missing profiles
+      if (err.code !== 'PGRST116') {
+        console.error('Unexpected error:', err);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -223,7 +254,7 @@ export default function App() {
       const file = files[i];
       
       if (file.size > MAX_FILE_SIZE) {
-        alert(`${file.name} is too large (max 5MB)`);
+        alert(`${file.name} is too large (max 50MB)`);
         continue;
       }
 
@@ -234,26 +265,20 @@ export default function App() {
       }
       
       try {
-        let content = '';
-        
-        if (file.type === 'application/pdf') {
-          const arrayBuffer = await file.arrayBuffer();
-          const text = new TextDecoder().decode(arrayBuffer);
-          content = text;
-        } else {
-          content = await file.text();
-        }
+        // Read file as text
+        const content = await file.text();
 
-        if (content.length > 100000) {
-          content = content.substring(0, 100000) + '\n\n[Content truncated...]';
-        }
+        // Truncate if too large (keep first 100k chars)
+        const truncatedContent = content.length > 100000 
+          ? content.substring(0, 100000) + '\n\n[Content truncated...]'
+          : content;
         
         const { data, error } = await supabase
           .from('documents')
           .insert({
             business_id: profile.business_id,
             name: file.name,
-            content: content,
+            content: truncatedContent,
             uploaded_by: user.id
           })
           .select()
@@ -560,7 +585,7 @@ export default function App() {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             fontWeight: '500'
           }}>
-            {profile?.businesses?.name || 'Loading...'}
+            {profile?.businesses?.name || 'My Business'}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button
@@ -916,7 +941,7 @@ export default function App() {
                         marginTop: '4px', 
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
                       }}>
-                        {ALLOWED_FILE_TYPES.join(', ')} files (max 5MB each)
+                        {ALLOWED_FILE_TYPES.join(', ')} files (max 50MB each)
                       </p>
                     </label>
                   </div>
