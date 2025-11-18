@@ -1,64 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { checkUsageLimits, incrementApiCall, logApiUsage } from '../../../lib/usageLimits';
 
 export const maxDuration = 60;
 
-// Create Supabase client (simpler approach)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-if (!process.env.GEMINI_API_KEY) {
-  console.error('CRITICAL: Missing GEMINI_API_KEY environment variable');
-}
-
 export async function POST(request) {
   const startTime = Date.now();
-  let userId, businessId;
 
   try {
     if (!process.env.GEMINI_API_KEY) {
+      console.error('❌ Missing GEMINI_API_KEY');
       return NextResponse.json(
         { error: 'Server configuration error: Missing API key' },
         { status: 500 }
       );
     }
 
-    // Get auth token from request header
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
+      console.error('❌ No authorization header');
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
     }
 
     const token = authHeader.replace('Bearer ', '');
+    console.log('🎟️ Token preview:', token.substring(0, 20) + '...');
     
-    // Verify the token
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      console.error('❌ Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    userId = user.id;
+    console.log('✅ User authenticated:', user.id);
 
-    // Check usage limits
-    const limits = await checkUsageLimits(userId);
-    
-    if (!limits.can_use_api) {
-      return NextResponse.json({
-        error: 'API call limit reached',
-        details: {
-          used: limits.api_calls_used,
-          limit: limits.api_calls_limit,
-          message: `You've reached your monthly limit of ${limits.api_calls_limit} API calls. Upgrade to Pro for 1,000 calls/month or Enterprise for unlimited.`
-        }
-      }, { status: 429 });
-    }
-
-    // Get profile with business_id
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('business_id')
@@ -66,11 +45,11 @@ export async function POST(request) {
       .single();
 
     if (profileError || !profile || !profile.business_id) {
-      console.error('Profile error:', profileError);
+      console.error('❌ Profile error:', profileError);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    businessId = profile.business_id;
+    console.log('✅ Profile found, business_id:', profile.business_id);
 
     const body = await request.json();
     const { messages } = body;
@@ -95,7 +74,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Message too long (max 10000 characters)' }, { status: 400 });
     }
 
-    // Get documents
+    console.log('📄 Fetching documents...');
     const { data: documents, error: docsError } = await supabase
       .from('documents')
       .select('name, content')
@@ -104,7 +83,9 @@ export async function POST(request) {
       .limit(5);
 
     if (docsError) {
-      console.error('Error fetching documents:', docsError);
+      console.error('⚠️ Error fetching documents:', docsError);
+    } else {
+      console.log('✅ Documents fetched:', documents?.length || 0);
     }
 
     let context = '';
@@ -117,7 +98,6 @@ export async function POST(request) {
       context += 'Based on the above documents, please answer the following question:\n\n';
     }
 
-    // Convert messages to Gemini format
     const geminiContents = [];
     
     for (const msg of messages) {
@@ -128,13 +108,14 @@ export async function POST(request) {
       });
     }
 
-    // Add context to the last user message
     if (context && geminiContents.length > 0) {
       const lastIndex = geminiContents.length - 1;
       if (geminiContents[lastIndex].role === 'user') {
         geminiContents[lastIndex].parts[0].text = context + geminiContents[lastIndex].parts[0].text;
       }
     }
+
+    console.log('🤖 Calling Gemini API...');
 
     let response;
     let retries = 3;
@@ -164,6 +145,7 @@ export async function POST(request) {
         }
 
         const errorData = await response.json();
+        console.error('❌ Gemini error:', errorData);
         lastError = new Error(errorData.error?.message || `API error: ${response.status}`);
         
         if (response.status >= 400 && response.status < 500) {
@@ -189,20 +171,13 @@ export async function POST(request) {
     }
 
     const data = await response.json();
+    console.log('✅ Gemini response received');
     
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
       throw new Error('Invalid response format from Gemini API');
     }
 
     const assistantResponse = data.candidates[0].content.parts[0].text;
-
-    // Increment API call counter
-    await incrementApiCall(userId);
-
-    // Log usage
-    const responseTime = Date.now() - startTime;
-    const tokensUsed = (data.usageMetadata?.promptTokenCount || 0) + (data.usageMetadata?.candidatesTokenCount || 0);
-    await logApiUsage(userId, businessId, '/api/chat', tokensUsed, responseTime, 200);
 
     return NextResponse.json({
       choices: [{
@@ -211,21 +186,11 @@ export async function POST(request) {
           content: assistantResponse,
         },
       }],
-      documentsUsed: documents?.length || 0,
-      usage: {
-        remaining: limits.api_calls_limit - (limits.api_calls_used + 1),
-        limit: limits.api_calls_limit
-      }
+      documentsUsed: documents?.length || 0
     });
 
   } catch (error) {
-    console.error('Chat error:', error);
-    
-    // Log failed request
-    if (userId && businessId) {
-      const responseTime = Date.now() - startTime;
-      await logApiUsage(userId, businessId, '/api/chat', 0, responseTime, 500);
-    }
+    console.error('❌ Chat error:', error);
     
     let errorMessage = 'Failed to process request';
     let statusCode = 500;
