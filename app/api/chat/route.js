@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 import pdf from "pdf-parse";
 
-// Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export const maxDuration = 60;
@@ -18,11 +17,10 @@ export async function POST(req) {
 
     const { message } = await req.json();
 
-    // 1. THE MODEL
-    // Since your package.json is v0.17.1, this is the correct model name.
+    // We use the standard tag. Deleting package-lock.json enables this to work.
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // 2. LOAD THE FILES
+    // --- LOAD FILES ---
     const documentsDir = path.join(process.cwd(), "public", "documents");
     let contextData = "";
 
@@ -44,23 +42,18 @@ export async function POST(req) {
        }
     } catch (e) { console.warn("Context read error", e); }
 
-    // 3. THE PROMPT (THE BRAIN)
-    // *********************************************************
-    // EDIT THIS SECTION TO CHANGE THE BOT'S PERSONALITY
-    // *********************************************************
-    const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant.
+    // --- PROMPT ---
+    const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
     
     INSTRUCTIONS:
-    1. Answer the user's question based on the provided Context Documents.
-    2. Be friendly, professional, and concise.
-    3. IMPORTANT: If the answer is found in the documents, cite the source (e.g. "According to the Food Code...").
-    4. If the answer is NOT in the documents, say: "I couldn't find that in your official documents," and then provide a general answer.
+    1. Answer based ONLY on the Context Documents below.
+    2. Cite the document name when you find an answer.
+    3. If the answer is missing from the documents, say "I couldn't find that in your official files," then use general knowledge.
 
     CONTEXT DOCUMENTS:
     ${contextData.slice(0, 60000) || "No documents found."}`; 
-    // *********************************************************
 
-    // 4. GENERATE
+    // --- GENERATE ---
     const result = await model.generateContent(`${systemInstruction}\n\nUSER QUESTION: ${message}`);
     const response = await result.response;
     
