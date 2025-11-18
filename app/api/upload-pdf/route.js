@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
-import { checkUsageLimits } from '../../../lib/usageLimits';
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const MAX_CONTENT_LENGTH = 200000; // 200k characters
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_CONTENT_LENGTH = 200000;
 
-// Create Supabase client (same as chat route)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -14,23 +12,24 @@ const supabase = createClient(
 
 export async function POST(request) {
   try {
-    // Get auth token from request header
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {
+      console.error('❌ No authorization header');
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
     }
 
     const token = authHeader.replace('Bearer ', '');
+    console.log('🎟️ Token preview:', token.substring(0, 20) + '...');
     
-    // Verify the token
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      console.error('Auth error:', authError);
+      console.error('❌ Auth error:', authError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get profile with business_id
+    console.log('✅ User authenticated:', user.id);
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('business_id')
@@ -38,23 +37,11 @@ export async function POST(request) {
       .single();
 
     if (profileError || !profile || !profile.business_id) {
-      console.error('Profile error:', profileError);
+      console.error('❌ Profile error:', profileError);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check usage limits
-    const limits = await checkUsageLimits(user.id);
-    
-    if (!limits.can_add_document) {
-      return NextResponse.json({
-        error: 'Document limit reached',
-        details: {
-          used: limits.documents_used,
-          limit: limits.documents_limit,
-          message: `You've reached your limit of ${limits.documents_limit} documents. Upgrade to Pro or Enterprise for unlimited documents.`
-        }
-      }, { status: 429 });
-    }
+    console.log('✅ Profile found, business_id:', profile.business_id);
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -67,6 +54,8 @@ export async function POST(request) {
       );
     }
 
+    console.log('📄 File received:', fileName || file.name, 'Size:', file.size);
+
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
@@ -77,11 +66,12 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    console.log('📖 Parsing PDF...');
     let pdfData;
     try {
       pdfData = await pdf(buffer);
     } catch (pdfError) {
-      console.error('PDF parse error:', pdfError);
+      console.error('❌ PDF parse error:', pdfError);
       return NextResponse.json(
         { error: 'Failed to parse PDF. File may be corrupted or password-protected.' },
         { status: 400 }
@@ -97,6 +87,8 @@ export async function POST(request) {
       );
     }
 
+    console.log('✅ PDF parsed, content length:', content.length);
+
     if (content.length > MAX_CONTENT_LENGTH) {
       content = content.substring(0, MAX_CONTENT_LENGTH) + '\n\n[Content truncated due to length...]';
     }
@@ -104,6 +96,8 @@ export async function POST(request) {
     const sanitizedFileName = (fileName || file.name)
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .substring(0, 255);
+
+    console.log('💾 Saving to database...');
 
     const { data, error } = await supabase
       .from('documents')
@@ -117,26 +111,24 @@ export async function POST(request) {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
+      console.error('❌ Database error:', error);
       return NextResponse.json(
         { error: 'Failed to save document' },
         { status: 500 }
       );
     }
 
+    console.log('✅ Document saved:', data.id);
+
     return NextResponse.json({ 
       document: data,
       message: 'PDF uploaded successfully',
       charactersExtracted: content.length,
-      wasTruncated: pdfData.text.length > MAX_CONTENT_LENGTH,
-      usage: {
-        remaining: limits.documents_limit - (limits.documents_used + 1),
-        limit: limits.documents_limit
-      }
+      wasTruncated: pdfData.text.length > MAX_CONTENT_LENGTH
     });
 
   } catch (error) {
-    console.error('PDF upload error:', error);
+    console.error('❌ PDF upload error:', error);
     
     let errorMessage = 'Failed to process PDF';
     if (error.message.includes('timeout')) {
