@@ -1,25 +1,19 @@
 {
-  "name": "employee-assistant",
-  "version": "0.1.0",
+  "name": "washtenaw-compliance-chatbot",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "validate": "node scripts/validate-env.js",
-    "validate:test": "node scripts/validate-env.js --test-connections",
-    "prebuild": "node scripts/validate-env.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "react": "^18",
     "react-dom": "^18",
     "next": "14.2.5",
     "lucide-react": "^0.263.1",
-    "@supabase/supabase-js": "^2.39.0",
-    "@supabase/ssr": "^0.5.2",
-    "pdf-parse": "^1.1.1",
-    "stripe": "^14.10.0"
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
