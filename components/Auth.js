@@ -37,12 +37,35 @@ export default function Auth() {
         if (error) throw error;
       } else {
         // Signup
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        setMessage('Check your email to confirm your account!');
+        
+        // Manually create profile and business if signup succeeds
+        if (data.user) {
+          try {
+            const { data: business } = await supabase
+              .from('businesses')
+              .insert({ name: 'My Business' })
+              .select()
+              .single();
+            
+            if (business) {
+              await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  business_id: business.id
+                });
+            }
+          } catch (profileError) {
+            console.error('Profile creation error:', profileError);
+          }
+        }
+        
+        setMessage('Account created! You can now sign in.');
       }
     } catch (error) {
       setError(error.message);
