@@ -30,12 +30,9 @@ export default function Chat() {
       });
 
       const data = await res.json();
-      
-      // Handle API Errors
       if (data.error) throw new Error(data.error);
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Error: " + error.message }]);
     } finally {
@@ -43,53 +40,79 @@ export default function Chat() {
     }
   };
 
-  // --- INLINE STYLES (Works without Tailwind) ---
-  const styles = {
-    container: { height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#111827', color: 'white', fontFamily: 'sans-serif' },
-    header: { padding: '20px', borderBottom: '1px solid #374151', backgroundColor: '#1f2937', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px', fontWeight: 'bold' },
-    chatBox: { flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' },
-    inputArea: { padding: '20px', borderTop: '1px solid #374151', backgroundColor: '#1f2937', display: 'flex', gap: '10px' },
-    input: { flex: 1, padding: '15px', borderRadius: '8px', border: '1px solid #4b5563', backgroundColor: '#374151', color: 'white', fontSize: '16px', outline: 'none' },
-    button: { padding: '15px 25px', borderRadius: '8px', border: 'none', backgroundColor: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 'bold' },
-    bubbleUser: { alignSelf: 'flex-end', backgroundColor: '#10b981', color: 'white', padding: '12px 18px', borderRadius: '12px 12px 0 12px', maxWidth: '80%', lineHeight: '1.5' },
-    bubbleBot: { alignSelf: 'flex-start', backgroundColor: '#374151', color: '#e5e7eb', padding: '12px 18px', borderRadius: '12px 12px 12px 0', maxWidth: '80%', lineHeight: '1.5', border: '1px solid #4b5563' }
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <MessageSquare color="#10b981" /> 
+    <div style={{ 
+      backgroundColor: '#111827', 
+      color: 'white', 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      fontFamily: 'sans-serif'
+    }}>
+      {/* HEADER */}
+      <div style={{ padding: '20px', borderBottom: '1px solid #374151', backgroundColor: '#1f2937', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <MessageSquare color="#10b981" />
         Compliance Assistant
       </div>
 
-      <div style={styles.chatBox}>
+      {/* CHAT AREA */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', color: '#9ca3af', marginTop: '50px' }}>
-            <p>Welcome. I am ready to answer questions about the Food Code.</p>
+            Ask a question about food safety.
           </div>
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} style={msg.role === 'user' ? styles.bubbleUser : styles.bubbleBot}>
+          <div key={i} style={{
+            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            backgroundColor: msg.role === 'user' ? '#10b981' : '#374151',
+            color: 'white',
+            padding: '12px',
+            borderRadius: '10px',
+            maxWidth: '85%',
+            lineHeight: '1.5'
+          }}>
             {msg.content}
           </div>
         ))}
         
-        {loading && <div style={{ color: '#9ca3af', marginLeft: '10px' }}>Thinking...</div>}
+        {loading && <div style={{ color: '#9ca3af' }}>Thinking...</div>}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={styles.inputArea}>
+      {/* INPUT AREA */}
+      <div style={{ padding: '20px', borderTop: '1px solid #374151', backgroundColor: '#1f2937', display: 'flex', gap: '10px' }}>
         <input
-          style={styles.input}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Ask about food safety..."
+          placeholder="Type here..."
           disabled={loading}
+          style={{
+            flex: 1,
+            padding: '15px',
+            borderRadius: '8px',
+            border: '1px solid #4b5563',
+            backgroundColor: '#374151',
+            color: 'white',
+            fontSize: '16px',
+            outline: 'none' // Removes the blue glow causing issues
+          }}
         />
-        <button style={styles.button} onClick={handleSendMessage} disabled={loading}>
-          <Send size={20} />
+        <button 
+          onClick={handleSendMessage} 
+          disabled={loading}
+          style={{
+            padding: '15px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: '#10b981',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          <Send />
         </button>
       </div>
     </div>
