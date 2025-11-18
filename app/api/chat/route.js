@@ -7,36 +7,28 @@ import pdf from "pdf-parse";
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// Allow the function to run for up to 60 seconds (prevents timeouts)
 export const maxDuration = 60;
-
-// Prevent caching so the bot always sees the latest files
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
-    // 1. Check for API Key
+    // 1. Check API Key
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not set in environment variables." },
+        { error: "GEMINI_API_KEY is not set." },
         { status: 500 }
       );
     }
 
-    // 2. Get the user's message
     const { message } = await req.json();
 
-    // 3. Define the model
-    // FIXED: Changed to "gemini-1.5-flash" to fix the 404 error
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // FIXED: Use the "latest" tag which is more stable on the v1beta API
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
-    // 4. Define the path to your GitHub uploaded files
-    // This looks inside the "public/documents" folder you created
+    // 2. Load Context from GitHub/Public folder
     const documentsDir = path.join(process.cwd(), "public", "documents");
-    
     let contextData = "";
 
-    // 5. Read and Parse Files (PDFs and Text)
     try {
        if (fs.existsSync(documentsDir)) {
          const files = fs.readdirSync(documentsDir);
@@ -44,67 +36,43 @@ export async function POST(req) {
          for (const file of files) {
             const filePath = path.join(documentsDir, file);
             const fileName = file.toLowerCase();
-
-            // Skip the placeholder file
             if (fileName === 'keep.txt') continue;
 
             try {
-                // Handle .txt files
                 if (fileName.endsWith('.txt')) {
-                    const content = fs.readFileSync(filePath, 'utf-8');
-                    contextData += `\n--- SOURCE: ${file} ---\n${content}\n`;
-                    console.log(`Loaded text file: ${file}`);
-                }
-                // Handle .pdf files
-                else if (fileName.endsWith('.pdf')) {
+                    contextData += `\n--- SOURCE: ${file} ---\n${fs.readFileSync(filePath, 'utf-8')}\n`;
+                } else if (fileName.endsWith('.pdf')) {
                     const dataBuffer = fs.readFileSync(filePath);
-                    // Convert PDF binary to text
                     const pdfData = await pdf(dataBuffer);
                     contextData += `\n--- SOURCE: ${file} ---\n${pdfData.text}\n`;
-                    console.log(`Loaded PDF file: ${file}`);
                 }
             } catch (err) {
-                console.error(`Error parsing file ${file}:`, err);
+                console.error(`Error reading ${file}:`, err);
             }
          }
-       } else {
-         console.warn("Documents directory not found at:", documentsDir);
        }
-    } catch (dirError) {
-       console.warn("Could not access documents directory:", dirError);
+    } catch (e) {
+       console.warn("Context load error:", e);
     }
 
-    // 6. Construct the System Prompt
-    // We verify if context was actually loaded
-    const hasContext = contextData.length > 0;
+    // 3. Construct Prompt
+    const systemInstruction = `You are the Washtenaw County Compliance Assistant.
     
-    const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant. 
+    Use the context below to answer. If the answer isn't in the documents, use general food safety knowledge but explicitly state: "I couldn't find this in your specific documents, but generally..."
     
-    Your goal is to help restaurant owners understand local regulations based on the provided context.
-    
-    INSTRUCTIONS:
-    1. Use the CONTEXT provided below to answer questions.
-    2. If you find the answer in the context, cite the document name (e.g. "According to the Michigan Food Law...").
-    3. If the answer is NOT in the context, you may use your general knowledge, but you must start your sentence with: "I couldn't find specific details in your uploaded documents, but generally..."
-    
-    CONTEXT DOCUMENTS:
-    ${hasContext ? contextData.slice(0, 60000) : "No documents loaded."}
-    `; 
+    CONTEXT:
+    ${contextData.slice(0, 60000)}`; 
 
-    const finalPrompt = `${systemInstruction}\n\nUSER QUESTION: ${message}`;
-
-    // 7. Generate Response
-    const result = await model.generateContent(finalPrompt);
+    // 4. Generate
+    const result = await model.generateContent(`${systemInstruction}\n\nUSER QUESTION: ${message}`);
     const response = await result.response;
-    const text = response.text();
-
-    return NextResponse.json({ response: text });
+    
+    return NextResponse.json({ response: response.text() });
 
   } catch (error) {
-    console.error("Chat error:", error);
-    // Return the actual error message so we can debug if it happens again
+    console.error("Gemini Error:", error);
     return NextResponse.json(
-      { error: "Failed to process request: " + error.message },
+      { error: "AI Error: " + error.message },
       { status: 500 }
     );
   }
