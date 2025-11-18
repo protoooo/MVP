@@ -8,7 +8,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // New State for Mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
   // --- INITIAL LOAD ---
@@ -53,10 +53,9 @@ export default function App() {
     });
   };
 
-  // --- NAVIGATION HANDLER ---
   const handleNavClick = (tab) => {
     setActiveTab(tab);
-    setIsMobileMenuOpen(false); // Close menu on selection (for mobile)
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -69,14 +68,14 @@ export default function App() {
         />
       )}
 
-      {/* --- SIDEBAR (Responsive) --- */}
+      {/* --- SIDEBAR --- */}
       <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+        {/* Sidebar Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #2a436b', paddingBottom: '15px' }}>
           <div style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Shield size={24} />
             <span>Compliance</span>
           </div>
-          {/* Close Button for Mobile */}
           <button 
             className="mobile-only"
             onClick={() => setIsMobileMenuOpen(false)}
@@ -86,6 +85,7 @@ export default function App() {
           </button>
         </div>
         
+        {/* Navigation Items */}
         <div className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => handleNavClick('chat')}>
           <MessageSquare size={18} /> Chat Assistant
         </div>
@@ -94,7 +94,7 @@ export default function App() {
           <FileText size={18} /> Document Library
         </div>
         
-        {/* Mini File List */}
+        {/* Loaded Files List */}
         <div style={{ marginLeft: '15px', marginTop: '10px', marginBottom: '15px', borderLeft: '1px solid #2a436b', paddingLeft: '10px' }}>
           <div style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', marginBottom: '5px', fontWeight: 'bold' }}>Loaded Files</div>
           {documents.length === 0 ? (
@@ -116,6 +116,13 @@ export default function App() {
         <div className={`nav-item ${activeTab === 'help' ? 'active' : ''}`} onClick={() => handleNavClick('help')}>
           <Info size={18} /> Help & Support
         </div>
+
+        {/* LEGAL DISCLAIMER (Safety Net) */}
+        <div style={{ marginTop: '20px', padding: '10px', borderTop: '1px solid #2a436b' }}>
+          <p style={{ fontSize: '10px', color: '#94a3b8', lineHeight: '1.4', fontStyle: 'italic' }}>
+            Not officially affiliated with Washtenaw County Government. Always verify with official Environmental Health Dept guidelines.
+          </p>
+        </div>
       </div>
 
       {/* --- MAIN CONTENT --- */}
@@ -130,9 +137,10 @@ export default function App() {
             >
               <Menu size={24} />
             </button>
+            {/* UPDATED HEADER TITLE (Option 1) */}
             <div className="header-title">
               <span style={{ color: '#0f2545' }}>Washtenaw County</span> 
-              <span style={{ color: '#6b7280', fontWeight: '400' }}> | Environmental Health</span>
+              <span style={{ color: '#6b7280', fontWeight: '400' }}> | Compliance Assistant</span>
             </div>
           </div>
         </div>
@@ -186,7 +194,8 @@ export default function App() {
             <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>Help & Support</h2>
             <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
               <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>Contact Information</h3>
-              <p style={{ marginBottom: '20px', color: '#4b5563' }}>For urgent issues, call 734-222-3800.</p>
+              <p style={{ marginBottom: '20px', color: '#4b5563' }}>For urgent issues or official health hazards, please contact the department directly.</p>
+              <p style={{ fontWeight: 'bold', color: '#0f2545' }}>Phone: 734-222-3800</p>
             </div>
           </div>
         )}
@@ -194,16 +203,13 @@ export default function App() {
 
       {/* --- RESPONSIVE CSS --- */}
       <style jsx global>{`
-        /* Base Layout using 100dvh (Dynamic Height) to fix mobile scroll issues */
         .app-container {
           height: 100dvh; 
           display: flex;
           background-color: #f3f4f6;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          overflow: hidden; /* Prevents body scroll */
+          overflow: hidden;
         }
-
-        /* Sidebar Styles */
         .sidebar {
           width: 280px;
           min-width: 280px;
@@ -215,7 +221,6 @@ export default function App() {
           z-index: 30;
           transition: transform 0.3s ease;
         }
-
         .nav-item {
           display: flex;
           align-items: center;
@@ -232,8 +237,6 @@ export default function App() {
           color: white;
           background-color: rgba(255,255,255,0.1);
         }
-
-        /* Main Content */
         .main-content {
           flex: 1;
           display: flex;
@@ -242,7 +245,6 @@ export default function App() {
           overflow: hidden;
           position: relative;
         }
-
         .header {
           padding: 15px 20px;
           background-color: #ffffff;
@@ -253,7 +255,6 @@ export default function App() {
           height: 60px;
           flex-shrink: 0;
         }
-        
         .header-title {
           font-size: 18px;
           font-weight: 600;
@@ -261,8 +262,6 @@ export default function App() {
           overflow: hidden;
           text-overflow: ellipsis;
         }
-
-        /* Chat Area */
         .chat-box {
           flex: 1;
           overflow-y: auto;
@@ -271,10 +270,8 @@ export default function App() {
           flex-direction: column;
           gap: 20px;
           background-color: #f9fafb;
-          /* Smooth scrolling on iOS */
           -webkit-overflow-scrolling: touch; 
         }
-
         .bubble {
           padding: 15px 20px;
           max-width: 85%;
@@ -296,8 +293,6 @@ export default function App() {
           border: 1px solid #e5e7eb;
           white-space: pre-wrap;
         }
-
-        /* Input Area (Pinned to bottom) */
         .input-area {
           padding: 15px 20px;
           background-color: #ffffff;
@@ -306,10 +301,8 @@ export default function App() {
           gap: 10px;
           align-items: center;
           flex-shrink: 0;
-          /* Safety for iPhone X+ Home Bar */
           padding-bottom: max(15px, env(safe-area-inset-bottom));
         }
-
         .chat-input {
           flex: 1;
           padding: 14px;
@@ -317,67 +310,39 @@ export default function App() {
           border: 1px solid #d1d5db;
           background-color: #ffffff;
           color: #1f2937;
-          font-size: 16px; /* 16px prevents zoom on iOS input focus */
+          font-size: 16px;
           outline: none;
         }
-
         .send-button {
           padding: 14px 20px;
           border-radius: 8px;
           border: none;
-          background-color: #5D4037; /* Matte Brown */
+          background-color: #5D4037;
           color: white;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-
         .scroll-content {
           padding: 30px;
           background-color: #f9fafb;
           flex: 1;
           overflow-y: auto;
         }
-
-        .mobile-only {
-          display: none;
-        }
-
-        /* --- MOBILE BREAKPOINT (< 768px) --- */
+        .mobile-only { display: none; }
         @media (max-width: 768px) {
-          .mobile-only {
-            display: block;
-          }
-
+          .mobile-only { display: block; }
           .sidebar {
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            transform: translateX(-100%); /* Hidden by default */
+            top: 0; left: 0; bottom: 0;
+            transform: translateX(-100%);
           }
-          .sidebar.open {
-            transform: translateX(0); /* Slide in */
-          }
-
-          .header-title {
-            font-size: 16px;
-          }
-          
-          .bubble {
-            max-width: 90%;
-            padding: 12px 16px;
-          }
-          
-          .chat-box {
-            padding: 15px;
-          }
-          
-          .input-area {
-             padding: 10px 15px;
-             padding-bottom: max(10px, env(safe-area-inset-bottom));
-          }
+          .sidebar.open { transform: translateX(0); }
+          .header-title { font-size: 16px; }
+          .bubble { max-width: 90%; padding: 12px 16px; }
+          .chat-box { padding: 15px; }
+          .input-area { padding: 10px 15px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
         }
       `}</style>
     </div>
