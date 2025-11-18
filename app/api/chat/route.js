@@ -13,7 +13,36 @@ export async function POST(req) {
 
     const { message } = await req.json();
 
-    // 1. LOAD FILES
+    // --- STEP 1: AUTO-DETECT AVAILABLE MODELS ---
+    // We ask Google: "What models does this user have access to?"
+    const modelsUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+    const modelsResponse = await fetch(modelsUrl);
+    const modelsData = await modelsResponse.json();
+
+    if (!modelsResponse.ok) {
+      throw new Error(`Failed to list models: ${modelsData.error?.message}`);
+    }
+
+    // Find the best available model that supports generating content
+    // We prefer 1.5-flash, then 1.5-pro, then anything else.
+    const availableModels = modelsData.models || [];
+    const validModels = availableModels.filter(m => m.supportedGenerationMethods.includes("generateContent"));
+    
+    // Logic to pick the best one
+    let selectedModel = validModels.find(m => m.name.includes("gemini-1.5-flash")) ||
+                        validModels.find(m => m.name.includes("gemini-1.5-pro")) ||
+                        validModels.find(m => m.name.includes("gemini-pro")) ||
+                        validModels[0];
+
+    if (!selectedModel) {
+      throw new Error("No text-generation models found for this API Key.");
+    }
+
+    // Clean the model name (remove "models/" prefix if present)
+    const modelName = selectedModel.name.replace("models/", "");
+    console.log(`Using detected model: ${modelName}`);
+
+    // --- STEP 2: LOAD FILES ---
     const documentsDir = path.join(process.cwd(), "public", "documents");
     let contextData = "";
 
@@ -35,19 +64,18 @@ export async function POST(req) {
        }
     } catch (e) { console.warn("Read error", e); }
 
-    // 2. PROMPT
+    // --- STEP 3: GENERATE CONTENT ---
     const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant.
     Answer based ONLY on the provided Context Documents.
     Cite the document name if you find the answer.
-    If the answer is NOT in the documents, say "I couldn't find that in your official files," then provide a general answer.
     
     CONTEXT DOCUMENTS:
     ${contextData.slice(0, 60000) || "No documents found."}`;
 
-    // 3. FIXED API REQUEST - Changed from v1beta to v1
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Use the model we successfully found in Step 1
+    const generateUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
-    const response = await fetch(url, {
+    const chatResponse = await fetch(generateUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -57,17 +85,20 @@ export async function POST(req) {
       })
     });
 
-    const data = await response.json();
+    const chatData = await chatResponse.json();
 
-    if (!response.ok) {
-      console.error("Google Error:", data);
-      throw new Error(data.error?.message || "Google API Error");
+    if (!chatResponse.ok) {
+      throw new Error(chatData.error?.message || "Generation Failed");
     }
 
-    const text = data.candidates[0].content.parts[0].text;
+    const text = chatData.candidates[0].content.parts[0].text;
+    
+    // Return the answer (and log which model worked for your sanity)
     return NextResponse.json({ response: text });
 
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Backend Error:", error);
+    // This will print the specific error to your chat screen so we know what's wrong
+    return NextResponse.json({ error: `System Error: ${error.message}` }, { status: 500 });
   }
 }
