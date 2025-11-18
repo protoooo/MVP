@@ -11,6 +11,7 @@ const ALLOWED_FILE_TYPES = ['.txt', '.md', '.pdf'];
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState('ask');
@@ -29,6 +30,7 @@ export default function App() {
   useEffect(() => {
     checkUser();
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         await loadProfile(session.user.id);
@@ -44,6 +46,7 @@ export default function App() {
   const checkUser = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         await loadProfile(session.user.id);
@@ -189,6 +192,7 @@ export default function App() {
     setConversations([]);
     setCurrentConversation(null);
     setProfile(null);
+    setSession(null);
   };
 
   const scrollToBottom = () => {
@@ -204,6 +208,11 @@ export default function App() {
     
     if (files.length > MAX_FILES_PER_UPLOAD) {
       alert(`Maximum ${MAX_FILES_PER_UPLOAD} files allowed at once`);
+      return;
+    }
+
+    if (!session?.access_token) {
+      setError('Not authenticated. Please sign in again.');
       return;
     }
 
@@ -250,6 +259,9 @@ export default function App() {
 
           const response = await fetch('/api/upload-pdf', {
             method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            },
             body: formData
           });
 
@@ -388,6 +400,11 @@ export default function App() {
       return;
     }
 
+    if (!session?.access_token) {
+      setError('Not authenticated. Please sign in again.');
+      return;
+    }
+
     let conversationId = currentConversation?.id;
     if (!conversationId) {
       try {
@@ -437,18 +454,18 @@ export default function App() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          messages: newMessages,
-          documents: documents
+          messages: newMessages
         })
       });
 
       const data = await response.json();
       
       if (!response.ok || data.error) {
-        throw new Error(data.error?.message || `Request failed with status ${response.status}`);
+        throw new Error(data.error || `Request failed with status ${response.status}`);
       }
 
       const assistantMessage = {
@@ -1233,7 +1250,7 @@ export default function App() {
           100% { transform: rotate(360deg); }
         }
         input::placeholder {
-          color: #718096;
+          color: '#718096';
         }
       `}</style>
     </div>
