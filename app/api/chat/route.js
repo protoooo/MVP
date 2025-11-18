@@ -36,19 +36,16 @@ export async function POST(req) {
     } catch (e) { console.warn("Read error", e); }
 
     // 2. PROMPT
-    // We limit context to 25,000 chars because gemini-pro has a smaller memory than flash
-    const cleanContext = contextData.slice(0, 25000); 
-    
     const systemInstruction = `You are the Washtenaw County Food Service Compliance Assistant.
     Answer based ONLY on the provided Context Documents.
-    Cite the document name (e.g. "According to the Food Code...") if you find the answer.
+    Cite the document name if you find the answer.
     If the answer is NOT in the documents, say "I couldn't find that in your official files," then provide a general answer.
     
     CONTEXT DOCUMENTS:
-    ${cleanContext || "No documents found."}`;
+    ${contextData.slice(0, 60000) || "No documents found."}`;
 
-    // 3. MANUAL API REQUEST (Using gemini-pro)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    // 3. MANUAL API REQUEST (Using gemini-1.5-flash specifically for Free Tier)
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -63,7 +60,6 @@ export async function POST(req) {
     const data = await response.json();
 
     if (!response.ok) {
-      // Log the actual error from Google
       console.error("Google Error:", data);
       throw new Error(data.error?.message || "Google API Error");
     }
@@ -72,7 +68,6 @@ export async function POST(req) {
     return NextResponse.json({ response: text });
 
   } catch (error) {
-    console.error("Backend Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
