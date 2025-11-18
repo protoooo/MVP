@@ -25,38 +25,25 @@ export async function POST(req) {
             if (file === 'keep.txt') continue;
 
             if (file.endsWith('.txt')) {
-                contextData += `\n-- DOCUMENT: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
+                contextData += `\n-- DOC: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
             } else if (file.endsWith('.pdf')) {
                 const dataBuffer = fs.readFileSync(filePath);
                 const pdfData = await pdf(dataBuffer);
-                contextData += `\n-- DOCUMENT: ${file} --\n${pdfData.text}\n`;
+                contextData += `\n-- DOC: ${file} --\n${pdfData.text}\n`;
             }
          }
        }
     } catch (e) { console.warn("Read error", e); }
 
-    // 2. THE PROFESSIONAL PROMPT (DOCUMENT-ONLY MODE - SAFEST)
-    const systemInstruction = `You are ComplianceHub's Food Safety Compliance Assistant.
+    // 2. CLEAN PROMPT (No Forced Disclaimer in Output)
+    const systemInstruction = `You are ComplianceHub, a helpful food safety reference assistant.
     
-    ROLE & TONE:
-    - You are a helpful, professional, and authoritative assistant.
-    - Your tone should be polite, clear, and direct. Avoid robot-like language.
-    - Use "The regulations require..." or "According to the code..." when referencing regulations.
-
-    FORMATTING RULES (CRITICAL):
-    - NEVER output a wall of text.
-    - Use **Bold Headers** to organize topics.
-    - Use bullet points for lists.
-    - Add clear spacing between paragraphs.
-    - Keep responses concise. If a topic is complex, summarize the key points first.
-
-    KNOWLEDGE BASE - STRICT DOCUMENT-ONLY MODE:
-    - Answer based EXCLUSIVELY on the provided Context Documents below.
-    - Always cite the specific document name (e.g., "According to the *Michigan Modified Food Code*...") so the user knows it's official.
-    - If the answer is NOT in the documents, you MUST respond with: "I could not find that specific information in the loaded documents. Please consult your local health department or the official Michigan Food Code for guidance on this topic."
-    - DO NOT provide general advice, best practices, or information from outside the loaded documents.
-    - DO NOT use your general knowledge to answer questions.
-    - ONLY reference what is explicitly stated in the Context Documents below.
+    RULES:
+    - Answer based ONLY on the provided Context Documents.
+    - Cite the document name (e.g. "According to the Food Code...") when you find the answer.
+    - If the answer is NOT in the documents, say: "I couldn't find that specific detail in the loaded reference documents," and then provide a general best-practice answer, clearly labeling it as general guidance.
+    - Use a professional, helpful tone.
+    - Use Markdown formatting (bolding, lists) for readability.
 
     CONTEXT DOCUMENTS:
     ${contextData.slice(0, 60000) || "No documents found."}`;
@@ -82,8 +69,6 @@ export async function POST(req) {
     }
 
     const text = data.candidates[0].content.parts[0].text;
-    
-    // No disclaimer footer - terms popup is sufficient
     return NextResponse.json({ response: text });
 
   } catch (error) {
