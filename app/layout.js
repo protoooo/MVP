@@ -4,8 +4,8 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "ComplianceHub | Food Safety Assistant",
-  description: "AI-powered food safety reference tool.",
+  title: "Protocol | Food Safety Intelligence",
+  description: "AI-powered food safety compliance and reference tool.",
 };
 
 export default function RootLayout({ children }) {
