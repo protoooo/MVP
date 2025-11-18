@@ -1,34 +1,45 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 import { checkUsageLimits } from '../../../lib/usageLimits';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_CONTENT_LENGTH = 200000; // 200k characters
 
+// Create Supabase client (same as chat route)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 export async function POST(request) {
   try {
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
-    );
+    // Get auth token from request header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the token
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      console.error('Auth error:', authError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get profile with business_id
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('business_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile || !profile.business_id) {
+      console.error('Profile error:', profileError);
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Check usage limits
@@ -43,19 +54,6 @@ export async function POST(request) {
           message: `You've reached your limit of ${limits.documents_limit} documents. Upgrade to Pro or Enterprise for unlimited documents.`
         }
       }, { status: 429 });
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('business_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile || !profile.business_id) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      );
     }
 
     const formData = await request.formData();
