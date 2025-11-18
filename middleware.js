@@ -50,11 +50,29 @@ export function middleware(request) {
       return response;
     }
     
-    // Apply rate limit: 100 requests per minute
-    if (!rateLimit(ip, 100, 60000)) {
+    // Different rate limits for different endpoints
+    let limit = 100;
+    let windowMs = 60000;
+    
+    // Stricter limits for AI endpoints (Gemini free tier: 15 RPM)
+    if (request.nextUrl.pathname === '/api/chat') {
+      limit = 12; // Lower than Gemini's 15 to be safe
+      windowMs = 60000; // per minute
+    }
+    
+    // Apply rate limit
+    if (!rateLimit(ip, limit, windowMs)) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        { 
+          error: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil(windowMs / 1000)
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(windowMs / 1000))
+          }
+        }
       );
     }
   }
