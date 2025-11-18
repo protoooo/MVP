@@ -8,7 +8,7 @@ const info = [];
 const required = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 };
 
 // Optional but recommended
@@ -36,9 +36,9 @@ for (const [key, value] of Object.entries(required)) {
     if (key === 'NEXT_PUBLIC_SUPABASE_URL' && !value.includes('supabase.co')) {
       errors.push(`${key} doesn't look like a valid Supabase URL`);
       console.log(`  ⚠️  ${key}: SET (but format looks wrong)`);
-    } else if (key === 'ANTHROPIC_API_KEY' && !value.startsWith('sk-ant-')) {
-      errors.push(`${key} doesn't look like a valid Anthropic API key`);
-      console.log(`  ⚠️  ${key}: SET (but format looks wrong)`);
+    } else if (key === 'GEMINI_API_KEY' && !value.startsWith('AIza')) {
+      warnings.push(`${key} doesn't look like a typical Gemini API key (should start with AIza)`);
+      console.log(`  ⚠️  ${key}: SET (but format looks unusual)`);
     } else {
       console.log(`  ✅ ${key}: SET`);
     }
@@ -118,7 +118,7 @@ if (errors.length > 0) {
   console.log('\n✅ Ready to deploy!\n');
 }
 
-// Test connections (optional - comment out if you don't want to test)
+// Test connections (optional)
 if (process.argv.includes('--test-connections')) {
   console.log('🔌 Testing connections...\n');
   testConnections();
@@ -137,24 +137,29 @@ async function testConnections() {
     console.log(`  ❌ Supabase: Failed - ${err.message}`);
   }
 
-  // Test Anthropic
+  // Test Gemini API
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'test' }]
-      })
-    });
-    console.log(`  ${response.ok ? '✅' : '❌'} Anthropic API: ${response.ok ? 'Connected' : 'Failed'}`);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: 'test' }]
+          }]
+        })
+      }
+    );
+    console.log(`  ${response.ok ? '✅' : '❌'} Gemini API: ${response.ok ? 'Connected' : 'Failed'}`);
+    if (!response.ok) {
+      const error = await response.json();
+      console.log(`     Error: ${error.error?.message || 'Unknown error'}`);
+    }
   } catch (err) {
-    console.log(`  ❌ Anthropic API: Failed - ${err.message}`);
+    console.log(`  ❌ Gemini API: Failed - ${err.message}`);
   }
 
   console.log('');
