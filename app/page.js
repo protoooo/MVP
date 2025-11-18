@@ -16,7 +16,10 @@ export default function App() {
   // --- CHECK IF TERMS ACCEPTED ON LOAD ---
   useEffect(() => {
     const accepted = localStorage.getItem('terms_accepted');
-    if (accepted === 'true') {
+    const acceptedVersion = localStorage.getItem('terms_version');
+    const currentVersion = '1.0'; // Increment this if you update terms
+    
+    if (accepted === 'true' && acceptedVersion === currentVersion) {
       setTermsAccepted(true);
     } else {
       setShowTermsModal(true);
@@ -334,18 +337,6 @@ export default function App() {
                     <Shield size={60} color="#d1d5db" style={{ margin: '0 auto 20px' }} />
                     <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Food Safety Compliance Assistant</h2>
                     <p style={{ fontSize: '14px' }}>Ask questions about the loaded food safety regulations.</p>
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#fef3c7', 
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      color: '#92400e',
-                      maxWidth: '500px',
-                      margin: '20px auto 0'
-                    }}>
-                      <strong>⚠️ Remember:</strong> This tool provides reference information only. Always verify with official sources.
-                    </div>
                   </div>
                 )}
                 {messages.map((msg, i) => (
