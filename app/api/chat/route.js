@@ -44,8 +44,8 @@ export async function POST(req) {
     CONTEXT DOCUMENTS:
     ${contextData.slice(0, 60000) || "No documents found."}`;
 
-    // 3. MANUAL API REQUEST (Using gemini-1.5-flash specifically for Free Tier)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // 3. FIXED API REQUEST - Changed from v1beta to v1
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: 'POST',
