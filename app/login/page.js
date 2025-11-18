@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock } from "lucide-react";
 
 export default function Login() {
   const [input, setInput] = useState("");
@@ -25,55 +24,101 @@ export default function Login() {
     } else {
       setError("Invalid Access Code");
       setLoading(false);
-      setInput("");
     }
   };
 
+  // Inline styles to guarantee it looks good regardless of Tailwind issues
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      width: "100%",
+      backgroundColor: "#111827", // Dark Gray
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      fontFamily: "sans-serif",
+    },
+    card: {
+      width: "100%",
+      maxWidth: "400px",
+      backgroundColor: "#1F2937", // Lighter Gray
+      borderRadius: "16px",
+      padding: "40px",
+      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
+      border: "1px solid #374151",
+      textAlign: "center",
+    },
+    icon: {
+      width: "60px",
+      height: "60px",
+      backgroundColor: "rgba(16, 185, 129, 0.1)",
+      color: "#10B981",
+      borderRadius: "50%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "24px",
+      margin: "0 auto 20px auto",
+    },
+    title: { color: "white", fontSize: "24px", fontWeight: "bold", marginBottom: "8px" },
+    subtitle: { color: "#9CA3AF", fontSize: "14px", marginBottom: "30px" },
+    input: {
+      width: "100%",
+      backgroundColor: "#111827",
+      border: "1px solid #4B5563",
+      color: "white",
+      padding: "14px",
+      borderRadius: "10px",
+      fontSize: "16px",
+      outline: "none",
+      marginBottom: "20px",
+    },
+    button: {
+      width: "100%",
+      backgroundColor: "#10B981", // Green
+      color: "white",
+      padding: "14px",
+      borderRadius: "10px",
+      fontSize: "16px",
+      fontWeight: "bold",
+      border: "none",
+      cursor: "pointer",
+      opacity: loading ? 0.7 : 1,
+    },
+    error: {
+      backgroundColor: "rgba(239, 68, 68, 0.2)",
+      color: "#FCA5A5",
+      padding: "10px",
+      borderRadius: "8px",
+      marginBottom: "20px",
+      fontSize: "14px",
+    },
+  };
+
   return (
-    <div className="min-h-screen w-full bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 p-8">
-        
-        <div className="flex flex-col items-center mb-8">
-          <div className="h-16 w-16 bg-gray-700 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-8 h-8 text-green-500" />
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome</h1>
-          <p className="text-gray-400">Please enter your access code</p>
-        </div>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.icon}>🔒</div>
+        <h1 style={styles.title}>Welcome</h1>
+        <p style={styles.subtitle}>Enter your access code to continue</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Access Code
-            </label>
-            <input
-              type="password"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full bg-gray-900 border border-gray-600 text-white text-lg rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
-              placeholder="123456"
-              autoFocus
-            />
-          </div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            style={styles.input}
+            placeholder="••••••"
+            autoFocus
+          />
 
-          {error && (
-            <div className="p-4 rounded-xl bg-red-900/50 border border-red-500 text-red-200 text-center">
-              {error}
-            </div>
-          )}
+          {error && <div style={styles.error}>{error}</div>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-500 text-white text-lg font-bold rounded-xl py-4 transition-colors shadow-lg"
-          >
+          <button type="submit" style={styles.button} disabled={loading}>
             {loading ? "Verifying..." : "Enter App"}
           </button>
         </form>
-
-        <p className="mt-8 text-center text-gray-500 text-sm">
-          Washtenaw County Compliance Assistant
-        </p>
       </div>
     </div>
   );
