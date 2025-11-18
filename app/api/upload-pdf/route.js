@@ -1,47 +1,20 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { promises as fs } from 'fs';
+import path from 'path';
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const MAX_CONTENT_LENGTH = 200000;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      console.error('❌ No authorization header');
-      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    console.log('🎟️ Token preview:', token.substring(0, 20) + '...');
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      console.error('❌ Auth error:', authError);
+    // Simple admin password check
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      console.error('❌ Unauthorized upload attempt');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('✅ User authenticated:', user.id);
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('business_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile || !profile.business_id) {
-      console.error('❌ Profile error:', profileError);
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    console.log('✅ Profile found, business_id:', profile.business_id);
+    console.log('✅ Admin authenticated');
 
     const formData = await request.formData();
     const file = formData.get('file');
@@ -66,71 +39,67 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    console.log('📖 Parsing PDF...');
-    let pdfData;
-    try {
-      pdfData = await pdf(buffer);
-    } catch (pdfError) {
-      console.error('❌ PDF parse error:', pdfError);
-      return NextResponse.json(
-        { error: 'Failed to parse PDF. File may be corrupted or password-protected.' },
-        { status: 400 }
-      );
-    }
-
-    let content = pdfData.text;
-
-    if (!content || content.trim().length === 0) {
-      return NextResponse.json(
-        { error: 'PDF appears to be empty or contains no readable text' },
-        { status: 400 }
-      );
-    }
-
-    console.log('✅ PDF parsed, content length:', content.length);
-
-    if (content.length > MAX_CONTENT_LENGTH) {
-      content = content.substring(0, MAX_CONTENT_LENGTH) + '\n\n[Content truncated due to length...]';
-    }
-
-    const sanitizedFileName = (fileName || file.name)
+    let content;
+    let finalFileName = (fileName || file.name)
       .replace(/[^a-zA-Z0-9._-]/g, '_')
       .substring(0, 255);
 
-    console.log('💾 Saving to database...');
+    // Handle PDFs
+    if (file.name.endsWith('.pdf')) {
+      console.log('📖 Parsing PDF...');
+      try {
+        const pdfData = await pdf(buffer);
+        content = pdfData.text;
+      } catch (pdfError) {
+        console.error('❌ PDF parse error:', pdfError);
+        return NextResponse.json(
+          { error: 'Failed to parse PDF. File may be corrupted or password-protected.' },
+          { status: 400 }
+        );
+      }
 
-    const { data, error } = await supabase
-      .from('documents')
-      .insert({
-        business_id: profile.business_id,
-        name: sanitizedFileName,
-        content: content,
-        uploaded_by: user.id,
-      })
-      .select()
-      .single();
+      if (!content || content.trim().length === 0) {
+        return NextResponse.json(
+          { error: 'PDF appears to be empty or contains no readable text' },
+          { status: 400 }
+        );
+      }
 
-    if (error) {
-      console.error('❌ Database error:', error);
-      return NextResponse.json(
-        { error: 'Failed to save document' },
-        { status: 500 }
-      );
+      console.log('✅ PDF parsed, content length:', content.length);
+      
+      // Save as .txt file
+      finalFileName = finalFileName.replace('.pdf', '.txt');
+    } else {
+      // Handle text files
+      content = buffer.toString('utf-8');
     }
 
-    console.log('✅ Document saved:', data.id);
+    // Save to knowledge-base directory
+    const knowledgeDir = path.join(process.cwd(), 'knowledge-base');
+    
+    // Create directory if it doesn't exist
+    try {
+      await fs.mkdir(knowledgeDir, { recursive: true });
+    } catch (err) {
+      // Directory might already exist
+    }
+
+    const filePath = path.join(knowledgeDir, finalFileName);
+    await fs.writeFile(filePath, content, 'utf-8');
+
+    console.log('✅ File saved:', filePath);
 
     return NextResponse.json({ 
-      document: data,
-      message: 'PDF uploaded successfully',
+      message: 'File uploaded successfully',
+      fileName: finalFileName,
       charactersExtracted: content.length,
-      wasTruncated: pdfData.text.length > MAX_CONTENT_LENGTH
+      path: `/knowledge-base/${finalFileName}`
     });
 
   } catch (error) {
-    console.error('❌ PDF upload error:', error);
+    console.error('❌ Upload error:', error);
     
-    let errorMessage = 'Failed to process PDF';
+    let errorMessage = 'Failed to process file';
     if (error.message.includes('timeout')) {
       errorMessage = 'Upload timed out. Please try a smaller file.';
     } else if (error.message.includes('network')) {
@@ -139,6 +108,74 @@ export async function POST(request) {
 
     return NextResponse.json(
       { error: errorMessage },
+      { status: 500 }
+    );
+  }
+}
+
+// List files endpoint
+export async function GET(request) {
+  try {
+    // Simple admin password check
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const knowledgeDir = path.join(process.cwd(), 'knowledge-base');
+    
+    try {
+      const files = await fs.readdir(knowledgeDir);
+      const fileDetails = await Promise.all(
+        files.map(async (file) => {
+          const stats = await fs.stat(path.join(knowledgeDir, file));
+          return {
+            name: file,
+            size: stats.size,
+            modified: stats.mtime
+          };
+        })
+      );
+      
+      return NextResponse.json({ files: fileDetails });
+    } catch (err) {
+      return NextResponse.json({ files: [] });
+    }
+
+  } catch (error) {
+    console.error('❌ List files error:', error);
+    return NextResponse.json(
+      { error: 'Failed to list files' },
+      { status: 500 }
+    );
+  }
+}
+
+// Delete file endpoint
+export async function DELETE(request) {
+  try {
+    const adminPassword = request.headers.get('x-admin-password');
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { fileName } = await request.json();
+    if (!fileName) {
+      return NextResponse.json({ error: 'No fileName provided' }, { status: 400 });
+    }
+
+    const knowledgeDir = path.join(process.cwd(), 'knowledge-base');
+    const filePath = path.join(knowledgeDir, fileName);
+
+    await fs.unlink(filePath);
+    console.log('✅ File deleted:', filePath);
+
+    return NextResponse.json({ message: 'File deleted successfully' });
+
+  } catch (error) {
+    console.error('❌ Delete error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete file' },
       { status: 500 }
     );
   }
