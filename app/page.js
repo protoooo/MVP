@@ -43,7 +43,7 @@ export default function App() {
   };
 
   const handleDeclineTerms = () => {
-    alert('You must accept the terms to use this application.');
+    alert('You must accept the terms to use Protocol.');
   };
 
   const handleSendMessage = async () => {
@@ -93,15 +93,15 @@ export default function App() {
           <div style={{ backgroundColor: 'white', borderRadius: '12px', maxWidth: '600px', width: '100%', maxHeight: '80vh', overflow: 'auto', padding: '30px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
               <AlertTriangle size={28} color="#dc2626" />
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0 }}>Terms of Use & Disclaimer</h2>
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1f2937', margin: 0 }}>Protocol Terms of Use</h2>
             </div>
             <div style={{ backgroundColor: '#fef2f2', border: '2px solid #fecaca', borderRadius: '8px', padding: '20px', marginBottom: '20px' }}>
               <h3 style={{ color: '#991b1b', fontWeight: 'bold', marginBottom: '10px', fontSize: '16px' }}>IMPORTANT LEGAL NOTICE</h3>
-              <p style={{ color: '#7f1d1d', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>By using this service, you acknowledge and agree to these terms.</p>
+              <p style={{ color: '#7f1d1d', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>By using Protocol, you acknowledge and agree to these terms.</p>
             </div>
             <div style={{ color: '#374151', fontSize: '14px', lineHeight: '1.8', marginBottom: '25px' }}>
-              <p style={{ marginBottom: '10px' }}>1. <strong>Informational Only:</strong> This tool organizes publicly available food safety regulations. It is NOT legal advice.</p>
-              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Not endorsed by any government agency.</p>
+              <p style={{ marginBottom: '10px' }}>1. <strong>Informational Only:</strong> Protocol organizes publicly available food safety regulations. It is NOT legal advice.</p>
+              <p style={{ marginBottom: '10px' }}>2. <strong>No Affiliation:</strong> Protocol is not endorsed by any government agency.</p>
               <p style={{ marginBottom: '10px' }}>3. <strong>Your Responsibility:</strong> You are responsible for verifying all info with official sources.</p>
               <p style={{ marginBottom: '10px' }}>4. <strong>No Liability:</strong> We are not liable for fines, violations, or penalties arising from use of this tool.</p>
             </div>
@@ -124,7 +124,7 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #2a436b', paddingBottom: '15px' }}>
             <div style={{ fontSize: '18px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Shield size={24} />
-              <span>ComplianceHub</span>
+              <span>Protocol</span>
             </div>
             <button className="mobile-only" onClick={() => setIsMobileMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
           </div>
@@ -156,8 +156,8 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <button className="mobile-only" onClick={() => setIsMobileMenuOpen(true)} style={{ background: 'none', border: 'none', color: '#0f2545', cursor: 'pointer', padding: 0 }}><Menu size={24} /></button>
               <div className="header-title">
-                <span style={{ color: '#0f2545' }}>Washtenaw County</span> 
-                <span style={{ color: '#6b7280', fontWeight: '400' }}> | Compliance Assistant</span>
+                <span style={{ color: '#0f2545' }}>Protocol</span> 
+                <span style={{ color: '#6b7280', fontWeight: '400' }}> | Food Safety Intelligence</span>
               </div>
             </div>
           </div>
@@ -168,9 +168,8 @@ export default function App() {
                 {messages.length === 0 && (
                   <div style={{ textAlign: 'center', color: '#6b7280', marginTop: '40px', padding: '0 20px' }}>
                     <Shield size={60} color="#d1d5db" style={{ margin: '0 auto 20px' }} />
-                    <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Food Safety Compliance Assistant</h2>
+                    <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Protocol</h2>
                     <p style={{ fontSize: '14px' }}>Ask questions about the loaded food safety regulations.</p>
-                    {/* YELLOW BOX REMOVED HERE */}
                   </div>
                 )}
                 {messages.map((msg, i) => (
@@ -190,19 +189,36 @@ export default function App() {
           ) : activeTab === 'documents' ? (
             <div className="scroll-content">
               <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>Document Library</h2>
-              {documents.map((doc, i) => (
-                <div key={i} style={{ backgroundColor: 'white', padding: '20px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{ backgroundColor: '#e0e7ff', padding: '10px', borderRadius: '8px' }}><FileText size={24} color="#0f2545" /></div>
-                  <div><div style={{ fontWeight: '600', color: '#1f2937' }}>{doc.name}</div><div style={{ fontSize: '12px', color: '#6b7280' }}>{doc.size} • Active</div></div>
+              {documents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+                  <FileText size={48} color="#d1d5db" style={{ margin: '0 auto 20px' }} />
+                  <p>No documents currently loaded.</p>
                 </div>
-              ))}
+              ) : (
+                documents.map((doc, i) => (
+                  <div key={i} style={{ backgroundColor: 'white', padding: '20px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ backgroundColor: '#e0e7ff', padding: '10px', borderRadius: '8px' }}><FileText size={24} color="#0f2545" /></div>
+                    <div><div style={{ fontWeight: '600', color: '#1f2937' }}>{doc.name}</div><div style={{ fontSize: '12px', color: '#6b7280' }}>{doc.size} • Active</div></div>
+                  </div>
+                ))
+              )}
             </div>
           ) : (
             <div className="scroll-content">
               <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#1f2937', marginBottom: '20px' }}>Help & Support</h2>
+              <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '20px' }}>
+                <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>About Protocol</h3>
+                <p style={{ marginBottom: '20px', color: '#4b5563', lineHeight: '1.6' }}>
+                  Protocol is an informational reference tool that organizes publicly available food safety regulations 
+                  and documents. This tool does not provide legal or compliance advice.
+                </p>
+              </div>
+              
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>About</h3>
-                <p style={{ color: '#4b5563' }}>This tool organizes publicly available regulations. Not affiliated with government.</p>
+                <h3 style={{ fontWeight: 'bold', marginBottom: '10px', color: '#0f2545' }}>Contact Health Department</h3>
+                <p style={{ marginBottom: '20px', color: '#4b5563' }}>For urgent issues, official guidance, or health hazards:</p>
+                <p style={{ fontWeight: 'bold', color: '#0f2545', marginBottom: '5px' }}>Washtenaw County Environmental Health</p>
+                <p style={{ color: '#4b5563' }}>Phone: 734-222-3800</p>
               </div>
             </div>
           )}
