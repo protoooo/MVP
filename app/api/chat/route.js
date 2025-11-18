@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 export const maxDuration = 60;
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export async function POST(request) {
   const startTime = Date.now();
@@ -19,37 +15,6 @@ export async function POST(request) {
         { status: 500 }
       );
     }
-
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      console.error('❌ No authorization header');
-      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    console.log('🎟️ Token preview:', token.substring(0, 20) + '...');
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      console.error('❌ Auth error:', authError);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    console.log('✅ User authenticated:', user.id);
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('business_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile || !profile.business_id) {
-      console.error('❌ Profile error:', profileError);
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
-    }
-
-    console.log('✅ Profile found, business_id:', profile.business_id);
 
     const body = await request.json();
     const { messages } = body;
@@ -74,45 +39,62 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Message too long (max 10000 characters)' }, { status: 400 });
     }
 
-    console.log('📄 Fetching documents...');
-    const { data: documents, error: docsError } = await supabase
-      .from('documents')
-      .select('name, content')
-      .eq('business_id', profile.business_id)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (docsError) {
-      console.error('⚠️ Error fetching documents:', docsError);
-    } else {
-      console.log('✅ Documents fetched:', documents?.length || 0);
+    // Load knowledge base from filesystem
+    console.log('📄 Loading knowledge base...');
+    let knowledgeContext = '';
+    
+    try {
+      const knowledgeDir = path.join(process.cwd(), 'knowledge-base');
+      const files = await fs.readdir(knowledgeDir);
+      
+      for (const file of files) {
+        if (file.endsWith('.txt') || file.endsWith('.md')) {
+          const content = await fs.readFile(path.join(knowledgeDir, file), 'utf-8');
+          knowledgeContext += `\n\n[${file}]\n${content}`;
+        }
+      }
+      
+      console.log('✅ Knowledge base loaded');
+    } catch (err) {
+      console.log('⚠️ No knowledge base found or error loading:', err.message);
     }
 
-    let context = '';
-    if (documents && documents.length > 0) {
-      context = 'Here are relevant documents from your knowledge base:\n\n';
-      documents.forEach((doc, idx) => {
-        const truncatedContent = doc.content.substring(0, 2000);
-        context += `[Document ${idx + 1}: ${doc.name}]\n${truncatedContent}\n\n`;
-      });
-      context += 'Based on the above documents, please answer the following question:\n\n';
-    }
+    // Build system context
+    const systemContext = `You are a compliance assistant for Washtenaw County food service establishments and restaurants. 
+Your role is to help restaurant owners, managers, and food service workers understand and comply with:
+- Michigan Food Code regulations
+- Washtenaw County Health Department requirements
+- Food safety protocols
+- Licensing and permit requirements
+- Inspection preparation
+
+Always provide accurate, helpful information. If you're unsure about specific regulations, advise consulting the Washtenaw County Health Department directly.
+
+Knowledge Base:
+${knowledgeContext}
+
+Based on the above information, please answer questions accurately and helpfully.`;
 
     const geminiContents = [];
     
+    // Add system context as first user message
+    geminiContents.push({
+      role: 'user',
+      parts: [{ text: systemContext }]
+    });
+    
+    geminiContents.push({
+      role: 'model',
+      parts: [{ text: 'I understand. I will assist with Washtenaw County food service compliance questions using the provided knowledge base.' }]
+    });
+    
+    // Add conversation history
     for (const msg of messages) {
       const role = msg.role === 'assistant' ? 'model' : 'user';
       geminiContents.push({
         role: role,
         parts: [{ text: msg.content }]
       });
-    }
-
-    if (context && geminiContents.length > 0) {
-      const lastIndex = geminiContents.length - 1;
-      if (geminiContents[lastIndex].role === 'user') {
-        geminiContents[lastIndex].parts[0].text = context + geminiContents[lastIndex].parts[0].text;
-      }
     }
 
     console.log('🤖 Calling Gemini API...');
@@ -134,7 +116,7 @@ export async function POST(request) {
               contents: geminiContents,
               generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 1024,
+                maxOutputTokens: 2048,
               }
             }),
           }
@@ -185,8 +167,7 @@ export async function POST(request) {
           role: 'assistant',
           content: assistantResponse,
         },
-      }],
-      documentsUsed: documents?.length || 0
+      }]
     });
 
   } catch (error) {
@@ -195,10 +176,7 @@ export async function POST(request) {
     let errorMessage = 'Failed to process request';
     let statusCode = 500;
 
-    if (error.message.includes('Unauthorized')) {
-      errorMessage = 'Authentication failed';
-      statusCode = 401;
-    } else if (error.message.includes('API error')) {
+    if (error.message.includes('API error')) {
       errorMessage = 'AI service temporarily unavailable';
       statusCode = 503;
     } else if (error.message.includes('timeout')) {
