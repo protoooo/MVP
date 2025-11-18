@@ -23,36 +23,41 @@ export default function Login() {
       router.push("/");
       router.refresh();
     } else {
-      setError("Incorrect access code");
+      setError("Invalid Access Code");
       setLoading(false);
+      setInput("");
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0f1419] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#1e2732] rounded-2xl shadow-xl border border-gray-800 p-8">
+    <div className="min-h-screen w-full bg-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 p-8">
+        
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-green-500" />
+          <div className="h-16 w-16 bg-gray-700 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-8 h-8 text-green-500" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-          <p className="text-gray-400 text-sm mt-2">Enter your access code to continue</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome</h1>
+          <p className="text-gray-400">Please enter your access code</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Access Code
+            </label>
             <input
               type="password"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full bg-[#0f1419] border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all placeholder-gray-600"
-              placeholder="••••••"
+              className="w-full bg-gray-900 border border-gray-600 text-white text-lg rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
+              placeholder="123456"
               autoFocus
             />
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            <div className="p-4 rounded-xl bg-red-900/50 border border-red-500 text-red-200 text-center">
               {error}
             </div>
           )}
@@ -60,21 +65,15 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold rounded-xl py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="w-full bg-green-600 hover:bg-green-500 text-white text-lg font-bold rounded-xl py-4 transition-colors shadow-lg"
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              "Access App"
-            )}
+            {loading ? "Verifying..." : "Enter App"}
           </button>
         </form>
-        
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            Washtenaw County Food Service Compliance Assistant
-          </p>
-        </div>
+
+        <p className="mt-8 text-center text-gray-500 text-sm">
+          Washtenaw County Compliance Assistant
+        </p>
       </div>
     </div>
   );
