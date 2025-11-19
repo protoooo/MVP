@@ -19,18 +19,14 @@ export async function GET(request) {
     }
 
     if (session) {
-      // Create user profile if it doesn't exist (email confirmation scenario)
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: session.user.id,
-          email: session.user.email,
-          is_subscribed: false,
-          requests_used: 0
-        })
+      // Create user profile using the database function (email confirmation scenario)
+      const { error: profileError } = await supabase.rpc('create_user_profile', {
+        user_id: session.user.id,
+        user_email: session.user.email
+      })
 
-      // Ignore duplicate key errors (profile already exists)
-      if (profileError && profileError.code !== '23505') {
+      // Log error but don't fail - profile might already exist
+      if (profileError) {
         console.error('Profile creation error:', profileError)
       }
 
