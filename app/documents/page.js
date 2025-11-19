@@ -4,57 +4,78 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// Hardcoded list to match your public/documents folder
-const DOCUMENTS = [
-  { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-  { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-  { title: 'Cooling Foods', filename: 'Cooling Foods.pdf' },
-  { title: 'Cross Contamination', filename: 'Cross contamination.pdf' },
-  { title: 'Enforcement Action', filename: 'Enforcement Action | Washtenaw County, MI.pdf' },
-  { title: 'Food Allergy Info', filename: 'Food Allergy Information | Washtenaw County, MI.pdf' },
-  { title: 'Food Inspection Program', filename: 'Food Service Inspection Program | Washtenaw County, MI.pdf' },
-  { title: 'Foodborne Illness Guide', filename: 'Food borne illness guide.pdf' },
-  { title: 'Norovirus Cleaning', filename: 'NorovirusEnvironCleaning.pdf' },
-  { title: 'Cooking Temps Chart', filename: 'Summary Chart for Minimum Cooking Food Temperatures.pdf' },
-  { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
-  { title: 'Violation Types', filename: 'Violation Types | Washtenaw County, MI.pdf' },
-  { title: 'MCL Act 92 (2000)', filename: 'mcl_act_92_of_2000.pdf' },
-  { title: 'Emergency Action Plan', filename: 'retail_food_establishments_emergency_action_plan.pdf' }
-]
-
 export default function Dashboard() {
   const [session, setSession] = useState(null)
-  const [selectedDoc, setSelectedDoc] = useState(DOCUMENTS[0])
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hello! I am your AI Compliance Assistant. Select a document on the left and ask me anything.' }
+    { role: 'assistant', content: 'Ready to inspect. Upload a photo or ask about Washtenaw County food codes.' }
   ])
   const [input, setInput] = useState('')
+  const [image, setImage] = useState(null) // Stores base64 image
   const [isLoading, setIsLoading] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
   const supabase = createClientComponentClient()
   const router = useRouter()
 
   useEffect(() => {
-    const getSession = async () => {
+    const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) router.push('/')
-      else setSession(session)
+      if (!session) {
+        router.push('/')
+        return
+      }
+
+      // Check Subscription Status
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed')
+        .eq('id', session.user.id)
+        .single()
+
+      // If not subscribed (and not our test user), go to pricing
+      if (!profile?.is_subscribed) {
+        router.push('/pricing')
+        return
+      }
+
+      setSession(session)
     }
-    getSession()
+    checkAccess()
   }, [supabase, router])
 
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Handle Image Selection
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() && !image) return
 
-    const userMessage = { role: 'user', content: input }
+    // Optimistic UI update
+    const userMessage = { 
+      role: 'user', 
+      content: input,
+      image: image 
+    }
+    
     setMessages(prev => [...prev, userMessage])
     setInput('')
+    setImage(null) // Clear image after sending
     setIsLoading(true)
 
     try {
@@ -62,18 +83,18 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messages: [...messages, userMessage],
-          docContext: selectedDoc.filename 
+          messages: [...messages, { role: 'user', content: input }], // Send history text
+          image: userMessage.image // Send image if exists
         }),
       })
 
-      if (!response.ok) throw new Error('Network response was not ok')
-
       const data = await response.json()
+      if (data.error) throw new Error(data.error)
+      
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
     } catch (error) {
-      console.error('Chat error:', error)
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to the AI right now." }])
+      console.error(error)
+      setMessages(prev => [...prev, { role: 'assistant', content: "I encountered an error connecting to the intelligence database." }])
     } finally {
       setIsLoading(false)
     }
@@ -82,119 +103,132 @@ export default function Dashboard() {
   if (!session) return null
 
   return (
-    <div className="flex h-screen bg-[#0f1117] text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#0f1117] text-white font-sans overflow-hidden">
       
-      {/* SIDEBAR */}
-      <div className="w-72 bg-[#161b22] border-r border-gray-800 flex flex-col shadow-xl z-20">
-        <div className="p-5 border-b border-gray-800 bg-[#161b22]">
-          <h1 className="text-lg font-bold text-white tracking-wide">PROTOCOL</h1>
-          <div className="text-xs text-gray-500 mt-1 flex items-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-            Online • {session.user.email}
-          </div>
+      {/* MOBILE HEADER */}
+      <div className="md:hidden fixed top-0 w-full bg-[#161b22] p-4 flex justify-between items-center z-50 border-b border-gray-800">
+        <span className="font-bold tracking-wider">PROTOCOL</span>
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+
+      {/* SIDEBAR (Library Context) */}
+      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-64 bg-[#161b22] border-r border-gray-800 flex flex-col z-40 pt-16 md:pt-0`}>
+        <div className="p-5 hidden md:block border-b border-gray-800">
+          <h1 className="text-lg font-bold tracking-wide">PROTOCOL</h1>
+          <p className="text-xs text-gray-500 mt-1">Washtenaw County Intelligence</p>
         </div>
         
-        <div className="p-4">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-2">Library</div>
-          <div className="space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-            {DOCUMENTS.map((doc, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedDoc(doc)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center group ${
-                  selectedDoc.filename === doc.filename 
-                    ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' 
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'
-                }`}
-              >
-                <svg className={`w-4 h-4 mr-3 flex-shrink-0 ${selectedDoc.filename === doc.filename ? 'text-indigo-400' : 'text-gray-600 group-hover:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="truncate">{doc.title}</span>
-              </button>
-            ))}
-          </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Active Regulations</div>
+          <ul className="space-y-2 text-sm text-gray-400">
+            <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>FDA Food Code 2022</li>
+            <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>MI Modified Food Code</li>
+            <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Enforcement Action Guide</li>
+            <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Allergy Information</li>
+            <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>Cooling & Temps</li>
+          </ul>
         </div>
 
-        <div className="mt-auto p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800">
           <button 
             onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
-            className="w-full flex items-center justify-center py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            className="w-full py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded hover:bg-gray-800 transition"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col md:flex-row h-full relative">
+      {/* MAIN CHAT AREA */}
+      <div className="flex-1 flex flex-col h-full pt-16 md:pt-0 relative bg-[#0f1117]">
         
-        {/* PDF VIEWER */}
-        <div className="flex-1 bg-[#0d1117] relative h-full">
-          {selectedDoc ? (
-            <iframe 
-              src={`/documents/${selectedDoc.filename}#toolbar=0`} 
-              className="w-full h-full border-none" 
-              title="Document Viewer"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">Select a document</div>
-          )}
-        </div>
+        {/* MESSAGES */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-800">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
+                
+                {/* User Image Display */}
+                {msg.image && (
+                  <img src={msg.image} alt="Upload" className="max-w-xs rounded-lg border border-gray-700 mb-2" />
+                )}
 
-        {/* CHAT INTERFACE */}
-        <div className="w-full md:w-[400px] bg-[#161b22] border-l border-gray-800 flex flex-col h-full shadow-2xl">
-          <div className="p-4 border-b border-gray-800 bg-[#161b22] flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-white text-sm">AI Compliance Assistant</h2>
-              <p className="text-xs text-indigo-400 truncate max-w-[200px]">{selectedDoc.title}</p>
-            </div>
-            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                <div className={`p-4 rounded-2xl text-sm md:text-base leading-relaxed ${
                   msg.role === 'user' 
                     ? 'bg-indigo-600 text-white rounded-br-none' 
-                    : 'bg-gray-800 border border-gray-700 text-gray-200 rounded-bl-none'
+                    : 'bg-[#1e232b] text-gray-200 border border-gray-800 rounded-bl-none shadow-sm'
                 }`}>
                   {msg.content}
                 </div>
               </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-800 border border-gray-700 px-4 py-3 rounded-2xl rounded-bl-none flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
-                </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start animate-pulse">
+              <div className="bg-[#1e232b] px-4 py-3 rounded-2xl rounded-bl-none border border-gray-800 text-gray-400 text-sm">
+                Analyzing compliance data...
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* INPUT AREA */}
+        <div className="p-4 bg-[#0f1117] border-t border-gray-800">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-[#161b22] p-2 rounded-xl border border-gray-700 focus-within:border-indigo-500 transition-colors">
+            
+            {/* Image Upload Button */}
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
+              title="Upload Image"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleImageSelect}
+            />
+
+            {/* Text Input */}
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }}}
+              placeholder={image ? "Image attached. Add context..." : "Ask about Washtenaw food codes..."}
+              className="flex-1 bg-transparent text-white text-sm md:text-base max-h-32 py-2 focus:outline-none resize-none"
+              rows="1"
+            />
+
+            {/* Send Button */}
+            <button 
+              type="submit"
+              disabled={isLoading || (!input.trim() && !image)}
+              className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+
+            {/* Image Preview Indicator */}
+            {image && (
+              <div className="absolute -top-16 left-0 bg-[#161b22] border border-gray-700 p-2 rounded-lg flex items-center shadow-lg">
+                <span className="text-xs text-green-400 font-bold mr-2">IMAGE ATTACHED</span>
+                <button onClick={() => setImage(null)} className="text-gray-400 hover:text-white">✕</button>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
 
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-[#161b22]">
-            <div className="relative">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about this document..."
-                className="w-full bg-[#0d1117] text-white text-sm rounded-xl pl-4 pr-12 py-3.5 border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none placeholder-gray-600 transition-all shadow-inner"
-              />
-              <button 
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className="absolute right-2 top-1.5 bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-              </button>
-            </div>
           </form>
+          <div className="text-center mt-2 text-[10px] text-gray-600">
+            Protocol AI uses Washtenaw County Health Department data. Verify critical issues with an official inspector.
+          </div>
         </div>
+
       </div>
     </div>
   )
