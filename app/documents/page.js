@@ -4,27 +4,51 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-const DOCUMENTS = [
-  { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-  { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-  { title: 'Cooling Foods', filename: 'Cooling Foods.pdf' },
-  { title: 'Cross Contamination', filename: 'Cross contamination.pdf' },
-  { title: 'Enforcement Action Guide', filename: 'Enforcement Action | Washtenaw County, MI.pdf' },
-  { title: 'Food Allergy Info', filename: 'Food Allergy Information | Washtenaw County, MI.pdf' },
-  { title: 'Inspection Program', filename: 'Food Service Inspection Program | Washtenaw County, MI.pdf' },
-  { title: 'Foodborne Illness Guide', filename: 'Food borne illness guide.pdf' },
-  { title: 'Norovirus Cleaning', filename: 'NorovirusEnvironCleaning.pdf' },
-  { title: 'Admin Procedures', filename: 'PROCEDURES_FOR_THE_ADMINISTRATION_AND_ENFORCEMENT_OF_THE_WASHTENAW_COUNTY_FOOD_SERVICE_REGULATION.pdf' },
-  { title: 'Cooking Temps Chart', filename: 'Summary Chart for Minimum Cooking Food Temperatures.pdf' },
-  { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
-  { title: 'Violation Types', filename: 'Violation Types | Washtenaw County, MI.pdf' },
-  { title: 'MCL Act 92 (2000)', filename: 'mcl_act_92_of_2000.pdf' },
-  { title: 'Emergency Action Plan', filename: 'retail_food_establishments_emergency_action_plan.pdf' }
-]
+// County-specific document configurations
+const COUNTY_DOCUMENTS = {
+  washtenaw: [
+    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
+    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
+    { title: 'Cooling Foods', filename: 'Cooling Foods.pdf' },
+    { title: 'Cross Contamination', filename: 'Cross contamination.pdf' },
+    { title: 'Enforcement Action Guide', filename: 'Enforcement Action | Washtenaw County, MI.pdf' },
+    { title: 'Food Allergy Info', filename: 'Food Allergy Information | Washtenaw County, MI.pdf' },
+    { title: 'Inspection Program', filename: 'Food Service Inspection Program | Washtenaw County, MI.pdf' },
+    { title: 'Foodborne Illness Guide', filename: 'Food borne illness guide.pdf' },
+    { title: 'Norovirus Cleaning', filename: 'NorovirusEnvironCleaning.pdf' },
+    { title: 'Admin Procedures', filename: 'PROCEDURES_FOR_THE_ADMINISTRATION_AND_ENFORCEMENT_OF_THE_WASHTENAW_COUNTY_FOOD_SERVICE_REGULATION.pdf' },
+    { title: 'Cooking Temps Chart', filename: 'Summary Chart for Minimum Cooking Food Temperatures.pdf' },
+    { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
+    { title: 'Violation Types', filename: 'Violation Types | Washtenaw County, MI.pdf' },
+    { title: 'MCL Act 92 (2000)', filename: 'mcl_act_92_of_2000.pdf' },
+    { title: 'Emergency Action Plan', filename: 'retail_food_establishments_emergency_action_plan.pdf' }
+  ],
+  wayne: [
+    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
+    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
+    { title: 'Wayne County Health Code', filename: 'Wayne_County_Health_Code.pdf' },
+    { title: 'Detroit Health Guidelines', filename: 'Detroit_Health_Guidelines.pdf' },
+    // Add more Wayne-specific documents
+  ],
+  oakland: [
+    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
+    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
+    { title: 'Oakland County Regulations', filename: 'Oakland_County_Regulations.pdf' },
+    // Add more Oakland-specific documents
+  ]
+}
+
+const COUNTY_NAMES = {
+  washtenaw: 'Washtenaw County',
+  wayne: 'Wayne County',
+  oakland: 'Oakland County'
+}
 
 export default function Dashboard() {
   const [session, setSession] = useState(null)
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
+  const [userCounty, setUserCounty] = useState('washtenaw')
+  const [showCountySelector, setShowCountySelector] = useState(false)
   
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Welcome to protocolLM. Upload a photo or ask a question to search all documents.' }
@@ -50,7 +74,7 @@ export default function Dashboard() {
 
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_subscribed, requests_used, images_used')
+        .select('is_subscribed, requests_used, images_used, county')
         .eq('id', session.user.id)
         .single()
 
@@ -58,6 +82,9 @@ export default function Dashboard() {
         router.push('/pricing')
         return 
       }
+
+      // Set user's county
+      setUserCounty(profile.county || 'washtenaw')
 
       const { data: subscription } = await supabase
         .from('subscriptions')
@@ -88,6 +115,28 @@ export default function Dashboard() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  const handleCountyChange = async (newCounty) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ county: newCounty })
+        .eq('id', session.user.id)
+
+      if (error) throw error
+
+      setUserCounty(newCounty)
+      setShowCountySelector(false)
+      
+      // Reset messages with new county context
+      setMessages([
+        { role: 'assistant', content: `County updated to ${COUNTY_NAMES[newCounty]}. Ask me anything about your local food safety regulations.` }
+      ])
+    } catch (error) {
+      console.error('Error updating county:', error)
+      alert('Failed to update county. Please try again.')
+    }
+  }
+
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim() && !image) return
@@ -104,7 +153,8 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           messages: [...messages, { role: 'user', content: input }], 
-          image: userMessage.image
+          image: userMessage.image,
+          county: userCounty
         }),
       })
 
@@ -156,9 +206,51 @@ export default function Dashboard() {
 
   if (!session) return null
 
+  const currentDocuments = COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS.washtenaw
+
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
       
+      {/* County Selector Modal */}
+      {showCountySelector && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-slate-900">Select Your County</h3>
+              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-slate-600 mb-6">Choose the county where your restaurant operates to access local regulations.</p>
+            
+            <div className="space-y-3">
+              {Object.entries(COUNTY_NAMES).map(([key, name]) => (
+                <button
+                  key={key}
+                  onClick={() => handleCountyChange(key)}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition ${
+                    userCounty === key 
+                      ? 'border-blue-600 bg-blue-50' 
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-900">{name}</span>
+                    {userCounty === key && (
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* PDF Modal */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
@@ -169,7 +261,7 @@ export default function Dashboard() {
           
           <div className="flex-1 w-full relative bg-slate-50 overflow-hidden">
             <iframe 
-              src={`/documents/${viewingPdf.filename}`} 
+              src={`/documents/${userCounty}/${viewingPdf.filename}`} 
               className="absolute inset-0 w-full h-full border-none" 
               title="Document Viewer"
             />
@@ -201,7 +293,23 @@ export default function Dashboard() {
           <h1 className="text-lg font-bold text-white tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <div className="text-xs text-blue-100 mt-1">Washtenaw County Compliance</div>
+          <div className="text-xs text-blue-100 mt-1">Michigan Restaurant Compliance</div>
+          
+          {/* County Selector Button */}
+          <button 
+            onClick={() => setShowCountySelector(true)}
+            className="mt-4 w-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-lg p-3 transition text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-blue-100 mb-1">Current County</div>
+                <div className="text-sm font-semibold text-white">{COUNTY_NAMES[userCounty]}</div>
+              </div>
+              <svg className="w-5 h-5 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+              </svg>
+            </div>
+          </button>
           
           {subscriptionInfo && (
             <div className="mt-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
@@ -244,9 +352,11 @@ export default function Dashboard() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 mt-16 md:mt-0">
-          <div className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-3 px-2">Document Library</div>
+          <div className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-3 px-2">
+            {COUNTY_NAMES[userCounty]} Documents
+          </div>
           <div className="space-y-1">
-            {DOCUMENTS.map((doc, idx) => (
+            {currentDocuments.map((doc, idx) => (
               <button 
                 key={idx} 
                 className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors text-left group" 
@@ -285,7 +395,7 @@ export default function Dashboard() {
         <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between shadow-sm mt-16 md:mt-0">
           <div>
             <h2 className="font-semibold text-slate-900 text-sm">Compliance Assistant</h2>
-            <p className="text-xs text-slate-500">Searching all documents</p>
+            <p className="text-xs text-slate-500">Searching {COUNTY_NAMES[userCounty]} documents</p>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs text-slate-400">GEMINI 2.0</span>
