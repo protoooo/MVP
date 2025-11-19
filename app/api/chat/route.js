@@ -5,6 +5,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
 
+const COUNTY_NAMES = {
+  washtenaw: 'Washtenaw County',
+  wayne: 'Wayne County',
+  oakland: 'Oakland County'
+}
+
 export async function POST(request) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -15,7 +21,7 @@ export async function POST(request) {
   try {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('is_subscribed, requests_used, images_used')
+      .select('is_subscribed, requests_used, images_used, county')
       .eq('id', session.user.id)
       .single()
 
@@ -40,7 +46,10 @@ export async function POST(request) {
       ? { requests: 5000, images: 500 }
       : { requests: 500, images: 50 }
 
-    const { messages, image } = await request.json()
+    const { messages, image, county } = await request.json()
+    
+    // Use county from request or fallback to profile
+    const userCounty = county || profile.county || 'washtenaw'
 
     // Check request limit
     if (profile.requests_used >= limits.requests) {
@@ -74,6 +83,7 @@ export async function POST(request) {
       const embeddingResult = await embeddingModel.embedContent(lastUserMessage)
       const embedding = embeddingResult.embedding.values
 
+      // Search documents filtered by county
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
         match_threshold: 0.5,
@@ -85,7 +95,17 @@ export async function POST(request) {
       }
 
       if (documents && documents.length > 0) {
-        contextText = documents.map(doc => {
+        // Filter documents by county (if metadata contains county info)
+        const countyDocs = documents.filter(doc => {
+          // If document has county metadata, filter by it
+          // Otherwise, include it (for shared documents like FDA Food Code)
+          if (doc.metadata?.county) {
+            return doc.metadata.county === userCounty
+          }
+          return true // Include documents without county metadata (shared docs)
+        })
+
+        contextText = countyDocs.map(doc => {
           if (doc.metadata?.source && !usedDocs.includes(doc.metadata.source)) {
             usedDocs.push(doc.metadata.source)
           }
@@ -94,17 +114,19 @@ export async function POST(request) {
       }
     }
 
+    const countyName = COUNTY_NAMES[userCounty] || userCounty
     const systemPrompt = `
-      You are the compliance assistant for protocol LM, helping Washtenaw County restaurants maintain food safety compliance.
+      You are the compliance assistant for protocol LM, helping ${countyName} restaurants maintain food safety compliance.
       
       INSTRUCTIONS:
-      1. You have access to official FDA, Michigan, and Washtenaw County regulations.
-      2. Answer questions based on this context and general food safety knowledge.
+      1. You have access to official FDA, Michigan, and ${countyName} regulations.
+      2. Answer questions based on this context and general food safety knowledge specific to ${countyName}.
       3. If the context contains the answer, CITE the source document name in **bold**.
       4. If the user uploads an image, analyze it for violations.
       5. Never mention that you are an AI or language model. You are a compliance assistant.
+      6. Always prioritize county-specific regulations over general guidelines when they differ.
       
-      RETRIEVED CONTEXT:
+      RETRIEVED CONTEXT (${countyName}):
       ${contextText || "No specific document matches found. Rely on general food safety knowledge."}
     `
 
