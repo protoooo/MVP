@@ -88,7 +88,11 @@ export default function App() {
       
       if (data.error) throw new Error(data.error);
       
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data.response,
+        confidence: data.confidence // Store confidence with message
+      }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Error: " + error.message }]);
     } finally {
@@ -202,6 +206,26 @@ export default function App() {
                       <img src={msg.image} alt="User upload" style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '10px', display: 'block' }} />
                     )}
                     {formatMessage(msg.content)}
+                    {msg.role === 'assistant' && msg.confidence && (
+                      <div style={{ 
+                        marginTop: '12px', 
+                        paddingTop: '10px', 
+                        borderTop: '1px solid #e5e7eb',
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span style={{ fontWeight: '500' }}>Source confidence:</span>
+                        <span style={{ 
+                          color: msg.confidence >= 70 ? '#059669' : '#d97706',
+                          fontWeight: '600'
+                        }}>
+                          {msg.confidence}%
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {loading && (
