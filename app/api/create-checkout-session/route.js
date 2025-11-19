@@ -38,19 +38,3 @@ export async function POST(req) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-```
-
----
-
-## Next Steps:
-
-1. **Create Stripe Price IDs:**
-   - Go to Stripe Dashboard → Products → Create Product
-   - Create "Pro" plan ($29/month recurring)
-   - Create "Enterprise" plan ($49/month recurring)
-   - Copy the `price_xxxxx` IDs and replace `price_PRO_PLAN_ID` and `price_ENTERPRISE_PLAN_ID` in the pricing page
-
-2. **Add these to Railway env vars:**
-```
-   NEXT_PUBLIC_BASE_URL=https://your-railway-domain.up.railway.app
-   NODE_ENV=production
