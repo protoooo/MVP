@@ -143,7 +143,7 @@ export default function Pricing() {
             </ul>
 
             <button
-              onClick={() => handleCheckout('price_YOUR_STRIPE_PRICE_ID')}
+              onClick={() => handleCheckout('price_1SVDccDlSrKA3nbAIRXwrC9F')}
               disabled={loading}
               style={{
                 width: '100%',
