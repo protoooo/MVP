@@ -111,4 +111,27 @@ export default function Auth() {
         )}
 
         <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-          <p style={{ fontSize: '13px', color: '#64748b', marginBottom:
+          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>
+            Start your 7-day free trial
+          </p>
+          <button
+            onClick={() => router.push('/pricing')}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '14px',
+              backgroundColor: '#f1f5f9',
+              color: '#0f172a',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            View Plans & Pricing
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
