@@ -22,9 +22,8 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    // 1. USE THE CORRECT MODEL STRING
-    // 'gemini-1.5-flash' is the standard stable tag. 
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    // ✅ FIXED: Use gemini-2.0-flash (stable, production-ready model)
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
     const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 
     const lastUserMessage = messages[messages.length - 1].content
