@@ -4,8 +4,54 @@ import { searchDocuments } from '../../../lib/searchDocs.js';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+// Simple in-memory rate limiter
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
+
+function checkRateLimit(identifier) {
+  const now = Date.now();
+  const userRequests = rateLimitMap.get(identifier) || [];
+  
+  // Filter out requests outside the current window
+  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+  
+  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    return false; // Rate limit exceeded
+  }
+  
+  // Add current request and update map
+  recentRequests.push(now);
+  rateLimitMap.set(identifier, recentRequests);
+  
+  // Cleanup old entries periodically (prevent memory leak)
+  if (Math.random() < 0.01) { // 1% chance to cleanup
+    const cutoff = now - RATE_LIMIT_WINDOW;
+    for (const [key, timestamps] of rateLimitMap.entries()) {
+      const active = timestamps.filter(t => t > cutoff);
+      if (active.length === 0) {
+        rateLimitMap.delete(key);
+      } else {
+        rateLimitMap.set(key, active);
+      }
+    }
+  }
+  
+  return true;
+}
+
 export async function POST(req) {
   try {
+    // Rate limiting - use IP address as identifier
+    const forwarded = req.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0] : req.headers.get('x-real-ip') || 'unknown';
+    
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ 
+        error: "Rate limit exceeded. Please wait a moment before trying again." 
+      }, { status: 429 });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "API Key missing" }, { status: 500 });
@@ -18,6 +64,28 @@ export async function POST(req) {
     const query = message || "food safety inspection compliance";
     const relevantChunks = await searchDocuments(query, 5);
     
+    // Calculate confidence based on top match score and score consistency
+    let confidence = null;
+    if (relevantChunks && relevantChunks.length > 0) {
+      const topScore = relevantChunks[0].score;
+      const avgTopThree = relevantChunks.slice(0, Math.min(3, relevantChunks.length))
+        .reduce((sum, chunk) => sum + chunk.score, 0) / Math.min(3, relevantChunks.length);
+      
+      // Confidence factors:
+      // - High top score (>0.7 = very relevant)
+      // - Consistent scores among top results (indicates clear match)
+      const scoreQuality = topScore;
+      const scoreConsistency = avgTopThree / topScore; // Closer to 1 = more consistent
+      
+      // Combined confidence (0-100%)
+      confidence = Math.round(scoreQuality * scoreConsistency * 100);
+      
+      // Only show confidence if we have good matches (>50%)
+      if (confidence < 50) {
+        confidence = null;
+      }
+    }
+    
     // Build context from only relevant chunks
     let contextData = "";
     if (relevantChunks && relevantChunks.length > 0) {
@@ -27,7 +95,7 @@ export async function POST(req) {
         )
         .join('\n\n');
       
-      console.log(`✅ Found ${relevantChunks.length} relevant chunks for query: "${query.substring(0, 50)}..."`);
+      console.log(`✅ Found ${relevantChunks.length} relevant chunks for query: "${query.substring(0, 50)}..." (confidence: ${confidence || 'low'}%)`);
     } else {
       console.warn('⚠️  No relevant chunks found. Using fallback.');
       contextData = "No specific document matches found. Provide general food safety guidance based on standard FDA and local health department regulations.";
@@ -94,7 +162,10 @@ USER QUESTION: ${message || "Analyze this image for food safety compliance."}`;
       throw new Error("No response text from API");
     }
 
-    return NextResponse.json({ response: text });
+    return NextResponse.json({ 
+      response: text,
+      confidence: confidence // Include confidence in response
+    });
 
   } catch (error) {
     console.error("Chat API Error:", error);
