@@ -1,5 +1,5 @@
 // scripts/upload-to-supabase.js
-// This script processes PDFs and uploads embeddings to Supabase
+// This script processes PDFs from county folders and uploads embeddings to Supabase
 // Run: node scripts/upload-to-supabase.js
 
 import fs from 'fs';
@@ -18,8 +18,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role key for admin access
 );
 
+const COUNTIES = ['washtenaw', 'wayne', 'oakland'];
+
 async function uploadToSupabase() {
-  console.log('🚀 Starting document upload to Supabase...\n');
+  console.log('🚀 Starting multi-county document upload to Supabase...\n');
   
   const documentsDir = path.join(process.cwd(), 'public', 'documents');
   
@@ -28,7 +30,6 @@ async function uploadToSupabase() {
     process.exit(1);
   }
   
-  const files = fs.readdirSync(documentsDir);
   let totalChunks = 0;
   let uploadedChunks = 0;
   
@@ -41,89 +42,106 @@ async function uploadToSupabase() {
     console.log('✅ Cleared existing documents\n');
   }
   
-  for (const file of files) {
-    if (file === 'keep.txt' || file.startsWith('.')) continue;
+  // Process each county
+  for (const county of COUNTIES) {
+    const countyDir = path.join(documentsDir, county);
     
-    console.log(`📄 Processing: ${file}`);
-    const filePath = path.join(documentsDir, file);
-    let text = '';
-    
-    // Extract text
-    try {
-      if (file.endsWith('.txt')) {
-        text = fs.readFileSync(filePath, 'utf-8');
-      } else if (file.endsWith('.pdf')) {
-        const dataBuffer = fs.readFileSync(filePath);
-        const pdfData = await pdf(dataBuffer);
-        text = pdfData.text;
-      }
-    } catch (err) {
-      console.error(`   ⚠️  Failed to read ${file}:`, err.message);
+    // Check if county directory exists
+    if (!fs.existsSync(countyDir)) {
+      console.log(`⚠️  Skipping ${county} - directory not found\n`);
       continue;
     }
     
-    // Split into chunks (500 words each)
-    const words = text.split(/\s+/);
-    const fileChunks = [];
+    console.log(`\n📍 Processing ${county.toUpperCase()} COUNTY\n${'='.repeat(50)}`);
     
-    for (let i = 0; i < words.length; i += 500) {
-      const chunk = words.slice(i, i + 500).join(' ');
-      if (chunk.trim().length < 100) continue; // Skip tiny chunks
+    const files = fs.readdirSync(countyDir);
+    
+    for (const file of files) {
+      if (file === 'keep.txt' || file.startsWith('.')) continue;
       
-      fileChunks.push({
-        source: file,
-        text: chunk.trim(),
-        chunkIndex: Math.floor(i / 500),
-        wordCount: Math.min(500, words.length - i)
-      });
-    }
-    
-    console.log(`   📊 Created ${fileChunks.length} chunks`);
-    totalChunks += fileChunks.length;
-    
-    // Generate embeddings and upload to Supabase
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
-    
-    for (let i = 0; i < fileChunks.length; i++) {
-      const chunk = fileChunks[i];
+      console.log(`📄 Processing: ${file}`);
+      const filePath = path.join(countyDir, file);
+      let text = '';
       
+      // Extract text
       try {
-        // Generate embedding
-        const result = await model.embedContent(chunk.text);
-        const embedding = result.embedding.values;
-        
-        // Upload to Supabase
-        const { error: insertError } = await supabase
-          .from('documents')
-          .insert({
-            content: chunk.text,
-            metadata: {
-              source: chunk.source,
-              chunk_index: chunk.chunkIndex,
-              word_count: chunk.wordCount
-            },
-            embedding: embedding
-          });
-        
-        if (insertError) {
-          console.error(`   ❌ Failed to upload chunk ${i}:`, insertError.message);
-        } else {
-          uploadedChunks++;
+        if (file.endsWith('.txt')) {
+          text = fs.readFileSync(filePath, 'utf-8');
+        } else if (file.endsWith('.pdf')) {
+          const dataBuffer = fs.readFileSync(filePath);
+          const pdfData = await pdf(dataBuffer);
+          text = pdfData.text;
         }
-        
-        // Progress indicator
-        if ((i + 1) % 5 === 0) {
-          console.log(`   ⏳ Progress: ${i + 1}/${fileChunks.length} chunks uploaded`);
-        }
-        
-        // Rate limiting - avoid API throttling
-        await new Promise(r => setTimeout(r, 100));
       } catch (err) {
-        console.error(`   ❌ Error on chunk ${i}:`, err.message);
+        console.error(`   ⚠️  Failed to read ${file}:`, err.message);
+        continue;
       }
+      
+      // Split into chunks (500 words each)
+      const words = text.split(/\s+/);
+      const fileChunks = [];
+      
+      for (let i = 0; i < words.length; i += 500) {
+        const chunk = words.slice(i, i + 500).join(' ');
+        if (chunk.trim().length < 100) continue; // Skip tiny chunks
+        
+        fileChunks.push({
+          source: file,
+          county: county,
+          text: chunk.trim(),
+          chunkIndex: Math.floor(i / 500),
+          wordCount: Math.min(500, words.length - i)
+        });
+      }
+      
+      console.log(`   📊 Created ${fileChunks.length} chunks`);
+      totalChunks += fileChunks.length;
+      
+      // Generate embeddings and upload to Supabase
+      const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+      
+      for (let i = 0; i < fileChunks.length; i++) {
+        const chunk = fileChunks[i];
+        
+        try {
+          // Generate embedding
+          const result = await model.embedContent(chunk.text);
+          const embedding = result.embedding.values;
+          
+          // Upload to Supabase with county metadata
+          const { error: insertError } = await supabase
+            .from('documents')
+            .insert({
+              content: chunk.text,
+              metadata: {
+                source: chunk.source,
+                county: chunk.county,
+                chunk_index: chunk.chunkIndex,
+                word_count: chunk.wordCount
+              },
+              embedding: embedding
+            });
+          
+          if (insertError) {
+            console.error(`   ❌ Failed to upload chunk ${i}:`, insertError.message);
+          } else {
+            uploadedChunks++;
+          }
+          
+          // Progress indicator
+          if ((i + 1) % 5 === 0) {
+            console.log(`   ⏳ Progress: ${i + 1}/${fileChunks.length} chunks uploaded`);
+          }
+          
+          // Rate limiting - avoid API throttling
+          await new Promise(r => setTimeout(r, 100));
+        } catch (err) {
+          console.error(`   ❌ Error on chunk ${i}:`, err.message);
+        }
+      }
+      
+      console.log(`   ✅ Completed ${file}\n`);
     }
-    
-    console.log(`   ✅ Completed ${file}\n`);
   }
   
   console.log('\n🎉 Upload complete!');
@@ -131,13 +149,25 @@ async function uploadToSupabase() {
   console.log(`✅ Successfully uploaded: ${uploadedChunks}`);
   console.log(`❌ Failed: ${totalChunks - uploadedChunks}`);
   
-  // Verify upload
-  const { count, error: countError } = await supabase
+  // Verify upload with breakdown by county
+  console.log('\n📚 Database Summary:');
+  for (const county of COUNTIES) {
+    const { count, error: countError } = await supabase
+      .from('documents')
+      .select('*', { count: 'exact', head: true })
+      .filter('metadata->>county', 'eq', county);
+    
+    if (!countError) {
+      console.log(`   ${county.charAt(0).toUpperCase() + county.slice(1)} County: ${count} chunks`);
+    }
+  }
+  
+  const { count: totalCount, error: totalError } = await supabase
     .from('documents')
     .select('*', { count: 'exact', head: true });
   
-  if (!countError) {
-    console.log(`\n📚 Documents in database: ${count}`);
+  if (!totalError) {
+    console.log(`   Total: ${totalCount} chunks`);
   }
 }
 
