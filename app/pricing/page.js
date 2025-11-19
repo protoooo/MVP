@@ -16,8 +16,7 @@ export default function Pricing() {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
-      // Save the price they wanted so we could theoretically redirect back later
-      // For now, send them to login
+      alert("Please Log In or Sign Up to subscribe to a plan.")
       router.push('/')
       return
     }
@@ -40,6 +39,7 @@ export default function Pricing() {
         window.location.href = data.url
       } else {
         console.error('No checkout URL returned')
+        alert('Something went wrong initiating checkout.')
         setLoadingId(null)
       }
     } catch (error) {
@@ -58,7 +58,7 @@ export default function Pricing() {
         {/* PRO PLAN */}
         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col shadow-lg">
           <h2 className="text-xl font-bold mb-2 text-indigo-400">Pro Plan</h2>
-          <p className="text-3xl font-bold mb-4">Standard<span className="text-sm font-normal text-gray-400">/mo</span></p>
+          <p className="text-3xl font-bold mb-4">$29<span className="text-sm font-normal text-gray-400">/mo</span></p>
           <ul className="text-gray-300 text-sm mb-8 space-y-3 flex-grow">
             <li className="flex items-center">✓ Full Document Access</li>
             <li className="flex items-center">✓ AI Compliance Assistant</li>
@@ -76,7 +76,7 @@ export default function Pricing() {
         {/* ENTERPRISE PLAN */}
         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 flex flex-col shadow-lg">
           <h2 className="text-xl font-bold mb-2 text-purple-400">Enterprise</h2>
-          <p className="text-3xl font-bold mb-4">Advanced<span className="text-sm font-normal text-gray-400">/mo</span></p>
+          <p className="text-3xl font-bold mb-4">$99<span className="text-sm font-normal text-gray-400">/mo</span></p>
           <ul className="text-gray-300 text-sm mb-8 space-y-3 flex-grow">
             <li className="flex items-center">✓ All Pro Features</li>
             <li className="flex items-center">✓ Multi-Location Support</li>
