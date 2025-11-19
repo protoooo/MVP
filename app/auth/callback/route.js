@@ -11,21 +11,53 @@ export async function GET(request) {
   if (code) {
     const cookieStore = cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (exchangeError) {
+      console.error('Session exchange error:', exchangeError)
+      return NextResponse.redirect(`${requestUrl.origin}/?error=auth_failed`)
+    }
+
+    if (session) {
+      // Create user profile if it doesn't exist (email confirmation scenario)
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: session.user.id,
+          email: session.user.email,
+          is_subscribed: false,
+          requests_used: 0
+        })
+
+      // Ignore duplicate key errors (profile already exists)
+      if (profileError && profileError.code !== '23505') {
+        console.error('Profile creation error:', profileError)
+      }
+
+      // Check if user has subscription
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed')
+        .eq('id', session.user.id)
+        .single()
+
+      let origin = process.env.NEXT_PUBLIC_BASE_URL 
+      if (!origin) {
+        origin = requestUrl.origin
+      }
+      origin = origin.replace(/\/$/, '')
+
+      // Redirect based on subscription status
+      if (profile?.is_subscribed) {
+        return NextResponse.redirect(`${origin}/documents`)
+      } else {
+        return NextResponse.redirect(`${origin}/pricing`)
+      }
+    }
   }
 
-  // 1. Grab the Env Variable
-  let origin = process.env.NEXT_PUBLIC_BASE_URL 
-
-  // 2. Safety Check: If variable is missing, fall back to request origin (localhost)
-  if (!origin) {
-    origin = requestUrl.origin
-  }
-
-  // 3. CRITICAL FIX: Remove the trailing slash if it exists
-  // This turns "railway.app/" into "railway.app" so we don't get double slashes
+  // If no code or session, redirect to home
+  let origin = process.env.NEXT_PUBLIC_BASE_URL || requestUrl.origin
   origin = origin.replace(/\/$/, '')
-
-  // 4. Redirect to the dashboard
-  return NextResponse.redirect(`${origin}/documents`)
+  return NextResponse.redirect(`${origin}/`)
 }
