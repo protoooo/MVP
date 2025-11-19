@@ -12,25 +12,21 @@ export default function Pricing() {
   const handleCheckout = async (priceId) => {
     setLoadingId(priceId)
 
-    // 1. Check if user is logged in
+    // 1. Check Session
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
-      alert("Please Log In or Sign Up to subscribe to a plan.")
+      alert("Please Log In or Sign Up on the home page to subscribe.")
       router.push('/')
       return
     }
 
-    // 2. Create Checkout Session
+    // 2. Create Checkout
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: priceId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId: priceId }),
       })
 
       const data = await res.json()
@@ -39,11 +35,11 @@ export default function Pricing() {
         window.location.href = data.url
       } else {
         console.error('No checkout URL returned')
-        alert('Something went wrong initiating checkout.')
+        alert('Error starting checkout.')
         setLoadingId(null)
       }
     } catch (error) {
-      console.error('Error creating checkout session:', error)
+      console.error('Error:', error)
       setLoadingId(null)
     }
   }
@@ -92,10 +88,7 @@ export default function Pricing() {
         </div>
 
       </div>
-      
-      <button onClick={() => router.back()} className="mt-10 text-gray-500 hover:text-white text-sm">
-        ← Back to Home
-      </button>
+      <button onClick={() => router.back()} className="mt-10 text-gray-500 hover:text-white text-sm">← Back to Home</button>
     </div>
   )
 }
