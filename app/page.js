@@ -10,12 +10,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [session, setSession] = useState(null)
-  const [view, setView] = useState('signup') // Toggle state: 'signup' or 'login'
+  const [view, setView] = useState('signup') // 'signup' or 'login'
   
   const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
+    // Check if user is already logged in on load
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
@@ -28,14 +29,16 @@ export default function Home() {
     setLoading(true)
     setMessage(null)
 
-    // 1. Grab the Base URL
+    // 1. Get the Base URL from Railway env var or fallback to origin
     let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
-    // 2. Clean the trailing slash
+    
+    // 2. IMPORTANT: Remove trailing slash if it exists to prevent double-slashes
     baseUrl = baseUrl.replace(/\/$/, '')
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        // This ensures the link points to the correct place
         emailRedirectTo: `${baseUrl}/auth/callback`,
       },
     })
@@ -59,14 +62,14 @@ export default function Home() {
         
         <h1 className="text-2xl font-bold text-center mb-2">Welcome to Protocol</h1>
         <p className="text-gray-400 text-center mb-6 text-sm">
-          Food safety intelligence for Washtenaw County restaurants.
+          Food safety intelligence and compliance resources.
         </p>
 
         {session ? (
-          // --- LOGGED IN VIEW ---
+          /* --- VIEW: ALREADY LOGGED IN --- */
           <div className="text-center space-y-4">
             <div className="p-3 bg-green-900/20 border border-green-800 rounded text-green-200 text-sm">
-              Logged in as <strong>{session.user.email}</strong>
+              You are logged in as <strong>{session.user.email}</strong>
             </div>
             <Link 
               href="/documents" 
@@ -82,7 +85,7 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          // --- GUEST VIEW ---
+          /* --- VIEW: LOGIN / SIGNUP FORM --- */
           <>
             {/* TOGGLE BUTTONS */}
             <div className="flex border-b border-gray-700 mb-6">
@@ -132,9 +135,13 @@ export default function Home() {
           </>
         )}
 
+        {/* FOOTER LINK TO PRICING */}
         {!session && (
           <div className="mt-8 pt-6 border-t border-gray-700 text-center">
-            <Link href="/pricing" className="text-sm text-gray-400 hover:text-white underline">
+            <Link 
+              href="/pricing"
+              className="text-sm text-gray-400 hover:text-white underline"
+            >
               View Plans & Pricing
             </Link>
           </div>
