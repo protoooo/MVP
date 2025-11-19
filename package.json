@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build-embeddings": "node scripts/build-embeddings.js"
+    "build-embeddings": "node scripts/build-embeddings.js",
+    "upload-embeddings": "node scripts/upload-to-supabase.js"
   },
   "dependencies": {
     "react": "^18",
