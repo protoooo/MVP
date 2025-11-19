@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import pdf from "pdf-parse";
+import { searchDocuments } from '@/lib/searchDocs';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -13,55 +11,56 @@ export async function POST(req) {
 
     const { message, image } = await req.json();
 
-    // 1. LOAD DOCUMENTS
-    const documentsDir = path.join(process.cwd(), "public", "documents");
+    // 1. SEARCH FOR RELEVANT DOCUMENT CHUNKS
+    // Only retrieve the 5 most relevant chunks instead of loading all documents
+    const query = message || "food safety inspection compliance";
+    const relevantChunks = await searchDocuments(query, 5);
+    
+    // Build context from only relevant chunks
     let contextData = "";
-
-    try {
-       if (fs.existsSync(documentsDir)) {
-         const files = fs.readdirSync(documentsDir);
-         for (const file of files) {
-            const filePath = path.join(documentsDir, file);
-            if (file === 'keep.txt' || file.startsWith('.')) continue;
-
-            if (file.endsWith('.txt')) {
-                contextData += `\n-- DOC: ${file} --\n${fs.readFileSync(filePath, 'utf-8')}\n`;
-            } else if (file.endsWith('.pdf')) {
-                const dataBuffer = fs.readFileSync(filePath);
-                const pdfData = await pdf(dataBuffer);
-                contextData += `\n-- DOC: ${file} --\n${pdfData.text}\n`;
-            }
-         }
-       }
-    } catch (e) { console.warn("Read error", e); }
+    if (relevantChunks.length > 0) {
+      contextData = relevantChunks
+        .map((chunk, idx) => 
+          `--- RELEVANT EXCERPT ${idx + 1} (from ${chunk.source}, relevance: ${(chunk.score * 100).toFixed(1)}%) ---\n${chunk.text}`
+        )
+        .join('\n\n');
+      
+      console.log(`✅ Found ${relevantChunks.length} relevant chunks for query: "${query.substring(0, 50)}..."`);
+    } else {
+      console.warn('⚠️  No relevant chunks found. Using fallback.');
+      contextData = "No specific document matches found. Provide general food safety guidance.";
+    }
 
     // 2. BUILD PROMPT
     const systemInstruction = `You are Protocol, a food safety intelligence assistant.
     
-    CORE INSTRUCTIONS:
-    1. If an IMAGE is provided, analyze it for food safety violations based on the Context Documents. Look for: Cross-contamination, improper storage, dirty surfaces, or unsafe temperatures.
-    2. If NO violations are found in the image, say "This looks compliant based on visual inspection," but warn that you cannot measure temperature visually.
-    3. Cite your sources (e.g., "According to the Food Code...").
-    4. Use Bold formatting for key issues.
+CORE INSTRUCTIONS:
+1. If an IMAGE is provided, analyze it for food safety violations based on the Context Documents. Look for: Cross-contamination, improper storage, dirty surfaces, or unsafe temperatures.
+2. If NO violations are found in the image, say "This looks compliant based on visual inspection," but warn that you cannot measure temperature visually.
+3. Cite your sources using the document names provided (e.g., "According to the Food Code..." or "Based on FDA guidelines...").
+4. Use **Bold formatting** for key issues.
+5. Be specific and reference the relevant regulations or standards.
 
-    CONTEXT DOCUMENTS:
-    ${contextData.slice(0, 60000) || "No documents found."}`;
+RELEVANT CONTEXT DOCUMENTS:
+${contextData}
+
+USER QUESTION: ${message || "Analyze this image for food safety compliance."}`;
 
     // 3. CONSTRUCT PAYLOAD (With or Without Image)
-    const parts = [{ text: `${systemInstruction}\n\nUSER QUESTION: ${message || "Analyze this image for safety."}` }];
+    const parts = [{ text: systemInstruction }];
     
     if (image) {
       // Remove the "data:image/jpeg;base64," prefix if present
-      const base64Data = image.split(",")[1];
+      const base64Data = image.includes(',') ? image.split(",")[1] : image;
       parts.push({
         inline_data: {
-          mime_type: "image/jpeg", // Assuming jpeg/png from camera
+          mime_type: "image/jpeg",
           data: base64Data
         }
       });
     }
 
-    // 4. API REQUEST (Gemini 2.5 Flash)
+    // 4. API REQUEST (Gemini 2.0 Flash)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
@@ -81,6 +80,7 @@ export async function POST(req) {
     return NextResponse.json({ response: text });
 
   } catch (error) {
+    console.error("Chat API Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
