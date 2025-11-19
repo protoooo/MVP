@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 export default function Home() {
   const [email, setEmail] = useState('')
@@ -11,8 +10,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   
-  // Simple Toggle: 'login' or 'signup'
-  const [view, setView] = useState('login')
+  // Toggle between 'login' and 'signup'
+  const [view, setView] = useState('signup')
   
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -22,37 +21,56 @@ export default function Home() {
     setLoading(true)
     setMessage(null)
 
-    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
-    baseUrl = baseUrl.replace(/\/$/, '')
-
     try {
-      // --- LOG IN (Password) ---
-      if (view === 'login') {
+      if (view === 'signup') {
+        // --- FLOW: SIGN UP -> PRICING ---
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            // If email confirmation is disabled in Supabase, this logs them in immediately
+            data: {
+              is_subscribed: false // Default to false until they pay
+            }
+          }
+        })
+
+        if (error) throw error
+
+        if (data.session) {
+          // Success: Redirect immediately to Pricing to get them to pay
+          router.push('/pricing')
+        } else {
+          // If Supabase requires email verification
+          setMessage({ 
+            type: 'success', 
+            text: 'Account created! Please check your email to confirm, then Log In.' 
+          })
+          setView('login')
+        }
+
+      } else {
+        // --- FLOW: LOG IN -> DASHBOARD (OR PRICING) ---
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
 
         if (error) throw error
-        
-        if (data.session) {
-          router.push('/documents')
-          return
-        }
-      } 
-      // --- SIGN UP (Magic Link Verification) ---
-      else {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: `${baseUrl}/auth/callback` },
-        })
 
-        if (error) throw error
-        
-        setMessage({ 
-          type: 'success', 
-          text: 'Confirmation link sent to your email.' 
-        })
+        // Check if they actually have a subscription
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed')
+          .eq('id', data.session.user.id)
+          .single()
+
+        if (profile && profile.is_subscribed) {
+          router.push('/documents')
+        } else {
+          // Logged in but hasn't paid? Send to pricing.
+          router.push('/pricing')
+        }
       }
     } catch (error) {
       setMessage({ type: 'error', text: error.message })
@@ -73,14 +91,6 @@ export default function Home() {
         {/* TABS */}
         <div className="grid grid-cols-2 gap-1 bg-gray-800 p-1 rounded-lg mb-6">
           <button
-            onClick={() => { setView('login'); setMessage(null); }}
-            className={`py-2 text-sm font-semibold rounded-md transition-all ${
-              view === 'login' ? 'bg-[#161b22] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Log In
-          </button>
-          <button
             onClick={() => { setView('signup'); setMessage(null); }}
             className={`py-2 text-sm font-semibold rounded-md transition-all ${
               view === 'signup' ? 'bg-[#161b22] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
@@ -88,11 +98,19 @@ export default function Home() {
           >
             Sign Up
           </button>
+          <button
+            onClick={() => { setView('login'); setMessage(null); }}
+            className={`py-2 text-sm font-semibold rounded-md transition-all ${
+              view === 'login' ? 'bg-[#161b22] text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Log In
+          </button>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Email</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Email Address</label>
             <input
               type="email"
               value={email}
@@ -103,26 +121,25 @@ export default function Home() {
             />
           </div>
 
-          {view === 'login' && (
-            <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl bg-[#0f1117] border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-white transition"
-                placeholder="••••••••"
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5 ml-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-4 py-3 rounded-xl bg-[#0f1117] border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-white transition"
+              placeholder="••••••••"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
-            {loading ? 'Processing...' : (view === 'login' ? 'Access Dashboard' : 'Create Account')}
+            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account & View Plans' : 'Access Dashboard')}
           </button>
 
           {message && (
