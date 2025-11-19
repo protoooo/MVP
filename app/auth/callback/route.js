@@ -14,12 +14,18 @@ export async function GET(request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // CRITICAL FIX: Force the redirect to use the Env Variable if it exists.
-  // This prevents the "localhost" bounce-back.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
-    ? process.env.NEXT_PUBLIC_BASE_URL 
-    : requestUrl.origin
+  // 1. Grab the Env Variable
+  let origin = process.env.NEXT_PUBLIC_BASE_URL 
 
-  // Redirect to the documents dashboard
-  return NextResponse.redirect(`${baseUrl}/documents`)
+  // 2. Safety Check: If variable is missing, fall back to request origin (localhost)
+  if (!origin) {
+    origin = requestUrl.origin
+  }
+
+  // 3. CRITICAL FIX: Remove the trailing slash if it exists
+  // This turns "railway.app/" into "railway.app" so we don't get double slashes
+  origin = origin.replace(/\/$/, '')
+
+  // 4. Redirect to the dashboard
+  return NextResponse.redirect(`${origin}/documents`)
 }
