@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to protocol LM. Upload a photo or ask a question to search all documents.' }
+    { role: 'assistant', content: 'Welcome to protocolLM. Upload a photo or ask a question to search all documents.' }
   ])
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
@@ -178,58 +178,62 @@ export default function Dashboard() {
       )}
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white p-4 flex justify-between items-center z-50 border-b border-slate-200">
-        <span className="font-semibold text-slate-900">protocol LM</span>
-        <button onClick={() => setIsSidebarOpen(true)} className="text-slate-600 p-2">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-blue-600 p-4 flex justify-between items-center z-50 shadow-sm">
+        <span className="font-bold text-white tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+          protocol<span className="font-black">LM</span>
+        </span>
+        <button onClick={() => setIsSidebarOpen(true)} className="text-white p-2">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-white border-r border-slate-200 flex flex-col z-40`}>
+      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-gradient-to-b from-blue-600 to-blue-700 text-white flex flex-col z-40 shadow-xl`}>
         
         <button 
           onClick={() => setIsSidebarOpen(false)}
-          className="md:hidden absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2"
+          className="md:hidden absolute top-4 right-4 text-white/80 hover:text-white p-2"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        <div className="p-6 hidden md:block border-b border-slate-200">
-          <h1 className="text-lg font-semibold text-slate-900">protocol LM</h1>
-          <div className="text-xs text-slate-500 mt-1">Washtenaw County Compliance</div>
+        <div className="p-6 hidden md:block border-b border-white/10">
+          <h1 className="text-lg font-bold text-white tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.02em' }}>
+            protocol<span className="font-black">LM</span>
+          </h1>
+          <div className="text-xs text-blue-100 mt-1">Washtenaw County Compliance</div>
           
           {subscriptionInfo && (
-            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="mt-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-900 uppercase">{subscriptionInfo.plan}</span>
+                <span className="text-xs font-semibold text-white uppercase">{subscriptionInfo.plan}</span>
                 {subscriptionInfo.trialEnd && new Date() < subscriptionInfo.trialEnd && (
-                  <span className="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">TRIAL</span>
+                  <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded font-medium">TRIAL</span>
                 )}
               </div>
               
               <div className="space-y-3">
                 <div>
-                  <div className="flex justify-between text-xs text-slate-600 mb-1">
+                  <div className="flex justify-between text-xs text-blue-100 mb-1">
                     <span>Queries</span>
                     <span className="font-medium">{subscriptionInfo.requestsUsed}/{subscriptionInfo.requestLimit}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                  <div className="w-full bg-white/20 rounded-full h-1.5">
                     <div 
-                      className="bg-slate-900 h-1.5 rounded-full transition-all" 
+                      className="bg-white h-1.5 rounded-full transition-all" 
                       style={{ width: `${Math.min((subscriptionInfo.requestsUsed / subscriptionInfo.requestLimit) * 100, 100)}%` }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs text-slate-600 mb-1">
+                  <div className="flex justify-between text-xs text-blue-100 mb-1">
                     <span>Image analyses</span>
                     <span className="font-medium">{subscriptionInfo.imagesUsed}/{subscriptionInfo.imageLimit}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                  <div className="w-full bg-white/20 rounded-full h-1.5">
                     <div 
-                      className="bg-slate-900 h-1.5 rounded-full transition-all" 
+                      className="bg-white h-1.5 rounded-full transition-all" 
                       style={{ width: `${Math.min((subscriptionInfo.imagesUsed / subscriptionInfo.imageLimit) * 100, 100)}%` }}
                     />
                   </div>
@@ -240,28 +244,28 @@ export default function Dashboard() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 mt-16 md:mt-0">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">Document Library</div>
+          <div className="text-xs font-semibold text-blue-100 uppercase tracking-wider mb-3 px-2">Document Library</div>
           <div className="space-y-1">
             {DOCUMENTS.map((doc, idx) => (
               <button 
                 key={idx} 
-                className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm hover:bg-slate-100 transition-colors text-left group" 
+                className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm hover:bg-white/10 transition-colors text-left group" 
                 onClick={() => { setViewingPdf(doc); setIsSidebarOpen(false); }}
               >
                  <div className="flex items-center overflow-hidden flex-1 min-w-0">
-                    <svg className="w-4 h-4 mr-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    <span className="truncate text-slate-700 group-hover:text-slate-900">{doc.title}</span>
+                    <svg className="w-4 h-4 mr-3 text-blue-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <span className="truncate text-white group-hover:text-blue-50">{doc.title}</span>
                  </div>
-                 <span className="text-xs text-slate-400 ml-2 opacity-0 group-hover:opacity-100 transition flex-shrink-0">View</span>
+                 <span className="text-xs text-blue-200 ml-2 opacity-0 group-hover:opacity-100 transition flex-shrink-0">View</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-white/10">
           <button 
             onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} 
-            className="w-full py-2.5 text-sm text-slate-700 hover:text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-50 transition font-medium"
+            className="w-full py-2.5 text-sm text-white hover:text-blue-50 border border-white/30 rounded-lg hover:bg-white/10 transition font-medium"
           >
             Sign out
           </button>
@@ -294,7 +298,7 @@ export default function Dashboard() {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
                 {msg.image && <img src={msg.image} alt="Analysis Target" className="max-w-[250px] rounded-lg border border-slate-200 shadow-sm" />}
-                <div className={`p-4 rounded-lg text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900 border border-slate-200'}`}>
+                <div className={`p-4 rounded-lg text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-900 border border-slate-200'}`}>
                   {msg.content}
                 </div>
               </div>
@@ -311,8 +315,8 @@ export default function Dashboard() {
         </div>
         
         <div className="p-4 bg-white border-t border-slate-200 pb-safe">
-          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-white p-2 rounded-lg border border-slate-300 focus-within:border-slate-900 transition shadow-sm">
-            <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition flex-shrink-0">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-white p-2 rounded-lg border border-slate-300 focus-within:border-blue-600 transition shadow-sm">
+            <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition flex-shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
             <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -324,7 +328,7 @@ export default function Dashboard() {
               className="flex-1 bg-transparent text-slate-900 text-sm md:text-base max-h-32 py-3 focus:outline-none resize-none" 
               rows="1"
             />
-            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
+            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
               <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
             {image && (
