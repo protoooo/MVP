@@ -14,7 +14,12 @@ export async function GET(request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Redirect to dashboard after login
-  // requestUrl.origin handles localhost vs production automatically
-  return NextResponse.redirect(`${requestUrl.origin}/documents`)
+  // CRITICAL FIX: Force the redirect to use the Env Variable if it exists.
+  // This prevents the "localhost" bounce-back.
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
+    ? process.env.NEXT_PUBLIC_BASE_URL 
+    : requestUrl.origin
+
+  // Redirect to the documents dashboard
+  return NextResponse.redirect(`${baseUrl}/documents`)
 }
