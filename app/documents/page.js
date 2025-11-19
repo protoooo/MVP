@@ -25,6 +25,7 @@ const DOCUMENTS = [
 
 export default function Dashboard() {
   const [session, setSession] = useState(null)
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Protocol Online. Upload a photo or ask a question to search all documents.' }
@@ -43,17 +44,39 @@ export default function Dashboard() {
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.push('/'); return }
+      if (!session) { 
+        router.push('/')
+        return 
+      }
 
+      // Check subscription status
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_subscribed')
+        .select('is_subscribed, requests_used')
         .eq('id', session.user.id)
         .single()
 
-      if (!profile?.is_subscribed) { router.push('/pricing'); return }
+      if (!profile?.is_subscribed) { 
+        router.push('/pricing')
+        return 
+      }
+
+      // Get subscription details
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('plan, status, trial_end, current_period_end')
+        .eq('user_id', session.user.id)
+        .single()
 
       setSession(session)
+      setSubscriptionInfo({
+        plan: subscription?.plan || 'pro',
+        status: subscription?.status || 'active',
+        requestsUsed: profile?.requests_used || 0,
+        requestLimit: subscription?.plan === 'enterprise' ? 10000 : 1000,
+        trialEnd: subscription?.trial_end ? new Date(subscription.trial_end) : null,
+        currentPeriodEnd: subscription?.current_period_end ? new Date(subscription.current_period_end) : null
+      })
     }
     checkAccess()
   }, [supabase, router])
@@ -83,9 +106,37 @@ export default function Dashboard() {
       })
 
       const data = await response.json()
+      
+      if (response.status === 403) {
+        // Subscription required
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: '⚠️ ' + data.error + '\n\nPlease visit the pricing page to subscribe.' 
+        }])
+        setTimeout(() => router.push('/pricing'), 3000)
+        return
+      }
+
+      if (response.status === 429) {
+        // Rate limit reached
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: '⚠️ ' + data.error 
+        }])
+        return
+      }
+
       if (data.error) throw new Error(data.error)
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
+      
+      // Update request count in UI
+      if (subscriptionInfo) {
+        setSubscriptionInfo(prev => ({
+          ...prev,
+          requestsUsed: prev.requestsUsed + 1
+        }))
+      }
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }])
     } finally {
@@ -107,7 +158,7 @@ export default function Dashboard() {
   return (
     <div className="fixed inset-0 flex bg-[#0f1117] text-white font-sans overflow-hidden">
       
-      {/* --- PDF MODAL --- */}
+      {/* PDF MODAL */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col">
           <div className="flex justify-between items-center p-4 bg-[#0d1117] border-b border-gray-700">
@@ -125,7 +176,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* MOBILE HEADER - Fixed at top */}
+      {/* MOBILE HEADER */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-[#161b22] p-4 flex justify-between items-center z-50 border-b border-gray-800">
         <span className="font-bold tracking-wider text-sm">PROTOCOL</span>
         <button onClick={() => setIsSidebarOpen(true)} className="text-gray-400 p-2">
@@ -136,7 +187,6 @@ export default function Dashboard() {
       {/* SIDEBAR */}
       <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-72 bg-[#161b22] border-r border-gray-800 flex flex-col z-40 shadow-2xl`}>
         
-        {/* Close button for mobile */}
         <button 
           onClick={() => setIsSidebarOpen(false)}
           className="md:hidden absolute top-4 right-4 text-gray-400 hover:text-white p-2"
@@ -147,6 +197,30 @@ export default function Dashboard() {
         <div className="p-5 hidden md:block border-b border-gray-800 bg-[#161b22]">
           <h1 className="text-lg font-bold text-white tracking-wide">PROTOCOL</h1>
           <div className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Washtenaw Compliance</div>
+          
+          {/* Subscription Info */}
+          {subscriptionInfo && (
+            <div className="mt-4 p-3 bg-[#0f1117] rounded-lg border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-indigo-400 uppercase">{subscriptionInfo.plan}</span>
+                {subscriptionInfo.trialEnd && new Date() < subscriptionInfo.trialEnd && (
+                  <span className="text-[10px] bg-indigo-900/50 text-indigo-200 px-2 py-0.5 rounded">TRIAL</span>
+                )}
+              </div>
+              <div className="text-[11px] text-gray-400">
+                <div className="flex justify-between">
+                  <span>Requests:</span>
+                  <span className="font-mono">{subscriptionInfo.requestsUsed}/{subscriptionInfo.requestLimit}</span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-1.5 mt-2">
+                  <div 
+                    className="bg-indigo-500 h-1.5 rounded-full transition-all" 
+                    style={{ width: `${(subscriptionInfo.requestsUsed / subscriptionInfo.requestLimit) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="flex-1 overflow-y-auto p-3 mt-16 md:mt-0">
@@ -173,7 +247,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black/50 z-30"
@@ -181,16 +254,14 @@ export default function Dashboard() {
         />
       )}
 
-      {/* CHAT AREA - Full height with proper spacing */}
+      {/* CHAT AREA */}
       <div className="flex-1 flex flex-col h-full relative bg-[#0f1117]">
         
-        {/* Header */}
         <div className="p-4 border-b border-gray-800 bg-[#161b22] flex items-center justify-between shadow-sm mt-16 md:mt-0">
           <div><h2 className="font-bold text-white text-sm">AI Compliance Assistant</h2><p className="text-xs text-gray-500">Searching <span className="text-indigo-400">All Documents</span></p></div>
           <div className="flex items-center space-x-2"><span className="text-[10px] text-gray-500 font-mono">GEMINI 2.0 FLASH</span><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div></div>
         </div>
         
-        {/* Messages - Flexible height that fills available space */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-800" style={{ minHeight: 0 }}>
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -204,7 +275,6 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
         
-        {/* Input - Fixed at bottom with safe area for mobile */}
         <div className="p-4 bg-[#0f1117] border-t border-gray-800 pb-safe">
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-[#161b22] p-2 rounded-xl border border-gray-700 focus-within:border-indigo-500 transition-colors shadow-lg">
             <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition flex-shrink-0">
