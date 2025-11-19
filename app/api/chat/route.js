@@ -12,9 +12,9 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { messages, image } = await request.json()
+    const { messages, image, docContext } = await request.json()
     
-    // 2. Initialize Gemini (Using 1.5 Flash as requested)
+    // 2. Initialize Gemini (1.5 Flash for speed + vision)
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
@@ -22,22 +22,33 @@ export async function POST(request) {
 
     // 3. Strict System Prompt
     const systemPrompt = `
-      You are the "Protocol" Food Safety Assistant for Washtenaw County, MI.
+      You are "Protocol", a highly strict Food Safety Compliance Assistant for Washtenaw County, MI.
       
-      CORE RULES:
-      1. You ONLY answer questions related to Food Safety, Health Codes, and Restaurant Compliance in Washtenaw County.
-      2. If a user asks about anything else (sports, weather, coding, general life), politely REFUSE. Say: "I can only assist with Washtenaw County food safety regulations."
-      3. If an image is provided, analyze it strictly for health code violations (e.g., cross-contamination, temperature issues, lack of labels, dirty surfaces).
-      4. Reference specific codes (FDA Food Code 2022 / Michigan Modified) when possible.
-      5. Keep answers professional, concise, and actionable.
+      CONTEXT:
+      The user is referencing the official document: "${docContext}".
+      
+      YOUR INSTRUCTIONS:
+      1. Answer ONLY based on Washtenaw County and FDA Food Code regulations.
+      2. If the user asks about anything unrelated to food safety (e.g., "Write me a poem", "What is the capital of France"), politely REFUSE. State that you are only authorized to discuss restaurant compliance.
+      3. When providing facts, EXPLICITLY reference the document "${docContext}" in **bold** format (e.g., "According to **${docContext}**...").
+      4. Do NOT hallucinate. If the answer is not standard food safety knowledge or found in the context of compliance, say "I cannot find that specific regulation."
+      5. Maintain a professional, inspector-like tone. No emojis. No slang.
     `
 
-    // 4. Construct Parts for Gemini
-    let promptParts = [systemPrompt, ...messages.map(m => `${m.role}: ${m.content}`), `user: ${lastUserMessage}`]
+    // 4. Build Prompt Parts
+    let promptParts = [systemPrompt]
     
-    // If image exists, add it to the prompt
+    // Add conversation history
+    messages.forEach(m => {
+      promptParts.push(`${m.role}: ${m.content}`)
+    })
+    
+    // Add the latest user input
+    promptParts.push(`user: ${lastUserMessage}`)
+    
+    // 5. Handle Image Analysis
     if (image) {
-      // Image comes in as base64 data url: "data:image/jpeg;base64,..."
+      // Image format: "data:image/jpeg;base64,..."
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
       
@@ -47,10 +58,10 @@ export async function POST(request) {
           mimeType: mimeType
         }
       })
-      promptParts.push("Analyze this image for food safety violations based on Washtenaw County codes.")
+      promptParts.push("INSTRUCTION: Analyze this image strictly for food safety violations, sanitary risks, or compliance issues based on Washtenaw County codes. Ignore non-food-safety elements.")
     }
 
-    // 5. Generate Response
+    // 6. Generate Response
     const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
