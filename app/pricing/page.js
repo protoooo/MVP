@@ -274,4 +274,51 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-4 text-slate-600">
-                Your limits reset monthly. Pro includes 500 queries and 50 image analyses per month. Enterprise includes 5,000 queries and 500
+                Your limits reset monthly. Pro includes 500 queries and 50 image analyses per month. Enterprise includes 5,000 queries and 500 image analyses. If you need more, upgrade to Enterprise or contact us for a custom plan.
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className="flex justify-between items-center cursor-pointer list-none p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
+                <span className="font-medium text-slate-900">Which regulations are included?</span>
+                <span className="text-slate-400 group-open:rotate-180 transition">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="p-4 text-slate-600">
+                You'll have access to FDA Food Code 2022, Michigan Modified Food Code, Washtenaw County enforcement guidelines, cooling procedures, cross-contamination guides, and 10+ other essential compliance documents.
+              </div>
+            </details>
+
+            <details className="group">
+              <summary className="flex justify-between items-center cursor-pointer list-none p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition">
+                <span className="font-medium text-slate-900">Do you offer refunds?</span>
+                <span className="text-slate-400 group-open:rotate-180 transition">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="p-4 text-slate-600">
+                We offer a 7-day free trial so you can try before you commit. If you're not satisfied after your trial, simply cancel before being charged. Once charged, we don't offer refunds, but you can cancel at any time to prevent future charges.
+              </div>
+            </details>
+          </div>
+        </div>
+
+        {/* Footer CTA */}
+        <div className="mt-16 text-center">
+          <p className="text-slate-600 mb-4">Still have questions?</p>
+          <a 
+            href="mailto:support@protocollm.com" 
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Contact our support team
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
