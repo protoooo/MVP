@@ -113,7 +113,7 @@ export default function Pricing() {
               <p className="text-slate-600 text-sm mb-6">Perfect for single locations</p>
               
               <div className="flex items-baseline mb-6">
-                <span className="text-5xl font-semibold text-slate-900">$29</span>
+                <span className="text-5xl font-semibold text-slate-900">$49</span>
                 <span className="ml-2 text-slate-600">/month</span>
               </div>
 
@@ -155,13 +155,13 @@ export default function Pricing() {
               </ul>
 
               <button 
-                onClick={() => handleCheckout('price_1SVG96DlSrKA3nbArP6hvWXr', 'Pro')} 
+                onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
                 disabled={loadingId !== null}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingId === 'price_1SVG96DlSrKA3nbArP6hvWXr' ? 'Processing...' : 'Start free trial'}
+                {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
-              <p className="text-center text-xs text-slate-500 mt-3">Then $29/month. Cancel anytime.</p>
+              <p className="text-center text-xs text-slate-500 mt-3">Then $49/month. Cancel anytime.</p>
             </div>
           </div>
 
@@ -172,7 +172,7 @@ export default function Pricing() {
               <p className="text-slate-600 text-sm mb-6">For restaurant groups with multiple locations</p>
               
               <div className="flex items-baseline mb-6">
-                <span className="text-5xl font-semibold text-slate-900">$49</span>
+                <span className="text-5xl font-semibold text-slate-900">$99</span>
                 <span className="ml-2 text-slate-600">/month</span>
               </div>
 
@@ -220,13 +220,13 @@ export default function Pricing() {
               </ul>
 
               <button 
-                onClick={() => handleCheckout('price_1SVG8KDlSrKA3nbAfEQje8j8', 'Enterprise')} 
+                onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
                 className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-3.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingId === 'price_1SVG8KDlSrKA3nbAfEQje8j8' ? 'Processing...' : 'Start free trial'}
+                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
               </button>
-              <p className="text-center text-xs text-slate-500 mt-3">Then $49/month. Cancel anytime.</p>
+              <p className="text-center text-xs text-slate-500 mt-3">Then $99/month. Cancel anytime.</p>
             </div>
           </div>
 
