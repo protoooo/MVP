@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// FULL LIST matching your GitHub screenshot exactly
+// FULL LIST - Matching your GitHub Repo
 const DOCUMENTS = [
   { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
   { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
@@ -25,27 +25,30 @@ const DOCUMENTS = [
 
 export default function Dashboard() {
   const [session, setSession] = useState(null)
-  const [selectedDoc, setSelectedDoc] = useState(DOCUMENTS[0])
+  
+  // State for Chat
+  const [selectedDoc, setSelectedDoc] = useState(DOCUMENTS[0]) // Current "Context" for AI
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Protocol System Online. Select a document from the sidebar or upload an image for analysis.' }
+    { role: 'assistant', content: 'Protocol Online. I am ready to assist with Washtenaw County Food Safety regulations.' }
   ])
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false) 
+  
+  // State for UI
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [viewingPdf, setViewingPdf] = useState(null) // If not null, shows the PDF Modal
   
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
   const supabase = createClientComponentClient()
   const router = useRouter()
 
+  // 1. Check Auth & Subscription
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/')
-        return
-      }
+      if (!session) { router.push('/'); return }
 
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -53,41 +56,34 @@ export default function Dashboard() {
         .eq('id', session.user.id)
         .single()
 
-      if (!profile?.is_subscribed) {
-        router.push('/pricing')
-        return
-      }
+      if (!profile?.is_subscribed) { router.push('/pricing'); return }
 
       setSession(session)
     }
     checkAccess()
   }, [supabase, router])
 
+  // 2. Auto-scroll Chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // 3. Handle Image
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setImage(reader.result)
-      }
+      reader.onloadend = () => setImage(reader.result)
       reader.readAsDataURL(file)
     }
   }
 
+  // 4. Send Message
   const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!input.trim() && !image) return
 
-    const userMessage = { 
-      role: 'user', 
-      content: input,
-      image: image 
-    }
-    
+    const userMessage = { role: 'user', content: input, image: image }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setImage(null)
@@ -105,15 +101,11 @@ export default function Dashboard() {
       })
 
       const data = await response.json()
-      
-      if (data.error) {
-        throw new Error(data.error)
-      }
+      if (data.error) throw new Error(data.error)
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
     } catch (error) {
-      console.error(error)
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}. Please try again.` }])
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }])
     } finally {
       setIsLoading(false)
     }
@@ -122,145 +114,190 @@ export default function Dashboard() {
   if (!session) return null
 
   return (
-    <div className="flex h-screen bg-[#0f1117] text-white font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#0f1117] text-white font-sans overflow-hidden relative">
       
-      {/* MOBILE HEADER */}
-      <div className="md:hidden fixed top-0 w-full bg-[#161b22] p-4 flex justify-between items-center z-50 border-b border-gray-800">
+      {/* --- PDF MODAL (Pop-up) --- */}
+      {viewingPdf && (
+        <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4 md:p-8">
+          <div className="w-full max-w-5xl h-full bg-[#161b22] rounded-xl border border-gray-700 flex flex-col shadow-2xl">
+            <div className="flex justify-between items-center p-4 border-b border-gray-700 bg-[#0d1117] rounded-t-xl">
+              <h3 className="text-sm font-semibold text-white truncate">{viewingPdf.title}</h3>
+              <button 
+                onClick={() => setViewingPdf(null)}
+                className="text-gray-400 hover:text-white px-3 py-1 rounded hover:bg-gray-800 transition"
+              >
+                Close X
+              </button>
+            </div>
+            <iframe 
+              src={`/documents/${viewingPdf.filename}`} 
+              className="flex-1 w-full h-full rounded-b-xl bg-white"
+              title="Document Viewer"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* --- MOBILE HEADER --- */}
+      <div className="md:hidden fixed top-0 w-full bg-[#161b22] p-4 flex justify-between items-center z-50 border-b border-gray-800 shadow-md">
         <span className="font-bold tracking-wider text-sm">PROTOCOL</span>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-400 p-2">
+        <button onClick={() => setIsSidebarOpen(true)} className="text-gray-400 p-2">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
 
-      {/* SIDEBAR */}
+      {/* --- SIDEBAR (Library) --- */}
       <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-72 bg-[#161b22] border-r border-gray-800 flex flex-col z-40 pt-16 md:pt-0 shadow-2xl`}>
         <div className="p-5 hidden md:block border-b border-gray-800 bg-[#161b22]">
           <h1 className="text-lg font-bold text-white tracking-wide">PROTOCOL</h1>
-          <div className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Washtenaw Compliance</div>
+          <div className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Active Context:</div>
+          <div className="text-xs text-indigo-400 font-mono mt-1 truncate">{selectedDoc.title}</div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-2">Document Library</div>
+        {/* Document List */}
+        <div className="flex-1 overflow-y-auto p-3">
+          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-2">Library</div>
           <div className="space-y-1">
-            {/* THIS LOOP IS THE FIX FOR THE MISSING FILES */}
             {DOCUMENTS.map((doc, idx) => (
-              <button
-                key={idx}
-                onClick={() => { setSelectedDoc(doc); setIsSidebarOpen(false); }}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all duration-200 flex items-center group ${
+              <div key={idx} className={`group flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-xs transition-all duration-200 ${
                   selectedDoc.filename === doc.filename 
-                    ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' 
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100'
-                }`}
-              >
-                <svg className={`w-3 h-3 mr-3 flex-shrink-0 ${selectedDoc.filename === doc.filename ? 'text-indigo-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="truncate">{doc.title}</span>
-              </button>
+                    ? 'bg-indigo-900/20 border border-indigo-500/30' 
+                    : 'hover:bg-gray-800'
+                }`}>
+                
+                {/* Select Context Button */}
+                <button
+                  onClick={() => { setSelectedDoc(doc); setIsSidebarOpen(false); }}
+                  className="flex-1 text-left flex items-center"
+                >
+                  <div className={`w-2 h-2 rounded-full mr-3 ${selectedDoc.filename === doc.filename ? 'bg-indigo-500' : 'bg-gray-600 group-hover:bg-gray-500'}`}></div>
+                  <span className={`truncate ${selectedDoc.filename === doc.filename ? 'text-indigo-200' : 'text-gray-400 group-hover:text-gray-200'}`}>
+                    {doc.title}
+                  </span>
+                </button>
+
+                {/* View PDF Icon (Opens Modal) */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setViewingPdf(doc); }}
+                  className="ml-2 text-gray-600 hover:text-indigo-400 p-1 rounded"
+                  title="Read Document"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                </button>
+              </div>
             ))}
           </div>
         </div>
 
+        {/* Mobile Close Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="md:hidden fixed inset-0 bg-black/50 z-[-1]"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+
         <div className="p-4 border-t border-gray-800">
           <button 
             onClick={async () => { await supabase.auth.signOut(); router.push('/'); }}
-            className="w-full flex items-center justify-center py-2 text-xs text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors border border-gray-700"
+            className="w-full py-2 text-xs text-gray-400 hover:text-white border border-gray-700 rounded hover:bg-gray-800 transition"
           >
             Sign Out
           </button>
         </div>
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col md:flex-row h-full relative bg-[#0f1117] pt-16 md:pt-0">
+      {/* --- MAIN CHAT AREA (Full Width) --- */}
+      <div className="flex-1 flex flex-col h-full relative bg-[#0f1117] pt-16 md:pt-0">
         
-        {/* PDF VIEWER */}
-        <div className="flex-1 bg-[#0d1117] relative border-r border-gray-800 hidden md:block">
-          <iframe 
-            src={`/documents/${selectedDoc.filename}#toolbar=0`} 
-            className="w-full h-full border-none opacity-90" 
-            title="Document Viewer"
-          />
+        {/* Chat Header */}
+        <div className="p-4 border-b border-gray-800 bg-[#161b22] flex items-center justify-between shadow-sm">
+          <div>
+            <h2 className="font-bold text-white text-sm">AI Compliance Assistant</h2>
+            <p className="text-xs text-gray-500">Using: <span className="text-indigo-400">{selectedDoc.title}</span></p>
+          </div>
+          <div className="flex items-center space-x-2">
+             <span className="text-[10px] text-gray-500 font-mono">GEMINI 1.5 FLASH</span>
+             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
         </div>
 
-        {/* CHAT */}
-        <div className="w-full md:w-[420px] bg-[#161b22] flex flex-col h-full shadow-2xl border-l border-gray-800">
-          <div className="p-4 border-b border-gray-800 bg-[#161b22] flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-white text-sm">AI Assistant</h2>
-              <p className="text-xs text-indigo-400 truncate max-w-[250px]">{selectedDoc.title}</p>
-            </div>
-            <div className="flex items-center space-x-2">
-               <span className="text-[10px] text-gray-500">Gemini 1.5 Flash</span>
-               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-5 scrollbar-thin scrollbar-thumb-gray-700">
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[90%] space-y-2`}>
-                  {msg.image && (
-                    <img src={msg.image} alt="Analysis Target" className="max-w-[200px] rounded-lg border border-gray-700" />
-                  )}
-                  <div className={`p-3.5 rounded-2xl text-sm leading-relaxed ${
-                    msg.role === 'user' 
-                      ? 'bg-indigo-600 text-white rounded-br-none shadow-lg shadow-indigo-900/20' 
-                      : 'bg-[#21262d] border border-gray-700 text-gray-200 rounded-bl-none'
-                  }`}>
-                    {msg.content}
-                  </div>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-800">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
+                {msg.image && (
+                  <img src={msg.image} alt="Analysis Target" className="max-w-[250px] rounded-lg border border-gray-700 shadow-md" />
+                )}
+                <div className={`p-4 rounded-2xl text-sm md:text-base leading-relaxed ${
+                  msg.role === 'user' 
+                    ? 'bg-indigo-600 text-white rounded-br-none shadow-lg shadow-indigo-900/20' 
+                    : 'bg-[#1e232b] border border-gray-800 text-gray-200 rounded-bl-none shadow-sm'
+                }`}>
+                  {msg.content}
                 </div>
               </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                 <div className="bg-[#21262d] px-4 py-3 rounded-2xl rounded-bl-none border border-gray-700 text-xs text-gray-400 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
-                    Processing...
-                 </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+               <div className="bg-[#1e232b] px-4 py-2 rounded-full border border-gray-800 text-xs text-gray-400 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce delay-75"></div>
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce delay-150"></div>
+               </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="p-4 bg-[#0f1117] border-t border-gray-800">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-[#161b22] p-2 rounded-xl border border-gray-700 focus-within:border-indigo-500 transition-colors shadow-lg">
+            
+            {/* Camera / Upload Button */}
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className="p-3 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
+              title="Upload Image"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+            <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageSelect} />
+
+            {/* Text Input */}
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }}}
+              placeholder={image ? "Image attached. Add context..." : "Ask about Washtenaw County codes..."}
+              className="flex-1 bg-transparent text-white text-sm md:text-base max-h-32 py-3 focus:outline-none resize-none"
+              rows="1"
+            />
+
+            {/* Send Button */}
+            <button 
+              type="submit"
+              disabled={isLoading || (!input.trim() && !image)}
+              className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+
+            {/* Image Preview Tag */}
+            {image && (
+              <div className="absolute -top-12 left-0 bg-[#1e232b] border border-gray-700 px-3 py-1.5 rounded-lg flex items-center shadow-lg">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                <span className="text-xs text-gray-200 font-bold mr-2">IMAGE READY</span>
+                <button onClick={() => setImage(null)} className="text-gray-400 hover:text-white ml-2">✕</button>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800 bg-[#161b22]">
-            <div className="relative flex items-end gap-2">
-              <button 
-                type="button"
-                onClick={() => fileInputRef.current.click()}
-                className="p-3 bg-[#21262d] text-gray-400 hover:text-white hover:bg-gray-700 rounded-xl border border-gray-700 transition"
-                title="Analyze Image"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              </button>
-              <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageSelect} />
-
-              <div className="flex-1 relative">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={image ? "Image attached. Add question..." : "Ask a food safety question..."}
-                  className="w-full bg-[#0d1117] text-white text-sm rounded-xl pl-4 pr-10 py-3 border border-gray-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-all"
-                />
-                {image && (
-                  <div className="absolute -top-10 left-0 bg-indigo-900/50 border border-indigo-500/50 px-2 py-1 rounded text-[10px] text-indigo-200 font-bold flex items-center">
-                    IMAGE READY
-                    <button onClick={() => setImage(null)} className="ml-2 hover:text-white">×</button>
-                  </div>
-                )}
-              </div>
-
-              <button 
-                type="submit"
-                disabled={isLoading || (!input.trim() && !image)}
-                className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-              </button>
-            </div>
           </form>
+          <div className="text-center mt-2 text-[10px] text-gray-600">
+            Protocol System v1.0 • Washtenaw County Data
+          </div>
         </div>
 
       </div>
