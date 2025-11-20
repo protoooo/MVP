@@ -89,7 +89,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Urgent Value Prop */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 xl:p-12 flex-col justify-between relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
@@ -101,19 +101,19 @@ export default function Home() {
           <div className="text-xs text-slate-300 font-medium">Michigan Restaurant Compliance</div>
         </div>
         
-        {/* NEW: Urgent problem statement */}
-        <div className="relative z-10 space-y-8">
-          <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl p-6">
+        {/* NEW: Urgent problem statement - with proper spacing */}
+        <div className="relative z-10 space-y-6 xl:space-y-8 flex-1 flex flex-col justify-center py-8">
+          <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl p-5 xl:p-6">
             <div className="text-sm text-slate-300 mb-2 font-semibold uppercase tracking-wide">The Reality</div>
-            <p className="text-white text-2xl font-bold leading-tight mb-3">
+            <p className="text-white text-xl xl:text-2xl font-bold leading-tight mb-3">
               Health inspections happen without warning
             </p>
-            <p className="text-slate-300 text-base leading-relaxed">
+            <p className="text-slate-300 text-sm xl:text-base leading-relaxed">
               Every restaurant in Michigan gets inspected 1-3 times per year. Most violations are preventable—but only if your staff knows exactly what inspectors are looking for.
             </p>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4 xl:space-y-5">
             {/* Pain Point 1 */}
             <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
               <div className="w-10 h-10 rounded-xl bg-red-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-red-400/30">
@@ -122,8 +122,8 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-2 text-lg">Critical violations cost you money</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">Temperature violations, cross-contamination, improper storage—these aren&apos;t just notes on a report. They mean re-inspections, potential closures, and lost revenue.</p>
+                <h3 className="text-white font-semibold mb-1.5 text-base xl:text-lg">Critical violations cost you money</h3>
+                <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">Temperature violations, cross-contamination, improper storage—these aren&apos;t just notes on a report. They mean re-inspections, potential closures, and lost revenue.</p>
               </div>
             </div>
 
@@ -135,8 +135,8 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-2 text-lg">Food code books gather dust</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">You have the FDA Food Code somewhere. Your staff has never read it. When the inspector shows up, everyone scrambles. There&apos;s a better way.</p>
+                <h3 className="text-white font-semibold mb-1.5 text-base xl:text-lg">Food code books gather dust</h3>
+                <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">You have the FDA Food Code somewhere. Your staff has never read it. When the inspector shows up, everyone scrambles. There&apos;s a better way.</p>
               </div>
             </div>
             
@@ -148,8 +148,8 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-2 text-lg">Questions need immediate answers</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">&quot;Can I cool soup in the walk-in?&quot; &quot;What temp for chicken?&quot; &quot;How long can this be out?&quot; Your team needs answers in seconds, not after digging through binders.</p>
+                <h3 className="text-white font-semibold mb-1.5 text-base xl:text-lg">Questions need immediate answers</h3>
+                <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">&quot;Can I cool soup in the walk-in?&quot; &quot;What temp for chicken?&quot; &quot;How long can this be out?&quot; Your team needs answers in seconds, not after digging through binders.</p>
               </div>
             </div>
 
@@ -161,27 +161,27 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-2 text-lg">Catch violations before inspectors do</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">Take a photo of your line, cooler, or storage area. Get instant feedback on potential violations with exact regulatory citations and how to fix them—before it ends up on your inspection report.</p>
+                <h3 className="text-white font-semibold mb-1.5 text-base xl:text-lg">Catch violations before inspectors do</h3>
+                <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">Take a photo of your line, cooler, or storage area. Get instant feedback on potential violations with exact regulatory citations and how to fix them—before it ends up on your inspection report.</p>
               </div>
             </div>
 
             {/* Solution Statement */}
-            <div className="flex items-start space-x-4 animate-slide-in pt-4 border-t border-white/10" style={{ animationDelay: '0.5s' }}>
+            <div className="flex items-start space-x-4 animate-slide-in pt-3 xl:pt-4 border-t border-white/10" style={{ animationDelay: '0.5s' }}>
               <div className="w-10 h-10 rounded-xl bg-green-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-green-400/30">
                 <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-2 text-lg">One tool. All your answers.</h3>
-                <p className="text-slate-300 text-sm leading-relaxed">FDA Food Code, Michigan regulations, county enforcement guidelines, and AI-powered image analysis—all accessible from your phone in seconds. No more guessing. No more violations you could have prevented.</p>
+                <h3 className="text-white font-semibold mb-1.5 text-base xl:text-lg">One tool. All your answers.</h3>
+                <p className="text-slate-300 text-xs xl:text-sm leading-relaxed">FDA Food Code, Michigan regulations, county enforcement guidelines, and AI-powered image analysis—all accessible from your phone in seconds. No more guessing. No more violations you could have prevented.</p>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="text-slate-400 text-xs relative z-10 font-medium">
+        <div className="text-slate-400 text-xs relative z-10 font-medium pt-6">
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
