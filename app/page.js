@@ -89,15 +89,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 to-black p-12 flex-col justify-between relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 flex-col justify-between relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float-delayed"></div>
         
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white tracking-tight">
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-1">
             protocol<span className="font-normal">LM</span>
           </h1>
+          <div className="text-xs text-slate-300 font-medium">Michigan Restaurant Compliance</div>
         </div>
         
         <div className="space-y-6 relative z-10">
@@ -171,9 +172,10 @@ export default function Home() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
-            <h1 className="text-3xl font-bold text-slate-950 tracking-tight">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
             </h1>
+            <div className="text-xs text-slate-600 font-medium">Michigan Restaurant Compliance</div>
           </div>
 
           <div className="mb-10">
@@ -263,7 +265,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-950 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+              className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
               {loading ? 'Processing...' : (view === 'signup' ? 'Create account' : 'Sign in')}
             </button>
