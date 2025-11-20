@@ -58,7 +58,6 @@ export default function Pricing() {
   }
 
   return (
-    // Using min-h-screen: This GUARANTEES the page allows scrolling if content is taller than the screen.
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white">
@@ -171,7 +170,7 @@ export default function Pricing() {
               <p className="text-slate-600 text-base mb-8" style={{ letterSpacing: '-0.01em' }}>For restaurant groups & chains</p>
               
               <div className="flex items-baseline mb-8">
-                <span className="text-6xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$199</span>
+                <span className="text-6xl font-bold text-slate-900" style={{ letterSpacing: '-0.03em' }}>$99</span>
                 <span className="ml-3 text-slate-600 font-medium">/month</span>
               </div>
 
