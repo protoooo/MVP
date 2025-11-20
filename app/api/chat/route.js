@@ -83,11 +83,11 @@ export async function POST(request) {
       const embeddingResult = await embeddingModel.embedContent(lastUserMessage)
       const embedding = embeddingResult.embedding.values
 
-      // Search documents filtered by county
+      // Search documents FILTERED BY COUNTY - this is bulletproof
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
         match_threshold: 0.5,
-        match_count: 5
+        match_count: 10 // Get more results to filter
       })
 
       if (searchError) {
@@ -95,21 +95,30 @@ export async function POST(request) {
       }
 
       if (documents && documents.length > 0) {
-        // Filter documents by county (if metadata contains county info)
+        // CRITICAL: Filter documents STRICTLY by county
+        // Only include documents that EXACTLY match the user's county
         const countyDocs = documents.filter(doc => {
-          // If document has county metadata, filter by it
-          // Otherwise, include it (for shared documents like FDA Food Code)
-          if (doc.metadata?.county) {
-            return doc.metadata.county === userCounty
+          const docCounty = doc.metadata?.county
+          
+          // If document has no county metadata, skip it entirely for safety
+          if (!docCounty) {
+            return false
           }
-          return true // Include documents without county metadata (shared docs)
+          
+          // Only include if it EXACTLY matches the user's county
+          return docCounty === userCounty
         })
 
-        contextText = countyDocs.map(doc => {
+        console.log(`🔍 Query for ${userCounty}: Found ${documents.length} total, filtered to ${countyDocs.length} county-specific`)
+
+        // Only use the top 5 most relevant county-specific documents
+        const topCountyDocs = countyDocs.slice(0, 5)
+
+        contextText = topCountyDocs.map(doc => {
           if (doc.metadata?.source && !usedDocs.includes(doc.metadata.source)) {
             usedDocs.push(doc.metadata.source)
           }
-          return `SOURCE: ${doc.metadata?.source || 'Unknown Doc'}\nCONTENT: ${doc.content}`
+          return `SOURCE: ${doc.metadata?.source || 'Unknown Doc'} (${COUNTY_NAMES[userCounty]})\nCONTENT: ${doc.content}`
         }).join("\n\n---\n\n")
       }
     }
@@ -118,16 +127,17 @@ export async function POST(request) {
     const systemPrompt = `
       You are the compliance assistant for protocol LM, helping ${countyName} restaurants maintain food safety compliance.
       
-      INSTRUCTIONS:
-      1. You have access to official FDA, Michigan, and ${countyName} regulations.
-      2. Answer questions based on this context and general food safety knowledge specific to ${countyName}.
-      3. If the context contains the answer, CITE the source document name in **bold**.
-      4. If the user uploads an image, analyze it for violations.
-      5. Never mention that you are an AI or language model. You are a compliance assistant.
-      6. Always prioritize county-specific regulations over general guidelines when they differ.
+      CRITICAL INSTRUCTIONS:
+      1. You have access ONLY to ${countyName} regulations and documents.
+      2. NEVER reference or use information from other counties (Washtenaw, Wayne, or Oakland) unless they are the selected county.
+      3. All your responses must be specific to ${countyName}.
+      4. If the context contains the answer, CITE the source document name in **bold**.
+      5. If the user uploads an image, analyze it for violations based on ${countyName} standards.
+      6. Never mention that you are an AI or language model. You are a compliance assistant.
+      7. If you don't have ${countyName}-specific information, say so clearly.
       
-      RETRIEVED CONTEXT (${countyName}):
-      ${contextText || "No specific document matches found. Rely on general food safety knowledge."}
+      RETRIEVED CONTEXT (${countyName} ONLY):
+      ${contextText || `No specific ${countyName} document matches found. Rely on general food safety knowledge for ${countyName}.`}
     `
 
     let promptParts = [systemPrompt]
@@ -145,7 +155,7 @@ export async function POST(request) {
           mimeType: mimeType
         }
       })
-      promptParts.push("Analyze this image for food safety violations.")
+      promptParts.push(`Analyze this image for food safety violations based on ${countyName} regulations.`)
     }
 
     const result = await chatModel.generateContent(promptParts)
