@@ -65,16 +65,13 @@ export default function Home() {
 
   // Helper component for the "Line Tracing" Card
   const TracingCard = ({ delay, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-lg group border-0">
+    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-rose-100">
       {/* The Content */}
       <div className="relative z-10">
         {children}
       </div>
 
-      {/* The Animated Border (SVG Overlay) - White Line to show on Raspberry BG if needed, 
-          but since card is white, we wrap the card or draw INSIDE. 
-          Actually, for the 'tracing' effect on a white card, we can make the border Raspberry.
-      */}
+      {/* The Animated Border (SVG Overlay) - Raspberry Color (#BE123C) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
         <rect 
           x="1" y="1" 
@@ -108,22 +105,20 @@ export default function Home() {
         }
       `}</style>
 
-      {/* LEFT SIDE - Solid Matte Raspberry */}
-      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-[#BE123C]">
+      {/* LEFT SIDE - Soft Light Pink Background (bg-rose-50) */}
+      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-rose-50">
         
-        {/* No Blobs - Solid Matte as requested */}
-
         {/* Header */}
         <div className="relative z-10 px-8 pt-6 pb-2 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            {/* Text is White on Raspberry BG */}
-            <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight mb-1">
-              protocol<span className="font-normal opacity-90">LM</span>
+            {/* Text is now Dark Raspberry to contrast with light background */}
+            <h1 className="text-2xl lg:text-3xl font-bold text-[#BE123C] tracking-tight mb-1">
+              protocol<span className="font-normal text-slate-700">LM</span>
             </h1>
-            {/* White Line */}
-            <div className="h-1.5 w-full bg-white/30 rounded-full"></div>
+            {/* Line is Dark Raspberry */}
+            <div className="h-1.5 w-full bg-[#BE123C] rounded-full opacity-20"></div>
           </div>
-          <div className={`text-xs text-rose-100 font-medium mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <div className={`text-xs text-slate-500 font-medium mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
           </div>
         </div>
@@ -131,9 +126,9 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - White/Rose */}
+            {/* Vertical Line Timeline - Soft Raspberry Gradient */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-white/30 rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#BE123C] to-rose-200 rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
@@ -209,14 +204,14 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className={`text-rose-100 text-xs relative z-10 px-8 lg:px-12 mt-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-slate-400 text-xs relative z-10 px-8 lg:px-12 mt-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 h-screen overflow-hidden">
-        <div className="w-full max-w-md">
+      {/* RIGHT SIDE - Moved content UP (justify-start with padding) instead of center */}
+      <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start lg:pt-32 p-6 h-screen overflow-hidden">
+        <div className="w-full max-w-md mx-auto">
           
           {/* Mobile Header */}
           <div className="mb-4 lg:hidden">
