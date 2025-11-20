@@ -77,23 +77,21 @@ export default function Home() {
   }
 
   return (
-    /* LAYOUT FIX: 
-       h-screen + overflow-hidden locks the page size (fitted).
-       Flexbox handles the split.
-    */
-    <div className="h-screen w-full bg-white flex overflow-hidden">
+    // CRITICAL FIXES: 
+    // 1. min-h-screen: Ensures full height but allows scrolling if content overflows (fixes "can't move").
+    // 2. bg-slate-900: Sets base color to dark. If there's a gap, it shows blue, removing the "white line".
+    <div className="min-h-screen w-full bg-slate-900 flex flex-col lg:flex-row">
       
-      {/* LEFT SIDE 
-         h-full ensures the background goes ALL the way down (No white line).
-      */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 h-full flex-col relative shrink-0">
+      {/* LEFT SIDE - Value Prop */}
+      {/* lg:w-1/2 ensures it takes half width on desktop. Flex-col for stacking content. */}
+      <div className="flex-1 lg:w-1/2 flex flex-col relative overflow-hidden shrink-0">
         
         {/* Background Gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         
         {/* Header */}
-        <div className="relative z-10 px-12 pt-12 pb-6">
+        <div className="relative z-10 px-8 pt-12 pb-6 lg:px-12">
           <div className={`inline-block transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
@@ -105,9 +103,9 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Content Container - Scrollable internally if content overflows vertical height */}
-        <div className="relative z-10 flex-1 px-12 flex flex-col justify-start pt-4 overflow-y-auto custom-scrollbar">
-          <div className="relative max-w-xl pl-6 pb-12">
+        {/* Content Container */}
+        <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-4 pb-12">
+          <div className="relative max-w-xl pl-6">
             
             {/* Animated Line Trace */}
             <div 
@@ -199,17 +197,15 @@ export default function Home() {
         </div>
         
         {/* Footer */}
-        <div className={`text-slate-500 text-xs relative z-10 px-12 pb-8 font-medium transition-opacity duration-1000 delay-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-slate-500 text-xs relative z-10 px-8 lg:px-12 pb-8 font-medium transition-opacity duration-1000 delay-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
 
-      {/* RIGHT SIDE - Auth Form 
-          Added overflow-y-auto: This allows the form side to scroll INTERNALLY
-          if the device is very short, while the main page body stays locked.
-      */}
-      <div className="w-full lg:w-1/2 h-full overflow-y-auto bg-white flex items-center justify-center p-6 relative">
-        <div className="w-full max-w-md my-auto">
+      {/* RIGHT SIDE - Auth Form */}
+      {/* bg-white applied here explicitly. If this content is short, the parent bg-slate-900 ensures no white line on left. */}
+      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 relative min-h-[50vh] lg:min-h-screen">
+        <div className="w-full max-w-md">
           
           {/* Mobile Header (Only visible on small screens) */}
           <div className="mb-8 lg:hidden">
