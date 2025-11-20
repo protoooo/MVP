@@ -72,45 +72,43 @@ export async function POST(request) {
         error: `Monthly limit of ${limits.images} image analyses reached. Resets on your next billing date.` 
       }, { status: 429 })
     }
-    
+
     if (!process.env.GEMINI_API_KEY) {
-       throw new Error("GEMINI_API_KEY is missing")
+      throw new Error("GEMINI_API_KEY is missing")
     }
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    
     const chatModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
     const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" })
 
     const lastUserMessage = messages[messages.length - 1].content
-
     let contextText = ""
     let usedDocs = []
+
     let searchQuery = lastUserMessage
 
     // For image analysis, use comprehensive search query
     if (image) {
       searchQuery = `food safety violations equipment cleanliness sanitation surfaces grease buildup 
-                     temperature control storage cross contamination pest control proper maintenance 
-                     cleaning procedures facility requirements non-food contact surfaces food contact surfaces
-                     cooling procedures holding temperatures cooking temperatures equipment design
-                     ${lastUserMessage}`.trim()
-      
+      temperature control storage cross contamination pest control proper maintenance 
+      cleaning procedures facility requirements non-food contact surfaces food contact surfaces
+      cooling procedures holding temperatures cooking temperatures equipment design
+      ${lastUserMessage}`.trim()
       console.log('🔍 IMAGE ANALYSIS - Enhanced search query:', searchQuery.substring(0, 100) + '...')
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const embeddingResult = await embeddingModel.embedContent(searchQuery)
       const embedding = embeddingResult.embedding.values
-
+      
       console.log('📊 Embedding generated, searching documents...')
-
+      
       // CRITICAL FIX: Check total documents for this county FIRST
       const { count: totalDocs, error: countError } = await supabase
         .from('documents')
         .select('*', { count: 'exact', head: true })
         .filter('metadata->>county', 'eq', userCounty)
-
+      
       if (countError) {
         console.error('❌ Error checking document count:', countError)
       } else {
@@ -119,12 +117,9 @@ export async function POST(request) {
 
       if (!totalDocs || totalDocs === 0) {
         console.error(`🚨 CRITICAL: No documents found for ${userCounty} in database!`)
-        
         return NextResponse.json({
           message: `⚠️ **No ${COUNTY_NAMES[userCounty]} documents available**
-
 I couldn't find any regulatory documents for ${COUNTY_NAMES[userCounty]} in the database. This means:
-
 1. Documents haven't been uploaded to Supabase yet
 2. The county filter isn't working correctly
 3. No documents exist for ${userCounty} in the database
@@ -143,9 +138,9 @@ Please contact support if this persists.`,
 
       // CRITICAL FIX: Use match_documents_by_county function that filters DURING search
       // This ensures we ONLY get documents from the correct county
-      const matchThreshold = image ? 0.25 : 0.4  // Lower thresholds for better recall
+      const matchThreshold = image ? 0.25 : 0.4 // Lower thresholds for better recall
       const matchCount = image ? 30 : 20
-
+      
       console.log(`🔎 Searching with threshold=${matchThreshold}, count=${matchCount}, county=${userCounty}`)
 
       // Try to use county-filtered function first
@@ -160,24 +155,21 @@ Please contact support if this persists.`,
           match_count: matchCount,
           filter_county: userCounty
         })
-        
         documents = result.data
         searchError = result.error
       } catch (err) {
-        console.log('⚠️  match_documents_by_county not available, falling back to match_documents')
-        
+        console.log('⚠️ match_documents_by_county not available, falling back to match_documents')
         // Fallback: Use regular match_documents and filter afterwards
         const result = await supabase.rpc('match_documents', {
           query_embedding: embedding,
           match_threshold: matchThreshold,
-          match_count: matchCount * 2  // Get more to account for filtering
+          match_count: matchCount * 2 // Get more to account for filtering
         })
         
         if (!result.error && result.data) {
           // Filter to only this county's documents
           documents = result.data.filter(doc => doc.metadata?.county === userCounty).slice(0, matchCount)
         }
-        
         searchError = result.error
       }
 
@@ -190,11 +182,10 @@ Please contact support if this persists.`,
 
       if (!documents || documents.length === 0) {
         console.error(`⚠️ NO DOCUMENTS RETRIEVED FOR ${userCounty} - Search may be too restrictive`)
-        
         // Try one more time with very low threshold
         const { data: fallbackDocs } = await supabase.rpc('match_documents', {
           query_embedding: embedding,
-          match_threshold: 0.1,  // Very low threshold
+          match_threshold: 0.1, // Very low threshold
           match_count: matchCount * 3
         })
         
@@ -206,26 +197,21 @@ Please contact support if this persists.`,
 
       if (documents && documents.length > 0) {
         console.log(`✅ Using ${documents.length} ${userCounty} documents for context`)
-
         contextText = documents.map((doc, idx) => {
           const source = doc.metadata?.source || 'Unknown Doc'
           const page = doc.metadata?.page
-          
           // Track unique documents
           const docKey = `${source}-${page}`
           if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
             usedDocs.push({ source, page })
           }
-          
           return `[DOCUMENT ${idx + 1}]
 SOURCE: ${source}
 PAGE: ${page || 'N/A'}
 COUNTY: ${COUNTY_NAMES[userCounty]}
 CONTENT: ${doc.content}
-
 `
         }).join("\n---\n\n")
-
         console.log('📋 Documents being used:', usedDocs.map(d => `${d.source} (p.${d.page})`).join(', '))
       }
     }
@@ -233,12 +219,9 @@ CONTENT: ${doc.content}
     // If we have no context and it's an image, return error
     if (image && !contextText) {
       console.error('🚨 CRITICAL: No documents retrieved for image analysis!')
-      
       return NextResponse.json({
         message: `⚠️ **Unable to analyze image**
-
 I couldn't retrieve any ${COUNTY_NAMES[userCounty]} regulatory documents. This might mean:
-
 1. Documents haven't been uploaded for ${userCounty}
 2. The vector search isn't finding relevant matches
 3. The database query is failing
@@ -256,6 +239,7 @@ Please contact support if this persists.`,
     }
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
+
     const systemPrompt = `You are the compliance assistant for protocolLM, helping ${countyName} restaurants maintain food safety compliance.
 
 CRITICAL CITATION RULES - READ CAREFULLY:
@@ -282,10 +266,9 @@ RESPONSE FORMAT:
 `
 
     let promptParts = [systemPrompt]
-    
     messages.slice(0, -1).forEach(m => promptParts.push(`${m.role}: ${m.content}`))
     promptParts.push(`user: ${lastUserMessage}`)
-    
+
     if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
@@ -296,14 +279,13 @@ RESPONSE FORMAT:
           mimeType: mimeType
         }
       })
-      
+
       if (!contextText) {
         promptParts.push(`ERROR: No regulatory documents were retrieved for ${countyName}. 
 You CANNOT analyze this image without access to county-specific regulations.
 Respond with the error message explaining that documents are missing.`)
       } else {
         promptParts.push(`ANALYZE THIS IMAGE FOR FOOD SAFETY VIOLATIONS
-
 MANDATORY REQUIREMENTS:
 1. Look at the image carefully and identify ANY potential food safety issues
 2. For EVERY issue, cite the specific document and page from RETRIEVED CONTEXT above
@@ -326,7 +308,6 @@ If documents don't cover what you see: "I observed [specific issue] but the curr
     const updates = { 
       requests_used: profile.requests_used + 1 
     }
-    
     if (image) {
       updates.images_used = (profile.images_used || 0) + 1
     }
