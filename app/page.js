@@ -64,9 +64,10 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  const TracingCard = ({ color, iconColor, delay, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-sm group">
-      {/* The Content - Static, no ghost effect */}
+  // Increased Dasharray to 3000 to ensure it fills completely without stopping short
+  const TracingCard = ({ color, delay, children }) => (
+    <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-sm group">
+      {/* The Content */}
       <div className="relative z-10">
         {children}
       </div>
@@ -82,8 +83,8 @@ export default function Home() {
           stroke={color} 
           strokeWidth="2"
           strokeLinecap="round"
-          strokeDasharray="1000"
-          strokeDashoffset="1000"
+          strokeDasharray="3000" 
+          strokeDashoffset="3000"
           className={`draw-border ${mounted ? 'animate-draw' : ''}`}
           style={{ animationDelay: delay }}
         />
@@ -102,13 +103,23 @@ export default function Home() {
           }
         }
         .animate-draw {
-          animation: drawBorder 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+          animation: drawBorder 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
       `}</style>
 
       {/* LEFT SIDE */}
-      <div className="w-full lg:w-1/2 bg-[#f0fdf4] flex flex-col relative h-screen overflow-hidden">
+      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-white">
         
+        {/* Soft Background Texture (Blurred Blobs) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Orange Blob Top Left */}
+          <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#FB923C]/10 blur-[100px]" />
+          {/* Pink Blob Middle Right */}
+          <div className="absolute top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#FB7185]/10 blur-[120px]" />
+          {/* Green Blob Bottom */}
+          <div className="absolute -bottom-[20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[#86EFAC]/20 blur-[100px]" />
+        </div>
+
         {/* Header */}
         <div className="relative z-10 px-8 pt-6 pb-2 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
@@ -126,7 +137,7 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Multicolored Vertical Line (Timeline) */}
+            {/* Multicolored Vertical Line Timeline */}
             <div 
               className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#FB923C] via-[#FB7185] to-[#86EFAC] rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
@@ -230,11 +241,29 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle with Gradient Outline */}
+          {/* Toggle with Matte Gradient for Active State */}
           <div className="bg-gradient-to-r from-[#FB923C] via-[#FB7185] to-[#86EFAC] p-[2px] rounded-xl mb-5">
             <div className="flex rounded-[10px] bg-white overflow-hidden p-1">
-              <button onClick={() => { setView('signup'); setMessage(null); }} className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${view === 'signup' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Sign up</button>
-              <button onClick={() => { setView('login'); setMessage(null); }} className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all ${view === 'login' ? 'bg-slate-100 text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}>Sign in</button>
+              <button 
+                onClick={() => { setView('signup'); setMessage(null); }} 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  view === 'signup' 
+                    ? 'bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 text-slate-900 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                }`}
+              >
+                Sign up
+              </button>
+              <button 
+                onClick={() => { setView('login'); setMessage(null); }} 
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  view === 'login' 
+                    ? 'bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 text-slate-900 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                }`}
+              >
+                Sign in
+              </button>
             </div>
           </div>
 
