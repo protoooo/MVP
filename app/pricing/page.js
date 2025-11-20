@@ -63,7 +63,7 @@ export default function Pricing() {
       <header className="border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="flex items-center space-x-2 group">
-            <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span className="text-slate-900 font-bold tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
@@ -91,7 +91,7 @@ export default function Pricing() {
             Start with a 7-day free trial. No credit card required.
           </p>
           {!isAuthenticated && (
-            <div className="mt-8 p-5 bg-blue-50 border border-blue-100 rounded-xl">
+            <div className="mt-8 p-5 bg-slate-50 border border-slate-200 rounded-xl">
               <p className="text-sm text-slate-700 leading-relaxed">
                 <span className="font-semibold">New here?</span> Create an account first, then select your plan to start your free trial.
               </p>
@@ -103,8 +103,8 @@ export default function Pricing() {
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
           {/* Pro Plan */}
-          <div className="relative bg-white rounded-2xl border-2 border-blue-600 shadow-2xl overflow-hidden hover:shadow-3xl transition-shadow duration-300">
-            <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold tracking-wide px-5 py-2 rounded-bl-xl">
+          <div className="relative bg-white rounded-2xl border-2 border-slate-900 shadow-2xl overflow-hidden hover:shadow-3xl transition-shadow duration-300">
+            <div className="absolute top-0 right-0 bg-slate-900 text-white text-xs font-bold tracking-wide px-5 py-2 rounded-bl-xl">
               MOST POPULAR
             </div>
 
@@ -117,37 +117,37 @@ export default function Pricing() {
                 <span className="ml-3 text-slate-600 font-medium">/month</span>
               </div>
 
-              <div className="mb-10 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="mb-10 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <p className="text-sm font-semibold text-slate-800">Includes 7-day free trial</p>
               </div>
 
               <ul className="space-y-5 mb-10">
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">500 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">50 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Unlimited document access</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Mobile optimized</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Priority email support</span>
@@ -157,7 +157,7 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
                 disabled={loadingId !== null}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
@@ -166,7 +166,7 @@ export default function Pricing() {
           </div>
 
           {/* Enterprise Plan */}
-          <div className="bg-white rounded-2xl border-2 border-slate-200 overflow-hidden hover:border-slate-300 transition-all duration-200 hover:shadow-xl">
+          <div className="bg-white rounded-2xl border-2 border-slate-300 overflow-hidden hover:border-slate-400 transition-all duration-200 hover:shadow-xl">
             <div className="p-10">
               <h2 className="text-3xl font-bold text-slate-900 mb-2" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
               <p className="text-slate-600 text-base mb-8" style={{ letterSpacing: '-0.01em' }}>For restaurant groups with multiple locations</p>
@@ -182,37 +182,37 @@ export default function Pricing() {
 
               <ul className="space-y-5 mb-10">
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">5,000 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700"><span className="font-semibold">500 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Multi-location dashboard</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Team management (5 seats)</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">API access</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-900 mr-3 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700">Dedicated account manager</span>
@@ -313,7 +313,7 @@ export default function Pricing() {
           <p className="text-slate-600 mb-4 text-base">Still have questions?</p>
           <a 
             href="mailto:support@protocollm.com" 
-            className="text-blue-600 hover:text-blue-700 font-semibold text-base"
+            className="text-slate-900 hover:text-slate-700 font-semibold text-base underline decoration-2 underline-offset-4"
           >
             Contact our support team
           </a>
