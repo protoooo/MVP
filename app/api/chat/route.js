@@ -88,7 +88,7 @@ export async function POST(request) {
     let usedDocs = []
     let searchQuery = lastUserMessage
 
-    // CRITICAL FIX: For image analysis, use a comprehensive search query
+    // For image analysis, use comprehensive search query
     if (image) {
       searchQuery = `food safety violations equipment cleanliness sanitation surfaces grease buildup 
                      temperature control storage cross contamination pest control proper maintenance 
@@ -105,7 +105,7 @@ export async function POST(request) {
 
       console.log('📊 Embedding generated, searching documents...')
 
-      // First, check if we have ANY documents for this county
+      // CRITICAL FIX: Check total documents for this county FIRST
       const { count: totalDocs, error: countError } = await supabase
         .from('documents')
         .select('*', { count: 'exact', head: true })
@@ -117,42 +117,97 @@ export async function POST(request) {
         console.log(`📚 Total documents for ${userCounty}:`, totalDocs)
       }
 
-      // Search with very low threshold for image analysis
-      const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
-        query_embedding: embedding,
-        match_threshold: image ? 0.3 : 0.5, // Much lower for images
-        match_count: image ? 25 : 15
-      })
+      if (!totalDocs || totalDocs === 0) {
+        console.error(`🚨 CRITICAL: No documents found for ${userCounty} in database!`)
+        
+        return NextResponse.json({
+          message: `⚠️ **No ${COUNTY_NAMES[userCounty]} documents available**
+
+I couldn't find any regulatory documents for ${COUNTY_NAMES[userCounty]} in the database. This means:
+
+1. Documents haven't been uploaded to Supabase yet
+2. The county filter isn't working correctly
+3. No documents exist for ${userCounty} in the database
+
+**To fix this, you need to:**
+1. Run: \`npm run upload-embeddings\` to upload documents to Supabase
+2. Verify documents exist in the \`documents\` table with county="${userCounty}"
+3. Check the Supabase logs for any errors
+
+Please contact support if this persists.`,
+          county: userCounty,
+          citations: [],
+          documentsSearched: 0
+        })
+      }
+
+      // CRITICAL FIX: Use match_documents_by_county function that filters DURING search
+      // This ensures we ONLY get documents from the correct county
+      const matchThreshold = image ? 0.25 : 0.4  // Lower thresholds for better recall
+      const matchCount = image ? 30 : 20
+
+      console.log(`🔎 Searching with threshold=${matchThreshold}, count=${matchCount}, county=${userCounty}`)
+
+      // Try to use county-filtered function first
+      let documents = null
+      let searchError = null
+
+      // First attempt: Use match_documents_by_county if it exists
+      try {
+        const result = await supabase.rpc('match_documents_by_county', {
+          query_embedding: embedding,
+          match_threshold: matchThreshold,
+          match_count: matchCount,
+          filter_county: userCounty
+        })
+        
+        documents = result.data
+        searchError = result.error
+      } catch (err) {
+        console.log('⚠️  match_documents_by_county not available, falling back to match_documents')
+        
+        // Fallback: Use regular match_documents and filter afterwards
+        const result = await supabase.rpc('match_documents', {
+          query_embedding: embedding,
+          match_threshold: matchThreshold,
+          match_count: matchCount * 2  // Get more to account for filtering
+        })
+        
+        if (!result.error && result.data) {
+          // Filter to only this county's documents
+          documents = result.data.filter(doc => doc.metadata?.county === userCounty).slice(0, matchCount)
+        }
+        
+        searchError = result.error
+      }
 
       if (searchError) {
         console.error('❌ Vector Search Error:', searchError)
         console.error('Error details:', JSON.stringify(searchError, null, 2))
       }
 
-      console.log(`🔎 Vector search returned ${documents?.length || 0} documents`)
+      console.log(`🔎 Vector search returned ${documents?.length || 0} documents for ${userCounty}`)
+
+      if (!documents || documents.length === 0) {
+        console.error(`⚠️ NO DOCUMENTS RETRIEVED FOR ${userCounty} - Search may be too restrictive`)
+        
+        // Try one more time with very low threshold
+        const { data: fallbackDocs } = await supabase.rpc('match_documents', {
+          query_embedding: embedding,
+          match_threshold: 0.1,  // Very low threshold
+          match_count: matchCount * 3
+        })
+        
+        if (fallbackDocs) {
+          documents = fallbackDocs.filter(doc => doc.metadata?.county === userCounty).slice(0, matchCount)
+          console.log(`🔄 Fallback search found ${documents.length} documents`)
+        }
+      }
 
       if (documents && documents.length > 0) {
-        // Filter documents by county
-        const countyDocs = documents.filter(doc => {
-          const docCounty = doc.metadata?.county
-          if (!docCounty) return false
-          return docCounty === userCounty
-        })
+        console.log(`✅ Using ${documents.length} ${userCounty} documents for context`)
 
-        console.log(`📍 Filtered to ${countyDocs.length} ${userCounty} documents`)
-
-        if (countyDocs.length === 0) {
-          console.error('⚠️  NO DOCUMENTS FOUND FOR COUNTY:', userCounty)
-          console.log('Sample doc metadata:', documents[0]?.metadata)
-        }
-
-        // Use more documents for image analysis
-        const docCount = image ? 15 : 5
-        const topCountyDocs = countyDocs.slice(0, docCount)
-
-        console.log(`✅ Using ${topCountyDocs.length} documents for context`)
-
-        contextText = topCountyDocs.map((doc, idx) => {
+        contextText = documents.map((doc, idx) => {
           const source = doc.metadata?.source || 'Unknown Doc'
           const page = doc.metadata?.page
           
@@ -172,38 +227,31 @@ CONTENT: ${doc.content}
         }).join("\n---\n\n")
 
         console.log('📋 Documents being used:', usedDocs.map(d => `${d.source} (p.${d.page})`).join(', '))
-      } else {
-        console.error('⚠️  Vector search returned no documents at all!')
       }
     }
 
-    // If we have no context and it's an image, return a helpful error
+    // If we have no context and it's an image, return error
     if (image && !contextText) {
       console.error('🚨 CRITICAL: No documents retrieved for image analysis!')
       
       return NextResponse.json({
         message: `⚠️ **Unable to analyze image**
 
-I couldn't retrieve any ${COUNTY_NAMES[userCounty]} regulatory documents from the database. This might mean:
+I couldn't retrieve any ${COUNTY_NAMES[userCounty]} regulatory documents. This might mean:
 
-1. Documents haven't been uploaded to Supabase yet
-2. The vector search function isn't working correctly
-3. No documents exist for ${userCounty} in the database
+1. Documents haven't been uploaded for ${userCounty}
+2. The vector search isn't finding relevant matches
+3. The database query is failing
 
-**To fix this, you need to:**
-1. Run: \`npm run upload-embeddings\` to upload documents to Supabase
-2. Verify the \`match_documents\` function exists in Supabase
-3. Check that documents exist in the \`documents\` table with county="${userCounty}"
+**To fix this:**
+1. Run: \`npm run upload-embeddings\` to upload documents
+2. Verify documents exist for county="${userCounty}"
+3. Check Supabase function \`match_documents\` exists
 
 Please contact support if this persists.`,
         county: userCounty,
         citations: [],
-        documentsSearched: 0,
-        debugInfo: {
-          searchQueryUsed: searchQuery.substring(0, 100),
-          documentsRetrieved: 0,
-          countyFilter: userCounty
-        }
+        documentsSearched: 0
       })
     }
 
@@ -314,7 +362,7 @@ If documents don't cover what you see: "I observed [specific issue] but the curr
     })
 
   } catch (error) {
-    console.error('❌ Gemini API Error:', error)
+    console.error('❌ LLM API Error:', error)
     return NextResponse.json({ 
       error: `Error: ${error.message}` 
     }, { status: 500 })
