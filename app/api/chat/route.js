@@ -11,6 +11,14 @@ const COUNTY_NAMES = {
   oakland: 'Oakland County'
 }
 
+// Environment variable validation
+const requiredEnvVars = ['GEMINI_API_KEY', 'NEXT_PUBLIC_SUPABASE_URL'];
+requiredEnvVars.forEach(varName => {
+  if (!process.env[varName]) {
+    console.error(`❌ Missing required environment variable: ${varName}`);
+  }
+});
+
 export async function POST(request) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -83,11 +91,11 @@ export async function POST(request) {
       const embeddingResult = await embeddingModel.embedContent(lastUserMessage)
       const embedding = embeddingResult.embedding.values
 
-      // Search documents FILTERED BY COUNTY - this is bulletproof
+      // Search documents across all counties
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
         match_threshold: 0.5,
-        match_count: 10 // Get more results to filter
+        match_count: 15 // Get more results before filtering
       })
 
       if (searchError) {
@@ -125,20 +133,22 @@ export async function POST(request) {
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     const systemPrompt = `
-      You are the compliance assistant for protocol LM, helping ${countyName} restaurants maintain food safety compliance.
-      
-      CRITICAL INSTRUCTIONS:
-      1. You have access ONLY to ${countyName} regulations and documents.
-      2. NEVER reference or use information from other counties (Washtenaw, Wayne, or Oakland) unless they are the selected county.
-      3. All your responses must be specific to ${countyName}.
-      4. If the context contains the answer, CITE the source document name in **bold**.
-      5. If the user uploads an image, analyze it for violations based on ${countyName} standards.
-      6. Never mention that you are an AI or language model. You are a compliance assistant.
-      7. If you don't have ${countyName}-specific information, say so clearly.
-      
-      RETRIEVED CONTEXT (${countyName} ONLY):
-      ${contextText || `No specific ${countyName} document matches found. Rely on general food safety knowledge for ${countyName}.`}
-    `
+You are the compliance assistant for protocolLM, helping ${countyName} restaurants maintain food safety compliance.
+
+CRITICAL INSTRUCTIONS:
+1. You have access ONLY to ${countyName} regulations and documents.
+2. NEVER reference or mention other counties (Washtenaw, Wayne, or Oakland) unless they are the selected county.
+3. All your responses must be specific to ${countyName}.
+4. If the context contains the answer, CITE the source document name in **bold**.
+5. If the user uploads an image, analyze it for violations based on ${countyName} standards.
+6. Never mention that you are an AI or language model. You are a compliance assistant.
+7. If you don't have ${countyName}-specific information, say so clearly and suggest checking official ${countyName} health department resources.
+
+IMPORTANT: Users can switch counties using the dropdown menu. When they do, you will have access to that county's documents instead.
+
+RETRIEVED CONTEXT (${countyName} ONLY):
+${contextText || `No specific ${countyName} document matches found. Rely on general food safety knowledge for ${countyName}.`}
+`
 
     let promptParts = [systemPrompt]
     
@@ -180,7 +190,10 @@ export async function POST(request) {
       console.error('Failed to update counters:', updateError)
     }
 
-    return NextResponse.json({ message: text })
+    return NextResponse.json({ 
+      message: text,
+      county: userCounty // Include county in response
+    })
 
   } catch (error) {
     console.error('Gemini API Error:', error)
