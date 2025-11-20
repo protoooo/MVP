@@ -68,9 +68,7 @@ export default function Dashboard() {
   const [userCounty, setUserCounty] = useState('washtenaw')
   const [showCountySelector, setShowCountySelector] = useState(false)
   
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to protocolLM. Upload a photo or ask a question to search all documents.' }
-  ])
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -81,6 +79,15 @@ export default function Dashboard() {
   const fileInputRef = useRef(null)
   const supabase = createClientComponentClient()
   const router = useRouter()
+
+  // Initialize welcome message with county context
+  useEffect(() => {
+    if (userCounty) {
+      setMessages([
+        { role: 'assistant', content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question about your local food safety regulations.` }
+      ])
+    }
+  }, [userCounty])
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -144,8 +151,9 @@ export default function Dashboard() {
       setUserCounty(newCounty)
       setShowCountySelector(false)
       
+      // Update welcome message with new county
       setMessages([
-        { role: 'assistant', content: `County updated to ${COUNTY_NAMES[newCounty]}. Ask me anything about your local food safety regulations.` }
+        { role: 'assistant', content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_DOCUMENTS[newCounty].length} ${COUNTY_NAMES[newCounty]}-specific documents. Ask me anything about your local food safety regulations.` }
       ])
     } catch (error) {
       console.error('Error updating county:', error)
@@ -170,7 +178,7 @@ export default function Dashboard() {
         body: JSON.stringify({ 
           messages: [...messages, { role: 'user', content: input }], 
           image: userMessage.image,
-          county: userCounty
+          county: userCounty // Pass current county to API
         }),
       })
 
@@ -239,7 +247,7 @@ export default function Dashboard() {
                 </svg>
               </button>
             </div>
-            <p className="text-sm text-slate-600 mb-8 leading-relaxed">Choose the county where your restaurant operates to access local regulations.</p>
+            <p className="text-sm text-slate-600 mb-8 leading-relaxed">Choose the county where your restaurant operates to access local regulations and compliance documents.</p>
             
             <div className="space-y-3">
               {Object.entries(COUNTY_NAMES).map(([key, name]) => (
@@ -253,7 +261,12 @@ export default function Dashboard() {
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-900">{name}</span>
+                    <div>
+                      <span className="font-semibold text-slate-900 block">{name}</span>
+                      <span className="text-xs text-slate-500 mt-1 block">
+                        {COUNTY_DOCUMENTS[key].length} documents available
+                      </span>
+                    </div>
                     {userCounty === key && (
                       <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -271,7 +284,10 @@ export default function Dashboard() {
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
           <div className="flex justify-between items-center p-5 bg-white border-b border-slate-200 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900 truncate">{viewingPdf.title}</h3>
+            <div>
+              <h3 className="text-base font-semibold text-slate-900">{viewingPdf.title}</h3>
+              <p className="text-xs text-slate-500 mt-1">{COUNTY_NAMES[userCounty]}</p>
+            </div>
             <div className="flex gap-2">
               <button 
                 onClick={() => window.open(`/documents/${userCounty}/${viewingPdf.filename}`, '_blank')}
@@ -301,9 +317,12 @@ export default function Dashboard() {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-slate-800 p-4 flex justify-between items-center z-50 shadow-lg">
-        <span className="font-bold text-white tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
-          protocol<span className="font-black">LM</span>
-        </span>
+        <div>
+          <span className="font-bold text-white tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
+            protocol<span className="font-black">LM</span>
+          </span>
+          <div className="text-xs text-slate-300 mt-0.5">{COUNTY_NAMES[userCounty]}</div>
+        </div>
         <button onClick={() => setIsSidebarOpen(true)} className="text-white p-2">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
@@ -327,14 +346,15 @@ export default function Dashboard() {
           
           <button 
             onClick={() => setShowCountySelector(true)}
-            className="mt-4 w-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl p-4 transition text-left"
+            className="mt-4 w-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl p-4 transition text-left group"
           >
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-slate-300 mb-1 font-medium">Current County</div>
                 <div className="text-sm font-semibold text-white">{COUNTY_NAMES[userCounty]}</div>
+                <div className="text-xs text-slate-300 mt-1">{currentDocuments.length} documents</div>
               </div>
-              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-slate-300 group-hover:text-white transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
               </svg>
             </div>
@@ -424,10 +444,16 @@ export default function Dashboard() {
         <div className="p-5 border-b border-slate-200 bg-white flex items-center justify-between shadow-sm mt-16 md:mt-0">
           <div>
             <h2 className="font-bold text-slate-900 text-base" style={{ letterSpacing: '-0.01em' }}>Compliance Assistant</h2>
-            <p className="text-xs text-slate-500 font-medium">Searching {COUNTY_NAMES[userCounty]} documents</p>
+            <p className="text-xs text-slate-500 font-medium">Searching {COUNTY_NAMES[userCounty]} documents only</p>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-400 font-semibold">GEMINI 2.0</span>
+            <button 
+              onClick={() => setShowCountySelector(true)}
+              className="md:hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+            >
+              Switch County
+            </button>
+            <span className="text-xs text-slate-400 font-semibold hidden md:block">GEMINI 2.0</span>
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           </div>
         </div>
@@ -467,7 +493,7 @@ export default function Dashboard() {
               value={input} 
               onChange={(e) => setInput(e.target.value)} 
               onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); }}} 
-              placeholder={image ? "Image attached. Add context..." : "Ask about regulations..."} 
+              placeholder={image ? "Image attached. Add context..." : `Ask about ${COUNTY_NAMES[userCounty]} regulations...`} 
               className="flex-1 bg-transparent text-slate-900 text-sm md:text-base max-h-32 py-3 focus:outline-none resize-none" 
               rows="1"
             />
