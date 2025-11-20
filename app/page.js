@@ -77,19 +77,22 @@ export default function Home() {
   }
 
   return (
-    // Changed h-screen to min-h-screen to prevent cutoff on small screens
-    // Added items-stretch to ensure both sides define the height equally
-    <div className="min-h-screen bg-white flex flex-col lg:flex-row items-stretch overflow-x-hidden">
+    /* LAYOUT FIX: 
+       h-screen + overflow-hidden locks the page size (fitted).
+       Flexbox handles the split.
+    */
+    <div className="h-screen w-full bg-white flex overflow-hidden">
       
-      {/* Left Side - Value Prop */}
-      {/* Added pb-20 and justify-start to fix spacing issues. Removed 'hidden' to ensure it renders, but you can keep hidden lg:flex if you want it mobile hidden */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col relative shrink-0">
+      {/* LEFT SIDE 
+         h-full ensures the background goes ALL the way down (No white line).
+      */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 h-full flex-col relative shrink-0">
         
         {/* Background Gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
         
-        {/* Header - Adjusted spacing */}
+        {/* Header */}
         <div className="relative z-10 px-12 pt-12 pb-6">
           <div className={`inline-block transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'}`}>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-1">
@@ -102,11 +105,11 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Content Container - Removed justify-center to fix the large gap */}
-        <div className="relative z-10 flex-1 px-12 flex flex-col justify-start pt-4">
-          <div className="relative max-w-xl pl-6">
+        {/* Content Container - Scrollable internally if content overflows vertical height */}
+        <div className="relative z-10 flex-1 px-12 flex flex-col justify-start pt-4 overflow-y-auto custom-scrollbar">
+          <div className="relative max-w-xl pl-6 pb-12">
             
-            {/* Animated Line Trace - Stripe Style */}
+            {/* Animated Line Trace */}
             <div 
               className={`absolute left-0 top-2 w-0.5 bg-gradient-to-b from-blue-500 via-green-400 to-transparent rounded-full transition-all duration-[1500ms] ease-out`}
               style={{ height: mounted ? '90%' : '0%' }}
@@ -114,11 +117,10 @@ export default function Home() {
 
             <div className="space-y-4">
               
-              {/* CARD 1: The Warning (Formerly plain text) */}
+              {/* CARD 1: The Warning */}
               <div className={`relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-all duration-700 ease-out transform ${mounted ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`} style={{ transitionDelay: '200ms' }}>
                 <div className="flex items-start gap-4">
                   <div className="shrink-0 w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                    {/* Cone/Warning Icon */}
                     <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -202,10 +204,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Right Side - Auth Form */}
-      {/* Added flex-grow to ensure it takes available space but doesn't force white background underneath left side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-white relative">
-        <div className="w-full max-w-md">
+      {/* RIGHT SIDE - Auth Form 
+          Added overflow-y-auto: This allows the form side to scroll INTERNALLY
+          if the device is very short, while the main page body stays locked.
+      */}
+      <div className="w-full lg:w-1/2 h-full overflow-y-auto bg-white flex items-center justify-center p-6 relative">
+        <div className="w-full max-w-md my-auto">
+          
+          {/* Mobile Header (Only visible on small screens) */}
           <div className="mb-8 lg:hidden">
             <div className="inline-block">
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">
