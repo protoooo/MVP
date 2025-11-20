@@ -64,11 +64,10 @@ export default function Home() {
   }
 
   return (
-    // min-h-screen allows scrolling if needed. bg-slate-900 prevents white line artifacts.
-    <div className="min-h-screen w-full bg-slate-900 flex flex-col lg:flex-row">
+    <div className="min-h-screen w-full bg-white flex flex-col lg:flex-row overflow-x-hidden">
       
       {/* LEFT SIDE */}
-      <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col relative shrink-0">
+      <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col relative min-h-screen lg:min-h-0">
         {/* Gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
         
