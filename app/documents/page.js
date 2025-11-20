@@ -213,7 +213,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-slate-900" style={{ letterSpacing: '-0.02em' }}>Select Your County</h3>
-              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-600 transition">
+              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-900 transition">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -228,14 +228,14 @@ export default function Dashboard() {
                   onClick={() => handleCountyChange(key)}
                   className={`w-full text-left p-5 rounded-xl border-2 transition-all duration-200 ${
                     userCounty === key 
-                      ? 'border-blue-600 bg-blue-50 shadow-md' 
+                      ? 'border-slate-900 bg-slate-50 shadow-md' 
                       : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-slate-900">{name}</span>
                     {userCounty === key && (
-                      <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -266,7 +266,7 @@ export default function Dashboard() {
       )}
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-blue-600 p-4 flex justify-between items-center z-50 shadow-lg">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-slate-900 p-4 flex justify-between items-center z-50 shadow-lg">
         <span className="font-bold text-white tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
           protocol<span className="font-black">LM</span>
         </span>
@@ -276,7 +276,7 @@ export default function Dashboard() {
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-gradient-to-b from-blue-600 to-blue-700 text-white flex flex-col z-40 shadow-2xl`}>
+      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-gradient-to-b from-slate-900 to-black text-white flex flex-col z-40 shadow-2xl`}>
         
         <button 
           onClick={() => setIsSidebarOpen(false)}
@@ -289,7 +289,7 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold text-white tracking-tight" style={{ letterSpacing: '-0.03em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <div className="text-xs text-blue-100 mt-1 font-medium">Michigan Restaurant Compliance</div>
+          <div className="text-xs text-slate-300 mt-1 font-medium">Michigan Restaurant Compliance</div>
           
           <button 
             onClick={() => setShowCountySelector(true)}
@@ -297,10 +297,10 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-blue-100 mb-1 font-medium">Current County</div>
+                <div className="text-xs text-slate-300 mb-1 font-medium">Current County</div>
                 <div className="text-sm font-semibold text-white">{COUNTY_NAMES[userCounty]}</div>
               </div>
-              <svg className="w-5 h-5 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
               </svg>
             </div>
@@ -317,7 +317,7 @@ export default function Dashboard() {
               
               <div className="space-y-3">
                 <div>
-                  <div className="flex justify-between text-xs text-blue-100 mb-1.5 font-medium">
+                  <div className="flex justify-between text-xs text-slate-300 mb-1.5 font-medium">
                     <span>Queries</span>
                     <span className="font-semibold">{subscriptionInfo.requestsUsed}/{subscriptionInfo.requestLimit}</span>
                   </div>
@@ -330,7 +330,7 @@ export default function Dashboard() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs text-blue-100 mb-1.5 font-medium">
+                  <div className="flex justify-between text-xs text-slate-300 mb-1.5 font-medium">
                     <span>Image analyses</span>
                     <span className="font-semibold">{subscriptionInfo.imagesUsed}/{subscriptionInfo.imageLimit}</span>
                   </div>
@@ -347,7 +347,7 @@ export default function Dashboard() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 mt-16 md:mt-0">
-          <div className="text-xs font-bold text-blue-100 uppercase tracking-wider mb-4 px-2">
+          <div className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4 px-2">
             {COUNTY_NAMES[userCounty]} Documents
           </div>
           <div className="space-y-1">
@@ -358,10 +358,10 @@ export default function Dashboard() {
                 onClick={() => { setViewingPdf(doc); setIsSidebarOpen(false); }}
               >
                  <div className="flex items-center overflow-hidden flex-1 min-w-0">
-                    <svg className="w-4 h-4 mr-3 text-blue-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    <span className="truncate text-white group-hover:text-blue-50 font-medium">{doc.title}</span>
+                    <svg className="w-4 h-4 mr-3 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <span className="truncate text-white group-hover:text-slate-50 font-medium">{doc.title}</span>
                  </div>
-                 <span className="text-xs text-blue-200 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">View</span>
+                 <span className="text-xs text-slate-300 ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">View</span>
               </button>
             ))}
           </div>
@@ -370,7 +370,7 @@ export default function Dashboard() {
         <div className="p-4 border-t border-white/10">
           <button 
             onClick={async () => { await supabase.auth.signOut(); router.push('/'); }} 
-            className="w-full py-3 text-sm text-white hover:text-blue-50 border border-white/30 rounded-xl hover:bg-white/10 transition font-semibold"
+            className="w-full py-3 text-sm text-white hover:text-slate-50 border border-white/30 rounded-xl hover:bg-white/10 transition font-semibold"
           >
             Sign out
           </button>
@@ -403,7 +403,7 @@ export default function Dashboard() {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
                 {msg.image && <img src={msg.image} alt="Analysis Target" className="max-w-[250px] rounded-xl border border-slate-200 shadow-md" />}
-                <div className={`p-4 rounded-xl text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-900 border border-slate-200'}`}>
+                <div className={`p-4 rounded-xl text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-900 border border-slate-200'}`}>
                   {msg.content}
                 </div>
               </div>
@@ -428,8 +428,8 @@ export default function Dashboard() {
         </div>
         
         <div className="p-4 bg-white border-t border-slate-200 pb-safe">
-          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-white p-2 rounded-xl border-2 border-slate-200 focus-within:border-blue-600 transition shadow-sm">
-            <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-slate-400 hover:text-blue-600 hover:bg-slate-50 rounded-xl transition flex-shrink-0">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative flex items-end gap-2 bg-white p-2 rounded-xl border-2 border-slate-200 focus-within:border-slate-900 transition shadow-sm">
+            <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition flex-shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
             <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -441,7 +441,7 @@ export default function Dashboard() {
               className="flex-1 bg-transparent text-slate-900 text-sm md:text-base max-h-32 py-3 focus:outline-none resize-none" 
               rows="1"
             />
-            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-md hover:shadow-lg">
+            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-md hover:shadow-lg">
               <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
             {image && (
