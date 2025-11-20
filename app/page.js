@@ -64,10 +64,8 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  // Reverted to a smaller dasharray (1200) so the speed is consistent and slow
-  // but still large enough to close the loop on these card sizes.
   const TracingCard = ({ color, delay, children }) => (
-    <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-sm group">
+    <div className="relative bg-white/90 backdrop-blur-sm rounded-xl p-5 shadow-sm group border border-slate-100">
       {/* The Content */}
       <div className="relative z-10">
         {children}
@@ -96,7 +94,6 @@ export default function Home() {
   return (
     <div className="h-screen w-full bg-white flex flex-col lg:flex-row overflow-hidden">
       
-      {/* CSS for the drawing animation - Slowed down to 3s for smoothness */}
       <style jsx global>{`
         @keyframes drawBorder {
           to {
@@ -111,14 +108,14 @@ export default function Home() {
       {/* LEFT SIDE */}
       <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-white">
         
-        {/* Soft Background Texture (Blurred Blobs) - Darkened by ~5% */}
+        {/* Soft Background Texture (Blurred Blobs) - Darkened colors */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Orange Blob Top Left (15% opacity) */}
-          <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#FB923C]/15 blur-[100px]" />
-          {/* Pink Blob Middle Right (15% opacity) */}
-          <div className="absolute top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#FB7185]/15 blur-[120px]" />
-          {/* Green Blob Bottom (25% opacity) */}
-          <div className="absolute -bottom-[20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[#86EFAC]/25 blur-[100px]" />
+          {/* Orange Blob Top Left */}
+          <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-[#EA580C]/10 blur-[100px]" />
+          {/* Pink Blob Middle Right */}
+          <div className="absolute top-[30%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#E11D48]/10 blur-[120px]" />
+          {/* Green Blob Bottom */}
+          <div className="absolute -bottom-[20%] left-[10%] w-[60%] h-[60%] rounded-full bg-[#16A34A]/15 blur-[100px]" />
         </div>
 
         {/* Header */}
@@ -127,8 +124,8 @@ export default function Home() {
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
               protocol<span className="font-normal">LM</span>
             </h1>
-            {/* Multicolored Line */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-[#FB923C] via-[#FB7185] to-[#86EFAC] rounded-full"></div>
+            {/* Multicolored Line - Darkened Gradient */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] rounded-full"></div>
           </div>
           <div className={`text-xs text-slate-600 font-medium mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
@@ -138,18 +135,18 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Multicolored Vertical Line Timeline */}
+            {/* Multicolored Vertical Line Timeline - Darkened Gradient */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#FB923C] via-[#FB7185] to-[#86EFAC] rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#EA580C] via-[#E11D48] to-[#16A34A] rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
             <div className="space-y-4">
               
-              {/* CARD 1 - Orange */}
-              <TracingCard color="#FB923C" delay="100ms">
+              {/* CARD 1 - Darker Orange */}
+              <TracingCard color="#EA580C" delay="100ms">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#EA580C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
@@ -159,10 +156,10 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 2 - Pink */}
-              <TracingCard color="#FB7185" delay="400ms">
+              {/* CARD 2 - Darker Pink */}
+              <TracingCard color="#E11D48" delay="400ms">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB7185] flex items-center justify-center">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#E11D48] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -172,11 +169,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 3 - Green */}
-              <TracingCard color="#86EFAC" delay="700ms">
+              {/* CARD 3 - Darker Green */}
+              <TracingCard color="#16A34A" delay="700ms">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#16A34A] flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Catch violations before inspectors do</h3>
@@ -185,10 +182,10 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 4 - Orange */}
-              <TracingCard color="#FB923C" delay="1000ms">
+              {/* CARD 4 - Darker Orange */}
+              <TracingCard color="#EA580C" delay="1000ms">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#FB923C] flex items-center justify-center">
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#EA580C] flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
@@ -198,11 +195,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 5 - Green */}
-              <TracingCard color="#86EFAC" delay="1300ms">
+              {/* CARD 5 - Darker Green */}
+              <TracingCard color="#16A34A" delay="1300ms">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#86EFAC] flex items-center justify-center">
-                    <svg className="w-6 h-6 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-[#16A34A] flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">One tool. All your answers.</h3>
@@ -215,8 +212,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className={`text-slate-500 text-xs relative z-10 px-8 lg:px-12 pb-3 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Footer - Increased spacing (mt-12) so it's not too close to the last card */}
+        <div className={`text-slate-500 text-xs relative z-10 px-8 lg:px-12 mt-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
@@ -229,7 +226,7 @@ export default function Home() {
           <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1.5 w-full bg-gradient-to-r from-[#FB923C] via-[#FB7185] to-[#86EFAC] rounded-full"></div>
+              <div className="h-1.5 w-full bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] rounded-full"></div>
             </div>
           </div>
 
@@ -242,14 +239,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle with Matte Gradient for Active State */}
-          <div className="bg-gradient-to-r from-[#FB923C] via-[#FB7185] to-[#86EFAC] p-[2px] rounded-xl mb-5">
+          {/* Toggle with Matte Gradient for Active State - Darker Colors */}
+          <div className="bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] p-[2px] rounded-xl mb-5">
             <div className="flex rounded-[10px] bg-white overflow-hidden p-1">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   view === 'signup' 
-                    ? 'bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 text-slate-900 shadow-sm' 
+                    ? 'bg-gradient-to-r from-[#EA580C]/20 via-[#E11D48]/20 to-[#16A34A]/20 text-slate-900 shadow-sm' 
                     : 'text-slate-600 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -259,7 +256,7 @@ export default function Home() {
                 onClick={() => { setView('login'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   view === 'login' 
-                    ? 'bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 text-slate-900 shadow-sm' 
+                    ? 'bg-gradient-to-r from-[#EA580C]/20 via-[#E11D48]/20 to-[#16A34A]/20 text-slate-900 shadow-sm' 
                     : 'text-slate-600 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -271,20 +268,20 @@ export default function Home() {
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#FB923C] focus:ring-4 focus:ring-[#FB923C]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#EA580C] focus:ring-4 focus:ring-[#EA580C]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#FB7185] focus:ring-4 focus:ring-[#FB7185]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#E11D48] focus:ring-4 focus:ring-[#E11D48]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Multicolored Button - Now Matte Gradient to match Toggle */}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#FB923C]/30 via-[#FB7185]/30 to-[#86EFAC]/30 hover:opacity-80 text-slate-900 font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
+            {/* Multicolored Button - Darker Gradient */}
+            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
             {message && (
-              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-green-50 border-2 border-[#86EFAC] text-green-800'}`}>
+              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-green-50 border-2 border-[#16A34A] text-green-800'}`}>
                 {message.text}
               </div>
             )}
@@ -293,7 +290,8 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
-              <button onClick={() => router.push('/pricing')} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold py-2.5 rounded-xl transition text-sm">View pricing plans</button>
+              {/* View Pricing Button - White inside, colored border */}
+              <button onClick={() => router.push('/pricing')} className="w-full bg-white border-2 border-[#EA580C] text-[#EA580C] hover:bg-orange-50 font-bold py-2.5 rounded-xl transition text-sm">View pricing plans</button>
             </div>
           )}
         </div>
