@@ -184,7 +184,7 @@ export default function Home() {
             </h2>
             <p className="text-slate-600 text-base">
               {view === 'signup' 
-                ? 'Start your 30-day free trial today' 
+                ? 'Get instant access to food safety compliance tools' 
                 : 'Sign in to access your dashboard'}
             </p>
           </div>
@@ -284,7 +284,7 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-8 pt-8 border-t border-slate-200">
               <p className="text-center text-sm text-slate-600 mb-4 font-medium">
-                30-day free trial • Credit card required
+                30-day free trial • No credit card required
               </p>
               <button
                 onClick={() => router.push('/pricing')}
