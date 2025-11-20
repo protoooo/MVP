@@ -272,10 +272,11 @@ export default function Dashboard() {
           part.type === 'text' ? (
             <span key={i}>{part.content}</span>
           ) : (
+            // Updated Citation Style: White background, Green border/text
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-slate-200 hover:bg-slate-300 text-slate-900 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
+              className="inline-flex items-center bg-white border border-[#16A34A] text-[#16A34A] hover:bg-green-50 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -352,11 +353,6 @@ export default function Dashboard() {
   const currentDocuments =
     COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS['washtenaw']
 
-  // ---------------------------------------------------------------------
-  // UI STARTS HERE (unchanged from your structure)
-  // FULL UI RETURN BLOCK (restored)
-  // ---------------------------------------------------------------------
-
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
 
@@ -366,7 +362,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-slate-900">Select Your County</h3>
-              <button onClick={() => setShowCountySelector(false)}>
+              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-900">
                 ✕
               </button>
             </div>
@@ -374,9 +370,9 @@ export default function Dashboard() {
               <button
                 key={key}
                 onClick={() => handleCountyChange(key)}
-                className="w-full text-left p-4 border rounded-lg mb-2 hover:bg-slate-100"
+                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#EA580C] hover:bg-orange-50 transition-all text-slate-700 font-medium"
               >
-                {name} — {COUNTY_DOCUMENTS[key].length} documents
+                {name} <span className="text-slate-400 text-sm ml-2">— {COUNTY_DOCUMENTS[key].length} documents</span>
               </button>
             ))}
           </div>
@@ -386,14 +382,19 @@ export default function Dashboard() {
       {/* PDF VIEWER */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="p-4 border-b flex justify-between">
+          <div className="p-4 border-b flex justify-between items-center bg-white">
             <div>
-              <h3 className="font-bold">{viewingPdf.title}</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
+              <p className="text-xs text-slate-500 font-medium">
                 Page {viewingPdf.targetPage}
               </p>
             </div>
-            <button onClick={() => setViewingPdf(null)}>Close</button>
+            <button 
+              onClick={() => setViewingPdf(null)}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition"
+            >
+              Close
+            </button>
           </div>
           <iframe
             src={`/documents/${userCounty}/${viewingPdf.filename}#page=${viewingPdf.targetPage}`}
@@ -402,33 +403,38 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-800 text-white p-6 transition ${
+      {/* SIDEBAR - Darker slate (slate-900) */}
+      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white p-6 transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
-        <div className="flex justify-between items-center mb-4 md:mb-6">
-          <h1 className="text-xl font-bold">protocolLM</h1>
-          <button className="md:hidden" onClick={() => setIsSidebarOpen(false)}>✕</button>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
+            {/* Colored line */}
+            <div className="h-1 w-full bg-gradient-to-r from-[#EA580C] via-[#E11D48] to-[#16A34A] rounded-full mt-1"></div>
+          </div>
+          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
         </div>
 
         <button
           onClick={() => setShowCountySelector(true)}
-          className="w-full bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-xl mb-6"
+          className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-700"
         >
-          County: {COUNTY_NAMES[userCounty]}
+          <span className="text-sm font-medium truncate">{COUNTY_NAMES[userCounty]}</span>
+          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
         </button>
 
         {/* Sidebar Tabs */}
-        <div className="flex mb-4">
+        <div className="flex mb-4 bg-slate-800 rounded-lg p-1">
           <button
             onClick={() => setSidebarView('documents')}
-            className={`flex-1 p-2 rounded-l-lg ${sidebarView === 'documents' ? 'bg-white text-slate-900' : 'bg-slate-700'}`}
+            className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'documents' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
           >
             Documents
           </button>
           <button
             onClick={() => setSidebarView('history')}
-            className={`flex-1 p-2 rounded-r-lg ${sidebarView === 'history' ? 'bg-white text-slate-900' : 'bg-slate-700'}`}
+            className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
           >
             History
           </button>
@@ -436,12 +442,12 @@ export default function Dashboard() {
 
         {/* DOCUMENTS LIST */}
         {sidebarView === 'documents' && (
-          <div className="overflow-y-auto h-full pr-2">
+          <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 space-y-1 custom-scrollbar">
             {currentDocuments.map((doc, i) => (
               <button
                 key={i}
                 onClick={() => setViewingPdf({ ...doc, targetPage: 1 })}
-                className="w-full text-left p-2 mb-2 bg-slate-700 hover:bg-slate-600 rounded"
+                className="w-full text-left p-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors truncate"
               >
                 {doc.title}
               </button>
@@ -451,36 +457,37 @@ export default function Dashboard() {
 
         {/* HISTORY LIST */}
         {sidebarView === 'history' && (
-          <div className="overflow-y-auto h-full pr-2">
+          <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 custom-scrollbar">
+            {/* New Chat - Darker Green #16A34A */}
             <button
-              className="w-full bg-green-500 hover:bg-green-400 text-black p-2 mb-3 rounded font-bold"
+              className="w-full bg-[#16A34A] hover:bg-[#15803d] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
               onClick={startNewChat}
             >
-              + New Chat
+              <span>+</span> New Chat
             </button>
 
             {chatHistory.length === 0 && (
-              <p className="text-slate-300 text-sm">No history yet.</p>
+              <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
             )}
 
             {chatHistory.map(chat => (
               <div
                 key={chat.id}
                 onClick={() => loadChat(chat)}
-                className="p-3 bg-slate-700 hover:bg-slate-600 rounded mb-2 flex justify-between"
+                className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
               >
-                <div>
-                  <p className="font-semibold text-sm">{chat.title}</p>
-                  <p className="text-xs text-slate-300">
-                    {new Date(chat.timestamp).toLocaleString()}
-                  </p>
+                <div className="flex justify-between items-start">
+                  <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
+                  <button
+                    onClick={(e) => deleteChat(chat.id, e)}
+                    className="text-slate-500 hover:text-[#E11D48] opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  onClick={(e) => deleteChat(chat.id, e)}
-                  className="text-red-400 hover:text-red-300"
-                >
-                  ✕
-                </button>
+                <p className="text-xs text-slate-500 mt-1">
+                  {new Date(chat.timestamp).toLocaleDateString()}
+                </p>
               </div>
             ))}
           </div>
@@ -488,29 +495,45 @@ export default function Dashboard() {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full bg-white relative">
 
         {/* MOBILE HEADER */}
-        <div className="md:hidden p-4 bg-slate-800 text-white flex justify-between items-center">
+        <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30">
           <div>
-            <span className="font-bold">protocolLM</span>
-            <div className="text-xs">{COUNTY_NAMES[userCounty]}</div>
+            <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
+            <div className="text-xs text-slate-400">{COUNTY_NAMES[userCounty]}</div>
           </div>
-          <button onClick={() => setIsSidebarOpen(true)}>☰</button>
+          <button onClick={() => setIsSidebarOpen(true)} className="text-white">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+          </button>
         </div>
 
         {/* MESSAGES */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`p-4 rounded-xl max-w-[80%] ${
-                msg.role === 'assistant'
-                  ? 'bg-slate-100 text-slate-900'
-                  : 'bg-blue-600 text-white ml-auto'
-              }`}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {renderMessageContent(msg)}
+              <div
+                className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm ${
+                  msg.role === 'assistant'
+                    ? 'bg-white border border-slate-200 text-slate-800'
+                    : 'bg-[#EA580C] text-white' // User bubble is now Darker Orange
+                }`}
+              >
+                {/* Only show avatar for Assistant */}
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#EA580C] via-[#E11D48] to-[#16A34A] flex items-center justify-center text-[10px] text-white font-bold">
+                      LM
+                    </div>
+                    <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                  </div>
+                )}
+                
+                {renderMessageContent(msg)}
+              </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -519,38 +542,48 @@ export default function Dashboard() {
         {/* INPUT */}
         <form
           onSubmit={handleSendMessage}
-          className="p-4 border-t flex items-center gap-3 bg-white"
+          className="p-4 md:p-6 border-t border-slate-100 bg-white"
         >
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
+          <div className="max-w-4xl mx-auto relative flex items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current.click()}
-            className="px-3 py-2 bg-slate-200 rounded-lg"
-          >
-            📷
-          </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              className={`p-3 rounded-xl transition-all ${
+                image 
+                  ? 'bg-[#E11D48] text-white shadow-md' 
+                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+            </button>
 
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Ask a food safety question..."
-            className="flex-1 p-3 border rounded-xl"
-          />
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder={image ? "Ask a question about this image..." : "Ask a food safety question..."}
+              className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EA580C]/20 focus:border-[#EA580C] transition-all text-sm"
+            />
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-xl disabled:opacity-50"
-          >
-            {isLoading ? '...' : 'Send'}
-          </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              // Send button matches user bubble (Dark Orange)
+              className="px-6 py-3.5 bg-[#EA580C] hover:bg-[#c2410c] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm"
+            >
+              {isLoading ? '...' : 'Send'}
+            </button>
+          </div>
+          <div className="text-center mt-2">
+             <p className="text-[10px] text-slate-400">AI can make mistakes. Verify with cited documents.</p>
+          </div>
         </form>
       </div>
     </div>
