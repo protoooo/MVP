@@ -66,8 +66,8 @@ export default function Pricing() {
             <svg className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="text-slate-900 font-bold tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
-              protocol<span className="font-black">LM</span>
+            <span className="text-slate-900 font-bold tracking-tight text-lg">
+              protocol<span className="font-normal">LM</span>
             </span>
           </button>
           {!isAuthenticated && (
@@ -88,7 +88,7 @@ export default function Pricing() {
             Choose your plan
           </h1>
           <p className="text-xl text-slate-600 font-normal" style={{ letterSpacing: '-0.01em' }}>
-            Start with a 7-day free trial. No credit card required.
+            Start with a 7-day free trial. Credit card required.
           </p>
           {!isAuthenticated && (
             <div className="mt-8 p-5 bg-slate-50 border border-slate-200 rounded-xl">
@@ -246,7 +246,7 @@ export default function Pricing() {
                 </span>
               </summary>
               <div className="p-5 text-slate-600 leading-relaxed">
-                You get full access to all features for 7 days. Your card won't be charged until after the trial ends. Cancel anytime during the trial with no charge.
+                You get full access to all features for 7 days. You'll need to provide a credit card, but you won't be charged until after the trial ends. Cancel anytime during the trial with no charge.
               </div>
             </details>
 
