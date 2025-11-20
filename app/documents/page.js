@@ -286,7 +286,7 @@ export default function Dashboard() {
       )}
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-slate-950 p-4 flex justify-between items-center z-50 shadow-lg">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-slate-800 p-4 flex justify-between items-center z-50 shadow-lg">
         <span className="font-bold text-white tracking-tight text-lg" style={{ letterSpacing: '-0.03em' }}>
           protocol<span className="font-black">LM</span>
         </span>
@@ -296,7 +296,7 @@ export default function Dashboard() {
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-gradient-to-b from-slate-950 to-black text-white flex flex-col z-40 shadow-2xl`}>
+      <div className={`fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out w-80 bg-gradient-to-b from-slate-800 to-slate-900 text-white flex flex-col z-40 shadow-2xl`}>
         
         <button 
           onClick={() => setIsSidebarOpen(false)}
@@ -306,10 +306,10 @@ export default function Dashboard() {
         </button>
 
         <div className="p-6 hidden md:block border-b border-white/10">
-          <h1 className="text-xl font-bold text-white tracking-tight" style={{ letterSpacing: '-0.03em' }}>
+          <h1 className="text-xl font-bold text-white tracking-tight mb-1" style={{ letterSpacing: '-0.03em' }}>
             protocol<span className="font-black">LM</span>
           </h1>
-          <div className="text-xs text-slate-300 mt-1 font-medium">Michigan Restaurant Compliance</div>
+          <div className="text-xs text-slate-300 font-medium">Michigan Restaurant Compliance</div>
           
           <button 
             onClick={() => setShowCountySelector(true)}
@@ -423,7 +423,7 @@ export default function Dashboard() {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] md:max-w-[70%] space-y-2`}>
                 {msg.image && <img src={msg.image} alt="Analysis Target" className="max-w-[250px] rounded-xl border border-slate-200 shadow-md" />}
-                <div className={`p-4 rounded-xl text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-950 text-white shadow-lg' : 'bg-slate-50 text-slate-900 border border-slate-200'}`}>
+                <div className={`p-4 rounded-xl text-sm md:text-base leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-800 text-white shadow-lg' : 'bg-slate-50 text-slate-900 border border-slate-200'}`}>
                   {msg.content}
                 </div>
               </div>
@@ -457,7 +457,7 @@ export default function Dashboard() {
               className="flex-1 bg-transparent text-slate-900 text-sm md:text-base max-h-32 py-3 focus:outline-none resize-none" 
               rows="1"
             />
-            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-slate-950 hover:bg-slate-900 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-md hover:shadow-lg">
+            <button type="submit" disabled={isLoading || (!input.trim() && !image)} className="p-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-md hover:shadow-lg">
               <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
             {image && (
