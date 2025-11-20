@@ -87,15 +87,23 @@ export async function POST(request) {
     let contextText = ""
     let usedDocs = []
 
-    if (lastUserMessage && lastUserMessage.trim().length > 0) {
-      const embeddingResult = await embeddingModel.embedContent(lastUserMessage)
+    // Enhanced search query for image analysis
+    let searchQuery = lastUserMessage
+    
+    // If image is present, enhance the query to retrieve relevant cleaning/sanitation docs
+    if (image) {
+      searchQuery = `${lastUserMessage} food safety violations cleaning sanitation equipment maintenance non-food contact surfaces grease buildup pest control cross contamination temperature control storage requirements`
+    }
+
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const embeddingResult = await embeddingModel.embedContent(searchQuery)
       const embedding = embeddingResult.embedding.values
 
       // Search documents across all counties
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
-        match_threshold: 0.5,
-        match_count: 15
+        match_threshold: 0.4, // Lowered threshold for better recall with images
+        match_count: 20 // Increased count for image analysis
       })
 
       if (searchError) {
@@ -112,14 +120,14 @@ export async function POST(request) {
 
         console.log(`🔍 Query for ${userCounty}: Found ${documents.length} total, filtered to ${countyDocs.length} county-specific`)
 
-        // Use top 5 most relevant county-specific documents
-        const topCountyDocs = countyDocs.slice(0, 5)
+        // Use more documents for image analysis
+        const topCountyDocs = countyDocs.slice(0, image ? 10 : 5)
 
         contextText = topCountyDocs.map((doc, idx) => {
           const source = doc.metadata?.source || 'Unknown Doc'
           const page = doc.metadata?.page
           
-          if (source && !usedDocs.some(d => d.source === source)) {
+          if (source && !usedDocs.some(d => d.source === source && d.page === page)) {
             usedDocs.push({ source, page })
           }
           
@@ -138,27 +146,27 @@ CONTENT: ${doc.content}
     const systemPrompt = `You are the compliance assistant for protocolLM, helping ${countyName} restaurants maintain food safety compliance.
 
 CRITICAL CITATION RULES:
-1. You have access ONLY to ${countyName} regulations and documents.
+1. You have access ONLY to ${countyName} regulations and documents shown in the RETRIEVED CONTEXT below.
 2. NEVER reference other counties unless they are the selected county.
 3. ALWAYS cite your sources using this exact format: **[Document Name, Page X]**
 4. When you reference ANY information from the documents, immediately follow it with a citation.
 5. Multiple citations for the same document should use: **[Document Name, Pages X, Y, Z]**
-6. If you don't have specific ${countyName} information, say so and suggest checking official ${countyName} health department resources.
+6. NEVER provide information that isn't in the RETRIEVED CONTEXT below.
+7. If the retrieved documents don't contain specific information, you MUST state: "I don't have a specific ${countyName} document citation for this issue."
 
 CITATION EXAMPLES:
-- "Chicken must reach an internal temperature of 165°F (74°C) **[Cooking Temps, Page 3]**"
-- "Raw meat should be stored on the bottom shelf **[Cross Contamination, Page 2]** to prevent dripping onto other foods."
-- "According to ${countyName} enforcement guidelines **[Enforcement Action Guide, Pages 5-7]**, violations are classified into three categories..."
+- "Equipment surfaces must be kept clean **[Cross Contamination, Page 2]**"
+- "Non-food contact surfaces should be cleaned regularly to prevent pest attraction **[Enforcement Action Guide, Page 5]**"
+- "Temperature control requirements **[Cooling Foods, Page 3]** state that..."
 
 RETRIEVED CONTEXT (${countyName} ONLY):
-${contextText || `No specific ${countyName} document matches found. Use general food safety knowledge for ${countyName}, but clearly state when information is general vs. county-specific.`}
+${contextText || `No ${countyName} documents were retrieved. You cannot provide specific regulatory information without document citations.`}
 
 RESPONSE FORMAT:
-- Be conversational but professional
-- Always cite sources when referencing specific requirements
-- Use bold citations: **[Document Name, Page X]**
-- If analyzing an image, cite relevant violations with document references
-- Group related information from the same document together
+- Always cite sources using **[Document Name, Page X]**
+- If analyzing an image, cite specific violations with document references
+- If no relevant documents were retrieved, state this clearly
+- Never make up citations or reference documents not in RETRIEVED CONTEXT
 `
 
     let promptParts = [systemPrompt]
@@ -176,7 +184,26 @@ RESPONSE FORMAT:
           mimeType: mimeType
         }
       })
-      promptParts.push(`Analyze this image for food safety violations based on ${countyName} regulations. Cite specific documents and pages for each violation you identify.`)
+      
+      // Enhanced image analysis prompt with stricter citation requirements
+      promptParts.push(`ANALYZE THIS IMAGE FOR FOOD SAFETY VIOLATIONS
+
+STRICT REQUIREMENTS:
+1. Examine the image carefully for any food safety issues
+2. For EVERY issue you identify, you MUST cite a specific document and page from the RETRIEVED CONTEXT above
+3. Use this exact format: **[Document Name, Page X]**
+4. If you observe an issue but cannot find a citation in the RETRIEVED CONTEXT, state: "I observed [specific issue] but do not have a ${countyName} document citation for this specific violation."
+5. NEVER provide generic food safety advice without a citation from RETRIEVED CONTEXT
+6. Only cite information that appears in the RETRIEVED CONTEXT section
+
+RESPONSE STRUCTURE:
+For each violation:
+- Describe what you observe in the image
+- State the relevant regulation **[Document Name, Page X]**
+- Explain how to correct it **[Document Name, Page X]**
+
+If no documents were retrieved that match the observed issues, respond:
+"I can see potential food safety concerns in this image, but I don't have specific ${countyName} regulatory documents in my current search results to cite. Please refer to official ${countyName} health department resources or contact them directly for guidance on the issues visible in this image."`)
     }
 
     const result = await chatModel.generateContent(promptParts)
@@ -213,10 +240,13 @@ RESPONSE FORMAT:
       })
     }
 
+    console.log(`📊 Response generated with ${citations.length} citations from ${usedDocs.length} documents`)
+
     return NextResponse.json({ 
       message: text,
       county: userCounty,
-      citations: citations
+      citations: citations,
+      documentsSearched: usedDocs.length
     })
 
   } catch (error) {
