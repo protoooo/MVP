@@ -159,7 +159,7 @@ export default function Home() {
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-1 text-sm">One tool. All your answers.</h3>
-                <p className="text-slate-300 text-xs leading-snug">FDA Food Code, Michigan regulations, county enforcement guidelines, and AI-powered image analysis—all accessible from your phone in seconds. No more guessing. No more violations you could have prevented.</p>
+                <p className="text-slate-300 text-xs leading-snug">FDA Food Code, Michigan regulations, county enforcement guidelines, and automated image analysis—all accessible from your phone in seconds. No more guessing. No more violations you could have prevented.</p>
               </div>
             </div>
           </div>
