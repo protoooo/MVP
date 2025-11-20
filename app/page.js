@@ -77,14 +77,13 @@ export default function Home() {
   }
 
   return (
-    // CRITICAL FIXES: 
-    // 1. min-h-screen: Ensures full height but allows scrolling if content overflows (fixes "can't move").
-    // 2. bg-slate-900: Sets base color to dark. If there's a gap, it shows blue, removing the "white line".
+    // STANDARD LAYOUT: min-h-screen allows scrolling.
+    // bg-slate-900 on the PARENT ensures no white line ever appears on the left side.
     <div className="min-h-screen w-full bg-slate-900 flex flex-col lg:flex-row">
       
       {/* LEFT SIDE - Value Prop */}
-      {/* lg:w-1/2 ensures it takes half width on desktop. Flex-col for stacking content. */}
-      <div className="flex-1 lg:w-1/2 flex flex-col relative overflow-hidden shrink-0">
+      {/* bg-slate-900 ensures consistency. */}
+      <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col relative shrink-0">
         
         {/* Background Gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 z-0"></div>
@@ -203,9 +202,8 @@ export default function Home() {
       </div>
 
       {/* RIGHT SIDE - Auth Form */}
-      {/* bg-white applied here explicitly. If this content is short, the parent bg-slate-900 ensures no white line on left. */}
-      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 relative min-h-[50vh] lg:min-h-screen">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 relative">
+        <div className="w-full max-w-md py-12">
           
           {/* Mobile Header (Only visible on small screens) */}
           <div className="mb-8 lg:hidden">
