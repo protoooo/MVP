@@ -51,25 +51,7 @@ h1, h2, h3, h4, h5, h6 {
   --color-salmon-dark: #F43F5E;
 }
 
-/* Stripe-style Card Reveal Animation - Starts on load */
-@keyframes border-trace {
-  0% {
-    stroke-dashoffset: 800;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes border-glow {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
+/* Simple Card Reveal Animation - No Glow */
 @keyframes content-fade-in {
   0% {
     opacity: 0;
@@ -86,33 +68,13 @@ h1, h2, h3, h4, h5, h6 {
   overflow: visible;
 }
 
-/* SVG border trace effect */
-.card-reveal::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 0.875rem;
-  background: linear-gradient(135deg, var(--color-spearmint), var(--color-creamsicle), var(--color-salmon));
-  opacity: 0;
-  animation: border-glow 2s ease-in-out infinite;
-  animation-delay: 1.2s;
-  pointer-events: none;
-  z-index: -1;
-  filter: blur(8px);
-}
-
+/* Solid matte border - no glow, no gradient animation */
 .card-reveal::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 0.75rem;
-  padding: 2px;
-  background: linear-gradient(135deg, var(--color-spearmint), var(--color-creamsicle), var(--color-salmon));
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  border: 2px solid var(--color-spearmint);
   opacity: 0;
   animation: content-fade-in 0.4s ease-out 0.8s forwards;
   pointer-events: none;
@@ -187,18 +149,7 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 0.4s;
 }
 
-/* Animated gradient background */
-@keyframes gradient-shift {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animated-gradient {
-  background: linear-gradient(135deg, #f0fdf4, #fff7ed, #fff1f2);
-  background-size: 200% 200%;
-  animation: gradient-shift 15s ease infinite;
+/* Simple matte background - no animation */
+.matte-background {
+  background: #f0fdf4;
 }
