@@ -86,29 +86,50 @@ export async function POST(request) {
 
     let contextText = ""
     let usedDocs = []
-
-    // Enhanced search query for image analysis
     let searchQuery = lastUserMessage
-    
-    // If image is present, enhance the query to retrieve relevant cleaning/sanitation docs
+
+    // CRITICAL FIX: For image analysis, use a comprehensive search query
     if (image) {
-      searchQuery = `${lastUserMessage} food safety violations cleaning sanitation equipment maintenance non-food contact surfaces grease buildup pest control cross contamination temperature control storage requirements`
+      searchQuery = `food safety violations equipment cleanliness sanitation surfaces grease buildup 
+                     temperature control storage cross contamination pest control proper maintenance 
+                     cleaning procedures facility requirements non-food contact surfaces food contact surfaces
+                     cooling procedures holding temperatures cooking temperatures equipment design
+                     ${lastUserMessage}`.trim()
+      
+      console.log('🔍 IMAGE ANALYSIS - Enhanced search query:', searchQuery.substring(0, 100) + '...')
     }
 
     if (searchQuery && searchQuery.trim().length > 0) {
       const embeddingResult = await embeddingModel.embedContent(searchQuery)
       const embedding = embeddingResult.embedding.values
 
-      // Search documents across all counties
+      console.log('📊 Embedding generated, searching documents...')
+
+      // First, check if we have ANY documents for this county
+      const { count: totalDocs, error: countError } = await supabase
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .filter('metadata->>county', 'eq', userCounty)
+
+      if (countError) {
+        console.error('❌ Error checking document count:', countError)
+      } else {
+        console.log(`📚 Total documents for ${userCounty}:`, totalDocs)
+      }
+
+      // Search with very low threshold for image analysis
       const { data: documents, error: searchError } = await supabase.rpc('match_documents', {
         query_embedding: embedding,
-        match_threshold: 0.4, // Lowered threshold for better recall with images
-        match_count: 20 // Increased count for image analysis
+        match_threshold: image ? 0.3 : 0.5, // Much lower for images
+        match_count: image ? 25 : 15
       })
 
       if (searchError) {
-        console.error('Vector Search Error:', searchError)
+        console.error('❌ Vector Search Error:', searchError)
+        console.error('Error details:', JSON.stringify(searchError, null, 2))
       }
+
+      console.log(`🔎 Vector search returned ${documents?.length || 0} documents`)
 
       if (documents && documents.length > 0) {
         // Filter documents by county
@@ -118,16 +139,26 @@ export async function POST(request) {
           return docCounty === userCounty
         })
 
-        console.log(`🔍 Query for ${userCounty}: Found ${documents.length} total, filtered to ${countyDocs.length} county-specific`)
+        console.log(`📍 Filtered to ${countyDocs.length} ${userCounty} documents`)
+
+        if (countyDocs.length === 0) {
+          console.error('⚠️  NO DOCUMENTS FOUND FOR COUNTY:', userCounty)
+          console.log('Sample doc metadata:', documents[0]?.metadata)
+        }
 
         // Use more documents for image analysis
-        const topCountyDocs = countyDocs.slice(0, image ? 10 : 5)
+        const docCount = image ? 15 : 5
+        const topCountyDocs = countyDocs.slice(0, docCount)
+
+        console.log(`✅ Using ${topCountyDocs.length} documents for context`)
 
         contextText = topCountyDocs.map((doc, idx) => {
           const source = doc.metadata?.source || 'Unknown Doc'
           const page = doc.metadata?.page
           
-          if (source && !usedDocs.some(d => d.source === source && d.page === page)) {
+          // Track unique documents
+          const docKey = `${source}-${page}`
+          if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
             usedDocs.push({ source, page })
           }
           
@@ -139,34 +170,67 @@ CONTENT: ${doc.content}
 
 `
         }).join("\n---\n\n")
+
+        console.log('📋 Documents being used:', usedDocs.map(d => `${d.source} (p.${d.page})`).join(', '))
+      } else {
+        console.error('⚠️  Vector search returned no documents at all!')
       }
+    }
+
+    // If we have no context and it's an image, return a helpful error
+    if (image && !contextText) {
+      console.error('🚨 CRITICAL: No documents retrieved for image analysis!')
+      
+      return NextResponse.json({
+        message: `⚠️ **Unable to analyze image**
+
+I couldn't retrieve any ${COUNTY_NAMES[userCounty]} regulatory documents from the database. This might mean:
+
+1. Documents haven't been uploaded to Supabase yet
+2. The vector search function isn't working correctly
+3. No documents exist for ${userCounty} in the database
+
+**To fix this, you need to:**
+1. Run: \`npm run upload-embeddings\` to upload documents to Supabase
+2. Verify the \`match_documents\` function exists in Supabase
+3. Check that documents exist in the \`documents\` table with county="${userCounty}"
+
+Please contact support if this persists.`,
+        county: userCounty,
+        citations: [],
+        documentsSearched: 0,
+        debugInfo: {
+          searchQueryUsed: searchQuery.substring(0, 100),
+          documentsRetrieved: 0,
+          countyFilter: userCounty
+        }
+      })
     }
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     const systemPrompt = `You are the compliance assistant for protocolLM, helping ${countyName} restaurants maintain food safety compliance.
 
-CRITICAL CITATION RULES:
-1. You have access ONLY to ${countyName} regulations and documents shown in the RETRIEVED CONTEXT below.
-2. NEVER reference other counties unless they are the selected county.
-3. ALWAYS cite your sources using this exact format: **[Document Name, Page X]**
-4. When you reference ANY information from the documents, immediately follow it with a citation.
-5. Multiple citations for the same document should use: **[Document Name, Pages X, Y, Z]**
-6. NEVER provide information that isn't in the RETRIEVED CONTEXT below.
-7. If the retrieved documents don't contain specific information, you MUST state: "I don't have a specific ${countyName} document citation for this issue."
+CRITICAL CITATION RULES - READ CAREFULLY:
+1. You have access ONLY to ${countyName} documents shown in RETRIEVED CONTEXT below
+2. You MUST cite every single regulatory statement using: **[Document Name, Page X]**
+3. NEVER provide information without a citation from RETRIEVED CONTEXT
+4. If RETRIEVED CONTEXT is empty or doesn't cover the topic, say: "I don't have specific ${countyName} documents for this issue."
+5. DO NOT use general food safety knowledge - ONLY cite from RETRIEVED CONTEXT
 
-CITATION EXAMPLES:
-- "Equipment surfaces must be kept clean **[Cross Contamination, Page 2]**"
-- "Non-food contact surfaces should be cleaned regularly to prevent pest attraction **[Enforcement Action Guide, Page 5]**"
-- "Temperature control requirements **[Cooling Foods, Page 3]** state that..."
+RETRIEVED CONTEXT (${countyName} REGULATIONS):
+${contextText || `⚠️ NO DOCUMENTS RETRIEVED - Cannot provide regulatory guidance without document citations.`}
 
-RETRIEVED CONTEXT (${countyName} ONLY):
-${contextText || `No ${countyName} documents were retrieved. You cannot provide specific regulatory information without document citations.`}
+${contextText ? `
+AVAILABLE DOCUMENTS:
+${usedDocs.map(d => `- ${d.source} (Page ${d.page})`).join('\n')}
+
+You MUST cite from these documents using **[Document Name, Page X]** format.
+` : ''}
 
 RESPONSE FORMAT:
-- Always cite sources using **[Document Name, Page X]**
-- If analyzing an image, cite specific violations with document references
-- If no relevant documents were retrieved, state this clearly
-- Never make up citations or reference documents not in RETRIEVED CONTEXT
+- Always use bold citations: **[Document Name, Page X]**
+- Never provide advice without citations
+- If you can't find a citation, explicitly state it
 `
 
     let promptParts = [systemPrompt]
@@ -185,25 +249,25 @@ RESPONSE FORMAT:
         }
       })
       
-      // Enhanced image analysis prompt with stricter citation requirements
-      promptParts.push(`ANALYZE THIS IMAGE FOR FOOD SAFETY VIOLATIONS
+      if (!contextText) {
+        promptParts.push(`ERROR: No regulatory documents were retrieved for ${countyName}. 
+You CANNOT analyze this image without access to county-specific regulations.
+Respond with the error message explaining that documents are missing.`)
+      } else {
+        promptParts.push(`ANALYZE THIS IMAGE FOR FOOD SAFETY VIOLATIONS
 
-STRICT REQUIREMENTS:
-1. Examine the image carefully for any food safety issues
-2. For EVERY issue you identify, you MUST cite a specific document and page from the RETRIEVED CONTEXT above
-3. Use this exact format: **[Document Name, Page X]**
-4. If you observe an issue but cannot find a citation in the RETRIEVED CONTEXT, state: "I observed [specific issue] but do not have a ${countyName} document citation for this specific violation."
-5. NEVER provide generic food safety advice without a citation from RETRIEVED CONTEXT
-6. Only cite information that appears in the RETRIEVED CONTEXT section
+MANDATORY REQUIREMENTS:
+1. Look at the image carefully and identify ANY potential food safety issues
+2. For EVERY issue, cite the specific document and page from RETRIEVED CONTEXT above
+3. Format: **[Document Name, Page X]**
+4. If you see an issue but can't find it in RETRIEVED CONTEXT, state: "I observed [issue] but don't have a ${countyName} citation in the current documents."
+5. DO NOT provide generic advice - ONLY cite from the ${usedDocs.length} documents listed above
 
-RESPONSE STRUCTURE:
-For each violation:
-- Describe what you observe in the image
-- State the relevant regulation **[Document Name, Page X]**
-- Explain how to correct it **[Document Name, Page X]**
+EXAMPLE RESPONSE FORMAT:
+"I observed grease buildup on the stovetop. Equipment food-contact surfaces and utensils must be clean to sight and touch **[MI Modified Food Code, Page 15]**. Non-food-contact surfaces should be kept free of accumulation of dust, dirt, and food residue **[Cross Contamination, Page 4]**."
 
-If no documents were retrieved that match the observed issues, respond:
-"I can see potential food safety concerns in this image, but I don't have specific ${countyName} regulatory documents in my current search results to cite. Please refer to official ${countyName} health department resources or contact them directly for guidance on the issues visible in this image."`)
+If documents don't cover what you see: "I observed [specific issue] but the current ${countyName} documents don't specifically address this violation."`)
+      }
     }
 
     const result = await chatModel.generateContent(promptParts)
@@ -228,7 +292,7 @@ If no documents were retrieved that match the observed issues, respond:
       console.error('Failed to update counters:', updateError)
     }
 
-    // Extract citations from response for the frontend
+    // Extract citations from response
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
@@ -240,7 +304,7 @@ If no documents were retrieved that match the observed issues, respond:
       })
     }
 
-    console.log(`📊 Response generated with ${citations.length} citations from ${usedDocs.length} documents`)
+    console.log(`✅ Response generated with ${citations.length} citations from ${usedDocs.length} documents`)
 
     return NextResponse.json({ 
       message: text,
@@ -250,7 +314,7 @@ If no documents were retrieved that match the observed issues, respond:
     })
 
   } catch (error) {
-    console.error('Gemini API Error:', error)
+    console.error('❌ Gemini API Error:', error)
     return NextResponse.json({ 
       error: `Error: ${error.message}` 
     }, { status: 500 })
