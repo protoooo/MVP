@@ -58,7 +58,7 @@ export default function Pricing() {
   }
 
   return (
-    // Use min-h-screen to allow scrolling if content is taller than screen
+    // Using min-h-screen allows the page to grow and scroll on mobile
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="border-b border-slate-200 bg-white">
@@ -213,11 +213,11 @@ export default function Pricing() {
               </ul>
 
               <button 
-                onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPEnterprise', 'Enterprise')} 
+                onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
                 className="w-full bg-white border-2 border-slate-200 hover:border-slate-900 text-slate-900 font-semibold py-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPEnterprise' ? 'Processing...' : 'Start free trial'}
+                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
               </button>
             </div>
           </div>
