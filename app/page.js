@@ -88,7 +88,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Left Side - Branding */}
+      {/* Left Side - Urgent Value Prop */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-800 to-slate-900 p-12 flex-col justify-between relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float"></div>
@@ -101,64 +101,82 @@ export default function Home() {
           <div className="text-xs text-slate-300 font-medium">Michigan Restaurant Compliance</div>
         </div>
         
-        <div className="space-y-6 relative z-10">
-          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-lg">Instant Compliance Answers</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">Get immediate answers to food safety questions using AI trained on FDA, Michigan, and county-specific regulations</p>
-            </div>
+        {/* NEW: Urgent problem statement */}
+        <div className="relative z-10 space-y-8">
+          <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl p-6">
+            <div className="text-sm text-slate-300 mb-2 font-semibold uppercase tracking-wide">The Reality</div>
+            <p className="text-white text-2xl font-bold leading-tight mb-3">
+              Health inspections happen without warning
+            </p>
+            <p className="text-slate-300 text-base leading-relaxed">
+              Every restaurant in Michigan gets inspected 1-3 times per year. Most violations are preventable—but only if your staff knows exactly what inspectors are looking for.
+            </p>
           </div>
 
-          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.2s' }}>
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
+          <div className="space-y-5">
+            {/* Pain Point 1 */}
+            <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-red-400/30">
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-2 text-lg">Critical violations cost you money</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">Temperature violations, cross-contamination, improper storage—these aren&apos;t just notes on a report. They mean re-inspections, potential closures, and lost revenue.</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-lg">Multi-County Coverage</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">Access county-specific regulations for Washtenaw, Wayne, and Oakland counties with one simple interface</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.3s' }}>
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-lg">Photo Violation Analysis</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">Upload images to identify potential violations and get instant remediation guidance</p>
-            </div>
-          </div>
 
-          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.4s' }}>
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+            {/* Pain Point 2 */}
+            <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.2s' }}>
+              <div className="w-10 h-10 rounded-xl bg-orange-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-orange-400/30">
+                <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-2 text-lg">Food code books gather dust</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">You have the FDA Food Code somewhere. Your staff has never read it. When the inspector shows up, everyone scrambles. There&apos;s a better way.</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-lg">Complete Reference Library</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">Access FDA Food Code, Michigan regulations, and county enforcement guidelines all in one place</p>
+            
+            {/* Pain Point 3 */}
+            <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.3s' }}>
+              <div className="w-10 h-10 rounded-xl bg-yellow-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-yellow-400/30">
+                <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-2 text-lg">Questions need immediate answers</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">&quot;Can I cool soup in the walk-in?&quot; &quot;What temp for chicken?&quot; &quot;How long can this be out?&quot; Your team needs answers in seconds, not after digging through binders.</p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.5s' }}>
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
+            {/* Pain Point 4 */}
+            <div className="flex items-start space-x-4 animate-slide-in" style={{ animationDelay: '0.4s' }}>
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-blue-400/30">
+                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-2 text-lg">Catch violations before inspectors do</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">Take a photo of your line, cooler, or storage area. Get instant feedback on potential violations with exact regulatory citations and how to fix them—before it ends up on your inspection report.</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-semibold mb-2 text-lg">Mobile-First Design</h3>
-              <p className="text-slate-300 text-sm leading-relaxed">Access compliance tools on any device, optimized for use during kitchen inspections</p>
+
+            {/* Solution Statement */}
+            <div className="flex items-start space-x-4 animate-slide-in pt-4 border-t border-white/10" style={{ animationDelay: '0.5s' }}>
+              <div className="w-10 h-10 rounded-xl bg-green-500/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-green-400/30">
+                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-2 text-lg">One tool. All your answers.</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">FDA Food Code, Michigan regulations, county enforcement guidelines, and AI-powered image analysis—all accessible from your phone in seconds. No more guessing. No more violations you could have prevented.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -180,11 +198,11 @@ export default function Home() {
 
           <div className="mb-10">
             <h2 className="text-3xl font-bold text-slate-900 mb-3" style={{ letterSpacing: '-0.03em' }}>
-              {view === 'signup' ? 'Create your account' : 'Welcome back'}
+              {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
             </h2>
             <p className="text-slate-600 text-base">
               {view === 'signup' 
-                ? 'Get instant access to food safety compliance tools' 
+                ? 'Join Michigan restaurants staying ahead of inspections' 
                 : 'Sign in to access your dashboard'}
             </p>
           </div>
@@ -267,7 +285,7 @@ export default function Home() {
               disabled={loading}
               className="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Processing...' : (view === 'signup' ? 'Create account' : 'Sign in')}
+              {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
             {message && (
@@ -284,7 +302,7 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-8 pt-8 border-t border-slate-200">
               <p className="text-center text-sm text-slate-600 mb-4 font-medium">
-                30-day free trial • No credit card required
+                30-day free trial • From $49/month
               </p>
               <button
                 onClick={() => router.push('/pricing')}
