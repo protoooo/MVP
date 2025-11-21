@@ -338,7 +338,7 @@ export default function Dashboard() {
   if (!session) return null
 
   return (
-    <div className="flex h-screen bg-white text-slate-900 overflow-hidden">
+    <div className="fixed inset-0 flex bg-white text-slate-900">
 
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
@@ -372,7 +372,7 @@ export default function Dashboard() {
 
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center bg-white">
+          <div className="p-4 border-b flex justify-between items-center bg-white flex-shrink-0">
             <div>
               <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
               <p className="text-xs text-slate-500 font-medium">
@@ -393,10 +393,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Fixed positioning, slides from LEFT */}
-      <div className={`fixed inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 z-40 ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:relative md:translate-x-0`}>
+      {/* SIDEBAR */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col z-40`}>
         <div className="p-6 flex-shrink-0 border-b border-slate-800">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -422,7 +420,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
           {chatHistory.length === 0 && (
             <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
           )}
@@ -450,10 +448,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col bg-white relative h-screen overflow-hidden">
+      {/* MAIN CHAT - Fixed height container */}
+      <div className="flex-1 flex flex-col">
 
-        {/* Mobile header with hamburger on LEFT */}
+        {/* Mobile header */}
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <button onClick={() => setIsSidebarOpen(true)} className="text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -462,11 +460,11 @@ export default function Dashboard() {
             <span className="font-bold text-lg">protocol<span className="font-normal">LM</span></span>
             <div className="text-xs text-slate-400">{COUNTY_NAMES[userCounty]}</div>
           </div>
-          <div className="w-6"></div> {/* Spacer for centering */}
+          <div className="w-6"></div>
         </div>
 
-        {/* Messages area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 min-h-0">
+        {/* Messages - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -514,14 +512,9 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area - FIXED BOTTOM with safe-area-inset */}
-        <form
-          onSubmit={handleSendMessage}
-          className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-        >
-          <div className="max-w-4xl mx-auto">
-            {/* Input row */}
+        {/* Input - Always visible at bottom */}
+        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
             <div className="flex items-end gap-2 md:gap-3">
               <input
                 type="file"
@@ -547,7 +540,7 @@ export default function Dashboard() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={image ? "Ask about this image..." : "Ask a question..."}
-                className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm min-w-0"
+                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm"
                 disabled={isLoading}
               />
 
@@ -559,13 +552,11 @@ export default function Dashboard() {
                 Send
               </button>
             </div>
-
-            {/* Disclaimer */}
             <div className="text-center mt-2">
               <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )
