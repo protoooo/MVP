@@ -105,15 +105,16 @@ export default function Home() {
         }
       `}</style>
 
-      {/* DESKTOP: Side by side layout */}
-      <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* MAIN LAYOUT */}
+      {/* flex-col-reverse: Puts the 2nd child (Right Side/Form) ON TOP on mobile. */}
+      {/* lg:flex-row: Puts them side-by-side on desktop. */}
+      <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - Features */}
-        {/* Changed pt-24 to pt-20 for slight downward adjustment */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
+        {/* LEFT SIDE - Features (Bottom on Mobile, Left on Desktop) */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
           
-          {/* Header - Absolute top left on desktop */}
-          <div className="px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full">
+          {/* Desktop Header - Hidden on Mobile to avoid double logo */}
+          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
@@ -125,8 +126,8 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Content area */}
-          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 pb-8 lg:mt-8">
+          {/* Content area - Added py-8 on mobile for spacing */}
+          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               {/* Vertical Line Timeline */}
               <div 
@@ -206,16 +207,23 @@ export default function Home() {
 
           </div>
 
-          {/* Footer - Fixed bottom on desktop */}
-          <div className={`hidden lg:block px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* Footer - Visible on BOTH mobile (at bottom) and desktop (at bottom left) */}
+          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             © 2025 protocolLM. All rights reserved.
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form */}
-        {/* Changed pt-32 to pt-24 for slight downward adjustment */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-24 px-6 sm:px-8 lg:px-12">
+        {/* RIGHT SIDE - Auth Form (Top on Mobile, Right on Desktop) */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-24 px-6 sm:px-8 lg:p-12">
           <div className="w-full max-w-md mx-auto">
+            
+            {/* Mobile Header - Visible only on mobile */}
+            <div className="mb-8 lg:hidden">
+              <div className="inline-block">
+                <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
+                <div className="h-1.5 w-full bg-[#4F759B] rounded-full"></div>
+              </div>
+            </div>
 
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
@@ -304,11 +312,6 @@ export default function Home() {
                 </button>
               </div>
             )}
-
-            {/* Mobile Footer */}
-            <div className="lg:hidden text-center text-slate-400 text-xs mt-8 font-medium">
-              © 2025 protocolLM. All rights reserved.
-            </div>
           </div>
         </div>
       </div>
