@@ -1,8 +1,151 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
+
+// --- 1. NEW: The Interactive Particle Component ---
+const ParticleBackground = () => {
+  const canvasRef = useRef(null)
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    let animationFrameId
+
+    // Configuration
+    const particleCount = 60 // Number of dots
+    const connectionDistance = 100 // Distance to draw lines
+    const mouseDistance = 150 // Distance for mouse interaction
+    const particles = []
+
+    // Mouse state
+    let mouse = { x: null, y: null }
+
+    const handleResize = () => {
+      if (canvas.parentElement) {
+        canvas.width = canvas.parentElement.offsetWidth
+        canvas.height = canvas.parentElement.offsetHeight
+        setDimensions({ width: canvas.width, height: canvas.height })
+        initParticles()
+      }
+    }
+
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = event.clientX - rect.left
+      mouse.y = event.clientY - rect.top
+    }
+
+    const handleMouseLeave = () => {
+      mouse.x = null
+      mouse.y = null
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width
+        this.y = Math.random() * canvas.height
+        this.vx = (Math.random() - 0.5) * 0.5 // Slow horizontal speed
+        this.vy = (Math.random() - 0.5) * 0.5 // Slow vertical speed
+        this.size = Math.random() * 2 + 1
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+
+        // Bounce off edges
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1
+
+        // Mouse interaction (Antigravity feel)
+        if (mouse.x != null) {
+          let dx = mouse.x - this.x
+          let dy = mouse.y - this.y
+          let distance = Math.sqrt(dx * dx + dy * dy)
+          if (distance < mouseDistance) {
+            const forceDirectionX = dx / distance
+            const forceDirectionY = dy / distance
+            const force = (mouseDistance - distance) / mouseDistance
+            // Gentle push away from cursor
+            const directionX = forceDirectionX * force * 0.6
+            const directionY = forceDirectionY * force * 0.6
+            this.x -= directionX
+            this.y -= directionY
+          }
+        }
+      }
+
+      draw() {
+        ctx.fillStyle = '#4F759B' // Brand color
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    function initParticles() {
+      particles.length = 0
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle())
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      // Update and draw particles
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update()
+        particles[i].draw()
+
+        // Draw connections (The "Neural Network" look)
+        for (let j = i; j < particles.length; j++) {
+          let dx = particles[i].x - particles[j].x
+          let dy = particles[i].y - particles[j].y
+          let distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < connectionDistance) {
+            ctx.beginPath()
+            // Opacity based on distance (fade out lines)
+            let opacity = 1 - (distance / connectionDistance)
+            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})` // Very subtle lines
+            ctx.lineWidth = 1
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate)
+    }
+
+    // Initialize
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mouseleave', handleMouseLeave)
+    animate()
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      canvas.removeEventListener('mousemove', handleMouseMove)
+      canvas.removeEventListener('mouseleave', handleMouseLeave)
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [])
+
+  return (
+    <canvas 
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-60"
+    />
+  )
+}
+
+// --- MAIN COMPONENT ---
 
 export default function Home() {
   const [email, setEmail] = useState('')
@@ -64,8 +207,9 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
+  // Added backdrop-blur to make text readable over particles
   const TracingCard = ({ delay, borderColor, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-200 transition-all duration-300">
+    <div className="relative bg-white/90 backdrop-blur-sm rounded-xl p-5 shadow-sm group border border-slate-200 transition-all duration-300 z-10">
       {/* The Content */}
       <div className="relative z-10">
         {children}
@@ -109,11 +253,16 @@ export default function Home() {
       {/* DESKTOP: Cards left, form right (lg:flex-row) */}
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - Features (shows second on mobile, left on desktop) */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative">
+        {/* LEFT SIDE - Features */}
+        {/* ADDED: relative and overflow-hidden for the canvas */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
+          
+          {/* --- NEW: The Particle Background Layer --- */}
+          <ParticleBackground />
           
           {/* Header - Absolute top left on desktop */}
-          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full">
+          {/* Added z-10 to sit above particles */}
+          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
@@ -126,7 +275,7 @@ export default function Home() {
           </div>
           
           {/* Content area - Cards */}
-          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8">
+          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               {/* Vertical Line Timeline */}
               <div 
@@ -207,13 +356,14 @@ export default function Home() {
           </div>
 
           {/* Footer - Visible on mobile and desktop */}
-          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* Added z-10 */}
+          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             © 2025 protocolLM. All rights reserved.
           </div>
         </div>
 
         {/* RIGHT SIDE - Auth Form (shows first on mobile, right on desktop) */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12">
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
             {/* Mobile Header */}
