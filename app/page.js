@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background (Gradient Lines Version) ---
+// --- 1. Particle Background (Fixed: No Scroll Jitter) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -32,11 +32,19 @@ const ParticleBackground = () => {
 
     let mouse = { x: null, y: null }
 
+    // FIX: Initialize particles ONLY ONCE, not on every resize
+    function initParticles() {
+      particles.length = 0
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle())
+      }
+    }
+
     const handleResize = () => {
       if (canvas.parentElement) {
+        // Just update dimensions, don't kill the particles
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
-        initParticles()
       }
     }
 
@@ -53,8 +61,9 @@ const ParticleBackground = () => {
 
     class Particle {
       constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
+        // Randomize initial position
+        this.x = Math.random() * (canvas.width || window.innerWidth)
+        this.y = Math.random() * (canvas.height || window.innerHeight)
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
         this.size = Math.random() * 2 + 1.5 
@@ -65,6 +74,7 @@ const ParticleBackground = () => {
         this.x += this.vx
         this.y += this.vy
 
+        // Bounce off edges (Dynamic based on current canvas size)
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1
 
@@ -92,13 +102,6 @@ const ParticleBackground = () => {
       }
     }
 
-    function initParticles() {
-      particles.length = 0
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
-      }
-    }
-
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       for (let i = 0; i < particles.length; i++) {
@@ -110,9 +113,8 @@ const ParticleBackground = () => {
           let distance = Math.sqrt(dx * dx + dy * dy)
           
           if (distance < connectionDistance) {
-            // START: GRADIENT LINE LOGIC
             let opacity = 1 - (distance / connectionDistance)
-            ctx.globalAlpha = opacity * 0.4 // Lowered slightly so colors don't overwhelm text
+            ctx.globalAlpha = opacity * 0.4 
             
             const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
             gradient.addColorStop(0, particles[i].color)
@@ -125,20 +127,21 @@ const ParticleBackground = () => {
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
             
-            // Reset Alpha for next drawing
             ctx.globalAlpha = 1.0
-            // END: GRADIENT LINE LOGIC
           }
         }
       }
       animationFrameId = requestAnimationFrame(animate)
     }
 
-    handleResize()
+    // Sequence matters:
+    handleResize() // 1. Set Size
+    initParticles() // 2. Create Dots
+    animate() // 3. Start Moving
+
     window.addEventListener('resize', handleResize)
     canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('mouseleave', handleMouseLeave)
-    animate()
 
     return () => {
       window.removeEventListener('resize', handleResize)
@@ -183,6 +186,7 @@ export default function Home() {
     try {
       if (view === 'signup') {
         const productionUrl = 'https://no-rap-production.up.railway.app'
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -351,6 +355,7 @@ export default function Home() {
 
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
+            
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
