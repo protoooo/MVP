@@ -61,7 +61,7 @@ const COUNTY_NAMES = {
   oakland: 'Oakland County'
 }
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 export default function Dashboard() {
   const [session, setSession] = useState(null)
@@ -533,7 +533,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* MAIN CHAT AREA - FIXED HEIGHT */}
+      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col bg-white relative" style={{ height: '100vh', maxHeight: '100vh' }}>
 
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
@@ -546,7 +546,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6" style={{ minHeight: 0 }}>
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6" style={{ minHeight: 0, maxHeight: 'calc(100vh - 160px)' }}>
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -572,6 +572,25 @@ export default function Dashboard() {
               </div>
             </div>
           ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                  <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold">
+                    LM
+                  </div>
+                  <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
 
@@ -605,6 +624,7 @@ export default function Dashboard() {
               onChange={e => setInput(e.target.value)}
               placeholder={image ? "Ask a question about this image..." : "Ask a food safety question..."}
               className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm"
+              disabled={isLoading}
             />
 
             <button
@@ -612,7 +632,7 @@ export default function Dashboard() {
               disabled={isLoading || !canSend}
               className="px-6 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
             >
-              {isLoading ? '...' : 'Send'}
+              Send
             </button>
           </div>
           <div className="text-center mt-2">
