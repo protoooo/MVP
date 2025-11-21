@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background Component (Same as Landing Page) ---
+// --- 1. Particle Background (5-Color Version) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -15,7 +15,16 @@ const ParticleBackground = () => {
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
-    // Config - fewer particles since sidebar is narrower
+    // The 5 Card Colors + Brand Blue
+    const colors = [
+      '#d97706', // Amber
+      '#be123c', // Rose
+      '#16a34a', // Green
+      '#0284c7', // Sky
+      '#4338ca', // Indigo
+      '#4F759B'  // Brand Blue
+    ]
+
     const particleCount = 30 
     const connectionDistance = 80
     const mouseDistance = 120
@@ -48,7 +57,9 @@ const ParticleBackground = () => {
         this.y = Math.random() * canvas.height
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1
+        this.size = Math.random() * 2 + 1.5
+        // Assign Random Color
+        this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
       update() {
@@ -75,7 +86,7 @@ const ParticleBackground = () => {
       }
 
       draw() {
-        ctx.fillStyle = '#4F759B'
+        ctx.fillStyle = this.color
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
@@ -100,7 +111,8 @@ const ParticleBackground = () => {
           let distance = Math.sqrt(dx * dx + dy * dy)
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
-            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})`
+            // Keep lines subtle brand blue
+            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.15})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -510,7 +522,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR (Updated to Light Theme + Particles) */}
+      {/* SIDEBAR (Light Theme + Particles) */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
         
         {/* Particle Background Layer */}
