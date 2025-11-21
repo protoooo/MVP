@@ -65,7 +65,7 @@ export default function Home() {
 
   // Helper component for the "Line Tracing" Card
   const TracingCard = ({ delay, borderColor, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-100">
+    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-100 hover:border-opacity-0 transition-all duration-500">
       {/* The Content */}
       <div className="relative z-10">
         {children}
@@ -105,19 +105,19 @@ export default function Home() {
         }
       `}</style>
 
-      {/* LEFT SIDE - Soft Emerald Background */}
-      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-emerald-50">
+      {/* LEFT SIDE - Very Light Neutral Background to let colors pop */}
+      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-slate-50/50">
         
         {/* Header */}
         <div className="relative z-10 px-8 pt-6 pb-2 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#059669] tracking-tight mb-1">
-              protocol<span className="font-normal text-slate-700">LM</span>
+            <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
+              protocol<span className="font-normal text-slate-500">LM</span>
             </h1>
-            {/* Line is Emerald */}
-            <div className="h-1.5 w-full bg-[#059669] rounded-full opacity-30"></div>
+            {/* The Rainbow Line */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-400 via-emerald-400 via-blue-400 to-indigo-400 rounded-full"></div>
           </div>
-          {/* Darkened Subheader to Slate-900 (Almost Black) */}
+          {/* Dark Slate Subheader */}
           <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
           </div>
@@ -126,19 +126,19 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - Semantic Gradient */}
+            {/* Vertical Line Timeline - Rainbow Gradient */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-amber-400 via-rose-400 to-emerald-400 rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-amber-400 via-rose-400 via-emerald-400 via-blue-400 to-indigo-400 rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
             <div className="space-y-4">
               
               {/* CARD 1 - AMBER (Warning) */}
-              <TracingCard delay="100ms" borderColor="#D97706">
+              <TracingCard delay="100ms" borderColor="#fbbf24">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100">
+                    <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Health inspections happen without warning</h3>
@@ -148,10 +148,10 @@ export default function Home() {
               </TracingCard>
 
               {/* CARD 2 - ROSE (Critical Cost) */}
-              <TracingCard delay="400ms" borderColor="#E11D48">
+              <TracingCard delay="400ms" borderColor="#fb7185">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">
+                    <svg className="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Critical violations cost you money</h3>
@@ -160,11 +160,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 3 - EMERALD (Success/Prevention/Image Analysis) */}
-              <TracingCard delay="700ms" borderColor="#059669">
+              {/* CARD 3 - EMERALD (Success/Image) */}
+              <TracingCard delay="700ms" borderColor="#34d399">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                    <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Verify compliance with a photo</h3>
@@ -173,11 +173,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 4 - BLUE (Time/Information) */}
-              <TracingCard delay="1000ms" borderColor="#2563EB">
+              {/* CARD 4 - BLUE (Time) */}
+              <TracingCard delay="1000ms" borderColor="#60a5fa">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
+                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Questions need immediate answers</h3>
@@ -186,11 +186,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 5 - INDIGO (All-in-One Tool) */}
-              <TracingCard delay="1300ms" borderColor="#4F46E5">
+              {/* CARD 5 - INDIGO (Tool) */}
+              <TracingCard delay="1300ms" borderColor="#818cf8">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                    <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">One tool. All your answers.</h3>
@@ -204,7 +204,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className={`text-emerald-800/50 text-xs relative z-10 px-8 lg:px-12 mt-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`text-slate-400 text-xs relative z-10 px-8 lg:px-12 mt-12 pb-6 font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           © 2025 protocolLM. All rights reserved.
         </div>
       </div>
@@ -217,7 +217,7 @@ export default function Home() {
           <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1.5 w-full bg-[#059669] rounded-full"></div>
+              <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 rounded-full"></div>
             </div>
           </div>
 
@@ -230,25 +230,25 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle */}
-          <div className="bg-slate-100 p-1 rounded-xl mb-5">
-            <div className="flex rounded-[10px] overflow-hidden">
+          {/* Toggle - Gradient Border Effect */}
+          <div className="bg-gradient-to-r from-amber-300 via-rose-300 to-indigo-300 p-[2px] rounded-xl mb-5">
+            <div className="flex rounded-[10px] bg-white overflow-hidden p-1">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
                   view === 'signup' 
-                    ? 'bg-emerald-100 text-[#059669] shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                    ? 'bg-slate-50 text-slate-900 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
                 Sign up
               </button>
               <button 
                 onClick={() => { setView('login'); setMessage(null); }} 
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
                   view === 'login' 
-                    ? 'bg-emerald-100 text-[#059669] shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                    ? 'bg-slate-50 text-slate-900 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
                 Sign in
@@ -259,20 +259,20 @@ export default function Home() {
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Main Action Button - Emerald */}
-            <button type="submit" disabled={loading} className="w-full bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm">
+            {/* Main Action Button - The "Brand" Rainbow Gradient */}
+            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500 hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
             {message && (
-              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-emerald-50 border-2 border-[#059669] text-[#059669]'}`}>
+              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-emerald-50 border-2 border-emerald-500 text-emerald-800'}`}>
                 {message.text}
               </div>
             )}
@@ -281,7 +281,11 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
-              <button onClick={() => router.push('/pricing')} className="w-full bg-white border-2 border-[#059669] text-[#059669] hover:bg-emerald-50 font-bold py-2.5 rounded-xl transition text-sm">View pricing plans</button>
+              {/* View Pricing Button - White with Gradient Border effect via background clip */}
+              <button onClick={() => router.push('/pricing')} className="relative w-full group font-bold py-2.5 rounded-xl transition text-sm overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                <span className="relative text-slate-900 group-hover:text-black">View pricing plans</span>
+              </button>
             </div>
           )}
         </div>
