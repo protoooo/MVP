@@ -57,6 +57,9 @@ export default function Pricing() {
     }
   }
 
+  // The Brand Gradient Definition
+  const gradientClasses = "bg-gradient-to-r from-[#d97706] via-[#be123c] via-[#4338ca] via-[#0284c7] to-[#16a34a]"
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
@@ -70,7 +73,6 @@ export default function Pricing() {
               <span className="text-slate-900 font-bold tracking-tight text-lg">
                 protocol<span className="font-normal">LM</span>
               </span>
-              {/* Underline - Steel Blue */}
               <div className="h-0.5 w-full bg-[#4F759B] rounded-full mt-0.5"></div>
             </div>
           </button>
@@ -104,13 +106,10 @@ export default function Pricing() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start">
           
-          {/* Pro Plan - Steel Blue */}
-          <div className="relative bg-white rounded-2xl border-2 border-[#4F759B] shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-            <div className="absolute top-0 right-0 bg-[#4F759B] text-white text-xs font-bold tracking-wide px-4 py-1.5 rounded-bl-xl">
-              MOST POPULAR
-            </div>
+          {/* Pro Plan - Standard (Slate Border) */}
+          <div className="relative bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-slate-400 transition-all duration-300">
             <div className="p-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Pro</h2>
               <p className="text-slate-600 text-sm mb-6" style={{ letterSpacing: '-0.01em' }}>Perfect for single locations</p>
@@ -126,31 +125,31 @@ export default function Pricing() {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#4F759B] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">500 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#4F759B] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">50 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#4F759B] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Unlimited document access</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#4F759B] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Mobile optimized</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-[#4F759B] mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Priority email support</span>
@@ -160,16 +159,25 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
                 disabled={loadingId !== null}
-                className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="w-full bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-400 hover:text-slate-900 font-semibold py-3.5 rounded-xl shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start free trial'}
               </button>
             </div>
           </div>
 
-          {/* Enterprise Plan - Slate */}
-          <div className="relative bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden hover:shadow-lg hover:border-slate-400 transition-all duration-300">
-            <div className="p-8">
+          {/* Enterprise Plan - "HOLOGRAPHIC" Effect */}
+          {/* 1. The Outer Gradient Wrapper (Creates the Border) */}
+          <div className={`relative rounded-2xl p-[2px] ${gradientClasses} shadow-xl hover:shadow-2xl transition-shadow duration-300`}>
+            
+            {/* 2. The Most Popular Badge (Gradient Background) */}
+            <div className={`absolute top-0 right-0 ${gradientClasses} text-white text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-bl-xl z-10`}>
+              Most Popular
+            </div>
+
+            {/* 3. The Inner White Card */}
+            <div className="bg-white rounded-xl h-full p-8 relative">
+              
               <h2 className="text-2xl font-bold text-slate-900 mb-1" style={{ letterSpacing: '-0.02em' }}>Enterprise</h2>
               <p className="text-slate-600 text-sm mb-6" style={{ letterSpacing: '-0.01em' }}>For restaurant groups & chains</p>
               
@@ -184,44 +192,53 @@ export default function Pricing() {
 
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  {/* Using Indigo for checks to match theme */}
+                  <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">5,000 queries</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm"><span className="font-semibold">500 image analyses</span> per month</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Dedicated account manager</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">Custom document integration</span>
                 </li>
                 <li className="flex items-start">
-                  <svg className="w-4 h-4 text-slate-500 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  <svg className="w-4 h-4 text-indigo-600 mr-2.5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-700 text-sm">API Access</span>
                 </li>
               </ul>
 
+              {/* 4. The Gradient Outline Button */}
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
-                className="w-full bg-white border-2 border-slate-300 text-slate-700 hover:border-[#4F759B] hover:text-[#4F759B] font-semibold py-3.5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                className="group relative w-full rounded-xl overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
+                {/* Gradient Background Layer (Shows as border) */}
+                <div className={`absolute inset-0 ${gradientClasses}`}></div>
+                
+                {/* Inner White Layer (The actual clickable area) */}
+                <div className="relative m-[2px] bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 rounded-[10px] transition-all flex items-center justify-center">
+                  {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start free trial'}
+                </div>
               </button>
+
             </div>
           </div>
           
