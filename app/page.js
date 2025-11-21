@@ -63,6 +63,12 @@ export default function Home() {
     }
   }
 
+  // Helper: The 5-Color Gradient CSS for consistency
+  const gradientColors = 'from-[#fbbf24] via-[#fb7185] via-[#34d399] via-[#60a5fa] to-[#818cf8]'
+  // Tailwind doesn't support 5 'via' stops easily, so we use arbitrary values for the perfect 5-color rainbow
+  const rainbowGradient = 'bg-[linear-gradient(90deg,#fbbf24,#fb7185,#34d399,#60a5fa,#818cf8)]'
+  const rainbowGradientSoft = 'bg-[linear-gradient(90deg,rgba(251,191,36,0.15),rgba(251,113,133,0.15),rgba(52,211,153,0.15),rgba(96,165,250,0.15),rgba(129,140,248,0.15))]'
+
   // Helper component for the "Line Tracing" Card
   const TracingCard = ({ delay, borderColor, children }) => (
     <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-100 hover:border-opacity-0 transition-all duration-500">
@@ -105,17 +111,20 @@ export default function Home() {
         }
       `}</style>
 
-      {/* LEFT SIDE - Very Light Neutral Background to let colors pop */}
-      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-slate-50/50">
+      {/* LEFT SIDE */}
+      <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-white">
         
+        {/* Background: 50% Blur/Opacity Mix of the 5 Colors */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none bg-[linear-gradient(135deg,#fbbf24,#fb7185,#34d399,#60a5fa,#818cf8)] blur-[100px]"></div>
+
         {/* Header */}
         <div className="relative z-10 px-8 pt-6 pb-2 lg:px-12 shrink-0">
           <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
-              protocol<span className="font-normal text-slate-500">LM</span>
+              protocol<span className="font-normal text-slate-600">LM</span>
             </h1>
             {/* The Rainbow Line */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-400 via-emerald-400 via-blue-400 to-indigo-400 rounded-full"></div>
+            <div className={`h-1.5 w-full rounded-full ${rainbowGradient}`}></div>
           </div>
           {/* Dark Slate Subheader */}
           <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -126,9 +135,9 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - Rainbow Gradient */}
+            {/* Vertical Line Timeline - Rainbow Gradient Vertical */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-amber-400 via-rose-400 via-emerald-400 via-blue-400 to-indigo-400 rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out bg-[linear-gradient(to_bottom,#fbbf24,#fb7185,#34d399,#60a5fa,#818cf8)]"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
@@ -217,7 +226,7 @@ export default function Home() {
           <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 rounded-full"></div>
+              <div className={`h-1.5 w-full rounded-full ${rainbowGradient}`}></div>
             </div>
           </div>
 
@@ -230,14 +239,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle - Gradient Border Effect */}
-          <div className="bg-gradient-to-r from-amber-300 via-rose-300 to-indigo-300 p-[2px] rounded-xl mb-5">
+          {/* Toggle - 5-Color Border + Soft Multi-colored active state */}
+          <div className={`p-[2px] rounded-xl mb-5 ${rainbowGradient}`}>
             <div className="flex rounded-[10px] bg-white overflow-hidden p-1">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
                   view === 'signup' 
-                    ? 'bg-slate-50 text-slate-900 shadow-sm' 
+                    ? `${rainbowGradientSoft} text-slate-900 shadow-sm` 
                     : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -247,7 +256,7 @@ export default function Home() {
                 onClick={() => { setView('login'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all duration-300 ${
                   view === 'login' 
-                    ? 'bg-slate-50 text-slate-900 shadow-sm' 
+                    ? `${rainbowGradientSoft} text-slate-900 shadow-sm` 
                     : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -259,15 +268,15 @@ export default function Home() {
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Main Action Button - The "Brand" Rainbow Gradient */}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500 hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm">
+            {/* Main Action Button - 5-Color Gradient Fill */}
+            <button type="submit" disabled={loading} className={`w-full ${rainbowGradient} hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm`}>
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
@@ -281,11 +290,18 @@ export default function Home() {
           {view === 'signup' && (
             <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
-              {/* View Pricing Button - White with Gradient Border effect via background clip */}
-              <button onClick={() => router.push('/pricing')} className="relative w-full group font-bold py-2.5 rounded-xl transition text-sm overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                <span className="relative text-slate-900 group-hover:text-black">View pricing plans</span>
-              </button>
+              
+              {/* View Pricing Button - 5-Color Border & Text */}
+              <div className={`p-[2px] rounded-xl ${rainbowGradient} opacity-90 hover:opacity-100 transition-opacity`}>
+                <button 
+                  onClick={() => router.push('/pricing')} 
+                  className="w-full bg-white rounded-[10px] py-2.5 text-sm font-bold relative overflow-hidden group"
+                >
+                  <span className={`bg-clip-text text-transparent ${rainbowGradient}`}>
+                    View pricing plans
+                  </span>
+                </button>
+              </div>
             </div>
           )}
         </div>
