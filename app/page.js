@@ -153,7 +153,6 @@ export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  // Prism Gradient for Inline Styles
   const prismGradient = {
     background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
   }
@@ -261,7 +260,6 @@ export default function Home() {
           
           <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
-              {/* Timeline Line */}
               <div 
                 className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out"
                 style={{ ...prismGradient, height: mounted ? '95%' : '0%' }}
@@ -332,6 +330,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Footer */}
           <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             © 2025 protocolLM. All rights reserved.
           </div>
@@ -357,10 +356,9 @@ export default function Home() {
               </p>
             </div>
 
-            {/* TOGGLE: Replaced with Gradient Border Style */}
+            {/* TOGGLE with Gradient Outline */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
-                {/* Sign Up Toggle Button */}
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
                   className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'signup' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
@@ -373,7 +371,6 @@ export default function Home() {
                   <span className={`relative z-10 ${view === 'signup' ? 'text-slate-900' : 'text-slate-500'}`}>Sign up</span>
                 </button>
 
-                {/* Sign In Toggle Button */}
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
                   className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'login' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
@@ -413,14 +410,17 @@ export default function Home() {
                 />
               </div>
               
-              {/* Primary Button: Solid Gradient Fill */}
+              {/* SUBMIT BUTTON: Gradient Outline Style (No Fill) */}
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full text-white font-bold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm"
-                style={prismGradient}
+                className="group relative w-full rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ height: '56px' }}
               >
-                {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
+                <div className="absolute inset-0" style={prismGradient}></div>
+                <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
+                  {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
+                </div>
               </button>
 
               {message && (
