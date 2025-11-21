@@ -466,8 +466,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Fixed height to match chat area */}
-      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col transition-transform duration-300 z-40 ${
+      {/* SIDEBAR - Uses max-h-screen to prevent extending beyond viewport */}
+      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col max-h-screen transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
         <div className="p-6 flex-shrink-0">
@@ -503,8 +503,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Scrollable content area - flex-1 allows it to take remaining space */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+        {/* Scrollable content area - min-h-0 is critical to prevent overflow */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar min-h-0">
           {sidebarView === 'documents' && (
             <div className="space-y-1">
               {currentDocuments.map((doc, i) => (
@@ -558,7 +558,7 @@ export default function Dashboard() {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col bg-white relative">
+      <div className="flex-1 flex flex-col bg-white relative max-h-screen">
 
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <div>
@@ -570,8 +570,8 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Messages area with proper height calculation */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        {/* Messages area - min-h-0 allows proper flex shrinking */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 min-h-0">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -619,7 +619,7 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area - fixed at bottom */}
+        {/* Input area - fixed at bottom, flex-shrink-0 prevents it from shrinking */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
