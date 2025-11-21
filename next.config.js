@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  
   // Webpack configuration for pdf-parse
   webpack: (config, { isServer }) => {
     if (isServer) {
