@@ -1,5 +1,4 @@
-// scripts/build-embeddings.js
-// One-time script to process documents from county folders and create embeddings
+// scripts/build-embeddings.js - FIXED VERSION
 // Run: npm run build-embeddings
 
 import fs from 'fs';
@@ -8,121 +7,190 @@ import pdf from 'pdf-parse';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config({ path: '.env.local' });
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const COUNTIES = ['washtenaw', 'wayne', 'oakland'];
 
 async function buildEmbeddings() {
-  console.log('🔨 Building multi-county document embeddings...\n');
+  console.log('🔨 Building embeddings (this will take 5-10 minutes)...\n');
   
   const documentsDir = path.join(process.cwd(), 'public', 'documents');
   const outputPath = path.join(process.cwd(), 'public', 'embeddings.json');
   
-  if (!fs.existsSync(documentsDir)) {
-    console.error('❌ Documents directory not found:', documentsDir);
-    process.exit(1);
-  }
-  
   const chunks = [];
+  const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
   
-  // Process each county
   for (const county of COUNTIES) {
     const countyDir = path.join(documentsDir, county);
+    if (!fs.existsSync(countyDir)) continue;
     
-    // Check if county directory exists
-    if (!fs.existsSync(countyDir)) {
-      console.log(`⚠️  Skipping ${county} - directory not found\n`);
-      continue;
-    }
-    
-    console.log(`\n📍 Processing ${county.toUpperCase()} COUNTY\n${'='.repeat(50)}`);
-    
-    const files = fs.readdirSync(countyDir);
+    console.log(`\n📍 ${county.toUpperCase()}`);
+    const files = fs.readdirSync(countyDir).filter(f => 
+      (f.endsWith('.pdf') || f.endsWith('.txt')) && !f.startsWith('.')
+    );
     
     for (const file of files) {
-      if (file === 'keep.txt' || file.startsWith('.')) continue;
-      
-      console.log(`📄 Processing: ${file}`);
+      console.log(`📄 ${file}`);
       const filePath = path.join(countyDir, file);
       let text = '';
       
-      // Extract text
       try {
         if (file.endsWith('.txt')) {
           text = fs.readFileSync(filePath, 'utf-8');
-        } else if (file.endsWith('.pdf')) {
+        } else {
           const dataBuffer = fs.readFileSync(filePath);
           const pdfData = await pdf(dataBuffer);
           text = pdfData.text;
         }
       } catch (err) {
-        console.error(`   ⚠️  Failed to read ${file}:`, err.message);
+        console.error(`   ⚠️  Failed: ${err.message}`);
         continue;
       }
       
-      // Split into chunks (500 words each, ~2000 chars)
+      // Split into 500-word chunks
       const words = text.split(/\s+/);
+      let processedChunks = 0;
+      
       for (let i = 0; i < words.length; i += 500) {
-        const chunk = words.slice(i, i + 500).join(' ');
-        if (chunk.trim().length < 100) continue; // Skip tiny chunks
+        const chunk = words.slice(i, i + 500).join(' ').trim();
+        if (chunk.length < 100) continue;
         
-        chunks.push({
-          source: file,
-          county: county,
-          text: chunk.trim(),
-          chunkIndex: Math.floor(i / 500),
-          wordCount: Math.min(500, words.length - i)
-        });
+        try {
+          // Generate embedding immediately
+          const result = await model.embedContent(chunk);
+          
+          chunks.push({
+            source: file.replace('.pdf', '').replace('.txt', ''),
+            county: county,
+            text: chunk,
+            chunkIndex: Math.floor(i / 500),
+            embedding: result.embedding.values
+          });
+          
+          processedChunks++;
+          
+          // Rate limit
+          await new Promise(r => setTimeout(r, 100));
+        } catch (err) {
+          console.error(`   ⚠️  Chunk failed: ${err.message}`);
+        }
       }
       
-      console.log(`   ✅ Created ${Math.ceil(words.length / 500)} chunks`);
+      console.log(`   ✅ ${processedChunks} chunks`);
     }
   }
   
-  console.log(`\n📚 Total chunks created: ${chunks.length}`);
-  console.log('🧮 Generating embeddings (this may take a few minutes)...\n');
+  fs.writeFileSync(outputPath, JSON.stringify(chunks, null, 2));
+  console.log(`\n✅ Saved ${chunks.length} embeddings`);
+  console.log(`💾 Size: ${(fs.statSync(outputPath).size / 1024 / 1024).toFixed(2)} MB`);
   
-  // Generate embeddings using Gemini
-  const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
-  
-  let countyBreakdown = { washtenaw: 0, wayne: 0, oakland: 0 };
-  
-  for (let i = 0; i < chunks.length; i++) {
-    try {
-      const result = await model.embedContent(chunks[i].text);
-      chunks[i].embedding = result.embedding.values;
-      countyBreakdown[chunks[i].county]++;
-      
-      if ((i + 1) % 10 === 0) {
-        console.log(`⏳ Progress: ${i + 1}/${chunks.length}`);
-      }
-      
-      // Rate limiting - avoid API throttling
-      await new Promise(r => setTimeout(r, 100));
-    } catch (err) {
-      console.error(`❌ Error on chunk ${i}:`, err.message);
-      // Continue anyway - partial embeddings better than none
-    }
-  }
-  
-  // Filter out chunks that failed to get embeddings
-  const validChunks = chunks.filter(c => c.embedding);
-  
-  // Save to file
-  fs.writeFileSync(outputPath, JSON.stringify(validChunks, null, 2));
-  console.log(`\n✅ Saved embeddings to: ${outputPath}`);
-  console.log(`📊 Valid chunks: ${validChunks.length}/${chunks.length}`);
-  console.log(`\n📍 Breakdown by county:`);
-  Object.entries(countyBreakdown).forEach(([county, count]) => {
-    console.log(`   ${county.charAt(0).toUpperCase() + county.slice(1)}: ${count} chunks`);
+  const breakdown = {};
+  chunks.forEach(c => {
+    breakdown[c.county] = (breakdown[c.county] || 0) + 1;
   });
-  console.log(`💾 File size: ${(fs.statSync(outputPath).size / 1024 / 1024).toFixed(2)} MB`);
-  console.log('\n🎉 Done! You can now run your app or upload to Supabase.');
+  console.log('\n📊 Breakdown:');
+  Object.entries(breakdown).forEach(([county, count]) => {
+    console.log(`   ${county}: ${count}`);
+  });
 }
 
 buildEmbeddings().catch(err => {
-  console.error('\n❌ Fatal error:', err);
+  console.error('\n❌ Error:', err);
   process.exit(1);
 });
+// lib/searchDocs.js - Optimized with pre-computed embeddings
+import fs from 'fs';
+import path from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+let embeddingsCache = null;
+
+// Load pre-computed embeddings from JSON file
+function loadEmbeddings() {
+  if (embeddingsCache) {
+    return embeddingsCache;
+  }
+
+  const embeddingsPath = path.join(process.cwd(), 'public', 'embeddings.json');
+  
+  if (!fs.existsSync(embeddingsPath)) {
+    console.error('❌ embeddings.json not found. Run: npm run build-embeddings');
+    return [];
+  }
+
+  try {
+    const data = fs.readFileSync(embeddingsPath, 'utf-8');
+    embeddingsCache = JSON.parse(data);
+    console.log(`✅ Loaded ${embeddingsCache.length} pre-computed embeddings`);
+    return embeddingsCache;
+  } catch (err) {
+    console.error('❌ Failed to load embeddings:', err.message);
+    return [];
+  }
+}
+
+function cosineSimilarity(a, b) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  return normA === 0 || normB === 0 ? 0 : dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+export async function searchDocuments(query, topK = 20, county = 'washtenaw') {
+  try {
+    const allEmbeddings = loadEmbeddings();
+    
+    if (allEmbeddings.length === 0) {
+      console.error('❌ No embeddings available');
+      return [];
+    }
+
+    // Filter by county
+    const countyDocs = allEmbeddings.filter(doc => doc.county === county);
+    
+    if (countyDocs.length === 0) {
+      console.error(`❌ No embeddings found for ${county}`);
+      return [];
+    }
+
+    console.log(`🔍 Searching ${countyDocs.length} ${county} documents...`);
+
+    // Generate embedding for query (ONLY ONE API CALL)
+    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    const queryResult = await model.embedContent(query);
+    const queryEmbedding = queryResult.embedding.values;
+
+    // Calculate similarity for all docs (FAST - no API calls)
+    const scored = countyDocs.map(doc => ({
+      ...doc,
+      score: cosineSimilarity(queryEmbedding, doc.embedding)
+    }));
+
+    // Sort and return top matches
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.slice(0, topK);
+    
+    console.log(`✅ Found ${results.length} matches (avg score: ${(results.reduce((sum, r) => sum + r.score, 0) / results.length).toFixed(3)})`);
+    
+    return results.map(doc => ({
+      text: doc.text,
+      source: doc.source,
+      page: doc.chunkIndex + 1, // Convert chunk index to page number
+      county: doc.county,
+      score: doc.score
+    }));
+
+  } catch (err) {
+    console.error('❌ Search failed:', err.message);
+    return [];
+  }
+}
+
+export function clearCache() {
+  embeddingsCache = null;
+}
