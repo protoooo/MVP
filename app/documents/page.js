@@ -396,10 +396,10 @@ export default function Dashboard() {
       )}
 
       {/* SIDEBAR - Now only shows chat history */}
-      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col max-h-screen transition-transform duration-300 z-40 ${
+      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col h-screen transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
-        <div className="p-6 flex-shrink-0">
+        <div className="p-6 flex-shrink-0 border-b border-slate-800">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
@@ -454,7 +454,7 @@ export default function Dashboard() {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col bg-white relative max-h-screen">
+      <div className="flex-1 flex flex-col bg-white relative h-screen overflow-hidden">
 
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <div>
