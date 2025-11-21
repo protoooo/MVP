@@ -22,6 +22,7 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
+    // Subscription Check
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -29,76 +30,49 @@ export async function POST(request) {
       .single()
 
     if (!profile?.is_subscribed) {
-      return NextResponse.json({ 
-        error: 'Active subscription required. Please visit the pricing page to subscribe.' 
-      }, { status: 403 })
+      return NextResponse.json({ error: 'Active subscription required.' }, { status: 403 })
     }
-
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('plan, status')
-      .eq('user_id', session.user.id)
-      .single()
-
-    const limits = subscription?.plan === 'enterprise' 
-      ? { requests: 5000, images: 500 }
-      : { requests: 500, images: 50 }
 
     const { messages, image, county } = await request.json()
     
     const requestedCounty = county || profile.county || 'washtenaw'
-    const userCounty = VALID_COUNTIES.includes(requestedCounty) 
-      ? requestedCounty 
-      : 'washtenaw'
-
-    if (profile.requests_used >= limits.requests) {
-      return NextResponse.json({ 
-        error: `Monthly limit of ${limits.requests} queries reached.` 
-      }, { status: 429 })
-    }
-
-    if (image && profile.images_used >= limits.images) {
-      return NextResponse.json({ 
-        error: `Monthly limit of ${limits.images} image analyses reached.` 
-      }, { status: 429 })
-    }
+    const userCounty = VALID_COUNTIES.includes(requestedCounty) ? requestedCounty : 'washtenaw'
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    
-    // UPDATED: Using the smartest stable model
+    // Use the smartest stable model
     const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-002" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
 
-    let searchQuery = lastUserMessage
+    // --- Robust Search with Fallback ---
+    if (lastUserMessage && lastUserMessage.trim().length > 0) {
+      try {
+        let searchQuery = lastUserMessage
+        if (image) searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
 
-    if (image) {
-      searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
-    }
-
-    if (searchQuery && searchQuery.trim().length > 0) {
-      const matchCount = image ? 30 : 20
-      const results = await searchDocuments(searchQuery, matchCount, userCounty)
-      
-      if (!results || results.length === 0) {
-        console.log(`No documents found for ${userCounty}`)
-      } else {
-        contextText = results.map((doc, idx) => {
-          const source = doc.source || 'Unknown Doc'
-          const page = doc.page || 'N/A'
-          const docKey = `${source}-${page}`
-          if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
-            usedDocs.push({ source, page })
-          }
-          return `[DOCUMENT ${idx + 1}]
+        // Attempt search
+        const results = await searchDocuments(searchQuery, 20, userCounty)
+        
+        if (results && results.length > 0) {
+          contextText = results.map((doc, idx) => {
+            const source = doc.source || 'Unknown Doc'
+            const page = doc.page || 'N/A'
+            const docKey = `${source}-${page}`
+            if (!usedDocs.some(d => `${d.source}-${d.page}` === docKey)) {
+              usedDocs.push({ source, page })
+            }
+            return `[DOCUMENT ${idx + 1}]
 SOURCE: ${source}
 PAGE: ${page}
 COUNTY: ${COUNTY_NAMES[userCounty]}
-CONTENT: ${doc.text}
-`
-        }).join("\n---\n\n")
+CONTENT: ${doc.text}`
+          }).join("\n---\n\n")
+        }
+      } catch (searchErr) {
+        // Log error but do NOT crash. Continue with general knowledge.
+        console.error("Search failed (using general knowledge):", searchErr)
       }
     }
 
@@ -109,7 +83,7 @@ CONTENT: ${doc.text}
 CRITICAL: Cite every regulatory statement using: **[Document Name, Page X]**
 
 RETRIEVED CONTEXT (${countyName}):
-${contextText || 'No documents available.'}
+${contextText || 'No specific documents found (Answer based on general food safety knowledge).'}
 
 ${contextText ? `AVAILABLE DOCUMENTS:\n${usedDocs.map(d => `- ${d.source} (Page ${d.page})`).join('\n')}` : ''}
 
@@ -122,14 +96,7 @@ Always cite from documents using **[Document Name, Page X]** format.`
     if (image) {
       const base64Data = image.split(',')[1]
       const mimeType = image.split(';')[0].split(':')[1]
-      
-      promptParts.push({
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType
-        }
-      })
-
+      promptParts.push({ inlineData: { data: base64Data, mimeType: mimeType } })
       promptParts.push(`Analyze this image for potential food safety concerns based on FDA Food Code and Michigan regulations.`)
     }
 
@@ -137,25 +104,17 @@ Always cite from documents using **[Document Name, Page X]** format.`
     const response = await result.response
     const text = response.text()
 
-    const updates = { requests_used: profile.requests_used + 1 }
-    if (image) {
-      updates.images_used = (profile.images_used || 0) + 1
-    }
+    // Update usage
+    const updates = { requests_used: (profile.requests_used || 0) + 1 }
+    if (image) updates.images_used = (profile.images_used || 0) + 1
+    await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
-    await supabase
-      .from('user_profiles')
-      .update(updates)
-      .eq('id', session.user.id)
-
+    // Extract citations
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
     while ((match = citationRegex.exec(text)) !== null) {
-      citations.push({
-        document: match[1],
-        pages: match[2],
-        county: userCounty
-      })
+      citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
 
     return NextResponse.json({ 
@@ -166,9 +125,10 @@ Always cite from documents using **[Document Name, Page X]** format.`
     })
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Detailed Backend Error:', error)
+    // Return 500 so frontend can catch it, but include message
     return NextResponse.json({ 
-      error: 'Service error occurred.' 
+      error: error.message || 'Service error occurred.' 
     }, { status: 500 })
   }
 }
