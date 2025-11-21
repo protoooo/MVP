@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background Component ---
+// --- 1. Particle Background Component (5-Color Version) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -14,6 +14,16 @@ const ParticleBackground = () => {
 
     const ctx = canvas.getContext('2d')
     let animationFrameId
+
+    // The 5 Card Colors + Brand Blue
+    const colors = [
+      '#d97706', // Amber
+      '#be123c', // Rose
+      '#16a34a', // Green
+      '#0284c7', // Sky
+      '#4338ca', // Indigo
+      '#4F759B'  // Brand Blue (Protocol)
+    ]
 
     const particleCount = 60 
     const connectionDistance = 100 
@@ -47,7 +57,9 @@ const ParticleBackground = () => {
         this.y = Math.random() * canvas.height
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1
+        this.size = Math.random() * 2 + 1.5 // Slightly varied size
+        // Assign a random color from our specific palette
+        this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
       update() {
@@ -74,7 +86,7 @@ const ParticleBackground = () => {
       }
 
       draw() {
-        ctx.fillStyle = '#4F759B'
+        ctx.fillStyle = this.color
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
@@ -97,9 +109,11 @@ const ParticleBackground = () => {
           let dx = particles[i].x - particles[j].x
           let dy = particles[i].y - particles[j].y
           let distance = Math.sqrt(dx * dx + dy * dy)
+          
+          // We keep the connections neutral/brand color so it doesn't look messy
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
-            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})`
+            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.15})` 
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
@@ -130,7 +144,7 @@ const ParticleBackground = () => {
   return (
     <canvas 
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-60"
+      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-70"
     />
   )
 }
@@ -159,7 +173,7 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        // FIXED: Hardcoded Production URL ensures no "localhost" bugs in emails
+        // Hardcoded Production URL to fix localhost bug
         const productionUrl = 'https://no-rap-production.up.railway.app'
         
         const { data, error } = await supabase.auth.signUp({
