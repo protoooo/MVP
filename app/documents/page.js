@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background (Fixed: No Scroll Jitter) ---
+// --- Particle Background ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -15,16 +15,7 @@ const ParticleBackground = () => {
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
-    // The 5 Card Colors + Brand Blue
-    const colors = [
-      '#d97706', // Amber
-      '#be123c', // Rose
-      '#16a34a', // Green
-      '#0284c7', // Sky
-      '#4338ca', // Indigo
-      '#4F759B'  // Brand Blue
-    ]
-
+    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
     const particleCount = 30 
     const connectionDistance = 80
     const mouseDistance = 120
@@ -70,7 +61,6 @@ const ParticleBackground = () => {
       update() {
         this.x += this.vx
         this.y += this.vy
-
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1
 
@@ -82,10 +72,8 @@ const ParticleBackground = () => {
             const forceDirectionX = dx / distance
             const forceDirectionY = dy / distance
             const force = (mouseDistance - distance) / mouseDistance
-            const directionX = forceDirectionX * force * 0.6
-            const directionY = forceDirectionY * force * 0.6
-            this.x -= directionX
-            this.y -= directionY
+            this.x -= (forceDirectionX * force * 0.6)
+            this.y -= (forceDirectionY * force * 0.6)
           }
         }
       }
@@ -152,7 +140,7 @@ const ParticleBackground = () => {
   )
 }
 
-// --- Main Dashboard Component ---
+// --- Main Dashboard ---
 
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
@@ -184,6 +172,11 @@ export default function Dashboard() {
   const supabase = createClientComponentClient()
   const router = useRouter()
 
+  // The Prism Gradient for inline styles
+  const prismGradient = {
+    background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
+  }
+
   useEffect(() => {
     if (userCounty && messages.length === 0) {
       setMessages([
@@ -209,15 +202,13 @@ export default function Dashboard() {
     }
   }, [session])
 
-  // NEW: Sign Out Function
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  // NEW: Manage Subscription Function
   const handleManageSubscription = () => {
-    router.push('/pricing') // Or to your stripe customer portal link
+    router.push('/pricing') 
   }
 
   const saveCurrentChat = () => {
@@ -399,7 +390,7 @@ export default function Dashboard() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-white border border-[#4F759B] text-[#4F759B] hover:bg-slate-50 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
+              className="inline-flex items-center bg-white border border-slate-300 text-slate-700 hover:border-[#4F759B] hover:text-[#4F759B] px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -537,7 +528,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
         
         <ParticleBackground />
@@ -547,7 +537,7 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h1 className="text-xl font-bold tracking-tight text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></h1>
-                <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1 opacity-90"></div>
+                <div className="h-1 w-full rounded-full mt-1 opacity-90" style={prismGradient}></div>
               </div>
               <button className="md:hidden text-slate-400 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
@@ -560,11 +550,15 @@ export default function Dashboard() {
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
 
+            {/* NEW CHAT BUTTON: "Empty button with gradient border" */}
             <button
-              className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
               onClick={startNewChat}
+              className="group relative w-full rounded-xl overflow-hidden mb-4 shadow-sm"
             >
-              <span>+</span> New Chat
+              <div className="absolute inset-0" style={prismGradient}></div>
+              <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold p-3 rounded-[10px] transition-all flex items-center justify-center gap-2">
+                <span>+</span> New Chat
+              </div>
             </button>
           </div>
 
@@ -577,7 +571,7 @@ export default function Dashboard() {
               <div
                 key={chat.id}
                 onClick={() => loadChat(chat)}
-                className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-[#4F759B] rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
+                className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
               >
                 <div className="flex justify-between items-start">
                   <p className="font-medium text-sm text-slate-700 truncate pr-2 flex-1">{chat.title}</p>
@@ -595,10 +589,10 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* NEW: User Footer (Sign Out & Manage) */}
           <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-[#4F759B] flex items-center justify-center text-white font-bold text-xs shadow-sm">
+              {/* User Avatar with Gradient */}
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm" style={prismGradient}>
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
               <div className="flex-1 min-w-0">
@@ -613,7 +607,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-2">
               <button 
                 onClick={handleManageSubscription}
-                className="text-xs font-semibold text-slate-600 hover:text-[#4F759B] bg-white border border-slate-200 hover:border-[#4F759B] py-2 rounded-lg transition-all"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 py-2 rounded-lg transition-all"
               >
                 Manage
               </button>
@@ -652,12 +646,14 @@ export default function Dashboard() {
                 className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'bg-[#4F759B] text-white'
+                    : 'text-white' 
                 }`}
+                style={msg.role === 'user' ? prismGradient : {}}
               >
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">
+                    {/* Bot Avatar Gradient */}
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0" style={prismGradient}>
                       LM
                     </div>
                     <span className="font-semibold text-xs text-slate-500">protocolLM</span>
@@ -673,15 +669,15 @@ export default function Dashboard() {
             <div className="flex justify-start">
               <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                  <div className="w-5 h-5 rounded-full bg-[#4F759B] flex items-center justify-center text-[10px] text-white font-bold">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold" style={prismGradient}>
                     LM
                   </div>
                   <span className="font-semibold text-xs text-slate-500">protocolLM</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-[#4F759B] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </div>
@@ -706,9 +702,10 @@ export default function Dashboard() {
                 onClick={() => fileInputRef.current.click()}
                 className={`p-3 rounded-xl transition-all flex-shrink-0 ${
                   image 
-                    ? 'bg-[#4F759B] text-white shadow-md' 
+                    ? 'text-white shadow-md' 
                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 }`}
+                style={image ? prismGradient : {}}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
               </button>
@@ -717,14 +714,16 @@ export default function Dashboard() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={image ? "Ask about this image..." : "Ask a question..."}
-                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F759B]/20 focus:border-[#4F759B] transition-all text-sm"
+                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all text-sm"
                 disabled={isLoading}
               />
 
+              {/* SEND BUTTON: Solid Gradient */}
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="px-5 py-3.5 bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
+                className="px-5 py-3.5 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all text-sm flex-shrink-0"
+                style={prismGradient}
               >
                 Send
               </button>
