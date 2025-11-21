@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background (5-Color Version) ---
+// --- 1. Particle Background (Gradient Lines Version) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -57,8 +57,7 @@ const ParticleBackground = () => {
         this.y = Math.random() * canvas.height
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1.5
-        // Assign Random Color
+        this.size = Math.random() * 2 + 1.5 
         this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
@@ -111,13 +110,23 @@ const ParticleBackground = () => {
           let distance = Math.sqrt(dx * dx + dy * dy)
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
-            // Keep lines subtle brand blue
-            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.15})`
+            
+            // START: GRADIENT LINE LOGIC
+            ctx.globalAlpha = opacity * 0.4 
+            
+            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
+            gradient.addColorStop(0, particles[i].color)
+            gradient.addColorStop(1, particles[j].color)
+            
+            ctx.strokeStyle = gradient
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
+            
+            ctx.globalAlpha = 1.0
+            // END: GRADIENT LINE LOGIC
           }
         }
       }
