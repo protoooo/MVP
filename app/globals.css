@@ -34,21 +34,18 @@ body {
   width: 100%;
 }
 
-/* Professional Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-/* Matte Brand Colors - Steel Blue Primary */
 :root {
   --color-steel-blue: #4F759B;
   --color-steel-blue-dark: #3e5c7a;
   --color-steel-blue-light: #6b8fb3;
 }
 
-/* Simple Card Reveal Animation - No Glow */
 @keyframes content-fade-in {
   0% {
     opacity: 0;
@@ -65,7 +62,6 @@ h1, h2, h3, h4, h5, h6 {
   overflow: visible;
 }
 
-/* Solid matte border - no glow, no gradient animation */
 .card-reveal::after {
   content: '';
   position: absolute;
@@ -84,7 +80,6 @@ h1, h2, h3, h4, h5, h6 {
   animation: content-fade-in 0.5s ease-out 1s forwards;
 }
 
-/* Custom Scrollbar Styles */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -123,7 +118,6 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-steel-blue-dark);
 }
 
-/* Loading Animation */
 @keyframes dot-flashing {
   0% {
     opacity: 0.2;
@@ -165,17 +159,14 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 0.4s;
 }
 
-/* Simple matte background */
 .matte-background {
   background: #f8fafc;
 }
 
-/* Smooth transitions for interactive elements */
 button, a, input, textarea, select {
   transition: all 0.2s ease-in-out;
 }
 
-/* Focus states for accessibility */
 button:focus-visible, 
 a:focus-visible, 
 input:focus-visible, 
@@ -183,4 +174,19 @@ textarea:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--color-steel-blue);
   outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  * {
+    max-width: 100vw;
+  }
+  
+  body {
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  input, textarea, select, button {
+    max-width: 100%;
+  }
 }
