@@ -4,57 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-const COUNTY_DOCUMENTS = {
-  washtenaw: [
-    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-    { title: 'Cooling Foods', filename: 'Cooling Foods.pdf' },
-    { title: 'Cross Contamination', filename: 'Cross contamination.pdf' },
-    { title: 'Enforcement Action Guide', filename: 'Enforcement Action | Washtenaw County, MI.pdf' },
-    { title: 'Food Allergy Info', filename: 'Food Allergy Information | Washtenaw County, MI.pdf' },
-    { title: 'Inspection Program', filename: 'Food Service Inspection Program | Washtenaw County, MI.pdf' },
-    { title: 'Foodborne Illness Guide', filename: 'Food borne illness guide.pdf' },
-    { title: 'Norovirus Cleaning', filename: 'NorovirusEnvironCleaning.pdf' },
-    { title: 'Admin Procedures', filename: 'PROCEDURES_FOR_THE_ADMINISTRATION_AND_ENFORCEMENT_OF_THE_WASHTENAW_COUNTY_FOOD_SERVICE_REGULATION.pdf' },
-    { title: 'Cooking Temps Chart', filename: 'Summary Chart for Minimum Cooking Food Temperatures.pdf' },
-    { title: 'USDA Safe Minimums', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
-    { title: 'Violation Types', filename: 'Violation Types | Washtenaw County, MI.pdf' },
-    { title: 'MCL Act 92 (2000)', filename: 'mcl_act_92_of_2000.pdf' },
-    { title: 'Emergency Action Plan', filename: 'retail_food_establishments_emergency_action_plan.pdf' }
-  ],
-  wayne: [
-    { title: '3 Comp Sink', filename: '3comp_sink.pdf' },
-    { title: '5 Keys to Safer Food', filename: '5keys_to_safer_food.pdf' },
-    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' },
-    { title: 'USDA Safe Minimum Temps', filename: 'USDA_Safe_Minimum_Internal_Temperature_Chart.pdf' },
-    { title: 'Calibrate Thermometer', filename: 'calibrate_thermometer.pdf' },
-    { title: 'Clean & Sanitizing', filename: 'clean_sanitizing.pdf' },
-    { title: 'Consumer Advisory 2012', filename: 'consumer_advisory-updated_2012.pdf' },
-    { title: 'Contamination', filename: 'contamination.pdf' },
-    { title: 'Cooking Temps', filename: 'cook_temps.pdf' },
-    { title: 'Cooling', filename: 'cooling.pdf' },
-    { title: 'Date Marking', filename: 'date_marking.pdf' },
-    { title: 'Employee Health Poster', filename: 'employeehealthposter.pdf' },
-    { title: 'Food Allergen Info', filename: 'foodallergeninformation.pdf' },
-    { title: 'General Norovirus Fact Sheet', filename: 'general_noro_fact_sheet.pdf' },
-    { title: 'Gloves USDA', filename: 'gloves_usda.pdf' },
-    { title: 'Guide for Wiping Cloths', filename: 'guideforuseofwipingcloths.doc' },
-    { title: 'Holding Temps', filename: 'hold_temps.pdf' },
-    { title: 'Non-Food Equipment', filename: 'nfsem_equip.pdf' },
-    { title: 'Non-Food Thawing', filename: 'nfsem_thaw.pdf' },
-    { title: 'Non-Food Trash', filename: 'nfsem_trash.pdf' },
-    { title: 'Norovirus for Food Handlers', filename: 'norovirus-foodhandlers.pdf' },
-    { title: 'Norovirus Cleaning Guidelines', filename: 'noroviruscleani nguidelines.pdf' },
-    { title: 'Raw Meat Storage', filename: 'raw_meat_storage.pdf' },
-    { title: 'Time as Public Health Control', filename: 'time_as_a_public_health_control.pdf' }
-  ],
-  oakland: [
-    { title: 'FDA Food Code 2022', filename: 'FDA_FOOD_CODE_2022.pdf' },
-    { title: 'MI Modified Food Code', filename: 'MI_MODIFIED_FOOD_CODE.pdf' }
-  ]
-}
-
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -78,7 +27,6 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)
   const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [sidebarView, setSidebarView] = useState('documents')
   const [viewingPdf, setViewingPdf] = useState(null)
   
   const messagesEndRef = useRef(null)
@@ -244,42 +192,25 @@ export default function Dashboard() {
     setMessages([
       { 
         role: 'assistant',
-        content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_DOCUMENTS[newCounty].length} ${COUNTY_NAMES[newCounty]}-specific documents.`,
+        content: `County updated to ${COUNTY_NAMES[newCounty]}. I now have access to ${COUNTY_NAMES[newCounty]}-specific documents.`,
         citations: []
       }
     ])
   }
 
   const handleCitationClick = (citation) => {
-    const searchTerm = citation.document.toLowerCase()
-    
-    let doc = COUNTY_DOCUMENTS[userCounty].find(d => 
-      d.title.toLowerCase().includes(searchTerm) ||
-      d.filename.toLowerCase().includes(searchTerm) ||
-      searchTerm.includes(d.title.toLowerCase())
-    )
-    
-    if (!doc) {
-      if (searchTerm.includes('fda') || searchTerm.includes('food code')) {
-        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.filename.includes('FDA_FOOD_CODE'))
-      } else if (searchTerm.includes('modified')) {
-        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.filename.includes('MI_MODIFIED'))
-      } else if (searchTerm.includes('cooling')) {
-        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.title.toLowerCase().includes('cooling'))
-      } else if (searchTerm.includes('cross contamination')) {
-        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.title.toLowerCase().includes('cross contamination'))
-      }
-    }
-
-    if (!doc) {
-      alert(`Document "${citation.document}" not found. Available documents are listed in the sidebar.`)
-      return
-    }
-
+    const docName = citation.document
     const pageMatch = citation.pages.match(/\d+/)
     const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
 
-    setViewingPdf({ ...doc, targetPage: pageNum })
+    // Try to find the file in the county folder
+    // This will attempt to open it, but if file doesn't exist, browser will show 404
+    setViewingPdf({
+      title: docName,
+      filename: `${docName}.pdf`, // Assumes PDF format
+      county: userCounty,
+      targetPage: pageNum
+    })
   }
 
   const renderMessageContent = (msg) => {
@@ -408,8 +339,6 @@ export default function Dashboard() {
 
   if (!session) return null
 
-  const currentDocuments = COUNTY_DOCUMENTS[userCounty] || COUNTY_DOCUMENTS['washtenaw']
-
   return (
     <div className="flex h-screen bg-white text-slate-900 overflow-hidden">
 
@@ -433,7 +362,7 @@ export default function Dashboard() {
                 disabled={isUpdatingCounty}
                 className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {name} <span className="text-slate-400 text-sm ml-2">— {COUNTY_DOCUMENTS[key].length} documents</span>
+                {name}
               </button>
             ))}
             {isUpdatingCounty && (
@@ -466,7 +395,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* SIDEBAR - Uses max-h-screen to prevent extending beyond viewport */}
+      {/* SIDEBAR - Now only shows chat history */}
       <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col max-h-screen transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
@@ -487,73 +416,40 @@ export default function Dashboard() {
             <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
-          <div className="flex mb-4 bg-slate-800 rounded-lg p-1">
-            <button
-              onClick={() => setSidebarView('documents')}
-              className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'documents' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-            >
-              Documents
-            </button>
-            <button
-              onClick={() => setSidebarView('history')}
-              className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-            >
-              History
-            </button>
-          </div>
+          <button
+            className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+            onClick={startNewChat}
+          >
+            <span>+</span> New Chat
+          </button>
         </div>
 
-        {/* Scrollable content area - min-h-0 is critical to prevent overflow */}
+        {/* Chat History - scrollable */}
         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar min-h-0">
-          {sidebarView === 'documents' && (
-            <div className="space-y-1">
-              {currentDocuments.map((doc, i) => (
+          {chatHistory.length === 0 && (
+            <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
+          )}
+
+          {chatHistory.map(chat => (
+            <div
+              key={chat.id}
+              onClick={() => loadChat(chat)}
+              className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
+            >
+              <div className="flex justify-between items-start">
+                <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
                 <button
-                  key={i}
-                  onClick={() => setViewingPdf({ ...doc, targetPage: null })}
-                  className="w-full text-left p-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors truncate"
+                  onClick={(e) => deleteChat(chat.id, e)}
+                  className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all"
                 >
-                  {doc.title}
+                  ✕
                 </button>
-              ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                {new Date(chat.timestamp).toLocaleDateString()}
+              </p>
             </div>
-          )}
-
-          {sidebarView === 'history' && (
-            <div>
-              <button
-                className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
-                onClick={startNewChat}
-              >
-                <span>+</span> New Chat
-              </button>
-
-              {chatHistory.length === 0 && (
-                <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
-              )}
-
-              {chatHistory.map(chat => (
-                <div
-                  key={chat.id}
-                  onClick={() => loadChat(chat)}
-                  className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
-                >
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
-                    <button
-                      onClick={(e) => deleteChat(chat.id, e)}
-                      className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {new Date(chat.timestamp).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -570,7 +466,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Messages area - min-h-0 allows proper flex shrinking */}
+        {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 min-h-0">
           {messages.map((msg, i) => (
             <div
@@ -619,7 +515,7 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area - fixed at bottom, flex-shrink-0 prevents it from shrinking */}
+        {/* Input area */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
