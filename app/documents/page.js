@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. Particle Background (Gradient Lines Version) ---
+// --- 1. Particle Background (Fixed: No Scroll Jitter) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -32,11 +32,19 @@ const ParticleBackground = () => {
 
     let mouse = { x: null, y: null }
 
+    // Initialize only once
+    function initParticles() {
+      particles.length = 0
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle())
+      }
+    }
+
+    // Simple resize: don't reset particles
     const handleResize = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
-        initParticles()
       }
     }
 
@@ -53,8 +61,8 @@ const ParticleBackground = () => {
 
     class Particle {
       constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
+        this.x = Math.random() * (canvas.width || 300)
+        this.y = Math.random() * (canvas.height || 800)
         this.vx = (Math.random() - 0.5) * 0.5
         this.vy = (Math.random() - 0.5) * 0.5
         this.size = Math.random() * 2 + 1.5 
@@ -92,13 +100,6 @@ const ParticleBackground = () => {
       }
     }
 
-    function initParticles() {
-      particles.length = 0
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
-      }
-    }
-
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       for (let i = 0; i < particles.length; i++) {
@@ -111,7 +112,6 @@ const ParticleBackground = () => {
           if (distance < connectionDistance) {
             let opacity = 1 - (distance / connectionDistance)
             
-            // START: GRADIENT LINE LOGIC
             ctx.globalAlpha = opacity * 0.4 
             
             const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
@@ -126,7 +126,6 @@ const ParticleBackground = () => {
             ctx.stroke()
             
             ctx.globalAlpha = 1.0
-            // END: GRADIENT LINE LOGIC
           }
         }
       }
@@ -134,10 +133,12 @@ const ParticleBackground = () => {
     }
 
     handleResize()
+    initParticles() // Only once
+    animate()
+
     window.addEventListener('resize', handleResize)
     canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('mouseleave', handleMouseLeave)
-    animate()
 
     return () => {
       window.removeEventListener('resize', handleResize)
