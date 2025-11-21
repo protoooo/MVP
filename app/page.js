@@ -4,30 +4,28 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- 1. NEW: The Interactive Particle Component ---
+// --- 1. Particle Background Component ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
     const canvas = canvasRef.current
+    if (!canvas) return
+
     const ctx = canvas.getContext('2d')
     let animationFrameId
 
-    // Configuration
-    const particleCount = 60 // Number of dots
-    const connectionDistance = 100 // Distance to draw lines
-    const mouseDistance = 150 // Distance for mouse interaction
+    const particleCount = 60 
+    const connectionDistance = 100 
+    const mouseDistance = 150
     const particles = []
 
-    // Mouse state
     let mouse = { x: null, y: null }
 
     const handleResize = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
-        setDimensions({ width: canvas.width, height: canvas.height })
         initParticles()
       }
     }
@@ -47,8 +45,8 @@ const ParticleBackground = () => {
       constructor() {
         this.x = Math.random() * canvas.width
         this.y = Math.random() * canvas.height
-        this.vx = (Math.random() - 0.5) * 0.5 // Slow horizontal speed
-        this.vy = (Math.random() - 0.5) * 0.5 // Slow vertical speed
+        this.vx = (Math.random() - 0.5) * 0.5
+        this.vy = (Math.random() - 0.5) * 0.5
         this.size = Math.random() * 2 + 1
       }
 
@@ -56,11 +54,9 @@ const ParticleBackground = () => {
         this.x += this.vx
         this.y += this.vy
 
-        // Bounce off edges
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1
         if (this.y < 0 || this.y > canvas.height) this.vy *= -1
 
-        // Mouse interaction (Antigravity feel)
         if (mouse.x != null) {
           let dx = mouse.x - this.x
           let dy = mouse.y - this.y
@@ -69,7 +65,6 @@ const ParticleBackground = () => {
             const forceDirectionX = dx / distance
             const forceDirectionY = dy / distance
             const force = (mouseDistance - distance) / mouseDistance
-            // Gentle push away from cursor
             const directionX = forceDirectionX * force * 0.6
             const directionY = forceDirectionY * force * 0.6
             this.x -= directionX
@@ -79,7 +74,7 @@ const ParticleBackground = () => {
       }
 
       draw() {
-        ctx.fillStyle = '#4F759B' // Brand color
+        ctx.fillStyle = '#4F759B'
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
@@ -95,24 +90,18 @@ const ParticleBackground = () => {
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      // Update and draw particles
       for (let i = 0; i < particles.length; i++) {
         particles[i].update()
         particles[i].draw()
-
-        // Draw connections (The "Neural Network" look)
         for (let j = i; j < particles.length; j++) {
           let dx = particles[i].x - particles[j].x
           let dy = particles[i].y - particles[j].y
           let distance = Math.sqrt(dx * dx + dy * dy)
-
           if (distance < connectionDistance) {
-            ctx.beginPath()
-            // Opacity based on distance (fade out lines)
             let opacity = 1 - (distance / connectionDistance)
-            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})` // Very subtle lines
+            ctx.strokeStyle = `rgba(79, 117, 155, ${opacity * 0.2})`
             ctx.lineWidth = 1
+            ctx.beginPath()
             ctx.moveTo(particles[i].x, particles[i].y)
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
@@ -122,7 +111,6 @@ const ParticleBackground = () => {
       animationFrameId = requestAnimationFrame(animate)
     }
 
-    // Initialize
     handleResize()
     window.addEventListener('resize', handleResize)
     canvas.addEventListener('mousemove', handleMouseMove)
@@ -131,8 +119,10 @@ const ParticleBackground = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      canvas.removeEventListener('mousemove', handleMouseMove)
-      canvas.removeEventListener('mouseleave', handleMouseLeave)
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove)
+        canvas.removeEventListener('mouseleave', handleMouseLeave)
+      }
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -169,11 +159,14 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
+        // FIXED: Hardcoded Production URL ensures no "localhost" bugs in emails
+        const productionUrl = 'https://no-rap-production.up.railway.app'
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: `${productionUrl}/auth/callback`,
             data: { county: 'washtenaw' }
           }
         })
@@ -206,16 +199,11 @@ export default function Home() {
     }
   }
 
-  // Helper component for the "Line Tracing" Card
-  // Added backdrop-blur to make text readable over particles
   const TracingCard = ({ delay, borderColor, children }) => (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-xl p-5 shadow-sm group border border-slate-200 transition-all duration-300 z-10">
-      {/* The Content */}
       <div className="relative z-10">
         {children}
       </div>
-
-      {/* The Animated Border (SVG Overlay) */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
         <rect 
           x="1" y="1" 
@@ -237,31 +225,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-white">
-      
       <style jsx global>{`
         @keyframes drawBorder {
-          to {
-            stroke-dashoffset: 0;
-          }
+          to { stroke-dashoffset: 0; }
         }
         .animate-draw {
           animation: drawBorder 2.5s ease-out forwards;
         }
       `}</style>
 
-      {/* MOBILE-FIRST: Form first, cards second (flex-col-reverse) */}
-      {/* DESKTOP: Cards left, form right (lg:flex-row) */}
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - Features */}
-        {/* ADDED: relative and overflow-hidden for the canvas */}
         <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
-          
-          {/* --- NEW: The Particle Background Layer --- */}
           <ParticleBackground />
           
-          {/* Header - Absolute top left on desktop */}
-          {/* Added z-10 to sit above particles */}
           <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
@@ -274,18 +251,14 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Content area - Cards */}
           <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
-              {/* Vertical Line Timeline */}
               <div 
                 className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#4F759B] to-slate-300 rounded-full transition-all duration-[1500ms] ease-out"
                 style={{ height: mounted ? '95%' : '0%' }}
               ></div>
 
               <div className="space-y-4">
-                
-                {/* CARD 1 - AMBER */}
                 <TracingCard delay="100ms" borderColor="#d97706">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100">
@@ -298,7 +271,6 @@ export default function Home() {
                   </div>
                 </TracingCard>
 
-                {/* CARD 2 - ROSE */}
                 <TracingCard delay="400ms" borderColor="#be123c">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">
@@ -311,7 +283,6 @@ export default function Home() {
                   </div>
                 </TracingCard>
 
-                {/* CARD 3 - GREEN (Verify Compliance) */}
                 <TracingCard delay="700ms" borderColor="#16a34a">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-green-50 flex items-center justify-center border border-green-100">
@@ -324,7 +295,6 @@ export default function Home() {
                   </div>
                 </TracingCard>
 
-                {/* CARD 4 - SKY BLUE */}
                 <TracingCard delay="1000ms" borderColor="#0284c7">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 flex items-center justify-center border border-sky-100">
@@ -337,7 +307,6 @@ export default function Home() {
                   </div>
                 </TracingCard>
 
-                {/* CARD 5 - INDIGO */}
                 <TracingCard delay="1300ms" borderColor="#4338ca">
                   <div className="flex items-start gap-3">
                     <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
@@ -352,21 +321,16 @@ export default function Home() {
 
               </div>
             </div>
-
           </div>
 
-          {/* Footer - Visible on mobile and desktop */}
-          {/* Added z-10 */}
           <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             © 2025 protocolLM. All rights reserved.
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form (shows first on mobile, right on desktop) */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
-            {/* Mobile Header */}
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
@@ -383,7 +347,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Toggle */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
                 <button 
