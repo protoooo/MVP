@@ -251,11 +251,32 @@ export default function Dashboard() {
   }
 
   const handleCitationClick = (citation) => {
-    const doc = COUNTY_DOCUMENTS[userCounty].find(d =>
-      d.title.toLowerCase().includes(citation.document.toLowerCase())
+    const searchTerm = citation.document.toLowerCase()
+    
+    // Try multiple matching strategies
+    let doc = COUNTY_DOCUMENTS[userCounty].find(d => 
+      d.title.toLowerCase().includes(searchTerm) ||
+      d.filename.toLowerCase().includes(searchTerm) ||
+      searchTerm.includes(d.title.toLowerCase())
     )
+    
+    // Fallback: fuzzy match on key terms
+    if (!doc) {
+      if (searchTerm.includes('fda') || searchTerm.includes('food code')) {
+        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.filename.includes('FDA_FOOD_CODE'))
+      } else if (searchTerm.includes('modified')) {
+        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.filename.includes('MI_MODIFIED'))
+      } else if (searchTerm.includes('cooling')) {
+        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.title.toLowerCase().includes('cooling'))
+      } else if (searchTerm.includes('cross contamination')) {
+        doc = COUNTY_DOCUMENTS[userCounty].find(d => d.title.toLowerCase().includes('cross contamination'))
+      }
+    }
 
-    if (!doc) return alert('Document not found.')
+    if (!doc) {
+      alert(`Document "${citation.document}" not found. Available documents are listed in the sidebar.`)
+      return
+    }
 
     const pageMatch = citation.pages.match(/\d+/)
     const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
