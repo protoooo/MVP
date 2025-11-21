@@ -253,14 +253,12 @@ export default function Dashboard() {
   const handleCitationClick = (citation) => {
     const searchTerm = citation.document.toLowerCase()
     
-    // Try multiple matching strategies
     let doc = COUNTY_DOCUMENTS[userCounty].find(d => 
       d.title.toLowerCase().includes(searchTerm) ||
       d.filename.toLowerCase().includes(searchTerm) ||
       searchTerm.includes(d.title.toLowerCase())
     )
     
-    // Fallback: fuzzy match on key terms
     if (!doc) {
       if (searchTerm.includes('fda') || searchTerm.includes('food code')) {
         doc = COUNTY_DOCUMENTS[userCounty].find(d => d.filename.includes('FDA_FOOD_CODE'))
@@ -451,7 +449,7 @@ export default function Dashboard() {
             <div>
               <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
               <p className="text-xs text-slate-500 font-medium">
-                Page {viewingPdf.targetPage}
+                {viewingPdf.targetPage && `Starting at Page ${viewingPdf.targetPage}`}
               </p>
             </div>
             <button 
@@ -462,100 +460,105 @@ export default function Dashboard() {
             </button>
           </div>
           <iframe
-            src={`/documents/${userCounty}/${viewingPdf.filename}#page=${viewingPdf.targetPage}`}
+            src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`}
             className="flex-1 w-full"
           />
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white p-6 transition-transform duration-300 z-40 ${
+      {/* SIDEBAR - Fixed height to match chat area */}
+      <div className={`fixed md:relative inset-y-0 left-0 w-80 bg-slate-900 text-white flex flex-col transition-transform duration-300 z-40 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
-            <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1"></div>
+        <div className="p-6 flex-shrink-0">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">protocol<span className="font-normal">LM</span></h1>
+              <div className="h-1 w-full bg-[#4F759B] rounded-full mt-1"></div>
+            </div>
+            <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
-          <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
-        </div>
 
-        <button
-          onClick={() => setShowCountySelector(true)}
-          className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-700"
-        >
-          <span className="text-sm font-medium truncate">{COUNTY_NAMES[userCounty]}</span>
-          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-        </button>
-
-        <div className="flex mb-4 bg-slate-800 rounded-lg p-1">
           <button
-            onClick={() => setSidebarView('documents')}
-            className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'documents' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+            onClick={() => setShowCountySelector(true)}
+            className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-700"
           >
-            Documents
+            <span className="text-sm font-medium truncate">{COUNTY_NAMES[userCounty]}</span>
+            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <button
-            onClick={() => setSidebarView('history')}
-            className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-          >
-            History
-          </button>
-        </div>
 
-        {sidebarView === 'documents' && (
-          <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 space-y-1 custom-scrollbar">
-            {currentDocuments.map((doc, i) => (
-              <button
-                key={i}
-                onClick={() => setViewingPdf({ ...doc, targetPage: 1 })}
-                className="w-full text-left p-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors truncate"
-              >
-                {doc.title}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {sidebarView === 'history' && (
-          <div className="overflow-y-auto h-[calc(100vh-220px)] pr-2 custom-scrollbar">
+          <div className="flex mb-4 bg-slate-800 rounded-lg p-1">
             <button
-              className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
-              onClick={startNewChat}
+              onClick={() => setSidebarView('documents')}
+              className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'documents' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
             >
-              <span>+</span> New Chat
+              Documents
             </button>
-
-            {chatHistory.length === 0 && (
-              <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
-            )}
-
-            {chatHistory.map(chat => (
-              <div
-                key={chat.id}
-                onClick={() => loadChat(chat)}
-                className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
-              >
-                <div className="flex justify-between items-start">
-                  <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
-                  <button
-                    onClick={(e) => deleteChat(chat.id, e)}
-                    className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  {new Date(chat.timestamp).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+            <button
+              onClick={() => setSidebarView('history')}
+              className={`flex-1 py-1.5 px-2 rounded-md text-sm font-medium transition-all ${sidebarView === 'history' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+            >
+              History
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* Scrollable content area - flex-1 allows it to take remaining space */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+          {sidebarView === 'documents' && (
+            <div className="space-y-1">
+              {currentDocuments.map((doc, i) => (
+                <button
+                  key={i}
+                  onClick={() => setViewingPdf({ ...doc, targetPage: null })}
+                  className="w-full text-left p-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors truncate"
+                >
+                  {doc.title}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {sidebarView === 'history' && (
+            <div>
+              <button
+                className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white p-3 mb-4 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+                onClick={startNewChat}
+              >
+                <span>+</span> New Chat
+              </button>
+
+              {chatHistory.length === 0 && (
+                <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
+              )}
+
+              {chatHistory.map(chat => (
+                <div
+                  key={chat.id}
+                  onClick={() => loadChat(chat)}
+                  className="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 rounded-xl mb-2 group cursor-pointer transition-all"
+                >
+                  <div className="flex justify-between items-start">
+                    <p className="font-medium text-sm text-slate-200 truncate pr-2">{chat.title}</p>
+                    <button
+                      onClick={(e) => deleteChat(chat.id, e)}
+                      className="text-slate-500 hover:text-[#4F759B] opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {new Date(chat.timestamp).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col bg-white relative" style={{ height: '100vh', maxHeight: '100vh' }}>
+      <div className="flex-1 flex flex-col bg-white relative">
 
         <div className="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center shadow-md z-30 flex-shrink-0">
           <div>
@@ -567,7 +570,8 @@ export default function Dashboard() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6" style={{ minHeight: 0, maxHeight: 'calc(100vh - 160px)' }}>
+        {/* Messages area with proper height calculation */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -615,6 +619,7 @@ export default function Dashboard() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input area - fixed at bottom */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 md:p-6 border-t border-slate-100 bg-white flex-shrink-0"
