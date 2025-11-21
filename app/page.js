@@ -64,9 +64,8 @@ export default function Home() {
   }
 
   // Helper component for the "Line Tracing" Card
-  // Fixed animation lag by adjusting dasharray/offset and easing
   const TracingCard = ({ delay, borderColor, children }) => (
-    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-200 hover:border-slate-300 transition-all duration-300">
+    <div className="relative bg-white rounded-xl p-5 shadow-sm group border border-slate-200 transition-all duration-300">
       {/* The Content */}
       <div className="relative z-10">
         {children}
@@ -83,7 +82,6 @@ export default function Home() {
           stroke={borderColor} 
           strokeWidth="2"
           strokeLinecap="round"
-          // Reduced from 1200 to 1000 to match perimeter better, preventing the "pause" at end
           strokeDasharray="1000" 
           strokeDashoffset="1000"
           className={`draw-border ${mounted ? 'animate-draw' : ''}`}
@@ -103,12 +101,11 @@ export default function Home() {
           }
         }
         .animate-draw {
-          /* Changed from cubic-bezier to ease-out for a smoother finish without the 'snap' or lag */
           animation: drawBorder 2.5s ease-out forwards;
         }
       `}</style>
 
-      {/* LEFT SIDE - Clean Slate-50 Background (Professional, no blur) */}
+      {/* LEFT SIDE - Soft Gray Background */}
       <div className="w-full lg:w-1/2 relative h-screen overflow-hidden bg-slate-50 border-r border-slate-200">
         
         {/* Header */}
@@ -117,10 +114,10 @@ export default function Home() {
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
               protocol<span className="font-normal text-slate-600">LM</span>
             </h1>
-            {/* Solid Emerald Line - Authority & Safety */}
-            <div className="h-1.5 w-full bg-[#059669] rounded-full"></div>
+            {/* Line - Matte Steel Blue */}
+            <div className="h-1.5 w-full bg-[#4F759B] rounded-full opacity-90"></div>
           </div>
-          {/* Dark Slate Subheader - Professional */}
+          {/* Dark Subheader */}
           <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Michigan Restaurant Compliance
           </div>
@@ -129,16 +126,16 @@ export default function Home() {
         {/* Content */}
         <div className="relative z-10 flex-1 px-8 lg:px-12 flex flex-col justify-start pt-8 lg:pt-12 min-h-0">
           <div className="relative max-w-xl pl-6 mx-auto w-full">
-            {/* Vertical Line Timeline - Solid Slate-200 (Neutral structure) */}
+            {/* Vertical Line Timeline - Soft Blue/Slate Gradient */}
             <div 
-              className="absolute left-0 top-2 w-1 bg-slate-200 rounded-full transition-all duration-[1500ms] ease-out"
+              className="absolute left-0 top-2 w-1 bg-gradient-to-b from-[#4F759B] to-slate-300 rounded-full transition-all duration-[1500ms] ease-out"
               style={{ height: mounted ? '95%' : '0%' }}
             ></div>
 
             <div className="space-y-4">
               
-              {/* CARD 1 - AMBER (Warning) */}
-              <TracingCard delay="100ms" borderColor="#D97706">
+              {/* CARD 1 - AMBER (Warning - Desaturated) */}
+              <TracingCard delay="100ms" borderColor="#d97706">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100">
                     <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -150,11 +147,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 2 - ROSE (Critical Cost) */}
-              <TracingCard delay="400ms" borderColor="#E11D48">
+              {/* CARD 2 - ROSE (Cost - Desaturated) */}
+              <TracingCard delay="400ms" borderColor="#be123c">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">
-                    <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg className="w-6 h-6 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Critical violations cost you money</h3>
@@ -163,11 +160,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 3 - EMERALD (Success/Image) */}
-              <TracingCard delay="700ms" borderColor="#059669">
+              {/* CARD 3 - STEEL BLUE (Image/Success - Primary Brand Color) */}
+              <TracingCard delay="700ms" borderColor="#4F759B">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
-                    <svg className="w-6 h-6 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200">
+                    <svg className="w-6 h-6 text-[#4F759B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Verify compliance with a photo</h3>
@@ -176,11 +173,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 4 - BLUE (Time) */}
-              <TracingCard delay="1000ms" borderColor="#2563EB">
+              {/* CARD 4 - STEEL BLUE (Time) */}
+              <TracingCard delay="1000ms" borderColor="#4F759B">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200">
+                    <svg className="w-6 h-6 text-[#4F759B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">Questions need immediate answers</h3>
@@ -189,11 +186,11 @@ export default function Home() {
                 </div>
               </TracingCard>
 
-              {/* CARD 5 - INDIGO (Tool) */}
-              <TracingCard delay="1300ms" borderColor="#4F46E5">
+              {/* CARD 5 - STEEL BLUE (Tool) */}
+              <TracingCard delay="1300ms" borderColor="#4F759B">
                 <div className="flex items-start gap-3">
-                  <div className="shrink-0 w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="shrink-0 w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-200">
+                    <svg className="w-6 h-6 text-[#4F759B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div>
                     <h3 className="text-slate-900 font-bold text-base mb-1.5">One tool. All your answers.</h3>
@@ -220,7 +217,7 @@ export default function Home() {
           <div className="mb-4 lg:hidden">
             <div className="inline-block">
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-              <div className="h-1.5 w-full bg-[#059669] rounded-full"></div>
+              <div className="h-1.5 w-full bg-[#4F759B] rounded-full"></div>
             </div>
           </div>
 
@@ -233,14 +230,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Toggle - Clean Slate Border, Emerald Active State */}
+          {/* Toggle - Matte Steel Blue Active State */}
           <div className="bg-slate-100 p-1 rounded-xl mb-5">
             <div className="flex rounded-[10px] overflow-hidden">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   view === 'signup' 
-                    ? 'bg-white text-[#059669] shadow-sm border border-slate-200' 
+                    ? 'bg-white text-[#4F759B] shadow-sm border border-slate-200' 
                     : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -250,7 +247,7 @@ export default function Home() {
                 onClick={() => { setView('login'); setMessage(null); }} 
                 className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ${
                   view === 'login' 
-                    ? 'bg-white text-[#059669] shadow-sm border border-slate-200' 
+                    ? 'bg-white text-[#4F759B] shadow-sm border border-slate-200' 
                     : 'text-slate-500 hover:text-slate-900 bg-transparent'
                 }`}
               >
@@ -262,20 +259,20 @@ export default function Home() {
           <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#4F759B] focus:ring-4 focus:ring-[#4F759B]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="you@restaurant.com" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#059669] focus:ring-4 focus:ring-[#059669]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-[#4F759B] focus:ring-4 focus:ring-[#4F759B]/20 focus:outline-none text-slate-900 transition text-sm" placeholder="••••••••" />
             </div>
             
-            {/* Main Action Button - Solid Emerald Green (No Gradients) */}
-            <button type="submit" disabled={loading} className="w-full bg-[#059669] hover:bg-[#047857] text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
+            {/* Main Action Button - Matte Steel Blue */}
+            <button type="submit" disabled={loading} className="w-full bg-[#4F759B] hover:bg-[#3e5c7a] text-white font-bold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md text-sm">
               {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
             </button>
 
             {message && (
-              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-emerald-50 border-2 border-emerald-500 text-emerald-800'}`}>
+              <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-[#4F759B] text-[#4F759B]'}`}>
                 {message.text}
               </div>
             )}
@@ -285,8 +282,8 @@ export default function Home() {
             <div className="mt-4 pt-4 border-t border-slate-200">
               <p className="text-center text-xs text-slate-600 mb-2 font-medium">30-day free trial • From $49/month</p>
               
-              {/* View Pricing Button - Solid White with Slate Border */}
-              <button onClick={() => router.push('/pricing')} className="w-full bg-white border-2 border-slate-200 hover:border-[#059669] text-slate-700 hover:text-[#059669] font-bold py-2.5 rounded-xl transition-all duration-300 text-sm">
+              {/* View Pricing Button - White with Steel Blue Border */}
+              <button onClick={() => router.push('/pricing')} className="w-full bg-white border-2 border-slate-200 hover:border-[#4F759B] text-slate-700 hover:text-[#4F759B] font-bold py-2.5 rounded-xl transition-all duration-300 text-sm">
                 View pricing plans
               </button>
             </div>
