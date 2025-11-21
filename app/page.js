@@ -109,10 +109,10 @@ export default function Home() {
       <div className="flex flex-col lg:flex-row min-h-screen">
         
         {/* LEFT SIDE - Features */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200">
+        <div className="w-full lg:w-1/2 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col">
           
           {/* Header - Fixed position on mobile */}
-          <div className="px-6 sm:px-8 lg:px-12 pt-6 pb-4">
+          <div className="px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
@@ -124,8 +124,8 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Scrollable content area */}
-          <div className="px-6 sm:px-8 lg:px-12 pb-8">
+          {/* Scrollable content area - Centered vertically on desktop */}
+          <div className="flex-1 flex items-center px-6 sm:px-8 lg:px-12 pb-8">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               {/* Vertical Line Timeline */}
               <div 
@@ -203,16 +203,17 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Footer - Only on larger screens */}
-            <div className={`hidden lg:block text-slate-400 text-xs mt-12 font-medium transition-opacity duration-1000 delay-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              © 2025 protocolLM. All rights reserved.
-            </div>
+          </div>
+
+          {/* Footer - Only on larger screens */}
+          <div className={`hidden lg:block px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            © 2025 protocolLM. All rights reserved.
           </div>
         </div>
 
         {/* RIGHT SIDE - Auth Form */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center p-6 sm:p-8 lg:p-12">
-          <div className="w-full max-w-md mx-auto">
+        <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 sm:p-8 lg:p-12">
+          <div className="w-full max-w-md">
 
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
