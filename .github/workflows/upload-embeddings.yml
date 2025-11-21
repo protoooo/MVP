@@ -22,4 +22,17 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npm run upload-embeddings
+        run: |
+          echo "Starting upload process..."
+          npm run upload-embeddings 2>&1 | tee upload.log
+          echo "Upload process completed"
+          
+      - name: Show results
+        if: always()
+        run: |
+          if [ -f upload.log ]; then
+            echo "=== Upload Log ==="
+            cat upload.log
+          else
+            echo "No upload log found"
+          fi
