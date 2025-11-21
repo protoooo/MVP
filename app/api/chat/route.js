@@ -133,7 +133,7 @@ Always cite from documents using **[Document Name, Page X]** format.`
         }
       })
 
-      promptParts.push(`Analyze this image for food safety violations. Cite specific documents and pages.`)
+      promptParts.push(`Analyze this image for potential food safety concerns based on FDA Food Code and Michigan regulations.`)
     }
 
     const result = await chatModel.generateContent(promptParts)
