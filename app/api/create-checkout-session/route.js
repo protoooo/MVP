@@ -23,12 +23,14 @@ export async function POST(request) {
     }
 
     // Determine plan name from price ID
-    // Pro: price_1SVJvcDlSrKA3nbAlLcPCs52
-    // Enterprise: price_1SVJyRDlSrKA3nbAGhdEZzXA
     const planName = priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'enterprise' : 'pro'
 
-    // Always use Railway URL
-    const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
+    // Always use environment variable
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+    console.log('✅ Creating checkout session for:', session.user.email)
+    console.log('✅ Plan:', planName)
+    console.log('✅ Success URL:', `${baseUrl}/documents?session_id={CHECKOUT_SESSION_ID}`)
 
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -40,8 +42,8 @@ export async function POST(request) {
           quantity: 1,
         },
       ],
-      success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing`,
+      success_url: `${baseUrl}/documents?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/pricing`,
       customer_email: session.user.email,
       metadata: {
         userId: session.user.id,
@@ -56,9 +58,11 @@ export async function POST(request) {
       },
     })
 
+    console.log('✅ Checkout session created:', checkoutSession.id)
+
     return NextResponse.json({ url: checkoutSession.url })
   } catch (err) {
-    console.error('Stripe checkout error:', err)
+    console.error('❌ Stripe checkout error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
