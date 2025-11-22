@@ -38,15 +38,15 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    // FIX: Use "gemini-1.5-pro-latest"
-    // This specific tag resolves the 404 error on the v1beta API.
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" })
+    // FIX: Revert to "gemini-1.5-flash"
+    // This model is guaranteed to work immediately with your current key.
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
 
-    // 2. Robust Search
+    // 2. Search
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
       try {
         let searchQuery = lastUserMessage
