@@ -28,6 +28,16 @@ function getVertexCredentials() {
   return null
 }
 
+// Sanitize errors for production
+function sanitizeError(error) {
+  console.error('Chat API Error:', error)
+  
+  if (process.env.NODE_ENV === 'production') {
+    return 'An error occurred processing your request. Please try again.'
+  }
+  return error.message || 'An error occurred'
+}
+
 export async function POST(request) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -46,7 +56,33 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Active subscription required.' }, { status: 403 })
     }
 
+    // RATE LIMITING: Check usage limits
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', session.user.id)
+      .single()
+
+    const limits = subscription?.plan === 'enterprise'
+      ? { requests: 5000, images: 500 }
+      : { requests: 500, images: 50 }
+
+    // Check request limit
+    if (profile.requests_used >= limits.requests) {
+      return NextResponse.json({ 
+        error: 'Monthly request limit reached. Please upgrade your plan or wait for the next billing cycle.' 
+      }, { status: 429 })
+    }
+
     const { messages, image, county } = await request.json()
+    
+    // Check image limit separately
+    if (image && profile.images_used >= limits.images) {
+      return NextResponse.json({ 
+        error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
+      }, { status: 429 })
+    }
+
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
     const credentials = getVertexCredentials()
@@ -73,7 +109,6 @@ export async function POST(request) {
         let searchQueries = []
         
         if (image) {
-          // For images, cast a WIDE net with multiple targeted searches
           searchQueries = [
             'equipment maintenance repair good working order',
             'physical facilities walls floors ceilings surfaces',
@@ -83,7 +118,6 @@ export async function POST(request) {
             lastUserMessage
           ]
         } else {
-          // For text queries, use the question plus key safety terms
           searchQueries = [
             lastUserMessage,
             `${lastUserMessage} requirements regulations`,
@@ -91,7 +125,6 @@ export async function POST(request) {
           ]
         }
 
-        // Perform multiple searches and combine results
         const allResults = []
         for (const query of searchQueries) {
           if (query.trim()) {
@@ -100,7 +133,6 @@ export async function POST(request) {
           }
         }
 
-        // Deduplicate by content similarity and take top 30 most relevant
         const uniqueResults = []
         const seenContent = new Set()
         
@@ -112,7 +144,6 @@ export async function POST(request) {
           }
         }
 
-        // Sort by relevance and take top 30
         const topResults = uniqueResults
           .sort((a, b) => b.score - a.score)
           .slice(0, 30)
@@ -205,13 +236,6 @@ THE REASONING FRAMEWORK (USE THIS FOR EVERY RESPONSE):
 → Explain how to apply it
 → Add practical tips
 
-Example:
-"Good question about reheating soup. According to **[FDA_FOOD_CODE_2022, Page 56]**, 
-all TCS foods must be reheated to 165°F for 15 seconds. This kills any bacteria that 
-might have grown during storage. Use a calibrated thermometer to check the internal 
-temp. Pro tip: Heat it rapidly - getting through the 'danger zone' (41°F-135°F) quickly 
-is important."
-
 **For Image Analysis (equipment, facilities):**
 → Describe what you observe
 → Identify potential food safety hazards
@@ -219,38 +243,15 @@ is important."
 → Cite the relevant standard
 → Make specific recommendations
 
-Example:
-"I can see what looks like a crack in the wall tile near your prep sink. Let me explain 
-why this matters. According to **[FDA_FOOD_CODE_2022, Page 123]**, 'Physical facilities 
-shall be maintained in good repair.' Here's the concern: cracks can harbor bacteria, 
-moisture, and pests - especially in areas that get wet. In your case, being near the 
-prep sink makes this a higher risk for contamination. I'd recommend repairing this 
-during your next maintenance window and keeping the area extra clean until then."
-
 **For Vague/General Questions:**
 → Ask clarifying questions OR
 → Address the most common scenarios
 → Provide multiple possibilities if needed
 
-Example:
-"Equipment maintenance is a broad topic! Are you asking about cleaning procedures, 
-repair requirements, or something specific? Let me cover the basics. According to 
-**[MI_MODIFIED_FOOD_CODE, Page 78]**, all equipment must be 'kept in good repair and 
-proper working condition.' This means if something breaks - a door gasket, a thermometer, 
-a drain - it needs to be fixed promptly because broken equipment can lead to temperature 
-problems, contamination, or sanitation issues."
-
 **For Scenarios Not Directly Addressed:**
 → Be honest about what's in the documents
 → Apply related principles with clear reasoning
 → Recommend verification
-
-Example:
-"I don't see specific guidance about [X] in the ${countyName} documents I have access to. 
-However, based on the general principle in **[Document, Page]** that [principle], this 
-would likely apply to your situation because [reasoning]. That said, I'd strongly 
-recommend checking with your local health inspector to confirm, since this is an area 
-where specific interpretation matters."
 
 ═══════════════════════════════════════════════════════════════════
 CRITICAL ACCURACY RULES:
@@ -312,9 +313,9 @@ answer when documents don't provide clear guidance.`
         parts: [{ text: systemInstructionText }]
       },
       generationConfig: {
-        temperature: 0.1,  // Low creativity - reduces hallucination
-        topP: 0.8,         // More focused sampling
-        topK: 20           // Reduced token diversity
+        temperature: 0.1,
+        topP: 0.8,
+        topK: 20
       }
     })
 
@@ -358,7 +359,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
 
-    // VALIDATION CHECK: Ensure response contains citations for factual claims
+    // Validation check
     const hasCitations = /\*\*\[.*?,\s*Page/.test(text)
     const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(text)
     
@@ -386,9 +387,8 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     })
 
   } catch (error) {
-    console.error('Vertex AI Error:', error)
     return NextResponse.json({ 
-      error: error.message || 'Service error occurred.' 
+      error: sanitizeError(error)
     }, { status: 500 })
   }
 }
