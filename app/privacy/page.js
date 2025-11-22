@@ -96,8 +96,8 @@ export default function PrivacyPolicy() {
             </ul>
             <p className="text-slate-700">
               To exercise these rights, email us at{' '}
-              <a href="mailto:support@protocollm.com" className="text-blue-600 hover:underline">
-                support@protocollm.com
+              <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
+                austinrnorthrop@gmail.com
               </a>
             </p>
           </section>
@@ -153,8 +153,8 @@ export default function PrivacyPolicy() {
             <div className="bg-slate-50 p-4 rounded-lg">
               <p className="text-slate-700">
                 <strong>Email:</strong>{' '}
-                <a href="mailto:support@protocollm.com" className="text-blue-600 hover:underline">
-                  support@protocollm.com
+                <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
+                  austinrnorthrop@gmail.com
                 </a>
               </p>
               <p className="text-slate-700 mt-2">
