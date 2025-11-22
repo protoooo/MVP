@@ -200,7 +200,7 @@ export default function TermsAcceptanceModal({ isOpen, onAccept, onDecline, user
 
               <h3 className="font-bold text-slate-900 mb-3 text-base">13. Contact</h3>
               <p className="mb-4">
-                Questions? Email: <a href="mailto:support@protocollm.com" className="text-blue-600 hover:underline">support@protocollm.com</a>
+                Questions? Email: <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">austinrnorthrop@gmail.com</a>
               </p>
 
               <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg">
@@ -282,7 +282,7 @@ export default function TermsAcceptanceModal({ isOpen, onAccept, onDecline, user
                 <li><strong>Opt-out:</strong> Unsubscribe from emails</li>
               </ul>
               <p className="mb-4 text-sm">
-                To exercise these rights, email: <a href="mailto:privacy@protocollm.com" className="text-blue-600 hover:underline">privacy@protocollm.com</a>
+                To exercise these rights, email: <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">austinrnorthrop@gmail.com</a>
               </p>
 
               <h3 className="font-bold text-slate-900 mb-3 text-base">6. Data Security</h3>
@@ -321,7 +321,7 @@ export default function TermsAcceptanceModal({ isOpen, onAccept, onDecline, user
               <h3 className="font-bold text-slate-900 mb-3 text-base">11. Contact</h3>
               <div className="bg-slate-50 p-4 rounded-lg mb-4">
                 <p className="font-bold text-slate-900 mb-2">Privacy Questions?</p>
-                <p className="text-sm">Email: <a href="mailto:privacy@protocollm.com" className="text-blue-600 hover:underline">privacy@protocollm.com</a></p>
+                <p className="text-sm">Email: <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">austinrnorthrop@gmail.com</a></p>
                 <p className="text-sm mt-2">
                   protocolLM<br />
                   Michigan, United States
