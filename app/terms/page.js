@@ -155,7 +155,7 @@ export default function TermsOfService() {
               <li>No refunds for partial months of service</li>
               <li>Cancel before your next billing date to avoid future charges</li>
               <li>Refunds may be issued at our discretion for technical failures</li>
-              <li>Contact support@protocollm.com for refund requests</li>
+              <li>Contact austinrnorthrop@gmail.com for refund requests</li>
             </ul>
           </section>
 
@@ -244,8 +244,8 @@ export default function TermsOfService() {
               </p>
               <p className="text-slate-700">
                 <strong>Email:</strong>{' '}
-                <a href="mailto:support@protocollm.com" className="text-blue-600 hover:underline">
-                  support@protocollm.com
+                <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
+                  austinrnorthrop@gmail.com
                 </a>
               </p>
               <p className="text-slate-700 mt-2">
