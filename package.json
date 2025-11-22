@@ -13,7 +13,8 @@
     "start": "next start -H 0.0.0.0 -p ${PORT:-8080}",
     "lint": "next lint",
     "build-embeddings": "node scripts/build-embeddings.js",
-    "upload-embeddings": "node scripts/upload-to-supabase.js"
+    "upload-embeddings": "node scripts/upload-to-supabase.js",
+    "test": "echo 'No tests yet' && exit 0"
   },
   "dependencies": {
     "react": "^18",
@@ -26,7 +27,9 @@
     "dotenv": "^16.4.5",
     "@supabase/supabase-js": "^2.39.0",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
-    "stripe": "^14.10.0"
+    "stripe": "^14.10.0",
+    "dompurify": "^3.0.6",
+    "isomorphic-dompurify": "^2.9.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
