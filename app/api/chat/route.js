@@ -14,7 +14,6 @@ const COUNTY_NAMES = {
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 
-// Helper to parse the JSON credentials from Railway variable
 function getVertexCredentials() {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
     try {
@@ -37,7 +36,6 @@ export async function POST(request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    // 1. Subscription Check
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -51,7 +49,6 @@ export async function POST(request) {
     const { messages, image, county } = await request.json()
     const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
 
-    // 2. Initialize Vertex AI
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
@@ -61,13 +58,13 @@ export async function POST(request) {
 
     const vertex_ai = new VertexAI({
       project: project,
-      location: 'us-central1',
+      location: 'us-east1', // ✅ SWITCHED TO US-EAST1 (More reliable for new accounts)
       googleAuthOptions: { credentials }
     })
 
-    const model = 'gemini-1.5-flash' 
+    // ✅ Use the stable frozen version
+    const model = 'gemini-1.5-flash-001' 
     
-    // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
@@ -93,7 +90,6 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
       }
     }
 
-    // 4. Construct Vertex Payload
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
     const systemInstructionText = `You are protocolLM compliance assistant for ${countyName}.
@@ -112,7 +108,6 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
       }
     })
 
-    // 5. Build Chat History
     let userMessageParts = []
     
     if (messages.length > 1) {
@@ -143,12 +138,10 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
 
-    // 6. Update Usage
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
-    // 7. Extract Citations
     const citations = []
     const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
     let match
