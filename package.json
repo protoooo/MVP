@@ -29,7 +29,9 @@
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "stripe": "^14.10.0",
     "dompurify": "^3.0.6",
-    "isomorphic-dompurify": "^2.9.0"
+    "isomorphic-dompurify": "^2.9.0",
+    "@sentry/nextjs": "^8.0.0",
+    "ioredis": "^5.3.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
