@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Webpack configuration for pdf-parse
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.resolve.alias.canvas = false;
@@ -20,10 +19,7 @@ const nextConfig = {
     }
   },
   
-  // Optimization
   swcMinify: true,
-  
-  // Disable strict mode temporarily to rule out double-render crashes
   reactStrictMode: false, 
 
   typescript: {
@@ -34,7 +30,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // CRITICAL: Expose env vars at runtime for Railway
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -46,9 +41,8 @@ const nextConfig = {
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
-
-  // Output configuration for Railway
-  output: 'standalone',
+  
+  // REMOVED: output: 'standalone' - this was breaking the deployment
 }
 
 export default nextConfig;
