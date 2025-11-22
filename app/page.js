@@ -369,7 +369,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* UPDATED FOOTER WITH LINKS */}
+          {/* FOOTER */}
           <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-2">
               <a href="/privacy" className="hover:text-slate-600 transition">Privacy Policy</a>
@@ -384,8 +384,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 z-20 min-h-screen">
+        {/* RIGHT SIDE - Auth Form (Modified to shift up) */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start items-center px-6 sm:px-8 lg:p-12 lg:pt-32 z-20 min-h-screen">
           
           <div className="w-full max-w-lg mx-auto">
             
