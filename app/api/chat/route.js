@@ -40,9 +40,8 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     
-    // FIX: Switch back to the stable "gemini-1.5-pro" tag
-    // This is the "Smart" model, but the stable version that always exists.
-    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+    // FIX: Use the specific version "gemini-1.5-pro-001"
+    const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-001" })
 
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
@@ -54,7 +53,6 @@ export async function POST(request) {
         let searchQuery = lastUserMessage
         if (image) searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
 
-        // Attempt search
         const results = await searchDocuments(searchQuery, 20, userCounty)
         
         if (results && results.length > 0) {
@@ -73,7 +71,6 @@ CONTENT: ${doc.text}`
           }).join("\n---\n\n")
         }
       } catch (searchErr) {
-        // Log error but do NOT crash. Continue with general knowledge.
         console.error("Search failed (using general knowledge):", searchErr)
       }
     }
