@@ -150,7 +150,7 @@ export default function Home() {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState('signup')
   const [mounted, setMounted] = useState(false)
-  
+   
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -246,11 +246,11 @@ export default function Home() {
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - NOW CENTERED */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden">
+        {/* LEFT SIDE - Info Cards */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
           <ParticleBackground />
           
-          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 absolute top-0 left-0 w-full z-10">
+          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
                 protocol<span className="font-normal text-slate-600">LM</span>
@@ -262,7 +262,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col justify-center px-6 sm:px-8 lg:px-12 py-8 z-10">
+          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
               <div 
                 className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out"
@@ -339,8 +339,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form - NOW CENTERED */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center px-6 sm:px-8 lg:p-12 z-20">
+        {/* RIGHT SIDE - Auth Form - UPDATED: CENTERED & FITTED */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 z-20 min-h-screen">
           <div className="w-full max-w-md mx-auto">
             
             <div className="mb-8 lg:hidden">
@@ -352,10 +352,11 @@ export default function Home() {
 
             {/* MODIFIED HEADER SECTION */}
             <div className="mb-8 text-center">
-              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+              {/* Added whitespace-nowrap (or adjusted size) to keep it side by side */}
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-3 tracking-tight whitespace-nowrap">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
-              <p className="text-lg text-slate-600 font-medium max-w-[90%] mx-auto leading-relaxed">
+              <p className="text-lg text-slate-600 font-medium max-w-[95%] mx-auto leading-relaxed">
                 {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
               </p>
             </div>
@@ -414,7 +415,7 @@ export default function Home() {
                 />
               </div>
               
-              {/* SUBMIT BUTTON: Gradient Outline Style (No Fill) */}
+              {/* SUBMIT BUTTON */}
               <button 
                 type="submit" 
                 disabled={loading} 
