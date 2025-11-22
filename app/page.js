@@ -339,9 +339,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form - UPDATED: CENTERED & FITTED */}
+        {/* RIGHT SIDE - Auth Form - UPDATED */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 z-20 min-h-screen">
-          <div className="w-full max-w-md mx-auto">
+          
+          {/* Expanded max-width to lg to give text more room */}
+          <div className="w-full max-w-lg mx-auto">
             
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
@@ -352,11 +354,12 @@ export default function Home() {
 
             {/* MODIFIED HEADER SECTION */}
             <div className="mb-8 text-center">
-              {/* Added whitespace-nowrap (or adjusted size) to keep it side by side */}
               <h2 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-3 tracking-tight whitespace-nowrap">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
-              <p className="text-lg text-slate-600 font-medium max-w-[95%] mx-auto leading-relaxed">
+              
+              {/* Added sm:whitespace-nowrap to prevent stacking on larger screens */}
+              <p className="text-lg text-slate-600 font-medium w-full mx-auto leading-relaxed sm:whitespace-nowrap">
                 {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
               </p>
             </div>
