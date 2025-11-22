@@ -1,42 +1,50 @@
+'use client'
+
 import "./globals.css";
 import { Inter } from "next/font/google";
+import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
-  title: "protocol LM | Food Safety Compliance",
-  description: "Professional food safety compliance tool",
-};
-
 export default function RootLayout({ children }) {
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const handleError = (event) => {
+      console.error('Global error:', event.error);
+      setError(event.error);
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (error) {
+    return (
+      <html lang="en">
+        <body style={{ padding: '40px', fontFamily: 'monospace', background: '#1a1a1a', color: '#fff' }}>
+          <h1>App Error Detected</h1>
+          <pre style={{ background: '#000', padding: '20px', overflow: 'auto' }}>
+            {error.message}
+            {'\n\n'}
+            {error.stack}
+          </pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '10px 20px' }}>
+            Reload App
+          </button>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
+        <meta name="theme-color" content="#0f172a" />
       </head>
-      <body className={inter.className}>
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
-}
-
-// Add this error boundary
-function ErrorBoundary({ children }) {
-  if (typeof window === 'undefined') return children;
-  
-  try {
-    return children;
-  } catch (error) {
-    return (
-      <div style={{ padding: '40px', fontFamily: 'monospace' }}>
-        <h1>App Crashed</h1>
-        <pre>{error.message}</pre>
-        <pre>{error.stack}</pre>
-      </div>
-    );
-  }
 }
