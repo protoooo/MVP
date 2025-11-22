@@ -176,14 +176,3 @@ Always cite from documents using **[Document Name, Page X]** format.`
     }, { status: 500 })
   }
 }
-```
-
-**Key fix:**
-The response structure from Vertex AI is:
-```
-response.candidates[0].content.parts[0].text
-```
-
-Instead of just:
-```
-response.text()
