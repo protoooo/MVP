@@ -18,7 +18,6 @@ const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 function getVertexCredentials() {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
     try {
-      // Clean potential smart quotes from iPad copy/paste
       const cleanJson = process.env.GOOGLE_CREDENTIALS_JSON
         .replace(/[\u201C\u201D]/g, '"')
         .replace(/[\u2018\u2019]/g, "'")
@@ -57,7 +56,6 @@ export async function POST(request) {
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
     if (!credentials || !project) {
-      console.error("Missing Credentials. Project:", project)
       throw new Error('System configuration error: Google Cloud Credentials missing.')
     }
 
@@ -67,9 +65,9 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // FIX: Use "gemini-1.5-flash" (No numbers)
-    // This "Evergreen" alias is the safest way to avoid 404 errors.
-    const model = 'gemini-1.5-flash' 
+    // FIX: Use the specific frozen version "-001"
+    // This resolves the 404 error because it doesn't rely on an alias.
+    const model = 'gemini-1.5-flash-001' 
     
     // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
