@@ -235,6 +235,16 @@ export default function Pricing() {
           </div>
           
         </div>
+
+        {/* FOOTER WITH LINKS */}
+        <div className="mt-16 pt-8 border-t border-slate-200 text-center">
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-600 mb-4">
+            <a href="/privacy" className="hover:text-slate-900 transition">Privacy Policy</a>
+            <a href="/terms" className="hover:text-slate-900 transition">Terms of Service</a>
+            <a href="/contact" className="hover:text-slate-900 transition">Contact</a>
+          </div>
+          <p className="text-xs text-slate-400">© 2025 protocolLM. All rights reserved.</p>
+        </div>
       </div>
     </div>
   )
