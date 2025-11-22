@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- Particle Background (unchanged) ---
+// --- Particle Background ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -207,8 +207,6 @@ export default function DocumentsPage() {
       if (response.ok) {
         const data = await response.json()
         setChatHistory(data.chats || [])
-      } else {
-        console.error('Failed to load chat history')
       }
     } catch (error) {
       console.error('Error loading chat history:', error)
@@ -291,8 +289,6 @@ export default function DocumentsPage() {
               return [data.chat, ...prev].slice(0, 50)
             }
           })
-        } else {
-          console.error('Failed to save chat')
         }
       } catch (error) {
         console.error('Error saving chat:', error)
@@ -336,8 +332,6 @@ export default function DocumentsPage() {
         if (currentChatId === chatId) {
           startNewChat()
         }
-      } else {
-        console.error('Failed to delete chat')
       }
     } catch (error) {
       console.error('Error deleting chat:', error)
@@ -362,7 +356,7 @@ export default function DocumentsPage() {
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('plan, status, trial_end, current_period_end')
-        .eq('user_id', session.user.id)
+        .eq('id', session.user.id)
         .single()
 
       const limits = subscription?.plan === 'enterprise'
@@ -618,7 +612,6 @@ export default function DocumentsPage() {
 
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
-
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
@@ -672,7 +665,6 @@ export default function DocumentsPage() {
       )}
 
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
-        
         <ParticleBackground />
         
         <div className="relative z-10 flex flex-col h-full">
@@ -770,3 +762,156 @@ export default function DocumentsPage() {
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Need Help?
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        <div className="md:hidden p-4 bg-slate-50 border-b border-slate-200 text-slate-900 flex justify-between items-center shadow-sm z-30 flex-shrink-0">
+          <button onClick={() => setIsSidebarOpen(true)} className="text-slate-700">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <div className="text-center flex-1 mx-4 min-w-0">
+            <span className="font-bold text-lg text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></span>
+            <div className="text-xs text-slate-500 truncate">{COUNTY_NAMES[userCounty]}</div>
+          </div>
+          <div className="w-6"></div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div
+                className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
+                  msg.role === 'assistant'
+                    ? 'bg-white border border-slate-200 text-slate-800'
+                    : 'text-white' 
+                }`}
+                style={msg.role === 'user' ? prismGradient : {}}
+              >
+                {msg.image && (
+                  <div className="mb-3 rounded-lg overflow-hidden">
+                    <img 
+                      src={msg.image} 
+                      alt="Uploaded evidence" 
+                      className="max-w-full h-auto max-h-64 object-cover" 
+                    />
+                  </div>
+                )}
+
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0" style={prismGradient}>
+                      LM
+                    </div>
+                    <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                  </div>
+                )}
+                
+                {renderMessageContent(msg)}
+              </div>
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold" style={prismGradient}>
+                    LM
+                  </div>
+                  <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
+          {image && (
+            <div className="max-w-4xl mx-auto mb-3 px-1">
+              <div className="relative inline-block">
+                <img src={image} alt="Preview" className="h-16 w-auto rounded-lg border border-slate-200 shadow-sm" />
+                <button 
+                  onClick={() => setImage(null)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+            <div className="flex items-end gap-2 md:gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                disabled={isLoading}
+                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                  image 
+                    ? 'text-white shadow-md' 
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+                style={image ? prismGradient : {}}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+              </button>
+
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={image ? "Ask about this image..." : "Ask a question..."}
+                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all text-sm"
+                disabled={isLoading}
+                maxLength={5000}
+              />
+
+              <button
+                type="submit"
+                disabled={isLoading || !canSend}
+                className="h-[48px] px-4 text-slate-900 font-bold hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                Send
+              </button>
+            </div>
+            <div className="text-center mt-2 flex items-center justify-center gap-2">
+              <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+              {savingChat && (
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </span>
+              )}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
