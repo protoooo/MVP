@@ -58,12 +58,13 @@ export async function POST(request) {
 
     const vertex_ai = new VertexAI({
       project: project,
-      location: 'us-east1', // ✅ SWITCHED TO US-EAST1 (More reliable for new accounts)
+      location: 'us-central1', // ✅ BACK TO CENTRAL (Most reliable for new projects)
       googleAuthOptions: { credentials }
     })
 
-    // ✅ Use the stable frozen version
-    const model = 'gemini-1.5-flash-001' 
+    // ✅ Use the Evergreen Alias (No numbers). 
+    // This forces Google to give you the active version for us-central1.
+    const model = 'gemini-1.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
