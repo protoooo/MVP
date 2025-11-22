@@ -83,6 +83,145 @@ export default function Contact() {
             <div className="mt-8 p-4 bg-slate-50 rounded-lg">
               <h3 className="font-bold text-slate-900 mb-2">Need immediate help?</h3>
               <p className="text-sm text-slate-700 mb-3">
-                Check out our{' '}
-                <a href="/documents" className="text-blue-600 hover:underline">
-                  documentation
+                Check out our documentation or browse the knowledge base for instant answers.
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+            
+            {submitted ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                <svg className="w-12 h-12 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Message Sent!</h3>
+                <p className="text-slate-700 mb-4">
+                  Your default email client should have opened. If not, email us directly at support@protocollm.com
+                </p>
+                <button 
+                  onClick={() => setSubmitted(false)}
+                  className="text-blue-600 hover:underline font-semibold"
+                >
+                  Send another message
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Your Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:ring-0 focus:outline-none text-slate-900 transition"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:ring-0 focus:outline-none text-slate-900 transition"
+                    placeholder="john@restaurant.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:ring-0 focus:outline-none text-slate-900 transition"
+                    placeholder="How can we help?"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Message
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-500 focus:ring-0 focus:outline-none text-slate-900 transition resize-none"
+                    placeholder="Tell us more about your question or issue..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Send Message
+                </button>
+
+                <p className="text-xs text-slate-500 text-center">
+                  This will open your default email client with your message pre-filled.
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+          
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-bold text-slate-900 mb-2">How quickly will I get a response?</h3>
+              <p className="text-slate-700 text-sm">
+                We aim to respond to all inquiries within 24-48 hours during business days. Urgent issues are prioritized.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-bold text-slate-900 mb-2">Can I cancel my subscription anytime?</h3>
+              <p className="text-slate-700 text-sm">
+                Yes! You can cancel your subscription at any time from your account settings. Your access continues until the end of the billing period.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-bold text-slate-900 mb-2">Do you offer refunds?</h3>
+              <p className="text-slate-700 text-sm">
+                We don't offer refunds for partial months, but you can cancel anytime to avoid future charges. Contact us if you experienced technical issues.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-bold text-slate-900 mb-2">Is my data secure?</h3>
+              <p className="text-slate-700 text-sm">
+                Yes. We use industry-standard encryption and security measures. See our{' '}
+                <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a> for details.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <a href="/" className="text-blue-600 hover:underline">
+            ← Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
