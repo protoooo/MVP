@@ -34,6 +34,7 @@ const ParticleBackground = () => {
       if (canvas.parentElement) {
         canvas.width = canvas.parentElement.offsetWidth
         canvas.height = canvas.parentElement.offsetHeight
+        initParticles()
       }
     }
 
@@ -168,28 +169,25 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        // FIXED: Use Railway URL for production
-        const redirectUrl = process.env.NEXT_PUBLIC_BASE_URL 
-          ? `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
-          : `${window.location.origin}/auth/callback`
-        
+        const productionUrl = 'https://no-rap-production.up.railway.app'
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectUrl,
+            emailRedirectTo: `${productionUrl}/auth/callback`,
             data: { county: 'washtenaw' }
           }
         })
         if (error) throw error
         if (data.session) {
-          router.push('/pricing')
+          window.location.href = '/pricing'
         } else {
           setMessage({ type: 'success', text: 'Account created! Check email to confirm.' })
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -197,13 +195,14 @@ export default function Home() {
           .single()
 
         if (profile?.is_subscribed) {
-          router.push('/documents')
+          window.location.href = '/documents'
         } else {
-          router.push('/pricing')
+          window.location.href = '/pricing'
         }
       }
     } catch (error) {
       console.error("Auth Error:", error)
+      alert(`Error: ${error.message}`)
       setMessage({ type: 'error', text: error.message })
     } finally {
       setLoading(false)
@@ -339,6 +338,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* RIGHT SIDE - Auth Form */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-start pt-12 lg:pt-40 px-6 sm:px-8 lg:p-12 z-20">
           <div className="w-full max-w-md mx-auto">
             
@@ -349,15 +349,17 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
+            {/* MODIFIED HEADER SECTION */}
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
-              <p className="text-slate-600 text-sm">
+              <p className="text-lg text-slate-600 font-medium max-w-[90%] mx-auto leading-relaxed">
                 {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
               </p>
             </div>
 
+            {/* TOGGLE with Gradient Outline */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
                 <button 
@@ -411,6 +413,7 @@ export default function Home() {
                 />
               </div>
               
+              {/* SUBMIT BUTTON: Gradient Outline Style (No Fill) */}
               <button 
                 type="submit" 
                 disabled={loading} 
