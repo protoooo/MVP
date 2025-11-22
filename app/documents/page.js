@@ -674,6 +674,7 @@ export default function DocumentsPage() {
             ))}
           </div>
 
+          {/* Combined Sidebar Footer with "Need Help?" Link */}
           <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm" style={prismGradient}>
@@ -702,6 +703,19 @@ export default function DocumentsPage() {
               >
                 Sign Out
               </button>
+            </div>
+
+            {/* ADDED SECTION */}
+            <div className="mt-2 pt-2 border-t border-slate-200/60">
+              <a 
+                href="/contact" 
+                className="text-xs text-slate-500 hover:text-slate-900 transition flex items-center justify-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Need Help?
+              </a>
             </div>
           </div>
 
