@@ -8,4 +8,5 @@ cmds = ['npm ci --legacy-peer-deps || npm install --legacy-peer-deps']
 cmds = ['npm run build']
 
 [start]
+# FIX: Use node directly for standalone mode and bind to 0.0.0.0
 cmd = 'HOSTNAME="0.0.0.0" node .next/standalone/server.js'
