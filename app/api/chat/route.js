@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
+import { sanitizeString, sanitizeCounty, sanitizeImageData, sanitizeMessages } from '@/lib/sanitize'
+import { logError, logInfo } from '@/lib/monitoring'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,7 +67,7 @@ function validateEnvironment() {
   const missing = required.filter(key => !process.env[key])
   
   if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:', missing)
+    logError(new Error('Missing environment variables'), { missing })
     return false
   }
   
@@ -80,7 +82,7 @@ function getVertexCredentials() {
         .replace(/[\u2018\u2019]/g, "'")
       return JSON.parse(cleanJson)
     } catch (e) {
-      console.error('Failed to parse GOOGLE_CREDENTIALS_JSON', e)
+      logError(e, { context: 'Failed to parse GOOGLE_CREDENTIALS_JSON' })
     }
   }
   return null
@@ -105,7 +107,7 @@ function validateApiResponse(response) {
 }
 
 function sanitizeError(error) {
-  console.error('Chat API Error:', error)
+  logError(error, { context: 'Chat API Error' })
   
   if (process.env.NODE_ENV === 'production') {
     return 'An error occurred processing your request. Please try again.'
@@ -179,40 +181,45 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
-    const { messages, image, county } = await request.json()
+    // Parse and sanitize request body
+    let requestBody
+    try {
+      requestBody = await request.json()
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
+
+    const { messages, image, county } = requestBody
     
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid request format' }, { status: 400 })
+    // Sanitize and validate all inputs
+    let sanitizedMessages
+    try {
+      sanitizedMessages = sanitizeMessages(messages)
+    } catch (e) {
+      return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
-    if (county && !VALID_COUNTIES.includes(county)) {
-      return NextResponse.json({ error: 'Invalid county parameter' }, { status: 400 })
-    }
+    // Sanitize county - server-side validation
+    const sanitizedCounty = sanitizeCounty(county || profile.county)
 
-    const lastUserMessage = messages[messages.length - 1]?.content || ""
-    if (typeof lastUserMessage !== 'string' || lastUserMessage.length > 5000) {
-      return NextResponse.json({ error: 'Invalid message format or length' }, { status: 400 })
-    }
-
-    if (image && profile.images_used >= limits.images) {
-      return NextResponse.json({ 
-        error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
-      }, { status: 429 })
-    }
-
+    // Validate and sanitize image if provided
+    let sanitizedImage = null
     if (image) {
-      if (typeof image !== 'string' || !image.startsWith('data:image/')) {
-        return NextResponse.json({ error: 'Invalid image format' }, { status: 400 })
+      if (profile.images_used >= limits.images) {
+        return NextResponse.json({ 
+          error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
+        }, { status: 429 })
       }
-      
-      const base64Length = image.split(',')[1]?.length || 0
-      const sizeInBytes = (base64Length * 3) / 4
-      if (sizeInBytes > 5 * 1024 * 1024) {
-        return NextResponse.json({ error: 'Image too large' }, { status: 400 })
+
+      try {
+        sanitizedImage = sanitizeImageData(image)
+      } catch (e) {
+        return NextResponse.json({ error: e.message }, { status: 400 })
       }
     }
 
-    const userCounty = VALID_COUNTIES.includes(county || profile.county) ? (county || profile.county) : 'washtenaw'
+    const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
+    const userCounty = sanitizedCounty
 
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
@@ -231,11 +238,11 @@ export async function POST(request) {
     let contextText = ""
     let usedDocs = []
 
-    if (lastUserMessage.trim().length > 0 || image) {
+    if (lastUserMessage.trim().length > 0 || sanitizedImage) {
       try {
         let searchQueries = []
         
-        if (image) {
+        if (sanitizedImage) {
           searchQueries = [
             'equipment maintenance repair good working order',
             'physical facilities walls floors ceilings surfaces',
@@ -290,7 +297,7 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
           }))
         }
       } catch (searchErr) {
-        console.error("Search failed:", searchErr)
+        logError(searchErr, { context: 'Document search failed' })
       }
     }
 
@@ -447,16 +454,16 @@ answer when documents don't provide clear guidance.`
 
     let userMessageParts = []
     
-    if (messages.length > 1) {
-      const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
+    if (sanitizedMessages.length > 1) {
+      const historyText = sanitizedMessages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
       userMessageParts.push({ text: `CONVERSATION HISTORY:\n${historyText}\n\n` })
     }
 
     userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
 
-    if (image && image.includes('base64,')) {
-      const base64Data = image.split(',')[1]
-      const mimeType = image.split(';')[0].split(':')[1]
+    if (sanitizedImage && sanitizedImage.includes('base64,')) {
+      const base64Data = sanitizedImage.split(',')[1]
+      const mimeType = sanitizedImage.split(';')[0].split(':')[1]
       
       userMessageParts.push({
         inlineData: {
@@ -491,11 +498,14 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
     
     if (makesFactualClaims && !hasCitations && !validatedText.includes('cannot find') && !validatedText.includes('do not directly address')) {
-      console.warn('⚠️ Response lacks required citations:', validatedText.substring(0, 200))
+      logInfo('Response lacks required citations', { 
+        preview: validatedText.substring(0, 200),
+        userId: session.user.id 
+      })
     }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
-    if (image) updates.images_used = (profile.images_used || 0) + 1
+    if (sanitizedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
     const citations = []
