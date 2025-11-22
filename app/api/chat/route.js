@@ -58,12 +58,11 @@ export async function POST(request) {
 
     const vertex_ai = new VertexAI({
       project: project,
-      location: 'us-central1', // Kept Central as it is usually required for newer models
+      location: 'us-central1',
       googleAuthOptions: { credentials }
     })
 
-    // ✅ KEEPING YOUR WORKING MODEL
-    const model = 'gemini-2.5-flash' 
+    const model = 'gemini-1.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
@@ -72,6 +71,7 @@ export async function POST(request) {
     if (lastUserMessage && lastUserMessage.trim().length > 0) {
       try {
         let searchQuery = lastUserMessage
+        // Improve search query for images to find relevant sanitation codes
         if (image) searchQuery = `food safety violations equipment cleanliness sanitation ${lastUserMessage}`.trim()
 
         const results = await searchDocuments(searchQuery, 20, userCounty)
@@ -92,14 +92,16 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    // --- STRICT DOCUMENT-ONLY MODE ---
+    // --- UPDATED STRICT DOCUMENT-ONLY MODE ---
+    // Changed instructions to allow application of general rules to specific scenarios
     const systemInstructionText = `You are ProtocolLM, a strictly regulated compliance assistant for ${countyName}.
 
 STRICT OPERATING RULES:
 1. ANSWER ONLY using the information provided in the "RETRIEVED CONTEXT" below.
-2. DO NOT use outside knowledge, general food safety principles, or hallucinate regulations not found in the text.
-3. If the answer is not explicitly found in the provided documents, you MUST state: "I cannot find this specific information in the official ${countyName} documents provided."
-4. You must CITE every single regulatory claim using this exact format: **[Document Name, Page X]**
+2. DO NOT use outside knowledge or general food safety principles unless they are explicitly confirmed by the text below.
+3. If the user asks about a specific scenario (e.g., "cracked pipe") that is not mentioned word-for-word, YOU MUST apply the general regulations found in the text (e.g., "Plumbing must be maintained in good repair") to answer the question.
+4. If absolutely NO relevant regulations are found in the context, state: "I cannot find this specific information in the official ${countyName} documents provided."
+5. You must CITE every single regulatory claim using this exact format: **[Document Name, Page X]**
 
 RETRIEVED CONTEXT (${countyName}):
 ${contextText || 'No matching documents found.'}
