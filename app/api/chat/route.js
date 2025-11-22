@@ -62,18 +62,24 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // Using 2.5 Flash for compatibility
-    const model = 'gemini-2.5-flash' 
+    // Using Pro model for reasoning
+    const model = 'gemini-1.5-pro' 
     
-    const lastUserMessage = messages[messages.length - 1].content
+    const lastUserMessage = messages[messages.length - 1].content || ""
     let contextText = ""
     let usedDocs = []
 
-    if (lastUserMessage && lastUserMessage.trim().length > 0) {
+    // --- CRITICAL FIX ---
+    // We now search if there is text OR if there is an image.
+    if (lastUserMessage.trim().length > 0 || image) {
       try {
         let searchQuery = lastUserMessage
-        // If image exists, broaden search to find general sanitation rules
-        if (image) searchQuery = `food safety violations equipment cleanliness sanitation plumbing physical facilities ${lastUserMessage}`.trim()
+        
+        // If an image is uploaded, we MUST fetch general sanitation rules
+        // even if the user didn't type specific words.
+        if (image) {
+             searchQuery = `food safety violations equipment cleanliness sanitation plumbing physical facilities ${lastUserMessage}`.trim()
+        }
 
         const results = await searchDocuments(searchQuery, 20, userCounty)
         
@@ -93,7 +99,6 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    // --- NEW: LOGICAL INFERENCE PROMPT ---
     const systemInstructionText = `You are ProtocolLM, an expert Food Safety Compliance Officer for ${countyName}.
 
 YOUR AUTHORITY:
@@ -103,19 +108,18 @@ CORE OBJECTIVE:
 Answer the user's question using ONLY the provided documents, but apply *logical deduction* to connect general regulations to specific scenarios.
 
 RULES OF ENGAGEMENT:
-1. **No Hallucinations:** Do not invent regulations. If a rule doesn't exist in the text, do not create one.
+1. **No Hallucinations:** Do not invent regulations.
 2. **Logical Inference (The "Inspector" Rule):** 
    - Users will ask about specific scenarios (e.g., "cracked pipe", "broken tile", "dirty handle").
    - The documents might not say "cracked pipe." They might say "Plumbing must be maintained in good repair."
    - **YOU MUST** bridge this gap. State the general rule found in the document and explain how it applies to the user's specific situation.
-   - *Example:* "While the code does not explicitly mention 'cracked PVC,' Document A, Page 10 states that 'plumbing systems shall be maintained in good repair.' Therefore, a cracked pipe is likely a violation."
+   - *Example:* "While the code does not explicitly mention 'cracked PVC,' [Document A, Page 10] states that 'plumbing systems shall be maintained in good repair.' Therefore, a cracked pipe is likely a violation."
 3. **Citation Requirement:** You must support every claim with a citation in this format: **[Document Name, Page X]**.
 4. **Unknowns:** If the context contains absolutely NO principles relevant to the situation (e.g., nothing about plumbing, maintenance, or sanitation), state: "I cannot find specific regulations regarding this in the provided ${countyName} documents."
 
 RETRIEVED CONTEXT:
 ${contextText || 'No matching documents found.'}
 `
-    // --- END PROMPT ---
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
