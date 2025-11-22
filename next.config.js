@@ -33,8 +33,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // CRITICAL: Output standalone for Railway
-  output: 'standalone'
+  // REMOVED: output: 'standalone' (This was the cause of the headache)
 }
 
 export default nextConfig;
