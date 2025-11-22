@@ -439,12 +439,20 @@ export default function Dashboard() {
         })
       })
 
-      const data = await response.json()
-
-      // FIX: Catch non-200 responses specifically
+      // FIX: Check response status BEFORE parsing JSON
       if (!response.ok) {
-        throw new Error(data.error || `Server error: ${response.status}`)
+        const errorText = await response.text()
+        let errorMessage
+        try {
+          const errorData = JSON.parse(errorText)
+          errorMessage = errorData.error || `Server error: ${response.status}`
+        } catch {
+          errorMessage = `Server error: ${response.status} - ${errorText.substring(0, 100)}`
+        }
+        throw new Error(errorMessage)
       }
+
+      const data = await response.json()
 
       setMessages(prev => [
         ...prev,
@@ -461,8 +469,13 @@ export default function Dashboard() {
 
       setTimeout(saveCurrentChat, 200)
     } catch (err) {
+      console.error('Chat error:', err)
       // FIX: Display the error in the chat bubble
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ Error: ${err.message}` }])
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `❌ Error: ${err.message}\n\nPlease try again or contact support if this persists.`,
+        citations: []
+      }])
     } finally {
       setIsLoading(false)
       setTimeout(() => setCanSend(true), 1000)
