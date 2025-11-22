@@ -15,7 +15,7 @@ export default function Contact() {
     e.preventDefault()
     
     // Construct mailto link
-    const mailtoLink = `mailto:support@protocollm.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
+    const mailtoLink = `mailto:austinrnorthrop@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
     )}`
     
@@ -45,8 +45,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-900 mb-1">Email Support</h3>
-                  <a href="mailto:support@protocollm.com" className="text-blue-600 hover:underline">
-                    support@protocollm.com
+                  <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
+                    austinrnorthrop@gmail.com
                   </a>
                   <p className="text-sm text-slate-600 mt-1">We respond within 24-48 hours</p>
                 </div>
@@ -99,7 +99,7 @@ export default function Contact() {
                 </svg>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Message Sent!</h3>
                 <p className="text-slate-700 mb-4">
-                  Your default email client should have opened. If not, email us directly at support@protocollm.com
+                  Your default email client should have opened. If not, email us directly at austinrnorthrop@gmail.com
                 </p>
                 <button 
                   onClick={() => setSubmitted(false)}
