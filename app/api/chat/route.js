@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { VertexAI } from '@google-cloud/vertexai' // ✅ Switching to Vertex Engine
+import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +18,7 @@ const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 function getVertexCredentials() {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
     try {
-      // Handle smart quotes or double-escaping from iPad copy/paste
+      // Clean potential smart quotes from iPad copy/paste
       const cleanJson = process.env.GOOGLE_CREDENTIALS_JSON
         .replace(/[\u201C\u201D]/g, '"')
         .replace(/[\u2018\u2019]/g, "'")
@@ -54,11 +54,10 @@ export async function POST(request) {
 
     // 2. Initialize Vertex AI
     const credentials = getVertexCredentials()
-    // Fallback to project_id inside JSON if env var is missing
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
     if (!credentials || !project) {
-      console.error("Missing Credentials. Project:", project, "Creds found:", !!credentials)
+      console.error("Missing Credentials. Project:", project)
       throw new Error('System configuration error: Google Cloud Credentials missing.')
     }
 
@@ -68,10 +67,11 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // ✅ Use the most stable Vertex model
-    const model = 'gemini-1.5-flash-001' 
+    // FIX: Use "gemini-1.5-flash" (No numbers)
+    // This "Evergreen" alias is the safest way to avoid 404 errors.
+    const model = 'gemini-1.5-flash' 
     
-    // 3. Search Logic (Unchanged)
+    // 3. Search Logic
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
     let usedDocs = []
@@ -116,10 +116,9 @@ ALWAYS cite from documents using **[Document Name, Page X]** format.`
       }
     })
 
-    // 5. Build Chat History (Vertex Format)
+    // 5. Build Chat History
     let userMessageParts = []
     
-    // Add context
     if (messages.length > 1) {
       const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
       userMessageParts.push({ text: `CHAT HISTORY:\n${historyText}\n\n` })
