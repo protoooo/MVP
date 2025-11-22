@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
-import { chatRateLimiter } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +14,46 @@ const COUNTY_NAMES = {
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
 
-// Validate environment variables on startup
+// Simple rate limiting (in-memory)
+const RATE_LIMITS = new Map()
+
+function checkRateLimit(userId) {
+  const now = Date.now()
+  const key = userId
+  const windowMs = 60 * 1000 // 1 minute
+  const maxRequests = 20
+
+  let userLimit = RATE_LIMITS.get(key)
+
+  if (!userLimit || now > userLimit.resetTime) {
+    userLimit = {
+      count: 0,
+      resetTime: now + windowMs
+    }
+    RATE_LIMITS.set(key, userLimit)
+  }
+
+  if (userLimit.count >= maxRequests) {
+    const retryAfter = Math.ceil((userLimit.resetTime - now) / 1000)
+    return {
+      allowed: false,
+      remainingRequests: 0,
+      resetTime: userLimit.resetTime,
+      retryAfter
+    }
+  }
+
+  userLimit.count++
+  RATE_LIMITS.set(key, userLimit)
+
+  return {
+    allowed: true,
+    remainingRequests: maxRequests - userLimit.count,
+    resetTime: userLimit.resetTime,
+    retryAfter: 0
+  }
+}
+
 function validateEnvironment() {
   const required = [
     'GOOGLE_CLOUD_PROJECT_ID',
@@ -48,20 +86,17 @@ function getVertexCredentials() {
   return null
 }
 
-// Validate and sanitize API responses
 function validateApiResponse(response) {
   if (typeof response !== 'string') {
     throw new Error('Invalid response format')
   }
   
-  // Remove any potential script tags or dangerous content
   let cleaned = response
     .replace(/<script[^>]*>.*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
   
-  // Limit response length to prevent memory issues
   if (cleaned.length > 50000) {
     cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated for length]'
   }
@@ -69,19 +104,16 @@ function validateApiResponse(response) {
   return cleaned
 }
 
-// Sanitize errors for production
 function sanitizeError(error) {
   console.error('Chat API Error:', error)
   
   if (process.env.NODE_ENV === 'production') {
-    // Don't expose internal error details in production
     return 'An error occurred processing your request. Please try again.'
   }
   return error.message || 'An error occurred'
 }
 
 export async function POST(request) {
-  // Validate environment before processing
   if (!validateEnvironment()) {
     return NextResponse.json(
       { error: 'Service configuration error. Please contact support.' },
@@ -97,8 +129,8 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // SERVER-SIDE RATE LIMITING
-  const rateCheck = await chatRateLimiter.checkLimit(session.user.id, 'chat')
+  // Rate limiting
+  const rateCheck = checkRateLimit(session.user.id)
   
   if (!rateCheck.allowed) {
     const retryAfter = Math.ceil((rateCheck.resetTime - Date.now()) / 1000)
@@ -112,7 +144,7 @@ export async function POST(request) {
         status: 429,
         headers: {
           'Retry-After': retryAfter.toString(),
-          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Limit': '20',
           'X-RateLimit-Remaining': '0',
           'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
         }
@@ -131,7 +163,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Active subscription required.' }, { status: 403 })
     }
 
-    // RATE LIMITING: Check usage limits
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('plan')
@@ -142,7 +173,6 @@ export async function POST(request) {
       ? { requests: 5000, images: 500 }
       : { requests: 500, images: 50 }
 
-    // Check request limit
     if (profile.requests_used >= limits.requests) {
       return NextResponse.json({ 
         error: 'Monthly request limit reached. Please upgrade your plan or wait for the next billing cycle.' 
@@ -151,39 +181,33 @@ export async function POST(request) {
 
     const { messages, image, county } = await request.json()
     
-    // INPUT VALIDATION
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid request format' }, { status: 400 })
     }
 
-    // Validate county parameter
     if (county && !VALID_COUNTIES.includes(county)) {
       return NextResponse.json({ error: 'Invalid county parameter' }, { status: 400 })
     }
 
-    // Validate message content
     const lastUserMessage = messages[messages.length - 1]?.content || ""
     if (typeof lastUserMessage !== 'string' || lastUserMessage.length > 5000) {
       return NextResponse.json({ error: 'Invalid message format or length' }, { status: 400 })
     }
 
-    // Check image limit separately
     if (image && profile.images_used >= limits.images) {
       return NextResponse.json({ 
         error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
       }, { status: 429 })
     }
 
-    // Validate image format if provided
     if (image) {
       if (typeof image !== 'string' || !image.startsWith('data:image/')) {
         return NextResponse.json({ error: 'Invalid image format' }, { status: 400 })
       }
       
-      // Additional check for image size (already validated client-side, but double-check)
       const base64Length = image.split(',')[1]?.length || 0
       const sizeInBytes = (base64Length * 3) / 4
-      if (sizeInBytes > 5 * 1024 * 1024) { // 5MB
+      if (sizeInBytes > 5 * 1024 * 1024) {
         return NextResponse.json({ error: 'Image too large' }, { status: 400 })
       }
     }
@@ -207,7 +231,6 @@ export async function POST(request) {
     let contextText = ""
     let usedDocs = []
 
-    // ENHANCED SEARCH STRATEGY
     if (lastUserMessage.trim().length > 0 || image) {
       try {
         let searchQueries = []
@@ -273,7 +296,6 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    // CONVERSATIONAL + ACCURATE INSPECTOR-STYLE SYSTEM PROMPT
     const systemInstructionText = `You are ProtocolLM, a Food Safety Compliance Assistant for ${countyName}.
 
 Think like an FDA-trained inspector, not a lawyer. Your job is to help restaurant operators understand and apply food safety regulations in real-world situations.
@@ -463,10 +485,8 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
 
-    // VALIDATE API RESPONSE
     const validatedText = validateApiResponse(text)
 
-    // Validation check
     const hasCitations = /\*\*\[.*?,\s*Page/.test(validatedText)
     const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
     
@@ -497,7 +517,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       }
     }, {
       headers: {
-        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Limit': '20',
         'X-RateLimit-Remaining': rateCheck.remainingRequests.toString(),
         'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
       }
