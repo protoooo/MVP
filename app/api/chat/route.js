@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
-import { sanitizeString, sanitizeCounty, sanitizeImageData, sanitizeMessages } from '@/lib/sanitize'
+import { sanitizeString, sanitizeCounty, sanitizeMessages } from '@/lib/sanitize'
 import { logError, logInfo } from '@/lib/monitoring'
 
 export const dynamic = 'force-dynamic'
@@ -115,6 +115,47 @@ function sanitizeError(error) {
   return error.message || 'An error occurred'
 }
 
+// NEW: Improved image validation function
+function validateImageData(imageData) {
+  if (!imageData || typeof imageData !== 'string') {
+    throw new Error('Invalid image data format')
+  }
+
+  // Check if it's a valid data URL
+  if (!imageData.startsWith('data:image/')) {
+    throw new Error('Image must be a data URL')
+  }
+
+  // Extract MIME type
+  const mimeMatch = imageData.match(/^data:(image\/[a-z]+);base64,/)
+  if (!mimeMatch) {
+    throw new Error('Invalid image format')
+  }
+
+  const mimeType = mimeMatch[1]
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  
+  if (!allowedTypes.includes(mimeType)) {
+    throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
+  }
+
+  // Extract base64 data
+  const base64Data = imageData.split(',')[1]
+  if (!base64Data || base64Data.length < 100) {
+    throw new Error('Image data is too small or corrupted')
+  }
+
+  // Check size (rough estimate)
+  const sizeInBytes = (base64Data.length * 3) / 4
+  const maxSize = 5 * 1024 * 1024 // 5MB
+
+  if (sizeInBytes > maxSize) {
+    throw new Error('Image is too large. Maximum size is 5MB.')
+  }
+
+  return { mimeType, base64Data }
+}
+
 export async function POST(request) {
   if (!validateEnvironment()) {
     return NextResponse.json(
@@ -202,8 +243,8 @@ export async function POST(request) {
     // Sanitize county - server-side validation
     const sanitizedCounty = sanitizeCounty(county || profile.county)
 
-    // Validate and sanitize image if provided
-    let sanitizedImage = null
+    // NEW: Improved image validation
+    let validatedImage = null
     if (image) {
       if (profile.images_used >= limits.images) {
         return NextResponse.json({ 
@@ -212,8 +253,10 @@ export async function POST(request) {
       }
 
       try {
-        sanitizedImage = sanitizeImageData(image)
+        validatedImage = validateImageData(image)
+        console.log('✅ Image validated:', validatedImage.mimeType)
       } catch (e) {
+        console.error('❌ Image validation failed:', e.message)
         return NextResponse.json({ error: e.message }, { status: 400 })
       }
     }
@@ -234,15 +277,16 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    const model = 'gemini-2.5-flash'
+    const model = 'gemini-2.0-flash-exp'
     let contextText = ""
     let usedDocs = []
 
-    if (lastUserMessage.trim().length > 0 || sanitizedImage) {
+    // Document search
+    if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
         let searchQueries = []
         
-        if (sanitizedImage) {
+        if (validatedImage) {
           searchQueries = [
             'equipment maintenance repair good working order',
             'physical facilities walls floors ceilings surfaces',
@@ -461,14 +505,12 @@ answer when documents don't provide clear guidance.`
 
     userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
 
-    if (sanitizedImage && sanitizedImage.includes('base64,')) {
-      const base64Data = sanitizedImage.split(',')[1]
-      const mimeType = sanitizedImage.split(';')[0].split(':')[1]
-      
+    // NEW: Properly format image for Vertex AI
+    if (validatedImage) {
       userMessageParts.push({
         inlineData: {
-          mimeType: mimeType,
-          data: base64Data
+          mimeType: validatedImage.mimeType,
+          data: validatedImage.base64Data
         }
       })
       
@@ -488,6 +530,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       contents: [{ role: 'user', parts: userMessageParts }]
     }
 
+    console.log('🚀 Sending request to Vertex AI...')
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
@@ -505,7 +548,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
-    if (sanitizedImage) updates.images_used = (profile.images_used || 0) + 1
+    if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
     const citations = []
@@ -514,6 +557,8 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     while ((match = citationRegex.exec(validatedText)) !== null) {
       citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
+
+    console.log('✅ Request successful')
 
     return NextResponse.json({ 
       message: validatedText,
@@ -534,6 +579,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     })
 
   } catch (error) {
+    console.error('❌ Chat API Error:', error)
     return NextResponse.json({ 
       error: sanitizeError(error)
     }, { status: 500 })
