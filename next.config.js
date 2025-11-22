@@ -20,17 +20,17 @@ const nextConfig = {
   },
   
   swcMinify: true,
-  reactStrictMode: false,
+  reactStrictMode: true,
 
+  // FIXED: Don't ignore TypeScript/ESLint errors
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
-  // Add cache control headers
   async headers() {
     return [
       {
@@ -60,6 +60,14 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
           },
         ],
       },
