@@ -169,24 +169,49 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        const productionUrl = 'https://no-rap-production.up.railway.app'
+        // Always use the environment variable
+        const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+        
+        console.log('🔐 Signing up with redirect to:', redirectUrl)
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${productionUrl}/auth/callback`,
+            emailRedirectTo: redirectUrl,
             data: { county: 'washtenaw' }
           }
         })
+        
         if (error) throw error
+        
+        console.log('✅ Signup response:', data)
+        
+        // Check if email confirmation is required
         if (data.session) {
+          // User is immediately logged in (email confirmation disabled)
+          console.log('✅ User logged in immediately')
           window.location.href = '/pricing'
+        } else if (data.user && !data.session) {
+          // Email confirmation required
+          console.log('📧 Email confirmation required')
+          setMessage({ 
+            type: 'success', 
+            text: '✅ Account created! Please check your email and click the confirmation link to continue. (Check spam folder if needed)' 
+          })
         } else {
-          setMessage({ type: 'success', text: 'Account created! Check email to confirm.' })
+          setMessage({ 
+            type: 'success', 
+            text: 'Account created! Check your email to continue.' 
+          })
         }
       } else {
+        // Sign in flow
+        console.log('🔐 Signing in...')
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        
+        console.log('✅ Sign in successful')
         
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -201,9 +226,19 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error("Auth Error:", error)
-      alert(`Error: ${error.message}`)
-      setMessage({ type: 'error', text: error.message })
+      console.error("❌ Auth Error:", error)
+      
+      // Better error messages
+      let errorMessage = error.message
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.'
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Please confirm your email address before signing in. Check your inbox for the confirmation link.'
+      } else if (error.message.includes('User already registered')) {
+        errorMessage = 'This email is already registered. Please sign in instead.'
+      }
+      
+      setMessage({ type: 'error', text: errorMessage })
     } finally {
       setLoading(false)
     }
@@ -339,10 +374,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form - UPDATED */}
+        {/* RIGHT SIDE - Auth Form */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 z-20 min-h-screen">
           
-          {/* Expanded max-width to lg to give text more room */}
           <div className="w-full max-w-lg mx-auto">
             
             <div className="mb-8 lg:hidden">
@@ -352,13 +386,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* MODIFIED HEADER SECTION */}
             <div className="mb-8 text-center">
               <h2 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-3 tracking-tight whitespace-nowrap">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
               
-              {/* Added sm:whitespace-nowrap to prevent stacking on larger screens */}
               <p className="text-lg text-slate-600 font-medium w-full mx-auto leading-relaxed sm:whitespace-nowrap">
                 {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
               </p>
@@ -418,7 +450,6 @@ export default function Home() {
                 />
               </div>
               
-              {/* SUBMIT BUTTON */}
               <button 
                 type="submit" 
                 disabled={loading} 
