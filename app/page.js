@@ -168,12 +168,16 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        const productionUrl = 'https://no-rap-production.up.railway.app'
+        // FIXED: Use Railway URL for production
+        const redirectUrl = process.env.NEXT_PUBLIC_BASE_URL 
+          ? `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+          : `${window.location.origin}/auth/callback`
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${productionUrl}/auth/callback`,
+            emailRedirectTo: redirectUrl,
             data: { county: 'washtenaw' }
           }
         })
@@ -391,60 +395,4 @@ export default function Home() {
                 <input 
                   type="email" 
                   value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
-                  placeholder="you@restaurant.com" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                  minLength={6} 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
-                  placeholder="••••••••" 
-                />
-              </div>
-              
-              {/* SUBMIT BUTTON: Gradient Outline Style (No Fill) */}
-              <button 
-                type="submit" 
-                disabled={loading} 
-                className="group relative w-full rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ height: '56px' }}
-              >
-                <div className="absolute inset-0" style={prismGradient}></div>
-                <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
-                  {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
-                </div>
-              </button>
-
-              {message && (
-                <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-slate-200 text-slate-600'}`}>
-                  {message.text}
-                </div>
-              )}
-            </form>
-
-            {view === 'signup' && (
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <p className="text-center text-xs text-slate-600 mb-3 font-medium">30-day free trial • From $49/month</p>
-                
-                <button 
-                  onClick={() => router.push('/pricing')} 
-                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all duration-300 text-sm"
-                >
-                  View pricing plans
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+                  onChange={(e) => setEmail(e.
