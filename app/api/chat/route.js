@@ -62,35 +62,74 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // Using Pro model for reasoning
-    const model = 'gemini-2.5-flash' 
-    
+    const model = 'gemini-2.5-flash'
     const lastUserMessage = messages[messages.length - 1].content || ""
     let contextText = ""
     let usedDocs = []
 
-    // --- CRITICAL FIX ---
-    // We now search if there is text OR if there is an image.
+    // ENHANCED SEARCH STRATEGY
     if (lastUserMessage.trim().length > 0 || image) {
       try {
-        let searchQuery = lastUserMessage
+        let searchQueries = []
         
-        // If an image is uploaded, we MUST fetch general sanitation rules
-        // even if the user didn't type specific words.
         if (image) {
-             searchQuery = `food safety violations equipment cleanliness sanitation plumbing physical facilities ${lastUserMessage}`.trim()
+          // For images, cast a WIDE net with multiple targeted searches
+          searchQueries = [
+            'equipment maintenance repair good working order',
+            'physical facilities walls floors ceilings surfaces',
+            'plumbing water supply sewage drainage',
+            'sanitation cleaning procedures requirements',
+            'food contact surfaces utensils equipment',
+            lastUserMessage // Include user's description
+          ]
+        } else {
+          // For text queries, use the question plus key safety terms
+          searchQueries = [
+            lastUserMessage,
+            `${lastUserMessage} requirements regulations`,
+            `${lastUserMessage} violations standards`
+          ]
         }
 
-        const results = await searchDocuments(searchQuery, 20, userCounty)
+        // Perform multiple searches and combine results
+        const allResults = []
+        for (const query of searchQueries) {
+          if (query.trim()) {
+            const results = await searchDocuments(query.trim(), 10, userCounty)
+            allResults.push(...results)
+          }
+        }
+
+        // Deduplicate by content similarity and take top 30 most relevant
+        const uniqueResults = []
+        const seenContent = new Set()
         
-        if (results && results.length > 0) {
-          contextText = results.map((doc, idx) => `[DOCUMENT ${idx + 1}]
+        for (const doc of allResults) {
+          const contentKey = doc.text.substring(0, 100)
+          if (!seenContent.has(contentKey) && doc.score > 0.3) { // Minimum relevance threshold
+            seenContent.add(contentKey)
+            uniqueResults.push(doc)
+          }
+        }
+
+        // Sort by relevance and take top 30
+        const topResults = uniqueResults
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 30)
+        
+        if (topResults.length > 0) {
+          contextText = topResults.map((doc, idx) => `[DOCUMENT ${idx + 1}]
 SOURCE: ${doc.source || 'Unknown'}
 PAGE: ${doc.page || 'N/A'}
 COUNTY: ${COUNTY_NAMES[userCounty]}
+RELEVANCE: ${(doc.score * 100).toFixed(1)}%
 CONTENT: ${doc.text}`).join("\n---\n\n")
           
-          usedDocs = results.map(r => ({ document: r.source, pages: r.page }))
+          usedDocs = topResults.map(r => ({ 
+            document: r.source, 
+            pages: r.page,
+            relevance: r.score 
+          }))
         }
       } catch (searchErr) {
         console.error("Search failed:", searchErr)
@@ -99,32 +138,88 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    const systemInstructionText = `You are ProtocolLM, an expert Food Safety Compliance Officer for ${countyName}.
+    // ENHANCED SYSTEM INSTRUCTION WITH STRICT GUARDRAILS
+    const systemInstructionText = `You are ProtocolLM, a Food Safety Compliance Expert for ${countyName}.
 
-YOUR AUTHORITY:
-You have access to specific County, State (Michigan), and Federal (FDA/USDA) documents in the "RETRIEVED CONTEXT". 
+YOUR CORE MISSION:
+Provide ACCURATE food safety guidance by STRICTLY using ONLY the regulations in the "RETRIEVED CONTEXT" section below. You are a compliance assistant, NOT a general knowledge AI.
 
-CORE OBJECTIVE:
-Answer the user's question using ONLY the provided documents, but apply *logical deduction* to connect general regulations to specific scenarios.
+═══════════════════════════════════════════════════════════════════
+CRITICAL RULES - VIOLATION WILL HARM USERS:
+═══════════════════════════════════════════════════════════════════
 
-RULES OF ENGAGEMENT:
-1. **No Hallucinations:** Do not invent regulations.
-2. **Logical Inference (The "Inspector" Rule):** 
-   - Users will ask about specific scenarios (e.g., "cracked pipe", "broken tile", "dirty handle").
-   - The documents might not say "cracked pipe." They might say "Plumbing must be maintained in good repair."
-   - **YOU MUST** bridge this gap. State the general rule found in the document and explain how it applies to the user's specific situation.
-   - *Example:* "While the code does not explicitly mention 'cracked PVC,' [Document A, Page 10] states that 'plumbing systems shall be maintained in good repair.' Therefore, a cracked pipe is likely a violation."
-3. **Citation Requirement:** You must support every claim with a citation in this format: **[Document Name, Page X]**.
-4. **Unknowns:** If the context contains absolutely NO principles relevant to the situation (e.g., nothing about plumbing, maintenance, or sanitation), state: "I cannot find specific regulations regarding this in the provided ${countyName} documents."
+1. **ZERO HALLUCINATIONS POLICY**
+   - You may ONLY reference regulations that appear in RETRIEVED CONTEXT
+   - If you cannot find relevant regulations, you MUST say so explicitly
+   - NEVER invent section numbers, temperatures, or requirements
+   - NEVER assume regulations based on "common sense" or "general knowledge"
 
-RETRIEVED CONTEXT:
-${contextText || 'No matching documents found.'}
-`
+2. **EVIDENCE-BASED RESPONSES ONLY**
+   - Every statement must trace back to RETRIEVED CONTEXT
+   - Use direct quotes when possible, with citations
+   - If context is ambiguous, acknowledge the ambiguity
+   - If multiple documents conflict, present both viewpoints
+
+3. **MANDATORY CITATION FORMAT**
+   - Format: **[Document Name, Page X]**
+   - EVERY claim needs a citation
+   - Multiple claims from same source = multiple citations
+   - No citation = Don't make the claim
+
+4. **LOGICAL INFERENCE GUIDELINES** (The "Inspector's Lens")
+   - General principles CAN apply to specific scenarios
+   - Example: "Equipment must be maintained" → applies to cracked pipes
+   - BUT you must explicitly connect the dots:
+     ✓ GOOD: "While not specifically mentioning cracked pipes, [Doc A] states 'plumbing must be maintained in good repair,' which would apply to this situation."
+     ✗ BAD: "Cracked pipes violate health codes." (too vague, no source)
+
+5. **WHEN UNCERTAIN**
+   - Use phrases like:
+     - "The provided regulations do not directly address..."
+     - "Based on the general principle in [Doc X]..."
+     - "I cannot find specific guidance on this in the ${countyName} documents."
+     - "You should verify this with your local health inspector."
+   - ALWAYS recommend official verification for critical decisions
+
+6. **IMAGE ANALYSIS PROTOCOL**
+   - Describe what you observe in the image
+   - Match observations to general regulatory principles
+   - Clearly label when you're applying general standards vs. specific rules
+   - Acknowledge if image quality limits assessment
+
+7. **CONFIDENCE INDICATORS**
+   - HIGH confidence: Direct, specific regulation found
+   - MEDIUM confidence: General principle applies
+   - LOW confidence: No clear guidance found
+   - Include confidence level in your response when appropriate
+
+═══════════════════════════════════════════════════════════════════
+RETRIEVED CONTEXT (YOUR ONLY KNOWLEDGE SOURCE):
+═══════════════════════════════════════════════════════════════════
+
+${contextText || 'ERROR: No regulations retrieved. You MUST inform the user that no relevant documents were found.'}
+
+═══════════════════════════════════════════════════════════════════
+RESPONSE TEMPLATE:
+═══════════════════════════════════════════════════════════════════
+
+1. [If image: Describe observations]
+2. State relevant regulations with citations
+3. Apply regulations to user's specific situation
+4. Indicate confidence level
+5. Recommend official verification for critical matters
+
+Remember: A "No, I don't have that information" is INFINITELY better than a wrong answer that leads to violations or closure.`
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
       systemInstruction: {
         parts: [{ text: systemInstructionText }]
+      },
+      generationConfig: {
+        temperature: 0.1, // LOWERED from default - reduces creativity/hallucination
+        topP: 0.8,        // More focused sampling
+        topK: 20          // Reduced token diversity
       }
     })
 
@@ -132,7 +227,7 @@ ${contextText || 'No matching documents found.'}
     
     if (messages.length > 1) {
       const historyText = messages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
-      userMessageParts.push({ text: `CHAT HISTORY:\n${historyText}\n\n` })
+      userMessageParts.push({ text: `CONVERSATION HISTORY:\n${historyText}\n\n` })
     }
 
     userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
@@ -147,7 +242,17 @@ ${contextText || 'No matching documents found.'}
           data: base64Data
         }
       })
-      userMessageParts.push({ text: "Analyze this image. Identify any issues based on the general sanitation, equipment maintenance, and physical facility standards found in the RETRIEVED CONTEXT." })
+      
+      userMessageParts.push({ 
+        text: `INSTRUCTIONS FOR IMAGE ANALYSIS:
+1. First, describe what you see in the image objectively
+2. Identify potential compliance issues based ONLY on regulations in RETRIEVED CONTEXT
+3. For each issue, cite the specific regulation
+4. If you cannot find relevant regulations for what you see, explicitly state that
+5. Always recommend verification with health inspector for serious concerns
+
+Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.` 
+      })
     }
 
     const requestPayload = {
@@ -157,6 +262,15 @@ ${contextText || 'No matching documents found.'}
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
+
+    // VALIDATION CHECK: Ensure response contains citations for factual claims
+    const hasCitations = /\*\*\[.*?,\s*Page/.test(text)
+    const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(text)
+    
+    if (makesFactualClaims && !hasCitations && !text.includes('cannot find') && !text.includes('do not directly address')) {
+      // Response makes claims but has no citations - flag this
+      console.warn('⚠️ Response lacks required citations:', text.substring(0, 200))
+    }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (image) updates.images_used = (profile.images_used || 0) + 1
@@ -173,7 +287,8 @@ ${contextText || 'No matching documents found.'}
       message: text,
       county: userCounty,
       citations: citations,
-      documentsSearched: usedDocs.length
+      documentsSearched: usedDocs.length,
+      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient' // Quality indicator
     })
 
   } catch (error) {
