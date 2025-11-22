@@ -4,14 +4,6 @@ import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// Get CSRF token from cookies
-function getCsrfToken() {
-  if (typeof document === 'undefined') return null
-  const cookies = document.cookie.split(';')
-  const csrfCookie = cookies.find(c => c.trim().startsWith('csrf-token='))
-  return csrfCookie ? csrfCookie.split('=')[1] : null
-}
-
 export default function Pricing() {
   const [loadingId, setLoadingId] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -38,21 +30,11 @@ export default function Pricing() {
       return
     }
 
-    // SECURITY: Get CSRF token
-    const csrfToken = getCsrfToken()
-    if (!csrfToken) {
-      console.warn('CSRF token not found')
-      alert('Session error. Please refresh the page.')
-      setLoadingId(null)
-      return
-    }
-
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken,
         },
         credentials: 'include',
         body: JSON.stringify({
