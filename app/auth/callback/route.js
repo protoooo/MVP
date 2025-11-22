@@ -22,7 +22,6 @@ export async function GET(request) {
     if (session) {
       console.log('✅ Session created for user:', session.user.email)
       
-      // Get county from user metadata (set during signup)
       const county = session.user.user_metadata?.county || 'washtenaw'
       
       // Use upsert to avoid race condition
@@ -35,6 +34,8 @@ export async function GET(request) {
           is_subscribed: false,
           requests_used: 0,
           images_used: 0,
+          accepted_terms: false,
+          accepted_privacy: false,
           updated_at: new Date().toISOString()
         }, { 
           onConflict: 'id',
@@ -45,28 +46,32 @@ export async function GET(request) {
         console.error('⚠️ Profile upsert error:', profileError)
       }
 
-      // Check if user has subscription
+      // Check if user has accepted terms
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_subscribed')
+        .select('is_subscribed, accepted_terms, accepted_privacy')
         .eq('id', session.user.id)
         .single()
 
-      // Always use environment variable for redirects
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
-      // Redirect based on subscription status
+      // If haven't accepted terms, redirect to terms page
+      if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+        console.log('✅ New user, redirecting to terms acceptance')
+        return NextResponse.redirect(`${baseUrl}/accept-terms`)
+      }
+
+      // If have subscription, go to documents
       if (profile?.is_subscribed) {
         console.log('✅ User has subscription, redirecting to /documents')
         return NextResponse.redirect(`${baseUrl}/documents`)
       } else {
-        console.log('✅ New user, redirecting to /pricing')
+        console.log('✅ User needs subscription, redirecting to /pricing')
         return NextResponse.redirect(`${baseUrl}/pricing`)
       }
     }
   }
 
-  // If no code or session, redirect to home
   console.log('⚠️ No code or session, redirecting to home')
   return NextResponse.redirect(process.env.NEXT_PUBLIC_BASE_URL)
 }
