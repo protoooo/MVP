@@ -283,12 +283,26 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
 
+    // VALIDATION LAYER - Import at top: import { ResponseValidator } from '@/lib/responseValidator'
+    // const validator = new ResponseValidator()
+    // const validationResult = validator.validate(text, contextText)
+    
+    // if (!validationResult.isValid) {
+    //   console.warn('⚠️ Response validation issues:', validationResult.issues)
+    //   // Optionally amend response with warnings
+    //   // text = validator.amendResponse(text, validationResult)
+    // }
+    
+    // const confidenceIndicator = validator.generateConfidenceMessage(validationResult)
+
     return NextResponse.json({ 
       message: text,
       county: userCounty,
       citations: citations,
       documentsSearched: usedDocs.length,
-      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient' // Quality indicator
+      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient',
+      // confidence: validationResult.confidenceLevel, // Uncomment when validator active
+      // confidenceMessage: confidenceIndicator        // Uncomment when validator active
     })
 
   } catch (error) {
