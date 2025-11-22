@@ -20,7 +20,7 @@ const nextConfig = {
   },
   
   swcMinify: true,
-  reactStrictMode: false, 
+  reactStrictMode: false,
 
   typescript: {
     ignoreBuildErrors: true,
@@ -28,6 +28,42 @@ const nextConfig = {
   
   eslint: {
     ignoreDuringBuilds: true,
+  },
+
+  // Add cache control headers
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+        ],
+      },
+    ];
   },
 
   env: {
@@ -41,8 +77,6 @@ const nextConfig = {
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
-  
-  // REMOVED: output: 'standalone' - this was breaking the deployment
 }
 
 export default nextConfig;
