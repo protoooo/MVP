@@ -63,7 +63,7 @@ export async function POST(request) {
     })
 
     // Using Pro model for reasoning
-    const model = 'gemini-1.5-pro' 
+    const model = 'gemini-2.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content || ""
     let contextText = ""
