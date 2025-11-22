@@ -8,4 +8,4 @@ cmds = ['npm ci --legacy-peer-deps || npm install --legacy-peer-deps']
 cmds = ['npm run build']
 
 [start]
-cmd = 'npm start'
+cmd = 'HOSTNAME="0.0.0.0" node .next/standalone/server.js'
