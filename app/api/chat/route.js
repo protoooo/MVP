@@ -5,6 +5,7 @@ import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 import { sanitizeString, sanitizeCounty, sanitizeMessages } from '@/lib/sanitize'
 import { logError, logInfo } from '@/lib/monitoring'
+import { checkRateLimit } from '@/lib/redis-rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,46 +16,6 @@ const COUNTY_NAMES = {
 }
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
-
-// Simple rate limiting (in-memory)
-const RATE_LIMITS = new Map()
-
-function checkRateLimit(userId) {
-  const now = Date.now()
-  const key = userId
-  const windowMs = 60 * 1000 // 1 minute
-  const maxRequests = 20
-
-  let userLimit = RATE_LIMITS.get(key)
-
-  if (!userLimit || now > userLimit.resetTime) {
-    userLimit = {
-      count: 0,
-      resetTime: now + windowMs
-    }
-    RATE_LIMITS.set(key, userLimit)
-  }
-
-  if (userLimit.count >= maxRequests) {
-    const retryAfter = Math.ceil((userLimit.resetTime - now) / 1000)
-    return {
-      allowed: false,
-      remainingRequests: 0,
-      resetTime: userLimit.resetTime,
-      retryAfter
-    }
-  }
-
-  userLimit.count++
-  RATE_LIMITS.set(key, userLimit)
-
-  return {
-    allowed: true,
-    remainingRequests: maxRequests - userLimit.count,
-    resetTime: userLimit.resetTime,
-    retryAfter: 0
-  }
-}
 
 function validateEnvironment() {
   const required = [
@@ -115,18 +76,15 @@ function sanitizeError(error) {
   return error.message || 'An error occurred'
 }
 
-// NEW: Improved image validation function
 function validateImageData(imageData) {
   if (!imageData || typeof imageData !== 'string') {
     throw new Error('Invalid image data format')
   }
 
-  // Check if it's a valid data URL
   if (!imageData.startsWith('data:image/')) {
     throw new Error('Image must be a data URL')
   }
 
-  // Extract MIME type
   const mimeMatch = imageData.match(/^data:(image\/[a-z]+);base64,/)
   if (!mimeMatch) {
     throw new Error('Invalid image format')
@@ -139,13 +97,11 @@ function validateImageData(imageData) {
     throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
   }
 
-  // Extract base64 data
   const base64Data = imageData.split(',')[1]
   if (!base64Data || base64Data.length < 100) {
     throw new Error('Image data is too small or corrupted')
   }
 
-  // Check size (rough estimate)
   const sizeInBytes = (base64Data.length * 3) / 4
   const maxSize = 5 * 1024 * 1024 // 5MB
 
@@ -172,11 +128,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Rate limiting
-  const rateCheck = checkRateLimit(session.user.id)
+  // NEW: Redis-backed rate limiting
+  const rateCheck = await checkRateLimit(session.user.id, 'chat')
   
   if (!rateCheck.allowed) {
-    const retryAfter = Math.ceil((rateCheck.resetTime - Date.now()) / 1000)
     return NextResponse.json(
       { 
         error: 'Rate limit exceeded. Please wait before sending another message.',
@@ -186,7 +141,7 @@ export async function POST(request) {
       { 
         status: 429,
         headers: {
-          'Retry-After': retryAfter.toString(),
+          'Retry-After': rateCheck.retryAfter.toString(),
           'X-RateLimit-Limit': '20',
           'X-RateLimit-Remaining': '0',
           'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
@@ -222,7 +177,6 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
-    // Parse and sanitize request body
     let requestBody
     try {
       requestBody = await request.json()
@@ -232,7 +186,6 @@ export async function POST(request) {
 
     const { messages, image, county } = requestBody
     
-    // Sanitize and validate all inputs
     let sanitizedMessages
     try {
       sanitizedMessages = sanitizeMessages(messages)
@@ -240,10 +193,8 @@ export async function POST(request) {
       return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
-    // Sanitize county - server-side validation
     const sanitizedCounty = sanitizeCounty(county || profile.county)
 
-    // NEW: Improved image validation
     let validatedImage = null
     if (image) {
       if (profile.images_used >= limits.images) {
@@ -281,7 +232,6 @@ export async function POST(request) {
     let contextText = ""
     let usedDocs = []
 
-    // Document search
     if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
         let searchQueries = []
@@ -505,7 +455,6 @@ answer when documents don't provide clear guidance.`
 
     userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
 
-    // NEW: Properly format image for Vertex AI
     if (validatedImage) {
       userMessageParts.push({
         inlineData: {
