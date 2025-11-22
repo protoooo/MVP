@@ -6,7 +6,7 @@ import { rateLimiter } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-// Simple admin check - you should add proper admin role checking
+// CRITICAL: Add your admin email here
 async function isAdmin(supabase, userId) {
   const { data } = await supabase
     .from('user_profiles')
@@ -14,10 +14,11 @@ async function isAdmin(supabase, userId) {
     .eq('id', userId)
     .single()
   
-  // Add your admin emails here
+  // ⚠️ CHANGE THIS TO YOUR ACTUAL EMAIL ADDRESS ⚠️
   const adminEmails = [
-    'your-admin@email.com',
-    // Add more admin emails
+    'austinrnorthrop@gmail.com',  // ← PUT YOUR EMAIL HERE
+    // Add more admin emails if needed:
+    // 'another-admin@example.com',
   ]
   
   return adminEmails.includes(data?.email)
