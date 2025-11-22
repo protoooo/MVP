@@ -1,143 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// Particle Background Component (same as before)
+// OPTIMIZED: Lightweight background that won't crash Safari
 const ParticleBackground = () => {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    let animationFrameId
-
-    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
-    const particleCount = 60 
-    const connectionDistance = 100 
-    const mouseDistance = 150
-    const particles = []
-
-    let mouse = { x: null, y: null }
-
-    function initParticles() {
-      particles.length = 0
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
-      }
-    }
-
-    const handleResize = () => {
-      if (canvas.parentElement) {
-        canvas.width = canvas.parentElement.offsetWidth
-        canvas.height = canvas.parentElement.offsetHeight
-        initParticles()
-      }
-    }
-
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = event.clientX - rect.left
-      mouse.y = event.clientY - rect.top
-    }
-
-    const handleMouseLeave = () => {
-      mouse.x = null
-      mouse.y = null
-    }
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * (canvas.width || window.innerWidth)
-        this.y = Math.random() * (canvas.height || window.innerHeight)
-        this.vx = (Math.random() - 0.5) * 0.5
-        this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1.5 
-        this.color = colors[Math.floor(Math.random() * colors.length)]
-      }
-
-      update() {
-        this.x += this.vx
-        this.y += this.vy
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1
-
-        if (mouse.x != null) {
-          let dx = mouse.x - this.x
-          let dy = mouse.y - this.y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < mouseDistance) {
-            const forceDirectionX = dx / distance
-            const forceDirectionY = dy / distance
-            const force = (mouseDistance - distance) / mouseDistance
-            this.x -= (forceDirectionX * force * 0.6)
-            this.y -= (forceDirectionY * force * 0.6)
-          }
-        }
-      }
-
-      draw() {
-        ctx.fillStyle = this.color
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update()
-        particles[i].draw()
-        for (let j = i; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x
-          let dy = particles[i].y - particles[j].y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < connectionDistance) {
-            let opacity = 1 - (distance / connectionDistance)
-            ctx.globalAlpha = opacity * 0.4 
-            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
-            gradient.addColorStop(0, particles[i].color)
-            gradient.addColorStop(1, particles[j].color)
-            ctx.strokeStyle = gradient
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-            ctx.globalAlpha = 1.0
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(animate)
-    }
-
-    handleResize()
-    initParticles()
-    animate()
-
-    window.addEventListener('resize', handleResize)
-    canvas.addEventListener('mousemove', handleMouseMove)
-    canvas.addEventListener('mouseleave', handleMouseLeave)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      if (canvas) {
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('mouseleave', handleMouseLeave)
-      }
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
-
   return (
-    <canvas 
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-70"
-    />
+    <div className="absolute inset-0 w-full h-full overflow-hidden z-0 opacity-40">
+       {/* Static gradient orbs instead of heavy canvas animation */}
+       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_rgba(217,119,6,0.1),transparent_50%)]"></div>
+       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-100/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-amber-100/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+       <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-sky-100/30 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+    </div>
   )
 }
 
@@ -251,6 +127,21 @@ export default function Home() {
         }
         .animate-draw {
           animation: drawBorder 2.5s ease-out forwards;
+        }
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
         }
       `}</style>
 
