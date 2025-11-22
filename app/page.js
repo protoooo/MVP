@@ -168,7 +168,9 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
+        // Use Railway URL in production
+        const productionUrl = 'https://no-rap-production.up.railway.app'
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -177,16 +179,26 @@ export default function Home() {
             data: { county: 'washtenaw' }
           }
         })
-        if (error) throw error
-        if (data.session) {
-          window.location.href = '/pricing'
-        } else {
-          setMessage({ type: 'success', text: 'Account created! Check email to confirm.' })
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        
         if (error) throw error
         
+        if (data.session) {
+          // User is immediately logged in (email confirmation disabled)
+          window.location.href = '/pricing'
+        } else {
+          // Email confirmation required
+          setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
+        }
+      } else {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        })
+        
+        if (error) throw error
+        
+        // Check subscription status
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
