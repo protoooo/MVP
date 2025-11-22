@@ -6,17 +6,42 @@ import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Validate environment on app startup
+if (typeof window === 'undefined') {
+  const { validateEnvOnStartup } = require('@/lib/validate-env');
+  validateEnvOnStartup();
+}
+
 export default function RootLayout({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const handleError = (event) => {
       console.error('Global error:', event.error);
+      
+      // Send to monitoring
+      if (typeof window !== 'undefined' && window.Sentry) {
+        window.Sentry.captureException(event.error);
+      }
+      
       setError(event.error);
     };
 
+    const handleUnhandledRejection = (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      
+      if (typeof window !== 'undefined' && window.Sentry) {
+        window.Sentry.captureException(event.reason);
+      }
+    };
+
     window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, []);
 
   if (error) {
