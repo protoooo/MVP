@@ -369,8 +369,18 @@ export default function Home() {
             </div>
           </div>
 
-          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 text-center lg:text-left z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            © 2025 protocolLM. All rights reserved.
+          {/* UPDATED FOOTER WITH LINKS */}
+          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-2">
+              <a href="/privacy" className="hover:text-slate-600 transition">Privacy Policy</a>
+              <span>•</span>
+              <a href="/terms" className="hover:text-slate-600 transition">Terms of Service</a>
+              <span>•</span>
+              <a href="/contact" className="hover:text-slate-600 transition">Contact</a>
+            </div>
+            <div className="text-center lg:text-left">
+              © 2025 protocolLM. All rights reserved.
+            </div>
           </div>
         </div>
 
