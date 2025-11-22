@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- Particle Background ---
+// --- Particle Background (unchanged) ---
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -141,8 +141,6 @@ const ParticleBackground = () => {
   )
 }
 
-// --- Main Dashboard ---
-
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -168,9 +166,12 @@ export default function DocumentsPage() {
   const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [viewingPdf, setViewingPdf] = useState(null)
+  const [loadingChats, setLoadingChats] = useState(true)
+  const [savingChat, setSavingChat] = useState(false)
   
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
+  const saveTimeoutRef = useRef(null)
   const supabase = createClientComponentClient()
   const router = useRouter()
 
@@ -190,22 +191,32 @@ export default function DocumentsPage() {
     }
   }, [userCounty])
 
+  // Load chat history from server
   useEffect(() => {
     if (session) {
-      const stored = localStorage.getItem(`chat_history_${session.user.id}`)
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored)
-          if (Array.isArray(parsed)) {
-            setChatHistory(parsed)
-          }
-        } catch (e) {
-          console.error('Invalid chat history data')
-          localStorage.removeItem(`chat_history_${session.user.id}`)
-        }
-      }
+      loadChatHistory()
     }
   }, [session])
+
+  const loadChatHistory = async () => {
+    try {
+      setLoadingChats(true)
+      const response = await fetch('/api/chat-history', {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setChatHistory(data.chats || [])
+      } else {
+        console.error('Failed to load chat history')
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error)
+    } finally {
+      setLoadingChats(false)
+    }
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -243,39 +254,55 @@ export default function DocumentsPage() {
     }
   }
 
-  const saveCurrentChat = () => {
-    if (!session || messages.length <= 1) return
+  // Debounced save to server
+  const saveCurrentChat = async () => {
+    if (!session || messages.length <= 1 || savingChat) return
 
-    try {
-      const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'New Chat'
-      const chat = {
-        id: currentChatId || Date.now().toString(),
-        title: chatTitle,
-        messages: messages,
-        timestamp: Date.now(),
-        county: userCounty
-      }
+    clearTimeout(saveTimeoutRef.current)
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSavingChat(true)
+        const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'New Chat'
+        
+        const response = await fetch('/api/chat-history', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            chatId: currentChatId,
+            title: chatTitle,
+            messages: messages,
+            county: userCounty
+          })
+        })
 
-      const existingIndex = chatHistory.findIndex(c => c.id === chat.id)
-      let newHistory = [...chatHistory]
-
-      if (existingIndex >= 0) newHistory[existingIndex] = chat
-      else newHistory = [chat, ...newHistory].slice(0, 50)
-
-      localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
-      setChatHistory(newHistory)
-      setCurrentChatId(chat.id)
-    } catch (e) {
-      if (e.name === 'QuotaExceededError') {
-        const newHistory = chatHistory.slice(0, 25)
-        try {
-          localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
-          setChatHistory(newHistory)
-        } catch (retryError) {
-          console.error('Storage error:', retryError)
+        if (response.ok) {
+          const data = await response.json()
+          setCurrentChatId(data.chat.id)
+          
+          // Update local chat history
+          setChatHistory(prev => {
+            const existing = prev.findIndex(c => c.id === data.chat.id)
+            if (existing >= 0) {
+              const updated = [...prev]
+              updated[existing] = data.chat
+              return updated
+            } else {
+              return [data.chat, ...prev].slice(0, 50)
+            }
+          })
+        } else {
+          console.error('Failed to save chat')
         }
+      } catch (error) {
+        console.error('Error saving chat:', error)
+      } finally {
+        setSavingChat(false)
       }
-    }
+    }, 1000) // Debounce for 1 second
   }
 
   const loadChat = (chat) => {
@@ -298,12 +325,26 @@ export default function DocumentsPage() {
     setIsSidebarOpen(false)
   }
 
-  const deleteChat = (chatId, e) => {
+  const deleteChat = async (chatId, e) => {
     e.stopPropagation()
-    const newHistory = chatHistory.filter(c => c.id !== chatId)
-    setChatHistory(newHistory)
-    localStorage.setItem(`chat_history_${session.user.id}`, JSON.stringify(newHistory))
-    if (currentChatId === chatId) startNewChat()
+    
+    try {
+      const response = await fetch(`/api/chat-history?chatId=${chatId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        setChatHistory(prev => prev.filter(c => c.id !== chatId))
+        if (currentChatId === chatId) {
+          startNewChat()
+        }
+      } else {
+        console.error('Failed to delete chat')
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error)
+    }
   }
 
   useEffect(() => {
@@ -348,6 +389,13 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  // Auto-save when messages change
+  useEffect(() => {
+    if (messages.length > 1) {
+      saveCurrentChat()
+    }
   }, [messages])
 
   const handleCountyChange = async (newCounty) => {
@@ -508,8 +556,6 @@ export default function DocumentsPage() {
           imagesUsed: image ? prev.imagesUsed + 1 : prev.imagesUsed
         }))
       }
-
-      setTimeout(saveCurrentChat, 200)
     } catch (err) {
       console.error('Chat error:', err)
       setMessages(prev => [...prev, { 
@@ -648,33 +694,34 @@ export default function DocumentsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
-            {chatHistory.length === 0 && (
+            {loadingChats ? (
+              <div className="text-center text-slate-400 text-sm mt-4">Loading chats...</div>
+            ) : chatHistory.length === 0 ? (
               <p className="text-slate-400 text-sm text-center mt-4">No chat history yet.</p>
-            )}
-
-            {chatHistory.map(chat => (
-              <div
-                key={chat.id}
-                onClick={() => loadChat(chat)}
-                className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
-              >
-                <div className="flex justify-between items-start">
-                  <p className="font-medium text-sm text-slate-700 truncate pr-2 flex-1">{chat.title}</p>
-                  <button
-                    onClick={(e) => deleteChat(chat.id, e)}
-                    className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                  >
-                    ✕
-                  </button>
+            ) : (
+              chatHistory.map(chat => (
+                <div
+                  key={chat.id}
+                  onClick={() => loadChat(chat)}
+                  className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
+                >
+                  <div className="flex justify-between items-start">
+                    <p className="font-medium text-sm text-slate-700 truncate pr-2 flex-1">{chat.title}</p>
+                    <button
+                      onClick={(e) => deleteChat(chat.id, e)}
+                      className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {new Date(chat.updated_at).toLocaleDateString()}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
-                  {new Date(chat.timestamp).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
-          {/* Combined Sidebar Footer with "Need Help?" Link */}
           <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm" style={prismGradient}>
@@ -705,7 +752,6 @@ export default function DocumentsPage() {
               </button>
             </div>
 
-            {/* ADDED SECTION */}
             <div className="mt-2 pt-2 border-t border-slate-200/60">
               <a 
                 href="/contact" 
@@ -851,8 +897,17 @@ export default function DocumentsPage() {
                 Send
               </button>
             </div>
-            <div className="text-center mt-2">
+            <div className="text-center mt-2 flex items-center justify-center gap-2">
               <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+              {savingChat && (
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </span>
+              )}
             </div>
           </form>
         </div>
