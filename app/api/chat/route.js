@@ -62,9 +62,7 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // ✅ Use the Evergreen Alias (No numbers). 
-    // This forces Google to give you the active version for us-central1.
-    const model = 'gemini-1.5-flash' 
+    const model = 'gemini-2.5-flash' 
     
     const lastUserMessage = messages[messages.length - 1].content
     let contextText = ""
