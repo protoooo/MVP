@@ -4,15 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// Get CSRF token from cookies
-function getCsrfToken() {
-  if (typeof document === 'undefined') return null
-  const cookies = document.cookie.split(';')
-  const csrfCookie = cookies.find(c => c.trim().startsWith('csrf-token='))
-  return csrfCookie ? csrfCookie.split('=')[1] : null
-}
-
-// --- Particle Background ---
+// Particle Background Component (same as before)
 const ParticleBackground = () => {
   const canvasRef = useRef(null)
 
@@ -149,8 +141,7 @@ const ParticleBackground = () => {
   )
 }
 
-// --- MAIN COMPONENT ---
-
+// MAIN COMPONENT
 export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -175,17 +166,9 @@ export default function Home() {
     setLoading(true)
     setMessage(null)
 
-    // SECURITY: Get CSRF token
-    const csrfToken = getCsrfToken()
-    if (!csrfToken) {
-      console.warn('CSRF token not found, refreshing page...')
-      window.location.reload()
-      return
-    }
-
     try {
       if (view === 'signup') {
-        const productionUrl = 'https://no-rap-production.up.railway.app'
+        const productionUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -316,7 +299,7 @@ export default function Home() {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Verify compliance with a photo</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Snap a picture of equipment or prep areas. Our system checks it against County, State, and Federal regulations.</p>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Snap a picture of equipment or prep areas. Our system checks it against regulations.</p>
                     </div>
                   </div>
                 </TracingCard>
@@ -376,7 +359,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* TOGGLE with Gradient Outline */}
+            {/* TOGGLE */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
                 <button 
