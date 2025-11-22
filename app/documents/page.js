@@ -766,4 +766,83 @@ export default function DocumentsPage() {
                   <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold" style={prismGradient}>
                     LM
                   </div>
-                  <span className="font-semibold text-xs text-
+                  <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
+          
+          {image && (
+            <div className="max-w-4xl mx-auto mb-3 px-1">
+              <div className="relative inline-block">
+                <img src={image} alt="Preview" className="h-16 w-auto rounded-lg border border-slate-200 shadow-sm" />
+                <button 
+                  onClick={() => setImage(null)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+            <div className="flex items-end gap-2 md:gap-3">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                disabled={isLoading}
+                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                  image 
+                    ? 'text-white shadow-md' 
+                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+                style={image ? prismGradient : {}}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+              </button>
+
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={image ? "Ask about this image..." : "Ask a question..."}
+                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all text-sm"
+                disabled={isLoading}
+                maxLength={5000}
+              />
+
+              <button
+                type="submit"
+                disabled={isLoading || !canSend}
+                className="h-[48px] px-4 text-slate-900 font-bold hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                Send
+              </button>
+            </div>
+            <div className="text-center mt-2">
+              <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
