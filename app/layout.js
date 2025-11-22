@@ -5,14 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "protocol LM | Food Safety Compliance",
-  description: "Professional food safety compliance tool for Washtenaw County restaurants.",
-  manifest: "/manifest.json",
-  themeColor: "#0f172a",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "protocol LM",
-  },
+  description: "Professional food safety compliance tool",
 };
 
 export default function RootLayout({ children }) {
@@ -21,12 +14,29 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <meta name="theme-color" content="#0f172a" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </body>
     </html>
   );
+}
+
+// Add this error boundary
+function ErrorBoundary({ children }) {
+  if (typeof window === 'undefined') return children;
+  
+  try {
+    return children;
+  } catch (error) {
+    return (
+      <div style={{ padding: '40px', fontFamily: 'monospace' }}>
+        <h1>App Crashed</h1>
+        <pre>{error.message}</pre>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  }
 }
