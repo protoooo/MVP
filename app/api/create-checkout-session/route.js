@@ -29,8 +29,8 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 })
   }
 
-  let origin = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-  origin = origin.replace(/\/$/, '')
+  // FIXED: Always use Railway URL
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://no-rap-production.up.railway.app'
 
   try {
     const stripeSession = await stripe.checkout.sessions.create({
@@ -40,7 +40,7 @@ export async function POST(request) {
       success_url: `${origin}/documents?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
       subscription_data: { 
-        trial_period_days: 30, // ✅ UPDATED TO 30 DAYS
+        trial_period_days: 30,
         metadata: {
           userId: session.user.id,
           plan: plan
