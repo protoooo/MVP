@@ -43,7 +43,7 @@ export default function DocumentsPage() {
       setMessages([
         { 
           role: 'assistant', 
-          content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}. Upload a photo or ask a question.`,
+          content: `ProtocolLM active. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
           citations: []
         }
       ])
@@ -169,7 +169,7 @@ export default function DocumentsPage() {
     setMessages([
       { 
         role: 'assistant',
-        content: `Welcome to protocolLM for ${COUNTY_NAMES[userCounty]}.`,
+        content: `ProtocolLM active. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
     ])
@@ -332,7 +332,7 @@ export default function DocumentsPage() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-white border border-slate-300 text-slate-700 hover:border-orange-500 hover:text-orange-600 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
+              className="inline-flex items-center bg-slate-100 border border-slate-200 text-slate-900 hover:border-slate-900 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -461,7 +461,7 @@ export default function DocumentsPage() {
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans">
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-900">Select Jurisdiction</h3>
               <button 
@@ -477,7 +477,7 @@ export default function DocumentsPage() {
                 key={key}
                 onClick={() => handleCountyChange(key)}
                 disabled={isUpdatingCounty}
-                className="w-full text-left p-4 border border-slate-200 rounded-lg mb-2 hover:border-orange-500 hover:bg-orange-50 transition-all text-slate-700 font-medium disabled:opacity-50"
+                className="w-full text-left p-4 border border-slate-200 rounded-none mb-2 hover:border-slate-900 hover:bg-slate-50 transition-all text-slate-700 font-bold disabled:opacity-50"
               >
                 {name}
               </button>
@@ -511,22 +511,22 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* --- SIDEBAR (Navy/Dark Theme) --- */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col z-40 relative overflow-hidden`}>
+      {/* --- SIDEBAR (Light Theme / Enterprise Clean) --- */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
         
         <div className="relative z-10 flex flex-col h-full">
-          <div className="p-6 flex-shrink-0 border-b border-slate-800">
+          <div className="p-6 flex-shrink-0 border-b border-slate-200">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-normal text-slate-400">LM</span></h1>
-                <div className="h-1 w-12 bg-orange-600 rounded-full mt-1"></div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900">protocol<span className="font-normal text-slate-500">LM</span></h1>
+                <div className="h-0.5 w-full bg-slate-900 mt-1"></div>
               </div>
-              <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
+              <button className="md:hidden text-slate-400 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
 
             <button
               onClick={() => setShowCountySelector(true)}
-              className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-lg mb-6 flex items-center justify-between transition-colors border border-slate-700 shadow-sm"
+              className="w-full bg-white hover:bg-slate-50 text-slate-700 p-3 rounded-none border border-slate-300 mb-4 flex items-center justify-between transition-colors shadow-sm"
             >
               <span className="text-sm font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
@@ -534,34 +534,34 @@ export default function DocumentsPage() {
 
             <button
               onClick={startNewChat}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold p-3 rounded-none transition-all flex items-center justify-center gap-2 shadow-sm text-sm"
             >
               <span>+</span> New Chat
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar pt-4">
             {loadingChats ? (
-              <div className="text-center text-slate-500 text-sm mt-4">Loading chats...</div>
+              <div className="text-center text-slate-400 text-xs mt-4">Loading chats...</div>
             ) : chatHistory.length === 0 ? (
-              <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
+              <p className="text-slate-400 text-xs text-center mt-4">No chat history.</p>
             ) : (
               chatHistory.map(chat => (
                 <div
                   key={chat.id}
                   onClick={() => loadChat(chat)}
-                  className="p-3 bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-slate-700 rounded-lg mb-2 group cursor-pointer transition-all"
+                  className="p-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-none mb-2 group cursor-pointer transition-all shadow-sm"
                 >
                   <div className="flex justify-between items-start">
-                    <p className="font-medium text-sm text-slate-300 truncate pr-2 flex-1 group-hover:text-white">{chat.title}</p>
+                    <p className="font-bold text-xs text-slate-700 truncate pr-2 flex-1 group-hover:text-slate-900">{chat.title}</p>
                     <button
                       onClick={(e) => deleteChat(chat.id, e)}
-                      className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                      className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                     >
                       ✕
                     </button>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-[10px] text-slate-400 mt-1 font-mono">
                     {new Date(chat.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -569,16 +569,16 @@ export default function DocumentsPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-800 bg-slate-900 flex-shrink-0">
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+              <div className="w-8 h-8 flex items-center justify-center text-slate-900 font-bold text-xs border border-slate-300 bg-white">
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">
+                <p className="text-xs font-bold text-slate-900 truncate">
                   {session?.user?.email}
                 </p>
-                <p className="text-[10px] text-slate-400 font-medium capitalize">
+                <p className="text-[10px] text-slate-500 font-medium capitalize">
                   {subscriptionInfo?.plan === 'enterprise' ? 'Enterprise' : 'Pro'} Plan
                 </p>
               </div>
@@ -587,31 +587,28 @@ export default function DocumentsPage() {
               <button 
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
-                className="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-600 py-2 rounded-md transition-all disabled:opacity-50"
+                className="text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:border-slate-400 py-2 rounded-none transition-all disabled:opacity-50"
               >
                 {loadingPortal ? '...' : 'Manage'}
               </button>
               <button 
                 onClick={handleSignOut}
-                className="text-xs font-semibold text-slate-300 hover:text-red-400 bg-slate-800 border border-slate-700 hover:border-red-900/50 py-2 rounded-md transition-all"
+                className="text-xs font-bold text-slate-600 hover:text-red-600 bg-white border border-slate-300 hover:border-red-200 py-2 rounded-none transition-all"
               >
                 Sign Out
               </button>
             </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-800 text-center">
-              <a 
-                href="/contact" 
-                className="text-xs text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-1"
-              >
-                Need Help? Contact Support
+            
+            <div className="mt-3 text-center">
+              <a href="/contact" className="text-[10px] text-slate-400 hover:text-slate-600 font-bold uppercase tracking-wider">
+                Support
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- MAIN CHAT AREA (White/Professional) --- */}
+      {/* --- MAIN CHAT AREA (White/Clean) --- */}
       <div className="flex-1 flex flex-col min-w-0 bg-white">
         
         {/* Mobile Header */}
@@ -634,14 +631,14 @@ export default function DocumentsPage() {
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`p-4 rounded-xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
+                className={`p-5 rounded-lg max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
                     : 'bg-slate-900 text-white' 
                 }`}
               >
                 {msg.image && (
-                  <div className="mb-3 rounded-lg overflow-hidden border border-white/20">
+                  <div className="mb-3 rounded overflow-hidden border border-white/20">
                     <img 
                       src={msg.image} 
                       alt="Uploaded evidence" 
@@ -651,11 +648,8 @@ export default function DocumentsPage() {
                 )}
 
                 {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    <div className="w-5 h-5 rounded-full bg-orange-600 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">
-                      LM
-                    </div>
-                    <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                  <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                    <span className="font-bold text-xs text-slate-400 uppercase tracking-wider">protocolLM</span>
                   </div>
                 )}
                 
@@ -666,17 +660,14 @@ export default function DocumentsPage() {
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+              <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                  <div className="w-5 h-5 rounded-full bg-orange-600 flex items-center justify-center text-[10px] text-white font-bold">
-                    LM
-                  </div>
-                  <span className="font-semibold text-xs text-slate-500">protocolLM</span>
+                   <span className="font-bold text-xs text-slate-400 uppercase tracking-wider">protocolLM</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </div>
@@ -690,10 +681,10 @@ export default function DocumentsPage() {
           {image && (
             <div className="max-w-4xl mx-auto mb-3 px-1">
               <div className="relative inline-block">
-                <img src={image} alt="Preview" className="h-16 w-auto rounded-lg border border-slate-200 shadow-sm" />
+                <img src={image} alt="Preview" className="h-16 w-auto rounded border border-slate-200 shadow-sm" />
                 <button 
                   onClick={() => setImage(null)}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-red-600"
+                  className="absolute -top-2 -right-2 bg-slate-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-slate-700"
                 >
                   ✕
                 </button>
@@ -715,10 +706,10 @@ export default function DocumentsPage() {
                 type="button"
                 onClick={() => fileInputRef.current.click()}
                 disabled={isLoading}
-                className={`p-3 rounded-lg transition-all flex-shrink-0 border ${
+                className={`p-3 rounded-none border transition-all flex-shrink-0 ${
                   image 
-                    ? 'bg-orange-50 border-orange-200 text-orange-600' 
-                    : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    ? 'bg-slate-100 border-slate-300 text-slate-900' 
+                    : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
@@ -727,8 +718,8 @@ export default function DocumentsPage() {
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Ask about this image..." : "Ask a question regarding compliance..."}
-                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 transition-all text-sm text-slate-900 placeholder-slate-500"
+                placeholder={image ? "Ask about this image..." : "Type your compliance question..."}
+                className="flex-1 min-w-0 p-3.5 bg-white border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all text-sm text-slate-900 placeholder-slate-400"
                 disabled={isLoading}
                 maxLength={5000}
               />
@@ -736,20 +727,16 @@ export default function DocumentsPage() {
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="h-[48px] px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 shadow-sm"
+                className="h-[48px] px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 text-sm tracking-wide"
               >
-                Send
+                SEND
               </button>
             </div>
             <div className="text-center mt-2 flex items-center justify-center gap-2">
-              <p className="text-[10px] text-slate-400">System can make mistakes. Verify with cited documents.</p>
+              <p className="text-[10px] text-slate-400 font-medium">AI can make mistakes. Verify with cited documents.</p>
               {savingChat && (
                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving...
+                  <span className="animate-pulse">Saving...</span>
                 </span>
               )}
             </div>
