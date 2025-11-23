@@ -51,7 +51,6 @@ function getVertexCredentials() {
 
 function validateApiResponse(response) {
   if (!response || typeof response !== 'string') {
-    // Return a fallback message instead of throwing to prevent 500 errors
     return "I analyzed the image but couldn't generate a text description. Please try asking a specific question about it."
   }
   
@@ -72,8 +71,7 @@ function sanitizeError(error) {
   logError(error, { context: 'Chat API Error' })
   
   if (process.env.NODE_ENV === 'production') {
-    // Return the actual error if it's a known API issue, otherwise generic
-    if (error.message.includes('safety') || error.message.includes('content')) {
+    if (error.message.includes('safety') || error.message.includes('content') || error.message.includes('format')) {
       return error.message
     }
     return 'An error occurred processing your request. Please try again.'
@@ -103,7 +101,7 @@ function validateImageData(imageData) {
     mimeType = 'image/jpeg'
   }
 
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'] // Removed 'image/jpg' as we normalize it
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
   
   if (!allowedTypes.includes(mimeType)) {
     throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
@@ -243,7 +241,6 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // Using the requested model
     const model = 'gemini-2.0-flash-exp' 
 
     // 5. RAG / Document Search
@@ -272,7 +269,6 @@ export async function POST(request) {
         }
 
         const allResults = []
-        // Only run if query isn't empty
         for (const query of searchQueries) {
           if (query && query.trim()) {
             const results = await searchDocuments(query.trim(), 10, userCounty)
@@ -321,58 +317,6 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
 Think like an FDA-trained inspector, not a lawyer. Your job is to help restaurant operators understand and apply food safety regulations in real-world situations.
 
 ═══════════════════════════════════════════════════════════════════
-HOW INSPECTORS ACTUALLY REASON (YOUR CORE METHODOLOGY):
-═══════════════════════════════════════════════════════════════════
-
-Real inspectors don't just quote codes - they apply PRINCIPLES to SITUATIONS using JUDGMENT.
-
-**The Inspector's 3-Step Framework:**
-
-1. **IDENTIFY THE HAZARD**
-   What food safety risk does this create?
-   - Cross-contamination risk?
-   - Temperature abuse?
-   - Pathogen growth?
-   - Physical/chemical hazard?
-   - Sanitation breakdown?
-
-2. **FIND THE PRINCIPLE**
-   What general regulatory principle applies?
-   Example: "Missing floor tiles in a dry area may not be a violation; but missing tiles 
-   where you use pressure hoses could introduce bacterial hazards."
-   
-   The PRINCIPLE: "Surfaces must prevent contamination"
-   APPLIED TO: Specific location and use case
-
-3. **COMMUNICATE CONVERSATIONALLY**
-   Don't sound robotic. Explain your reasoning like a helpful inspector would:
-   ✓ "Here's what I see..."
-   ✓ "The concern is..."
-   ✓ "The regulation says [citation]..."
-   ✓ "So in your situation..."
-   ✓ "I'd recommend..."
-
-═══════════════════════════════════════════════════════════════════
-RESPONSE STYLE REQUIREMENTS:
-═══════════════════════════════════════════════════════════════════
-
-**BE CONVERSATIONAL:**
-- Use natural language: "Let me explain", "Here's the thing", "Good question"
-- Break down complex regulations into plain English
-- Use examples: "Think of it like this..."
-- Be helpful, not preachy
-
-**BE PRACTICAL:**
-- Focus on WHY rules exist (food safety), not just WHAT they say
-- Offer actionable solutions: "To fix this, you could..."
-- Acknowledge real-world constraints: "I know that's not always easy, but..."
-
-**BE ACCURATE:**
-- Every claim needs a citation: **[Document Name, Page X]**
-- When applying general principles, explain your reasoning explicitly
-- If documents don't address something, say so clearly
-
-═══════════════════════════════════════════════════════════════════
 THE REASONING FRAMEWORK (USE THIS FOR EVERY RESPONSE):
 ═══════════════════════════════════════════════════════════════════
 
@@ -388,11 +332,6 @@ THE REASONING FRAMEWORK (USE THIS FOR EVERY RESPONSE):
 → Apply general maintenance/sanitation principles
 → Cite the relevant standard
 → Make specific recommendations
-
-**For Vague/General Questions:**
-→ Ask clarifying questions OR
-→ Address the most common scenarios
-→ Provide multiple possibilities if needed
 
 **For Scenarios Not Directly Addressed:**
 → Be honest about what's in the documents
@@ -415,43 +354,11 @@ CRITICAL ACCURACY RULES:
 - Giving recommendations vs. requirements
 - Unsure or lacking specific guidance
 
-**NEVER:**
-- Invent section numbers, temperatures, or time limits
-- Claim certainty when documents don't provide clear guidance
-- Use phrases like "the code requires" without a citation
-- Make up procedures not found in the documents
-
-═══════════════════════════════════════════════════════════════════
-UNCERTAINTY ACKNOWLEDGMENT:
-═══════════════════════════════════════════════════════════════════
-
-When you're not certain, use these phrases:
-- "I don't see specific guidance on this in the documents"
-- "Based on related principles..."
-- "This would likely apply because..."
-- "I'd recommend verifying this with your inspector"
-- "The documents don't specifically mention [X], but..."
-- "This is an area where interpretation matters"
-
-Being honest about limits builds trust. Restaurants need accuracy, not false confidence.
-
 ═══════════════════════════════════════════════════════════════════
 RETRIEVED CONTEXT (Your Knowledge Base):
 ═══════════════════════════════════════════════════════════════════
 
-${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the user that you need more specific information or cannot find regulations on their topic.'}
-
-═══════════════════════════════════════════════════════════════════
-REMEMBER:
-═══════════════════════════════════════════════════════════════════
-
-You're not just a search engine - you're a knowledgeable assistant who understands 
-HOW regulations work and WHY they exist. Help users understand the principles behind 
-the rules so they can make good decisions even in situations you haven't explicitly 
-discussed.
-
-But never sacrifice accuracy for helpfulness. "I don't know" is a valid and important 
-answer when documents don't provide clear guidance.`
+${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the user that you need more specific information or cannot find regulations on their topic.'}`
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
@@ -465,47 +372,54 @@ answer when documents don't provide clear guidance.`
       }
     })
 
-    let userMessageParts = []
+    // --- FIX: CONSOLIDATE PAYLOAD STRUCTURE ---
+    // We combine all text parts into a single text block to prevent "Invalid message format"
+    // Vertex AI prefers: [ { inlineData }, { text } ] or just [ { text } ]
     
-    // Add history text first
+    let fullPromptText = ""
+
     if (sanitizedMessages.length > 1) {
       const historyText = sanitizedMessages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
-      userMessageParts.push({ text: `CONVERSATION HISTORY:\n${historyText}\n\n` })
+      fullPromptText += `CONVERSATION HISTORY:\n${historyText}\n\n`
     }
 
-    // Add current user text
-    const currentQuestion = lastUserMessage.trim() || "Analyze this image for compliance violations."
-    userMessageParts.push({ text: `USER QUESTION: ${currentQuestion}` })
+    fullPromptText += `USER QUESTION: ${lastUserMessage.trim() || "Analyze this image for compliance violations."}`
 
-    // Add image if present
     if (validatedImage) {
-      userMessageParts.push({
-        inlineData: {
-          mimeType: validatedImage.mimeType,
-          data: validatedImage.base64Data
-        }
-      })
-      
-      userMessageParts.push({ 
-        text: `INSTRUCTIONS FOR IMAGE ANALYSIS:
+      fullPromptText += `\n\nINSTRUCTIONS FOR IMAGE ANALYSIS:
 1. First, describe what you see in the image objectively
 2. Identify potential food safety hazards based ONLY on regulations in RETRIEVED CONTEXT
 3. For each issue, cite the specific regulation
 4. If you cannot find relevant regulations for what you see, explicitly state that
 5. Always recommend verification with health inspector for serious concerns
 
-Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.` 
+Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.`
+    }
+
+    // Construct the strictly ordered parts array
+    const parts = []
+
+    // 1. Image goes FIRST (if present)
+    if (validatedImage) {
+      parts.push({
+        inlineData: {
+          mimeType: validatedImage.mimeType,
+          data: validatedImage.base64Data
+        }
       })
     }
 
+    // 2. Text goes SECOND (Always)
+    parts.push({ text: fullPromptText })
+
     const requestPayload = {
-      contents: [{ role: 'user', parts: userMessageParts }]
+      contents: [{ role: 'user', parts: parts }]
     }
 
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     
-    // Safety Check: If model refuses to answer, response.candidates might be restricted
+    // Safety Check
     let text = ""
     if (response.candidates && response.candidates.length > 0 && response.candidates[0].content) {
         text = response.candidates[0].content.parts[0].text
