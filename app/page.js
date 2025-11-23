@@ -84,20 +84,19 @@ export default function Home() {
     }
   }
 
-  // UPDATED: Larger text sizes for better readability and authority
-  const LedgerItem = ({ code, title, desc, delay }) => (
+  // New "Feature Item" - High contrast, icon-based, concise
+  const FeatureItem = ({ icon, title, desc, delay }) => (
     <div 
-      className={`border-l-[3px] border-slate-900 pl-5 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+      className={`flex items-start gap-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="flex items-baseline gap-3 mb-1.5">
-        {/* Increased from text-[10px] to text-xs */}
-        <span className="font-mono text-xs font-bold text-slate-500 tracking-wider uppercase">{code}</span>
-        {/* Increased from text-sm to text-base */}
-        <h3 className="text-slate-900 font-bold text-base">{title}</h3>
+      <div className="shrink-0 w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-white">
+        {icon}
       </div>
-      {/* Increased from text-xs to text-sm */}
-      <p className="text-slate-600 text-sm leading-relaxed max-w-md">{desc}</p>
+      <div>
+        <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
+        <p className="text-slate-400 text-xs leading-relaxed max-w-sm">{desc}</p>
+      </div>
     </div>
   )
 
@@ -105,58 +104,60 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Regulatory Knowledge Base) */}
-        {/* CHANGED: Added 'lg:pb-32' to push the center point upwards visually */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12 lg:pb-32">
+        {/* LEFT SIDE (Dark Navy - High End Look) */}
+        <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12 lg:pb-32">
           
+          {/* Subtle background radial gradient for depth */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-900 pointer-events-none"></div>
+
           {/* Logo anchored to top-left */}
           <div className="absolute top-0 left-0 w-full p-6 sm:p-8 lg:p-12 z-20 pointer-events-none">
             <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                protocol<span className="font-normal text-slate-500">LM</span>
+              <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
+                protocol<span className="font-normal text-slate-400">LM</span>
               </h1>
-              <div className="h-0.5 w-full bg-slate-900"></div>
+              <div className="h-0.5 w-full bg-white/20"></div>
             </div>
           </div>
           
           <div className="max-w-xl mx-auto w-full z-10">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
-              Integrated Knowledge Base
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10">
+              System Intelligence
             </p>
 
-            <div className="space-y-8">
-              <LedgerItem 
+            <div className="space-y-10">
+              <FeatureItem 
                 delay="100ms"
-                code="WASHTENAW ENV. HEALTH"
-                title="Enforcement Actions & Violation Types"
-                desc="Instant verification against local Washtenaw County enforcement triggers and priority violation standards."
+                title="Local Enforcement Data"
+                desc="Trained on specific Washtenaw & Wayne County enforcement triggers and priority violations."
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
-              <LedgerItem 
+              <FeatureItem 
                 delay="200ms"
-                code="WAYNE COUNTY TPHC"
-                title="Time as a Public Health Control"
-                desc="Generate required written procedures for holding hot/cold foods without temperature control."
+                title="Time & Temp Controls"
+                desc="Automated procedures for TPHC (Time as a Public Health Control) and cooling logs."
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
-              <LedgerItem 
+              <FeatureItem 
                 delay="300ms"
-                code="MCL ACT 92 of 2000"
-                title="Michigan Modified Food Code"
-                desc="Full synthesis of the FDA Food Code as adopted by Michigan Law, including specific state modifications."
+                title="State Code Synthesis"
+                desc="A single source of truth combining the FDA Food Code with Michigan Modified Food Law."
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
               />
-              <LedgerItem 
+              <FeatureItem 
                 delay="400ms"
-                code="EMERGENCY ACTION"
-                title="Norovirus & Contamination Protocols"
-                desc="Immediate guidance for vomit/diarrhea events and Norovirus environmental cleaning procedures."
+                title="Contamination Protocols"
+                desc="Immediate emergency guidance for vomit, diarrhea, and Norovirus events."
+                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
               />
             </div>
           </div>
 
           {/* Footer anchored to bottom-left */}
-          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 lg:p-12 text-slate-400 text-[10px] font-medium uppercase tracking-wider z-20">
+          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 lg:p-12 text-slate-500 text-[10px] font-medium uppercase tracking-wider z-20">
             <div className={`flex flex-wrap gap-6 transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <span>Secure Encrypted Environment</span>
-              <span>Proprietary Knowledge Base</span>
+              <span>Bank-Grade Security</span>
+              <span>Enterprise Ready</span>
             </div>
           </div>
         </div>
