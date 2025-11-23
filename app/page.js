@@ -18,13 +18,9 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
     
-    // Check if already logged in
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        console.log('✅ Already logged in, redirecting...')
-        
-        // Redirect to appropriate page
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -63,8 +59,6 @@ export default function Home() {
         if (error) throw error
         
         if (data.session) {
-          // Immediately signed in
-          console.log('✅ Signed up with session')
           window.location.href = '/pricing'
         } else if (data.user && !data.session) {
           setMessage({ 
@@ -80,9 +74,6 @@ export default function Home() {
         
         if (error) throw error
         
-        console.log('✅ Signed in successfully')
-        
-        // Session will persist automatically
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -112,62 +103,74 @@ export default function Home() {
     }
   }
 
-  // Wireframe Icons
+  // --- ANIMATED ICONS ---
+  
   const IconShield = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="M12 22V5" strokeOpacity="0.5" />
-      <path d="M4 12h16" strokeOpacity="0.5" />
-      <circle cx="12" cy="12" r="4" strokeOpacity="0.5" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
-  const IconCylinder = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
-      <path d="M12 3c-4.97 0-9 1.79-9 4s4.03 4 9 4 9-1.79 9-4-4.03-4-9-4z" />
-      <path d="M3 7v10c0 2.21 4.03 4 9 4s9-1.79 9-4V7" />
-      <path d="M3 12c0 2.21 4.03 4 9 4s9-1.79 9-4" strokeOpacity="0.5" />
-      <path d="M12 3v18" strokeOpacity="0.3" />
+  const IconPriority = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
+      {/* Clean cylinder/database shape without internal lines */}
+      <path d="M12 3c-4.97 0-9 1.79-9 4v10c0 2.21 4.03 4 9 4s9-1.79 9-4V7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 3c4.97 0 9 1.79 9 4s-4.03 4-9 4-9-1.79-9-4 4.03-4 9-4z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
   const IconGrid = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      <path d="M12 22V7" strokeOpacity="0.5" />
-      <path d="M7 4.5l10 5" strokeOpacity="0.3" />
-      <path d="M17 4.5l-10 5" strokeOpacity="0.3" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
+      {/* Clean isometric box without the cross lines */}
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
   const IconOrb = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      <path d="M2 12h20" />
-      <path d="M12 2v20" strokeOpacity="0.5" />
-      <path d="M4.93 4.93l14.14 14.14" strokeOpacity="0.3" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
+      <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 12h20" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`group flex items-center gap-6 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      // Increased padding from p-6 to p-8 for larger size
+      className={`group flex items-center gap-6 p-8 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100/80 group-hover:text-teal-50 group-hover:scale-105 transition-all duration-500 ease-out">
+      {/* Increased icon container size */}
+      <div className="relative shrink-0 w-20 h-20 flex items-center justify-center text-teal-100 group-hover:text-white transition-all duration-500 ease-out">
         <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <Icon />
       </div>
       <div className="min-w-0 relative z-10">
-        <h3 className="text-white font-medium text-xs tracking-wide uppercase mb-2">{title}</h3>
-        <p className="text-teal-200/60 text-xs leading-relaxed">{desc}</p>
+        <h3 className="text-white font-bold text-sm tracking-wide uppercase mb-2">{title}</h3>
+        <p className="text-teal-200/70 text-sm leading-relaxed font-medium">{desc}</p>
       </div>
     </div>
   )
 
   return (
     <div className="min-h-screen w-full bg-white font-sans">
+      {/* Animation Styles */}
+      <style jsx global>{`
+        .icon-trace path, .icon-trace circle {
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: trace 3s ease-in-out forwards;
+        }
+        .group:hover .icon-trace path, .group:hover .icon-trace circle {
+          animation: trace 2s ease-in-out infinite;
+        }
+        @keyframes trace {
+          0% { stroke-dashoffset: 100; }
+          100% { stroke-dashoffset: 0; }
+        }
+      `}</style>
+
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
         {/* LEFT SIDE */}
@@ -186,7 +189,7 @@ export default function Home() {
           
           <div className="flex-1 flex flex-col justify-center z-10">
             <div className="max-w-lg mx-auto w-full pt-10">
-              <div className="grid gap-5">
+              <div className="grid gap-6"> {/* Increased gap */}
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
@@ -195,9 +198,9 @@ export default function Home() {
                 />
                 <FeatureCard 
                   delay="200ms"
-                  title="TPHC Controls"
-                  desc="Automated time as a public health control procedures."
-                  icon={IconCylinder}
+                  title="Priority Violations"
+                  desc="Identify 'Priority (P)' and 'Foundation (Pf)' risks before they become fines."
+                  icon={IconPriority}
                 />
                 <FeatureCard 
                   delay="300ms"
