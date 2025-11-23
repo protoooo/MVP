@@ -249,9 +249,6 @@ export async function POST(request) {
       try {
         console.log(`🔍 RAG Search starting for ${userCountyName}...`)
         
-        // ================================================
-        // STRATEGY: Use multiple targeted queries
-        // ================================================
         const searchQueries = []
         
         // Query 1: ALWAYS fetch county enforcement docs (MANDATORY)
@@ -279,7 +276,7 @@ export async function POST(request) {
           })
         }
         
-        // Query 4: Image-specific queries
+        // Query 4-5: Image-specific queries
         if (validatedImage) {
           searchQueries.push({
             query: `${userCountyName} equipment cleaning maintenance inspection requirements`,
@@ -296,9 +293,6 @@ export async function POST(request) {
         
         console.log(`📋 Executing ${searchQueries.length} search queries...`)
         
-        // ================================================
-        // Execute all searches
-        // ================================================
         const allResults = []
         
         for (const { query, weight, purpose } of searchQueries) {
@@ -307,7 +301,6 @@ export async function POST(request) {
             
             const results = await searchDocuments(query, 15, sanitizedCounty)
             
-            // Apply weight to scores
             for (const result of results) {
               result.searchWeight = weight
               result.searchPurpose = purpose
@@ -324,9 +317,7 @@ export async function POST(request) {
         
         console.log(`📊 Total retrieved: ${allResults.length} document chunks`)
         
-        // ================================================
-        // De-duplicate and rank
-        // ================================================
+        // De-duplicate
         const seenContent = new Map()
         
         for (const doc of allResults) {
@@ -335,7 +326,6 @@ export async function POST(request) {
           if (!seenContent.has(contentKey)) {
             seenContent.set(contentKey, doc)
           } else {
-            // Keep the one with higher score
             const existing = seenContent.get(contentKey)
             if (doc.adjustedScore > existing.adjustedScore) {
               seenContent.set(contentKey, doc)
@@ -346,9 +336,7 @@ export async function POST(request) {
         const uniqueResults = Array.from(seenContent.values())
         console.log(`📌 Unique documents: ${uniqueResults.length}`)
         
-        // ================================================
-        // CRITICAL: Ensure county enforcement docs appear
-        // ================================================
+        // Ensure county enforcement docs appear
         const countyEnforcementDocs = uniqueResults.filter(doc => {
           const source = doc.source.toLowerCase()
           return (
@@ -372,27 +360,24 @@ export async function POST(request) {
         console.log(`🎯 County enforcement docs: ${countyEnforcementDocs.length}`)
         console.log(`📚 Other docs: ${otherDocs.length}`)
         
-        // ================================================
         // Final ranking: enforcement first, then by score
-        // ================================================
         const topCountyDocs = countyEnforcementDocs
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 8) // Guarantee at least 8 county docs
+          .slice(0, 8)
         
         const topOtherDocs = otherDocs
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 22) // Up to 22 other docs
+          .slice(0, 22)
         
         const finalResults = [...topCountyDocs, ...topOtherDocs]
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 30) // Total context: 30 docs
+          .slice(0, 30)
         
         console.log(`✅ Final context: ${finalResults.length} documents`)
         
         if (finalResults.length > 0) {
           console.log(`   Top doc: ${finalResults[0].source} (score: ${finalResults[0].adjustedScore.toFixed(3)})`)
           
-          // Build context text
           contextText = finalResults.map((doc, idx) => 
             `[DOCUMENT ${idx + 1}]
 SOURCE: ${doc.source}
@@ -401,7 +386,6 @@ PAGE: ${doc.page || 'N/A'}
 CONTENT: ${doc.text}`
           ).join("\n\n")
           
-          // Build citations
           usedDocs = finalResults.map(r => ({ 
             document: r.source, 
             pages: r.page || 'N/A',
@@ -421,9 +405,7 @@ CONTENT: ${doc.text}`
     console.log(`📝 Context length: ${contextText.length} characters`)
     console.log(`📎 Documents in context: ${usedDocs.length}`)
 
-    // ═══════════════════════════════════════════════════════════════════
-    // SYSTEM INSTRUCTION (Enhanced)
-    // ═══════════════════════════════════════════════════════════════════
+    // System instruction
     const systemInstructionText = `You are ProtocolLM, an expert food safety compliance consultant for ${userCountyName}.
 
 Your knowledge base contains:
@@ -501,4 +483,33 @@ ${contextText || 'No specific documents retrieved. Provide general guidance and 
     })
 
     const response = await result.response
-    const rawText = response.candidates[0].content.parts[0
+    const rawText = response.candidates[0].content.parts[0].text
+
+    const cleanText = cleanAIResponse(rawText)
+
+    const citations = []
+    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
+    let match
+    while ((match = citationRegex.exec(cleanText)) !== null) {
+      citations.push({ 
+        document: match[1].trim(), 
+        pages: match[2].trim(), 
+        county: sanitizedCounty 
+      })
+    }
+
+    const updates = { requests_used: (profile.requests_used || 0) + 1 }
+    if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
+    await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
+
+    return NextResponse.json({ 
+      message: cleanText,
+      citations: citations,
+      county: sanitizedCounty
+    })
+
+  } catch (error) {
+    console.error('Chat Processing Error:', error)
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 })
+  }
+}
