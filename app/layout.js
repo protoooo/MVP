@@ -6,12 +6,6 @@ import { useEffect, useState } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
 
-// Validate environment on app startup
-if (typeof window === 'undefined') {
-  const { validateEnvOnStartup } = require('@/lib/validate-env');
-  validateEnvOnStartup();
-}
-
 export default function RootLayout({ children }) {
   const [error, setError] = useState(null);
 
