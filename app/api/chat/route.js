@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 import { sanitizeString, sanitizeCounty } from '@/lib/sanitize'
-import { logError } from '@/lib/monitoring'
+import { logError, logInfo } from '@/lib/monitoring'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
@@ -567,7 +567,7 @@ ${contextText || 'No specific documents retrieved. Provide general guidance and 
     })
 
   } catch (error) {
-    console.error('Chat Processing Error:', error)
+    logError(error, { context: 'Chat Processing Error', userId: session?.user?.id })
     return NextResponse.json({ error: sanitizeError(error) }, { status: 500 })
   }
 }
