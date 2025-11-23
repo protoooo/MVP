@@ -12,12 +12,14 @@ const ParticleBackground = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { alpha: true })
     let animationFrameId
+    let isScrolling = false
+    let scrollTimeout
 
     const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
-    const particleCount = 60 
-    const connectionDistance = 100 
+    const particleCount = 40 // Reduced for performance
+    const connectionDistance = 100
     const mouseDistance = 150
     const particles = []
 
@@ -49,17 +51,27 @@ const ParticleBackground = () => {
       mouse.y = null
     }
 
+    const handleScroll = () => {
+      isScrolling = true
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        isScrolling = false
+      }, 150)
+    }
+
     class Particle {
       constructor() {
         this.x = Math.random() * (canvas.width || window.innerWidth)
         this.y = Math.random() * (canvas.height || window.innerHeight)
-        this.vx = (Math.random() - 0.5) * 0.5
-        this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1.5 
+        this.vx = (Math.random() - 0.5) * 0.3
+        this.vy = (Math.random() - 0.5) * 0.3
+        this.size = Math.random() * 2 + 1.5
         this.color = colors[Math.floor(Math.random() * colors.length)]
       }
 
       update() {
+        if (isScrolling) return
+        
         this.x += this.vx
         this.y += this.vy
         if (this.x < 0 || this.x > canvas.width) this.vx *= -1
@@ -73,8 +85,8 @@ const ParticleBackground = () => {
             const forceDirectionX = dx / distance
             const forceDirectionY = dy / distance
             const force = (mouseDistance - distance) / mouseDistance
-            this.x -= (forceDirectionX * force * 0.6)
-            this.y -= (forceDirectionY * force * 0.6)
+            this.x -= (forceDirectionX * force * 0.4)
+            this.y -= (forceDirectionY * force * 0.4)
           }
         }
       }
@@ -89,26 +101,32 @@ const ParticleBackground = () => {
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      const shouldDrawLines = !isScrolling
+      
       for (let i = 0; i < particles.length; i++) {
         particles[i].update()
         particles[i].draw()
-        for (let j = i; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x
-          let dy = particles[i].y - particles[j].y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < connectionDistance) {
-            let opacity = 1 - (distance / connectionDistance)
-            ctx.globalAlpha = opacity * 0.4 
-            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
-            gradient.addColorStop(0, particles[i].color)
-            gradient.addColorStop(1, particles[j].color)
-            ctx.strokeStyle = gradient
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-            ctx.globalAlpha = 1.0
+        
+        if (shouldDrawLines) {
+          for (let j = i + 1; j < particles.length; j++) {
+            let dx = particles[i].x - particles[j].x
+            let dy = particles[i].y - particles[j].y
+            let distance = Math.sqrt(dx * dx + dy * dy)
+            if (distance < connectionDistance) {
+              let opacity = 1 - (distance / connectionDistance)
+              ctx.globalAlpha = opacity * 0.3
+              const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
+              gradient.addColorStop(0, particles[i].color)
+              gradient.addColorStop(1, particles[j].color)
+              ctx.strokeStyle = gradient
+              ctx.lineWidth = 1
+              ctx.beginPath()
+              ctx.moveTo(particles[i].x, particles[i].y)
+              ctx.lineTo(particles[j].x, particles[j].y)
+              ctx.stroke()
+              ctx.globalAlpha = 1.0
+            }
           }
         }
       }
@@ -120,11 +138,14 @@ const ParticleBackground = () => {
     animate()
 
     window.addEventListener('resize', handleResize)
+    window.addEventListener('scroll', handleScroll)
     canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('mouseleave', handleMouseLeave)
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      window.removeEventListener('scroll', handleScroll)
+      clearTimeout(scrollTimeout)
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove)
         canvas.removeEventListener('mouseleave', handleMouseLeave)
@@ -137,6 +158,7 @@ const ParticleBackground = () => {
     <canvas 
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-70"
+      style={{ willChange: 'auto' }}
     />
   )
 }
@@ -169,10 +191,7 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        // Always use the environment variable
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
-        
-        console.log('🔐 Signing up with redirect to:', redirectUrl)
         
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -185,16 +204,9 @@ export default function Home() {
         
         if (error) throw error
         
-        console.log('✅ Signup response:', data)
-        
-        // Check if email confirmation is required
         if (data.session) {
-          // User is immediately logged in (email confirmation disabled)
-          console.log('✅ User logged in immediately')
           window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          // Email confirmation required
-          console.log('📧 Email confirmation required')
           setMessage({ 
             type: 'success', 
             text: '✅ Account created! Please check your email and click the confirmation link to continue. (Check spam folder if needed)' 
@@ -206,12 +218,8 @@ export default function Home() {
           })
         }
       } else {
-        // Sign in flow
-        console.log('🔐 Signing in...')
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        
-        console.log('✅ Sign in successful')
         
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -226,9 +234,6 @@ export default function Home() {
         }
       }
     } catch (error) {
-      console.error("❌ Auth Error:", error)
-      
-      // Better error messages
       let errorMessage = error.message
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password. Please try again.'
@@ -281,7 +286,6 @@ export default function Home() {
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE - Info Cards */}
         <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
           <ParticleBackground />
           
@@ -369,7 +373,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* FOOTER */}
           <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-2">
               <a href="/privacy" className="hover:text-slate-600 transition">Privacy Policy</a>
@@ -384,7 +387,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - Auth Form (Modified to shift up) */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start items-center px-6 sm:px-8 lg:p-12 lg:pt-32 z-20 min-h-screen">
           
           <div className="w-full max-w-lg mx-auto">
@@ -406,7 +408,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* TOGGLE with Gradient Outline */}
             <div className="bg-slate-100 p-1 rounded-xl mb-5">
               <div className="flex rounded-[10px] overflow-hidden">
                 <button 
