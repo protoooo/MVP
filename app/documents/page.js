@@ -43,7 +43,7 @@ export default function DocumentsPage() {
       setMessages([
         { 
           role: 'assistant', 
-          content: `ProtocolLM active. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
+          content: `System ready. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
           citations: []
         }
       ])
@@ -169,7 +169,7 @@ export default function DocumentsPage() {
     setMessages([
       { 
         role: 'assistant',
-        content: `ProtocolLM active. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
+        content: `System ready. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
     ])
@@ -332,7 +332,7 @@ export default function DocumentsPage() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-slate-100 border border-slate-200 text-slate-900 hover:border-slate-900 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
+              className="inline-flex items-center bg-slate-100 border border-slate-200 text-[#0B0E14] hover:border-[#0B0E14] px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -477,7 +477,7 @@ export default function DocumentsPage() {
                 key={key}
                 onClick={() => handleCountyChange(key)}
                 disabled={isUpdatingCounty}
-                className="w-full text-left p-4 border border-slate-200 rounded-none mb-2 hover:border-slate-900 hover:bg-slate-50 transition-all text-slate-700 font-bold disabled:opacity-50"
+                className="w-full text-left p-4 border border-slate-200 rounded-none mb-2 hover:border-[#0B0E14] hover:bg-slate-50 transition-all text-slate-700 font-bold disabled:opacity-50"
               >
                 {name}
               </button>
@@ -511,30 +511,30 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* --- SIDEBAR (Light Theme / Enterprise Clean) --- */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
+      {/* --- SIDEBAR (Dark Navy - Matching Landing) --- */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#0B0E14] border-r border-white/10 text-slate-300 flex flex-col z-40 relative overflow-hidden`}>
         
         <div className="relative z-10 flex flex-col h-full">
-          <div className="p-6 flex-shrink-0 border-b border-slate-200">
+          <div className="p-6 flex-shrink-0 border-b border-white/5">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">protocol<span className="font-normal text-slate-500">LM</span></h1>
-                <div className="h-0.5 w-full bg-slate-900 mt-1"></div>
+                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-normal text-slate-500">LM</span></h1>
+                <div className="h-[1px] w-16 bg-white/20 mt-1"></div>
               </div>
-              <button className="md:hidden text-slate-400 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}>✕</button>
+              <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
 
             <button
               onClick={() => setShowCountySelector(true)}
-              className="w-full bg-white hover:bg-slate-50 text-slate-700 p-3 rounded-none border border-slate-300 mb-4 flex items-center justify-between transition-colors shadow-sm"
+              className="w-full bg-white/5 hover:bg-white/10 text-white p-3 rounded-none border border-white/10 mb-4 flex items-center justify-between transition-colors"
             >
-              <span className="text-sm font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
+              <span className="text-xs font-bold uppercase tracking-wide truncate">{COUNTY_NAMES[userCounty]}</span>
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
 
             <button
               onClick={startNewChat}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold p-3 rounded-none transition-all flex items-center justify-center gap-2 shadow-sm text-sm"
+              className="w-full bg-white text-[#0B0E14] hover:bg-slate-200 font-bold p-3 rounded-none transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest"
             >
               <span>+</span> New Chat
             </button>
@@ -542,26 +542,26 @@ export default function DocumentsPage() {
 
           <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar pt-4">
             {loadingChats ? (
-              <div className="text-center text-slate-400 text-xs mt-4">Loading chats...</div>
+              <div className="text-center text-slate-500 text-xs mt-4 uppercase tracking-wider">Loading...</div>
             ) : chatHistory.length === 0 ? (
-              <p className="text-slate-400 text-xs text-center mt-4">No chat history.</p>
+              <p className="text-slate-500 text-xs text-center mt-4">No history.</p>
             ) : (
               chatHistory.map(chat => (
                 <div
                   key={chat.id}
                   onClick={() => loadChat(chat)}
-                  className="p-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-none mb-2 group cursor-pointer transition-all shadow-sm"
+                  className="p-3 bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/10 rounded-none mb-2 group cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <p className="font-bold text-xs text-slate-700 truncate pr-2 flex-1 group-hover:text-slate-900">{chat.title}</p>
+                    <p className="font-medium text-xs text-slate-400 truncate pr-2 flex-1 group-hover:text-white">{chat.title}</p>
                     <button
                       onClick={(e) => deleteChat(chat.id, e)}
-                      className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                      className="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                     >
                       ✕
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 font-mono">
+                  <p className="text-[10px] text-slate-600 mt-1 font-mono">
                     {new Date(chat.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -569,13 +569,13 @@ export default function DocumentsPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-200 bg-slate-50 flex-shrink-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 flex items-center justify-center text-slate-900 font-bold text-xs border border-slate-300 bg-white">
+          <div className="p-4 border-t border-white/5 bg-[#0B0E14] flex-shrink-0">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 flex items-center justify-center text-[#0B0E14] font-bold text-xs bg-white">
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
+                <p className="text-xs font-bold text-white truncate">
                   {session?.user?.email}
                 </p>
                 <p className="text-[10px] text-slate-500 font-medium capitalize">
@@ -587,20 +587,20 @@ export default function DocumentsPage() {
               <button 
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
-                className="text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-300 hover:border-slate-400 py-2 rounded-none transition-all disabled:opacity-50"
+                className="text-[10px] font-bold text-slate-300 hover:text-white bg-white/5 border border-white/10 hover:border-white/20 py-2 rounded-none transition-all disabled:opacity-50 uppercase tracking-wide"
               >
-                {loadingPortal ? '...' : 'Manage'}
+                Manage
               </button>
               <button 
                 onClick={handleSignOut}
-                className="text-xs font-bold text-slate-600 hover:text-red-600 bg-white border border-slate-300 hover:border-red-200 py-2 rounded-none transition-all"
+                className="text-[10px] font-bold text-slate-300 hover:text-red-400 bg-white/5 border border-white/10 hover:border-red-900/50 py-2 rounded-none transition-all uppercase tracking-wide"
               >
                 Sign Out
               </button>
             </div>
             
-            <div className="mt-3 text-center">
-              <a href="/contact" className="text-[10px] text-slate-400 hover:text-slate-600 font-bold uppercase tracking-wider">
+            <div className="mt-4 text-center">
+              <a href="/contact" className="text-[10px] text-slate-600 hover:text-white font-bold uppercase tracking-widest transition-colors">
                 Support
               </a>
             </div>
@@ -634,7 +634,7 @@ export default function DocumentsPage() {
                 className={`p-5 rounded-lg max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'bg-slate-900 text-white' 
+                    : 'bg-[#0B0E14] text-white' 
                 }`}
               >
                 {msg.image && (
@@ -684,7 +684,7 @@ export default function DocumentsPage() {
                 <img src={image} alt="Preview" className="h-16 w-auto rounded border border-slate-200 shadow-sm" />
                 <button 
                   onClick={() => setImage(null)}
-                  className="absolute -top-2 -right-2 bg-slate-900 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-slate-700"
+                  className="absolute -top-2 -right-2 bg-[#0B0E14] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-slate-800"
                 >
                   ✕
                 </button>
@@ -708,18 +708,18 @@ export default function DocumentsPage() {
                 disabled={isLoading}
                 className={`p-3 rounded-none border transition-all flex-shrink-0 ${
                   image 
-                    ? 'bg-slate-100 border-slate-300 text-slate-900' 
-                    : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-slate-100 border-slate-300 text-[#0B0E14]' 
+                    : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-[#0B0E14]'
                 }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
               </button>
 
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 placeholder={image ? "Ask about this image..." : "Type your compliance question..."}
-                className="flex-1 min-w-0 p-3.5 bg-white border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all text-sm text-slate-900 placeholder-slate-400"
+                className="flex-1 min-w-0 p-3.5 bg-white border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#0B0E14] focus:border-[#0B0E14] transition-all text-sm text-slate-900 placeholder-slate-400"
                 disabled={isLoading}
                 maxLength={5000}
               />
@@ -727,7 +727,7 @@ export default function DocumentsPage() {
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="h-[48px] px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 text-sm tracking-wide"
+                className="h-[48px] px-6 bg-[#0B0E14] hover:bg-slate-800 text-white font-bold rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 text-xs uppercase tracking-widest"
               >
                 SEND
               </button>
