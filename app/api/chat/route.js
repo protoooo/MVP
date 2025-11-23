@@ -120,7 +120,6 @@ function validateImageData(imageData) {
   return { mimeType, base64Data }
 }
 
-// FIXED: Simplified message sanitization
 function sanitizeMessages(messages) {
   if (!Array.isArray(messages)) {
     throw new Error('Messages must be an array')
@@ -131,7 +130,6 @@ function sanitizeMessages(messages) {
   }
 
   return messages.map(msg => {
-    // More flexible validation
     if (!msg || typeof msg !== 'object') {
       throw new Error('Invalid message format')
     }
@@ -148,6 +146,8 @@ function sanitizeMessages(messages) {
 }
 
 export async function POST(request) {
+  console.log('🚀 Chat API called')
+  
   if (!validateEnvironment()) {
     return NextResponse.json(
       { error: 'Service configuration error. Please contact support.' },
@@ -160,12 +160,16 @@ export async function POST(request) {
   
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
+    console.log('❌ No session found')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  console.log('✅ User authenticated:', session.user.email)
 
   const rateCheck = await checkRateLimit(session.user.id, 'chat')
   
   if (!rateCheck.allowed) {
+    console.log('⏱️  Rate limit exceeded')
     return NextResponse.json(
       { 
         error: 'Rate limit exceeded. Please wait before sending another message.',
@@ -191,6 +195,12 @@ export async function POST(request) {
       .eq('id', session.user.id)
       .single()
 
+    console.log('📊 User profile:', {
+      subscribed: profile?.is_subscribed,
+      requests: profile?.requests_used,
+      county: profile?.county
+    })
+
     if (!profile?.is_subscribed) {
       return NextResponse.json({ error: 'Active subscription required.' }, { status: 403 })
     }
@@ -215,20 +225,21 @@ export async function POST(request) {
     try {
       requestBody = await request.json()
     } catch (e) {
+      console.error('❌ Invalid JSON:', e)
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
     const { messages, image, county } = requestBody
     
-    // FIXED: Better message validation
     let sanitizedMessages = []
     try {
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
         throw new Error('Messages are required')
       }
       sanitizedMessages = sanitizeMessages(messages)
+      console.log('✅ Messages sanitized:', sanitizedMessages.length)
     } catch (e) {
-      console.error('Message validation error:', e)
+      console.error('❌ Message validation error:', e)
       return NextResponse.json({ error: 'Invalid message format: ' + e.message }, { status: 400 })
     }
 
@@ -236,6 +247,8 @@ export async function POST(request) {
 
     let validatedImage = null
     if (image) {
+      console.log('📷 Image detected in request')
+      
       if (profile.images_used >= limits.images) {
         return NextResponse.json({ 
           error: 'Monthly image analysis limit reached. Please upgrade your plan.' 
@@ -244,13 +257,21 @@ export async function POST(request) {
 
       try {
         validatedImage = validateImageData(image)
+        console.log('✅ Image validated:', validatedImage.mimeType)
       } catch (e) {
+        console.error('❌ Image validation error:', e)
         return NextResponse.json({ error: e.message }, { status: 400 })
       }
     }
 
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
     const userCounty = sanitizedCounty
+
+    console.log('🎯 Query details:', {
+      message: lastUserMessage.substring(0, 100),
+      county: userCounty,
+      hasImage: !!validatedImage
+    })
 
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
@@ -267,11 +288,17 @@ export async function POST(request) {
 
     const model = 'gemini-2.0-flash-exp'
 
+    // RAG / Document Search - ENHANCED LOGGING
     let contextText = ""
     let usedDocs = []
 
     if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
+        console.log('🔍 Starting document search...')
+        console.log('   Query:', lastUserMessage.substring(0, 100))
+        console.log('   County:', userCounty)
+        console.log('   Has image:', !!validatedImage)
+        
         let searchQueries = []
         
         if (validatedImage) {
@@ -283,21 +310,40 @@ export async function POST(request) {
             'food contact surfaces utensils equipment',
             lastUserMessage
           ]
+          console.log('   Using IMAGE search queries')
         } else {
           searchQueries = [
             lastUserMessage,
             `${lastUserMessage} requirements regulations`,
             `${lastUserMessage} violations standards`
           ]
+          console.log('   Using TEXT search queries')
         }
 
         const allResults = []
+        let queryCount = 0
+        
         for (const query of searchQueries) {
           if (query && query.trim()) {
-            const results = await searchDocuments(query.trim(), 10, userCounty)
-            allResults.push(...results)
+            queryCount++
+            console.log(`   📝 Search query ${queryCount}:`, query.substring(0, 60))
+            
+            try {
+              const results = await searchDocuments(query.trim(), 10, userCounty)
+              console.log(`   ✅ Query ${queryCount} returned ${results.length} results`)
+              
+              if (results.length > 0) {
+                console.log(`      Top result: ${results[0].source} (score: ${results[0].score})`)
+              }
+              
+              allResults.push(...results)
+            } catch (searchError) {
+              console.error(`   ❌ Query ${queryCount} failed:`, searchError.message)
+            }
           }
         }
+
+        console.log(`   📊 Total results collected: ${allResults.length}`)
 
         const uniqueResults = []
         const seenContent = new Set()
@@ -310,11 +356,17 @@ export async function POST(request) {
           }
         }
 
+        console.log(`   🔄 Unique results after deduplication: ${uniqueResults.length}`)
+
         const topResults = uniqueResults
           .sort((a, b) => b.score - a.score)
           .slice(0, 30)
         
+        console.log(`   🎯 Final top results: ${topResults.length}`)
+        
         if (topResults.length > 0) {
+          console.log('   ✅ Building context text...')
+          
           contextText = topResults.map((doc, idx) => `[DOCUMENT ${idx + 1}]
 SOURCE: ${doc.source || 'Unknown'}
 PAGE: ${doc.page || 'N/A'}
@@ -327,11 +379,24 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
             pages: r.page,
             relevance: r.score 
           }))
+          
+          console.log(`   📄 Context text length: ${contextText.length} chars`)
+          console.log(`   📚 Documents in context:`, usedDocs.map(d => d.document).join(', '))
+        } else {
+          console.warn('   ⚠️  No results met threshold (score > 0.3)')
         }
       } catch (searchErr) {
+        console.error('   ❌ Document search failed:', searchErr)
+        console.error('   Stack:', searchErr.stack)
         logError(searchErr, { context: 'Document search failed' })
       }
+    } else {
+      console.log('🔍 Skipping document search (empty query and no image)')
     }
+
+    console.log('📝 Context summary:')
+    console.log('   Has context:', contextText.length > 0)
+    console.log('   Documents used:', usedDocs.length)
 
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
@@ -383,6 +448,8 @@ RETRIEVED CONTEXT (Your Knowledge Base):
 
 ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the user that you need more specific information or cannot find regulations on their topic.'}`
 
+    console.log('🤖 Initializing Vertex AI model...')
+
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
       systemInstruction: {
@@ -424,6 +491,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
           data: validatedImage.base64Data
         }
       })
+      console.log('📷 Image added to request')
     }
 
     parts.push({ text: fullPromptText })
@@ -432,12 +500,14 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       contents: [{ role: 'user', parts: parts }]
     }
 
+    console.log('🚀 Calling Vertex AI...')
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     
     let text = ""
     if (response.candidates && response.candidates.length > 0 && response.candidates[0].content) {
         text = response.candidates[0].content.parts[0].text
+        console.log('✅ Received AI response:', text.length, 'chars')
     } else if (response.promptFeedback && response.promptFeedback.blockReason) {
         throw new Error(`AI Safety Block: ${response.promptFeedback.blockReason}`)
     } else {
@@ -450,6 +520,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
     
     if (makesFactualClaims && !hasCitations && !validatedText.includes('cannot find') && !validatedText.includes('do not directly address')) {
+      console.warn('⚠️  Response lacks required citations')
       logInfo('Response lacks required citations', { 
         preview: validatedText.substring(0, 200),
         userId: session.user.id 
@@ -466,6 +537,11 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     while ((match = citationRegex.exec(validatedText)) !== null) {
       citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
+
+    console.log('✅ Response generated successfully')
+    console.log('   Response length:', validatedText.length)
+    console.log('   Citations found:', citations.length)
+    console.log('   Documents searched:', usedDocs.length)
 
     return NextResponse.json({ 
       message: validatedText,
@@ -487,6 +563,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
 
   } catch (error) {
     console.error('❌ Chat API Error:', error)
+    console.error('   Stack:', error.stack)
     return NextResponse.json({ 
       error: sanitizeError(error)
     }, { status: 500 })
