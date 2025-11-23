@@ -111,7 +111,7 @@ export default function Home() {
     </svg>
   )
 
-  // New: Warning Triangle for Violations
+  // Warning Triangle for Violations
   const IconWarning = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
@@ -127,7 +127,7 @@ export default function Home() {
     </svg>
   )
 
-  // New: Biohazard/Hazmat shape
+  // Biohazard/Hazmat shape
   const IconHazmat = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
       <circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -192,7 +192,8 @@ export default function Home() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center z-10">
-            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-32">
+            {/* UPDATED: Changed lg:mt-32 to lg:mt-12 to bring cards up */}
+            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
                 <FeatureCard 
                   delay="100ms"
