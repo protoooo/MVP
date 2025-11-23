@@ -43,7 +43,7 @@ export default function DocumentsPage() {
       setMessages([
         { 
           role: 'assistant', 
-          content: `System ready. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
+          content: `System ready. Consultant active for ${COUNTY_NAMES[userCounty]}.`,
           citations: []
         }
       ])
@@ -82,7 +82,9 @@ export default function DocumentsPage() {
   }
 
   const handleManageSubscription = async () => {
+    if (loadingPortal) return
     setLoadingPortal(true)
+    
     try {
       const res = await fetch('/api/create-portal-session', { 
         method: 'POST',
@@ -93,18 +95,19 @@ export default function DocumentsPage() {
       })
       
       if (!res.ok) {
-        throw new Error('Failed to access billing portal')
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to access billing portal')
       }
       
       const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('Could not access billing portal.')
+        throw new Error('No portal URL returned')
       }
     } catch (error) {
       console.error('Portal error:', error)
-      alert('Error loading billing portal.')
+      alert('Unable to load the billing portal. Please try refreshing the page or contacting support.')
     } finally {
       setLoadingPortal(false)
     }
@@ -118,7 +121,7 @@ export default function DocumentsPage() {
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSavingChat(true)
-        const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'New Chat'
+        const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 40) || 'New Chat'
         
         const response = await fetch('/api/chat-history', {
           method: 'POST',
@@ -154,7 +157,7 @@ export default function DocumentsPage() {
       } finally {
         setSavingChat(false)
       }
-    }, 1000)
+    }, 2000) // Increased delay to prevent spam saving
   }
 
   const loadChat = (chat) => {
@@ -169,7 +172,7 @@ export default function DocumentsPage() {
     setMessages([
       { 
         role: 'assistant',
-        content: `System ready. Database loaded for ${COUNTY_NAMES[userCounty]}.`,
+        content: `System ready. Consultant active for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
     ])
@@ -180,6 +183,8 @@ export default function DocumentsPage() {
   const deleteChat = async (chatId, e) => {
     e.stopPropagation()
     
+    if (!confirm('Are you sure you want to delete this chat?')) return
+
     try {
       const response = await fetch(`/api/chat-history?chatId=${chatId}`, {
         method: 'DELETE',
@@ -248,10 +253,7 @@ export default function DocumentsPage() {
   }, [messages])
 
   const handleCountyChange = async (newCounty) => {
-    if (!['washtenaw', 'wayne', 'oakland'].includes(newCounty)) {
-      console.error('Invalid county selected')
-      return
-    }
+    if (!['washtenaw', 'wayne', 'oakland'].includes(newCounty)) return
     
     setIsUpdatingCounty(true)
     
@@ -269,14 +271,9 @@ export default function DocumentsPage() {
     setUserCounty(newCounty)
     setShowCountySelector(false)
     setIsUpdatingCounty(false)
-
-    setMessages([
-      { 
-        role: 'assistant',
-        content: `County updated to ${COUNTY_NAMES[newCounty]}.`,
-        citations: []
-      }
-    ])
+    
+    // Reset chat for new county context
+    startNewChat()
   }
 
   const handleCitationClick = (citation) => {
@@ -285,11 +282,6 @@ export default function DocumentsPage() {
     const docName = citation.document || ''
     const pageMatch = citation.pages?.toString().match(/\d+/)
     const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
-
-    if (!['washtenaw', 'wayne', 'oakland'].includes(userCounty)) {
-      console.error('Invalid county')
-      return
-    }
 
     setViewingPdf({
       title: docName,
@@ -300,31 +292,40 @@ export default function DocumentsPage() {
   }
 
   const renderMessageContent = (msg) => {
-    if (!msg.citations?.length) return msg.content
-
+    // Return raw content if no specific citation formatting is needed
+    // but we still parse for the citation buttons.
+    
+    const content = msg.content || ''
     const parts = []
     let lastIndex = 0
+    
+    // Regex to find [Doc Name, Page X]
     const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
 
-    while ((match = citationRegex.exec(msg.content)) !== null) {
+    while ((match = citationRegex.exec(content)) !== null) {
+      // Add text before citation
       if (match.index > lastIndex) {
-        parts.push({ type: 'text', content: msg.content.slice(lastIndex, match.index) })
+        parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
       }
+      
+      // Add citation button
       parts.push({
         type: 'citation',
         document: match[1],
         pages: match[2]
       })
+      
       lastIndex = match.index + match[0].length
     }
 
-    if (lastIndex < msg.content.length) {
-      parts.push({ type: 'text', content: msg.content.slice(lastIndex) })
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', content: content.slice(lastIndex) })
     }
 
     return (
-      <>
+      <div className="whitespace-pre-wrap font-normal text-slate-800 leading-7">
         {parts.map((part, i) =>
           part.type === 'text' ? (
             <span key={i}>{part.content}</span>
@@ -332,13 +333,14 @@ export default function DocumentsPage() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-slate-100 border border-slate-200 text-[#022c22] hover:border-[#022c22] px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer"
+              className="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 hover:border-teal-300 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors mx-1 -translate-y-0.5 cursor-pointer"
             >
-              {part.document}, Page {part.pages}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {part.document} <span className="opacity-60">| p.{part.pages}</span>
             </button>
           )
         )}
-      </>
+      </div>
     )
   }
 
@@ -350,7 +352,7 @@ export default function DocumentsPage() {
     
     const sanitizedInput = input.trim()
     if (sanitizedInput.length > 5000) {
-      alert('Message too long. Please keep messages under 5000 characters.')
+      alert('Message too long.')
       return
     }
 
@@ -384,13 +386,9 @@ export default function DocumentsPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         if (response.status === 429) {
-          throw new Error(errorData.error || 'Too many requests. Please wait a moment.')
-        } else if (response.status === 401) {
-          throw new Error('Session expired. Please sign in again.')
-        } else if (response.status === 400) {
-          throw new Error(errorData.error || 'Invalid request.')
+          throw new Error('Rate limit reached. Please wait a moment.')
         } else {
-          throw new Error(errorData.error || 'An error occurred.')
+          throw new Error(errorData.error || 'Network error occurred.')
         }
       }
 
@@ -409,15 +407,15 @@ export default function DocumentsPage() {
         }))
       }
     } catch (err) {
-      console.error('💥 Chat error:', err)
+      console.error('Chat error:', err)
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `❌ Error: ${err.message}`,
+        content: `I encountered an error: ${err.message}. Please try again.`,
         citations: []
       }])
     } finally {
       setIsLoading(false)
-      setTimeout(() => setCanSend(true), 1000)
+      setTimeout(() => setCanSend(true), 500)
     }
   }
 
@@ -441,16 +439,7 @@ export default function DocumentsPage() {
     const reader = new FileReader()
     reader.onloadend = () => {
       const result = reader.result
-      if (typeof result === 'string' && result.startsWith('data:image/')) {
-        setImage(result)
-      } else {
-        alert('Invalid image format')
-        e.target.value = ''
-      }
-    }
-    reader.onerror = () => {
-      alert('Error reading file')
-      e.target.value = ''
+      setImage(result)
     }
     reader.readAsDataURL(file)
   }
@@ -460,126 +449,144 @@ export default function DocumentsPage() {
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans">
       {showCountySelector && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-slate-900">Select Jurisdiction</h3>
               <button 
                 onClick={() => setShowCountySelector(false)} 
-                className="text-slate-400 hover:text-slate-900 transition"
+                className="text-slate-400 hover:text-slate-900 transition bg-slate-100 rounded-full p-1"
                 disabled={isUpdatingCounty}
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            {Object.entries(COUNTY_NAMES).map(([key, name]) => (
-              <button
-                key={key}
-                onClick={() => handleCountyChange(key)}
-                disabled={isUpdatingCounty}
-                className="w-full text-left p-4 border border-slate-200 rounded-none mb-2 hover:border-[#022c22] hover:bg-slate-50 transition-all text-slate-700 font-bold disabled:opacity-50"
-              >
-                {name}
-              </button>
-            ))}
+            <div className="space-y-2">
+              {Object.entries(COUNTY_NAMES).map(([key, name]) => (
+                <button
+                  key={key}
+                  onClick={() => handleCountyChange(key)}
+                  disabled={isUpdatingCounty}
+                  className={`w-full text-left p-4 border rounded-lg transition-all font-semibold flex items-center justify-between ${
+                    userCounty === key 
+                      ? 'border-[#022c22] bg-teal-50 text-[#022c22]' 
+                      : 'border-slate-200 hover:border-teal-600 hover:bg-white text-slate-600'
+                  }`}
+                >
+                  {name}
+                  {userCounty === key && <span className="text-teal-700">●</span>}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {viewingPdf && (
-        <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white flex-shrink-0">
-            <div>
-              <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
-              <p className="text-xs text-slate-500 font-medium">
-                {viewingPdf.targetPage && `Page ${viewingPdf.targetPage}`}
-              </p>
+        <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+          <div className="bg-white w-full h-full max-w-6xl rounded-xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white flex-shrink-0">
+              <div>
+                <h3 className="font-bold text-slate-900 text-lg">{viewingPdf.title}</h3>
+                <p className="text-sm text-slate-500">
+                  {viewingPdf.targetPage && `Jumped to Page ${viewingPdf.targetPage}`}
+                </p>
+              </div>
+              <button 
+                onClick={() => setViewingPdf(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition"
+              >
+                Close Document
+              </button>
             </div>
-            <button 
-              onClick={() => setViewingPdf(null)}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition"
-            >
-              Close
-            </button>
+            <iframe
+              src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`}
+              className="flex-1 w-full bg-slate-50"
+              title="PDF Viewer"
+            />
           </div>
-          <iframe
-            src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`}
-            className="flex-1 w-full"
-            sandbox="allow-same-origin" 
-            title="PDF Viewer"
-          />
         </div>
       )}
 
       {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#022c22] border-r border-teal-900 text-teal-100 flex flex-col z-40 relative overflow-hidden`}>
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#022c22] border-r border-teal-900 text-teal-100 flex flex-col z-40 relative overflow-hidden transition-all duration-300`}>
         
         <div className="relative z-10 flex flex-col h-full">
-          <div className="p-6 flex-shrink-0 border-b border-teal-900">
+          <div className="p-6 flex-shrink-0 border-b border-teal-900/50">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-normal text-teal-500">LM</span></h1>
-                <div className="h-[1px] w-16 bg-teal-500/30 mt-1"></div>
+                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-light text-teal-400">LM</span></h1>
               </div>
               <button className="md:hidden text-teal-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
 
             <button
               onClick={() => setShowCountySelector(true)}
-              className="w-full bg-teal-900/40 hover:bg-teal-900/60 text-white p-3 rounded-none border border-teal-800/50 mb-4 flex items-center justify-between transition-colors"
+              className="w-full bg-teal-900/40 hover:bg-teal-900/60 text-white p-3 rounded-lg border border-teal-800/50 mb-3 flex items-center justify-between transition-colors group"
             >
-              <span className="text-xs font-bold uppercase tracking-wide truncate">{COUNTY_NAMES[userCounty]}</span>
-              <svg className="w-4 h-4 text-teal-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] text-teal-400 uppercase tracking-wider font-semibold">Jurisdiction</span>
+                <span className="text-xs font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
+              </div>
+              <svg className="w-4 h-4 text-teal-500 group-hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
             </button>
 
             <button
               onClick={startNewChat}
-              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold p-3 rounded-none transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shadow-md"
+              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold p-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-teal-900/20"
             >
               <span>+</span> New Chat
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar pt-4">
+          <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+            <div className="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-3 px-2">History</div>
             {loadingChats ? (
-              <div className="text-center text-teal-500 text-xs mt-4 uppercase tracking-wider">Loading...</div>
+              <div className="space-y-3 px-2">
+                <div className="h-8 bg-teal-900/30 rounded w-3/4 animate-pulse"></div>
+                <div className="h-8 bg-teal-900/30 rounded w-1/2 animate-pulse"></div>
+              </div>
             ) : chatHistory.length === 0 ? (
-              <p className="text-teal-500 text-xs text-center mt-4">No history.</p>
+              <p className="text-teal-600 text-xs px-2 italic">No chat history yet.</p>
             ) : (
               chatHistory.map(chat => (
                 <div
                   key={chat.id}
                   onClick={() => loadChat(chat)}
-                  className="p-3 bg-teal-900/20 hover:bg-teal-900/40 border border-transparent hover:border-teal-800 rounded-none mb-2 group cursor-pointer transition-all"
+                  className={`p-3 rounded-lg mb-1 group cursor-pointer transition-all relative ${
+                    currentChatId === chat.id ? 'bg-teal-800/50 text-white' : 'hover:bg-teal-900/30 text-teal-200'
+                  }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium text-xs text-teal-200 truncate pr-2 flex-1 group-hover:text-white">{chat.title}</p>
-                    <button
-                      onClick={(e) => deleteChat(chat.id, e)}
-                      className="text-teal-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
-                    >
-                      ✕
-                    </button>
+                  <div className="pr-6">
+                    <p className="font-medium text-xs truncate">{chat.title}</p>
+                    <p className="text-[10px] opacity-60 mt-0.5">
+                      {new Date(chat.updated_at).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-[10px] text-teal-600 mt-1 font-mono">
-                    {new Date(chat.updated_at).toLocaleDateString()}
-                  </p>
+                  <button
+                    onClick={(e) => deleteChat(chat.id, e)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                    title="Delete chat"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))
             )}
           </div>
 
-          <div className="p-4 border-t border-teal-900 bg-[#022c22] flex-shrink-0">
+          <div className="p-4 border-t border-teal-900 bg-[#01251d] flex-shrink-0">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 flex items-center justify-center text-[#022c22] font-bold text-xs bg-teal-500 rounded-sm">
+              <div className="w-8 h-8 flex items-center justify-center text-[#022c22] font-bold text-xs bg-teal-400 rounded-full">
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-white truncate">
                   {session?.user?.email}
                 </p>
-                <p className="text-[10px] text-teal-400 font-medium capitalize">
+                <p className="text-[10px] text-teal-400 font-medium capitalize flex items-center gap-1">
                   {subscriptionInfo?.plan === 'enterprise' ? 'Enterprise' : 'Pro'} Plan
+                  {loadingPortal && <span className="animate-spin inline-block w-2 h-2 border-2 border-teal-400 border-t-transparent rounded-full ml-1"></span>}
                 </p>
               </div>
             </div>
@@ -587,113 +594,122 @@ export default function DocumentsPage() {
               <button 
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
-                className="text-[10px] font-bold text-teal-200 hover:text-white bg-teal-900/30 border border-teal-800 hover:border-teal-700 py-2 rounded-none transition-all disabled:opacity-50 uppercase tracking-wide"
+                className="text-[10px] font-bold text-teal-200 hover:text-white bg-teal-900/40 border border-teal-800 hover:border-teal-600 py-2 rounded transition-all disabled:opacity-50"
               >
-                Manage
+                Billing
               </button>
               <button 
                 onClick={handleSignOut}
-                className="text-[10px] font-bold text-teal-200 hover:text-red-400 bg-teal-900/30 border border-teal-800 hover:border-red-900/50 py-2 rounded-none transition-all uppercase tracking-wide"
+                className="text-[10px] font-bold text-teal-200 hover:text-red-400 bg-teal-900/40 border border-teal-800 hover:border-red-900/50 py-2 rounded transition-all"
               >
-                Sign Out
+                Log Out
               </button>
-            </div>
-            
-            <div className="mt-4 text-center">
-              <a href="/contact" className="text-[10px] text-teal-600 hover:text-teal-400 font-bold uppercase tracking-widest transition-colors">
-                Support
-              </a>
             </div>
           </div>
         </div>
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-white relative">
         
-        {/* Mobile Header */}
-        <div className="md:hidden p-4 bg-white border-b border-slate-200 text-slate-900 flex justify-between items-center shadow-sm z-30 flex-shrink-0">
-          <button onClick={() => setIsSidebarOpen(true)} className="text-slate-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-          </button>
-          <div className="text-center flex-1 mx-4 min-w-0">
-            <span className="font-bold text-lg text-slate-900">protocol<span className="font-normal text-teal-600">LM</span></span>
-            <div className="text-xs text-slate-500 truncate">{COUNTY_NAMES[userCounty]}</div>
+        {/* Header */}
+        <div className="p-4 bg-white/90 backdrop-blur-sm border-b border-slate-100 text-slate-900 flex justify-between items-center z-30 absolute top-0 left-0 right-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-600 hover:text-slate-900">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div className="md:hidden font-bold text-slate-900">protocol<span className="font-normal text-teal-600">LM</span></div>
           </div>
-          <div className="w-6"></div>
+          <div className="hidden md:block text-xs font-medium text-slate-400 uppercase tracking-wider">
+            {COUNTY_NAMES[userCounty]} Compliance Database
+          </div>
+          <div className="w-6"></div> 
         </div>
 
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 space-y-8">
           {messages.map((msg, i) => (
             <div
               key={i}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`p-5 rounded-lg max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
-                  msg.role === 'assistant'
-                    ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'bg-[#022c22] text-white' 
+                className={`max-w-[90%] lg:max-w-[80%] ${
+                  msg.role === 'assistant' ? 'w-full' : ''
                 }`}
               >
-                {msg.image && (
-                  <div className="mb-3 rounded overflow-hidden border border-white/20">
-                    <img 
-                      src={msg.image} 
-                      alt="Uploaded evidence" 
-                      className="max-w-full h-auto max-h-64 object-cover" 
-                    />
-                  </div>
-                )}
+                <div className={`
+                  ${msg.role === 'user' 
+                    ? 'bg-[#022c22] text-white rounded-2xl rounded-tr-sm px-5 py-3 shadow-md inline-block float-right' 
+                    : 'text-slate-800 pl-0' 
+                  }
+                `}>
+                  {msg.image && (
+                    <div className="mb-3 rounded-lg overflow-hidden border border-white/20 max-w-sm">
+                      <img 
+                        src={msg.image} 
+                        alt="Analysis subject" 
+                        className="w-full h-auto" 
+                      />
+                    </div>
+                  )}
 
-                {msg.role === 'assistant' && (
-                  <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
-                    <span className="font-bold text-xs text-slate-400 uppercase tracking-wider">protocolLM</span>
-                  </div>
-                )}
-                
-                {renderMessageContent(msg)}
+                  {msg.role === 'assistant' && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
+                      <span className="font-bold text-sm text-slate-900">ProtocolLM</span>
+                    </div>
+                  )}
+                  
+                  {msg.role === 'user' ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  ) : (
+                    renderMessageContent(msg)
+                  )}
+                </div>
               </div>
             </div>
           ))}
           
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
-                <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                   <span className="font-bold text-xs text-slate-400 uppercase tracking-wider">protocolLM</span>
+            <div className="flex justify-start w-full">
+               <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 mb-1">
+                   <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
+                   <span className="font-bold text-sm text-slate-900">Thinking...</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="flex items-center gap-1 ml-8">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </div>
           )}
           
-          <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-4" />
         </div>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-200 bg-white">
+        <div className="flex-shrink-0 p-4 md:p-6 bg-white/80 backdrop-blur border-t border-slate-200 z-20">
           {image && (
             <div className="max-w-4xl mx-auto mb-3 px-1">
-              <div className="relative inline-block">
-                <img src={image} alt="Preview" className="h-16 w-auto rounded border border-slate-200 shadow-sm" />
-                <button 
-                  onClick={() => setImage(null)}
-                  className="absolute -top-2 -right-2 bg-[#022c22] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-md hover:bg-teal-900"
-                >
-                  ✕
-                </button>
+              <div className="relative inline-block group">
+                <img src={image} alt="Preview" className="h-20 w-auto rounded-lg border border-slate-200 shadow-sm object-cover" />
+                <div className="absolute inset-0 bg-black/20 rounded-lg hidden group-hover:flex items-center justify-center transition-all">
+                   <button 
+                    onClick={() => setImage(null)}
+                    className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
-            <div className="flex items-end gap-2 md:gap-3">
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
+            <div className="flex items-end gap-2 bg-white border border-slate-300 rounded-2xl shadow-sm p-2 focus-within:border-teal-600 focus-within:ring-1 focus-within:ring-teal-600 transition-all">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -706,39 +722,42 @@ export default function DocumentsPage() {
                 type="button"
                 onClick={() => fileInputRef.current.click()}
                 disabled={isLoading}
-                className={`p-3 rounded-none border transition-all flex-shrink-0 ${
+                className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
                   image 
-                    ? 'bg-teal-50 border-teal-300 text-[#022c22]' 
-                    : 'bg-white border-slate-300 text-slate-500 hover:bg-slate-50 hover:text-[#022c22]'
+                    ? 'bg-teal-100 text-teal-700' 
+                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
                 }`}
+                title="Upload Image"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </button>
 
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Ask about this image..." : "Type your compliance question..."}
-                className="flex-1 min-w-0 p-3.5 bg-white border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#022c22] focus:border-[#022c22] transition-all text-sm text-slate-900 placeholder-slate-400"
+                placeholder={image ? "Ask a question about this image..." : "Type your question here..."}
+                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400"
                 disabled={isLoading}
                 maxLength={5000}
               />
 
               <button
                 type="submit"
-                disabled={isLoading || !canSend}
-                className="h-[48px] px-6 bg-[#022c22] hover:bg-teal-900 text-white font-bold rounded-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 text-xs uppercase tracking-widest"
+                disabled={isLoading || (!input.trim() && !image)}
+                className={`p-2.5 rounded-xl font-bold transition-all flex-shrink-0 ${
+                  isLoading || (!input.trim() && !image)
+                  ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                  : 'bg-[#022c22] text-white hover:bg-teal-900 shadow-md'
+                }`}
               >
-                SEND
+                <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
               </button>
             </div>
-            <div className="text-center mt-2 flex items-center justify-center gap-2">
-              <p className="text-[10px] text-slate-400 font-medium">AI can make mistakes. Verify with cited documents.</p>
-              {savingChat && (
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                  <span className="animate-pulse">Saving...</span>
-                </span>
-              )}
+            
+            <div className="text-center mt-2">
+              <p className="text-[10px] text-slate-400">
+                AI can make mistakes. Please verify with cited documents.
+              </p>
             </div>
           </form>
         </div>
