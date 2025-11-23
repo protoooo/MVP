@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- Particle Background ---
-const ParticleBackground = () => {
+// --- Circuit/GPU Background Animation ---
+const CircuitBackground = () => {
   const canvasRef = useRef(null)
 
   useEffect(() => {
@@ -16,148 +16,177 @@ const ParticleBackground = () => {
     let animationFrameId
     
     // Configuration
-    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
-    const particleCount = 40 
-    const connectionDistance = 100
-    const mouseDistance = 150
-    const particles = []
+    const gridSize = 30 // Distance between grid points
+    const packetCount = 25 // How many "data beams" exist at once
+    const trailLength = 20 // How long the light trail is
+    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca']
+    
+    let packets = []
+    let w = 0
+    let h = 0
 
-    let mouse = { x: null, y: null }
+    // --- Classes ---
 
-    class Particle {
+    class Packet {
       constructor() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
-        this.vx = (Math.random() - 0.5) * 0.3
-        this.vy = (Math.random() - 0.5) * 0.3
-        this.size = Math.random() * 2 + 1.5
+        this.reset()
+      }
+
+      reset() {
+        // Snap to grid
+        this.x = Math.floor(Math.random() * (w / gridSize)) * gridSize
+        this.y = Math.floor(Math.random() * (h / gridSize)) * gridSize
+        
+        // Random direction (Up, Down, Left, Right)
+        const dirs = [
+          { dx: 1, dy: 0 },  // Right
+          { dx: -1, dy: 0 }, // Left
+          { dx: 0, dy: 1 },  // Down
+          { dx: 0, dy: -1 }  // Up
+        ]
+        const dir = dirs[Math.floor(Math.random() * dirs.length)]
+        this.dx = dir.dx
+        this.dy = dir.dy
+        
+        this.speed = 2 // Pixels per frame
+        this.life = Math.random() * 100 + 50 // How long it lives before respawning
+        this.age = 0
         this.color = colors[Math.floor(Math.random() * colors.length)]
+        
+        // history for the tail effect
+        this.history = [] 
       }
 
       update() {
-        this.x += this.vx
-        this.y += this.vy
+        this.age++
+        
+        // Move
+        this.x += this.dx * this.speed
+        this.y += this.dy * this.speed
 
-        // Bounce off edges with damping and clamping to prevent "stuck" particles on resize
-        if (this.x < 0) {
-          this.x = 0
-          this.vx *= -1
-        } else if (this.x > canvas.width) {
-          this.x = canvas.width
-          this.vx *= -1
+        // Store position for trail
+        this.history.push({ x: this.x, y: this.y })
+        if (this.history.length > trailLength) {
+          this.history.shift()
         }
 
-        if (this.y < 0) {
-          this.y = 0
-          this.vy *= -1
-        } else if (this.y > canvas.height) {
-          this.y = canvas.height
-          this.vy *= -1
-        }
-
-        // Mouse interaction
-        if (mouse.x != null) {
-          let dx = mouse.x - this.x
-          let dy = mouse.y - this.y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < mouseDistance) {
-            const forceDirectionX = dx / distance
-            const forceDirectionY = dy / distance
-            const force = (mouseDistance - distance) / mouseDistance
-            this.x -= (forceDirectionX * force * 0.4)
-            this.y -= (forceDirectionY * force * 0.4)
+        // Randomly turn 90 degrees occasionally to look like "logic"
+        if (this.age % Math.floor(Math.random() * 50 + 20) === 0) {
+          // If moving horizontally, move vertically, and vice versa
+          if (this.dx !== 0) {
+            this.dx = 0
+            this.dy = Math.random() > 0.5 ? 1 : -1
+          } else {
+            this.dy = 0
+            this.dx = Math.random() > 0.5 ? 1 : -1
           }
+          
+          // Snap to grid to keep lines clean after turning
+          this.x = Math.round(this.x / gridSize) * gridSize
+          this.y = Math.round(this.y / gridSize) * gridSize
+        }
+
+        // Die if too old or out of bounds
+        if (
+          this.age > this.life || 
+          this.x < -50 || 
+          this.x > w + 50 || 
+          this.y < -50 || 
+          this.y > h + 50
+        ) {
+          this.reset()
         }
       }
 
       draw() {
-        ctx.fillStyle = this.color
+        if (this.history.length < 2) return
+
         ctx.beginPath()
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        
+        // Draw the trail
+        for (let i = 0; i < this.history.length - 1; i++) {
+          const p1 = this.history[i]
+          const p2 = this.history[i+1]
+          
+          // Opacity increases towards the head
+          const opacity = i / this.history.length
+          
+          ctx.beginPath()
+          ctx.strokeStyle = this.color
+          ctx.lineWidth = 2
+          ctx.globalAlpha = opacity
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.stroke()
+        }
+        
+        // Draw the "Head" (glowing dot)
+        ctx.globalAlpha = 1
+        ctx.fillStyle = '#fff'
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2)
         ctx.fill()
       }
     }
 
-    function initParticles() {
-      particles.length = 0
-      // Ensure canvas has dimensions before spawning
-      if (canvas.width === 0 || canvas.height === 0) return
-      
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
+    // --- Initialization ---
+
+    const initPackets = () => {
+      packets = []
+      for (let i = 0; i < packetCount; i++) {
+        packets.push(new Packet())
       }
     }
 
     const handleResize = () => {
       if (canvas.parentElement) {
-        // Just update dimensions, do NOT reset particles
-        canvas.width = canvas.parentElement.offsetWidth
-        canvas.height = canvas.parentElement.offsetHeight
+        w = canvas.parentElement.offsetWidth
+        h = canvas.parentElement.offsetHeight
+        canvas.width = w
+        canvas.height = h
         
-        // Only init if this is the very first load (particles array is empty)
-        if (particles.length === 0) {
-          initParticles()
-        }
+        if (packets.length === 0) initPackets()
       }
     }
 
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = event.clientX - rect.left
-      mouse.y = event.clientY - rect.top
-    }
-
-    const handleMouseLeave = () => {
-      mouse.x = null
-      mouse.y = null
+    const drawGrid = () => {
+      ctx.fillStyle = '#cbd5e1' // slate-300
+      ctx.globalAlpha = 0.3
+      
+      for (let x = 0; x <= w; x += gridSize) {
+        for (let y = 0; y <= h; y += gridSize) {
+          ctx.beginPath()
+          ctx.arc(x, y, 1, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
+      ctx.globalAlpha = 1
     }
 
     function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Clear with transparency for any motion blur effects, or just clear rect
+      ctx.clearRect(0, 0, w, h)
       
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update()
-        particles[i].draw()
-        
-        // Draw connections
-        for (let j = i + 1; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x
-          let dy = particles[i].y - particles[j].y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          
-          if (distance < connectionDistance) {
-            let opacity = 1 - (distance / connectionDistance)
-            ctx.globalAlpha = opacity * 0.3
-            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
-            gradient.addColorStop(0, particles[i].color)
-            gradient.addColorStop(1, particles[j].color)
-            ctx.strokeStyle = gradient
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-            ctx.globalAlpha = 1.0
-          }
-        }
-      }
+      drawGrid()
+      
+      packets.forEach(packet => {
+        packet.update()
+        packet.draw()
+      })
+
       animationFrameId = requestAnimationFrame(animate)
     }
 
-    // Initial setup
+    // Start
     handleResize()
     animate()
 
     window.addEventListener('resize', handleResize)
-    canvas.addEventListener('mousemove', handleMouseMove)
-    canvas.addEventListener('mouseleave', handleMouseLeave)
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      if (canvas) {
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('mouseleave', handleMouseLeave)
-      }
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -165,8 +194,7 @@ const ParticleBackground = () => {
   return (
     <canvas 
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-70"
-      style={{ willChange: 'transform' }} 
+      className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-60"
     />
   )
 }
@@ -294,8 +322,11 @@ export default function Home() {
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
+        {/* LEFT SIDE (Animated Background) */}
         <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
-          <ParticleBackground />
+          
+          {/* NEW CIRCUIT BACKGROUND */}
+          <CircuitBackground />
           
           <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
             <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
@@ -395,6 +426,7 @@ export default function Home() {
           </div>
         </div>
 
+        {/* RIGHT SIDE (Login/Signup Form) */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start items-center px-6 sm:px-8 lg:p-12 lg:pt-32 z-20 min-h-screen">
           
           <div className="w-full max-w-lg mx-auto">
