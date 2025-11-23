@@ -5,7 +5,6 @@ import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 import { sanitizeString, sanitizeCounty, sanitizeMessages } from '@/lib/sanitize'
 import { logError, logInfo } from '@/lib/monitoring'
-import { checkRateLimit } from '@/lib/redis-rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +15,57 @@ const COUNTY_NAMES = {
 }
 
 const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
+
+// In-memory fallback rate limiting
+const memoryRateLimit = new Map()
+
+function checkRateLimitMemory(userId, action = 'chat') {
+  const limits = { chat: { max: 20, window: 60000 } }
+  const { max, window } = limits[action] || limits.chat
+  const key = `${userId}:${action}`
+  const now = Date.now()
+  
+  let userLimit = memoryRateLimit.get(key)
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    userLimit = { count: 0, resetTime: now + window }
+    memoryRateLimit.set(key, userLimit)
+  }
+  
+  if (userLimit.count >= max) {
+    return {
+      allowed: false,
+      remainingRequests: 0,
+      resetTime: userLimit.resetTime,
+      retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
+    }
+  }
+  
+  userLimit.count++
+  memoryRateLimit.set(key, userLimit)
+  
+  return {
+    allowed: true,
+    remainingRequests: max - userLimit.count,
+    resetTime: userLimit.resetTime,
+    retryAfter: 0
+  }
+}
+
+async function checkRateLimit(userId, action = 'chat') {
+  // Try Redis first, fall back to memory
+  if (process.env.REDIS_URL) {
+    try {
+      const { checkRateLimit: redisCheck } = await import('@/lib/redis-rate-limit')
+      return await redisCheck(userId, action)
+    } catch (error) {
+      console.warn('⚠️ Redis unavailable, using in-memory rate limiting:', error.message)
+    }
+  }
+  
+  // Fallback to in-memory rate limiting
+  return checkRateLimitMemory(userId, action)
+}
 
 function validateEnvironment() {
   const required = [
@@ -128,7 +178,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // NEW: Redis-backed rate limiting
+  // Rate limiting with fallback
   const rateCheck = await checkRateLimit(session.user.id, 'chat')
   
   if (!rateCheck.allowed) {
