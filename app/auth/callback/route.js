@@ -74,8 +74,8 @@ export async function GET(request) {
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
-      // Always redirect to pricing after email confirmation, regardless of subscription status
-      // This allows users to see the pricing page after confirming their email
+      // After email confirmation, ALWAYS redirect to /pricing
+      // This allows users to see pricing and choose/upgrade their plan
       console.log('✅ Email confirmed, redirecting to /pricing')
       return NextResponse.redirect(`${baseUrl}/pricing`)
     }
