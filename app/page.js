@@ -18,21 +18,11 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
     
+    // Don't force redirect - let users stay on landing page if they want
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('is_subscribed')
-          .eq('id', session.user.id)
-          .single()
-
-        if (profile?.is_subscribed) {
-          router.push('/documents')
-        } else {
-          router.push('/pricing')
-        }
-      }
+      // Remove automatic redirect - users can manually navigate to /documents or /pricing
+      // if they're already logged in
     }
     
     checkAuth()
@@ -59,6 +49,7 @@ export default function Home() {
         if (error) throw error
         
         if (data.session) {
+          // User was auto-confirmed (email confirmation disabled)
           window.location.href = '/pricing'
         } else if (data.user && !data.session) {
           setMessage({ 
@@ -138,14 +129,12 @@ export default function Home() {
     </svg>
   )
 
-  // UPDATED FeatureCard: Accepts color classes for icon and glow
   const FeatureCard = ({ icon: Icon, title, desc, delay, iconColor, glowColor }) => (
     <div 
       className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
       <div className={`relative shrink-0 w-16 h-16 flex items-center justify-center ${iconColor} transition-all duration-500 ease-out`}>
-        {/* The colored glow behind the icon */}
         <div className={`absolute inset-0 ${glowColor} blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
         <Icon />
       </div>
@@ -195,7 +184,6 @@ export default function Home() {
             <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
                 
-                {/* 1. Enforcement Data (Teal - Safe/Standard) */}
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
@@ -205,7 +193,6 @@ export default function Home() {
                   glowColor="bg-teal-500/30"
                 />
 
-                {/* 2. Violation Risk (Red/Rose - Danger/Alert) */}
                 <FeatureCard 
                   delay="200ms"
                   title="Violation Risk"
@@ -215,7 +202,6 @@ export default function Home() {
                   glowColor="bg-rose-500/30"
                 />
 
-                {/* 3. Unified Code (Blue/Sky - Info/Neutral) */}
                 <FeatureCard 
                   delay="300ms"
                   title="Unified Code"
@@ -225,7 +211,6 @@ export default function Home() {
                   glowColor="bg-sky-500/30"
                 />
 
-                {/* 4. Hazmat Protocols (Amber/Orange - Caution) */}
                 <FeatureCard 
                   delay="400ms"
                   title="Hazmat Protocols"
