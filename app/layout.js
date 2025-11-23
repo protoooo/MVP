@@ -1,42 +1,100 @@
 'use client'
 
-import "./globals.css";
-import { Inter } from "next/font/google";
-import { useEffect, useState } from 'react';
+import "./globals.css"
+import { Inter } from "next/font/google"
+import { useEffect, useState, createContext, useContext } from 'react'
+import { createClient } from '@/lib/supabase-browser'
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
+
+// Auth Context
+const AuthContext = createContext({})
+
+export function useAuth() {
+  return useContext(AuthContext)
+}
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Get initial session
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        console.log('✅ Session restored:', session?.user?.email || 'No user')
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔄 Auth state changed:', event)
+        setUser(session?.user ?? null)
+      }
+    )
+
+    // Session refresh interval (every 30 minutes)
+    const refreshInterval = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        await supabase.auth.refreshSession()
+        console.log('🔄 Session refreshed automatically')
+      }
+    }, 30 * 60 * 1000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearInterval(refreshInterval)
+    }
+  }, [])
+
+  return (
+    <AuthContext.Provider value={{ user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
 
 export default function RootLayout({ children }) {
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const handleError = (event) => {
-      console.error('Global error:', event.error);
+      console.error('Global error:', event.error)
       
-      // Send to monitoring
       if (typeof window !== 'undefined' && window.Sentry) {
-        window.Sentry.captureException(event.error);
+        window.Sentry.captureException(event.error)
       }
       
-      setError(event.error);
-    };
+      setError(event.error)
+    }
 
     const handleUnhandledRejection = (event) => {
-      console.error('Unhandled promise rejection:', event.reason);
+      console.error('Unhandled promise rejection:', event.reason)
       
       if (typeof window !== 'undefined' && window.Sentry) {
-        window.Sentry.captureException(event.reason);
+        window.Sentry.captureException(event.reason)
       }
-    };
+    }
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
     
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-    };
-  }, []);
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
+  }, [])
 
   if (error) {
     return (
@@ -53,7 +111,7 @@ export default function RootLayout({ children }) {
           </button>
         </body>
       </html>
-    );
+    )
   }
 
   return (
@@ -63,7 +121,11 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#0f172a" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
-  );
+  )
 }
