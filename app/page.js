@@ -84,14 +84,14 @@ export default function Home() {
     }
   }
 
-  // --- ROBINHOOD STYLE WIREFRAME ICONS ---
+  // --- WIREFRAME ICONS (Slightly lighter stroke for Teal background) ---
   
   const IconShield = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <path d="M12 22V5" strokeOpacity="0.5" />
       <path d="M4 12h16" strokeOpacity="0.5" />
-      <circle cx="12" cy="12" r="4" strokeOpacity="0.8" />
+      <circle cx="12" cy="12" r="4" strokeOpacity="0.5" />
     </svg>
   )
 
@@ -123,18 +123,20 @@ export default function Home() {
     </svg>
   )
 
-  // High-End Feature Card
+  // Feature Card with Glow
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`group flex items-center gap-6 p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      className={`group flex items-center gap-6 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="shrink-0 w-16 h-16 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out">
+      {/* Icon with subtle glow behind it */}
+      <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100/80 group-hover:text-teal-50 group-hover:scale-105 transition-all duration-500 ease-out">
+        <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <Icon />
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 relative z-10">
         <h3 className="text-white font-medium text-xs tracking-wide uppercase mb-2">{title}</h3>
-        <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
+        <p className="text-teal-200/60 text-xs leading-relaxed">{desc}</p>
       </div>
     </div>
   )
@@ -143,23 +145,23 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Dark Navy - Wireframes) */}
-        <div className="w-full lg:w-1/2 bg-[#0B0E14] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
+        {/* LEFT SIDE (Deep Teal Theme) */}
+        <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* Background */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-slate-800/20 via-[#0B0E14] to-[#0B0E14] pointer-events-none"></div>
+          {/* Modern Radial Gradient for depth */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149] via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
 
-          {/* Logo (Absolute Top Left) */}
+          {/* Logo */}
           <div className="lg:absolute lg:top-12 lg:left-12 z-10 mb-10 lg:mb-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-                protocol<span className="font-normal text-slate-500">LM</span>
+                protocol<span className="font-normal text-teal-300">LM</span>
               </h1>
-              <div className="h-[1px] w-24 bg-white/20"></div>
+              <div className="h-[1px] w-24 bg-teal-500/30"></div>
             </div>
           </div>
           
-          {/* Content (Centered) - Added pt-10 to push cards down slightly */}
+          {/* Content Cards */}
           <div className="flex-1 flex flex-col justify-center z-10">
             <div className="max-w-lg mx-auto w-full pt-10">
               <div className="grid gap-5">
@@ -191,9 +193,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer (Absolute Bottom Left) */}
+          {/* Footer */}
           <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
-            <div className={`text-slate-600 text-[10px] font-bold uppercase tracking-widest flex gap-8 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`text-teal-400/50 text-[10px] font-bold uppercase tracking-widest flex gap-8 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <span>Encrypted</span>
               <span>Private</span>
               <span>Institutional</span>
@@ -204,7 +206,6 @@ export default function Home() {
         {/* RIGHT SIDE (Login/Signup Form) */}
         <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* Spacer for center alignment */}
           <div className="hidden lg:block lg:h-24"></div> 
 
           <div className="flex-1 flex flex-col justify-center">
@@ -238,7 +239,7 @@ export default function Home() {
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
                     placeholder="name@company.com" 
                   />
                 </div>
@@ -250,7 +251,7 @@ export default function Home() {
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                     minLength={6} 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
                     placeholder="••••••••" 
                   />
                 </div>
@@ -258,13 +259,13 @@ export default function Home() {
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-[#0B0E14] hover:bg-slate-800 text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
+                  className="w-full bg-[#022c22] hover:bg-[#0f3c3a] text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
                 >
                   {loading ? 'Processing...' : (view === 'signup' ? 'Start Free Trial' : 'Access Dashboard')}
                 </button>
 
                 {message && (
-                  <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-green-50 border-green-100 text-green-900'}`}>
+                  <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-teal-50 border-teal-100 text-teal-900'}`}>
                     {message.text}
                   </div>
                 )}
