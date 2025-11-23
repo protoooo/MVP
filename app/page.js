@@ -14,55 +14,20 @@ const ParticleBackground = () => {
 
     const ctx = canvas.getContext('2d', { alpha: true })
     let animationFrameId
-    let isScrolling = false
-    let scrollTimeout
-
+    
+    // Configuration
     const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
-    const particleCount = 40 // Reduced for performance
+    const particleCount = 40 
     const connectionDistance = 100
     const mouseDistance = 150
     const particles = []
 
     let mouse = { x: null, y: null }
 
-    function initParticles() {
-      particles.length = 0
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
-      }
-    }
-
-    const handleResize = () => {
-      if (canvas.parentElement) {
-        canvas.width = canvas.parentElement.offsetWidth
-        canvas.height = canvas.parentElement.offsetHeight
-        initParticles()
-      }
-    }
-
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = event.clientX - rect.left
-      mouse.y = event.clientY - rect.top
-    }
-
-    const handleMouseLeave = () => {
-      mouse.x = null
-      mouse.y = null
-    }
-
-    const handleScroll = () => {
-      isScrolling = true
-      clearTimeout(scrollTimeout)
-      scrollTimeout = setTimeout(() => {
-        isScrolling = false
-      }, 150)
-    }
-
     class Particle {
       constructor() {
-        this.x = Math.random() * (canvas.width || window.innerWidth)
-        this.y = Math.random() * (canvas.height || window.innerHeight)
+        this.x = Math.random() * canvas.width
+        this.y = Math.random() * canvas.height
         this.vx = (Math.random() - 0.5) * 0.3
         this.vy = (Math.random() - 0.5) * 0.3
         this.size = Math.random() * 2 + 1.5
@@ -70,13 +35,27 @@ const ParticleBackground = () => {
       }
 
       update() {
-        if (isScrolling) return
-        
         this.x += this.vx
         this.y += this.vy
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1
 
+        // Bounce off edges with damping and clamping to prevent "stuck" particles on resize
+        if (this.x < 0) {
+          this.x = 0
+          this.vx *= -1
+        } else if (this.x > canvas.width) {
+          this.x = canvas.width
+          this.vx *= -1
+        }
+
+        if (this.y < 0) {
+          this.y = 0
+          this.vy *= -1
+        } else if (this.y > canvas.height) {
+          this.y = canvas.height
+          this.vy *= -1
+        }
+
+        // Mouse interaction
         if (mouse.x != null) {
           let dx = mouse.x - this.x
           let dy = mouse.y - this.y
@@ -99,53 +78,82 @@ const ParticleBackground = () => {
       }
     }
 
+    function initParticles() {
+      particles.length = 0
+      // Ensure canvas has dimensions before spawning
+      if (canvas.width === 0 || canvas.height === 0) return
+      
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle())
+      }
+    }
+
+    const handleResize = () => {
+      if (canvas.parentElement) {
+        // Just update dimensions, do NOT reset particles
+        canvas.width = canvas.parentElement.offsetWidth
+        canvas.height = canvas.parentElement.offsetHeight
+        
+        // Only init if this is the very first load (particles array is empty)
+        if (particles.length === 0) {
+          initParticles()
+        }
+      }
+    }
+
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = event.clientX - rect.left
+      mouse.y = event.clientY - rect.top
+    }
+
+    const handleMouseLeave = () => {
+      mouse.x = null
+      mouse.y = null
+    }
+
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      
-      const shouldDrawLines = !isScrolling
       
       for (let i = 0; i < particles.length; i++) {
         particles[i].update()
         particles[i].draw()
         
-        if (shouldDrawLines) {
-          for (let j = i + 1; j < particles.length; j++) {
-            let dx = particles[i].x - particles[j].x
-            let dy = particles[i].y - particles[j].y
-            let distance = Math.sqrt(dx * dx + dy * dy)
-            if (distance < connectionDistance) {
-              let opacity = 1 - (distance / connectionDistance)
-              ctx.globalAlpha = opacity * 0.3
-              const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
-              gradient.addColorStop(0, particles[i].color)
-              gradient.addColorStop(1, particles[j].color)
-              ctx.strokeStyle = gradient
-              ctx.lineWidth = 1
-              ctx.beginPath()
-              ctx.moveTo(particles[i].x, particles[i].y)
-              ctx.lineTo(particles[j].x, particles[j].y)
-              ctx.stroke()
-              ctx.globalAlpha = 1.0
-            }
+        // Draw connections
+        for (let j = i + 1; j < particles.length; j++) {
+          let dx = particles[i].x - particles[j].x
+          let dy = particles[i].y - particles[j].y
+          let distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance < connectionDistance) {
+            let opacity = 1 - (distance / connectionDistance)
+            ctx.globalAlpha = opacity * 0.3
+            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
+            gradient.addColorStop(0, particles[i].color)
+            gradient.addColorStop(1, particles[j].color)
+            ctx.strokeStyle = gradient
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.stroke()
+            ctx.globalAlpha = 1.0
           }
         }
       }
       animationFrameId = requestAnimationFrame(animate)
     }
 
+    // Initial setup
     handleResize()
-    initParticles()
     animate()
 
     window.addEventListener('resize', handleResize)
-    window.addEventListener('scroll', handleScroll)
     canvas.addEventListener('mousemove', handleMouseMove)
     canvas.addEventListener('mouseleave', handleMouseLeave)
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      window.removeEventListener('scroll', handleScroll)
-      clearTimeout(scrollTimeout)
       if (canvas) {
         canvas.removeEventListener('mousemove', handleMouseMove)
         canvas.removeEventListener('mouseleave', handleMouseLeave)
@@ -158,7 +166,7 @@ const ParticleBackground = () => {
     <canvas 
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-70"
-      style={{ willChange: 'auto' }}
+      style={{ willChange: 'transform' }} 
     />
   )
 }
