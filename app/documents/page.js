@@ -157,7 +157,7 @@ export default function DocumentsPage() {
       } finally {
         setSavingChat(false)
       }
-    }, 2000) // Increased delay to prevent spam saving
+    }, 2000)
   }
 
   const loadChat = (chat) => {
@@ -272,7 +272,6 @@ export default function DocumentsPage() {
     setShowCountySelector(false)
     setIsUpdatingCounty(false)
     
-    // Reset chat for new county context
     startNewChat()
   }
 
@@ -292,24 +291,18 @@ export default function DocumentsPage() {
   }
 
   const renderMessageContent = (msg) => {
-    // Return raw content if no specific citation formatting is needed
-    // but we still parse for the citation buttons.
-    
     const content = msg.content || ''
     const parts = []
     let lastIndex = 0
     
-    // Regex to find [Doc Name, Page X]
     const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
 
     while ((match = citationRegex.exec(content)) !== null) {
-      // Add text before citation
       if (match.index > lastIndex) {
         parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
       }
       
-      // Add citation button
       parts.push({
         type: 'citation',
         document: match[1],
@@ -319,7 +312,6 @@ export default function DocumentsPage() {
       lastIndex = match.index + match[0].length
     }
 
-    // Add remaining text
     if (lastIndex < content.length) {
       parts.push({ type: 'text', content: content.slice(lastIndex) })
     }
@@ -627,7 +619,8 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 space-y-8">
+        {/* CHANGED: increased pt-20 to pt-28 to allow header clearance */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-28 space-y-8">
           {messages.map((msg, i) => (
             <div
               key={i}
