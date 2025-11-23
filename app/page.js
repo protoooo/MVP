@@ -84,7 +84,7 @@ export default function Home() {
     }
   }
 
-  // UPDATED: Now using Navy Blue borders and real document references
+  // Serious, text-based Ledger Item
   const LedgerItem = ({ code, title, desc, delay }) => (
     <div 
       className={`border-l-[3px] border-slate-900 pl-5 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
@@ -102,59 +102,56 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Regulatory Knowledge Base Aesthetic) */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-24 relative overflow-hidden">
+        {/* LEFT SIDE (Regulatory Knowledge Base) */}
+        {/* CHANGED: Added 'justify-center' and removed 'pt-24' to vertically center content */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12">
           
-          <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
+          {/* Logo anchored to top-left independently of centered content */}
+          <div className="absolute top-0 left-0 w-full p-6 sm:p-8 lg:p-12 z-20 pointer-events-none">
             <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
                 protocol<span className="font-normal text-slate-500">LM</span>
               </h1>
-              {/* Full width underline - Navy Blue */}
               <div className="h-0.5 w-full bg-slate-900"></div>
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-12 lg:mt-4 z-10">
-            <div className="max-w-xl mx-auto w-full">
-              
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
-                Integrated Knowledge Base
-              </p>
+          <div className="max-w-xl mx-auto w-full z-10">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
+              Integrated Knowledge Base
+            </p>
 
-              {/* UPDATED: REAL EXAMPLES FROM YOUR FILES */}
-              <div className="space-y-6">
-                <LedgerItem 
-                  delay="100ms"
-                  code="WASHTENAW ENV. HEALTH"
-                  title="Enforcement Actions & Violation Types"
-                  desc="Instant verification against local Washtenaw County enforcement triggers and priority violation standards."
-                />
-                <LedgerItem 
-                  delay="200ms"
-                  code="WAYNE COUNTY TPHC"
-                  title="Time as a Public Health Control"
-                  desc="Generate required written procedures for holding hot/cold foods without temperature control."
-                />
-                <LedgerItem 
-                  delay="300ms"
-                  code="MCL ACT 92 of 2000"
-                  title="Michigan Modified Food Code"
-                  desc="Full synthesis of the FDA Food Code as adopted by Michigan Law, including specific state modifications."
-                />
-                <LedgerItem 
-                  delay="400ms"
-                  code="EMERGENCY ACTION"
-                  title="Norovirus & Contamination Protocols"
-                  desc="Immediate guidance for vomit/diarrhea events and Norovirus environmental cleaning procedures."
-                />
-              </div>
-
+            <div className="space-y-6">
+              <LedgerItem 
+                delay="100ms"
+                code="WASHTENAW ENV. HEALTH"
+                title="Enforcement Actions & Violation Types"
+                desc="Instant verification against local Washtenaw County enforcement triggers and priority violation standards."
+              />
+              <LedgerItem 
+                delay="200ms"
+                code="WAYNE COUNTY TPHC"
+                title="Time as a Public Health Control"
+                desc="Generate required written procedures for holding hot/cold foods without temperature control."
+              />
+              <LedgerItem 
+                delay="300ms"
+                code="MCL ACT 92 of 2000"
+                title="Michigan Modified Food Code"
+                desc="Full synthesis of the FDA Food Code as adopted by Michigan Law, including specific state modifications."
+              />
+              <LedgerItem 
+                delay="400ms"
+                code="EMERGENCY ACTION"
+                title="Norovirus & Contamination Protocols"
+                desc="Immediate guidance for vomit/diarrhea events and Norovirus environmental cleaning procedures."
+              />
             </div>
           </div>
 
-          <div className={`px-6 sm:px-8 lg:px-12 pb-8 text-slate-400 text-[10px] font-medium transition-opacity duration-1000 delay-500 shrink-0 z-10 uppercase tracking-wider ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="flex flex-wrap gap-6">
+          {/* Footer anchored to bottom-left */}
+          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 lg:p-12 text-slate-400 text-[10px] font-medium uppercase tracking-wider z-20">
+            <div className={`flex flex-wrap gap-6 transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <span>Secure Encrypted Environment</span>
               <span>Proprietary Knowledge Base</span>
             </div>
@@ -162,10 +159,12 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start items-center px-6 sm:px-8 lg:p-12 lg:pt-32 z-20 min-h-screen">
+        {/* CHANGED: Added 'justify-center' and removed 'lg:justify-start' / 'pt-32' to vertically center content */}
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 py-12 z-20 min-h-screen">
           
           <div className="w-full max-w-md mx-auto">
             
+            {/* Mobile Logo (Visible only on small screens) */}
             <div className="mb-10 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
