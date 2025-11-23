@@ -17,15 +17,6 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true)
-    
-    // Don't force redirect - let users stay on landing page if they want
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      // Remove automatic redirect - users can manually navigate to /documents or /pricing
-      // if they're already logged in
-    }
-    
-    checkAuth()
   }, [])
 
   const handleAuth = async (e) => {
@@ -50,46 +41,93 @@ export default function Home() {
         
         if (data.session) {
           // User was auto-confirmed (email confirmation disabled)
+          console.log('✅ Auto-confirmed signup, redirecting to pricing')
           window.location.href = '/pricing'
         } else if (data.user && !data.session) {
           setMessage({ 
             type: 'success', 
             text: '✅ Account created. Please check your email to verify.' 
           })
+          setLoading(false)
         }
       } else {
+        // LOGIN FLOW
+        console.log('🔐 Attempting login...')
+        
         const { data, error } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
         })
         
-        if (error) throw error
+        if (error) {
+          console.error('❌ Login error:', error)
+          throw error
+        }
         
-        const { data: profile } = await supabase
+        console.log('✅ Login successful, checking profile...')
+
+        // Add timeout to profile check to prevent indefinite hang
+        const profileTimeout = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile check timeout')), 5000)
+        )
+
+        const profileCheck = supabase
           .from('user_profiles')
-          .select('is_subscribed')
+          .select('is_subscribed, accepted_terms, accepted_privacy')
           .eq('id', data.session.user.id)
           .single()
 
-        if (profile?.is_subscribed) {
-          window.location.href = '/documents'
-        } else {
+        try {
+          const { data: profile, error: profileError } = await Promise.race([
+            profileCheck,
+            profileTimeout
+          ])
+
+          if (profileError) {
+            console.error('⚠️ Profile fetch error:', profileError)
+            // If profile doesn't exist, redirect to terms
+            console.log('📋 Redirecting to terms acceptance...')
+            window.location.href = '/accept-terms'
+            return
+          }
+
+          console.log('📊 Profile data:', profile)
+
+          // Check terms acceptance first
+          if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+            console.log('📋 Terms not accepted, redirecting...')
+            window.location.href = '/accept-terms'
+            return
+          }
+
+          // Then check subscription
+          if (profile?.is_subscribed) {
+            console.log('✅ User has subscription, redirecting to documents')
+            window.location.href = '/documents'
+          } else {
+            console.log('💳 No subscription, redirecting to pricing')
+            window.location.href = '/pricing'
+          }
+        } catch (timeoutError) {
+          console.error('⏱️ Profile check timeout, redirecting to pricing')
           window.location.href = '/pricing'
         }
       }
     } catch (error) {
       console.error('❌ Auth error:', error)
       let errorMessage = error.message
+      
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password.'
       } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address.'
+        errorMessage = 'Please confirm your email address first.'
       } else if (error.message.includes('User already registered')) {
         errorMessage = 'Account exists. Please sign in.'
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Connection timeout. Please try again.'
       }
       
       setMessage({ type: 'error', text: errorMessage })
-    } finally {
       setLoading(false)
     }
   }
@@ -269,7 +307,8 @@ export default function Home() {
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    disabled={loading}
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none disabled:opacity-50" 
                     placeholder="name@company.com" 
                   />
                 </div>
@@ -280,8 +319,9 @@ export default function Home() {
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
-                    minLength={6} 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    minLength={6}
+                    disabled={loading}
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none disabled:opacity-50" 
                     placeholder="••••••••" 
                   />
                 </div>
