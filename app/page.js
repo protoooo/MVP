@@ -1,205 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-
-// --- Circuit/GPU Background Animation ---
-const CircuitBackground = () => {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d', { alpha: true })
-    let animationFrameId
-    
-    // Configuration
-    const gridSize = 30 // Distance between grid points
-    const packetCount = 25 // How many "data beams" exist at once
-    const trailLength = 20 // How long the light trail is
-    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca']
-    
-    let packets = []
-    let w = 0
-    let h = 0
-
-    // --- Classes ---
-
-    class Packet {
-      constructor() {
-        this.reset()
-      }
-
-      reset() {
-        // Snap to grid
-        this.x = Math.floor(Math.random() * (w / gridSize)) * gridSize
-        this.y = Math.floor(Math.random() * (h / gridSize)) * gridSize
-        
-        // Random direction (Up, Down, Left, Right)
-        const dirs = [
-          { dx: 1, dy: 0 },  // Right
-          { dx: -1, dy: 0 }, // Left
-          { dx: 0, dy: 1 },  // Down
-          { dx: 0, dy: -1 }  // Up
-        ]
-        const dir = dirs[Math.floor(Math.random() * dirs.length)]
-        this.dx = dir.dx
-        this.dy = dir.dy
-        
-        this.speed = 2 // Pixels per frame
-        this.life = Math.random() * 100 + 50 // How long it lives before respawning
-        this.age = 0
-        this.color = colors[Math.floor(Math.random() * colors.length)]
-        
-        // history for the tail effect
-        this.history = [] 
-      }
-
-      update() {
-        this.age++
-        
-        // Move
-        this.x += this.dx * this.speed
-        this.y += this.dy * this.speed
-
-        // Store position for trail
-        this.history.push({ x: this.x, y: this.y })
-        if (this.history.length > trailLength) {
-          this.history.shift()
-        }
-
-        // Randomly turn 90 degrees occasionally to look like "logic"
-        if (this.age % Math.floor(Math.random() * 50 + 20) === 0) {
-          // If moving horizontally, move vertically, and vice versa
-          if (this.dx !== 0) {
-            this.dx = 0
-            this.dy = Math.random() > 0.5 ? 1 : -1
-          } else {
-            this.dy = 0
-            this.dx = Math.random() > 0.5 ? 1 : -1
-          }
-          
-          // Snap to grid to keep lines clean after turning
-          this.x = Math.round(this.x / gridSize) * gridSize
-          this.y = Math.round(this.y / gridSize) * gridSize
-        }
-
-        // Die if too old or out of bounds
-        if (
-          this.age > this.life || 
-          this.x < -50 || 
-          this.x > w + 50 || 
-          this.y < -50 || 
-          this.y > h + 50
-        ) {
-          this.reset()
-        }
-      }
-
-      draw() {
-        if (this.history.length < 2) return
-
-        ctx.beginPath()
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
-        
-        // Draw the trail
-        for (let i = 0; i < this.history.length - 1; i++) {
-          const p1 = this.history[i]
-          const p2 = this.history[i+1]
-          
-          // Opacity increases towards the head
-          const opacity = i / this.history.length
-          
-          ctx.beginPath()
-          ctx.strokeStyle = this.color
-          ctx.lineWidth = 2
-          ctx.globalAlpha = opacity
-          ctx.moveTo(p1.x, p1.y)
-          ctx.lineTo(p2.x, p2.y)
-          ctx.stroke()
-        }
-        
-        // Draw the "Head" (glowing dot)
-        ctx.globalAlpha = 1
-        ctx.fillStyle = '#fff'
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-
-    // --- Initialization ---
-
-    const initPackets = () => {
-      packets = []
-      for (let i = 0; i < packetCount; i++) {
-        packets.push(new Packet())
-      }
-    }
-
-    const handleResize = () => {
-      if (canvas.parentElement) {
-        w = canvas.parentElement.offsetWidth
-        h = canvas.parentElement.offsetHeight
-        canvas.width = w
-        canvas.height = h
-        
-        if (packets.length === 0) initPackets()
-      }
-    }
-
-    const drawGrid = () => {
-      ctx.fillStyle = '#cbd5e1' // slate-300
-      ctx.globalAlpha = 0.3
-      
-      for (let x = 0; x <= w; x += gridSize) {
-        for (let y = 0; y <= h; y += gridSize) {
-          ctx.beginPath()
-          ctx.arc(x, y, 1, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      }
-      ctx.globalAlpha = 1
-    }
-
-    function animate() {
-      // Clear with transparency for any motion blur effects, or just clear rect
-      ctx.clearRect(0, 0, w, h)
-      
-      drawGrid()
-      
-      packets.forEach(packet => {
-        packet.update()
-        packet.draw()
-      })
-
-      animationFrameId = requestAnimationFrame(animate)
-    }
-
-    // Start
-    handleResize()
-    animate()
-
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
-
-  return (
-    <canvas 
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-60"
-    />
-  )
-}
-
-// --- MAIN COMPONENT ---
 
 export default function Home() {
   const [email, setEmail] = useState('')
@@ -212,9 +15,9 @@ export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  const prismGradient = {
-    background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
-  }
+  // Enterprise Brand Colors
+  const brandColor = '#0f172a' // Slate 900
+  const accentColor = '#ea580c' // Orange 600
 
   useEffect(() => {
     setMounted(true)
@@ -245,7 +48,7 @@ export default function Home() {
         } else if (data.user && !data.session) {
           setMessage({ 
             type: 'success', 
-            text: '✅ Account created! Please check your email and click the confirmation link to continue. (Check spam folder if needed)' 
+            text: '✅ Account created! Please check your email and click the confirmation link.' 
           })
         } else {
           setMessage({ 
@@ -274,7 +77,7 @@ export default function Home() {
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password. Please try again.'
       } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address before signing in. Check your inbox for the confirmation link.'
+        errorMessage = 'Please confirm your email address before signing in.'
       } else if (error.message.includes('User already registered')) {
         errorMessage = 'This email is already registered. Please sign in instead.'
       }
@@ -285,23 +88,31 @@ export default function Home() {
     }
   }
 
-  const TracingCard = ({ delay, borderColor, children }) => (
-    <div className="relative bg-white/90 backdrop-blur-sm rounded-xl p-5 shadow-sm group border border-slate-200 transition-all duration-300 z-10">
-      <div className="relative z-10">
-        {children}
+  // Updated to use a uniform professional color (Orange) for the tracing effect
+  const TracingCard = ({ delay, icon, title, desc }) => (
+    <div className="relative bg-white border border-slate-200 rounded-lg p-5 shadow-sm transition-all duration-300 z-10">
+      <div className="relative z-10 flex items-start gap-4">
+        <div className="shrink-0 w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-700">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1">{title}</h3>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">{desc}</p>
+        </div>
       </div>
-      <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-xl overflow-visible">
+      {/* The tracing line is now uniform Orange for a cohesive brand look */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-lg overflow-visible">
         <rect 
           x="1" y="1" 
           width="calc(100% - 2px)" 
           height="calc(100% - 2px)" 
-          rx="11" 
+          rx="7" 
           fill="none" 
-          stroke={borderColor} 
+          stroke={accentColor} 
           strokeWidth="2"
           strokeLinecap="round"
-          strokeDasharray="1000" 
-          strokeDashoffset="1000"
+          strokeDasharray="800" 
+          strokeDashoffset="800"
           className={`draw-border ${mounted ? 'animate-draw' : ''}`}
           style={{ animationDelay: delay }}
         />
@@ -316,97 +127,81 @@ export default function Home() {
           to { stroke-dashoffset: 0; }
         }
         .animate-draw {
-          animation: drawBorder 2.5s ease-out forwards;
+          animation: drawBorder 2s ease-out forwards;
+        }
+        /* Subtle Technical Grid Background */
+        .bg-tech-grid {
+          background-size: 40px 40px;
+          background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
         }
       `}</style>
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Animated Background) */}
+        {/* LEFT SIDE (Informational) */}
         <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
           
-          {/* NEW CIRCUIT BACKGROUND */}
-          <CircuitBackground />
+          {/* Static Background Pattern */}
+          <div className="absolute inset-0 bg-tech-grid opacity-40 pointer-events-none"></div>
           
+          {/* Header */}
           <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
-            <div className={`inline-block transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+            <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
               <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
-                protocol<span className="font-normal text-slate-600">LM</span>
+                protocol<span className="font-normal text-slate-500">LM</span>
               </h1>
-              <div className="h-1.5 w-full rounded-full opacity-90" style={prismGradient}></div>
+              {/* Brand Accent Line */}
+              <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
             </div>
-            <div className={`text-xs text-slate-900 font-bold mt-1 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`text-xs text-slate-500 font-bold mt-2 uppercase tracking-wider transition-all duration-700 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               Michigan Restaurant Compliance
             </div>
           </div>
           
+          {/* Content Cards */}
           <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
             <div className="relative max-w-xl pl-6 mx-auto w-full">
+              {/* Connecting Vertical Line */}
               <div 
-                className="absolute left-0 top-2 w-1 rounded-full transition-all duration-[1500ms] ease-out"
-                style={{ ...prismGradient, height: mounted ? '95%' : '0%' }}
+                className="absolute left-0 top-2 w-0.5 bg-slate-200 rounded-full transition-all duration-[1500ms] ease-out"
+                style={{ height: mounted ? '95%' : '0%' }}
               ></div>
 
               <div className="space-y-4">
-                <TracingCard delay="100ms" borderColor="#d97706">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Health inspections happen without warning</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Be ready at all times with instant compliance checks.</p>
-                    </div>
-                  </div>
-                </TracingCard>
+                <TracingCard 
+                  delay="100ms" 
+                  title="Unannounced Inspections"
+                  desc="Health inspections happen without warning. Be ready instantly."
+                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+                />
 
-                <TracingCard delay="400ms" borderColor="#be123c">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-rose-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Critical violations cost you money</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Re-inspections, closures, and lost revenue add up fast.</p>
-                    </div>
-                  </div>
-                </TracingCard>
+                <TracingCard 
+                  delay="300ms" 
+                  title="Protect Revenue"
+                  desc="Critical violations cause closures. Protect your bottom line."
+                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                />
 
-                <TracingCard delay="700ms" borderColor="#16a34a">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-green-50 flex items-center justify-center border border-green-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Verify compliance with a photo</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Snap a picture of equipment or prep areas. Our system checks it against County, State, and Federal regulations.</p>
-                    </div>
-                  </div>
-                </TracingCard>
+                <TracingCard 
+                  delay="500ms" 
+                  title="Visual Verification"
+                  desc="Snap a photo of equipment. We verify compliance against County & State codes."
+                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>}
+                />
 
-                <TracingCard delay="1000ms" borderColor="#0284c7">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 flex items-center justify-center border border-sky-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">Questions need immediate answers</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">Your team needs answers in seconds, not hours.</p>
-                    </div>
-                  </div>
-                </TracingCard>
+                <TracingCard 
+                  delay="700ms" 
+                  title="Instant Answers"
+                  desc="Your managers need answers in seconds, not hours. 24/7 Availability."
+                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                />
 
-                <TracingCard delay="1300ms" borderColor="#4338ca">
-                  <div className="flex items-start gap-3">
-                    <div className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1.5">One tool. All your answers.</h3>
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">FDA Food Code, Michigan guidelines, and intelligent reasoning.</p>
-                    </div>
-                  </div>
-                </TracingCard>
+                <TracingCard 
+                  delay="900ms" 
+                  title="Unified Standards"
+                  desc="One tool for FDA Food Code, Michigan Law, and County specifics."
+                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                />
 
               </div>
             </div>
@@ -434,69 +229,60 @@ export default function Home() {
             <div className="mb-8 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-                <div className="h-1.5 w-full rounded-full" style={prismGradient}></div>
+                <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
               </div>
             </div>
 
             <div className="mb-8 text-center">
-              <h2 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-3 tracking-tight whitespace-nowrap">
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-bold text-slate-900 mb-3 tracking-tight">
                 {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
               </h2>
               
-              <p className="text-lg text-slate-600 font-medium w-full mx-auto leading-relaxed sm:whitespace-nowrap">
-                {view === 'signup' ? 'Join Michigan restaurants staying ahead of inspections' : 'Sign in to access your dashboard'}
+              <p className="text-base text-slate-600 font-normal w-full mx-auto leading-relaxed">
+                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Sign in to access your dashboard.'}
               </p>
             </div>
 
-            <div className="bg-slate-100 p-1 rounded-xl mb-5">
-              <div className="flex rounded-[10px] overflow-hidden">
+            {/* Toggle Switch */}
+            <div className="bg-slate-100 p-1 rounded-lg mb-6 max-w-sm mx-auto w-full">
+              <div className="flex rounded-md overflow-hidden relative">
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'signup' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
+                  className={`flex-1 py-2 text-sm font-semibold transition-all duration-200 rounded-md z-10 ${view === 'signup' ? 'text-slate-900 shadow-sm bg-white' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                  {view === 'signup' && (
-                    <div className="absolute inset-0 rounded-lg p-[2px]" style={prismGradient}>
-                      <div className="h-full w-full bg-white rounded-[6px]"></div>
-                    </div>
-                  )}
-                  <span className={`relative z-10 ${view === 'signup' ? 'text-slate-900' : 'text-slate-500'}`}>Sign up</span>
+                  Sign up
                 </button>
 
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`flex-1 relative group py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 ${view === 'login' ? 'bg-white shadow-sm' : 'bg-transparent hover:bg-slate-200/50'}`}
+                  className={`flex-1 py-2 text-sm font-semibold transition-all duration-200 rounded-md z-10 ${view === 'login' ? 'text-slate-900 shadow-sm bg-white' : 'text-slate-500 hover:text-slate-700'}`}
                 >
-                  {view === 'login' && (
-                    <div className="absolute inset-0 rounded-lg p-[2px]" style={prismGradient}>
-                      <div className="h-full w-full bg-white rounded-[6px]"></div>
-                    </div>
-                  )}
-                  <span className={`relative z-10 ${view === 'login' ? 'text-slate-900' : 'text-slate-500'}`}>Sign in</span>
+                  Sign in
                 </button>
               </div>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-1.5">Email address</label>
+                <label className="block text-sm font-bold text-slate-900 mb-1.5">Email address</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
-                  placeholder="you@restaurant.com" 
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 focus:outline-none text-slate-900 transition text-sm bg-white" 
+                  placeholder="you@company.com" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-900 mb-1.5">Password</label>
+                <label className="block text-sm font-bold text-slate-900 mb-1.5">Password</label>
                 <input 
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                   minLength={6} 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:ring-0 focus:outline-none text-slate-900 transition text-sm" 
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 focus:outline-none text-slate-900 transition text-sm bg-white" 
                   placeholder="••••••••" 
                 />
               </div>
@@ -504,32 +290,24 @@ export default function Home() {
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="group relative w-full rounded-xl overflow-hidden shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ height: '56px' }}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
               >
-                <div className="absolute inset-0" style={prismGradient}></div>
-                <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold w-[calc(100%-4px)] h-[calc(100%-4px)] rounded-[10px] transition-all flex items-center justify-center text-sm">
-                  {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-day free trial' : 'Sign in')}
-                </div>
+                {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-Day Free Trial' : 'Sign In')}
               </button>
 
               {message && (
-                <div className={`p-3 rounded-xl text-xs font-medium ${message.type === 'error' ? 'bg-red-50 border-2 border-red-200 text-red-800' : 'bg-slate-50 border-2 border-slate-200 text-slate-600'}`}>
+                <div className={`p-4 rounded-lg text-sm font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'}`}>
                   {message.text}
                 </div>
               )}
             </form>
 
             {view === 'signup' && (
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <p className="text-center text-xs text-slate-600 mb-3 font-medium">30-day free trial • From $49/month</p>
-                
-                <button 
-                  onClick={() => router.push('/pricing')} 
-                  className="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-all duration-300 text-sm"
-                >
-                  View pricing plans
-                </button>
+              <div className="mt-6 pt-6 border-t border-slate-200 text-center">
+                <p className="text-xs text-slate-500 mb-3 font-medium uppercase tracking-wide">Enterprise Grade Compliance</p>
+                <div className="flex justify-center gap-2 items-center text-xs text-slate-400">
+                   <span>Secure</span> • <span>Private</span> • <span>Reliable</span>
+                </div>
               </div>
             )}
           </div>
