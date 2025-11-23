@@ -4,7 +4,6 @@ import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-// Helper to create Supabase client
 function createSupabaseServer() {
   const cookieStore = cookies()
   
@@ -21,7 +20,6 @@ function createSupabaseServer() {
   )
 }
 
-// Get chat history for current user
 export async function GET(request) {
   const supabase = createSupabaseServer()
   
@@ -47,7 +45,6 @@ export async function GET(request) {
   }
 }
 
-// Save or update a chat
 export async function POST(request) {
   const supabase = createSupabaseServer()
   
@@ -59,13 +56,39 @@ export async function POST(request) {
   try {
     const { chatId, title, messages, county } = await request.json()
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+    // Validate messages array
+    if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid chat data' }, { status: 400 })
     }
 
+    // Check message count
+    if (messages.length === 0) {
+      return NextResponse.json({ error: 'Chat cannot be empty' }, { status: 400 })
+    }
+
+    if (messages.length > 100) {
+      return NextResponse.json({ error: 'Too many messages (max 100)' }, { status: 400 })
+    }
+
+    // Check total size
     const messagesJson = JSON.stringify(messages)
-    if (messagesJson.length > 100000) {
-      return NextResponse.json({ error: 'Chat too large' }, { status: 400 })
+    const sizeInKB = messagesJson.length / 1024
+
+    if (messagesJson.length > 50000) {
+      return NextResponse.json({ 
+        error: `Chat too large (${sizeInKB.toFixed(1)}KB). Max 50KB.` 
+      }, { status: 400 })
+    }
+
+    // Validate each message structure
+    for (const msg of messages) {
+      if (!msg.role || !msg.content) {
+        return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
+      }
+      
+      if (msg.content.length > 10000) {
+        return NextResponse.json({ error: 'Individual message too large' }, { status: 400 })
+      }
     }
 
     const chatData = {
@@ -105,7 +128,6 @@ export async function POST(request) {
   }
 }
 
-// Delete a chat
 export async function DELETE(request) {
   const supabase = createSupabaseServer()
   
