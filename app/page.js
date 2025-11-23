@@ -113,7 +113,6 @@ export default function Home() {
 
   const IconPriority = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      {/* Clean cylinder/database shape without internal lines */}
       <path d="M12 3c-4.97 0-9 1.79-9 4v10c0 2.21 4.03 4 9 4s9-1.79 9-4V7" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M12 3c4.97 0 9 1.79 9 4s-4.03 4-9 4-9-1.79-9-4 4.03-4 9-4z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -121,7 +120,6 @@ export default function Home() {
 
   const IconGrid = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      {/* Clean isometric box without the cross lines */}
       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -137,12 +135,12 @@ export default function Home() {
 
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      // Increased padding from p-6 to p-8 for larger size
-      className={`group flex items-center gap-6 p-8 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      // Adjusted padding to p-6 (was p-8) to fit better on screen
+      className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      {/* Increased icon container size */}
-      <div className="relative shrink-0 w-20 h-20 flex items-center justify-center text-teal-100 group-hover:text-white transition-all duration-500 ease-out">
+      {/* Adjusted size to w-16 (was w-20) */}
+      <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100 group-hover:text-white transition-all duration-500 ease-out">
         <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <Icon />
       </div>
@@ -155,7 +153,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-white font-sans">
-      {/* Animation Styles */}
       <style jsx global>{`
         .icon-trace path, .icon-trace circle {
           stroke-dasharray: 100;
@@ -178,7 +175,8 @@ export default function Home() {
           
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149] via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
 
-          <div className="lg:absolute lg:top-12 lg:left-12 z-10 mb-10 lg:mb-0">
+          {/* Header: Increased top margin/padding for safety */}
+          <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
                 protocol<span className="font-normal text-teal-300">LM</span>
@@ -188,8 +186,10 @@ export default function Home() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center z-10">
-            <div className="max-w-lg mx-auto w-full pt-10">
-              <div className="grid gap-6"> {/* Increased gap */}
+            {/* Added lg:mt-20 to push content down from header if needed */}
+            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-16">
+              {/* Reduced gap from 6 to 4 to save vertical space */}
+              <div className="grid gap-4">
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
