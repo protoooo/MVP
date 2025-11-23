@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 const COUNTY_NAMES = {
@@ -35,7 +35,7 @@ export default function DocumentsPage() {
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
   const saveTimeoutRef = useRef(null)
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export default function DocumentsPage() {
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('plan, status, trial_end, current_period_end')
-        .eq('id', session.user.id)
+        .eq('user_id', session.user.id)
         .single()
 
       const limits = subscription?.plan === 'enterprise'
@@ -304,7 +304,7 @@ export default function DocumentsPage() {
 
     const parts = []
     let lastIndex = 0
-    const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
+    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
 
     while ((match = citationRegex.exec(msg.content)) !== null) {
@@ -511,7 +511,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* --- SIDEBAR (Dark Teal - Matching Landing) --- */}
+      {/* SIDEBAR */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#022c22] border-r border-teal-900 text-teal-100 flex flex-col z-40 relative overflow-hidden`}>
         
         <div className="relative z-10 flex flex-col h-full">
@@ -608,7 +608,7 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* --- MAIN CHAT AREA (White/Clean) --- */}
+      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col min-w-0 bg-white">
         
         {/* Mobile Header */}
