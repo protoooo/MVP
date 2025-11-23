@@ -5,6 +5,7 @@ import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
 import { sanitizeString, sanitizeCounty, sanitizeMessages } from '@/lib/sanitize'
 import { logError, logInfo } from '@/lib/monitoring'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,59 +13,6 @@ const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
   oakland: 'Oakland County'
-}
-
-const VALID_COUNTIES = ['washtenaw', 'wayne', 'oakland']
-
-// In-memory fallback rate limiting
-const memoryRateLimit = new Map()
-
-function checkRateLimitMemory(userId, action = 'chat') {
-  const limits = { chat: { max: 20, window: 60000 } }
-  const { max, window } = limits[action] || limits.chat
-  const key = `${userId}:${action}`
-  const now = Date.now()
-  
-  let userLimit = memoryRateLimit.get(key)
-  
-  if (!userLimit || now > userLimit.resetTime) {
-    userLimit = { count: 0, resetTime: now + window }
-    memoryRateLimit.set(key, userLimit)
-  }
-  
-  if (userLimit.count >= max) {
-    return {
-      allowed: false,
-      remainingRequests: 0,
-      resetTime: userLimit.resetTime,
-      retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
-    }
-  }
-  
-  userLimit.count++
-  memoryRateLimit.set(key, userLimit)
-  
-  return {
-    allowed: true,
-    remainingRequests: max - userLimit.count,
-    resetTime: userLimit.resetTime,
-    retryAfter: 0
-  }
-}
-
-async function checkRateLimit(userId, action = 'chat') {
-  // Try Redis first, fall back to memory
-  if (process.env.REDIS_URL) {
-    try {
-      const { checkRateLimit: redisCheck } = await import('@/lib/redis-rate-limit')
-      return await redisCheck(userId, action)
-    } catch (error) {
-      console.warn('⚠️ Redis unavailable, using in-memory rate limiting:', error.message)
-    }
-  }
-  
-  // Fallback to in-memory rate limiting
-  return checkRateLimitMemory(userId, action)
 }
 
 function validateEnvironment() {
@@ -153,7 +101,7 @@ function validateImageData(imageData) {
   }
 
   const sizeInBytes = (base64Data.length * 3) / 4
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  const maxSize = 5 * 1024 * 1024
 
   if (sizeInBytes > maxSize) {
     throw new Error('Image is too large. Maximum size is 5MB.')
@@ -178,7 +126,6 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Rate limiting with fallback
   const rateCheck = await checkRateLimit(session.user.id, 'chat')
   
   if (!rateCheck.allowed) {
@@ -255,9 +202,7 @@ export async function POST(request) {
 
       try {
         validatedImage = validateImageData(image)
-        console.log('✅ Image validated:', validatedImage.mimeType)
       } catch (e) {
-        console.error('❌ Image validation failed:', e.message)
         return NextResponse.json({ error: e.message }, { status: 400 })
       }
     }
@@ -529,7 +474,6 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       contents: [{ role: 'user', parts: userMessageParts }]
     }
 
-    console.log('🚀 Sending request to Vertex AI...')
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     const text = response.candidates[0].content.parts[0].text
@@ -556,8 +500,6 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     while ((match = citationRegex.exec(validatedText)) !== null) {
       citations.push({ document: match[1], pages: match[2], county: userCounty })
     }
-
-    console.log('✅ Request successful')
 
     return NextResponse.json({ 
       message: validatedText,
