@@ -1,13 +1,28 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-export async function POST(request) {
+function createSupabaseServer() {
   const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
+}
+
+export async function POST(request) {
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -22,17 +37,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    // Determine plan name from price ID
     const planName = priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'enterprise' : 'pro'
 
-    // Always use environment variable
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
     console.log('✅ Creating checkout session for:', session.user.email)
     console.log('✅ Plan:', planName)
     console.log('✅ Success URL:', `${baseUrl}/documents?session_id={CHECKOUT_SESSION_ID}`)
 
-    // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
