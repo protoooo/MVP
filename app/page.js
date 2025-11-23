@@ -84,18 +84,18 @@ export default function Home() {
     }
   }
 
-  // New "Feature Item" - High contrast, icon-based, concise
-  const FeatureItem = ({ icon, title, desc, delay }) => (
+  // Glass Cards - "High Tech / Enterprise" Look
+  const FeatureCard = ({ icon, title, desc, delay }) => (
     <div 
-      className={`flex items-start gap-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+      className={`flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm transition-all duration-700 hover:bg-white/10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="shrink-0 w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-white">
+      <div className="shrink-0 w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-white border border-white/10">
         {icon}
       </div>
       <div>
         <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
-        <p className="text-slate-400 text-xs leading-relaxed max-w-sm">{desc}</p>
+        <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
       </div>
     </div>
   )
@@ -104,47 +104,46 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Dark Navy - High End Look) */}
-        <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12 lg:pb-32">
+        {/* LEFT SIDE (Dark Navy - Structure) */}
+        <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col justify-between relative overflow-hidden px-8 py-10 lg:p-12">
           
-          {/* Subtle background radial gradient for depth */}
+          {/* Background Gradient */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-900 pointer-events-none"></div>
 
-          {/* Logo anchored to top-left */}
-          <div className="absolute top-0 left-0 w-full p-6 sm:p-8 lg:p-12 z-20 pointer-events-none">
-            <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-                protocol<span className="font-normal text-slate-400">LM</span>
-              </h1>
-              <div className="h-0.5 w-full bg-white/20"></div>
-            </div>
+          {/* 1. Header Logo (Part of flow, not absolute) */}
+          <div className={`relative z-10 transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
+              protocol<span className="font-normal text-slate-400">LM</span>
+            </h1>
+            <div className="h-0.5 w-32 bg-white/20"></div>
           </div>
           
-          <div className="max-w-xl mx-auto w-full z-10">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10">
+          {/* 2. Middle Content (Vertically Centered automatically via justify-between/flex) */}
+          <div className="relative z-10 max-w-lg w-full my-auto py-12">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">
               System Intelligence
             </p>
 
-            <div className="space-y-10">
-              <FeatureItem 
+            <div className="grid gap-4">
+              <FeatureCard 
                 delay="100ms"
                 title="Local Enforcement Data"
                 desc="Trained on specific Washtenaw & Wayne County enforcement triggers and priority violations."
                 icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
-              <FeatureItem 
+              <FeatureCard 
                 delay="200ms"
                 title="Time & Temp Controls"
                 desc="Automated procedures for TPHC (Time as a Public Health Control) and cooling logs."
                 icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
-              <FeatureItem 
+              <FeatureCard 
                 delay="300ms"
                 title="State Code Synthesis"
                 desc="A single source of truth combining the FDA Food Code with Michigan Modified Food Law."
                 icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
               />
-              <FeatureItem 
+              <FeatureCard 
                 delay="400ms"
                 title="Contamination Protocols"
                 desc="Immediate emergency guidance for vomit, diarrhea, and Norovirus events."
@@ -153,9 +152,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer anchored to bottom-left */}
-          <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 lg:p-12 text-slate-500 text-[10px] font-medium uppercase tracking-wider z-20">
-            <div className={`flex flex-wrap gap-6 transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* 3. Footer (Stuck to bottom of container) */}
+          <div className={`relative z-10 text-slate-500 text-[10px] font-medium uppercase tracking-wider transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="flex flex-wrap gap-6">
               <span>Bank-Grade Security</span>
               <span>Enterprise Ready</span>
             </div>
@@ -163,21 +162,21 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 py-12 z-20 min-h-screen">
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-between px-8 py-10 lg:p-12 min-h-screen">
           
-          <div className="w-full max-w-md mx-auto">
-            
-            {/* Mobile Logo */}
-            <div className="mb-10 lg:hidden">
-              <div className="inline-block">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-                <div className="h-0.5 w-full bg-slate-900"></div>
-              </div>
-            </div>
+          {/* Mobile Logo (Visible only on small screens) */}
+          <div className="lg:hidden mb-8">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
+            <div className="h-0.5 w-32 bg-slate-900"></div>
+          </div>
 
+          {/* Spacer for Desktop to push content to middle */}
+          <div className="hidden lg:block"></div>
+
+          <div className="w-full max-w-md mx-auto">
             <div className="mb-10">
-              <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-4 tracking-tight">
-                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Sign in to dashboard.'}
+              <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
+                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back to the dashboard.'}
               </h2>
             </div>
 
@@ -247,14 +246,15 @@ export default function Home() {
                 </button>
               )}
             </div>
+          </div>
 
-            <div className="mt-12 text-center">
-               <div className="flex justify-center gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  <a href="/terms" className="hover:text-slate-600">Terms</a>
-                  <a href="/privacy" className="hover:text-slate-600">Privacy</a>
-                  <a href="/contact" className="hover:text-slate-600">Contact</a>
-               </div>
-            </div>
+          {/* Footer aligns with left side footer */}
+          <div className="mt-auto pt-8 text-center lg:text-left">
+             <div className="flex justify-center lg:justify-start gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <a href="/terms" className="hover:text-slate-600">Terms</a>
+                <a href="/privacy" className="hover:text-slate-600">Privacy</a>
+                <a href="/contact" className="hover:text-slate-600">Contact</a>
+             </div>
           </div>
         </div>
       </div>
