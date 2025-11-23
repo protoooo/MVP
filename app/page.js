@@ -123,17 +123,17 @@ export default function Home() {
     </svg>
   )
 
-  // High-End Feature Card
+  // High-End Feature Card (Bigger padding now)
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`group flex items-center gap-5 p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      className={`group flex items-center gap-6 p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="shrink-0 w-14 h-14 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out">
+      <div className="shrink-0 w-16 h-16 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out">
         <Icon />
       </div>
       <div className="min-w-0">
-        <h3 className="text-white font-medium text-xs tracking-wide uppercase mb-1.5">{title}</h3>
+        <h3 className="text-white font-medium text-xs tracking-wide uppercase mb-2">{title}</h3>
         <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
       </div>
     </div>
@@ -144,7 +144,8 @@ export default function Home() {
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
         {/* LEFT SIDE (Dark Navy - Wireframes) */}
-        <div className="w-full lg:w-1/2 bg-[#0B0E14] relative overflow-hidden px-8 py-6 flex flex-col">
+        {/* Added lg:pb-40 to push center content UP */}
+        <div className="w-full lg:w-1/2 bg-[#0B0E14] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
           {/* Background */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-slate-800/20 via-[#0B0E14] to-[#0B0E14] pointer-events-none"></div>
@@ -161,8 +162,8 @@ export default function Home() {
           
           {/* Content (Centered) */}
           <div className="flex-1 flex flex-col justify-center z-10">
-            <div className="max-w-md mx-auto w-full">
-              <div className="grid gap-4">
+            <div className="max-w-lg mx-auto w-full">
+              <div className="grid gap-5">
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
@@ -202,16 +203,17 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col">
+        {/* Added lg:pb-40 to push center content UP */}
+        <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
           
           {/* Spacers to force center alignment mirroring left side */}
-          <div className="hidden lg:block lg:h-32"></div> 
+          <div className="hidden lg:block lg:h-24"></div> 
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="w-full max-w-md mx-auto">
               <div className="mb-12">
-                <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
-                  {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back to the dashboard.'}
+                <h2 className="text-3xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-[1.1] text-balance">
+                  {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back.'}
                 </h2>
               </div>
 
