@@ -26,6 +26,7 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
+        // SIGNUP FLOW - Email confirmation brings them to /auth/callback which redirects to /pricing
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
         
         const { data, error } = await supabase.auth.signUp({
@@ -40,18 +41,31 @@ export default function Home() {
         if (error) throw error
         
         if (data.session) {
-          // User was auto-confirmed (email confirmation disabled)
-          console.log('✅ Auto-confirmed signup, redirecting to pricing')
-          window.location.href = '/pricing'
+          // User was auto-confirmed (email confirmation disabled in Supabase)
+          console.log('✅ Auto-confirmed signup, checking profile...')
+          
+          // Check if they've accepted terms
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('accepted_terms, accepted_privacy')
+            .eq('id', data.session.user.id)
+            .single()
+          
+          if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+            window.location.href = '/accept-terms'
+          } else {
+            window.location.href = '/pricing'
+          }
         } else if (data.user && !data.session) {
+          // Email confirmation required
           setMessage({ 
             type: 'success', 
-            text: '✅ Account created. Please check your email to verify.' 
+            text: '✅ Check your email to confirm your account, then you can sign in.' 
           })
           setLoading(false)
         }
       } else {
-        // LOGIN FLOW
+        // LOGIN FLOW with retry logic
         console.log('🔐 Attempting login...')
         
         const { data, error } = await supabase.auth.signInWithPassword({ 
@@ -66,65 +80,86 @@ export default function Home() {
         
         console.log('✅ Login successful, checking profile...')
 
-        // Add timeout to profile check to prevent indefinite hang
-        const profileTimeout = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Profile check timeout')), 5000)
-        )
+        // Retry profile fetch with exponential backoff
+        const maxRetries = 3
+        let profile = null
+        
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('is_subscribed, accepted_terms, accepted_privacy')
+              .eq('id', data.session.user.id)
+              .single()
 
-        const profileCheck = supabase
-          .from('user_profiles')
-          .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', data.session.user.id)
-          .single()
+            if (profileError) {
+              if (profileError.code === 'PGRST116') {
+                // Profile doesn't exist yet - redirect to terms
+                if (attempt === maxRetries - 1) {
+                  console.log('📋 Profile not found, redirecting to terms')
+                  window.location.href = '/accept-terms'
+                  return
+                }
+              }
+              
+              // Other error - retry
+              const delay = 1000 * (attempt + 1)
+              console.log(`⏳ Retry ${attempt + 1}/${maxRetries} in ${delay}ms...`)
+              await new Promise(resolve => setTimeout(resolve, delay))
+              continue
+            }
 
-        try {
-          const { data: profile, error: profileError } = await Promise.race([
-            profileCheck,
-            profileTimeout
-          ])
-
-          if (profileError) {
-            console.error('⚠️ Profile fetch error:', profileError)
-            // If profile doesn't exist, redirect to terms
-            console.log('📋 Redirecting to terms acceptance...')
-            window.location.href = '/accept-terms'
-            return
+            profile = profileData
+            console.log('📊 Profile retrieved:', { 
+              terms: profile.accepted_terms, 
+              subscribed: profile.is_subscribed 
+            })
+            break
+            
+          } catch (retryError) {
+            console.error(`❌ Retry ${attempt + 1} failed:`, retryError)
+            if (attempt === maxRetries - 1) {
+              throw retryError
+            }
           }
+        }
 
-          console.log('📊 Profile data:', profile)
+        // Profile retrieved successfully
+        if (!profile) {
+          console.log('📋 No profile, redirecting to terms')
+          window.location.href = '/accept-terms'
+          return
+        }
 
-          // Check terms acceptance first
-          if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-            console.log('📋 Terms not accepted, redirecting...')
-            window.location.href = '/accept-terms'
-            return
-          }
+        // Check terms acceptance
+        if (!profile.accepted_terms || !profile.accepted_privacy) {
+          console.log('📋 Terms not accepted, redirecting')
+          window.location.href = '/accept-terms'
+          return
+        }
 
-          // Then check subscription
-          if (profile?.is_subscribed) {
-            console.log('✅ User has subscription, redirecting to documents')
-            window.location.href = '/documents'
-          } else {
-            console.log('💳 No subscription, redirecting to pricing')
-            window.location.href = '/pricing'
-          }
-        } catch (timeoutError) {
-          console.error('⏱️ Profile check timeout, redirecting to pricing')
+        // Check subscription
+        if (profile.is_subscribed) {
+          console.log('✅ User has subscription, redirecting to documents')
+          window.location.href = '/documents'
+        } else {
+          console.log('💳 No subscription, redirecting to pricing')
           window.location.href = '/pricing'
         }
       }
     } catch (error) {
       console.error('❌ Auth error:', error)
+      
       let errorMessage = error.message
       
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password.'
       } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address first.'
+        errorMessage = 'Please check your email and confirm your account first.'
       } else if (error.message.includes('User already registered')) {
-        errorMessage = 'Account exists. Please sign in.'
-      } else if (error.message.includes('timeout')) {
-        errorMessage = 'Connection timeout. Please try again.'
+        errorMessage = 'Account already exists. Please sign in instead.'
+      } else if (error.message.includes('timeout') || error.message.includes('network')) {
+        errorMessage = 'Connection issue. Please try again.'
       }
       
       setMessage({ type: 'error', text: errorMessage })
@@ -331,7 +366,7 @@ export default function Home() {
                   disabled={loading} 
                   className="w-full bg-[#022c22] hover:bg-[#0f3c3a] text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
                 >
-                  {loading ? 'Processing...' : (view === 'signup' ? 'Start Free Trial' : 'Access Dashboard')}
+                  {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Access Dashboard')}
                 </button>
 
                 {message && (
