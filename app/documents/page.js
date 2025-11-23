@@ -4,131 +4,170 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- Particle Background ---
-const ParticleBackground = () => {
+// --- Circuit/GPU Background Animation ---
+const CircuitBackground = () => {
   const canvasRef = useRef(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    
-    const ctx = canvas.getContext('2d')
+
+    const ctx = canvas.getContext('2d', { alpha: true })
     let animationFrameId
+    
+    // Configuration
+    const gridSize = 30 // Distance between grid points
+    const packetCount = 20 // Slightly fewer for the sidebar to be subtle
+    const trailLength = 15 
+    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca']
+    
+    let packets = []
+    let w = 0
+    let h = 0
 
-    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca', '#4F759B']
-    const particleCount = 30 
-    const connectionDistance = 80
-    const mouseDistance = 120
-    const particles = []
+    class Packet {
+      constructor() {
+        this.reset()
+      }
 
-    let mouse = { x: null, y: null }
+      reset() {
+        // Snap to grid
+        this.x = Math.floor(Math.random() * (w / gridSize)) * gridSize
+        this.y = Math.floor(Math.random() * (h / gridSize)) * gridSize
+        
+        // Random direction (Up, Down, Left, Right)
+        const dirs = [
+          { dx: 1, dy: 0 },  // Right
+          { dx: -1, dy: 0 }, // Left
+          { dx: 0, dy: 1 },  // Down
+          { dx: 0, dy: -1 }  // Up
+        ]
+        const dir = dirs[Math.floor(Math.random() * dirs.length)]
+        this.dx = dir.dx
+        this.dy = dir.dy
+        
+        this.speed = 2 // Pixels per frame
+        this.life = Math.random() * 100 + 50 
+        this.age = 0
+        this.color = colors[Math.floor(Math.random() * colors.length)]
+        
+        this.history = [] 
+      }
 
-    function initParticles() {
-      particles.length = 0
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle())
+      update() {
+        this.age++
+        
+        this.x += this.dx * this.speed
+        this.y += this.dy * this.speed
+
+        this.history.push({ x: this.x, y: this.y })
+        if (this.history.length > trailLength) {
+          this.history.shift()
+        }
+
+        // Randomly turn
+        if (this.age % Math.floor(Math.random() * 50 + 20) === 0) {
+          if (this.dx !== 0) {
+            this.dx = 0
+            this.dy = Math.random() > 0.5 ? 1 : -1
+          } else {
+            this.dy = 0
+            this.dx = Math.random() > 0.5 ? 1 : -1
+          }
+          this.x = Math.round(this.x / gridSize) * gridSize
+          this.y = Math.round(this.y / gridSize) * gridSize
+        }
+
+        // Boundary check
+        if (
+          this.age > this.life || 
+          this.x < -50 || 
+          this.x > w + 50 || 
+          this.y < -50 || 
+          this.y > h + 50
+        ) {
+          this.reset()
+        }
+      }
+
+      draw() {
+        if (this.history.length < 2) return
+
+        ctx.beginPath()
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        
+        for (let i = 0; i < this.history.length - 1; i++) {
+          const p1 = this.history[i]
+          const p2 = this.history[i+1]
+          const opacity = (i / this.history.length) * 0.5 // Lower opacity for sidebar
+          
+          ctx.beginPath()
+          ctx.strokeStyle = this.color
+          ctx.lineWidth = 2
+          ctx.globalAlpha = opacity
+          ctx.moveTo(p1.x, p1.y)
+          ctx.lineTo(p2.x, p2.y)
+          ctx.stroke()
+        }
+        
+        // Head
+        ctx.globalAlpha = 0.8
+        ctx.fillStyle = this.color
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    const initPackets = () => {
+      packets = []
+      for (let i = 0; i < packetCount; i++) {
+        packets.push(new Packet())
       }
     }
 
     const handleResize = () => {
       if (canvas.parentElement) {
-        canvas.width = canvas.parentElement.offsetWidth
-        canvas.height = canvas.parentElement.offsetHeight
-        initParticles()
+        w = canvas.parentElement.offsetWidth
+        h = canvas.parentElement.offsetHeight
+        canvas.width = w
+        canvas.height = h
+        if (packets.length === 0) initPackets()
       }
     }
 
-    const handleMouseMove = (event) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = event.clientX - rect.left
-      mouse.y = event.clientY - rect.top
-    }
-
-    const handleMouseLeave = () => {
-      mouse.x = null
-      mouse.y = null
-    }
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * (canvas.width || 300)
-        this.y = Math.random() * (canvas.height || 800)
-        this.vx = (Math.random() - 0.5) * 0.5
-        this.vy = (Math.random() - 0.5) * 0.5
-        this.size = Math.random() * 2 + 1.5 
-        this.color = colors[Math.floor(Math.random() * colors.length)]
-      }
-
-      update() {
-        this.x += this.vx
-        this.y += this.vy
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1
-
-        if (mouse.x != null) {
-          let dx = mouse.x - this.x
-          let dy = mouse.y - this.y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < mouseDistance) {
-            const forceDirectionX = dx / distance
-            const forceDirectionY = dy / distance
-            const force = (mouseDistance - distance) / mouseDistance
-            this.x -= (forceDirectionX * force * 0.6)
-            this.y -= (forceDirectionY * force * 0.6)
-          }
+    const drawGrid = () => {
+      ctx.fillStyle = '#cbd5e1' // slate-300
+      ctx.globalAlpha = 0.2 // Very subtle grid
+      
+      for (let x = 0; x <= w; x += gridSize) {
+        for (let y = 0; y <= h; y += gridSize) {
+          ctx.beginPath()
+          ctx.arc(x, y, 1, 0, Math.PI * 2)
+          ctx.fill()
         }
       }
-
-      draw() {
-        ctx.fillStyle = this.color
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
-        ctx.fill()
-      }
+      ctx.globalAlpha = 1
     }
 
     function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update()
-        particles[i].draw()
-        for (let j = i; j < particles.length; j++) {
-          let dx = particles[i].x - particles[j].x
-          let dy = particles[i].y - particles[j].y
-          let distance = Math.sqrt(dx * dx + dy * dy)
-          if (distance < connectionDistance) {
-            let opacity = 1 - (distance / connectionDistance)
-            ctx.globalAlpha = opacity * 0.4 
-            const gradient = ctx.createLinearGradient(particles[i].x, particles[i].y, particles[j].x, particles[j].y)
-            gradient.addColorStop(0, particles[i].color)
-            gradient.addColorStop(1, particles[j].color)
-            ctx.strokeStyle = gradient
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(particles[i].x, particles[i].y)
-            ctx.lineTo(particles[j].x, particles[j].y)
-            ctx.stroke()
-            ctx.globalAlpha = 1.0
-          }
-        }
-      }
+      ctx.clearRect(0, 0, w, h)
+      drawGrid()
+      packets.forEach(packet => {
+        packet.update()
+        packet.draw()
+      })
       animationFrameId = requestAnimationFrame(animate)
     }
 
     handleResize()
-    initParticles()
     animate()
 
     window.addEventListener('resize', handleResize)
-    canvas.addEventListener('mousemove', handleMouseMove)
-    canvas.addEventListener('mouseleave', handleMouseLeave)
 
     return () => {
       window.removeEventListener('resize', handleResize)
-      if (canvas) {
-        canvas.removeEventListener('mousemove', handleMouseMove)
-        canvas.removeEventListener('mouseleave', handleMouseLeave)
-      }
       cancelAnimationFrame(animationFrameId)
     }
   }, [])
@@ -136,7 +175,7 @@ const ParticleBackground = () => {
   return (
     <canvas 
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-auto z-0 opacity-60"
+      className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-50"
     />
   )
 }
@@ -665,7 +704,9 @@ export default function DocumentsPage() {
       )}
 
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
-        <ParticleBackground />
+        
+        {/* UPDATED ANIMATION HERE */}
+        <CircuitBackground />
         
         <div className="relative z-10 flex flex-col h-full">
           <div className="p-6 flex-shrink-0 border-b border-slate-200/60 bg-slate-50/80 backdrop-blur-sm">
