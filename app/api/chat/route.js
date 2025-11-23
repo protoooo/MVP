@@ -66,26 +66,20 @@ function getVertexCredentials() {
 
 /**
  * Cleans the response to ensure no markdown formatting remains
- * and ensures citations are spaced correctly.
  */
 function cleanAIResponse(text) {
   if (!text) return ""
   
   let cleaned = text
-    // Remove Markdown bold/italic markers
     .replace(/\*\*/g, '')
     .replace(/__/g, '')
-    .replace(/\*/g, '') // Remove single asterisks used for lists sometimes
+    .replace(/\*/g, '') 
     .replace(/`/g, '')
-    
-    // Remove HTML/Scripts
     .replace(/<script[^>]*>.*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
-
-    // Ensure space before citations
-    .replace(/([a-zA-Z0-9.])\[/g, '$1 [')
+    .replace(/([a-zA-Z0-9.])\[/g, '$1 [') // Ensure space before citations
 
   if (cleaned.length > 50000) {
     cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated for length]'
@@ -249,7 +243,7 @@ export async function POST(request) {
     const model = 'gemini-2.0-flash-exp'
 
     // ═══════════════════════════════════════════════════════════════════
-    // RAG - DOCUMENT RETRIEVAL
+    // RAG - DOCUMENT RETRIEVAL (IMPROVED STRATEGY)
     // ═══════════════════════════════════════════════════════════════════
     let contextText = ""
     let usedDocs = []
@@ -258,60 +252,56 @@ export async function POST(request) {
       try {
         console.log(`🔍 Searching documents for ${userCountyName}...`)
         
-        // Enhanced Search Strategy to target County Specifics
         let searchQueries = []
         
+        // 1. Mandatory "Meta" Query to always fetch County Specifics
+        // We want the "Violation Types" and "Enforcement" docs to ALWAYS appear if possible
+        searchQueries.push(`"${userCountyName}" violation types enforcement priority foundation core`)
+
         if (validatedImage) {
-          searchQueries = [
-            `${userCountyName} physical facility maintenance requirements`,
-            `${userCountyName} equipment cleaning standards`,
-            'cross contamination prevention procedures',
-            'sanitation standard operating procedures',
-            lastUserMessage // Fallback to user text
-          ]
+          // 2. Image Context Queries
+          searchQueries.push(`${userCountyName} equipment cleaning frequency requirements`)
+          searchQueries.push(`${userCountyName} physical facility maintenance`)
+          searchQueries.push(lastUserMessage)
         } else {
-          searchQueries = [
-            // Priority 1: Specific County Query
-            `${lastUserMessage} ${userCountyName} regulations`,
-            // Priority 2: Specific County Violation Types
-            `${userCountyName} violation types priority foundation core`,
-            // Priority 3: General Query
-            lastUserMessage
-          ]
+          // 2. Text Context Queries
+          searchQueries.push(`${lastUserMessage} ${userCountyName} regulations`)
+          searchQueries.push(lastUserMessage)
         }
 
         const allResults = []
         
         for (const query of searchQueries) {
           if (query && query.trim()) {
-            // We pass the county code (e.g. 'washtenaw') to the search function
-            // to help filtering if supported, or just rely on semantic match
-            const results = await searchDocuments(query.trim(), 10, sanitizedCounty)
+            // Increased limit to ensure we catch the county docs even if they rank lower
+            const results = await searchDocuments(query.trim(), 15, sanitizedCounty)
             allResults.push(...results)
           }
         }
 
-        // Deduplicate and Sort
         const seenContent = new Set()
         const uniqueResults = []
         
         for (const doc of allResults) {
-          const contentKey = doc.text.substring(0, 100) // First 100 chars as signature
+          const contentKey = doc.text.substring(0, 100)
           if (!seenContent.has(contentKey)) {
-            // Bonus score for documents that actually contain the county name in the source filename
+            // HEAVILY Boost County Specific Documents
             if (doc.source && doc.source.toLowerCase().includes(sanitizedCounty)) {
-              doc.score += 0.15 // Boost local documents
+              doc.score += 0.25 // Massive boost to force them to top
+            }
+            // Boost "Violation Types" or "Enforcement" docs specifically
+            if (doc.source && (doc.source.toLowerCase().includes('violation') || doc.source.toLowerCase().includes('enforcement'))) {
+              doc.score += 0.20 
             }
             
-            if (doc.score > 0.20) { // Minimum relevance threshold
+            if (doc.score > 0.20) {
               seenContent.add(contentKey)
               uniqueResults.push(doc)
             }
           }
         }
 
-        // Sort by score (descending)
-        const topResults = uniqueResults.sort((a, b) => b.score - a.score).slice(0, 25)
+        const topResults = uniqueResults.sort((a, b) => b.score - a.score).slice(0, 30)
         
         if (topResults.length > 0) {
           contextText = topResults.map((doc, idx) => 
@@ -332,34 +322,30 @@ CONTENT: ${doc.text}`
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // SYSTEM INSTRUCTION
+    // SYSTEM INSTRUCTION (UPDATED FOR CROSS-REFERENCING)
     // ═══════════════════════════════════════════════════════════════════
-    const systemInstructionText = `You are ProtocolLM, an expert food safety consultant for restaurants in ${userCountyName}.
+    const systemInstructionText = `You are ProtocolLM, an expert food safety consultant for ${userCountyName}.
 
-Your goal is to provide clear, conversational, and highly accurate compliance advice. You help operators fix issues before an inspector walks in.
+Your goal is to analyze situations and provide compliance advice. You have access to two types of documents:
+1. **The Code (FDA/State)**: Defines *what* the rule is (e.g., "Cleaning frequency").
+2. **County Documents**: Define *severity* (Priority, Foundation, Core) and *enforcement*.
 
-RULES FOR RESPONSE:
-1. **NO MARKDOWN FORMATTING**: Do not use asterisks (**bold**), underscores (__italics__), or headers (##). Write in clean, plain text paragraphs. Use standard capitalization for emphasis if absolutely necessary.
+**CRITICAL INSTRUCTION: CROSS-REFERENCE SOURCES**
+Even if you find the specific rule in the FDA/State code, you MUST look at the retrieved County documents (like "Violation Types") to see if you can categorize the violation.
+- **Example**: "This is a violation of the FDA Food Code [FDA_Code, Page 50]. According to the ${userCountyName} Violation Types document [Washtenaw_Violations, Page 2], this is classified as a Priority Foundation (Pf) item."
 
-2. **PRIORITIZE LOCAL REGULATIONS**: You have access to ${userCountyName} specific documents (e.g., "Violation Types | ${userCountyName}", "Enforcement Action"). ALWAYS cite these local documents first if they address the user's question.
-
-3. **CONVERSATIONAL TONE**: Do not sound like a robot or an encyclopedia. Speak like a helpful, knowledgeable consultant standing in the kitchen with the manager.
-   - Bad: "The FDA Food Code Section 4-201 states..."
-   - Good: "According to the FDA Food Code [FDA_Food_Code, Page 45], you need to keep that equipment clean..."
-
-4. **CITATION FORMAT**: You MUST cite your sources when stating a requirement. Use this exact format: [Document Name, Page X].
-   - Place citations at the end of the sentence or clause they support.
-   - Do not use footnotes or brackets alone.
-
-5. **IMAGE ANALYSIS (If applicable)**:
-   - Describe what you see plainly.
-   - Identify violations based on the provided documents.
-   - Suggest immediate corrective actions (e.g., "Wash this immediately," "Discard the food").
-
-6. **HANDLING UNKNOWNS**: If the provided documents do not contain the answer, say: "I don't have the specific regulation for that in my current database, but generally..." and provide standard food safety advice, noting it as general guidance.
+**RESPONSE RULES:**
+1. **NO MARKDOWN**: No asterisks (**bold**) or underscores.
+2. **CITATION FORMAT**: [Document Name, Page X].
+3. **CONVERSATIONAL**: Speak naturally. "You should..." not "The operator shall..."
+4. **IMAGE ANALYSIS**:
+   - Identify the specific issue (e.g., "Grease buildup on stove").
+   - Cite the regulation requiring it to be clean.
+   - **Crucial**: Try to label it as Priority (P), Priority Foundation (Pf), or Core using the County documents if available in context.
+   - Recommend immediate action.
 
 CONTEXT DOCUMENTS:
-${contextText || 'No specific documents found. Rely on general food safety knowledge but admit the lack of specific citations.'}
+${contextText || 'No specific documents found. Provide general food safety advice.'}
 `
 
     const generativeModel = vertex_ai.getGenerativeModel({
@@ -368,7 +354,7 @@ ${contextText || 'No specific documents found. Rely on general food safety knowl
         parts: [{ text: systemInstructionText }]
       },
       generationConfig: {
-        temperature: 0.2, // Lower temperature for more factual adherence
+        temperature: 0.1,
         topP: 0.8,
         topK: 40
       }
@@ -377,7 +363,6 @@ ${contextText || 'No specific documents found. Rely on general food safety knowl
     let fullPromptText = `USER QUESTION: ${lastUserMessage || "Analyze this image."}`
     
     if (sanitizedMessages.length > 1) {
-      // Add limited history for context
       const history = sanitizedMessages.slice(-3, -1).map(m => `${m.role}: ${m.content}`).join('\n')
       fullPromptText = `PREVIOUS CONVERSATION:\n${history}\n\n${fullPromptText}`
     }
@@ -400,10 +385,8 @@ ${contextText || 'No specific documents found. Rely on general food safety knowl
     const response = await result.response
     const rawText = response.candidates[0].content.parts[0].text
 
-    // CLEAN THE OUTPUT
     const cleanText = cleanAIResponse(rawText)
 
-    // Extract citations for the UI to make them clickable
     const citations = []
     const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
@@ -415,7 +398,6 @@ ${contextText || 'No specific documents found. Rely on general food safety knowl
       })
     }
 
-    // Update Usage Stats
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
