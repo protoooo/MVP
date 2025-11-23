@@ -619,8 +619,8 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        {/* UPDATED: Increased top padding to pt-36 to clear the header on tablet */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-36 space-y-8">
+        {/* CHANGED: increased top padding to pt-40 to clear header on ipad */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-40 space-y-8">
           {messages.map((msg, i) => (
             <div
               key={i}
