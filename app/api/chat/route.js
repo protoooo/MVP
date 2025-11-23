@@ -8,6 +8,8 @@ import { logError, logInfo } from '@/lib/monitoring'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
+// Max duration for image analysis/long reasoning
+export const maxDuration = 60 
 
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
@@ -48,8 +50,9 @@ function getVertexCredentials() {
 }
 
 function validateApiResponse(response) {
-  if (typeof response !== 'string') {
-    throw new Error('Invalid response format')
+  if (!response || typeof response !== 'string') {
+    // Return a fallback message instead of throwing to prevent 500 errors
+    return "I analyzed the image but couldn't generate a text description. Please try asking a specific question about it."
   }
   
   let cleaned = response
@@ -69,6 +72,10 @@ function sanitizeError(error) {
   logError(error, { context: 'Chat API Error' })
   
   if (process.env.NODE_ENV === 'production') {
+    // Return the actual error if it's a known API issue, otherwise generic
+    if (error.message.includes('safety') || error.message.includes('content')) {
+      return error.message
+    }
     return 'An error occurred processing your request. Please try again.'
   }
   return error.message || 'An error occurred'
@@ -83,25 +90,34 @@ function validateImageData(imageData) {
     throw new Error('Image must be a data URL')
   }
 
+  // Capture the mime type specifically
   const mimeMatch = imageData.match(/^data:(image\/[a-z]+);base64,/)
   if (!mimeMatch) {
     throw new Error('Invalid image format')
   }
 
-  const mimeType = mimeMatch[1]
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  let mimeType = mimeMatch[1]
+  
+  // CRITICAL FIX: Normalize 'image/jpg' to 'image/jpeg' for Vertex AI
+  if (mimeType === 'image/jpg') {
+    mimeType = 'image/jpeg'
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'] // Removed 'image/jpg' as we normalize it
   
   if (!allowedTypes.includes(mimeType)) {
     throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
   }
 
-  const base64Data = imageData.split(',')[1]
+  // CRITICAL FIX: Ensure clean base64 string without whitespace/newlines
+  const base64Data = imageData.split(',')[1].replace(/\s/g, '')
+  
   if (!base64Data || base64Data.length < 100) {
     throw new Error('Image data is too small or corrupted')
   }
 
   const sizeInBytes = (base64Data.length * 3) / 4
-  const maxSize = 5 * 1024 * 1024
+  const maxSize = 5 * 1024 * 1024 // 5MB Limit
 
   if (sizeInBytes > maxSize) {
     throw new Error('Image is too large. Maximum size is 5MB.')
@@ -148,6 +164,7 @@ export async function POST(request) {
   }
 
   try {
+    // 1. Verify Subscription & Limits
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -174,11 +191,12 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
+    // 2. Parse Request Body
     let requestBody
     try {
       requestBody = await request.json()
     } catch (e) {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
     const { messages, image, county } = requestBody
@@ -192,6 +210,7 @@ export async function POST(request) {
 
     const sanitizedCounty = sanitizeCounty(county || profile.county)
 
+    // 3. Validate Image if Present
     let validatedImage = null
     if (image) {
       if (profile.images_used >= limits.images) {
@@ -210,6 +229,7 @@ export async function POST(request) {
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
     const userCounty = sanitizedCounty
 
+    // 4. Initialize Vertex AI
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
@@ -223,7 +243,10 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    const model = 'gemini-2.0-flash-exp'
+    // Using the requested model
+    const model = 'gemini-2.0-flash-exp' 
+
+    // 5. RAG / Document Search
     let contextText = ""
     let usedDocs = []
 
@@ -249,8 +272,9 @@ export async function POST(request) {
         }
 
         const allResults = []
+        // Only run if query isn't empty
         for (const query of searchQueries) {
-          if (query.trim()) {
+          if (query && query.trim()) {
             const results = await searchDocuments(query.trim(), 10, userCounty)
             allResults.push(...results)
           }
@@ -443,13 +467,17 @@ answer when documents don't provide clear guidance.`
 
     let userMessageParts = []
     
+    // Add history text first
     if (sanitizedMessages.length > 1) {
       const historyText = sanitizedMessages.slice(0, -1).map(m => `${m.role}: ${m.content}`).join('\n')
       userMessageParts.push({ text: `CONVERSATION HISTORY:\n${historyText}\n\n` })
     }
 
-    userMessageParts.push({ text: `USER QUESTION: ${lastUserMessage}` })
+    // Add current user text
+    const currentQuestion = lastUserMessage.trim() || "Analyze this image for compliance violations."
+    userMessageParts.push({ text: `USER QUESTION: ${currentQuestion}` })
 
+    // Add image if present
     if (validatedImage) {
       userMessageParts.push({
         inlineData: {
@@ -476,7 +504,16 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
 
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
-    const text = response.candidates[0].content.parts[0].text
+    
+    // Safety Check: If model refuses to answer, response.candidates might be restricted
+    let text = ""
+    if (response.candidates && response.candidates.length > 0 && response.candidates[0].content) {
+        text = response.candidates[0].content.parts[0].text
+    } else if (response.promptFeedback && response.promptFeedback.blockReason) {
+        throw new Error(`AI Safety Block: ${response.promptFeedback.blockReason}`)
+    } else {
+        throw new Error("AI response was empty or blocked.")
+    }
 
     const validatedText = validateApiResponse(text)
 
@@ -490,6 +527,7 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       })
     }
 
+    // Update Usage Stats
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
