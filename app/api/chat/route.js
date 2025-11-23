@@ -88,6 +88,7 @@ function validateImageData(imageData) {
     throw new Error('Image must be a data URL')
   }
 
+  // Capture the mime type specifically
   const mimeMatch = imageData.match(/^data:(image\/[a-z]+);base64,/)
   if (!mimeMatch) {
     throw new Error('Invalid image format')
@@ -95,7 +96,7 @@ function validateImageData(imageData) {
 
   let mimeType = mimeMatch[1]
   
-  // CRITICAL FIX: Google Vertex AI requires 'image/jpeg', not 'image/jpg'
+  // CRITICAL FIX: Normalize 'image/jpg' to 'image/jpeg' for Vertex AI
   if (mimeType === 'image/jpg') {
     mimeType = 'image/jpeg'
   }
@@ -106,7 +107,7 @@ function validateImageData(imageData) {
     throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
   }
 
-  // CRITICAL FIX: Remove whitespace/newlines from base64 string
+  // CRITICAL FIX: Ensure clean base64 string without whitespace/newlines
   const base64Data = imageData.split(',')[1].replace(/\s/g, '')
   
   if (!base64Data || base64Data.length < 100) {
@@ -114,7 +115,7 @@ function validateImageData(imageData) {
   }
 
   const sizeInBytes = (base64Data.length * 3) / 4
-  const maxSize = 5 * 1024 * 1024 
+  const maxSize = 5 * 1024 * 1024 // 5MB Limit
 
   if (sizeInBytes > maxSize) {
     throw new Error('Image is too large. Maximum size is 5MB.')
@@ -161,6 +162,7 @@ export async function POST(request) {
   }
 
   try {
+    // 1. Verify Subscription & Limits
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -187,6 +189,7 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
+    // 2. Parse Request Body
     let requestBody
     try {
       requestBody = await request.json()
@@ -205,6 +208,7 @@ export async function POST(request) {
 
     const sanitizedCounty = sanitizeCounty(county || profile.county)
 
+    // 3. Validate Image if Present
     let validatedImage = null
     if (image) {
       if (profile.images_used >= limits.images) {
@@ -223,6 +227,7 @@ export async function POST(request) {
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
     const userCounty = sanitizedCounty
 
+    // 4. Initialize Vertex AI
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
@@ -236,11 +241,10 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // --- STABLE MODEL SELECTION ---
-    // "gemini-2.0-flash-exp" is causing "Invalid message format" errors on images.
-    // Switching to "gemini-1.5-flash-002" (The current stable production version).
-    const model = 'gemini-2.0-flash' 
+    // Use Flash 2.0
+    const model = 'gemini-2.0-flash-exp' 
 
+    // 5. RAG / Document Search
     let contextText = ""
     let usedDocs = []
 
@@ -266,6 +270,7 @@ export async function POST(request) {
         }
 
         const allResults = []
+        // Only run if query isn't empty
         for (const query of searchQueries) {
           if (query && query.trim()) {
             const results = await searchDocuments(query.trim(), 10, userCounty)
@@ -369,9 +374,7 @@ ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the 
       }
     })
 
-    // --- PAYLOAD CONSTRUCTION ---
-    // We combine all text parts into a single text block to prevent "Invalid message format"
-    // Vertex AI prefers: [ { inlineData }, { text } ] or just [ { text } ]
+    // --- PAYLOAD STRUCTURE OPTIMIZATION ---
     
     let fullPromptText = ""
 
@@ -383,3 +386,95 @@ ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the 
     fullPromptText += `USER QUESTION: ${lastUserMessage.trim() || "Analyze this image for compliance violations."}`
 
     if (validatedImage) {
+      fullPromptText += `\n\nINSTRUCTIONS FOR IMAGE ANALYSIS:
+1. First, describe what you see in the image objectively
+2. Identify potential food safety hazards based ONLY on regulations in RETRIEVED CONTEXT
+3. For each issue, cite the specific regulation
+4. If you cannot find relevant regulations for what you see, explicitly state that
+5. Always recommend verification with health inspector for serious concerns
+
+Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.`
+    }
+
+    // Construct the strictly ordered parts array
+    const parts = []
+
+    // 1. Image goes FIRST (if present)
+    if (validatedImage) {
+      parts.push({
+        inlineData: {
+          mimeType: validatedImage.mimeType,
+          data: validatedImage.base64Data
+        }
+      })
+    }
+
+    // 2. Text goes SECOND (Always)
+    parts.push({ text: fullPromptText })
+
+    const requestPayload = {
+      contents: [{ role: 'user', parts: parts }]
+    }
+
+    const result = await generativeModel.generateContent(requestPayload)
+    const response = await result.response
+    
+    // Safety Check
+    let text = ""
+    if (response.candidates && response.candidates.length > 0 && response.candidates[0].content) {
+        text = response.candidates[0].content.parts[0].text
+    } else if (response.promptFeedback && response.promptFeedback.blockReason) {
+        throw new Error(`AI Safety Block: ${response.promptFeedback.blockReason}`)
+    } else {
+        throw new Error("AI response was empty or blocked.")
+    }
+
+    const validatedText = validateApiResponse(text)
+
+    const hasCitations = /\*\*\[.*?,\s*Page/.test(validatedText)
+    const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
+    
+    if (makesFactualClaims && !hasCitations && !validatedText.includes('cannot find') && !validatedText.includes('do not directly address')) {
+      logInfo('Response lacks required citations', { 
+        preview: validatedText.substring(0, 200),
+        userId: session.user.id 
+      })
+    }
+
+    // Update Usage Stats
+    const updates = { requests_used: (profile.requests_used || 0) + 1 }
+    if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
+    await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
+
+    const citations = []
+    const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
+    let match
+    while ((match = citationRegex.exec(validatedText)) !== null) {
+      citations.push({ document: match[1], pages: match[2], county: userCounty })
+    }
+
+    return NextResponse.json({ 
+      message: validatedText,
+      county: userCounty,
+      citations: citations,
+      documentsSearched: usedDocs.length,
+      contextQuality: usedDocs.length > 0 ? 'good' : 'insufficient',
+      rateLimit: {
+        remaining: rateCheck.remainingRequests,
+        resetTime: rateCheck.resetTime
+      }
+    }, {
+      headers: {
+        'X-RateLimit-Limit': '20',
+        'X-RateLimit-Remaining': rateCheck.remainingRequests.toString(),
+        'X-RateLimit-Reset': Math.floor(rateCheck.resetTime / 1000).toString()
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ Chat API Error:', error)
+    return NextResponse.json({ 
+      error: sanitizeError(error)
+    }, { status: 500 })
+  }
+}
