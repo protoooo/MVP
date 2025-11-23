@@ -1,15 +1,29 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config, { isServer }) => {
+    // CRITICAL FIX: Exclude server-only modules from browser bundle
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Prevent ioredis from being bundled in browser
+        'ioredis': false,
+        './redis-rate-limit': false,
+        '../lib/redis-rate-limit': false,
+      }
+    }
+    
     if (isServer) {
       config.resolve.alias.canvas = false;
     }
+    
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
+      dns: false,
     };
+    
     return config;
   },
 
@@ -22,7 +36,6 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: true,
 
-  // FIXED: Don't ignore TypeScript/ESLint errors
   typescript: {
     ignoreBuildErrors: false,
   },
