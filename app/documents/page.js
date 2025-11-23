@@ -4,182 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
-// --- Circuit/GPU Background Animation ---
-const CircuitBackground = () => {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d', { alpha: true })
-    let animationFrameId
-    
-    // Configuration
-    const gridSize = 30 // Distance between grid points
-    const packetCount = 20 // Slightly fewer for the sidebar to be subtle
-    const trailLength = 15 
-    const colors = ['#d97706', '#be123c', '#16a34a', '#0284c7', '#4338ca']
-    
-    let packets = []
-    let w = 0
-    let h = 0
-
-    class Packet {
-      constructor() {
-        this.reset()
-      }
-
-      reset() {
-        // Snap to grid
-        this.x = Math.floor(Math.random() * (w / gridSize)) * gridSize
-        this.y = Math.floor(Math.random() * (h / gridSize)) * gridSize
-        
-        // Random direction (Up, Down, Left, Right)
-        const dirs = [
-          { dx: 1, dy: 0 },  // Right
-          { dx: -1, dy: 0 }, // Left
-          { dx: 0, dy: 1 },  // Down
-          { dx: 0, dy: -1 }  // Up
-        ]
-        const dir = dirs[Math.floor(Math.random() * dirs.length)]
-        this.dx = dir.dx
-        this.dy = dir.dy
-        
-        this.speed = 2 // Pixels per frame
-        this.life = Math.random() * 100 + 50 
-        this.age = 0
-        this.color = colors[Math.floor(Math.random() * colors.length)]
-        
-        this.history = [] 
-      }
-
-      update() {
-        this.age++
-        
-        this.x += this.dx * this.speed
-        this.y += this.dy * this.speed
-
-        this.history.push({ x: this.x, y: this.y })
-        if (this.history.length > trailLength) {
-          this.history.shift()
-        }
-
-        // Randomly turn
-        if (this.age % Math.floor(Math.random() * 50 + 20) === 0) {
-          if (this.dx !== 0) {
-            this.dx = 0
-            this.dy = Math.random() > 0.5 ? 1 : -1
-          } else {
-            this.dy = 0
-            this.dx = Math.random() > 0.5 ? 1 : -1
-          }
-          this.x = Math.round(this.x / gridSize) * gridSize
-          this.y = Math.round(this.y / gridSize) * gridSize
-        }
-
-        // Boundary check
-        if (
-          this.age > this.life || 
-          this.x < -50 || 
-          this.x > w + 50 || 
-          this.y < -50 || 
-          this.y > h + 50
-        ) {
-          this.reset()
-        }
-      }
-
-      draw() {
-        if (this.history.length < 2) return
-
-        ctx.beginPath()
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
-        
-        for (let i = 0; i < this.history.length - 1; i++) {
-          const p1 = this.history[i]
-          const p2 = this.history[i+1]
-          const opacity = (i / this.history.length) * 0.5 // Lower opacity for sidebar
-          
-          ctx.beginPath()
-          ctx.strokeStyle = this.color
-          ctx.lineWidth = 2
-          ctx.globalAlpha = opacity
-          ctx.moveTo(p1.x, p1.y)
-          ctx.lineTo(p2.x, p2.y)
-          ctx.stroke()
-        }
-        
-        // Head
-        ctx.globalAlpha = 0.8
-        ctx.fillStyle = this.color
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-
-    const initPackets = () => {
-      packets = []
-      for (let i = 0; i < packetCount; i++) {
-        packets.push(new Packet())
-      }
-    }
-
-    const handleResize = () => {
-      if (canvas.parentElement) {
-        w = canvas.parentElement.offsetWidth
-        h = canvas.parentElement.offsetHeight
-        canvas.width = w
-        canvas.height = h
-        if (packets.length === 0) initPackets()
-      }
-    }
-
-    const drawGrid = () => {
-      ctx.fillStyle = '#cbd5e1' // slate-300
-      ctx.globalAlpha = 0.2 // Very subtle grid
-      
-      for (let x = 0; x <= w; x += gridSize) {
-        for (let y = 0; y <= h; y += gridSize) {
-          ctx.beginPath()
-          ctx.arc(x, y, 1, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      }
-      ctx.globalAlpha = 1
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, w, h)
-      drawGrid()
-      packets.forEach(packet => {
-        packet.update()
-        packet.draw()
-      })
-      animationFrameId = requestAnimationFrame(animate)
-    }
-
-    handleResize()
-    animate()
-
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      cancelAnimationFrame(animationFrameId)
-    }
-  }, [])
-
-  return (
-    <canvas 
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-50"
-    />
-  )
-}
-
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -213,10 +37,6 @@ export default function DocumentsPage() {
   const saveTimeoutRef = useRef(null)
   const supabase = createClientComponentClient()
   const router = useRouter()
-
-  const prismGradient = {
-    background: 'linear-gradient(to right, #d97706, #be123c, #4338ca, #0284c7, #16a34a)'
-  }
 
   useEffect(() => {
     if (userCounty && messages.length === 0) {
@@ -512,7 +332,7 @@ export default function DocumentsPage() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center bg-white border border-slate-300 text-slate-700 hover:border-[#4F759B] hover:text-[#4F759B] px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
+              className="inline-flex items-center bg-white border border-slate-300 text-slate-700 hover:border-orange-500 hover:text-orange-600 px-2 py-1 rounded text-xs font-bold transition-colors mx-1 cursor-pointer shadow-sm"
             >
               {part.document}, Page {part.pages}
             </button>
@@ -548,8 +368,6 @@ export default function DocumentsPage() {
     setIsLoading(true)
 
     try {
-      console.log('📤 Sending request with image:', !!image)
-      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
@@ -563,25 +381,20 @@ export default function DocumentsPage() {
         })
       })
 
-      console.log('📥 Response status:', response.status)
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('❌ API Error:', errorData)
-        
         if (response.status === 429) {
           throw new Error(errorData.error || 'Too many requests. Please wait a moment.')
         } else if (response.status === 401) {
           throw new Error('Session expired. Please sign in again.')
         } else if (response.status === 400) {
-          throw new Error(errorData.error || 'Invalid request. Please check your input.')
+          throw new Error(errorData.error || 'Invalid request.')
         } else {
-          throw new Error(errorData.error || 'An error occurred. Please try again.')
+          throw new Error(errorData.error || 'An error occurred.')
         }
       }
 
       const data = await response.json()
-      console.log('✅ Response received successfully')
 
       setMessages(prev => [
         ...prev,
@@ -612,8 +425,6 @@ export default function DocumentsPage() {
     const file = e.target.files[0]
     if (!file) return
     
-    console.log('📸 Image selected:', file.name, 'Size:', file.size, 'Type:', file.type)
-    
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
       alert('Only JPEG, PNG, and WebP images are allowed')
@@ -631,16 +442,13 @@ export default function DocumentsPage() {
     reader.onloadend = () => {
       const result = reader.result
       if (typeof result === 'string' && result.startsWith('data:image/')) {
-        console.log('✅ Image loaded successfully')
         setImage(result)
       } else {
-        console.error('❌ Invalid image format')
         alert('Invalid image format')
         e.target.value = ''
       }
     }
     reader.onerror = () => {
-      console.error('❌ Error reading file')
       alert('Error reading file')
       e.target.value = ''
     }
@@ -650,15 +458,15 @@ export default function DocumentsPage() {
   if (!session) return null
 
   return (
-    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden">
+    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans">
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">Select Your County</h3>
+              <h3 className="text-xl font-bold text-slate-900">Select Jurisdiction</h3>
               <button 
                 onClick={() => setShowCountySelector(false)} 
-                className="text-slate-400 hover:text-slate-900"
+                className="text-slate-400 hover:text-slate-900 transition"
                 disabled={isUpdatingCounty}
               >
                 ✕
@@ -669,7 +477,7 @@ export default function DocumentsPage() {
                 key={key}
                 onClick={() => handleCountyChange(key)}
                 disabled={isUpdatingCounty}
-                className="w-full text-left p-4 border-2 border-slate-100 rounded-xl mb-2 hover:border-[#4F759B] hover:bg-slate-50 transition-all text-slate-700 font-medium disabled:opacity-50"
+                className="w-full text-left p-4 border border-slate-200 rounded-lg mb-2 hover:border-orange-500 hover:bg-orange-50 transition-all text-slate-700 font-medium disabled:opacity-50"
               >
                 {name}
               </button>
@@ -680,7 +488,7 @@ export default function DocumentsPage() {
 
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col">
-          <div className="p-4 border-b flex justify-between items-center bg-white flex-shrink-0">
+          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white flex-shrink-0">
             <div>
               <h3 className="font-bold text-slate-900">{viewingPdf.title}</h3>
               <p className="text-xs text-slate-500 font-medium">
@@ -703,24 +511,22 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-50 border-r border-slate-200 text-slate-900 flex flex-col z-40 relative overflow-hidden`}>
-        
-        {/* UPDATED ANIMATION HERE */}
-        <CircuitBackground />
+      {/* --- SIDEBAR (Navy/Dark Theme) --- */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-80 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col z-40 relative overflow-hidden`}>
         
         <div className="relative z-10 flex flex-col h-full">
-          <div className="p-6 flex-shrink-0 border-b border-slate-200/60 bg-slate-50/80 backdrop-blur-sm">
+          <div className="p-6 flex-shrink-0 border-b border-slate-800">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></h1>
-                <div className="h-1 w-full rounded-full mt-1 opacity-90" style={prismGradient}></div>
+                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-normal text-slate-400">LM</span></h1>
+                <div className="h-1 w-12 bg-orange-600 rounded-full mt-1"></div>
               </div>
-              <button className="md:hidden text-slate-400 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}>✕</button>
+              <button className="md:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
             </div>
 
             <button
               onClick={() => setShowCountySelector(true)}
-              className="w-full bg-white hover:bg-slate-50 text-slate-700 p-3 rounded-xl mb-6 flex items-center justify-between transition-colors border border-slate-200 shadow-sm"
+              className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 p-3 rounded-lg mb-6 flex items-center justify-between transition-colors border border-slate-700 shadow-sm"
             >
               <span className="text-sm font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
               <svg className="w-4 h-4 text-slate-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
@@ -728,37 +534,34 @@ export default function DocumentsPage() {
 
             <button
               onClick={startNewChat}
-              className="group relative w-full rounded-xl overflow-hidden mb-4 shadow-sm"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
             >
-              <div className="absolute inset-0" style={prismGradient}></div>
-              <div className="relative m-[2px] bg-white hover:bg-slate-50 text-slate-800 font-bold p-3 rounded-[10px] transition-all flex items-center justify-center gap-2">
-                <span>+</span> New Chat
-              </div>
+              <span>+</span> New Chat
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
             {loadingChats ? (
-              <div className="text-center text-slate-400 text-sm mt-4">Loading chats...</div>
+              <div className="text-center text-slate-500 text-sm mt-4">Loading chats...</div>
             ) : chatHistory.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center mt-4">No chat history yet.</p>
+              <p className="text-slate-500 text-sm text-center mt-4">No chat history yet.</p>
             ) : (
               chatHistory.map(chat => (
                 <div
                   key={chat.id}
                   onClick={() => loadChat(chat)}
-                  className="p-3 bg-white/80 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl mb-2 group cursor-pointer transition-all shadow-sm"
+                  className="p-3 bg-slate-800/50 hover:bg-slate-800 border border-transparent hover:border-slate-700 rounded-lg mb-2 group cursor-pointer transition-all"
                 >
                   <div className="flex justify-between items-start">
-                    <p className="font-medium text-sm text-slate-700 truncate pr-2 flex-1">{chat.title}</p>
+                    <p className="font-medium text-sm text-slate-300 truncate pr-2 flex-1 group-hover:text-white">{chat.title}</p>
                     <button
                       onClick={(e) => deleteChat(chat.id, e)}
-                      className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
+                      className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                     >
                       ✕
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     {new Date(chat.updated_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -766,16 +569,16 @@ export default function DocumentsPage() {
             )}
           </div>
 
-          <div className="p-4 border-t border-slate-200/60 bg-slate-50/80 backdrop-blur-sm flex-shrink-0">
+          <div className="p-4 border-t border-slate-800 bg-slate-900 flex-shrink-0">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm" style={prismGradient}>
+              <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                 {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
+                <p className="text-xs font-bold text-white truncate">
                   {session?.user?.email}
                 </p>
-                <p className="text-[10px] text-slate-500 font-medium capitalize">
+                <p className="text-[10px] text-slate-400 font-medium capitalize">
                   {subscriptionInfo?.plan === 'enterprise' ? 'Enterprise' : 'Pro'} Plan
                 </p>
               </div>
@@ -784,45 +587,46 @@ export default function DocumentsPage() {
               <button 
                 onClick={handleManageSubscription}
                 disabled={loadingPortal}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 py-2 rounded-lg transition-all disabled:opacity-50"
+                className="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 border border-slate-700 hover:border-slate-600 py-2 rounded-md transition-all disabled:opacity-50"
               >
                 {loadingPortal ? '...' : 'Manage'}
               </button>
               <button 
                 onClick={handleSignOut}
-                className="text-xs font-semibold text-slate-600 hover:text-red-600 bg-white border border-slate-200 hover:border-red-200 py-2 rounded-lg transition-all"
+                className="text-xs font-semibold text-slate-300 hover:text-red-400 bg-slate-800 border border-slate-700 hover:border-red-900/50 py-2 rounded-md transition-all"
               >
                 Sign Out
               </button>
             </div>
 
-            <div className="mt-2 pt-2 border-t border-slate-200/60">
+            <div className="mt-4 pt-3 border-t border-slate-800 text-center">
               <a 
                 href="/contact" 
-                className="text-xs text-slate-500 hover:text-slate-900 transition flex items-center justify-center gap-1"
+                className="text-xs text-slate-500 hover:text-slate-300 transition flex items-center justify-center gap-1"
               >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                Need Help?
+                Need Help? Contact Support
               </a>
             </div>
           </div>
         </div>
       </div>
 
+      {/* --- MAIN CHAT AREA (White/Professional) --- */}
       <div className="flex-1 flex flex-col min-w-0 bg-white">
-        <div className="md:hidden p-4 bg-slate-50 border-b border-slate-200 text-slate-900 flex justify-between items-center shadow-sm z-30 flex-shrink-0">
+        
+        {/* Mobile Header */}
+        <div className="md:hidden p-4 bg-white border-b border-slate-200 text-slate-900 flex justify-between items-center shadow-sm z-30 flex-shrink-0">
           <button onClick={() => setIsSidebarOpen(true)} className="text-slate-700">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           <div className="text-center flex-1 mx-4 min-w-0">
-            <span className="font-bold text-lg text-slate-900">protocol<span className="font-normal text-slate-600">LM</span></span>
+            <span className="font-bold text-lg text-slate-900">protocol<span className="font-normal text-slate-500">LM</span></span>
             <div className="text-xs text-slate-500 truncate">{COUNTY_NAMES[userCounty]}</div>
           </div>
           <div className="w-6"></div>
         </div>
 
+        {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
           {messages.map((msg, i) => (
             <div
@@ -830,15 +634,14 @@ export default function DocumentsPage() {
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`p-4 rounded-2xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
+                className={`p-4 rounded-xl max-w-[85%] lg:max-w-[75%] text-sm leading-relaxed shadow-sm break-words ${
                   msg.role === 'assistant'
                     ? 'bg-white border border-slate-200 text-slate-800'
-                    : 'text-white' 
+                    : 'bg-slate-900 text-white' 
                 }`}
-                style={msg.role === 'user' ? prismGradient : {}}
               >
                 {msg.image && (
-                  <div className="mb-3 rounded-lg overflow-hidden">
+                  <div className="mb-3 rounded-lg overflow-hidden border border-white/20">
                     <img 
                       src={msg.image} 
                       alt="Uploaded evidence" 
@@ -849,7 +652,7 @@ export default function DocumentsPage() {
 
                 {msg.role === 'assistant' && (
                   <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0" style={prismGradient}>
+                    <div className="w-5 h-5 rounded-full bg-orange-600 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0">
                       LM
                     </div>
                     <span className="font-semibold text-xs text-slate-500">protocolLM</span>
@@ -863,9 +666,9 @@ export default function DocumentsPage() {
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
                 <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold" style={prismGradient}>
+                  <div className="w-5 h-5 rounded-full bg-orange-600 flex items-center justify-center text-[10px] text-white font-bold">
                     LM
                   </div>
                   <span className="font-semibold text-xs text-slate-500">protocolLM</span>
@@ -882,7 +685,8 @@ export default function DocumentsPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-100 bg-white">
+        {/* Input Area */}
+        <div className="flex-shrink-0 p-4 md:p-6 border-t border-slate-200 bg-white">
           {image && (
             <div className="max-w-4xl mx-auto mb-3 px-1">
               <div className="relative inline-block">
@@ -911,12 +715,11 @@ export default function DocumentsPage() {
                 type="button"
                 onClick={() => fileInputRef.current.click()}
                 disabled={isLoading}
-                className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                className={`p-3 rounded-lg transition-all flex-shrink-0 border ${
                   image 
-                    ? 'text-white shadow-md' 
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    ? 'bg-orange-50 border-orange-200 text-orange-600' 
+                    : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                 }`}
-                style={image ? prismGradient : {}}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>
               </button>
@@ -924,8 +727,8 @@ export default function DocumentsPage() {
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Ask about this image..." : "Ask a question..."}
-                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-slate-400 transition-all text-sm"
+                placeholder={image ? "Ask about this image..." : "Ask a question regarding compliance..."}
+                className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 transition-all text-sm text-slate-900 placeholder-slate-500"
                 disabled={isLoading}
                 maxLength={5000}
               />
@@ -933,7 +736,7 @@ export default function DocumentsPage() {
               <button
                 type="submit"
                 disabled={isLoading || !canSend}
-                className="h-[48px] px-4 text-slate-900 font-bold hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                className="h-[48px] px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 shadow-sm"
               >
                 Send
               </button>
