@@ -40,7 +40,7 @@ export async function POST(request) {
     if (fetchError) {
       console.error('❌ Subscription fetch error:', fetchError)
       return NextResponse.json(
-        { error: 'Could not find subscription details in database.' },
+        { error: 'Could not find subscription details' },
         { status: 404 }
       )
     }
@@ -48,12 +48,12 @@ export async function POST(request) {
     if (!subscription?.stripe_customer_id) {
       console.error('❌ No stripe_customer_id found for user:', session.user.id)
       return NextResponse.json(
-        { error: 'No billing account found for this user. Please contact support.' },
+        { error: 'No active subscription found. Please contact support.' },
         { status: 404 }
       )
     }
 
-    // Dynamic Origin Calculation
+    // FIX: Dynamic Base URL calculation
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const returnUrl = `${origin}/documents`
 
@@ -64,6 +64,8 @@ export async function POST(request) {
       customer: subscription.stripe_customer_id,
       return_url: returnUrl,
     })
+
+    console.log('✅ Portal session created:', portalSession.id)
 
     return NextResponse.json({ url: portalSession.url })
   } catch (err) {
