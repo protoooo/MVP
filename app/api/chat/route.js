@@ -64,9 +64,6 @@ function getVertexCredentials() {
   return null
 }
 
-/**
- * Cleans the response to ensure no markdown formatting remains
- */
 function cleanAIResponse(text) {
   if (!text) return ""
   
@@ -79,7 +76,7 @@ function cleanAIResponse(text) {
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
-    .replace(/([a-zA-Z0-9.])\[/g, '$1 [') // Ensure space before citations
+    .replace(/([a-zA-Z0-9.])\[/g, '$1 [')
 
   if (cleaned.length > 50000) {
     cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated for length]'
@@ -243,110 +240,231 @@ export async function POST(request) {
     const model = 'gemini-2.0-flash-exp'
 
     // ═══════════════════════════════════════════════════════════════════
-    // RAG - DOCUMENT RETRIEVAL (IMPROVED STRATEGY)
+    // RAG - MULTI-QUERY DOCUMENT RETRIEVAL STRATEGY
     // ═══════════════════════════════════════════════════════════════════
     let contextText = ""
     let usedDocs = []
 
     if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
-        console.log(`🔍 Searching documents for ${userCountyName}...`)
+        console.log(`🔍 RAG Search starting for ${userCountyName}...`)
         
-        let searchQueries = []
+        // ================================================
+        // STRATEGY: Use multiple targeted queries
+        // ================================================
+        const searchQueries = []
         
-        // 1. Mandatory "Meta" Query to always fetch County Specifics
-        // We want the "Violation Types" and "Enforcement" docs to ALWAYS appear if possible
-        searchQueries.push(`"${userCountyName}" violation types enforcement priority foundation core`)
-
-        if (validatedImage) {
-          // 2. Image Context Queries
-          searchQueries.push(`${userCountyName} equipment cleaning frequency requirements`)
-          searchQueries.push(`${userCountyName} physical facility maintenance`)
-          searchQueries.push(lastUserMessage)
-        } else {
-          // 2. Text Context Queries
-          searchQueries.push(`${lastUserMessage} ${userCountyName} regulations`)
-          searchQueries.push(lastUserMessage)
+        // Query 1: ALWAYS fetch county enforcement docs (MANDATORY)
+        searchQueries.push({
+          query: `${userCountyName} enforcement inspection procedures priority foundation`,
+          weight: 1.0,
+          purpose: 'county_enforcement'
+        })
+        
+        // Query 2: County + user's actual question
+        if (lastUserMessage.trim()) {
+          searchQueries.push({
+            query: `${userCountyName} ${lastUserMessage}`,
+            weight: 0.9,
+            purpose: 'county_specific'
+          })
         }
-
+        
+        // Query 3: Pure user question (for general code)
+        if (lastUserMessage.trim()) {
+          searchQueries.push({
+            query: lastUserMessage,
+            weight: 0.7,
+            purpose: 'general_code'
+          })
+        }
+        
+        // Query 4: Image-specific queries
+        if (validatedImage) {
+          searchQueries.push({
+            query: `${userCountyName} equipment cleaning maintenance inspection requirements`,
+            weight: 0.85,
+            purpose: 'equipment_regs'
+          })
+          
+          searchQueries.push({
+            query: `physical facility standards enforcement ${userCountyName}`,
+            weight: 0.85,
+            purpose: 'facility_standards'
+          })
+        }
+        
+        console.log(`📋 Executing ${searchQueries.length} search queries...`)
+        
+        // ================================================
+        // Execute all searches
+        // ================================================
         const allResults = []
         
-        for (const query of searchQueries) {
-          if (query && query.trim()) {
-            // Increased limit to ensure we catch the county docs even if they rank lower
-            const results = await searchDocuments(query.trim(), 15, sanitizedCounty)
-            allResults.push(...results)
+        for (const { query, weight, purpose } of searchQueries) {
+          try {
+            console.log(`   🔎 ${purpose}: "${query.substring(0, 60)}..."`)
+            
+            const results = await searchDocuments(query, 15, sanitizedCounty)
+            
+            // Apply weight to scores
+            for (const result of results) {
+              result.searchWeight = weight
+              result.searchPurpose = purpose
+              result.adjustedScore = result.score * weight
+              allResults.push(result)
+            }
+            
+            console.log(`      ✓ Found ${results.length} docs (top score: ${results[0]?.score.toFixed(3) || 'N/A'})`)
+            
+          } catch (searchErr) {
+            console.error(`   ✗ Search failed for ${purpose}:`, searchErr.message)
           }
         }
-
-        const seenContent = new Set()
-        const uniqueResults = []
+        
+        console.log(`📊 Total retrieved: ${allResults.length} document chunks`)
+        
+        // ================================================
+        // De-duplicate and rank
+        // ================================================
+        const seenContent = new Map()
         
         for (const doc of allResults) {
           const contentKey = doc.text.substring(0, 100)
+          
           if (!seenContent.has(contentKey)) {
-            // HEAVILY Boost County Specific Documents
-            if (doc.source && doc.source.toLowerCase().includes(sanitizedCounty)) {
-              doc.score += 0.25 // Massive boost to force them to top
-            }
-            // Boost "Violation Types" or "Enforcement" docs specifically
-            if (doc.source && (doc.source.toLowerCase().includes('violation') || doc.source.toLowerCase().includes('enforcement'))) {
-              doc.score += 0.20 
-            }
-            
-            if (doc.score > 0.20) {
-              seenContent.add(contentKey)
-              uniqueResults.push(doc)
+            seenContent.set(contentKey, doc)
+          } else {
+            // Keep the one with higher score
+            const existing = seenContent.get(contentKey)
+            if (doc.adjustedScore > existing.adjustedScore) {
+              seenContent.set(contentKey, doc)
             }
           }
         }
-
-        const topResults = uniqueResults.sort((a, b) => b.score - a.score).slice(0, 30)
         
-        if (topResults.length > 0) {
-          contextText = topResults.map((doc, idx) => 
+        const uniqueResults = Array.from(seenContent.values())
+        console.log(`📌 Unique documents: ${uniqueResults.length}`)
+        
+        // ================================================
+        // CRITICAL: Ensure county enforcement docs appear
+        // ================================================
+        const countyEnforcementDocs = uniqueResults.filter(doc => {
+          const source = doc.source.toLowerCase()
+          return (
+            doc.county === sanitizedCounty &&
+            (source.includes('enforcement') || 
+             source.includes('inspection') ||
+             source.includes('food service'))
+          )
+        })
+        
+        const otherDocs = uniqueResults.filter(doc => {
+          const source = doc.source.toLowerCase()
+          return !(
+            doc.county === sanitizedCounty &&
+            (source.includes('enforcement') || 
+             source.includes('inspection') ||
+             source.includes('food service'))
+          )
+        })
+        
+        console.log(`🎯 County enforcement docs: ${countyEnforcementDocs.length}`)
+        console.log(`📚 Other docs: ${otherDocs.length}`)
+        
+        // ================================================
+        // Final ranking: enforcement first, then by score
+        // ================================================
+        const topCountyDocs = countyEnforcementDocs
+          .sort((a, b) => b.adjustedScore - a.adjustedScore)
+          .slice(0, 8) // Guarantee at least 8 county docs
+        
+        const topOtherDocs = otherDocs
+          .sort((a, b) => b.adjustedScore - a.adjustedScore)
+          .slice(0, 22) // Up to 22 other docs
+        
+        const finalResults = [...topCountyDocs, ...topOtherDocs]
+          .sort((a, b) => b.adjustedScore - a.adjustedScore)
+          .slice(0, 30) // Total context: 30 docs
+        
+        console.log(`✅ Final context: ${finalResults.length} documents`)
+        
+        if (finalResults.length > 0) {
+          console.log(`   Top doc: ${finalResults[0].source} (score: ${finalResults[0].adjustedScore.toFixed(3)})`)
+          
+          // Build context text
+          contextText = finalResults.map((doc, idx) => 
             `[DOCUMENT ${idx + 1}]
 SOURCE: ${doc.source}
-PAGE: ${doc.page}
+COUNTY: ${doc.county || sanitizedCounty}
+PAGE: ${doc.page || 'N/A'}
 CONTENT: ${doc.text}`
           ).join("\n\n")
           
-          usedDocs = topResults.map(r => ({ 
+          // Build citations
+          usedDocs = finalResults.map(r => ({ 
             document: r.source, 
-            pages: r.page
+            pages: r.page || 'N/A',
+            county: r.county || sanitizedCounty
           }))
+          
+        } else {
+          console.warn(`⚠️  No documents found for query`)
         }
+        
       } catch (searchErr) {
-        console.error('Search failed:', searchErr)
+        console.error('❌ RAG pipeline error:', searchErr)
+        console.error('   Stack:', searchErr.stack)
       }
     }
 
+    console.log(`📝 Context length: ${contextText.length} characters`)
+    console.log(`📎 Documents in context: ${usedDocs.length}`)
+
     // ═══════════════════════════════════════════════════════════════════
-    // SYSTEM INSTRUCTION (UPDATED FOR CROSS-REFERENCING)
+    // SYSTEM INSTRUCTION (Enhanced)
     // ═══════════════════════════════════════════════════════════════════
-    const systemInstructionText = `You are ProtocolLM, an expert food safety consultant for ${userCountyName}.
+    const systemInstructionText = `You are ProtocolLM, an expert food safety compliance consultant for ${userCountyName}.
 
-Your goal is to analyze situations and provide compliance advice. You have access to two types of documents:
-1. **The Code (FDA/State)**: Defines *what* the rule is (e.g., "Cleaning frequency").
-2. **County Documents**: Define *severity* (Priority, Foundation, Core) and *enforcement*.
+Your knowledge base contains:
+1. **County-Specific Documents**: Enforcement procedures, violation classifications, inspection guidelines
+2. **State & Federal Code**: FDA Food Code, Michigan Modified Food Code
+3. **Technical Guidance**: Temperature charts, cleaning procedures, hazmat protocols
 
-**CRITICAL INSTRUCTION: CROSS-REFERENCE SOURCES**
-Even if you find the specific rule in the FDA/State code, you MUST look at the retrieved County documents (like "Violation Types") to see if you can categorize the violation.
-- **Example**: "This is a violation of the FDA Food Code [FDA_Code, Page 50]. According to the ${userCountyName} Violation Types document [Washtenaw_Violations, Page 2], this is classified as a Priority Foundation (Pf) item."
+**CRITICAL INSTRUCTIONS:**
 
-**RESPONSE RULES:**
-1. **NO MARKDOWN**: No asterisks (**bold**) or underscores.
-2. **CITATION FORMAT**: [Document Name, Page X].
-3. **CONVERSATIONAL**: Speak naturally. "You should..." not "The operator shall..."
-4. **IMAGE ANALYSIS**:
-   - Identify the specific issue (e.g., "Grease buildup on stove").
-   - Cite the regulation requiring it to be clean.
-   - **Crucial**: Try to label it as Priority (P), Priority Foundation (Pf), or Core using the County documents if available in context.
-   - Recommend immediate action.
+1. **ALWAYS CHECK COUNTY DOCUMENTS FIRST**
+   - If a ${userCountyName} enforcement or inspection document appears in context, USE IT
+   - County documents define how violations are CLASSIFIED and ENFORCED locally
+   - Example: "According to ${userCountyName} enforcement procedures [Enforcement Action, Page 2], this is handled as..."
 
-CONTEXT DOCUMENTS:
-${contextText || 'No specific documents found. Provide general food safety advice.'}
-`
+2. **CROSS-REFERENCE BETWEEN CODE AND ENFORCEMENT**
+   - State the RULE from FDA/MI Code
+   - State the CLASSIFICATION from County docs (Priority, Priority Foundation, Core) if available
+   - State the ENFORCEMENT APPROACH from County docs
+   
+3. **FORMAT YOUR RESPONSES**
+   - NO MARKDOWN (no **bold**, no *italic*)
+   - Citations: [Document Name, Page X]
+   - Be conversational but precise
+   - Use "you should" not "the operator shall"
+
+4. **IMAGE ANALYSIS PROTOCOL**
+   When analyzing images:
+   a) Describe what you see specifically
+   b) Identify the violation with code reference
+   c) Classify using county documents if available (P, Pf, or Core)
+   d) Recommend immediate corrective action
+   e) Cite ALL sources used
+
+5. **HANDLING MISSING INFO**
+   - If county classification isn't in context, say: "While the FDA Code addresses this [FDA_Code, Page X], I don't have ${userCountyName}'s specific enforcement classification in the current context. Contact your health department for enforcement details."
+   - Never guess at classifications
+
+**YOUR DOCUMENT CONTEXT:**
+${contextText || 'No specific documents retrieved. Provide general guidance and recommend user verify with health department.'}
+
+**REMEMBER**: County enforcement documents are GOLD. Always check for them first.`
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
@@ -383,33 +501,4 @@ ${contextText || 'No specific documents found. Provide general food safety advic
     })
 
     const response = await result.response
-    const rawText = response.candidates[0].content.parts[0].text
-
-    const cleanText = cleanAIResponse(rawText)
-
-    const citations = []
-    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
-    let match
-    while ((match = citationRegex.exec(cleanText)) !== null) {
-      citations.push({ 
-        document: match[1].trim(), 
-        pages: match[2].trim(), 
-        county: sanitizedCounty 
-      })
-    }
-
-    const updates = { requests_used: (profile.requests_used || 0) + 1 }
-    if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
-    await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
-
-    return NextResponse.json({ 
-      message: cleanText,
-      citations: citations,
-      county: sanitizedCounty
-    })
-
-  } catch (error) {
-    console.error('Chat Processing Error:', error)
-    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 })
-  }
-}
+    const rawText = response.candidates[0].content.parts[0
