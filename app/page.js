@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function Home() {
@@ -13,10 +13,33 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
    
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   useEffect(() => {
     setMounted(true)
+    
+    // Check if already logged in
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        console.log('✅ Already logged in, redirecting...')
+        
+        // Redirect to appropriate page
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile?.is_subscribed) {
+          router.push('/documents')
+        } else {
+          router.push('/pricing')
+        }
+      }
+    }
+    
+    checkAuth()
   }, [])
 
   const handleAuth = async (e) => {
@@ -40,22 +63,26 @@ export default function Home() {
         if (error) throw error
         
         if (data.session) {
+          // Immediately signed in
+          console.log('✅ Signed up with session')
           window.location.href = '/pricing'
         } else if (data.user && !data.session) {
           setMessage({ 
             type: 'success', 
             text: '✅ Account created. Please check your email to verify.' 
           })
-        } else {
-          setMessage({ 
-            type: 'success', 
-            text: 'Account created. Check your email to continue.' 
-          })
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        })
+        
         if (error) throw error
         
+        console.log('✅ Signed in successfully')
+        
+        // Session will persist automatically
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -69,6 +96,7 @@ export default function Home() {
         }
       }
     } catch (error) {
+      console.error('❌ Auth error:', error)
       let errorMessage = error.message
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password.'
@@ -84,8 +112,7 @@ export default function Home() {
     }
   }
 
-  // --- WIREFRAME ICONS (Slightly lighter stroke for Teal background) ---
-  
+  // Wireframe Icons
   const IconShield = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -123,13 +150,11 @@ export default function Home() {
     </svg>
   )
 
-  // Feature Card with Glow
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
       className={`group flex items-center gap-6 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      {/* Icon with subtle glow behind it */}
       <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100/80 group-hover:text-teal-50 group-hover:scale-105 transition-all duration-500 ease-out">
         <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <Icon />
@@ -145,13 +170,11 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Deep Teal Theme) */}
+        {/* LEFT SIDE */}
         <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* Modern Radial Gradient for depth */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149] via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
 
-          {/* Logo */}
           <div className="lg:absolute lg:top-12 lg:left-12 z-10 mb-10 lg:mb-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
@@ -161,7 +184,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Content Cards */}
           <div className="flex-1 flex flex-col justify-center z-10">
             <div className="max-w-lg mx-auto w-full pt-10">
               <div className="grid gap-5">
@@ -193,7 +215,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
             <div className={`text-teal-400/50 text-[10px] font-bold uppercase tracking-widest flex gap-8 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <span>Encrypted</span>
@@ -203,7 +224,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* RIGHT SIDE (Login/Signup Form) */}
+        {/* RIGHT SIDE */}
         <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
           
           <div className="hidden lg:block lg:h-24"></div> 
