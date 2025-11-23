@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
@@ -14,6 +14,22 @@ const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
   oakland: 'Oakland County'
+}
+
+function createSupabaseServer() {
+  const cookieStore = cookies()
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
 }
 
 function validateEnvironment() {
@@ -155,8 +171,7 @@ export async function POST(request) {
     )
   }
 
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
@@ -288,9 +303,6 @@ export async function POST(request) {
 
     const model = 'gemini-2.0-flash-exp'
 
-    // ═══════════════════════════════════════════════════════════════════
-    // ENHANCED RAG - COMPREHENSIVE DOCUMENT SEARCH
-    // ═══════════════════════════════════════════════════════════════════
     let contextText = ""
     let usedDocs = []
 
@@ -298,11 +310,9 @@ export async function POST(request) {
       try {
         console.log('🔍 Starting comprehensive document search...')
         
-        // Create multiple search queries for better coverage
         let searchQueries = []
         
         if (validatedImage) {
-          // Image analysis - search for all relevant equipment/facility standards
           searchQueries = [
             'equipment maintenance repair good working order',
             'physical facilities walls floors ceilings surfaces',
@@ -314,7 +324,6 @@ export async function POST(request) {
           ]
           console.log('   Using IMAGE-focused search queries')
         } else {
-          // Text query - comprehensive search
           searchQueries = [
             lastUserMessage,
             `${lastUserMessage} requirements`,
@@ -347,7 +356,6 @@ export async function POST(request) {
 
         console.log(`   📊 Total results collected: ${allResults.length}`)
 
-        // Deduplicate while keeping best scores
         const uniqueResults = []
         const seenContent = new Set()
         
@@ -361,7 +369,6 @@ export async function POST(request) {
 
         console.log(`   🔄 Unique results: ${uniqueResults.length}`)
 
-        // Sort by relevance and take top 40 for comprehensive context
         const topResults = uniqueResults
           .sort((a, b) => b.score - a.score)
           .slice(0, 40)
@@ -394,9 +401,6 @@ CONTENT: ${doc.text}`
       }
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // IMPROVED SYSTEM INSTRUCTION - CONVERSATIONAL & ACCURATE
-    // ═══════════════════════════════════════════════════════════════════
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
     const systemInstructionText = `You are ProtocolLM, a food safety compliance assistant for ${countyName} restaurants.
@@ -544,7 +548,6 @@ Remember: NO ASTERISKS. Use natural citations like [Document, Page X].`
 
     const validatedText = validateApiResponse(text)
 
-    // Extract citations from natural format [Document, Page X]
     const citations = []
     const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
@@ -556,7 +559,6 @@ Remember: NO ASTERISKS. Use natural citations like [Document, Page X].`
       })
     }
 
-    // Quality check
     const hasAsterisks = /\*\*/.test(validatedText)
     if (hasAsterisks) {
       console.warn('⚠️  Response contains asterisks - system prompt may need adjustment')
