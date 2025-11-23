@@ -171,7 +171,7 @@ export default function DocumentsPage() {
     saveCurrentChat()
     setMessages([
       { 
-        role: 'assistant',
+        role: 'assistant', 
         content: `System ready. Consultant active for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
@@ -619,8 +619,8 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        {/* CHANGED: increased pt-20 to pt-28 to allow header clearance */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-28 space-y-8">
+        {/* UPDATED: Increased top padding to pt-36 to clear the header on tablet */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-36 space-y-8">
           {messages.map((msg, i) => (
             <div
               key={i}
