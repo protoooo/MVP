@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  
   webpack: (config, { isServer }) => {
-    // CRITICAL FIX: Exclude server-only modules from browser bundle
     if (!isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
-        // Prevent ioredis from being bundled in browser
         'ioredis': false,
         './redis-rate-limit': false,
         '../lib/redis-rate-limit': false,
