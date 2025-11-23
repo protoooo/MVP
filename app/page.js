@@ -84,10 +84,10 @@ export default function Home() {
     }
   }
 
-  // New "Regulatory Ledger" Item - Serious, text-based, no cute icons
+  // UPDATED: Now using Navy Blue borders and real document references
   const LedgerItem = ({ code, title, desc, delay }) => (
     <div 
-      className={`border-l-[3px] border-slate-200 pl-6 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+      className={`border-l-[3px] border-slate-900 pl-5 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
       style={{ transitionDelay: delay }}
     >
       <div className="flex items-baseline gap-3 mb-1">
@@ -119,33 +119,34 @@ export default function Home() {
             <div className="max-w-xl mx-auto w-full">
               
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
-                System Capabilities
+                Integrated Knowledge Base
               </p>
 
+              {/* UPDATED: REAL EXAMPLES FROM YOUR FILES */}
               <div className="space-y-6">
                 <LedgerItem 
                   delay="100ms"
-                  code="FDA 4-204.112"
-                  title="Compliance Verification"
-                  desc="Instant analysis of equipment and facility photos against County, State, and Federal codes."
+                  code="WASHTENAW ENV. HEALTH"
+                  title="Enforcement Actions & Violation Types"
+                  desc="Instant verification against local Washtenaw County enforcement triggers and priority violation standards."
                 />
                 <LedgerItem 
                   delay="200ms"
-                  code="MCL 289.1101"
-                  title="Risk Mitigation"
-                  desc="Identify priority violations before the Health Department inspection occurs."
+                  code="WAYNE COUNTY TPHC"
+                  title="Time as a Public Health Control"
+                  desc="Generate required written procedures for holding hot/cold foods without temperature control."
                 />
                 <LedgerItem 
                   delay="300ms"
-                  code="ADMIN"
-                  title="24/7 Availability"
-                  desc="Immediate answers for managers during night shifts, weekends, and peak hours."
+                  code="MCL ACT 92 of 2000"
+                  title="Michigan Modified Food Code"
+                  desc="Full synthesis of the FDA Food Code as adopted by Michigan Law, including specific state modifications."
                 />
                 <LedgerItem 
                   delay="400ms"
-                  code="DATA"
-                  title="Unified Standards"
-                  desc="A single source of truth synthesizing the FDA Food Code and Michigan Modified Food Law."
+                  code="EMERGENCY ACTION"
+                  title="Norovirus & Contamination Protocols"
+                  desc="Immediate guidance for vomit/diarrhea events and Norovirus environmental cleaning procedures."
                 />
               </div>
 
