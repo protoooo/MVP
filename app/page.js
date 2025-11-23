@@ -103,7 +103,7 @@ export default function Home() {
     }
   }
 
-  // --- UPDATED ICONS ---
+  // --- ICONS ---
   
   const IconShield = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
@@ -111,7 +111,6 @@ export default function Home() {
     </svg>
   )
 
-  // Warning Triangle for Violations
   const IconWarning = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
@@ -127,7 +126,6 @@ export default function Home() {
     </svg>
   )
 
-  // Biohazard/Hazmat shape
   const IconHazmat = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
       <circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -140,13 +138,15 @@ export default function Home() {
     </svg>
   )
 
-  const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
+  // UPDATED FeatureCard: Accepts color classes for icon and glow
+  const FeatureCard = ({ icon: Icon, title, desc, delay, iconColor, glowColor }) => (
     <div 
       className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100 group-hover:text-white transition-all duration-500 ease-out">
-        <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className={`relative shrink-0 w-16 h-16 flex items-center justify-center ${iconColor} transition-all duration-500 ease-out`}>
+        {/* The colored glow behind the icon */}
+        <div className={`absolute inset-0 ${glowColor} blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
         <Icon />
       </div>
       <div className="min-w-0 relative z-10">
@@ -192,33 +192,49 @@ export default function Home() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center z-10">
-            {/* UPDATED: Changed lg:mt-32 to lg:mt-12 to bring cards up */}
             <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
+                
+                {/* 1. Enforcement Data (Teal - Safe/Standard) */}
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
                   desc="Trained on Washtenaw, Wayne & Oakland County violation triggers."
                   icon={IconShield}
+                  iconColor="text-teal-300 group-hover:text-teal-100"
+                  glowColor="bg-teal-500/30"
                 />
+
+                {/* 2. Violation Risk (Red/Rose - Danger/Alert) */}
                 <FeatureCard 
                   delay="200ms"
                   title="Violation Risk"
                   desc="Identify Priority, Foundation, and Core risks before they become fines."
                   icon={IconWarning}
+                  iconColor="text-rose-400 group-hover:text-rose-200"
+                  glowColor="bg-rose-500/30"
                 />
+
+                {/* 3. Unified Code (Blue/Sky - Info/Neutral) */}
                 <FeatureCard 
                   delay="300ms"
                   title="Unified Code"
                   desc="FDA Food Code synthesized with Michigan Food Law."
                   icon={IconGrid}
+                  iconColor="text-sky-400 group-hover:text-sky-200"
+                  glowColor="bg-sky-500/30"
                 />
+
+                {/* 4. Hazmat Protocols (Amber/Orange - Caution) */}
                 <FeatureCard 
                   delay="400ms"
                   title="Hazmat Protocols"
                   desc="Immediate guidance for contamination events."
                   icon={IconHazmat}
+                  iconColor="text-amber-400 group-hover:text-amber-200"
+                  glowColor="bg-amber-500/30"
                 />
+
               </div>
             </div>
           </div>
