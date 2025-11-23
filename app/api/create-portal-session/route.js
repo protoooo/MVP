@@ -1,13 +1,28 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-export async function POST(request) {
+function createSupabaseServer() {
   const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
+}
+
+export async function POST(request) {
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -16,7 +31,6 @@ export async function POST(request) {
   }
 
   try {
-    // Get user's Stripe customer ID
     const { data: subscription, error: fetchError } = await supabase
       .from('subscriptions')
       .select('stripe_customer_id')
@@ -39,13 +53,11 @@ export async function POST(request) {
       )
     }
 
-    // Use the environment variable properly
     const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/documents`
 
     console.log('✅ Creating portal session for customer:', subscription.stripe_customer_id)
     console.log('✅ Return URL:', returnUrl)
 
-    // Create Stripe billing portal session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
       return_url: returnUrl,
