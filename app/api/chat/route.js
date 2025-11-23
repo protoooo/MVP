@@ -50,7 +50,7 @@ function getVertexCredentials() {
 
 function validateApiResponse(response) {
   if (!response || typeof response !== 'string') {
-    return "I analyzed the image but couldn't generate a text description. Please try asking a specific question about it."
+    return "I analyzed your question but couldn't generate a proper response. Please try rephrasing."
   }
   
   let cleaned = response
@@ -288,91 +288,95 @@ export async function POST(request) {
 
     const model = 'gemini-2.0-flash-exp'
 
-    // RAG / Document Search - ENHANCED LOGGING
+    // ═══════════════════════════════════════════════════════════════════
+    // ENHANCED RAG - COMPREHENSIVE DOCUMENT SEARCH
+    // ═══════════════════════════════════════════════════════════════════
     let contextText = ""
     let usedDocs = []
 
     if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
-        console.log('🔍 Starting document search...')
-        console.log('   Query:', lastUserMessage.substring(0, 100))
-        console.log('   County:', userCounty)
-        console.log('   Has image:', !!validatedImage)
+        console.log('🔍 Starting comprehensive document search...')
         
+        // Create multiple search queries for better coverage
         let searchQueries = []
         
         if (validatedImage) {
+          // Image analysis - search for all relevant equipment/facility standards
           searchQueries = [
             'equipment maintenance repair good working order',
             'physical facilities walls floors ceilings surfaces',
             'plumbing water supply sewage drainage',
             'sanitation cleaning procedures requirements',
             'food contact surfaces utensils equipment',
+            'structural defects repairs maintenance',
             lastUserMessage
           ]
-          console.log('   Using IMAGE search queries')
+          console.log('   Using IMAGE-focused search queries')
         } else {
+          // Text query - comprehensive search
           searchQueries = [
             lastUserMessage,
-            `${lastUserMessage} requirements regulations`,
-            `${lastUserMessage} violations standards`
+            `${lastUserMessage} requirements`,
+            `${lastUserMessage} regulations standards`,
+            `${lastUserMessage} compliance procedures`,
+            `${lastUserMessage} violations enforcement`
           ]
-          console.log('   Using TEXT search queries')
+          console.log('   Using TEXT-focused search queries')
         }
 
         const allResults = []
-        let queryCount = 0
         
         for (const query of searchQueries) {
           if (query && query.trim()) {
-            queryCount++
-            console.log(`   📝 Search query ${queryCount}:`, query.substring(0, 60))
-            
             try {
-              const results = await searchDocuments(query.trim(), 10, userCounty)
-              console.log(`   ✅ Query ${queryCount} returned ${results.length} results`)
+              console.log(`   📝 Searching: "${query.substring(0, 60)}..."`)
+              const results = await searchDocuments(query.trim(), 15, userCounty)
+              console.log(`      ✅ Found ${results.length} documents`)
               
               if (results.length > 0) {
-                console.log(`      Top result: ${results[0].source} (score: ${results[0].score})`)
+                console.log(`         Top result: ${results[0].source} (${(results[0].score * 100).toFixed(1)}% relevant)`)
               }
               
               allResults.push(...results)
             } catch (searchError) {
-              console.error(`   ❌ Query ${queryCount} failed:`, searchError.message)
+              console.error(`   ❌ Search failed:`, searchError.message)
             }
           }
         }
 
         console.log(`   📊 Total results collected: ${allResults.length}`)
 
+        // Deduplicate while keeping best scores
         const uniqueResults = []
         const seenContent = new Set()
         
         for (const doc of allResults) {
-          const contentKey = doc.text.substring(0, 100)
-          if (!seenContent.has(contentKey) && doc.score > 0.3) {
+          const contentKey = doc.text.substring(0, 150)
+          if (!seenContent.has(contentKey) && doc.score > 0.25) {
             seenContent.add(contentKey)
             uniqueResults.push(doc)
           }
         }
 
-        console.log(`   🔄 Unique results after deduplication: ${uniqueResults.length}`)
+        console.log(`   🔄 Unique results: ${uniqueResults.length}`)
 
+        // Sort by relevance and take top 40 for comprehensive context
         const topResults = uniqueResults
           .sort((a, b) => b.score - a.score)
-          .slice(0, 30)
+          .slice(0, 40)
         
-        console.log(`   🎯 Final top results: ${topResults.length}`)
+        console.log(`   🎯 Final documents for context: ${topResults.length}`)
         
         if (topResults.length > 0) {
-          console.log('   ✅ Building context text...')
-          
-          contextText = topResults.map((doc, idx) => `[DOCUMENT ${idx + 1}]
+          contextText = topResults.map((doc, idx) => 
+            `[DOCUMENT ${idx + 1}]
 SOURCE: ${doc.source || 'Unknown'}
 PAGE: ${doc.page || 'N/A'}
 COUNTY: ${COUNTY_NAMES[userCounty]}
 RELEVANCE: ${(doc.score * 100).toFixed(1)}%
-CONTENT: ${doc.text}`).join("\n---\n\n")
+CONTENT: ${doc.text}`
+          ).join("\n\n---\n\n")
           
           usedDocs = topResults.map(r => ({ 
             document: r.source, 
@@ -380,73 +384,96 @@ CONTENT: ${doc.text}`).join("\n---\n\n")
             relevance: r.score 
           }))
           
-          console.log(`   📄 Context text length: ${contextText.length} chars`)
-          console.log(`   📚 Documents in context:`, usedDocs.map(d => d.document).join(', '))
+          console.log(`   ✅ Context built: ${contextText.length} chars from ${usedDocs.length} documents`)
         } else {
-          console.warn('   ⚠️  No results met threshold (score > 0.3)')
+          console.warn('   ⚠️  No relevant documents found (all below 0.25 threshold)')
         }
       } catch (searchErr) {
-        console.error('   ❌ Document search failed:', searchErr)
-        console.error('   Stack:', searchErr.stack)
+        console.error('   ❌ Document search system error:', searchErr)
         logError(searchErr, { context: 'Document search failed' })
       }
-    } else {
-      console.log('🔍 Skipping document search (empty query and no image)')
     }
 
-    console.log('📝 Context summary:')
-    console.log('   Has context:', contextText.length > 0)
-    console.log('   Documents used:', usedDocs.length)
-
+    // ═══════════════════════════════════════════════════════════════════
+    // IMPROVED SYSTEM INSTRUCTION - CONVERSATIONAL & ACCURATE
+    // ═══════════════════════════════════════════════════════════════════
     const countyName = COUNTY_NAMES[userCounty] || userCounty
     
-    const systemInstructionText = `You are ProtocolLM, a Food Safety Compliance Assistant for ${countyName}.
+    const systemInstructionText = `You are ProtocolLM, a food safety compliance assistant for ${countyName} restaurants.
 
-Think like an FDA-trained inspector, not a lawyer. Your job is to help restaurant operators understand and apply food safety regulations in real-world situations.
+Your role is to help restaurant operators understand and apply food safety regulations accurately and conversationally.
 
 ═══════════════════════════════════════════════════════════════════
-THE REASONING FRAMEWORK (USE THIS FOR EVERY RESPONSE):
+CORE PRINCIPLES:
 ═══════════════════════════════════════════════════════════════════
 
-**For Specific Questions (temp, time, procedures):**
-→ Find the exact regulation
-→ Quote it with citation
-→ Explain how to apply it
-→ Add practical tips
+1. **Be Conversational, Not Robotic**
+   - Talk like a knowledgeable colleague, not a manual
+   - Use natural language: "You'll need to..." instead of "It is required that..."
+   - Be direct and practical
 
-**For Image Analysis (equipment, facilities):**
+2. **NEVER Use Asterisks for Formatting**
+   - Use natural language emphasis only
+   - For citations, use the format: [Document Name, Page X]
+   - Keep responses clean and professional
+
+3. **Always Ground in Retrieved Documents**
+   - Every factual claim MUST come from the RETRIEVED CONTEXT below
+   - If documents don't contain the answer, say: "I don't have specific regulations on this in my database. You should verify with your local health department."
+   - Never make up information
+
+4. **Citation Format (CRITICAL)**
+   - Cite like this: "According to the FDA Food Code [FDA_FOOD_CODE_2022, Page 45], cold foods must be held at 41°F or below."
+   - Make citations NATURAL and READABLE
+   - Don't over-cite - cite when stating specific requirements, temperatures, times, or procedures
+
+═══════════════════════════════════════════════════════════════════
+RESPONSE FRAMEWORK:
+═══════════════════════════════════════════════════════════════════
+
+**For Specific Questions (temperatures, times, procedures):**
+→ Find the exact regulation in the RETRIEVED CONTEXT
+→ State it clearly with natural citation
+→ Explain how to apply it practically
+→ Add any relevant tips
+
+**For Image Analysis (equipment, facilities, conditions):**
 → Describe what you observe
-→ Identify potential food safety hazards
-→ Apply general maintenance/sanitation principles
-→ Cite the relevant standard
-→ Make specific recommendations
+→ Identify potential issues based on regulations in RETRIEVED CONTEXT
+→ Cite the relevant standards
+→ Give specific recommendations
+→ Note: If you can't find relevant regulations, say so honestly
 
-**For Scenarios Not Directly Addressed:**
-→ Be honest about what's in the documents
-→ Apply related principles with clear reasoning
-→ Recommend verification
+**For Questions Not in Retrieved Context:**
+→ State clearly: "I don't have specific regulations on this"
+→ If you can apply general principles, explain your reasoning
+→ Always recommend verification with health department
 
 ═══════════════════════════════════════════════════════════════════
-CRITICAL ACCURACY RULES:
+CRITICAL RULES:
 ═══════════════════════════════════════════════════════════════════
 
-**ALWAYS cite when you:**
-- Give specific numbers (temperatures, times, concentrations)
-- Quote regulations directly
-- State what's required, prohibited, or allowed
-- Reference inspection criteria
+✅ DO:
+- Be direct and helpful
+- Use natural language
+- Cite sources cleanly: [Document Name, Page X]
+- Admit when you don't have information
+- Explain practical application
 
-**CLEARLY flag when you're:**
-- Applying a general principle to a specific case
-- Making reasonable inferences
-- Giving recommendations vs. requirements
-- Unsure or lacking specific guidance
+❌ DON'T:
+- Use asterisks, markdown bold, or formatting
+- Make up information
+- Give vague answers when regulations exist
+- Over-cite or under-cite
+- Use legal/overly technical language
 
 ═══════════════════════════════════════════════════════════════════
 RETRIEVED CONTEXT (Your Knowledge Base):
 ═══════════════════════════════════════════════════════════════════
 
-${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the user that you need more specific information or cannot find regulations on their topic.'}`
+${contextText || 'WARNING: No relevant documents retrieved. You MUST tell the user you cannot find specific regulations for their question and recommend they contact their local health department.'}
+
+Remember: Be helpful, accurate, and conversational. Never use asterisks. Always cite naturally.`
 
     console.log('🤖 Initializing Vertex AI model...')
 
@@ -469,17 +496,18 @@ ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the 
       fullPromptText += `CONVERSATION HISTORY:\n${historyText}\n\n`
     }
 
-    fullPromptText += `USER QUESTION: ${lastUserMessage.trim() || "Analyze this image for compliance violations."}`
+    fullPromptText += `USER QUESTION: ${lastUserMessage.trim() || "Analyze this image for compliance issues."}`
 
     if (validatedImage) {
       fullPromptText += `\n\nINSTRUCTIONS FOR IMAGE ANALYSIS:
-1. First, describe what you see in the image objectively
-2. Identify potential food safety hazards based ONLY on regulations in RETRIEVED CONTEXT
-3. For each issue, cite the specific regulation
-4. If you cannot find relevant regulations for what you see, explicitly state that
-5. Always recommend verification with health inspector for serious concerns
+1. Describe what you see objectively
+2. Identify potential food safety issues using regulations from RETRIEVED CONTEXT
+3. For each issue, cite the specific regulation naturally: [Document Name, Page X]
+4. If regulations aren't found for something you see, state that clearly
+5. Give practical recommendations
+6. For serious issues, recommend health department consultation
 
-Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.`
+Remember: NO ASTERISKS. Use natural citations like [Document, Page X].`
     }
 
     const parts = []
@@ -516,32 +544,40 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
 
     const validatedText = validateApiResponse(text)
 
-    const hasCitations = /\*\*\[.*?,\s*Page/.test(validatedText)
-    const makesFactualClaims = /violat|requir|must|shall|prohibit|standard/i.test(validatedText)
-    
-    if (makesFactualClaims && !hasCitations && !validatedText.includes('cannot find') && !validatedText.includes('do not directly address')) {
-      console.warn('⚠️  Response lacks required citations')
-      logInfo('Response lacks required citations', { 
-        preview: validatedText.substring(0, 200),
-        userId: session.user.id 
+    // Extract citations from natural format [Document, Page X]
+    const citations = []
+    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
+    let match
+    while ((match = citationRegex.exec(validatedText)) !== null) {
+      citations.push({ 
+        document: match[1], 
+        pages: match[2], 
+        county: userCounty 
       })
+    }
+
+    // Quality check
+    const hasAsterisks = /\*\*/.test(validatedText)
+    if (hasAsterisks) {
+      console.warn('⚠️  Response contains asterisks - system prompt may need adjustment')
+    }
+
+    const hasCitations = citations.length > 0
+    const makesFactualClaims = /must|shall|requir|prohibit|standard|violat/i.test(validatedText)
+    
+    if (makesFactualClaims && !hasCitations && contextText.length > 0) {
+      console.warn('⚠️  Response makes claims without citations despite having context')
     }
 
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
-    const citations = []
-    const citationRegex = /\*\*\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]\*\*/g
-    let match
-    while ((match = citationRegex.exec(validatedText)) !== null) {
-      citations.push({ document: match[1], pages: match[2], county: userCounty })
-    }
-
     console.log('✅ Response generated successfully')
     console.log('   Response length:', validatedText.length)
     console.log('   Citations found:', citations.length)
     console.log('   Documents searched:', usedDocs.length)
+    console.log('   Contains asterisks:', hasAsterisks)
 
     return NextResponse.json({ 
       message: validatedText,
