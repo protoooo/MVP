@@ -123,19 +123,17 @@ export default function Home() {
     </svg>
   )
 
-  // High-End Feature Card with Wireframe Art
+  // High-End Feature Card
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`group flex items-center gap-6 p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      className={`group flex items-center gap-5 p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      {/* Large Wireframe Icon Container */}
-      <div className="shrink-0 w-16 h-16 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 ease-out">
+      <div className="shrink-0 w-14 h-14 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 ease-out">
         <Icon />
       </div>
-      
       <div className="min-w-0">
-        <h3 className="text-white font-medium text-sm tracking-wide uppercase mb-2">{title}</h3>
+        <h3 className="text-white font-medium text-xs tracking-wide uppercase mb-1.5">{title}</h3>
         <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
       </div>
     </div>
@@ -145,53 +143,57 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Dark Navy - Robinhood Style Wireframes) */}
-        <div className="w-full lg:w-1/2 bg-[#0B0E14] flex flex-col justify-between relative overflow-hidden px-8 py-10 lg:p-16">
+        {/* LEFT SIDE (Dark Navy - Wireframes) */}
+        <div className="w-full lg:w-1/2 bg-[#0B0E14] relative overflow-hidden px-8 py-6 flex flex-col">
           
-          {/* Subtle Mesh Gradient Background */}
+          {/* Background */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-slate-800/20 via-[#0B0E14] to-[#0B0E14] pointer-events-none"></div>
 
-          {/* 1. Header Logo */}
-          <div className={`relative z-10 transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-              protocol<span className="font-normal text-slate-500">LM</span>
-            </h1>
-            <div className="h-[1px] w-full max-w-[100px] bg-white/20"></div>
+          {/* Logo (Absolute Top Left) */}
+          <div className="lg:absolute lg:top-12 lg:left-12 z-10 mb-10 lg:mb-0">
+            <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+              <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
+                protocol<span className="font-normal text-slate-500">LM</span>
+              </h1>
+              <div className="h-[1px] w-24 bg-white/20"></div>
+            </div>
           </div>
           
-          {/* 2. Middle Content (Wireframe Features) */}
-          <div className="relative z-10 w-full my-auto py-12">
-            <div className="grid gap-6">
-              <FeatureCard 
-                delay="100ms"
-                title="Enforcement Data"
-                desc="Trained on Washtenaw & Wayne County violation triggers."
-                icon={IconShield}
-              />
-              <FeatureCard 
-                delay="200ms"
-                title="TPHC Controls"
-                desc="Automated time as a public health control procedures."
-                icon={IconCylinder}
-              />
-              <FeatureCard 
-                delay="300ms"
-                title="Unified Code"
-                desc="FDA Food Code synthesized with Michigan Food Law."
-                icon={IconGrid}
-              />
-              <FeatureCard 
-                delay="400ms"
-                title="Hazmat Protocols"
-                desc="Immediate guidance for Norovirus and contamination events."
-                icon={IconOrb}
-              />
+          {/* Content (Centered) */}
+          <div className="flex-1 flex flex-col justify-center z-10">
+            <div className="max-w-md mx-auto w-full">
+              <div className="grid gap-4">
+                <FeatureCard 
+                  delay="100ms"
+                  title="Enforcement Data"
+                  desc="Trained on Washtenaw & Wayne County violation triggers."
+                  icon={IconShield}
+                />
+                <FeatureCard 
+                  delay="200ms"
+                  title="TPHC Controls"
+                  desc="Automated time as a public health control procedures."
+                  icon={IconCylinder}
+                />
+                <FeatureCard 
+                  delay="300ms"
+                  title="Unified Code"
+                  desc="FDA Food Code synthesized with Michigan Food Law."
+                  icon={IconGrid}
+                />
+                <FeatureCard 
+                  delay="400ms"
+                  title="Hazmat Protocols"
+                  desc="Immediate guidance for Norovirus and contamination events."
+                  icon={IconOrb}
+                />
+              </div>
             </div>
           </div>
 
-          {/* 3. Footer */}
-          <div className={`relative z-10 text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="flex flex-wrap gap-8">
+          {/* Footer (Absolute Bottom Left) */}
+          <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
+            <div className={`text-slate-600 text-[10px] font-bold uppercase tracking-widest flex gap-8 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <span>Encrypted</span>
               <span>Private</span>
               <span>Institutional</span>
@@ -200,90 +202,88 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-between px-8 py-10 lg:p-16 min-h-screen">
+        <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col">
           
-          <div className="lg:hidden mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-            <div className="h-[1px] w-32 bg-slate-900"></div>
-          </div>
+          {/* Spacers to force center alignment mirroring left side */}
+          <div className="hidden lg:block lg:h-32"></div> 
 
-          <div className="hidden lg:block"></div>
-
-          <div className="w-full max-w-md mx-auto">
-            <div className="mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
-                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back.'}
-              </h2>
-            </div>
-
-            <div className="flex border-b border-slate-200 mb-8">
-              <button 
-                onClick={() => { setView('signup'); setMessage(null); }} 
-                className={`pb-2 text-xs font-bold uppercase tracking-wide mr-8 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
-              >
-                Create Account
-              </button>
-              <button 
-                onClick={() => { setView('login'); setMessage(null); }} 
-                className={`pb-2 text-xs font-bold uppercase tracking-wide transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
-              >
-                Sign In
-              </button>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-6">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
-                <input 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                  className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
-                  placeholder="name@company.com" 
-                />
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="w-full max-w-md mx-auto">
+              <div className="mb-12">
+                <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
+                  {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back to the dashboard.'}
+                </h2>
               </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                  minLength={6} 
-                  className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
-                  placeholder="••••••••" 
-                />
-              </div>
-              
-              <button 
-                type="submit" 
-                disabled={loading} 
-                className="w-full bg-[#0B0E14] hover:bg-slate-800 text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
-              >
-                {loading ? 'Processing...' : (view === 'signup' ? 'Start Free Trial' : 'Access Dashboard')}
-              </button>
 
-              {message && (
-                <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-green-50 border-green-100 text-green-900'}`}>
-                  {message.text}
-                </div>
-              )}
-            </form>
-
-            <div className="mt-8 text-center">
-              {view === 'signup' && (
+              <div className="flex border-b border-slate-200 mb-8">
                 <button 
-                  onClick={() => router.push('/pricing')}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-wider"
+                  onClick={() => { setView('signup'); setMessage(null); }} 
+                  className={`pb-2 text-xs font-bold uppercase tracking-wide mr-8 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
                 >
-                  View Plans & Pricing
+                  Create Account
                 </button>
-              )}
+                <button 
+                  onClick={() => { setView('login'); setMessage(null); }} 
+                  className={`pb-2 text-xs font-bold uppercase tracking-wide transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+                >
+                  Sign In
+                </button>
+              </div>
+
+              <form onSubmit={handleAuth} className="space-y-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    placeholder="name@company.com" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
+                  <input 
+                    type="password" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                    minLength={6} 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    placeholder="••••••••" 
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full bg-[#0B0E14] hover:bg-slate-800 text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
+                >
+                  {loading ? 'Processing...' : (view === 'signup' ? 'Start Free Trial' : 'Access Dashboard')}
+                </button>
+
+                {message && (
+                  <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-green-50 border-green-100 text-green-900'}`}>
+                    {message.text}
+                  </div>
+                )}
+              </form>
+
+              <div className="mt-8 text-center">
+                {view === 'signup' && (
+                  <button 
+                    onClick={() => router.push('/pricing')}
+                    className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-wider"
+                  >
+                    View Plans & Pricing
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="mt-auto pt-8 text-center lg:text-left">
+          <div className="lg:absolute lg:bottom-12 lg:left-8 z-10 mt-10 lg:mt-0 text-center lg:text-left w-full">
              <div className="flex justify-center lg:justify-start gap-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                 <a href="/terms" className="hover:text-slate-600 transition">Terms</a>
                 <a href="/privacy" className="hover:text-slate-600 transition">Privacy</a>
