@@ -40,7 +40,7 @@ export async function POST(request) {
     if (fetchError) {
       console.error('❌ Subscription fetch error:', fetchError)
       return NextResponse.json(
-        { error: 'Could not find subscription details' },
+        { error: 'Could not find subscription details in database.' },
         { status: 404 }
       )
     }
@@ -48,12 +48,12 @@ export async function POST(request) {
     if (!subscription?.stripe_customer_id) {
       console.error('❌ No stripe_customer_id found for user:', session.user.id)
       return NextResponse.json(
-        { error: 'No active subscription found. Please contact support.' },
+        { error: 'No billing account found for this user. Please contact support.' },
         { status: 404 }
       )
     }
 
-    // Calculate absolute return URL dynamically to prevent Env Var issues
+    // Dynamic Origin Calculation
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const returnUrl = `${origin}/documents`
 
