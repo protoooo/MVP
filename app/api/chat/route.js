@@ -3,12 +3,11 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { VertexAI } from '@google-cloud/vertexai'
 import { searchDocuments } from '@/lib/searchDocs'
-import { sanitizeString, sanitizeCounty, sanitizeMessages } from '@/lib/sanitize'
+import { sanitizeString, sanitizeCounty } from '@/lib/sanitize'
 import { logError, logInfo } from '@/lib/monitoring'
 import { checkRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
-// Max duration for image analysis/long reasoning
 export const maxDuration = 60 
 
 const COUNTY_NAMES = {
@@ -88,7 +87,6 @@ function validateImageData(imageData) {
     throw new Error('Image must be a data URL')
   }
 
-  // Capture the mime type specifically
   const mimeMatch = imageData.match(/^data:(image\/[a-z]+);base64,/)
   if (!mimeMatch) {
     throw new Error('Invalid image format')
@@ -96,7 +94,6 @@ function validateImageData(imageData) {
 
   let mimeType = mimeMatch[1]
   
-  // CRITICAL FIX: Normalize 'image/jpg' to 'image/jpeg' for Vertex AI
   if (mimeType === 'image/jpg') {
     mimeType = 'image/jpeg'
   }
@@ -107,7 +104,6 @@ function validateImageData(imageData) {
     throw new Error(`Image type ${mimeType} not supported. Use JPEG, PNG, or WebP.`)
   }
 
-  // CRITICAL FIX: Ensure clean base64 string without whitespace/newlines
   const base64Data = imageData.split(',')[1].replace(/\s/g, '')
   
   if (!base64Data || base64Data.length < 100) {
@@ -115,13 +111,40 @@ function validateImageData(imageData) {
   }
 
   const sizeInBytes = (base64Data.length * 3) / 4
-  const maxSize = 5 * 1024 * 1024 // 5MB Limit
+  const maxSize = 5 * 1024 * 1024
 
   if (sizeInBytes > maxSize) {
     throw new Error('Image is too large. Maximum size is 5MB.')
   }
 
   return { mimeType, base64Data }
+}
+
+// FIXED: Simplified message sanitization
+function sanitizeMessages(messages) {
+  if (!Array.isArray(messages)) {
+    throw new Error('Messages must be an array')
+  }
+
+  if (messages.length > 100) {
+    throw new Error('Too many messages')
+  }
+
+  return messages.map(msg => {
+    // More flexible validation
+    if (!msg || typeof msg !== 'object') {
+      throw new Error('Invalid message format')
+    }
+
+    const role = msg.role === 'user' ? 'user' : 'assistant'
+    const content = typeof msg.content === 'string' ? sanitizeString(msg.content, 5000) : ''
+    
+    return {
+      role,
+      content,
+      citations: Array.isArray(msg.citations) ? msg.citations : []
+    }
+  })
 }
 
 export async function POST(request) {
@@ -162,7 +185,6 @@ export async function POST(request) {
   }
 
   try {
-    // 1. Verify Subscription & Limits
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('is_subscribed, requests_used, images_used, county')
@@ -189,7 +211,6 @@ export async function POST(request) {
       }, { status: 429 })
     }
 
-    // 2. Parse Request Body
     let requestBody
     try {
       requestBody = await request.json()
@@ -199,16 +220,20 @@ export async function POST(request) {
 
     const { messages, image, county } = requestBody
     
-    let sanitizedMessages
+    // FIXED: Better message validation
+    let sanitizedMessages = []
     try {
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        throw new Error('Messages are required')
+      }
       sanitizedMessages = sanitizeMessages(messages)
     } catch (e) {
-      return NextResponse.json({ error: e.message }, { status: 400 })
+      console.error('Message validation error:', e)
+      return NextResponse.json({ error: 'Invalid message format: ' + e.message }, { status: 400 })
     }
 
     const sanitizedCounty = sanitizeCounty(county || profile.county)
 
-    // 3. Validate Image if Present
     let validatedImage = null
     if (image) {
       if (profile.images_used >= limits.images) {
@@ -227,7 +252,6 @@ export async function POST(request) {
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
     const userCounty = sanitizedCounty
 
-    // 4. Initialize Vertex AI
     const credentials = getVertexCredentials()
     const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
     
@@ -241,10 +265,8 @@ export async function POST(request) {
       googleAuthOptions: { credentials }
     })
 
-    // Use Flash 2.0
-    const model = 'gemini-2.0-flash-exp' 
+    const model = 'gemini-2.0-flash-exp'
 
-    // 5. RAG / Document Search
     let contextText = ""
     let usedDocs = []
 
@@ -270,7 +292,6 @@ export async function POST(request) {
         }
 
         const allResults = []
-        // Only run if query isn't empty
         for (const query of searchQueries) {
           if (query && query.trim()) {
             const results = await searchDocuments(query.trim(), 10, userCounty)
@@ -374,8 +395,6 @@ ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the 
       }
     })
 
-    // --- PAYLOAD STRUCTURE OPTIMIZATION ---
-    
     let fullPromptText = ""
 
     if (sanitizedMessages.length > 1) {
@@ -396,10 +415,8 @@ ${contextText || 'WARNING: No relevant documents retrieved. You MUST inform the 
 Analyze this image against the sanitation, equipment maintenance, and physical facility standards in the RETRIEVED CONTEXT.`
     }
 
-    // Construct the strictly ordered parts array
     const parts = []
 
-    // 1. Image goes FIRST (if present)
     if (validatedImage) {
       parts.push({
         inlineData: {
@@ -409,7 +426,6 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       })
     }
 
-    // 2. Text goes SECOND (Always)
     parts.push({ text: fullPromptText })
 
     const requestPayload = {
@@ -419,7 +435,6 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
     const result = await generativeModel.generateContent(requestPayload)
     const response = await result.response
     
-    // Safety Check
     let text = ""
     if (response.candidates && response.candidates.length > 0 && response.candidates[0].content) {
         text = response.candidates[0].content.parts[0].text
@@ -441,7 +456,6 @@ Analyze this image against the sanitation, equipment maintenance, and physical f
       })
     }
 
-    // Update Usage Stats
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
