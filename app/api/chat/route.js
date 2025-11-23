@@ -244,7 +244,7 @@ export async function POST(request) {
     })
 
     // Using the requested model
-    const model = 'gemini-2.0-flash-exp' 
+    const model = 'gemini-2.5-flash' 
 
     // 5. RAG / Document Search
     let contextText = ""
