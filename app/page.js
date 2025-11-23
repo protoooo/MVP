@@ -84,17 +84,58 @@ export default function Home() {
     }
   }
 
-  // Glass Cards - "High Tech / Enterprise" Look
-  const FeatureCard = ({ icon, title, desc, delay }) => (
+  // --- ROBINHOOD STYLE WIREFRAME ICONS ---
+  
+  const IconShield = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M12 22V5" strokeOpacity="0.5" />
+      <path d="M4 12h16" strokeOpacity="0.5" />
+      <circle cx="12" cy="12" r="4" strokeOpacity="0.8" />
+    </svg>
+  )
+
+  const IconCylinder = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
+      <path d="M12 3c-4.97 0-9 1.79-9 4s4.03 4 9 4 9-1.79 9-4-4.03-4-9-4z" />
+      <path d="M3 7v10c0 2.21 4.03 4 9 4s9-1.79 9-4V7" />
+      <path d="M3 12c0 2.21 4.03 4 9 4s9-1.79 9-4" strokeOpacity="0.5" />
+      <path d="M12 3v18" strokeOpacity="0.3" />
+    </svg>
+  )
+
+  const IconGrid = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      <path d="M12 22V7" strokeOpacity="0.5" />
+      <path d="M7 4.5l10 5" strokeOpacity="0.3" />
+      <path d="M17 4.5l-10 5" strokeOpacity="0.3" />
+    </svg>
+  )
+
+  const IconOrb = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="0.8">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      <path d="M2 12h20" />
+      <path d="M12 2v20" strokeOpacity="0.5" />
+      <path d="M4.93 4.93l14.14 14.14" strokeOpacity="0.3" />
+    </svg>
+  )
+
+  // High-End Feature Card with Wireframe Art
+  const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm transition-all duration-700 hover:bg-white/10 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+      className={`group flex items-center gap-6 p-5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="shrink-0 w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-white border border-white/10">
-        {icon}
+      {/* Large Wireframe Icon Container */}
+      <div className="shrink-0 w-16 h-16 text-slate-300 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 ease-out">
+        <Icon />
       </div>
-      <div>
-        <h3 className="text-white font-bold text-sm mb-1">{title}</h3>
+      
+      <div className="min-w-0">
+        <h3 className="text-white font-medium text-sm tracking-wide uppercase mb-2">{title}</h3>
         <p className="text-slate-400 text-xs leading-relaxed">{desc}</p>
       </div>
     </div>
@@ -104,119 +145,113 @@ export default function Home() {
     <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Dark Navy - Structure) */}
-        <div className="w-full lg:w-1/2 bg-slate-900 flex flex-col justify-between relative overflow-hidden px-8 py-10 lg:p-12">
+        {/* LEFT SIDE (Dark Navy - Robinhood Style Wireframes) */}
+        <div className="w-full lg:w-1/2 bg-[#0B0E14] flex flex-col justify-between relative overflow-hidden px-8 py-10 lg:p-16">
           
-          {/* Background Gradient */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-slate-900 pointer-events-none"></div>
+          {/* Subtle Mesh Gradient Background */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-slate-800/20 via-[#0B0E14] to-[#0B0E14] pointer-events-none"></div>
 
-          {/* 1. Header Logo (Part of flow, not absolute) */}
+          {/* 1. Header Logo */}
           <div className={`relative z-10 transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-              protocol<span className="font-normal text-slate-400">LM</span>
+              protocol<span className="font-normal text-slate-500">LM</span>
             </h1>
-            <div className="h-0.5 w-32 bg-white/20"></div>
+            <div className="h-[1px] w-full max-w-[100px] bg-white/20"></div>
           </div>
           
-          {/* 2. Middle Content (Vertically Centered automatically via justify-between/flex) */}
-          <div className="relative z-10 max-w-lg w-full my-auto py-12">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">
-              System Intelligence
-            </p>
-
-            <div className="grid gap-4">
+          {/* 2. Middle Content (Wireframe Features) */}
+          <div className="relative z-10 w-full my-auto py-12">
+            <div className="grid gap-6">
               <FeatureCard 
                 delay="100ms"
-                title="Local Enforcement Data"
-                desc="Trained on specific Washtenaw & Wayne County enforcement triggers and priority violations."
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                title="Enforcement Data"
+                desc="Trained on Washtenaw & Wayne County violation triggers."
+                icon={IconShield}
               />
               <FeatureCard 
                 delay="200ms"
-                title="Time & Temp Controls"
-                desc="Automated procedures for TPHC (Time as a Public Health Control) and cooling logs."
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                title="TPHC Controls"
+                desc="Automated time as a public health control procedures."
+                icon={IconCylinder}
               />
               <FeatureCard 
                 delay="300ms"
-                title="State Code Synthesis"
-                desc="A single source of truth combining the FDA Food Code with Michigan Modified Food Law."
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                title="Unified Code"
+                desc="FDA Food Code synthesized with Michigan Food Law."
+                icon={IconGrid}
               />
               <FeatureCard 
                 delay="400ms"
-                title="Contamination Protocols"
-                desc="Immediate emergency guidance for vomit, diarrhea, and Norovirus events."
-                icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+                title="Hazmat Protocols"
+                desc="Immediate guidance for Norovirus and contamination events."
+                icon={IconOrb}
               />
             </div>
           </div>
 
-          {/* 3. Footer (Stuck to bottom of container) */}
-          <div className={`relative z-10 text-slate-500 text-[10px] font-medium uppercase tracking-wider transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="flex flex-wrap gap-6">
-              <span>Bank-Grade Security</span>
-              <span>Enterprise Ready</span>
+          {/* 3. Footer */}
+          <div className={`relative z-10 text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="flex flex-wrap gap-8">
+              <span>Encrypted</span>
+              <span>Private</span>
+              <span>Institutional</span>
             </div>
           </div>
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-between px-8 py-10 lg:p-12 min-h-screen">
+        <div className="w-full lg:w-1/2 bg-white flex flex-col justify-between px-8 py-10 lg:p-16 min-h-screen">
           
-          {/* Mobile Logo (Visible only on small screens) */}
           <div className="lg:hidden mb-8">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-            <div className="h-0.5 w-32 bg-slate-900"></div>
+            <div className="h-[1px] w-32 bg-slate-900"></div>
           </div>
 
-          {/* Spacer for Desktop to push content to middle */}
           <div className="hidden lg:block"></div>
 
           <div className="w-full max-w-md mx-auto">
-            <div className="mb-10">
-              <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
-                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back to the dashboard.'}
+            <div className="mb-12">
+              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4 tracking-tight leading-tight">
+                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back.'}
               </h2>
             </div>
 
-            {/* Toggle Switch */}
             <div className="flex border-b border-slate-200 mb-8">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
-                className={`pb-2 text-sm font-bold mr-6 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+                className={`pb-2 text-xs font-bold uppercase tracking-wide mr-8 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
               >
                 Create Account
               </button>
               <button 
                 onClick={() => { setView('login'); setMessage(null); }} 
-                className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+                className={`pb-2 text-xs font-bold uppercase tracking-wide transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
               >
                 Sign In
               </button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-5">
+            <form onSubmit={handleAuth} className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Email</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  className="w-full px-4 py-3 rounded-none border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-white placeholder-slate-400" 
+                  className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
                   placeholder="name@company.com" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Password</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
                 <input 
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                   minLength={6} 
-                  className="w-full px-4 py-3 rounded-none border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-white placeholder-slate-400" 
+                  className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
                   placeholder="••••••••" 
                 />
               </div>
@@ -224,13 +259,13 @@ export default function Home() {
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-none shadow-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-4 tracking-wide text-sm"
+                className="w-full bg-[#0B0E14] hover:bg-slate-800 text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
               >
-                {loading ? 'PROCESSING...' : (view === 'signup' ? 'START TRIAL' : 'ACCESS DASHBOARD')}
+                {loading ? 'Processing...' : (view === 'signup' ? 'Start Free Trial' : 'Access Dashboard')}
               </button>
 
               {message && (
-                <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-green-50 border-green-200 text-green-900'}`}>
+                <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-green-50 border-green-100 text-green-900'}`}>
                   {message.text}
                 </div>
               )}
@@ -240,7 +275,7 @@ export default function Home() {
               {view === 'signup' && (
                 <button 
                   onClick={() => router.push('/pricing')}
-                  className="text-xs font-bold text-slate-500 hover:text-slate-900 border-b border-slate-300 hover:border-slate-900 pb-0.5 transition-all"
+                  className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-wider"
                 >
                   View Plans & Pricing
                 </button>
@@ -248,12 +283,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer aligns with left side footer */}
           <div className="mt-auto pt-8 text-center lg:text-left">
-             <div className="flex justify-center lg:justify-start gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <a href="/terms" className="hover:text-slate-600">Terms</a>
-                <a href="/privacy" className="hover:text-slate-600">Privacy</a>
-                <a href="/contact" className="hover:text-slate-600">Contact</a>
+             <div className="flex justify-center lg:justify-start gap-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <a href="/terms" className="hover:text-slate-600 transition">Terms</a>
+                <a href="/privacy" className="hover:text-slate-600 transition">Privacy</a>
+                <a href="/contact" className="hover:text-slate-600 transition">Contact</a>
              </div>
           </div>
         </div>
