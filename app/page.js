@@ -84,17 +84,20 @@ export default function Home() {
     }
   }
 
-  // Serious, text-based Ledger Item
+  // UPDATED: Larger text sizes for better readability and authority
   const LedgerItem = ({ code, title, desc, delay }) => (
     <div 
       className={`border-l-[3px] border-slate-900 pl-5 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className="flex items-baseline gap-3 mb-1">
-        <span className="font-mono text-[10px] font-bold text-slate-500 tracking-wider uppercase">{code}</span>
-        <h3 className="text-slate-900 font-bold text-sm">{title}</h3>
+      <div className="flex items-baseline gap-3 mb-1.5">
+        {/* Increased from text-[10px] to text-xs */}
+        <span className="font-mono text-xs font-bold text-slate-500 tracking-wider uppercase">{code}</span>
+        {/* Increased from text-sm to text-base */}
+        <h3 className="text-slate-900 font-bold text-base">{title}</h3>
       </div>
-      <p className="text-slate-600 text-xs leading-relaxed max-w-sm">{desc}</p>
+      {/* Increased from text-xs to text-sm */}
+      <p className="text-slate-600 text-sm leading-relaxed max-w-md">{desc}</p>
     </div>
   )
 
@@ -103,10 +106,10 @@ export default function Home() {
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
         {/* LEFT SIDE (Regulatory Knowledge Base) */}
-        {/* CHANGED: Added 'justify-center' and removed 'pt-24' to vertically center content */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12">
+        {/* CHANGED: Added 'lg:pb-32' to push the center point upwards visually */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col justify-center relative overflow-hidden px-6 sm:px-8 lg:px-12 py-12 lg:pb-32">
           
-          {/* Logo anchored to top-left independently of centered content */}
+          {/* Logo anchored to top-left */}
           <div className="absolute top-0 left-0 w-full p-6 sm:p-8 lg:p-12 z-20 pointer-events-none">
             <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
@@ -121,7 +124,7 @@ export default function Home() {
               Integrated Knowledge Base
             </p>
 
-            <div className="space-y-6">
+            <div className="space-y-8">
               <LedgerItem 
                 delay="100ms"
                 code="WASHTENAW ENV. HEALTH"
@@ -159,12 +162,11 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        {/* CHANGED: Added 'justify-center' and removed 'lg:justify-start' / 'pt-32' to vertically center content */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center px-6 sm:px-8 lg:p-12 py-12 z-20 min-h-screen">
           
           <div className="w-full max-w-md mx-auto">
             
-            {/* Mobile Logo (Visible only on small screens) */}
+            {/* Mobile Logo */}
             <div className="mb-10 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
