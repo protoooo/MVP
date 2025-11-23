@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { logError } from '@/lib/monitoring'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,18 +30,31 @@ export async function GET(request) {
   }
 
   try {
-    const { data, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const offset = (page - 1) * limit
+
+    const { data, error, count } = await supabase
       .from('chat_history')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('user_id', session.user.id)
       .order('updated_at', { ascending: false })
-      .limit(50)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
-    return NextResponse.json({ chats: data || [] })
+    return NextResponse.json({ 
+      chats: data || [],
+      pagination: {
+        page,
+        limit,
+        total: count,
+        hasMore: offset + limit < count
+      }
+    })
   } catch (error) {
-    console.error('Error fetching chat history:', error)
+    logError(error, { context: 'Failed to fetch chat history', userId: session.user.id })
     return NextResponse.json({ error: 'Failed to fetch chat history' }, { status: 500 })
   }
 }
@@ -56,12 +70,10 @@ export async function POST(request) {
   try {
     const { chatId, title, messages, county } = await request.json()
 
-    // Validate messages array
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid chat data' }, { status: 400 })
     }
 
-    // Check message count
     if (messages.length === 0) {
       return NextResponse.json({ error: 'Chat cannot be empty' }, { status: 400 })
     }
@@ -70,7 +82,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Too many messages (max 100)' }, { status: 400 })
     }
 
-    // Check total size
     const messagesJson = JSON.stringify(messages)
     const sizeInKB = messagesJson.length / 1024
 
@@ -80,7 +91,6 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Validate each message structure
     for (const msg of messages) {
       if (!msg.role || !msg.content) {
         return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
@@ -123,7 +133,7 @@ export async function POST(request) {
       return NextResponse.json({ chat: data })
     }
   } catch (error) {
-    console.error('Error saving chat history:', error)
+    logError(error, { context: 'Failed to save chat', userId: session.user.id })
     return NextResponse.json({ error: 'Failed to save chat' }, { status: 500 })
   }
 }
@@ -154,7 +164,7 @@ export async function DELETE(request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting chat:', error)
+    logError(error, { context: 'Failed to delete chat', userId: session.user.id })
     return NextResponse.json({ error: 'Failed to delete chat' }, { status: 500 })
   }
 }
