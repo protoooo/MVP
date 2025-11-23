@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function Pricing() {
   const [loadingId, setLoadingId] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -57,7 +57,6 @@ export default function Pricing() {
     }
   }
 
-  // Wireframe Icons
   const IconCube = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="w-16 h-16 text-teal-200/50">
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -75,7 +74,6 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#022c22] font-sans text-white">
-      {/* Header */}
       <header className="border-b border-teal-900 sticky top-0 z-50 bg-[#022c22]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="group">
@@ -94,7 +92,6 @@ export default function Pricing() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 pt-12 pb-20">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
@@ -107,7 +104,6 @@ export default function Pricing() {
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
-          {/* Pro Plan - Light Glass */}
           <div className="group bg-white/[0.02] border border-teal-500/20 rounded-xl p-8 hover:bg-white/[0.04] transition-all duration-500 flex flex-col">
             <div className="flex justify-between items-start mb-8">
               <div>
@@ -140,7 +136,6 @@ export default function Pricing() {
             </button>
           </div>
 
-          {/* Enterprise Plan - Premium Glass */}
           <div className="group bg-teal-900/20 border border-teal-500/40 rounded-xl p-8 hover:bg-teal-900/30 transition-all duration-500 flex flex-col relative overflow-hidden shadow-2xl shadow-teal-900/20">
             <div className="absolute top-0 right-0 bg-teal-500 text-[#022c22] text-[10px] font-bold px-3 py-1 uppercase tracking-wide">Preferred</div>
             
