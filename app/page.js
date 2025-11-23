@@ -123,7 +123,7 @@ export default function Home() {
     </svg>
   )
 
-  // High-End Feature Card (Bigger padding now)
+  // High-End Feature Card
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
       className={`group flex items-center gap-6 p-6 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -144,7 +144,6 @@ export default function Home() {
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
         {/* LEFT SIDE (Dark Navy - Wireframes) */}
-        {/* Added lg:pb-40 to push center content UP */}
         <div className="w-full lg:w-1/2 bg-[#0B0E14] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
           {/* Background */}
@@ -160,9 +159,9 @@ export default function Home() {
             </div>
           </div>
           
-          {/* Content (Centered) */}
+          {/* Content (Centered) - Added pt-10 to push cards down slightly */}
           <div className="flex-1 flex flex-col justify-center z-10">
-            <div className="max-w-lg mx-auto w-full">
+            <div className="max-w-lg mx-auto w-full pt-10">
               <div className="grid gap-5">
                 <FeatureCard 
                   delay="100ms"
@@ -203,10 +202,9 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE (Login/Signup Form) */}
-        {/* Added lg:pb-40 to push center content UP */}
         <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* Spacers to force center alignment mirroring left side */}
+          {/* Spacer for center alignment */}
           <div className="hidden lg:block lg:h-24"></div> 
 
           <div className="flex-1 flex flex-col justify-center">
@@ -240,7 +238,7 @@ export default function Home() {
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
                     placeholder="name@company.com" 
                   />
                 </div>
@@ -252,7 +250,7 @@ export default function Home() {
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                     minLength={6} 
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-transparent placeholder-slate-400 rounded-none" 
+                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none" 
                     placeholder="••••••••" 
                   />
                 </div>
