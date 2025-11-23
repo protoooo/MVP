@@ -51,17 +51,26 @@ function validateEnvironment() {
 }
 
 function getVertexCredentials() {
-  if (process.env.GOOGLE_CREDENTIALS_JSON) {
-    try {
-      const cleanJson = process.env.GOOGLE_CREDENTIALS_JSON
-        .replace(/[\u201C\u201D]/g, '"')
-        .replace(/[\u2018\u2019]/g, "'")
-      return JSON.parse(cleanJson)
-    } catch (e) {
-      logError(e, { context: 'Failed to parse GOOGLE_CREDENTIALS_JSON' })
-    }
+  if (!process.env.GOOGLE_CREDENTIALS_JSON) {
+    throw new Error('GOOGLE_CREDENTIALS_JSON environment variable is missing')
   }
-  return null
+
+  try {
+    const cleanJson = process.env.GOOGLE_CREDENTIALS_JSON
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+    
+    const credentials = JSON.parse(cleanJson)
+    
+    if (!credentials.project_id || !credentials.private_key) {
+      throw new Error('Google credentials missing required fields (project_id or private_key)')
+    }
+    
+    return credentials
+  } catch (e) {
+    logError(e, { context: 'Failed to parse GOOGLE_CREDENTIALS_JSON' })
+    throw new Error('Invalid Google Cloud credentials configuration')
+  }
 }
 
 function cleanAIResponse(text) {
@@ -129,6 +138,57 @@ function validateImageData(imageData) {
 
   if (sizeInBytes > maxSize) {
     throw new Error('Image is too large. Maximum size is 5MB.')
+  }
+
+  try {
+    const binaryString = atob(base64Data.substring(0, 100))
+    
+    if (mimeType === 'image/jpeg') {
+      const hasJPEGMarker = binaryString.charCodeAt(0) === 0xFF && 
+                           binaryString.charCodeAt(1) === 0xD8
+      
+      if (!hasJPEGMarker) {
+        throw new Error('Corrupted JPEG image')
+      }
+    }
+    
+    if (mimeType === 'image/png') {
+      const hasPNGSignature = binaryString.charCodeAt(0) === 0x89 && 
+                             binaryString.charCodeAt(1) === 0x50 &&
+                             binaryString.charCodeAt(2) === 0x4E &&
+                             binaryString.charCodeAt(3) === 0x47
+      
+      if (!hasPNGSignature) {
+        throw new Error('Corrupted PNG image')
+      }
+      
+      if (binaryString.length >= 24) {
+        const width = (binaryString.charCodeAt(16) << 24) | 
+                     (binaryString.charCodeAt(17) << 16) |
+                     (binaryString.charCodeAt(18) << 8) | 
+                     binaryString.charCodeAt(19)
+        
+        const height = (binaryString.charCodeAt(20) << 24) | 
+                      (binaryString.charCodeAt(21) << 16) |
+                      (binaryString.charCodeAt(22) << 8) | 
+                      binaryString.charCodeAt(23)
+        
+        const maxDimension = 4096
+        if (width > maxDimension || height > maxDimension) {
+          throw new Error(`Image dimensions too large (max ${maxDimension}x${maxDimension}). Got ${width}x${height}.`)
+        }
+        
+        if (width < 10 || height < 10) {
+          throw new Error('Image dimensions too small')
+        }
+      }
+    }
+    
+  } catch (decodeError) {
+    if (decodeError.message.includes('dimensions') || decodeError.message.includes('Corrupted')) {
+      throw decodeError
+    }
+    throw new Error('Failed to validate image format')
   }
 
   return { mimeType, base64Data }
@@ -230,7 +290,16 @@ export async function POST(request) {
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
 
     const credentials = getVertexCredentials()
-    const project = process.env.GOOGLE_CLOUD_PROJECT_ID || credentials?.project_id
+    const project = credentials.project_id
+
+    if (!project) {
+      logError(new Error('No GCP project ID'), { credentials: '***' })
+      return NextResponse.json(
+        { error: 'Service configuration error' },
+        { status: 500 }
+      )
+    }
+
     const vertex_ai = new VertexAI({
       project: project,
       location: 'us-central1',
@@ -239,9 +308,6 @@ export async function POST(request) {
 
     const model = 'gemini-2.0-flash-exp'
 
-    // ═══════════════════════════════════════════════════════════════════
-    // RAG - MULTI-QUERY DOCUMENT RETRIEVAL STRATEGY
-    // ═══════════════════════════════════════════════════════════════════
     let contextText = ""
     let usedDocs = []
 
@@ -251,14 +317,12 @@ export async function POST(request) {
         
         const searchQueries = []
         
-        // Query 1: ALWAYS fetch county enforcement docs (MANDATORY)
         searchQueries.push({
           query: `${userCountyName} enforcement inspection procedures priority foundation`,
           weight: 1.0,
           purpose: 'county_enforcement'
         })
         
-        // Query 2: County + user's actual question
         if (lastUserMessage.trim()) {
           searchQueries.push({
             query: `${userCountyName} ${lastUserMessage}`,
@@ -267,7 +331,6 @@ export async function POST(request) {
           })
         }
         
-        // Query 3: Pure user question (for general code)
         if (lastUserMessage.trim()) {
           searchQueries.push({
             query: lastUserMessage,
@@ -276,7 +339,6 @@ export async function POST(request) {
           })
         }
         
-        // Query 4-5: Image-specific queries
         if (validatedImage) {
           searchQueries.push({
             query: `${userCountyName} equipment cleaning maintenance inspection requirements`,
@@ -317,7 +379,6 @@ export async function POST(request) {
         
         console.log(`📊 Total retrieved: ${allResults.length} document chunks`)
         
-        // De-duplicate
         const seenContent = new Map()
         
         for (const doc of allResults) {
@@ -336,7 +397,6 @@ export async function POST(request) {
         const uniqueResults = Array.from(seenContent.values())
         console.log(`📌 Unique documents: ${uniqueResults.length}`)
         
-        // Ensure county enforcement docs appear
         const countyEnforcementDocs = uniqueResults.filter(doc => {
           const source = doc.source.toLowerCase()
           return (
@@ -360,7 +420,6 @@ export async function POST(request) {
         console.log(`🎯 County enforcement docs: ${countyEnforcementDocs.length}`)
         console.log(`📚 Other docs: ${otherDocs.length}`)
         
-        // Final ranking: enforcement first, then by score
         const topCountyDocs = countyEnforcementDocs
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
           .slice(0, 8)
@@ -405,7 +464,6 @@ CONTENT: ${doc.text}`
     console.log(`📝 Context length: ${contextText.length} characters`)
     console.log(`📎 Documents in context: ${usedDocs.length}`)
 
-    // System instruction
     const systemInstructionText = `You are ProtocolLM, an expert food safety compliance consultant for ${userCountyName}.
 
 Your knowledge base contains:
