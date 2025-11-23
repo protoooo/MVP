@@ -103,7 +103,7 @@ export default function Home() {
     }
   }
 
-  // --- ANIMATED ICONS ---
+  // --- UPDATED ICONS ---
   
   const IconShield = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
@@ -111,10 +111,12 @@ export default function Home() {
     </svg>
   )
 
-  const IconPriority = () => (
+  // New: Warning Triangle for Violations
+  const IconWarning = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <path d="M12 3c-4.97 0-9 1.79-9 4v10c0 2.21 4.03 4 9 4s9-1.79 9-4V7" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 3c4.97 0 9 1.79 9 4s-4.03 4-9 4-9-1.79-9-4 4.03-4 9-4z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
@@ -125,21 +127,24 @@ export default function Home() {
     </svg>
   )
 
-  const IconOrb = () => (
+  // New: Biohazard/Hazmat shape
+  const IconHazmat = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M2 12h20" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
     </svg>
   )
 
   const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      // Adjusted padding to p-6 (was p-8) to fit better on screen
       className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
       style={{ transitionDelay: delay }}
     >
-      {/* Adjusted size to w-16 (was w-20) */}
       <div className="relative shrink-0 w-16 h-16 flex items-center justify-center text-teal-100 group-hover:text-white transition-all duration-500 ease-out">
         <div className="absolute inset-0 bg-teal-500/10 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         <Icon />
@@ -154,12 +159,14 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white font-sans">
       <style jsx global>{`
-        .icon-trace path, .icon-trace circle {
+        .icon-trace path, .icon-trace circle, .icon-trace line {
           stroke-dasharray: 100;
           stroke-dashoffset: 100;
           animation: trace 3s ease-in-out forwards;
         }
-        .group:hover .icon-trace path, .group:hover .icon-trace circle {
+        .group:hover .icon-trace path, 
+        .group:hover .icon-trace circle,
+        .group:hover .icon-trace line {
           animation: trace 2s ease-in-out infinite;
         }
         @keyframes trace {
@@ -175,7 +182,6 @@ export default function Home() {
           
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149] via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
 
-          {/* Header: Increased top margin/padding for safety */}
           <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
@@ -186,21 +192,19 @@ export default function Home() {
           </div>
           
           <div className="flex-1 flex flex-col justify-center z-10">
-            {/* Added lg:mt-20 to push content down from header if needed */}
-            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-16">
-              {/* Reduced gap from 6 to 4 to save vertical space */}
+            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-32">
               <div className="grid gap-4">
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
-                  desc="Trained on Washtenaw & Wayne County violation triggers."
+                  desc="Trained on Washtenaw, Wayne & Oakland County violation triggers."
                   icon={IconShield}
                 />
                 <FeatureCard 
                   delay="200ms"
-                  title="Priority Violations"
-                  desc="Identify 'Priority (P)' and 'Foundation (Pf)' risks before they become fines."
-                  icon={IconPriority}
+                  title="Violation Risk"
+                  desc="Identify Priority, Foundation, and Core risks before they become fines."
+                  icon={IconWarning}
                 />
                 <FeatureCard 
                   delay="300ms"
@@ -211,8 +215,8 @@ export default function Home() {
                 <FeatureCard 
                   delay="400ms"
                   title="Hazmat Protocols"
-                  desc="Immediate guidance for Norovirus and contamination events."
-                  icon={IconOrb}
+                  desc="Immediate guidance for contamination events."
+                  icon={IconHazmat}
                 />
               </div>
             </div>
