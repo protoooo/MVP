@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import TermsAcceptanceModal from '@/components/TermsAcceptanceModal'
 
 export default function AcceptTermsPage() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
@@ -20,7 +20,6 @@ export default function AcceptTermsPage() {
         return
       }
 
-      // Check if already accepted
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('accepted_terms, accepted_privacy, is_subscribed')
@@ -28,7 +27,6 @@ export default function AcceptTermsPage() {
         .single()
 
       if (profile?.accepted_terms && profile?.accepted_privacy) {
-        // Already accepted, redirect appropriately
         if (profile.is_subscribed) {
           router.push('/documents')
         } else {
@@ -61,7 +59,6 @@ export default function AcceptTermsPage() {
       })
 
       if (response.ok) {
-        // Check subscription status
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -85,7 +82,6 @@ export default function AcceptTermsPage() {
   }
 
   const handleDecline = async () => {
-    // Sign user out and redirect to home
     await supabase.auth.signOut()
     router.push('/')
   }
