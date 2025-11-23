@@ -53,7 +53,10 @@ export async function POST(request) {
       )
     }
 
-    const returnUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/documents`
+    // FIX: Dynamic Base URL calculation
+    // This ensures we have a valid https:// URL even if the env var is missing
+    const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const returnUrl = `${origin}/documents`
 
     console.log('✅ Creating portal session for customer:', subscription.stripe_customer_id)
     console.log('✅ Return URL:', returnUrl)
