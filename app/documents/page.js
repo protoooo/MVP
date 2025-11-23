@@ -94,20 +94,23 @@ export default function DocumentsPage() {
         credentials: 'include'
       })
       
+      // Parse response immediately to get error details if any
+      const data = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to access billing portal')
+        // Show the specific error message from the server
+        throw new Error(data.error || 'Failed to access billing portal')
       }
       
-      const data = await res.json()
       if (data.url) {
         window.location.href = data.url
       } else {
-        throw new Error('No portal URL returned')
+        throw new Error('No portal URL returned from server')
       }
     } catch (error) {
       console.error('Portal error:', error)
-      alert('Unable to load the billing portal. Please try refreshing the page or contacting support.')
+      // Alert the actual error message so we know what's wrong
+      alert(`Billing Error: ${error.message}`)
     } finally {
       setLoadingPortal(false)
     }
@@ -619,8 +622,8 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        {/* UPDATED: pt-44 to handle larger headers on tablets */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-44 space-y-8">
+        {/* CHANGED: used specific padding-top to avoid conflict and increased height */}
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 pt-[180px] space-y-8">
           {messages.map((msg, i) => (
             <div
               key={i}
