@@ -1,13 +1,29 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+// Helper to create Supabase client
+function createSupabaseServer() {
+  const cookieStore = cookies()
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
+}
+
 // Get chat history for current user
 export async function GET(request) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
@@ -33,8 +49,7 @@ export async function GET(request) {
 
 // Save or update a chat
 export async function POST(request) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
@@ -44,14 +59,12 @@ export async function POST(request) {
   try {
     const { chatId, title, messages, county } = await request.json()
 
-    // Validate input
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid chat data' }, { status: 400 })
     }
 
-    // Limit message size to prevent abuse
     const messagesJson = JSON.stringify(messages)
-    if (messagesJson.length > 100000) { // 100KB limit
+    if (messagesJson.length > 100000) {
       return NextResponse.json({ error: 'Chat too large' }, { status: 400 })
     }
 
@@ -64,7 +77,6 @@ export async function POST(request) {
     }
 
     if (chatId) {
-      // Update existing chat
       const { data, error } = await supabase
         .from('chat_history')
         .update(chatData)
@@ -76,7 +88,6 @@ export async function POST(request) {
       if (error) throw error
       return NextResponse.json({ chat: data })
     } else {
-      // Create new chat
       chatData.created_at = new Date().toISOString()
       
       const { data, error } = await supabase
@@ -96,8 +107,7 @@ export async function POST(request) {
 
 // Delete a chat
 export async function DELETE(request) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createSupabaseServer()
   
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) {
