@@ -2,9 +2,10 @@
 nixPkgs = ['nodejs_20', 'openssl']
 
 [phases.install]
-cmds = ['npm ci --legacy-peer-deps || npm install --legacy-peer-deps']
+cmds = ['npm ci --legacy-peer-deps']
 
 [phases.build]
 cmds = ['npm run build']
 
-# DELETED: The [start] section. We are letting package.json handle it now.
+[start]
+cmd = 'npm start'
