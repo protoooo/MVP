@@ -15,10 +15,6 @@ export default function Home() {
   const router = useRouter()
   const supabase = createClientComponentClient()
 
-  // Enterprise Brand Colors
-  const brandColor = '#0f172a' // Slate 900
-  const accentColor = '#ea580c' // Orange 600
-
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -48,12 +44,12 @@ export default function Home() {
         } else if (data.user && !data.session) {
           setMessage({ 
             type: 'success', 
-            text: '✅ Account created! Please check your email and click the confirmation link.' 
+            text: '✅ Account created. Please check your email to verify.' 
           })
         } else {
           setMessage({ 
             type: 'success', 
-            text: 'Account created! Check your email to continue.' 
+            text: 'Account created. Check your email to continue.' 
           })
         }
       } else {
@@ -75,11 +71,11 @@ export default function Home() {
     } catch (error) {
       let errorMessage = error.message
       if (error.message.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password. Please try again.'
+        errorMessage = 'Invalid email or password.'
       } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address before signing in.'
+        errorMessage = 'Please confirm your email address.'
       } else if (error.message.includes('User already registered')) {
-        errorMessage = 'This email is already registered. Please sign in instead.'
+        errorMessage = 'Account exists. Please sign in.'
       }
       
       setMessage({ type: 'error', text: errorMessage })
@@ -88,135 +84,78 @@ export default function Home() {
     }
   }
 
-  // Updated to use a uniform professional color (Orange) for the tracing effect
-  const TracingCard = ({ delay, icon, title, desc }) => (
-    <div className="relative bg-white border border-slate-200 rounded-lg p-5 shadow-sm transition-all duration-300 z-10">
-      <div className="relative z-10 flex items-start gap-4">
-        <div className="shrink-0 w-10 h-10 rounded-md bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-700">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-slate-900 font-bold text-sm sm:text-base mb-1">{title}</h3>
-          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">{desc}</p>
-        </div>
+  // New "Regulatory Ledger" Item - Serious, text-based, no cute icons
+  const LedgerItem = ({ code, title, desc, delay }) => (
+    <div 
+      className={`border-l-[3px] border-slate-200 pl-6 py-3 transition-all duration-700 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+      style={{ transitionDelay: delay }}
+    >
+      <div className="flex items-baseline gap-3 mb-1">
+        <span className="font-mono text-[10px] font-bold text-slate-500 tracking-wider uppercase">{code}</span>
+        <h3 className="text-slate-900 font-bold text-sm">{title}</h3>
       </div>
-      {/* The tracing line is now uniform Orange for a cohesive brand look */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-lg overflow-visible">
-        <rect 
-          x="1" y="1" 
-          width="calc(100% - 2px)" 
-          height="calc(100% - 2px)" 
-          rx="7" 
-          fill="none" 
-          stroke={accentColor} 
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeDasharray="800" 
-          strokeDashoffset="800"
-          className={`draw-border ${mounted ? 'animate-draw' : ''}`}
-          style={{ animationDelay: delay }}
-        />
-      </svg>
+      <p className="text-slate-600 text-xs leading-relaxed max-w-sm">{desc}</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen w-full bg-white">
-      <style jsx global>{`
-        @keyframes drawBorder {
-          to { stroke-dashoffset: 0; }
-        }
-        .animate-draw {
-          animation: drawBorder 2s ease-out forwards;
-        }
-        /* Subtle Technical Grid Background */
-        .bg-tech-grid {
-          background-size: 40px 40px;
-          background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-        }
-      `}</style>
-
+    <div className="min-h-screen w-full bg-white font-sans">
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE (Informational) */}
-        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-20 relative overflow-hidden">
+        {/* LEFT SIDE (Regulatory Knowledge Base Aesthetic) */}
+        <div className="w-full lg:w-1/2 bg-slate-50 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col lg:pt-24 relative overflow-hidden">
           
-          {/* Static Background Pattern */}
-          <div className="absolute inset-0 bg-tech-grid opacity-40 pointer-events-none"></div>
-          
-          {/* Header */}
           <div className="hidden lg:block px-6 sm:px-8 lg:px-12 pt-6 pb-4 shrink-0 lg:absolute lg:top-0 lg:left-0 lg:w-full z-10">
-            <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight mb-1">
+            <div className={`inline-block transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
                 protocol<span className="font-normal text-slate-500">LM</span>
               </h1>
-              {/* Brand Accent Line */}
-              <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
-            </div>
-            <div className={`text-xs text-slate-500 font-bold mt-2 uppercase tracking-wider transition-all duration-700 delay-100 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              Michigan Restaurant Compliance
+              {/* Full width underline - Navy Blue */}
+              <div className="h-0.5 w-full bg-slate-900"></div>
             </div>
           </div>
           
-          {/* Content Cards */}
-          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-8 lg:pb-8 lg:mt-8 z-10">
-            <div className="relative max-w-xl pl-6 mx-auto w-full">
-              {/* Connecting Vertical Line */}
-              <div 
-                className="absolute left-0 top-2 w-0.5 bg-slate-200 rounded-full transition-all duration-[1500ms] ease-out"
-                style={{ height: mounted ? '95%' : '0%' }}
-              ></div>
+          <div className="flex-1 flex flex-col justify-start px-6 sm:px-8 lg:px-12 py-12 lg:mt-4 z-10">
+            <div className="max-w-xl mx-auto w-full">
+              
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
+                System Capabilities
+              </p>
 
-              <div className="space-y-4">
-                <TracingCard 
-                  delay="100ms" 
-                  title="Unannounced Inspections"
-                  desc="Health inspections happen without warning. Be ready instantly."
-                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
+              <div className="space-y-6">
+                <LedgerItem 
+                  delay="100ms"
+                  code="FDA 4-204.112"
+                  title="Compliance Verification"
+                  desc="Instant analysis of equipment and facility photos against County, State, and Federal codes."
                 />
-
-                <TracingCard 
-                  delay="300ms" 
-                  title="Protect Revenue"
-                  desc="Critical violations cause closures. Protect your bottom line."
-                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                <LedgerItem 
+                  delay="200ms"
+                  code="MCL 289.1101"
+                  title="Risk Mitigation"
+                  desc="Identify priority violations before the Health Department inspection occurs."
                 />
-
-                <TracingCard 
-                  delay="500ms" 
-                  title="Visual Verification"
-                  desc="Snap a photo of equipment. We verify compliance against County & State codes."
-                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /></svg>}
+                <LedgerItem 
+                  delay="300ms"
+                  code="ADMIN"
+                  title="24/7 Availability"
+                  desc="Immediate answers for managers during night shifts, weekends, and peak hours."
                 />
-
-                <TracingCard 
-                  delay="700ms" 
-                  title="Instant Answers"
-                  desc="Your managers need answers in seconds, not hours. 24/7 Availability."
-                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                />
-
-                <TracingCard 
-                  delay="900ms" 
+                <LedgerItem 
+                  delay="400ms"
+                  code="DATA"
                   title="Unified Standards"
-                  desc="One tool for FDA Food Code, Michigan Law, and County specifics."
-                  icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                  desc="A single source of truth synthesizing the FDA Food Code and Michigan Modified Food Law."
                 />
-
               </div>
+
             </div>
           </div>
 
-          <div className={`px-6 sm:px-8 lg:px-12 pb-6 text-slate-400 text-xs font-medium transition-opacity duration-1000 delay-1000 shrink-0 z-10 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4 mb-2">
-              <a href="/privacy" className="hover:text-slate-600 transition">Privacy Policy</a>
-              <span>•</span>
-              <a href="/terms" className="hover:text-slate-600 transition">Terms of Service</a>
-              <span>•</span>
-              <a href="/contact" className="hover:text-slate-600 transition">Contact</a>
-            </div>
-            <div className="text-center lg:text-left">
-              © 2025 protocolLM. All rights reserved.
+          <div className={`px-6 sm:px-8 lg:px-12 pb-8 text-slate-400 text-[10px] font-medium transition-opacity duration-1000 delay-500 shrink-0 z-10 uppercase tracking-wider ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="flex flex-wrap gap-6">
+              <span>Secure Encrypted Environment</span>
+              <span>Proprietary Knowledge Base</span>
             </div>
           </div>
         </div>
@@ -224,65 +163,58 @@ export default function Home() {
         {/* RIGHT SIDE (Login/Signup Form) */}
         <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center lg:justify-start items-center px-6 sm:px-8 lg:p-12 lg:pt-32 z-20 min-h-screen">
           
-          <div className="w-full max-w-lg mx-auto">
+          <div className="w-full max-w-md mx-auto">
             
-            <div className="mb-8 lg:hidden">
+            <div className="mb-10 lg:hidden">
               <div className="inline-block">
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">protocol<span className="font-normal">LM</span></h1>
-                <div className="h-1 w-12 bg-orange-600 rounded-full"></div>
+                <div className="h-0.5 w-full bg-slate-900"></div>
               </div>
             </div>
 
-            <div className="mb-8 text-center">
-              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-bold text-slate-900 mb-3 tracking-tight">
-                {view === 'signup' ? 'Stop guessing. Start knowing.' : 'Welcome back'}
+            <div className="mb-10">
+              <h2 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-4 tracking-tight">
+                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Sign in to dashboard.'}
               </h2>
-              
-              <p className="text-base text-slate-600 font-normal w-full mx-auto leading-relaxed">
-                {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Sign in to access your dashboard.'}
-              </p>
             </div>
 
-            {/* Toggle Switch */}
-            <div className="bg-slate-100 p-1 rounded-lg mb-6 max-w-sm mx-auto w-full">
-              <div className="flex rounded-md overflow-hidden relative">
-                <button 
-                  onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`flex-1 py-2 text-sm font-semibold transition-all duration-200 rounded-md z-10 ${view === 'signup' ? 'text-slate-900 shadow-sm bg-white' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Sign up
-                </button>
-
-                <button 
-                  onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`flex-1 py-2 text-sm font-semibold transition-all duration-200 rounded-md z-10 ${view === 'login' ? 'text-slate-900 shadow-sm bg-white' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Sign in
-                </button>
-              </div>
+            {/* Toggle Switch - minimal */}
+            <div className="flex border-b border-slate-200 mb-8">
+              <button 
+                onClick={() => { setView('signup'); setMessage(null); }} 
+                className={`pb-2 text-sm font-bold mr-6 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+              >
+                Create Account
+              </button>
+              <button 
+                onClick={() => { setView('login'); setMessage(null); }} 
+                className={`pb-2 text-sm font-bold transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+              >
+                Sign In
+              </button>
             </div>
 
-            <form onSubmit={handleAuth} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-900 mb-1.5">Email address</label>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Email</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 focus:outline-none text-slate-900 transition text-sm bg-white" 
-                  placeholder="you@company.com" 
+                  className="w-full px-4 py-3 rounded-none border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-white placeholder-slate-400" 
+                  placeholder="name@company.com" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-900 mb-1.5">Password</label>
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Password</label>
                 <input 
                   type="password" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
                   minLength={6} 
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 focus:outline-none text-slate-900 transition text-sm bg-white" 
+                  className="w-full px-4 py-3 rounded-none border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 transition text-sm bg-white placeholder-slate-400" 
                   placeholder="••••••••" 
                 />
               </div>
@@ -290,26 +222,25 @@ export default function Home() {
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-none shadow-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-4 tracking-wide text-sm"
               >
-                {loading ? 'Processing...' : (view === 'signup' ? 'Start 30-Day Free Trial' : 'Sign In')}
+                {loading ? 'PROCESSING...' : (view === 'signup' ? 'START TRIAL' : 'ACCESS DASHBOARD')}
               </button>
 
               {message && (
-                <div className={`p-4 rounded-lg text-sm font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'}`}>
+                <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-200 text-red-900' : 'bg-green-50 border-green-200 text-green-900'}`}>
                   {message.text}
                 </div>
               )}
             </form>
 
-            {view === 'signup' && (
-              <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-                <p className="text-xs text-slate-500 mb-3 font-medium uppercase tracking-wide">Enterprise Grade Compliance</p>
-                <div className="flex justify-center gap-2 items-center text-xs text-slate-400">
-                   <span>Secure</span> • <span>Private</span> • <span>Reliable</span>
-                </div>
-              </div>
-            )}
+            <div className="mt-12 text-center">
+               <div className="flex justify-center gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  <a href="/terms" className="hover:text-slate-600">Terms</a>
+                  <a href="/privacy" className="hover:text-slate-600">Privacy</a>
+                  <a href="/contact" className="hover:text-slate-600">Contact</a>
+               </div>
+            </div>
           </div>
         </div>
       </div>
