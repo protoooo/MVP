@@ -11,7 +11,6 @@ const COUNTY_NAMES = {
 }
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
-const MAX_PDF_SIZE = 10 * 1024 * 1024
 
 export default function DocumentsPage() {
   const [session, setSession] = useState(null)
@@ -26,8 +25,6 @@ export default function DocumentsPage() {
   const [currentChatId, setCurrentChatId] = useState(null)
   const [input, setInput] = useState('')
   const [image, setImage] = useState(null)
-  const [pdfFile, setPdfFile] = useState(null)
-  const [pdfText, setPdfText] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -37,7 +34,6 @@ export default function DocumentsPage() {
   
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
-  const pdfInputRef = useRef(null)
   const saveTimeoutRef = useRef(null)
   const supabase = createClient()
   const router = useRouter()
@@ -98,6 +94,7 @@ export default function DocumentsPage() {
         credentials: 'include'
       })
       
+      // We parse JSON immediately to get the real error message
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
@@ -111,6 +108,7 @@ export default function DocumentsPage() {
       }
     } catch (error) {
       console.error('Portal error:', error)
+      // Shows the EXACT error from Stripe/Server to help debug
       alert(`Billing Error: ${error.message}`)
     } finally {
       setLoadingPortal(false)
@@ -340,51 +338,10 @@ export default function DocumentsPage() {
     )
   }
 
-  const handlePdfSelect = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    
-    if (file.type !== 'application/pdf') {
-      alert('Only PDF files are allowed')
-      e.target.value = ''
-      return
-    }
-    
-    if (file.size > MAX_PDF_SIZE) {
-      alert('PDF must be smaller than 10MB')
-      e.target.value = ''
-      return
-    }
-
-    setPdfFile(file)
-    
-    // Extract text from PDF on client side
-    try {
-      const formData = new FormData()
-      formData.append('pdf', file)
-      
-      const response = await fetch('/api/extract-pdf', {
-        method: 'POST',
-        body: formData
-      })
-      
-      if (!response.ok) throw new Error('Failed to extract PDF text')
-      
-      const { text } = await response.json()
-      setPdfText(text)
-      
-    } catch (error) {
-      console.error('PDF extraction error:', error)
-      alert('Failed to read PDF. Please try again.')
-      setPdfFile(null)
-      e.target.value = ''
-    }
-  }
-
   const handleSendMessage = async (e) => {
     e.preventDefault()
     
-    if (!input.trim() && !image && !pdfFile) return
+    if (!input.trim() && !image) return
     if (!canSend) return
     
     const sanitizedInput = input.trim()
@@ -397,17 +354,13 @@ export default function DocumentsPage() {
 
     const userMessage = { 
       role: 'user', 
-      content: sanitizedInput || (pdfFile ? `[Analyzing PDF: ${pdfFile.name}]` : '[Analyzing image]'), 
+      content: sanitizedInput, 
       image, 
-      pdf: pdfFile ? pdfFile.name : null,
       citations: [] 
     }
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setImage(null)
-    setPdfFile(null)
-    const currentPdfText = pdfText
-    setPdfText(null)
     setIsLoading(true)
 
     try {
@@ -418,9 +371,8 @@ export default function DocumentsPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          messages: [...messages, { role: 'user', content: sanitizedInput || (pdfFile ? `Analyze this PDF content: ${currentPdfText}` : 'Analyze this image') }],
+          messages: [...messages, { role: 'user', content: sanitizedInput }],
           image: userMessage.image,
-          pdfText: currentPdfText,
           county: userCounty
         })
       })
@@ -669,6 +621,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
+        {/* UPDATED: Increased top padding to pt-48 (12rem) to ensure header clearance */}
         <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 pt-48 space-y-8">
           {messages.map((msg, i) => (
             <div
@@ -696,15 +649,6 @@ export default function DocumentsPage() {
                     </div>
                   )}
 
-                  {msg.pdf && (
-                    <div className="mb-3 p-3 rounded-lg bg-white/10 border border-white/20 max-w-sm flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-sm">{msg.pdf}</span>
-                    </div>
-                  )}
-
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
@@ -717,3 +661,102 @@ export default function DocumentsPage() {
                   ) : (
                     renderMessageContent(msg)
                   )}
+                </div>
+              </div>
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div className="flex justify-start w-full">
+               <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 mb-1">
+                   <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
+                   <span className="font-bold text-sm text-slate-900">Thinking...</span>
+                </div>
+                <div className="flex items-center gap-1 ml-8">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} className="h-4" />
+        </div>
+
+        {/* Input Area */}
+        <div className="flex-shrink-0 p-4 md:p-6 bg-white/80 backdrop-blur border-t border-slate-200 z-20">
+          {image && (
+            <div className="max-w-4xl mx-auto mb-3 px-1">
+              <div className="relative inline-block group">
+                <img src={image} alt="Preview" className="h-20 w-auto rounded-lg border border-slate-200 shadow-sm object-cover" />
+                <div className="absolute inset-0 bg-black/20 rounded-lg hidden group-hover:flex items-center justify-center transition-all">
+                   <button 
+                    onClick={() => setImage(null)}
+                    className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
+            <div className="flex items-end gap-2 bg-white border border-slate-300 rounded-2xl shadow-sm p-2 focus-within:border-teal-600 focus-within:ring-1 focus-within:ring-teal-600 transition-all">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                disabled={isLoading}
+                className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
+                  image 
+                    ? 'bg-teal-100 text-teal-700' 
+                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
+                }`}
+                title="Upload Image"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              </button>
+
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder={image ? "Ask a question about this image..." : "Type your question here..."}
+                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400"
+                disabled={isLoading}
+                maxLength={5000}
+              />
+
+              <button
+                type="submit"
+                disabled={isLoading || (!input.trim() && !image)}
+                className={`p-2.5 rounded-xl font-bold transition-all flex-shrink-0 ${
+                  isLoading || (!input.trim() && !image)
+                  ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                  : 'bg-[#022c22] text-white hover:bg-teal-900 shadow-md'
+                }`}
+              >
+                <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+              </button>
+            </div>
+            
+            <div className="text-center mt-2">
+              <p className="text-[10px] text-slate-400">
+                AI can make mistakes. Please verify with cited documents.
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
