@@ -178,7 +178,7 @@ export default function Home() {
               </h2>
             </div>
 
-            {/* Toggle Switch - minimal */}
+            {/* Toggle Switch */}
             <div className="flex border-b border-slate-200 mb-8">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
@@ -233,6 +233,17 @@ export default function Home() {
                 </div>
               )}
             </form>
+
+            <div className="mt-8 text-center">
+              {view === 'signup' && (
+                <button 
+                  onClick={() => router.push('/pricing')}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-900 border-b border-slate-300 hover:border-slate-900 pb-0.5 transition-all"
+                >
+                  View Plans & Pricing
+                </button>
+              )}
+            </div>
 
             <div className="mt-12 text-center">
                <div className="flex justify-center gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
