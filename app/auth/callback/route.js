@@ -68,18 +68,16 @@ export async function GET(request) {
 
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
+      // Check if terms are accepted
       if (!profile?.accepted_terms || !profile?.accepted_privacy) {
         console.log('✅ New user, redirecting to terms acceptance')
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
-      if (profile?.is_subscribed) {
-        console.log('✅ User has subscription, redirecting to /documents')
-        return NextResponse.redirect(`${baseUrl}/documents`)
-      } else {
-        console.log('✅ User needs subscription, redirecting to /pricing')
-        return NextResponse.redirect(`${baseUrl}/pricing`)
-      }
+      // Always redirect to pricing after email confirmation, regardless of subscription status
+      // This allows users to see the pricing page after confirming their email
+      console.log('✅ Email confirmed, redirecting to /pricing')
+      return NextResponse.redirect(`${baseUrl}/pricing`)
     }
   }
 
