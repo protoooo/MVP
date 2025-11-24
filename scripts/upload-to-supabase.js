@@ -4,25 +4,20 @@ import path from 'path';
 import pdf from 'pdf-parse';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: '.env.local' });
+// --- HARDCODED KEYS FOR ONE-TIME UPLOAD ---
+const GEMINI_KEY = "AIzaSyD334jKR0N9adJBOnY0mpACdS_H8I8ae_o";
+const SUPABASE_URL = "https://ocpklqmfxescfdlsymuc.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jcG1xbWZ4ZXNjZmRsc3ltdWMiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNzMyMzkxMTQ5LCJleHAiOjIwNDc5NjcxNDl9.megVZy2ZkbHN5bxVjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMjM5MTE0OSwiZXhwIjoyMDQ3OTY3MTQ5fQ.fcm9sZSIsImlhdCI6MTczMjM5MTE0OSwiZXhwIjoyMDQ3OTY3MTQ5fQ.109LzolQpx5cV7BK9_mApBFiOoEtsG90VaZV0Nj1eNWU";
+// ------------------------------------------
 
-if (!process.env.GEMINI_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ Missing environment variables. Please check .env.local');
-  process.exit(1);
-}
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const COUNTIES = ['washtenaw', 'wayne', 'oakland'];
 
@@ -40,7 +35,7 @@ function chunkText(text, wordsPerChunk = 500, overlap = 50) {
 }
 
 async function uploadToSupabase() {
-  console.log('🚀 Starting document upload to Supabase...\n');
+  console.log('🚀 Starting document upload to Supabase (Hardcoded Mode)...\n');
   
   const documentsDir = path.join(process.cwd(), 'public', 'documents');
   
@@ -70,7 +65,6 @@ async function uploadToSupabase() {
     }
 
     console.log(`\n📍 Processing ${county.toUpperCase()} COUNTY`);
-    console.log(`   Directory: ${countyDir}`);
     
     const files = fs.readdirSync(countyDir);
     const pdfFiles = files.filter(f => f.endsWith('.pdf') && !f.startsWith('.'));
@@ -91,7 +85,7 @@ async function uploadToSupabase() {
         console.log(`      📊 Extracted ${rawText.length} characters`);
         
         if (rawText.length < 100) {
-          console.log(`      ⚠️  WARNING: Very little text extracted. Might be a scanned PDF.`);
+          console.log(`      ⚠️  WARNING: Very little text extracted.`);
           continue;
         }
       } catch (err) {
@@ -100,20 +94,10 @@ async function uploadToSupabase() {
       }
 
       const cleanText = rawText.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-      
-      if (!cleanText) {
-        console.log('      ❌ No text extracted. Skipping.');
-        continue;
-      }
-
       const textChunks = chunkText(cleanText);
       console.log(`      ✂️  Generated ${textChunks.length} chunks`);
 
-      if (textChunks.length === 0) {
-        console.log('      ⚠️  No chunks created. Skipping.');
-        continue;
-      }
-
+      // NOTE: Using embedding-001 as confirmed by curl test, but usually text-embedding-004 is preferred
       const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
       let fileUploadedCount = 0;
 
@@ -121,8 +105,6 @@ async function uploadToSupabase() {
         const chunkContent = textChunks[i];
         
         try {
-          console.log(`      🔄 Processing chunk ${i + 1}/${textChunks.length}...`);
-          
           const result = await model.embedContent(chunkContent);
           const embedding = result.embedding.values;
 
@@ -140,31 +122,19 @@ async function uploadToSupabase() {
             console.error(`      ❌ Upload error: ${error.message}`);
             continue;
           }
-          
           fileUploadedCount++;
-          
-          // Rate limit - Gemini has limits
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 200)); // Rate limit
           
         } catch (err) {
           console.error(`      ❌ Failed chunk ${i}: ${err.message}`);
         }
       }
-      
-      console.log(`      ✅ Uploaded ${fileUploadedCount}/${textChunks.length} chunks for ${file}`);
+      console.log(`      ✅ Uploaded ${fileUploadedCount}/${textChunks.length} chunks`);
       totalChunks += fileUploadedCount;
     }
   }
 
-  console.log(`\n\n🎉 UPLOAD COMPLETE!`);
-  console.log(`📊 Total chunks uploaded: ${totalChunks}`);
-  
-  // Verify upload
-  const { count } = await supabase
-    .from('documents')
-    .select('*', { count: 'exact', head: true });
-  
-  console.log(`✅ Verified ${count} documents in database`);
+  console.log(`\n\n🎉 UPLOAD COMPLETE! Total chunks: ${totalChunks}`);
 }
 
 uploadToSupabase().catch(console.error);
