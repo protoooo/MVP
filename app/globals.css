@@ -57,6 +57,21 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out;
+}
+
 .card-reveal {
   position: relative;
   overflow: visible;
