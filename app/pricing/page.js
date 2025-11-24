@@ -217,4 +217,20 @@ export default function Pricing() {
               <button 
                 onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
                 disabled={loadingId !== null}
-                className="w-full text-white font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] upperca
+                className="w-full text-white font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest shadow-md hover:shadow-lg hover:opacity-90"
+                style={{ backgroundColor: '#6b85a3' }}
+              >
+                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start Trial'}
+              </button>
+            </div>
+          </div>
+          
+        </div>
+
+        <div className="mt-24 pt-8 border-t border-slate-200 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">© 2025 protocolLM. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
