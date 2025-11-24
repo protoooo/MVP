@@ -26,7 +26,6 @@ export default function Home() {
 
     try {
       if (view === 'signup') {
-        // SIGNUP FLOW - Email confirmation brings them to /auth/callback which redirects to /pricing
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
         
         const { data, error } = await supabase.auth.signUp({
@@ -41,10 +40,6 @@ export default function Home() {
         if (error) throw error
         
         if (data.session) {
-          // User was auto-confirmed (email confirmation disabled in Supabase)
-          console.log('✅ Auto-confirmed signup, checking profile...')
-          
-          // Check if they've accepted terms
           const { data: profile } = await supabase
             .from('user_profiles')
             .select('accepted_terms, accepted_privacy')
@@ -57,7 +52,6 @@ export default function Home() {
             window.location.href = '/pricing'
           }
         } else if (data.user && !data.session) {
-          // Email confirmation required
           setMessage({ 
             type: 'success', 
             text: '✅ Check your email to confirm your account, then you can sign in.' 
@@ -65,22 +59,13 @@ export default function Home() {
           setLoading(false)
         }
       } else {
-        // LOGIN FLOW with retry logic
-        console.log('🔐 Attempting login...')
-        
         const { data, error } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
         })
         
-        if (error) {
-          console.error('❌ Login error:', error)
-          throw error
-        }
+        if (error) throw error
         
-        console.log('✅ Login successful, checking profile...')
-
-        // Retry profile fetch with exponential backoff
         const maxRetries = 3
         let profile = null
         
@@ -94,81 +79,48 @@ export default function Home() {
 
             if (profileError) {
               if (profileError.code === 'PGRST116') {
-                // Profile doesn't exist yet - redirect to terms
                 if (attempt === maxRetries - 1) {
-                  console.log('📋 Profile not found, redirecting to terms')
                   window.location.href = '/accept-terms'
                   return
                 }
               }
-              
-              // Other error - retry
-              const delay = 1000 * (attempt + 1)
-              console.log(`⏳ Retry ${attempt + 1}/${maxRetries} in ${delay}ms...`)
-              await new Promise(resolve => setTimeout(resolve, delay))
+              await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
               continue
             }
-
             profile = profileData
-            console.log('📊 Profile retrieved:', { 
-              terms: profile.accepted_terms, 
-              subscribed: profile.is_subscribed 
-            })
             break
-            
           } catch (retryError) {
-            console.error(`❌ Retry ${attempt + 1} failed:`, retryError)
-            if (attempt === maxRetries - 1) {
-              throw retryError
-            }
+            if (attempt === maxRetries - 1) throw retryError
           }
         }
 
-        // Profile retrieved successfully
         if (!profile) {
-          console.log('📋 No profile, redirecting to terms')
           window.location.href = '/accept-terms'
           return
         }
 
-        // Check terms acceptance
         if (!profile.accepted_terms || !profile.accepted_privacy) {
-          console.log('📋 Terms not accepted, redirecting')
           window.location.href = '/accept-terms'
           return
         }
 
-        // Check subscription
         if (profile.is_subscribed) {
-          console.log('✅ User has subscription, redirecting to documents')
           window.location.href = '/documents'
         } else {
-          console.log('💳 No subscription, redirecting to pricing')
           window.location.href = '/pricing'
         }
       }
     } catch (error) {
-      console.error('❌ Auth error:', error)
-      
       let errorMessage = error.message
-      
-      if (error.message.includes('Invalid login credentials')) {
-        errorMessage = 'Invalid email or password.'
-      } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please check your email and confirm your account first.'
-      } else if (error.message.includes('User already registered')) {
-        errorMessage = 'Account already exists. Please sign in instead.'
-      } else if (error.message.includes('timeout') || error.message.includes('network')) {
-        errorMessage = 'Connection issue. Please try again.'
-      }
+      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid email or password.'
+      else if (error.message.includes('Email not confirmed')) errorMessage = 'Please check your email and confirm your account first.'
+      else if (error.message.includes('User already registered')) errorMessage = 'Account already exists. Please sign in instead.'
       
       setMessage({ type: 'error', text: errorMessage })
       setLoading(false)
     }
   }
 
-  // --- ICONS ---
-  
   const IconShield = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
@@ -361,10 +313,11 @@ export default function Home() {
                   />
                 </div>
                 
+                {/* UPDATED BUTTON STYLE */}
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-[#022c22] hover:bg-[#0f3c3a] text-white font-bold py-4 rounded shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
+                  className="w-full bg-[#022c22] hover:bg-[#0f3c3a] text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
                 >
                   {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Access Dashboard')}
                 </button>
