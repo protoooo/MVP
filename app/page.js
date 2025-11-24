@@ -86,13 +86,13 @@ export default function Home() {
   const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" /></svg>)
   const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" /></svg>)
 
-  // --- MICHIGAN MAP COMPONENT (Uses separate class) ---
+  // --- MICHIGAN MAP COMPONENT ---
   const MichiganMap = () => (
-    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-trace opacity-10 text-teal-300" strokeWidth="0.5">
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-trace text-teal-400/30" strokeWidth="2">
       {/* Lower Peninsula */}
-      <path d="M120 170 L120 185 L70 185 L65 175 L60 150 L55 130 L60 110 L75 90 L100 75 L120 85 L130 100 L140 110 L145 130 L140 150 L135 160 L120 170 Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M130 180 L130 190 L80 190 L75 180 L70 150 L65 130 L70 110 L85 90 L110 75 L130 85 L140 100 L150 110 L155 130 L150 150 L145 160 L130 180 Z" strokeLinecap="round" strokeLinejoin="round" />
       {/* Upper Peninsula */}
-      <path d="M40 80 L50 70 L70 65 L90 70 L110 75 L100 80 L80 85 L60 90 L50 85 L40 80 Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M50 80 L60 70 L80 65 L100 70 L120 75 L110 80 L90 85 L70 90 L60 85 L50 80 Z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
@@ -115,21 +115,20 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white font-sans selection:bg-[#022c22] selection:text-white">
       <style jsx global>{`
-        /* SMALL ICONS ANIMATION */
+        /* ICONS */
         .icon-trace path, .icon-trace circle, .icon-trace line {
           stroke-dasharray: 100;
           stroke-dashoffset: 100;
           animation: trace 3s ease-in-out forwards;
         }
         
-        /* BIG MAP ANIMATION (Needs longer path length) */
+        /* MAP - Slower, longer trace */
         .map-trace path {
           stroke-dasharray: 1000;
           stroke-dashoffset: 1000;
-          animation: trace 6s ease-out forwards;
+          animation: trace 8s ease-out forwards;
         }
 
-        /* Hover effect for small icons */
         .group:hover .icon-trace path, 
         .group:hover .icon-trace circle,
         .group:hover .icon-trace line {
@@ -141,13 +140,12 @@ export default function Home() {
           100% { stroke-dashoffset: 0; }
         }
         
-        /* Override keyframe start for map specifically */
-        .map-trace path {
-           animation-name: traceMap;
-        }
         @keyframes traceMap {
            0% { stroke-dashoffset: 1000; }
            100% { stroke-dashoffset: 0; }
+        }
+        .map-trace path {
+           animation-name: traceMap;
         }
       `}</style>
 
@@ -156,15 +154,17 @@ export default function Home() {
         {/* LEFT SIDE */}
         <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* BACKGROUND MAP - Positioned behind everything */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-             <div className="w-[140%] h-[140%] -translate-x-5 translate-y-10 opacity-15 rotate-6">
+          {/* BACKGROUND GRADIENT - Moved BEHIND map */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/40 via-[#022c22] to-[#022c22] opacity-80 pointer-events-none z-0"></div>
+
+          {/* BACKGROUND MAP - Moved ON TOP of gradient, z-index 0 */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
+             <div className="w-[140%] h-[140%] -translate-x-5 translate-y-10 opacity-40 rotate-3">
                 <MichiganMap />
              </div>
           </div>
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/50 via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
-
+          {/* TOP LOGO - z-index 20 to sit above everything */}
           <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
@@ -174,7 +174,8 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col justify-center z-10">
+          {/* FEATURE CARDS - z-index 10 */}
+          <div className="flex-1 flex flex-col justify-center z-10 relative">
             <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
                 <FeatureCard 
