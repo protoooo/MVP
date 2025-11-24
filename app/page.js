@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Adjusted Speed) ---
+// --- 1. THE LIVE TERMINAL (NO CARD, JUST TEXT) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
@@ -29,10 +29,6 @@ const TypewriterTerminal = () => {
       a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
     },
     {
-      q: "QUERY: Can we use a 3-comp sink for handwashing?",
-      a: "NEGATIVE: Priority Violation (P). Hands must be washed in a designated handwashing sink only."
-    },
-    {
       q: "QUERY: Date marking requirements for deli meat?",
       a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
     }
@@ -42,7 +38,6 @@ const TypewriterTerminal = () => {
     let timeout
     const currentScenario = scenarios[scenarioIndex]
 
-    // Typing Question
     if (phase === 'typing_q') {
       if (charIndex < currentScenario.q.length) {
         timeout = setTimeout(() => {
@@ -52,28 +47,24 @@ const TypewriterTerminal = () => {
       } else {
         setPhase('pause_q')
       }
-    // Pause before Answer
     } else if (phase === 'pause_q') {
       timeout = setTimeout(() => {
         setPhase('typing_a')
         setCharIndex(0) 
       }, 600) 
-    // Typing Answer (SLOWED DOWN)
     } else if (phase === 'typing_a') {
       if (charIndex < currentScenario.a.length) {
         timeout = setTimeout(() => {
           setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
           setCharIndex(charIndex + 1)
-        }, 30) // Changed from 10ms to 30ms for readability
+        }, 15) 
       } else {
         setPhase('pause_a')
       }
-    // Read Time
     } else if (phase === 'pause_a') {
       timeout = setTimeout(() => {
         setPhase('deleting')
       }, 4500) 
-    // Clear
     } else if (phase === 'deleting') {
       setDisplayText('')
       setCharIndex(0)
@@ -84,20 +75,21 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    <div className="w-full max-w-2xl bg-white border border-slate-200 p-8 font-mono text-sm leading-relaxed shadow-sm rounded-lg min-h-[160px] flex flex-col justify-center relative overflow-hidden">
-      {/* Left Accent Line */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#6b85a3]"></div>
+    // Removed bg-white, border, shadow. Just text.
+    <div className="w-full max-w-3xl font-mono text-base md:text-lg leading-relaxed min-h-[180px] flex flex-col justify-center relative">
+      {/* Left Accent Line to anchor the text */}
+      <div className="absolute left-0 top-4 bottom-4 w-1 bg-[#6b85a3]/30"></div>
       
-      <div className="whitespace-pre-wrap pl-4">
+      <div className="whitespace-pre-wrap pl-6">
         {displayText.split('\n\n').map((line, i) => (
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-2 uppercase tracking-wider text-[10px]' : 'text-[#6b85a3] font-bold text-base'}>
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
             {line}
             {i === displayText.split('\n\n').length - 1 && (
-              <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 animate-pulse align-middle opacity-50"></span>
+              <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
             )}
           </div>
         ))}
-        {displayText === '' && <span className="inline-block w-2 h-4 bg-slate-300 animate-pulse align-middle"></span>}
+        {displayText === '' && <span className="inline-block w-2.5 h-5 bg-slate-300 animate-pulse align-middle ml-6"></span>}
       </div>
     </div>
   )
@@ -156,8 +148,8 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/90 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-lg relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
         
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">
@@ -170,7 +162,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
             required 
-            className="w-full p-3 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-sm" 
+            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
             placeholder="Email"
           />
           <input 
@@ -178,20 +170,20 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
             required 
-            className="w-full p-3 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-sm" 
+            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
             placeholder="Password"
           />
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3 rounded-sm text-xs uppercase tracking-widest transition-all font-mono"
+            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
           >
             {loading ? 'Processing...' : 'Submit'}
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 p-3 text-xs font-mono border ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+          <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
             {message.text}
           </div>
         )}
@@ -227,56 +219,62 @@ export default function Home() {
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
       {/* HEADER */}
-      <nav className="w-full px-8 py-8 flex justify-between items-center fixed top-0 left-0 right-0 bg-[#f8fafc]/90 backdrop-blur-sm z-10">
+      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-lg font-bold tracking-tighter text-slate-900">
+          {/* LOGO SIZE INCREASED */}
+          <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
-        <div className={`flex gap-6 text-[10px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => openAuth('login')} className="text-slate-400 hover:text-[#6b85a3] transition-colors">
+        <div className={`flex gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* BUTTONS SIZE INCREASED SLIGHTLY */}
+          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
             Sign In
           </button>
-          <button onClick={() => openAuth('signup')} className="text-[#6b85a3] border border-[#6b85a3] px-4 py-1.5 rounded-sm hover:bg-[#6b85a3] hover:text-white transition-all">
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
             Create Account
           </button>
         </div>
       </nav>
 
-      {/* MAIN CONTENT - CENTERED MONOLITH */}
-      <div className="flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center">
+      {/* MAIN CONTENT - CENTERED */}
+      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* THE LIVE TERMINAL (HERO) */}
-        <div className={`w-full mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <TypewriterTerminal />
+        {/* HERO TEXT (Centered Above) */}
+        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 rounded-md shadow-sm">
+            Regulatory Intelligence Unit
+          </div>
+          <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+            Unified Regulatory<br/>Intelligence.
+          </h2>
+          <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
+            The only compliance infrastructure trained on FDA Code 2022, Michigan Modified Food Law, and county-specific enforcement data for <strong>Washtenaw, Wayne, and Oakland.</strong>
+          </p>
         </div>
 
-        {/* VALUE PROP */}
-        <div className={`text-center max-w-2xl transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-6">
-            Unified Regulatory Intelligence.
-          </h2>
-          <p className="text-sm text-slate-500 leading-relaxed mb-8">
-            The only compliance infrastructure trained specifically on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the FDA Food Code 2022.
-          </p>
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
+        <div className={`w-full transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-4">Live System Preview</div>
+          <TypewriterTerminal />
         </div>
 
       </div>
 
-      {/* FOOTER - Features moved here */}
+      {/* FOOTER (Features) */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           
-          {/* KEY FEATURES - Spaced nicely at bottom */}
           <div className="flex flex-col md:flex-row gap-8 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
             <span>Violation Risk Analysis</span>
             <span>Hazmat Protocols</span>
             <span>Priority P / Core Logic</span>
           </div>
 
-          {/* COPYRIGHT */}
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-            © 2025 protocolLM
+          <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-300">
+            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
+            <a href="/privacy" className="hover:text-[#6b85a3]">Privacy</a>
+            <span>© 2025 protocolLM</span>
           </div>
         </div>
       </div>
