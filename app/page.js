@@ -39,7 +39,7 @@ export default function Home() {
           if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
           else window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          setMessage({ type: 'success', text: '>> ACKNOWLEDGED. CHECK INBOX FOR UPLINK.' })
+          setMessage({ type: 'success', text: 'Confirmation link sent to inbox.' })
           setLoading(false)
         }
       } else {
@@ -73,155 +73,168 @@ export default function Home() {
       }
     } catch (error) {
       let errorMessage = error.message
-      if (error.message.includes('Invalid login credentials')) errorMessage = 'ACCESS DENIED: INVALID CREDENTIALS.'
-      else if (error.message.includes('Email not confirmed')) errorMessage = 'ACCESS DENIED: PENDING CONFIRMATION.'
-      setMessage({ type: 'error', text: errorMessage.toUpperCase() })
+      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid credentials provided.'
+      else if (error.message.includes('Email not confirmed')) errorMessage = 'Account pending confirmation.'
+      setMessage({ type: 'error', text: errorMessage })
       setLoading(false)
     }
   }
 
-  // --- 1999 STYLE ICONS ---
-  const IconSquare = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4"><rect x="2" y="2" width="20" height="20" strokeWidth="2"/></svg>)
-  const IconCheck = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4"><path d="M20 6L9 17L4 12" strokeWidth="2"/></svg>)
+  // --- ICONS (Fine line style) ---
+  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>)
+  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>)
+  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /><path d="M12 22V12" /></svg>)
+  const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>)
+
+  // --- MICHIGAN MAP (CAD/Blueprint Style) ---
+  const MichiganMap = () => (
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-draw text-slate-400" strokeWidth="0.5">
+      <path d="M130 180 L130 190 L80 190 L75 180 L70 150 L65 130 L70 110 L85 90 L110 75 L130 85 L140 100 L150 110 L155 130 L150 150 L145 160 L130 180 Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M50 80 L60 70 L80 65 L100 70 L120 75 L110 80 L90 85 L70 90 L60 85 L50 80 Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+
+  const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
+    <div 
+      className={`flex items-start gap-4 p-4 border border-slate-200 bg-white transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+      style={{ transitionDelay: delay }}
+    >
+      <div className="shrink-0 w-8 h-8 flex items-center justify-center text-blue-900/60">
+        <Icon />
+      </div>
+      <div className="min-w-0">
+        <h3 className="text-slate-900 font-semibold text-xs uppercase tracking-wider mb-1 font-mono">{title}</h3>
+        <p className="text-slate-500 text-[11px] leading-relaxed font-mono">{desc}</p>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen w-full bg-black font-mono text-green-500 selection:bg-green-500 selection:text-black overflow-hidden">
-      {/* CRT SCANLINE EFFECT */}
+    <div className="min-h-screen w-full bg-white font-mono text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <style jsx global>{`
-        .scanlines {
-          background: linear-gradient(
-            to bottom,
-            rgba(255,255,255,0),
-            rgba(255,255,255,0) 50%,
-            rgba(0,0,0,0.2) 50%,
-            rgba(0,0,0,0.2)
-          );
-          background-size: 100% 4px;
-          animation: scanline 10s linear infinite;
-          pointer-events: none;
-          z-index: 50;
+        .map-draw path {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: draw 8s ease-out forwards;
         }
-        @keyframes scanline {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(4px); }
+        @keyframes draw {
+          to { stroke-dashoffset: 0; }
         }
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
       `}</style>
 
-      <div className="fixed inset-0 scanlines"></div>
-
-      <div className="flex flex-col-reverse lg:flex-row min-h-screen border-x border-green-900/30 max-w-[1600px] mx-auto box-content relative z-10">
+      <div className="flex flex-col-reverse lg:flex-row min-h-screen border-x border-slate-200 max-w-[1600px] mx-auto box-content">
         
-        {/* LEFT SIDE - "SYSTEM BOOT" */}
-        <div className="w-full lg:w-1/2 bg-black text-green-500 relative overflow-hidden px-8 py-10 flex flex-col lg:pb-40 border-r border-green-900">
+        {/* LEFT SIDE - "The System File" */}
+        <div className="w-full lg:w-1/2 bg-slate-50/50 relative overflow-hidden px-10 py-10 flex flex-col lg:pb-40 border-r border-slate-200">
           
-          {/* Matrix Grid Background */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none" 
-               style={{ backgroundImage: 'linear-gradient(#22c55e 1px, transparent 1px), linear-gradient(90deg, #22c55e 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+          {/* Graph Paper Background */}
+          <div className="absolute inset-0 opacity-40 pointer-events-none" 
+               style={{ backgroundImage: 'linear-gradient(#cbd5e1 1px, transparent 1px), linear-gradient(90deg, #cbd5e1 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+          </div>
+
+          {/* Background Map (Subtle Blueprint) */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+             <div className="w-[130%] h-[130%] rotate-3">
+                <MichiganMap />
+             </div>
           </div>
 
           {/* Header */}
           <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-12 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <h1 className="text-2xl font-bold tracking-tighter mb-2">
-                PROTOCOL_LM <span className="blink">_</span>
+              <div className="inline-flex items-center gap-2 border border-slate-300 bg-white px-3 py-1 mb-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-slate-500">System Online</span>
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                protocol<span className="font-normal text-blue-600">LM</span>
               </h1>
-              <p className="text-xs text-green-700">
-                SYSTEM.ROOT.ACCESS // VER 2.4
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">
+                Regulatory Intelligence Unit
               </p>
             </div>
           </div>
           
-          {/* Feature List looks like boot sequence */}
+          {/* Feature List */}
           <div className="flex-1 flex flex-col justify-center z-10 pl-2">
-            <div className="max-w-md w-full pt-4 lg:mt-12 font-mono text-xs space-y-4">
-              <div>
-                <p className="opacity-50 mb-1">{`> LOADING ENFORCEMENT_DATA...`}</p>
-                <div className="flex items-center gap-2 text-green-400">
-                  <IconCheck />
-                  <span>WASHTENAW / WAYNE / OAKLAND MOUNTED</span>
-                </div>
-              </div>
-              <div>
-                <p className="opacity-50 mb-1">{`> INITIALIZING RISK_ASSESSMENT...`}</p>
-                <div className="flex items-center gap-2 text-green-400">
-                  <IconCheck />
-                  <span>PRIORITY (P) LOGIC ACTIVE</span>
-                </div>
-              </div>
-              <div>
-                <p className="opacity-50 mb-1">{`> DECRYPTING UNIFIED_CODE...`}</p>
-                <div className="flex items-center gap-2 text-green-400">
-                  <IconCheck />
-                  <span>FDA 2022 + MI MODIFIED SYNCED</span>
-                </div>
-              </div>
-              <div>
-                <p className="opacity-50 mb-1">{`> CHECKING HAZMAT_PROTOCOLS...`}</p>
-                <div className="flex items-center gap-2 text-green-400">
-                  <IconCheck />
-                  <span>CONTAMINATION GUIDANCE READY</span>
-                </div>
-              </div>
+            <div className="max-w-md w-full pt-4 lg:mt-12 space-y-3">
+              <FeatureCard 
+                delay="100ms" title="Enforcement.Data" 
+                desc="Washtenaw / Wayne / Oakland violation triggers." icon={IconShield} 
+              />
+              <FeatureCard 
+                delay="200ms" title="Risk.Assessment" 
+                desc="Priority (P) vs. Core Analysis logic." icon={IconWarning} 
+              />
+              <FeatureCard 
+                delay="300ms" title="Unified.Code" 
+                desc="FDA 2022 + MI Modified Food Law integration." icon={IconGrid} 
+              />
+              <FeatureCard 
+                delay="400ms" title="Hazmat.Protocols" 
+                desc="Standard Operating Procedures for contamination." icon={IconHazmat} 
+              />
             </div>
           </div>
 
           <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
-            <div className="text-green-900 text-[10px] font-bold uppercase tracking-widest">
-              <p>LAT: 42.3314° N, LON: 83.0458° W</p>
-              <p>STATUS: SECURE</p>
+            <div className={`text-slate-400 text-[9px] font-bold uppercase tracking-widest flex flex-col gap-1 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+              <span>Secure Connection // TLS 1.3</span>
+              <span>ID: 8X29-AFF4-90B1-SEC</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT SIDE - "TERMINAL LOGIN" */}
-        <div className="w-full lg:w-1/2 bg-[#050505] relative px-10 py-10 flex flex-col lg:pb-40">
+        {/* RIGHT SIDE - "The Paper Form" */}
+        <div className="w-full lg:w-1/2 bg-white relative px-10 py-10 flex flex-col lg:pb-40">
           
           <div className="hidden lg:block lg:h-24"></div> 
 
           <div className="flex-1 flex flex-col justify-center">
             <div className="w-full max-w-md mx-auto">
-              <div className="mb-12 border-l-2 border-green-500 pl-4">
-                <h2 className="text-xl lg:text-3xl font-bold text-white mb-2 tracking-tighter uppercase">
-                  Compliance<br/>Infrastructure.
+              
+              {/* Title Section */}
+              <div className="mb-10">
+                <h2 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
+                  Compliance Infrastructure.
                 </h2>
-                <p className="text-xs text-green-600 uppercase tracking-widest">
-                  Michigan Restaurant Group Access
+                <div className="h-1 w-12 bg-blue-100 mb-4"></div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Authorized access for Michigan restaurant groups only.
                 </p>
               </div>
 
-              {/* Toggle Buttons */}
-              <div className="flex mb-8 gap-6 text-xs font-bold tracking-widest uppercase">
+              {/* Toggle Tabs (Folder Tab Style) */}
+              <div className="flex mb-0 border-b border-slate-200">
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`pb-1 border-b-2 transition-all ${view === 'signup' ? 'border-green-500 text-green-500' : 'border-transparent text-gray-700 hover:text-green-900'}`}
+                  className={`px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-t border-x ${view === 'signup' ? 'bg-white border-slate-200 border-b-white -mb-[1px] text-blue-600' : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
-                  [ Initialize ]
+                  Register
                 </button>
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`pb-1 border-b-2 transition-all ${view === 'login' ? 'border-green-500 text-green-500' : 'border-transparent text-gray-700 hover:text-green-900'}`}
+                  className={`px-6 py-3 text-[10px] font-bold uppercase tracking-widest transition-all border-t border-x ${view === 'login' ? 'bg-white border-slate-200 border-b-white -mb-[1px] text-blue-600' : 'bg-slate-50 border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
-                  [ Login ]
+                  Sign In
                 </button>
               </div>
 
-              <form onSubmit={handleAuth} className="space-y-6">
-                <div className="group">
-                  <label className="block text-[10px] text-green-700 uppercase tracking-widest mb-2">User_ID (Email)</label>
+              <form onSubmit={handleAuth} className="space-y-0 border-x border-b border-slate-200 p-8 pt-10 bg-white shadow-sm">
+                <div className="group mb-6">
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Email_Address</label>
                   <input 
                     type="email" 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
                     disabled={loading}
-                    className="w-full p-3 bg-black border border-green-800 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none text-green-400 text-sm rounded-none placeholder-green-900/50 font-mono" 
-                    placeholder="user@system.com" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:border-blue-400 focus:ring-0 focus:outline-none text-slate-900 text-sm rounded-none transition-all placeholder-slate-300 font-mono" 
+                    placeholder="user@domain.com" 
                   />
                 </div>
-                <div className="group">
-                  <label className="block text-[10px] text-green-700 uppercase tracking-widest mb-2">Passcode</label>
+                <div className="group mb-8">
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Passcode</label>
                   <input 
                     type="password" 
                     value={password} 
@@ -229,7 +242,7 @@ export default function Home() {
                     required 
                     minLength={6}
                     disabled={loading}
-                    className="w-full p-3 bg-black border border-green-800 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none text-green-400 text-sm rounded-none placeholder-green-900/50 font-mono" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:border-blue-400 focus:ring-0 focus:outline-none text-slate-900 text-sm rounded-none transition-all placeholder-slate-300 font-mono" 
                     placeholder="••••••••" 
                   />
                 </div>
@@ -237,13 +250,13 @@ export default function Home() {
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-green-900/20 hover:bg-green-500 hover:text-black text-green-500 font-bold py-4 rounded-none border border-green-500 transition-all mt-6 text-xs uppercase tracking-[0.2em]"
+                  className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-4 rounded-none transition-all text-xs uppercase tracking-widest"
                 >
-                  {loading ? 'PROCESSING...' : (view === 'signup' ? '>> EXECUTE_REGISTRATION' : '>> ENTER_SYSTEM')}
+                  {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Access Dashboard')}
                 </button>
 
                 {message && (
-                  <div className={`p-3 text-[10px] font-bold uppercase tracking-wide border ${message.type === 'error' ? 'border-red-500 text-red-500' : 'border-green-500 text-green-500'}`}>
+                  <div className={`mt-6 p-3 text-[10px] font-bold uppercase tracking-wide border-l-2 ${message.type === 'error' ? 'bg-red-50 border-red-500 text-red-900' : 'bg-blue-50 border-blue-500 text-blue-900'}`}>
                     {message.text}
                   </div>
                 )}
@@ -253,9 +266,9 @@ export default function Home() {
                 {view === 'signup' && (
                   <button 
                     onClick={() => router.push('/pricing')}
-                    className="text-[10px] text-green-800 hover:text-green-500 hover:underline transition-all uppercase tracking-widest"
+                    className="text-[10px] font-bold text-slate-400 hover:text-blue-600 transition-all uppercase tracking-widest"
                   >
-                    View_Fee_Structure.txt
+                    Reference: Fee_Schedule.pdf
                   </button>
                 )}
               </div>
@@ -263,10 +276,10 @@ export default function Home() {
           </div>
 
           <div className="lg:absolute lg:bottom-12 lg:left-8 z-10 mt-10 lg:mt-0 text-center lg:text-left w-full">
-             <div className="flex justify-center lg:justify-start gap-6 text-[9px] text-green-900 font-bold uppercase tracking-widest">
-                <a href="/terms" className="hover:text-green-500 transition">Terms</a>
-                <a href="/privacy" className="hover:text-green-500 transition">Privacy</a>
-                <a href="/contact" className="hover:text-green-500 transition">Signal</a>
+             <div className="flex justify-center lg:justify-start gap-6 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                <a href="/terms" className="hover:text-slate-900 transition">Terms</a>
+                <a href="/privacy" className="hover:text-slate-900 transition">Privacy</a>
+                <a href="/contact" className="hover:text-slate-900 transition">Contact</a>
              </div>
           </div>
         </div>
