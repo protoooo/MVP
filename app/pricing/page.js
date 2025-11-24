@@ -57,11 +57,27 @@ export default function Pricing() {
     }
   }
 
+  // --- ICONS ---
+  const IconCircle = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#6b85a3]">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v8M8 12h8" strokeOpacity="0.5" />
+    </svg>
+  )
+
+  const IconCube = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#6b85a3]">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <path d="M3.27 6.96L12 12.01l8.73-5.05" strokeOpacity="0.5" />
+      <path d="M12 22.08V12" strokeOpacity="0.5" />
+    </svg>
+  )
+
   return (
     <div className="min-h-screen bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
       {/* Header */}
-      <header className="fixed top-0 w-full border-b border-slate-200 bg-[#f8fafc]/90 backdrop-blur-sm z-50">
+      <header className="border-b border-slate-200 bg-[#f8fafc]/90 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="group">
             <span className="text-lg font-bold tracking-tighter text-slate-900">
@@ -79,15 +95,20 @@ export default function Pricing() {
         </div>
       </header>
 
-      {/* MAIN CONTENT - Vertically Centered ("The Equator") */}
-      <div className="flex-1 flex items-center justify-center w-full px-6 pt-20 pb-12">
+      {/* MAIN CONTENT - Centered */}
+      <div className="flex-1 flex items-center justify-center w-full px-6 pt-16 pb-24">
         
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl w-full items-stretch">
+        {/* 2-COLUMN GRID (Centered) */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full items-stretch">
           
           {/* STARTER CARD ($19) */}
-          <div className="group bg-white border border-slate-200 rounded-sm p-8 hover:border-[#6b85a3]/50 transition-all duration-300 flex flex-col shadow-sm">
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest">Starter</h2>
+          <div className="group bg-white border border-slate-200 rounded-sm p-8 hover:border-[#6b85a3]/50 transition-all duration-300 flex flex-col h-full shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest mb-2">Starter</h2>
+                <p className="text-slate-500 text-xs">Single location basic access</p>
+              </div>
+              <IconCircle />
             </div>
             
             <div className="flex items-baseline mb-8">
@@ -95,10 +116,10 @@ export default function Pricing() {
               <span className="ml-2 text-slate-400 text-xs">/month</span>
             </div>
 
-            <div className="flex-1 space-y-4 mb-10">
-              {['100 Queries / Month', '10 Image Analyses', 'State & Federal Code Access', 'Email Support'].map((item, i) => (
+            <div className="flex-1 space-y-4 mb-12">
+              {['200 Queries / Month', '20 Image Analyses', 'State & Federal Code Access', 'Email Support'].map((item, i) => (
                 <div key={i} className="flex items-center text-xs text-slate-600">
-                  <div className="w-1 h-1 bg-slate-300 rounded-full mr-3"></div>
+                  <div className="w-1 h-1 bg-slate-300 rounded-full mr-3 group-hover:bg-[#6b85a3] transition-colors"></div>
                   {item}
                 </div>
               ))}
@@ -107,16 +128,26 @@ export default function Pricing() {
             <button 
               onClick={() => handleCheckout('price_1SWzz2DlSrKA3nbAR2I856jl', 'Starter')} 
               disabled={loadingId !== null}
-              className="w-full bg-white hover:bg-[#f1f5f9] text-slate-600 hover:text-[#6b85a3] font-bold py-3.5 rounded-sm transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest border border-slate-200"
+              className="w-full bg-white hover:bg-[#f1f5f9] text-slate-600 hover:text-[#6b85a3] font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest border border-slate-200"
             >
               {loadingId === 'price_1SWzz2DlSrKA3nbAR2I856jl' ? 'Processing...' : 'Start Trial'}
             </button>
           </div>
 
-          {/* STANDARD CARD ($49) */}
-          <div className="group bg-white border-2 border-[#6b85a3]/20 rounded-sm p-8 hover:border-[#6b85a3] transition-all duration-300 flex flex-col shadow-md">
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest">Standard</h2>
+          {/* PRO CARD ($49) - Formerly Standard */}
+          <div className="group bg-white border-2 border-[#6b85a3] rounded-sm p-8 shadow-xl shadow-slate-200/50 transition-all duration-300 flex flex-col relative h-full transform md:-translate-y-2">
+            
+            {/* Recommended Badge */}
+            <div className="absolute top-0 right-0 bg-[#6b85a3] text-white text-[9px] font-bold px-3 py-1 uppercase tracking-wide z-20">
+              Recommended
+            </div>
+
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest mb-2">Pro</h2>
+                <p className="text-slate-500 text-xs">Enhanced intelligence</p>
+              </div>
+              <IconCube />
             </div>
             
             <div className="flex items-baseline mb-8">
@@ -124,10 +155,10 @@ export default function Pricing() {
               <span className="ml-2 text-slate-400 text-xs">/month</span>
             </div>
 
-            <div className="flex-1 space-y-4 mb-10">
+            <div className="flex-1 space-y-4 mb-12">
               {['500 Queries / Month', '50 Image Analyses', 'State & Federal Code Access', 'Standard Support'].map((item, i) => (
-                <div key={i} className="flex items-center text-xs text-slate-700 font-bold">
-                  <div className="w-1 h-1 bg-[#6b85a3] rounded-full mr-3"></div>
+                <div key={i} className="flex items-center text-xs text-slate-900 font-bold">
+                  <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full mr-3"></div>
                   {item}
                 </div>
               ))}
@@ -136,51 +167,17 @@ export default function Pricing() {
             <button 
               onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
               disabled={loadingId !== null}
-              className="w-full bg-white hover:bg-[#6b85a3] text-[#6b85a3] hover:text-white font-bold py-3.5 rounded-sm transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest border-2 border-[#6b85a3]"
+              className="w-full text-white font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest shadow-md hover:shadow-lg hover:opacity-90"
+              style={{ backgroundColor: '#6b85a3' }}
             >
               {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start Trial'}
             </button>
           </div>
 
-          {/* ENTERPRISE CARD ($99) */}
-          <div className="group bg-white border border-slate-300 rounded-sm p-8 shadow-xl shadow-slate-200/50 transition-all duration-300 flex flex-col transform lg:-translate-y-2 relative">
-            
-            <div className="absolute top-0 right-0 bg-[#6b85a3] text-white text-[9px] font-bold px-3 py-1 uppercase tracking-wide z-20">
-              Recommended
-            </div>
-
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest">Enterprise</h2>
-            </div>
-            
-            <div className="flex items-baseline mb-8">
-              <span className="text-4xl font-bold text-slate-900 tracking-tighter">$99</span>
-              <span className="ml-2 text-slate-500 text-xs font-bold">/month</span>
-            </div>
-
-            <div className="flex-1 space-y-4 mb-10">
-              {['5,000 Queries / Month', '500 Image Analyses', 'Priority Email Support', 'API Access Available'].map((item, i) => (
-                <div key={i} className="flex items-center text-xs text-slate-900 font-extrabold">
-                  <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full mr-3"></div>
-                  {item}
-                </div>
-              ))}
-            </div>
-            
-            <button 
-              onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
-              disabled={loadingId !== null}
-              className="w-full text-white font-bold py-3.5 rounded-sm transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest shadow-md hover:shadow-lg hover:opacity-90"
-              style={{ backgroundColor: '#6b85a3' }}
-            >
-              {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start Trial'}
-            </button>
-          </div>
-          
         </div>
       </div>
 
-      <div className="py-8 border-t border-slate-200 text-center bg-white">
+      <div className="py-8 border-t border-slate-200 text-center">
         <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">© 2025 protocolLM. All rights reserved.</p>
       </div>
     </div>
