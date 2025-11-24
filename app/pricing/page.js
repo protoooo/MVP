@@ -57,8 +57,9 @@ export default function Pricing() {
     }
   }
 
+  // Icons updated to match their specific card themes
   const IconCube = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="w-16 h-16 text-teal-200/50">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="w-16 h-16 text-teal-400">
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <path d="M3.27 6.96L12 12.01l8.73-5.05" strokeOpacity="0.5" />
       <path d="M12 22.08V12" strokeOpacity="0.5" />
@@ -66,25 +67,26 @@ export default function Pricing() {
   )
 
   const IconStack = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="w-16 h-16 text-teal-200/50">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" className="w-16 h-16 text-slate-400">
       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
       <path d="M12 22V7" strokeOpacity="0.5" />
     </svg>
   )
 
   return (
-    <div className="min-h-screen bg-[#022c22] font-sans text-white">
-      <header className="border-b border-teal-900 sticky top-0 z-50 bg-[#022c22]/80 backdrop-blur-md">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      {/* Header - Light Theme */}
+      <header className="border-b border-slate-200 sticky top-0 z-50 bg-white/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="group">
-            <span className="text-xl font-bold tracking-tight text-white">
-              protocol<span className="font-normal text-teal-500">LM</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900">
+              protocol<span className="font-normal text-teal-600">LM</span>
             </span>
           </button>
           {!isAuthenticated && (
             <button 
               onClick={() => router.push('/')}
-              className="text-xs font-bold text-teal-400 hover:text-white uppercase tracking-wide transition"
+              className="text-xs font-bold text-slate-500 hover:text-slate-900 uppercase tracking-wide transition"
             >
               Log in
             </button>
@@ -92,88 +94,100 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 pt-12 pb-20">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+      <div className="max-w-7xl mx-auto px-6 pt-16 pb-24">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight">
             Compliance Infrastructure
           </h1>
-          <p className="text-teal-200/60 max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-500 text-lg max-w-xl mx-auto leading-relaxed">
             Mitigate liability and streamline operations with unified regulatory intelligence.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           
-          <div className="group bg-white/[0.02] border border-teal-500/20 rounded-xl p-8 hover:bg-white/[0.04] transition-all duration-500 flex flex-col">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-1">Standard</h2>
-                <p className="text-teal-400/60 text-xs">Single location intelligence</p>
-              </div>
-              <IconCube />
-            </div>
+          {/* STANDARD CARD - Deep Green */}
+          <div className="group bg-[#022c22] rounded-2xl p-8 hover:shadow-2xl hover:shadow-teal-900/20 transition-all duration-500 flex flex-col relative overflow-hidden">
+            {/* Subtle texture for green card */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
             
-            <div className="flex items-baseline mb-8">
-              <span className="text-4xl font-bold text-white">$49</span>
-              <span className="ml-1 text-teal-400/60 text-sm">/month</span>
-            </div>
-
-            <div className="flex-1 space-y-4 mb-10">
-              {['500 Queries / Month', '50 Image Analyses', 'State & Federal Code Access', 'Standard Support'].map((item, i) => (
-                <div key={i} className="flex items-center text-sm text-teal-100/80">
-                  <div className="w-1 h-1 bg-teal-500 rounded-full mr-3"></div>
-                  {item}
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-sm font-bold text-teal-400 uppercase tracking-widest mb-2">Standard</h2>
+                  <p className="text-teal-100/70 text-xs">Single location intelligence</p>
                 </div>
-              ))}
+                <IconCube />
+              </div>
+              
+              <div className="flex items-baseline mb-8">
+                <span className="text-5xl font-bold text-white tracking-tight">$49</span>
+                <span className="ml-2 text-teal-100/60 text-sm font-medium">/month</span>
+              </div>
+
+              <div className="flex-1 space-y-5 mb-12">
+                {['500 Queries / Month', '50 Image Analyses', 'State & Federal Code Access', 'Standard Support'].map((item, i) => (
+                  <div key={i} className="flex items-center text-sm text-teal-50 font-medium">
+                    <div className="w-1.5 h-1.5 bg-teal-400 rounded-full mr-3 shadow-[0_0_8px_rgba(45,212,191,0.5)]"></div>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
+                disabled={loadingId !== null}
+                className="w-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 hover:text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 text-xs uppercase tracking-widest border border-teal-500/30"
+              >
+                {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start Trial'}
+              </button>
             </div>
-            
-            <button 
-              onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
-              disabled={loadingId !== null}
-              className="w-full bg-transparent hover:bg-teal-900 text-white font-bold py-4 rounded-lg transition-all duration-300 disabled:opacity-50 text-xs uppercase tracking-widest border border-teal-500/30 hover:border-teal-500/50"
-            >
-              {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start Trial'}
-            </button>
           </div>
 
-          <div className="group bg-teal-900/20 border border-teal-500/40 rounded-xl p-8 hover:bg-teal-900/30 transition-all duration-500 flex flex-col relative overflow-hidden shadow-2xl shadow-teal-900/20">
-            <div className="absolute top-0 right-0 bg-teal-500 text-[#022c22] text-[10px] font-bold px-3 py-1 uppercase tracking-wide">Preferred</div>
+          {/* ENTERPRISE CARD - Chrome / Silver */}
+          <div className="group bg-gradient-to-br from-white via-slate-50 to-slate-200 border border-slate-200 rounded-2xl p-8 hover:shadow-2xl hover:shadow-slate-300/50 transition-all duration-500 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-slate-900 text-white text-[10px] font-bold px-4 py-1.5 uppercase tracking-wide rounded-bl-xl shadow-sm z-20">Preferred</div>
             
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-1">Enterprise</h2>
-                <p className="text-teal-400/60 text-xs">Multi-unit groups & chains</p>
-              </div>
-              <IconStack />
-            </div>
-            
-            <div className="flex items-baseline mb-8">
-              <span className="text-4xl font-bold text-white">$99</span>
-              <span className="ml-1 text-teal-400/60 text-sm">/month</span>
-            </div>
+            {/* Chrome reflection effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/80 to-transparent opacity-50 pointer-events-none"></div>
 
-            <div className="flex-1 space-y-4 mb-10">
-              {['5,000 Queries / Month', '500 Image Analyses', 'Priority Email Support', 'API Access Available'].map((item, i) => (
-                <div key={i} className="flex items-center text-sm text-white">
-                  <div className="w-1 h-1 bg-teal-400 rounded-full mr-3"></div>
-                  {item}
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-2">Enterprise</h2>
+                  <p className="text-slate-500 text-xs">Multi-unit groups & chains</p>
                 </div>
-              ))}
+                <IconStack />
+              </div>
+              
+              <div className="flex items-baseline mb-8">
+                <span className="text-5xl font-bold text-slate-900 tracking-tight">$99</span>
+                <span className="ml-2 text-slate-500 text-sm font-medium">/month</span>
+              </div>
+
+              <div className="flex-1 space-y-5 mb-12">
+                {['5,000 Queries / Month', '500 Image Analyses', 'Priority Email Support', 'API Access Available'].map((item, i) => (
+                  <div key={i} className="flex items-center text-sm text-slate-700 font-medium">
+                    <div className="w-1.5 h-1.5 bg-slate-900 rounded-full mr-3"></div>
+                    {item}
+                  </div>
+                ))}
+              </div>
+              
+              <button 
+                onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
+                disabled={loadingId !== null}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-slate-900/20"
+              >
+                {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start Trial'}
+              </button>
             </div>
-            
-            <button 
-              onClick={() => handleCheckout('price_1SVJyRDlSrKA3nbAGhdEZzXA', 'Enterprise')} 
-              disabled={loadingId !== null}
-              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-lg transition-all duration-300 disabled:opacity-50 text-xs uppercase tracking-widest shadow-lg shadow-teal-900/50"
-            >
-              {loadingId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'Processing...' : 'Start Trial'}
-            </button>
           </div>
           
         </div>
 
-        <div className="mt-20 pt-8 border-t border-teal-900/50 text-center">
-          <p className="text-[10px] text-teal-500/50 uppercase tracking-widest">© 2025 protocolLM. All rights reserved.</p>
+        <div className="mt-24 pt-8 border-t border-slate-200 text-center">
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">© 2025 protocolLM. All rights reserved.</p>
         </div>
       </div>
     </div>
