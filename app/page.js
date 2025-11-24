@@ -1,15 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL ---
+// --- 1. THE LIVE TERMINAL (With "Thinking" State) ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
+  const [phase, setPhase] = useState('question') // question, thinking, answer, reset
   const [showQ, setShowQ] = useState(false)
+  const [showThinking, setShowThinking] = useState(false)
   const [showA, setShowA] = useState(false)
 
+  // 10 High-Value Scenarios
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -55,28 +58,57 @@ const LiveDataTerminal = () => {
 
   useEffect(() => {
     const runSequence = async () => {
+      // 1. Show Question
+      setPhase('question')
       setShowQ(true)
       await new Promise(r => setTimeout(r, 1500))
+
+      // 2. Thinking State (Simulates database lookup)
+      setPhase('thinking')
+      setShowThinking(true)
+      await new Promise(r => setTimeout(r, 1200)) // Thinking time
+      setShowThinking(false)
+
+      // 3. Show Answer
+      setPhase('answer')
       setShowA(true)
-      await new Promise(r => setTimeout(r, 4500))
+      await new Promise(r => setTimeout(r, 5000)) // Read time
+
+      // 4. Fade Out All
+      setPhase('reset')
       setShowQ(false)
       setShowA(false)
+      
+      // 5. Reset & Loop
       await new Promise(r => setTimeout(r, 500))
       setIndex(prev => (prev + 1) % scenarios.length)
     }
+
     runSequence()
   }, [index])
 
   const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
+      
+      {/* QUESTION */}
       <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.q}
       </div>
+
+      {/* THINKING INDICATOR (Only shows between Q and A) */}
+      {phase === 'thinking' && (
+        <div className="text-[#6b85a3] text-xs font-bold uppercase tracking-widest animate-pulse mb-2">
+          {`> ANALYZING DATABASE...`}
+        </div>
+      )}
+
+      {/* ANSWER */}
       <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {current.a}
+        {showA ? current.a : ''}
       </div>
+
     </div>
   )
 }
@@ -187,15 +219,22 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
+  const searchParams = useSearchParams()
    
   useEffect(() => {
     setMounted(true)
-  }, [])
+    const authParam = searchParams.get('auth')
+    if (authParam) {
+      setAuthView(authParam)
+      setShowAuth(true)
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -205,7 +244,6 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
@@ -225,12 +263,10 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
-          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight mb-6">
+          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6">
             Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
@@ -238,14 +274,12 @@ export default function Home() {
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
 
       </div>
 
-      {/* FOOTER */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -256,8 +290,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
