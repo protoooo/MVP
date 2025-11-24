@@ -37,13 +37,22 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    const planName = priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA' ? 'enterprise' : 'pro'
+    // --- FIXED PLAN MAPPING ---
+    let planName = 'pro' // Fallback
+
+    if (priceId === 'price_1SWzz2DlSrKA3nbAR2I856jl') {
+      planName = 'starter'
+    } else if (priceId === 'price_1SVJvcDlSrKA3nbAlLcPCs52') {
+      planName = 'pro'
+    } else if (priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA') {
+      planName = 'enterprise'
+    }
+    // --------------------------
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
     console.log('✅ Creating checkout session for:', session.user.email)
     console.log('✅ Plan:', planName)
-    console.log('✅ Success URL:', `${baseUrl}/documents?session_id={CHECKOUT_SESSION_ID}`)
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -69,8 +78,6 @@ export async function POST(request) {
         },
       },
     })
-
-    console.log('✅ Checkout session created:', checkoutSession.id)
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (err) {
