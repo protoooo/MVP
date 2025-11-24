@@ -80,107 +80,90 @@ export default function Home() {
     }
   }
 
-  // --- TEXT-ONLY FEATURE COMPONENT ---
+  // --- CLEAN TEXT FEATURE (No Icons) ---
   const FeatureItem = ({ title, desc }) => (
-    <div className="group border-l-2 border-slate-200 pl-6 py-1 hover:border-slate-400 transition-colors duration-500">
-      <h3 className="text-slate-900 font-bold text-xs uppercase tracking-widest mb-2">{title}</h3>
-      <p className="text-slate-500 text-xs leading-relaxed max-w-sm">{desc}</p>
+    <div className="flex flex-col gap-2 p-6 bg-white border border-slate-200 hover:border-[#6b85a3] transition-colors duration-300">
+      <h3 className="text-slate-900 font-bold text-xs uppercase tracking-widest">{title}</h3>
+      <div className="h-px w-8 bg-[#6b85a3]"></div>
+      <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-slate-200 selection:text-black">
+    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      <div className="flex flex-col-reverse lg:flex-row min-h-screen border-x border-slate-200 max-w-[1600px] mx-auto box-content">
+      {/* HEADER */}
+      <nav className="w-full max-w-5xl mx-auto px-6 py-12 flex justify-between items-end border-b border-slate-200 pb-6">
+        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <h1 className="text-xl font-bold tracking-tighter text-slate-900">
+            protocol<span style={{ color: '#6b85a3' }}>LM</span>
+          </h1>
+        </div>
+        <div className={`text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          Authorized Use Only
+        </div>
+      </nav>
+
+      {/* MAIN CONTENT */}
+      <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-12 flex flex-col gap-16">
         
-        {/* LEFT SIDE - "The Briefing" */}
-        {/* Matte Light Steel Blue Background */}
-        <div className="w-full lg:w-[45%] bg-[#f1f5f9] relative px-12 py-12 flex flex-col justify-between border-r border-slate-200">
-          
-          {/* Header */}
-          <div className="relative z-10">
-            <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <h1 className="text-lg font-bold tracking-tighter text-slate-900">
-                protocol<span className="text-slate-400">LM</span>
-              </h1>
-              <div className="mt-2 flex gap-3 text-[10px] uppercase tracking-widest text-slate-400 font-medium">
-                <span>Ver 2.4</span>
-                <span className="text-slate-300">|</span>
-                <span>Michigan Systems</span>
-              </div>
+        {/* INTRO SECTION */}
+        <div className={`grid md:grid-cols-2 gap-12 items-center transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div>
+            <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 shadow-sm">
+              Regulatory Intelligence Unit
             </div>
-          </div>
-          
-          {/* Center Content */}
-          <div className={`relative z-10 space-y-12 my-auto transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="space-y-6">
-              <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                Regulatory Intelligence Unit
-              </div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight leading-tight">
-                Compliance<br />
-                Infrastructure.
-              </h2>
-              <p className="text-sm text-slate-500 max-w-sm leading-relaxed border-l border-slate-300 pl-4">
-                Unified enforcement data for Michigan restaurant groups. Mitigate liability with county-level precision.
-              </p>
-            </div>
-
-            <div className="space-y-8 pt-4">
-              <FeatureItem 
-                title="Enforcement Data" 
-                desc="Trained on Washtenaw, Wayne, and Oakland County violation triggers." 
-              />
-              <FeatureItem 
-                title="Violation Risk" 
-                desc="Identify Priority P vs Core risks before they become fines." 
-              />
-              <FeatureItem 
-                title="Unified Code" 
-                desc="FDA 2022 and Michigan Modified Food Law integration." 
-              />
-              <FeatureItem 
-                title="Hazmat Protocols" 
-                desc="Immediate guidance for contamination events and recovery." 
-              />
-            </div>
+            <h2 className="text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+              Compliance<br />
+              Infrastructure.
+            </h2>
+            <p className="text-sm text-slate-500 leading-relaxed border-l-2 border-[#6b85a3] pl-4">
+              Unified enforcement data for Michigan restaurant groups. Mitigate liability with county-level precision.
+            </p>
           </div>
 
-          {/* Footer */}
-          <div className={`relative z-10 flex gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-widest transition-all duration-700 delay-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            System Active
+          {/* FEATURES GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FeatureItem 
+              title="Enforcement Data" 
+              desc="Trained on Washtenaw, Wayne & Oakland County violation triggers." 
+            />
+            <FeatureItem 
+              title="Violation Risk" 
+              desc="Identify Priority P vs Core risks before they become fines." 
+            />
+            <FeatureItem 
+              title="Unified Code" 
+              desc="FDA 2022 and Michigan Modified Food Law integration." 
+            />
+            <FeatureItem 
+              title="Hazmat Protocols" 
+              desc="Immediate guidance for contamination events and recovery." 
+            />
           </div>
         </div>
 
-        {/* RIGHT SIDE - "The Form" */}
-        <div className="w-full lg:w-[55%] bg-white relative px-8 lg:px-24 py-12 flex flex-col justify-center">
-          
-          <div className="max-w-md w-full mx-auto">
+        {/* LOGIN FORM (THE MONOLITH) */}
+        <div className={`w-full max-w-md mx-auto mt-8 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="bg-white p-8 border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             
-            <div className="mb-12 pt-8 lg:pt-0">
-              <h3 className="text-slate-900 text-xl font-bold tracking-tight uppercase mb-2">Authorized Access</h3>
-              <p className="text-slate-500 text-xs">Enter credentials to proceed.</p>
-            </div>
-
-            {/* Minimal Text Tabs */}
-            <div className="flex gap-8 mb-10 border-b border-slate-100 pb-px">
+            <div className="flex gap-8 mb-8 border-b border-slate-100 pb-1">
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
-                className={`pb-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${view === 'signup' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                className={`pb-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${view === 'signup' ? 'border-[#6b85a3] text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
               >
                 Create Account
               </button>
               <button 
                 onClick={() => { setView('login'); setMessage(null); }} 
-                className={`pb-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${view === 'login' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                className={`pb-3 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 ${view === 'login' ? 'border-[#6b85a3] text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
               >
                 Sign In
               </button>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-6">
-              <div className="group">
+              <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
                 <input 
                   type="email" 
@@ -188,11 +171,11 @@ export default function Home() {
                   onChange={(e) => setEmail(e.target.value)} 
                   required 
                   disabled={loading}
-                  className="w-full py-3 bg-transparent border-b border-slate-200 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-300 rounded-none" 
+                  className="w-full p-3 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-300" 
                   placeholder="user@domain.com" 
                 />
               </div>
-              <div className="group">
+              <div>
                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
                 <input 
                   type="password" 
@@ -201,7 +184,7 @@ export default function Home() {
                   required 
                   minLength={6}
                   disabled={loading}
-                  className="w-full py-3 bg-transparent border-b border-slate-200 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-300 rounded-none" 
+                  className="w-full p-3 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-300" 
                   placeholder="••••••••" 
                 />
               </div>
@@ -209,36 +192,44 @@ export default function Home() {
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-sm shadow-sm transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed mt-8 text-xs uppercase tracking-widest"
+                className="w-full text-white font-bold py-4 shadow-sm transition-all hover:shadow-md mt-4 text-[10px] uppercase tracking-widest hover:opacity-90"
+                style={{ backgroundColor: '#6b85a3' }}
               >
                 {loading ? 'Processing...' : (view === 'signup' ? 'Initialize Account' : 'Authenticate')}
               </button>
 
               {message && (
-                <div className={`p-4 text-[10px] font-bold uppercase tracking-wide bg-slate-50 border border-slate-200 ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                <div className={`p-4 text-[10px] font-bold uppercase tracking-wide border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
                   {message.text}
                 </div>
               )}
             </form>
 
             {view === 'signup' && (
-              <div className="mt-8 text-center">
+              <div className="mt-6 text-center pt-6 border-t border-slate-100">
                 <button 
                   onClick={() => router.push('/pricing')}
-                  className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+                  className="text-[10px] font-bold text-slate-400 hover:text-[#6b85a3] transition-colors uppercase tracking-widest"
                 >
                   View Fee Structure
                 </button>
               </div>
             )}
           </div>
+        </div>
 
-          <div className="lg:absolute lg:bottom-12 lg:left-24 z-10 mt-16 lg:mt-0 w-full max-w-md mx-auto lg:mx-0 border-t border-slate-100 pt-6 lg:border-none lg:pt-0">
-             <div className="flex justify-center lg:justify-start gap-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <a href="/terms" className="hover:text-slate-900 transition-colors">Terms</a>
-                <a href="/privacy" className="hover:text-slate-900 transition-colors">Privacy</a>
-                <a href="/contact" className="hover:text-slate-900 transition-colors">Contact</a>
-             </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="w-full py-8 mt-auto">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 pt-8">
+          <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+            © 2025 protocolLM. Michigan.
+          </div>
+          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            <a href="/terms" className="hover:text-[#6b85a3] transition">Terms</a>
+            <a href="/privacy" className="hover:text-[#6b85a3] transition">Privacy</a>
+            <a href="/contact" className="hover:text-[#6b85a3] transition">Contact</a>
           </div>
         </div>
       </div>
