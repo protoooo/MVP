@@ -40,7 +40,7 @@ export default function DocumentsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  // Auth Check
+  // --- 1. AUTH & SUBSCRIPTION CHECK ---
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -58,13 +58,13 @@ export default function DocumentsPage() {
       setSession(session)
       setSubscriptionInfo({
         requestsUsed: profile?.requests_used || 0,
-        requestLimit: 500 
+        requestLimit: 500
       })
     }
     checkAccess()
   }, [supabase, router])
 
-  // Payment Success
+  // --- 2. PAYMENT SUCCESS HANDLER ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const sessionId = params.get('session_id')
@@ -75,7 +75,7 @@ export default function DocumentsPage() {
     }
   }, [])
 
-  // Load History
+  // --- 3. LOAD CHAT HISTORY ---
   useEffect(() => {
     if (session) loadChatHistory()
   }, [session])
@@ -95,7 +95,7 @@ export default function DocumentsPage() {
     }
   }
 
-  // Welcome Message
+  // --- 4. WELCOME MESSAGE ---
   useEffect(() => {
     if (userCounty && messages.length === 0) {
       setMessages([{ 
@@ -106,7 +106,7 @@ export default function DocumentsPage() {
     }
   }, [userCounty])
 
-  // Auto Scroll & Save
+  // --- 5. AUTO-SCROLL & AUTO-SAVE ---
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -157,6 +157,7 @@ export default function DocumentsPage() {
     }, 2000)
   }
 
+  // --- ACTIONS ---
   const loadChat = (chat) => {
     setMessages(chat.messages)
     setUserCounty(chat.county)
@@ -230,49 +231,6 @@ export default function DocumentsPage() {
     } finally {
       setIsUpdatingCounty(false)
     }
-  }
-
-  const handleCitationClick = (citation) => {
-    if (!citation?.document) return
-    const pageMatch = citation.pages?.toString().match(/\d+/)
-    setViewingPdf({
-      title: citation.document,
-      filename: `${citation.document}.pdf`,
-      county: userCounty,
-      targetPage: pageMatch ? parseInt(pageMatch[0]) : 1
-    })
-  }
-
-  const renderMessageContent = (msg) => {
-    const content = msg.content || ''
-    const parts = []
-    let lastIndex = 0
-    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
-    let match
-
-    while ((match = citationRegex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
-      }
-      parts.push({ type: 'citation', document: match[1], pages: match[2] })
-      lastIndex = match.index + match[0].length
-    }
-    if (lastIndex < content.length) {
-      parts.push({ type: 'text', content: content.slice(lastIndex) })
-    }
-
-    return (
-      <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
-        {parts.map((part, i) =>
-          part.type === 'text' ? <span key={i}>{part.content}</span> : (
-            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              {part.document} <span className="opacity-50">| P.{part.pages}</span>
-            </button>
-          )
-        )}
-      </div>
-    )
   }
 
   // --- CORE MESSAGING FUNCTION ---
@@ -363,12 +321,56 @@ export default function DocumentsPage() {
     reader.readAsDataURL(file)
   }
 
+  // --- RENDER HELPERS ---
+  const handleCitationClick = (citation) => {
+    if (!citation?.document) return
+    const pageMatch = citation.pages?.toString().match(/\d+/)
+    setViewingPdf({
+      title: citation.document,
+      filename: `${citation.document}.pdf`,
+      county: userCounty,
+      targetPage: pageMatch ? parseInt(pageMatch[0]) : 1
+    })
+  }
+
+  const renderMessageContent = (msg) => {
+    const content = msg.content || ''
+    const parts = []
+    let lastIndex = 0
+    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
+    let match
+
+    while ((match = citationRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
+      }
+      parts.push({ type: 'citation', document: match[1], pages: match[2] })
+      lastIndex = match.index + match[0].length
+    }
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', content: content.slice(lastIndex) })
+    }
+
+    return (
+      <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
+        {parts.map((part, i) =>
+          part.type === 'text' ? <span key={i}>{part.content}</span> : (
+            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {part.document} <span className="opacity-50">| P.{part.pages}</span>
+            </button>
+          )
+        )}
+      </div>
+    )
+  }
+
   if (!session) return <div className="min-h-screen bg-white flex items-center justify-center font-mono text-xs text-slate-400">LOADING SYSTEM...</div>
 
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
       
-      {/* MODALS (County/PDF/Success) */}
+      {/* MODALS */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
@@ -408,62 +410,62 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#0f172a] border-r border-slate-800 text-slate-300 flex flex-col z-40 overflow-hidden`}>
-        <div className="p-6 border-b border-slate-800">
+      {/* SIDEBAR (LIGHT THEME) */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden`}>
+        <div className="p-6 border-b border-slate-200">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-lg font-bold tracking-tighter text-white">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
+            <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
             <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
 
-          <button onClick={() => setShowCountySelector(true)} className="w-full bg-slate-800/50 hover:bg-slate-800 text-white p-3 border border-slate-700 mb-3 flex items-center justify-between transition-colors group rounded-sm">
+          <button onClick={() => setShowCountySelector(true)} className="w-full bg-white hover:border-[#6b85a3] text-slate-700 p-3 border border-slate-300 mb-3 flex items-center justify-between transition-colors group rounded-sm">
             <div className="flex flex-col items-start">
               <span className="text-[9px] text-[#6b85a3] uppercase tracking-widest font-bold">Jurisdiction</span>
-              <span className="text-xs font-bold truncate text-slate-200">{COUNTY_NAMES[userCounty]}</span>
+              <span className="text-xs font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
             </div>
             <svg className="w-4 h-4 text-[#6b85a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
-          {/* NEW CHAT */}
+          {/* MAIN BUTTON: NEW CHAT */}
           <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90 mb-3" style={{ backgroundColor: '#6b85a3' }}>
             <span>+</span> New Inquiry
           </button>
 
-          {/* --- NEW: MOCK AUDIT BUTTON --- */}
-          <button onClick={runMockAudit} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold p-3 border border-slate-700 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm">
+          {/* FEATURE BUTTON: MOCK AUDIT */}
+          <button onClick={runMockAudit} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm hover:border-[#6b85a3] hover:text-[#6b85a3]">
              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
              Run Mock Audit
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2">Record History</div>
+          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">Record History</div>
           {loadingChats ? (
-            <div className="space-y-3 px-2 opacity-30"><div className="h-8 bg-slate-700 rounded-sm w-3/4 animate-pulse"></div></div>
+            <div className="space-y-3 px-2 opacity-50"><div className="h-8 bg-slate-200 rounded-sm w-3/4 animate-pulse"></div></div>
           ) : (
             chatHistory.map(chat => (
-              <div key={chat.id} onClick={() => loadChat(chat)} className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-sm ${currentChatId === chat.id ? 'bg-slate-800 text-white border-l-2 border-[#6b85a3]' : 'hover:bg-slate-800/50 text-slate-400'}`}>
+              <div key={chat.id} onClick={() => loadChat(chat)} className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-sm ${currentChatId === chat.id ? 'bg-white border border-slate-300 border-l-4 border-l-[#6b85a3] text-slate-900' : 'hover:bg-slate-200 text-slate-500'}`}>
                 <div className="pr-6">
                   <p className="font-medium text-xs truncate font-mono">{chat.title}</p>
                   <p className="text-[9px] opacity-50 mt-1 uppercase tracking-wider">{new Date(chat.updated_at).toLocaleDateString()}</p>
                 </div>
-                <button onClick={(e) => deleteChat(chat.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1">✕</button>
+                <button onClick={(e) => deleteChat(chat.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1">✕</button>
               </div>
             ))
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-800 bg-[#0f172a]">
+        <div className="p-4 border-t border-slate-200 bg-[#f1f5f9]">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate font-mono">{session?.user?.email}</p>
+              <p className="text-xs font-bold text-slate-900 truncate font-mono">{session?.user?.email}</p>
               <p className="text-[9px] text-[#6b85a3] font-medium uppercase tracking-wider">{subscriptionInfo?.requestsUsed} Queries Used</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-400 hover:text-white bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">Billing</button>
-            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-400 hover:text-red-400 bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">Log Out</button>
+            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-500 hover:text-[#6b85a3] bg-white border border-slate-300 py-2 transition-all rounded-sm uppercase tracking-wide">Billing</button>
+            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-500 hover:text-red-500 bg-white border border-slate-300 py-2 transition-all rounded-sm uppercase tracking-wide">Log Out</button>
           </div>
         </div>
       </div>
@@ -495,7 +497,6 @@ export default function DocumentsPage() {
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {/* Input Area */}
         <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
@@ -506,11 +507,13 @@ export default function DocumentsPage() {
               <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) || !canSend ? 'bg-slate-200 text-slate-400' : 'text-white hover:opacity-90'}`} style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}><svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
             </div>
             <div className="flex justify-between items-center mt-3">
-              {/* --- NEW: GENERATE MEMO BUTTON --- */}
-              <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30">
+              
+              {/* --- FEATURE BUTTON: GENERATE MEMO --- */}
+              <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30 cursor-pointer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                 Generate Staff Memo
               </button>
+              
               <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">AI Guidance | Verify with Official Docs</p>
             </div>
           </form>
