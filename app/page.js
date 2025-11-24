@@ -27,130 +27,72 @@ export default function Home() {
     try {
       if (view === 'signup') {
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
-        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: { county: 'washtenaw' }
-          }
+          options: { emailRedirectTo: redirectUrl, data: { county: 'washtenaw' } }
         })
-        
         if (error) throw error
-        
         if (data.session) {
           const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('accepted_terms, accepted_privacy')
-            .eq('id', data.session.user.id)
-            .single()
-          
-          if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-            window.location.href = '/accept-terms'
-          } else {
-            window.location.href = '/pricing'
-          }
+            .from('user_profiles').select('accepted_terms, accepted_privacy').eq('id', data.session.user.id).single()
+          if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
+          else window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          setMessage({ 
-            type: 'success', 
-            text: '✅ Check your email to confirm your account, then you can sign in.' 
-          })
+          setMessage({ type: 'success', text: '✅ Check your email to confirm your account, then you can sign in.' })
           setLoading(false)
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ 
-          email, 
-          password 
-        })
-        
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         
         const maxRetries = 3
         let profile = null
-        
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           try {
             const { data: profileData, error: profileError } = await supabase
-              .from('user_profiles')
-              .select('is_subscribed, accepted_terms, accepted_privacy')
-              .eq('id', data.session.user.id)
-              .single()
-
+              .from('user_profiles').select('is_subscribed, accepted_terms, accepted_privacy').eq('id', data.session.user.id).single()
             if (profileError) {
-              if (profileError.code === 'PGRST116') {
-                if (attempt === maxRetries - 1) {
-                  window.location.href = '/accept-terms'
-                  return
-                }
+              if (profileError.code === 'PGRST116' && attempt === maxRetries - 1) {
+                window.location.href = '/accept-terms'
+                return
               }
               await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
               continue
             }
             profile = profileData
             break
-          } catch (retryError) {
-            if (attempt === maxRetries - 1) throw retryError
-          }
+          } catch (retryError) { if (attempt === maxRetries - 1) throw retryError }
         }
-
-        if (!profile) {
+        if (!profile || !profile.accepted_terms || !profile.accepted_privacy) {
           window.location.href = '/accept-terms'
           return
         }
-
-        if (!profile.accepted_terms || !profile.accepted_privacy) {
-          window.location.href = '/accept-terms'
-          return
-        }
-
-        if (profile.is_subscribed) {
-          window.location.href = '/documents'
-        } else {
-          window.location.href = '/pricing'
-        }
+        if (profile.is_subscribed) window.location.href = '/documents'
+        else window.location.href = '/pricing'
       }
     } catch (error) {
       let errorMessage = error.message
       if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid email or password.'
       else if (error.message.includes('Email not confirmed')) errorMessage = 'Please check your email and confirm your account first.'
-      else if (error.message.includes('User already registered')) errorMessage = 'Account already exists. Please sign in instead.'
-      
       setMessage({ type: 'error', text: errorMessage })
       setLoading(false)
     }
   }
 
-  const IconShield = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+  // --- ICONS ---
+  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" /></svg>)
+  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" /><line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" strokeLinejoin="round" /><line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" /></svg>)
+  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" /></svg>)
+  const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" /></svg>)
 
-  const IconWarning = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" strokeLinejoin="round" />
-      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-
-  const IconGrid = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-
-  const IconHazmat = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1">
-      <circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+  // --- MICHIGAN MAP TRACING COMPONENT ---
+  const MichiganMap = () => (
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full icon-trace opacity-10 text-teal-300" strokeWidth="0.5">
+      {/* Lower Peninsula */}
+      <path d="M120 170 L120 185 L70 185 L65 175 L60 150 L55 130 L60 110 L75 90 L100 75 L120 85 L130 100 L140 110 L145 130 L140 150 L135 160 L120 170 Z" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Upper Peninsula */}
+      <path d="M40 80 L50 70 L70 65 L90 70 L110 75 L100 80 L80 85 L60 90 L50 85 L40 80 Z" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 
@@ -171,12 +113,12 @@ export default function Home() {
   )
 
   return (
-    <div className="min-h-screen w-full bg-white font-sans">
+    <div className="min-h-screen w-full bg-white font-sans selection:bg-[#022c22] selection:text-white">
       <style jsx global>{`
         .icon-trace path, .icon-trace circle, .icon-trace line {
-          stroke-dasharray: 100;
-          stroke-dashoffset: 100;
-          animation: trace 3s ease-in-out forwards;
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: trace 4s ease-out forwards;
         }
         .group:hover .icon-trace path, 
         .group:hover .icon-trace circle,
@@ -184,7 +126,7 @@ export default function Home() {
           animation: trace 2s ease-in-out infinite;
         }
         @keyframes trace {
-          0% { stroke-dashoffset: 100; }
+          0% { stroke-dashoffset: 1000; }
           100% { stroke-dashoffset: 0; }
         }
       `}</style>
@@ -194,7 +136,15 @@ export default function Home() {
         {/* LEFT SIDE */}
         <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149] via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
+          {/* BACKGROUND MAP */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+             {/* Scaled up and rotated slightly to look like an architectural blueprint */}
+             <div className="w-[150%] h-[150%] -translate-x-10 translate-y-10 opacity-20">
+                <MichiganMap />
+             </div>
+          </div>
+
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/50 via-[#022c22] to-[#022c22] opacity-60 pointer-events-none"></div>
 
           <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -208,7 +158,6 @@ export default function Home() {
           <div className="flex-1 flex flex-col justify-center z-10">
             <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
-                
                 <FeatureCard 
                   delay="100ms"
                   title="Enforcement Data"
@@ -217,7 +166,6 @@ export default function Home() {
                   iconColor="text-teal-300 group-hover:text-teal-100"
                   glowColor="bg-teal-500/30"
                 />
-
                 <FeatureCard 
                   delay="200ms"
                   title="Violation Risk"
@@ -226,7 +174,6 @@ export default function Home() {
                   iconColor="text-rose-400 group-hover:text-rose-200"
                   glowColor="bg-rose-500/30"
                 />
-
                 <FeatureCard 
                   delay="300ms"
                   title="Unified Code"
@@ -235,7 +182,6 @@ export default function Home() {
                   iconColor="text-sky-400 group-hover:text-sky-200"
                   glowColor="bg-sky-500/30"
                 />
-
                 <FeatureCard 
                   delay="400ms"
                   title="Hazmat Protocols"
@@ -244,7 +190,6 @@ export default function Home() {
                   iconColor="text-amber-400 group-hover:text-amber-200"
                   glowColor="bg-amber-500/30"
                 />
-
               </div>
             </div>
           </div>
@@ -260,9 +205,7 @@ export default function Home() {
 
         {/* RIGHT SIDE */}
         <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
-          
           <div className="hidden lg:block lg:h-24"></div> 
-
           <div className="flex-1 flex flex-col justify-center">
             <div className="w-full max-w-md mx-auto">
               <div className="mb-12">
@@ -313,7 +256,6 @@ export default function Home() {
                   />
                 </div>
                 
-                {/* UPDATED BUTTON STYLE */}
                 <button 
                   type="submit" 
                   disabled={loading} 
