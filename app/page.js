@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react' // Added Suspense
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation' // Added useSearchParams
 
 // --- 1. THE LIVE TERMINAL ---
 const LiveDataTerminal = () => {
@@ -10,7 +10,6 @@ const LiveDataTerminal = () => {
   const [showQ, setShowQ] = useState(false)
   const [showA, setShowA] = useState(false)
 
-  // 10 High-Value Scenarios for Owners
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -71,7 +70,7 @@ const LiveDataTerminal = () => {
   const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.q}
       </div>
@@ -188,15 +187,26 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+// Main Content Logic
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
+  const searchParams = useSearchParams() // Hook to read URL params
    
   useEffect(() => {
     setMounted(true)
-  }, [])
+    
+    // Check for auth signal from Pricing page
+    const authParam = searchParams.get('auth')
+    if (authParam) {
+      setAuthView(authParam)
+      setShowAuth(true)
+      // Clean up URL
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -229,17 +239,17 @@ export default function Home() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT (Updated: No Line Break, Wider Container) */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
-          <h2 className="text-3xl md:text-5xl font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-nowrap">
-            Local Regulatory Intelligence.
+        {/* HERO TEXT */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+            Local Regulatory<br/>Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL (CENTERPIECE) */}
+        {/* THE LIVE TERMINAL */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
@@ -260,5 +270,14 @@ export default function Home() {
       {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+// Wrapper for Suspense (Required for useSearchParams in Next.js)
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
