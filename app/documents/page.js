@@ -19,6 +19,7 @@ export default function DocumentsPage() {
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -38,6 +39,24 @@ export default function DocumentsPage() {
   const saveTimeoutRef = useRef(null)
   const supabase = createClient()
   const router = useRouter()
+
+  // Check for successful payment on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const sessionId = params.get('session_id')
+    
+    if (sessionId) {
+      setShowSuccessMessage(true)
+      
+      // Clean URL without page reload
+      window.history.replaceState({}, '', '/documents')
+      
+      // Auto-hide success message after 8 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 8000)
+    }
+  }, [])
 
   // Initialize welcome message when county changes
   useEffect(() => {
@@ -492,6 +511,33 @@ export default function DocumentsPage() {
 
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans">
+      {/* Success Message Banner */}
+      {showSuccessMessage && (
+        <div className="fixed top-0 left-0 right-0 z-[70] bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-4 shadow-lg animate-slideDown">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-full p-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Welcome to protocolLM! 🎉</h3>
+                <p className="text-sm text-teal-50">Your 30-day trial has started. Full access to all features is now active.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowSuccessMessage(false)}
+              className="text-white/80 hover:text-white transition ml-4"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* County Selector Modal */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -673,163 +719,4 @@ export default function DocumentsPage() {
           <div className="hidden md:block text-xs font-medium text-slate-400 uppercase tracking-wider">
             {COUNTY_NAMES[userCounty]} Compliance Database
           </div>
-          <div className="w-6"></div> 
-        </div>
-
-        {/* Error Banner */}
-        {error && (
-          <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2 text-red-800 text-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {error}
-            </div>
-            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 pt-8 space-y-8">
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[90%] lg:max-w-[80%] ${
-                  msg.role === 'assistant' ? 'w-full' : ''
-                }`}
-              >
-                <div className={`
-                  ${msg.role === 'user' 
-                    ? 'bg-[#022c22] text-white rounded-2xl rounded-tr-sm px-5 py-3 shadow-md inline-block float-right' 
-                    : 'text-slate-800 pl-0' 
-                  }
-                `}>
-                  {msg.image && (
-                    <div className="mb-3 rounded-lg overflow-hidden border border-white/20 max-w-sm">
-                      <img 
-                        src={msg.image} 
-                        alt="Analysis subject" 
-                        className="w-full h-auto" 
-                      />
-                    </div>
-                  )}
-
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
-                      <span className="font-bold text-sm text-slate-900">ProtocolLM</span>
-                    </div>
-                  )}
-                  
-                  {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                  ) : (
-                    renderMessageContent(msg)
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex justify-start w-full">
-               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 mb-1">
-                   <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
-                   <span className="font-bold text-sm text-slate-900">Thinking...</span>
-                </div>
-                <div className="flex items-center gap-1 ml-8">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} className="h-4" />
-        </div>
-
-        {/* Input Area */}
-        <div className="flex-shrink-0 p-4 md:p-6 bg-white/80 backdrop-blur border-t border-slate-200 z-20">
-          {image && (
-            <div className="max-w-4xl mx-auto mb-3 px-1">
-              <div className="relative inline-block group">
-                <img src={image} alt="Preview" className="h-20 w-auto rounded-lg border border-slate-200 shadow-sm object-cover" />
-                <div className="absolute inset-0 bg-black/20 rounded-lg hidden group-hover:flex items-center justify-center transition-all">
-                   <button 
-                    onClick={() => setImage(null)}
-                    className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
-            <div className="flex items-end gap-2 bg-white border border-slate-300 rounded-2xl shadow-sm p-2 focus-within:border-teal-600 focus-within:ring-1 focus-within:ring-teal-600 transition-all">
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
-                  image 
-                    ? 'bg-teal-100 text-teal-700' 
-                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
-                }`}
-                title="Upload Image"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </button>
-
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Ask a question about this image..." : "Type your question here..."}
-                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400"
-                disabled={isLoading}
-                maxLength={5000}
-              />
-
-              <button
-                type="submit"
-                disabled={isLoading || (!input.trim() && !image) || !canSend}
-                className={`p-2.5 rounded-xl font-bold transition-all flex-shrink-0 ${
-                  isLoading || (!input.trim() && !image) || !canSend
-                  ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-                  : 'bg-[#022c22] text-white hover:bg-teal-900 shadow-md'
-                }`}
-              >
-                <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-              </button>
-            </div>
-            
-            <div className="text-center mt-2">
-              <p className="text-[10px] text-slate-400">
-                AI can make mistakes. Please verify with cited documents.
-                {savingChat && <span className="ml-2 text-teal-600">● Saving...</span>}
-              </p>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
+          <div className="w-6"></div>
