@@ -4,91 +4,12 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- TYPEWRITER TERMINAL COMPONENT (Light Mode Variant) ---
-const TypewriterTerminal = () => {
-  const [displayText, setDisplayText] = useState('')
-  const [phase, setPhase] = useState('typing_q') 
-  const [scenarioIndex, setScenarioIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
-
-  const scenarios = [
-    {
-      q: "> QUERY: Storage hierarchy for walk-in cooler?",
-      a: "RESPONSE: Raw poultry (bottom), Ground meat (above poultry), Whole meat (above ground), Ready-to-eat (top). [FDA 3-302.11]"
-    },
-    {
-      q: "> QUERY: Inspector cited 'Priority Foundation' for sanitizer.",
-      a: "RESPONSE: Pf violation. Concentration likely too low/high. Correct within 10 days. Target: 200-400ppm Quat."
-    },
-    {
-      q: "> QUERY: Protocol for employee with Norovirus symptoms?",
-      a: "RESPONSE: EXCLUDE immediately. Do not allow return until 48 hours symptom-free. Report to Person-In-Charge. [Washtenaw Enf. Guide]"
-    }
-  ]
-
-  useEffect(() => {
-    let timeout
-    const currentScenario = scenarios[scenarioIndex]
-
-    if (phase === 'typing_q') {
-      if (charIndex < currentScenario.q.length) {
-        timeout = setTimeout(() => {
-          setDisplayText(currentScenario.q.slice(0, charIndex + 1))
-          setCharIndex(charIndex + 1)
-        }, 30) 
-      } else {
-        setPhase('pause_q')
-      }
-    } else if (phase === 'pause_q') {
-      timeout = setTimeout(() => {
-        setPhase('typing_a')
-        setCharIndex(0) 
-      }, 400) 
-    } else if (phase === 'typing_a') {
-      if (charIndex < currentScenario.a.length) {
-        timeout = setTimeout(() => {
-          setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
-          setCharIndex(charIndex + 1)
-        }, 15) 
-      } else {
-        setPhase('pause_a')
-      }
-    } else if (phase === 'pause_a') {
-      timeout = setTimeout(() => {
-        setPhase('deleting')
-      }, 3500) 
-    } else if (phase === 'deleting') {
-      setDisplayText('')
-      setCharIndex(0)
-      setPhase('typing_q')
-      setScenarioIndex((prev) => (prev + 1) % scenarios.length)
-    }
-    return () => clearTimeout(timeout)
-  }, [charIndex, phase, scenarioIndex])
-
-  return (
-    <div className="w-full min-h-[130px] bg-[#f1f5f9] border-l-4 border-[#6b85a3] p-6 font-mono text-xs leading-relaxed shadow-sm rounded-r-sm">
-      <div className="whitespace-pre-wrap">
-        {displayText.split('\n\n').map((line, i) => (
-          <div key={i} className={line.startsWith('RESPONSE') ? 'text-[#6b85a3] font-bold mt-2' : 'text-slate-600 font-medium'}>
-            {line}
-            {i === displayText.split('\n\n').length - 1 && (
-              <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 animate-pulse align-middle opacity-50"></span>
-            )}
-          </div>
-        ))}
-        {displayText === '' && <span className="inline-block w-2 h-4 bg-[#6b85a3] animate-pulse align-middle opacity-50"></span>}
-      </div>
-    </div>
-  )
-}
-
 export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [view, setView] = useState('signup')
+  const [view, setView] = useState('login') // Default to login like ChatGPT
   const [mounted, setMounted] = useState(false)
    
   const router = useRouter()
@@ -118,7 +39,7 @@ export default function Home() {
           if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
           else window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          setMessage({ type: 'success', text: 'Secure link sent to inbox.' })
+          setMessage({ type: 'success', text: 'Check your email to confirm.' })
           setLoading(false)
         }
       } else {
@@ -152,176 +73,119 @@ export default function Home() {
       }
     } catch (error) {
       let errorMessage = error.message
-      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid credentials.'
-      else if (error.message.includes('Email not confirmed')) errorMessage = 'Account pending confirmation.'
+      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid email or password.'
+      else if (error.message.includes('Email not confirmed')) errorMessage = 'Please confirm your email.'
       setMessage({ type: 'error', text: errorMessage })
       setLoading(false)
     }
   }
 
-  // --- TEXT FEATURE ITEM (Clean, Professional) ---
-  const FeatureItem = ({ title, desc }) => (
-    <div className="group p-6 bg-white border border-slate-200 hover:border-[#6b85a3] transition-all duration-300 rounded-sm shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-md">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full"></div>
-        <h3 className="text-slate-800 font-bold text-xs uppercase tracking-widest">{title}</h3>
-      </div>
-      <p className="text-slate-500 text-xs leading-relaxed pl-4.5 border-l border-slate-100">{desc}</p>
-    </div>
-  )
-
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
+    <div className="min-h-screen w-full bg-white font-sans text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col items-center justify-center p-6">
       
-      {/* HEADER */}
-      <nav className="w-full max-w-6xl mx-auto px-6 py-10 flex justify-between items-end border-b border-slate-200">
-        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-xl font-bold tracking-tighter text-slate-900">
-            protocol<span style={{ color: '#6b85a3' }}>LM</span>
+      <div className={`w-full max-w-[320px] flex flex-col items-center transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        
+        {/* LOGO */}
+        <div className="mb-10 text-center">
+          <div className="w-12 h-12 bg-[#6b85a3] rounded-full mx-auto mb-6 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6 text-white" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              <path d="M12 22V12" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            {view === 'signup' ? 'Create your account' : 'Welcome back'}
           </h1>
         </div>
-        <div className={`text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          Authorized Personnel Only
-        </div>
-      </nav>
 
-      {/* MAIN CONTENT - CENTERED MONOLITH */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-16 items-start">
-        
-        {/* LEFT COLUMN - INFO & TERMINAL */}
-        <div className={`flex-1 pt-4 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* FORM */}
+        <form onSubmit={handleAuth} className="w-full space-y-4">
+          <div className="relative">
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+              disabled={loading}
+              className="peer w-full px-4 py-3.5 bg-white border border-slate-300 rounded-lg focus:border-[#6b85a3] focus:ring-1 focus:ring-[#6b85a3] focus:outline-none text-slate-900 text-[15px] transition-all placeholder-transparent" 
+              placeholder="Email address" 
+              id="email"
+            />
+            <label 
+              htmlFor="email"
+              className="absolute left-4 top-3.5 text-slate-500 text-[15px] transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[#6b85a3] peer-focus:bg-white peer-focus:px-1 peer-not-placeholder-shown:-top-2.5 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1 cursor-text"
+            >
+              Email address
+            </label>
+          </div>
+
+          <div className="relative">
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              minLength={6}
+              disabled={loading}
+              className="peer w-full px-4 py-3.5 bg-white border border-slate-300 rounded-lg focus:border-[#6b85a3] focus:ring-1 focus:ring-[#6b85a3] focus:outline-none text-slate-900 text-[15px] transition-all placeholder-transparent" 
+              placeholder="Password" 
+              id="password"
+            />
+            <label 
+              htmlFor="password"
+              className="absolute left-4 top-3.5 text-slate-500 text-[15px] transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-placeholder-shown:top-3.5 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[#6b85a3] peer-focus:bg-white peer-focus:px-1 peer-not-placeholder-shown:-top-2.5 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:bg-white peer-not-placeholder-shown:px-1 cursor-text"
+            >
+              Password
+            </label>
+          </div>
           
-          {/* HERO TEXT */}
-          <div className="mb-12">
-            <div className="inline-block px-2 py-1 bg-white border border-slate-200 text-[9px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 rounded-sm">
-              Regulatory Intelligence Unit
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full text-white font-medium py-3.5 rounded-lg shadow-none hover:opacity-90 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed text-[15px]"
+            style={{ backgroundColor: '#6b85a3' }}
+          >
+            {loading ? '...' : (view === 'signup' ? 'Continue' : 'Continue')}
+          </button>
+
+          {message && (
+            <div className={`text-center text-xs mt-4 ${message.type === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+              {message.text}
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6">
-              Compliance<br />
-              Infrastructure.
-            </h2>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-lg border-l-2 border-[#6b85a3] pl-5">
-              Unified enforcement data for Michigan restaurant groups. 
-              Mitigate liability with county-level precision.
-            </p>
-          </div>
+          )}
+        </form>
 
-          {/* LIVE TERMINAL */}
-          <div className="mb-12">
-             <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">System Preview</div>
-             <TypewriterTerminal />
-          </div>
-
-          {/* FEATURES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FeatureItem 
-              title="Enforcement Data" 
-              desc="Trained on Washtenaw, Wayne & Oakland County violation triggers." 
-            />
-            <FeatureItem 
-              title="Violation Risk" 
-              desc="Identify Priority (P) vs. Core risks before they become fines." 
-            />
-            <FeatureItem 
-              title="Unified Code" 
-              desc="FDA 2022 and Michigan Modified Food Law integration." 
-            />
-            <FeatureItem 
-              title="Hazmat Protocols" 
-              desc="Immediate guidance for contamination events and recovery." 
-            />
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN - LOGIN FORM */}
-        <div className={`w-full max-w-md lg:w-[400px] shrink-0 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-          <div className="bg-white p-8 border border-slate-200 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] rounded-sm sticky top-8">
-            
-            <div className="flex justify-between mb-8 pb-4 border-b border-slate-100">
+        {/* TOGGLE */}
+        <div className="mt-6 text-sm text-slate-600">
+          {view === 'login' ? (
+            <>
+              Don't have an account?{' '}
               <button 
                 onClick={() => { setView('signup'); setMessage(null); }} 
-                className={`text-[10px] font-bold uppercase tracking-widest transition-all ${view === 'signup' ? 'text-[#6b85a3]' : 'text-slate-400 hover:text-slate-600'}`}
+                className="text-[#6b85a3] hover:underline"
               >
-                New Account
+                Sign up
               </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
               <button 
                 onClick={() => { setView('login'); setMessage(null); }} 
-                className={`text-[10px] font-bold uppercase tracking-widest transition-all ${view === 'login' ? 'text-[#6b85a3]' : 'text-slate-400 hover:text-slate-600'}`}
+                className="text-[#6b85a3] hover:underline"
               >
-                Login
+                Log in
               </button>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-5">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
-                <input 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  required 
-                  disabled={loading}
-                  className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:bg-white focus:border-[#6b85a3] focus:ring-0 focus:outline-none text-slate-900 text-xs transition-all placeholder-slate-300 rounded-sm" 
-                  placeholder="user@domain.com" 
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
-                <input 
-                  type="password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  required 
-                  minLength={6}
-                  disabled={loading}
-                  className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:bg-white focus:border-[#6b85a3] focus:ring-0 focus:outline-none text-slate-900 text-xs transition-all placeholder-slate-300 rounded-sm" 
-                  placeholder="••••••••" 
-                />
-              </div>
-              
-              <button 
-                type="submit" 
-                disabled={loading} 
-                className="w-full text-white font-bold py-4 shadow-sm transition-all hover:opacity-90 hover:shadow-md mt-4 text-[10px] uppercase tracking-widest rounded-sm"
-                style={{ backgroundColor: '#6b85a3' }}
-              >
-                {loading ? 'Processing...' : (view === 'signup' ? 'Initialize Account' : 'Authenticate')}
-              </button>
-
-              {message && (
-                <div className={`p-4 text-[10px] font-bold uppercase tracking-wide border rounded-sm ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
-                  {message.text}
-                </div>
-              )}
-            </form>
-
-            {view === 'signup' && (
-              <div className="mt-8 text-center pt-6 border-t border-slate-100">
-                <button 
-                  onClick={() => router.push('/pricing')}
-                  className="text-[10px] font-bold text-slate-400 hover:text-[#6b85a3] transition-colors uppercase tracking-widest"
-                >
-                  View Fee Structure
-                </button>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
-      </div>
-
-      {/* FOOTER */}
-      <div className="w-full py-8 mt-auto bg-[#f8fafc]">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 pt-8">
-          <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            © 2025 protocolLM. Michigan.
-          </div>
-          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            <a href="/terms" className="hover:text-[#6b85a3] transition">Terms</a>
-            <a href="/privacy" className="hover:text-[#6b85a3] transition">Privacy</a>
-            <a href="/contact" className="hover:text-[#6b85a3] transition">Contact</a>
-          </div>
+        <div className="mt-8 pt-8 border-t border-slate-100 w-full flex justify-center gap-6 text-xs text-slate-400">
+          <button onClick={() => router.push('/pricing')} className="hover:text-slate-600">Pricing</button>
+          <a href="/terms" className="hover:text-slate-600">Terms</a>
+          <a href="/privacy" className="hover:text-slate-600">Privacy</a>
         </div>
+
       </div>
     </div>
   )
