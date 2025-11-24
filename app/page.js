@@ -4,13 +4,12 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Human Q / System A) ---
+// --- 1. THE LIVE TERMINAL ---
 const LiveDataTerminal = () => {
-  const [qText, setQText] = useState('')
-  const [aText, setAText] = useState('')
-  const [phase, setPhase] = useState('init') 
   const [index, setIndex] = useState(0)
-
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
+  
   const scenarios = [
     {
       q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
@@ -54,81 +53,36 @@ const LiveDataTerminal = () => {
     }
   ]
 
-  // Realistic Human Typing Algorithm
-  const typeHuman = async (text) => {
-    let current = ''
-    for (let i = 0; i < text.length; i++) {
-      current += text[i]
-      setQText(current)
-      
-      // Randomized "Human" Delays
-      let delay = Math.random() * 60 + 30; // 30-90ms base
-      if (text[i] === ' ') delay += 50;    // Pause between words
-      if ([':', '.', '?'].includes(text[i])) delay += 200; // Pause for thought
-      
-      await new Promise(r => setTimeout(r, delay))
-    }
-  }
-
   useEffect(() => {
     const runSequence = async () => {
-      const current = scenarios[index]
-
-      // 1. Human Types Question
-      setPhase('typing_q')
-      setQText('') 
-      setAText('')
-      await typeHuman(current.q)
-
-      // 2. System Processing
-      setPhase('thinking')
+      setShowQ(true)
+      await new Promise(r => setTimeout(r, 1500))
+      setShowA(true)
+      await new Promise(r => setTimeout(r, 5500)) 
+      setShowQ(false)
+      setShowA(false)
       await new Promise(r => setTimeout(r, 800))
-
-      // 3. System Response (Instant/Fade)
-      setPhase('showing_a')
-      setAText(current.a)
-
-      // 4. Hold for Reading
-      await new Promise(r => setTimeout(r, 5500))
-
-      // 5. Fade Out
-      setPhase('out')
-      await new Promise(r => setTimeout(r, 600))
-      
-      // Loop
       setIndex(prev => (prev + 1) % scenarios.length)
     }
-
     runSequence()
   }, [index])
 
+  const current = scenarios[index]
+
   return (
     <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative px-4">
-      
-      {/* QUESTION AREA */}
-      <div className={`text-slate-400 mb-5 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
-        {qText}
-        {/* Cursor only shows during typing phase */}
-        {phase === 'typing_q' && (
-          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
-        )}
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.q}
       </div>
-
-      {/* ANSWER AREA */}
-      <div className={`text-[#6b85a3] transition-all duration-1000 ease-out transform ${phase === 'showing_a' || phase === 'out' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {aText && (
-          <>
-            <span className="font-bold text-xs mr-3 tracking-widest text-slate-900">PROTOCOL_LM:</span>
-            <span className="font-medium">{aText}</span>
-          </>
-        )}
+      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
+        <span className="font-medium">{current.a}</span>
       </div>
-
     </div>
   )
 }
 
-// --- 2. AUTH MODAL ---
+// --- 2. AUTH MODAL (Corrected Text) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -136,6 +90,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -186,8 +141,9 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
         
+        {/* FIXED HEADER TEXT */}
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">
-          {view === 'signup' ? 'Initialize_Account' : 'Authenticate'}
+          {view === 'signup' ? 'Create Account' : 'Sign In'}
         </h2>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -207,12 +163,13 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
             placeholder="Password"
           />
+          {/* FIXED BUTTON TEXT */}
           <button 
             type="submit" 
             disabled={loading} 
             className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
           >
-            {loading ? 'Processing...' : 'Submit'}
+            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}
           </button>
         </form>
 
@@ -235,7 +192,8 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+// Main Content
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
@@ -260,14 +218,13 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
-        <div className={`flex gap-6 text-xs font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
             Pricing
           </button>
@@ -280,33 +237,21 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
-        
-        {/* HERO TEXT */}
         <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
-          
-          {/* ONE LINE HEADER (No "Stripe" font) */}
-          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8 whitespace-normal lg:whitespace-nowrap">
+          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
             Food Safety & Inspection Intelligence.
           </h2>
-
-          {/* THE SEPARATOR LINE */}
-          <div className="w-full h-px bg-slate-200 max-w-2xl mx-auto mb-8"></div>
-          
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
-
       </div>
 
-      {/* FOOTER */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -317,8 +262,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
