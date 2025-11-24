@@ -86,16 +86,6 @@ export default function Home() {
   const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" /></svg>)
   const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" /></svg>)
 
-  // --- MICHIGAN MAP COMPONENT ---
-  const MichiganMap = () => (
-    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-trace text-teal-400/30" strokeWidth="2">
-      {/* Lower Peninsula */}
-      <path d="M130 180 L130 190 L80 190 L75 180 L70 150 L65 130 L70 110 L85 90 L110 75 L130 85 L140 100 L150 110 L155 130 L150 150 L145 160 L130 180 Z" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Upper Peninsula */}
-      <path d="M50 80 L60 70 L80 65 L100 70 L120 75 L110 80 L90 85 L70 90 L60 85 L50 80 Z" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-
   const FeatureCard = ({ icon: Icon, title, desc, delay, iconColor, glowColor }) => (
     <div 
       className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -115,37 +105,25 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white font-sans selection:bg-[#022c22] selection:text-white">
       <style jsx global>{`
-        /* ICONS */
         .icon-trace path, .icon-trace circle, .icon-trace line {
           stroke-dasharray: 100;
           stroke-dashoffset: 100;
           animation: trace 3s ease-in-out forwards;
         }
-        
-        /* MAP - Slower, longer trace */
-        .map-trace path {
-          stroke-dasharray: 1000;
-          stroke-dashoffset: 1000;
-          animation: trace 8s ease-out forwards;
-        }
-
         .group:hover .icon-trace path, 
         .group:hover .icon-trace circle,
         .group:hover .icon-trace line {
           animation: trace 2s ease-in-out infinite;
         }
-
         @keyframes trace {
           0% { stroke-dashoffset: 100; }
           100% { stroke-dashoffset: 0; }
         }
-        
-        @keyframes traceMap {
-           0% { stroke-dashoffset: 1000; }
-           100% { stroke-dashoffset: 0; }
-        }
-        .map-trace path {
-           animation-name: traceMap;
+        /* TECH GRID BACKGROUND */
+        .bg-grid {
+          background-size: 40px 40px;
+          background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
         }
       `}</style>
 
@@ -154,17 +132,22 @@ export default function Home() {
         {/* LEFT SIDE */}
         <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* BACKGROUND GRADIENT - Moved BEHIND map */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/40 via-[#022c22] to-[#022c22] opacity-80 pointer-events-none z-0"></div>
+          {/* --- OPTION 1: UPLOAD AN IMAGE --- */}
+          {/* Un-comment this section if you upload 'detroit.jpg' to your public folder */}
+          {/* 
+          <img 
+            src="/detroit.jpg" 
+            className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay grayscale"
+            alt="Background"
+          />
+          */}
 
-          {/* BACKGROUND MAP - Moved ON TOP of gradient, z-index 0 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0">
-             <div className="w-[140%] h-[140%] -translate-x-5 translate-y-10 opacity-40 rotate-3">
-                <MichiganMap />
-             </div>
-          </div>
+          {/* --- OPTION 2: TECH GRID (Current Fallback) --- */}
+          <div className="absolute inset-0 bg-grid opacity-20"></div>
 
-          {/* TOP LOGO - z-index 20 to sit above everything */}
+          {/* GRADIENT OVERLAY */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/40 via-[#022c22]/90 to-[#022c22] z-0"></div>
+
           <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
@@ -174,7 +157,6 @@ export default function Home() {
             </div>
           </div>
           
-          {/* FEATURE CARDS - z-index 10 */}
           <div className="flex-1 flex flex-col justify-center z-10 relative">
             <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
               <div className="grid gap-4">
@@ -276,6 +258,7 @@ export default function Home() {
                   />
                 </div>
                 
+                {/* Button matched to Pricing page style */}
                 <button 
                   type="submit" 
                   disabled={loading} 
