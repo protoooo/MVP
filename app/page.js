@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Smooth Fade - No Typing) ---
+// --- 1. THE LIVE TERMINAL ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
   const [showQ, setShowQ] = useState(false)
   const [showA, setShowA] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // 10 High-Value Scenarios for Owners
   const scenarios = [
@@ -57,25 +56,15 @@ const LiveDataTerminal = () => {
 
   useEffect(() => {
     const runSequence = async () => {
-      // 1. Show Question
       setShowQ(true)
-      
-      // 2. Wait, then Show Answer
       await new Promise(r => setTimeout(r, 1500))
       setShowA(true)
-
-      // 3. Hold for reading
       await new Promise(r => setTimeout(r, 4500))
-
-      // 4. Fade Out
       setShowQ(false)
       setShowA(false)
-      
-      // 5. Wait for fade out to finish, then swap index
       await new Promise(r => setTimeout(r, 500))
       setIndex(prev => (prev + 1) % scenarios.length)
     }
-
     runSequence()
   }, [index])
 
@@ -83,17 +72,12 @@ const LiveDataTerminal = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
-      
-      {/* QUESTION */}
       <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.q}
       </div>
-
-      {/* ANSWER */}
       <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.a}
       </div>
-
     </div>
   )
 }
@@ -154,48 +138,19 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
-        
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">
           {view === 'signup' ? 'Initialize_Account' : 'Authenticate'}
         </h2>
-
         <form onSubmit={handleAuth} className="space-y-4">
-          <input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
-            placeholder="Email"
-          />
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
-            placeholder="Password"
-          />
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
-          >
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">
             {loading ? 'Processing...' : 'Submit'}
           </button>
         </form>
-
-        {message && (
-          <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
-            {message.text}
-          </div>
-        )}
-
+        {message && <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
         <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <button 
-            onClick={() => { setView(view === 'signup' ? 'login' : 'signup'); setMessage(null); }}
-            className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono"
-          >
+          <button onClick={() => { setView(view === 'signup' ? 'login' : 'signup'); setMessage(null); }} className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono">
             {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
           </button>
         </div>
@@ -208,6 +163,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
+  const router = useRouter()
    
   useEffect(() => {
     setMounted(true)
@@ -228,11 +184,25 @@ export default function Home() {
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
-        <div className={`flex gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
+        
+        {/* NAV BUTTONS - Added Pricing */}
+        <div className={`flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <button 
+            onClick={() => router.push('/pricing')} 
+            className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors"
+          >
+            Pricing
+          </button>
+          <button 
+            onClick={() => openAuth('login')} 
+            className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors"
+          >
             Sign In
           </button>
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
+          <button 
+            onClick={() => openAuth('signup')} 
+            className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all"
+          >
             Create Account
           </button>
         </div>
@@ -242,18 +212,17 @@ export default function Home() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory Intelligence.
+            Local Regulatory<br/>Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL (CENTERPIECE) */}
-        {/* Floating text only. No box. */}
-        <div className={`w-full transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        {/* THE LIVE TERMINAL */}
+        <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
 
