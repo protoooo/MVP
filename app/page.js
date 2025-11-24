@@ -39,7 +39,7 @@ export default function Home() {
           if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
           else window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          setMessage({ type: 'success', text: '✅ Check your email to confirm your account, then you can sign in.' })
+          setMessage({ type: 'success', text: 'CONFIRMATION EMAIL SENT. CHECK INBOX.' })
           setLoading(false)
         }
       } else {
@@ -73,179 +73,163 @@ export default function Home() {
       }
     } catch (error) {
       let errorMessage = error.message
-      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid email or password.'
-      else if (error.message.includes('Email not confirmed')) errorMessage = 'Please check your email and confirm your account first.'
-      setMessage({ type: 'error', text: errorMessage })
+      if (error.message.includes('Invalid login credentials')) errorMessage = 'INVALID CREDENTIALS.'
+      else if (error.message.includes('Email not confirmed')) errorMessage = 'ACCOUNT PENDING CONFIRMATION.'
+      setMessage({ type: 'error', text: errorMessage.toUpperCase() })
       setLoading(false)
     }
   }
 
-  // --- ICONS ---
-  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" /></svg>)
-  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" /><line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" strokeLinejoin="round" /><line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" /></svg>)
-  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" /></svg>)
-  const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" /></svg>)
+  // --- ICONS (Technical / Wireframe Style) ---
+  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>)
+  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>)
+  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /><path d="M12 22V12" /></svg>)
+  const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>)
 
-  const FeatureCard = ({ icon: Icon, title, desc, delay, iconColor, glowColor }) => (
+  // --- MICHIGAN MAP (Blueprint Style) ---
+  const MichiganMap = () => (
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-draw text-blue-200" strokeWidth="0.8">
+      <path d="M130 180 L130 190 L80 190 L75 180 L70 150 L65 130 L70 110 L85 90 L110 75 L130 85 L140 100 L150 110 L155 130 L150 150 L145 160 L130 180 Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M50 80 L60 70 L80 65 L100 70 L120 75 L110 80 L90 85 L70 90 L60 85 L50 80 Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+
+  const FeatureCard = ({ icon: Icon, title, desc, delay }) => (
     <div 
-      className={`group flex items-center gap-5 p-6 rounded-xl border border-teal-900/50 bg-[#022c22]/50 hover:bg-[#042f2e] transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      className={`flex items-start gap-4 p-4 border-l-2 border-blue-200/20 hover:bg-white/5 transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
       style={{ transitionDelay: delay }}
     >
-      <div className={`relative shrink-0 w-16 h-16 flex items-center justify-center ${iconColor} transition-all duration-500 ease-out`}>
-        <div className={`absolute inset-0 ${glowColor} blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+      <div className="shrink-0 w-8 h-8 flex items-center justify-center text-blue-300">
         <Icon />
       </div>
-      <div className="min-w-0 relative z-10">
-        <h3 className="text-white font-bold text-sm tracking-wide uppercase mb-2">{title}</h3>
-        <p className="text-teal-200/70 text-sm leading-relaxed font-medium">{desc}</p>
+      <div className="min-w-0">
+        <h3 className="text-white font-bold text-xs uppercase tracking-widest mb-1 font-mono">{title}</h3>
+        <p className="text-blue-100/60 text-[10px] leading-relaxed font-mono">{desc}</p>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen w-full bg-white font-sans selection:bg-[#022c22] selection:text-white">
+    <div className="min-h-screen w-full bg-white font-mono text-slate-900 selection:bg-slate-900 selection:text-white">
       <style jsx global>{`
-        .icon-trace path, .icon-trace circle, .icon-trace line {
-          stroke-dasharray: 100;
-          stroke-dashoffset: 100;
-          animation: trace 3s ease-in-out forwards;
+        .map-draw path {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: draw 5s ease-out forwards;
         }
-        .group:hover .icon-trace path, 
-        .group:hover .icon-trace circle,
-        .group:hover .icon-trace line {
-          animation: trace 2s ease-in-out infinite;
-        }
-        @keyframes trace {
-          0% { stroke-dashoffset: 100; }
-          100% { stroke-dashoffset: 0; }
-        }
-        /* TECH GRID BACKGROUND */
-        .bg-grid {
-          background-size: 40px 40px;
-          background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-                            linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+        @keyframes draw {
+          to { stroke-dashoffset: 0; }
         }
       `}</style>
 
       <div className="flex flex-col-reverse lg:flex-row min-h-screen">
         
-        {/* LEFT SIDE */}
-        <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
+        {/* LEFT SIDE - The "Blueprint" (Matte Navy) */}
+        <div className="w-full lg:w-1/2 bg-[#0f172a] text-white relative overflow-hidden px-10 py-10 flex flex-col lg:pb-40 border-r border-slate-200">
           
-          {/* --- OPTION 1: UPLOAD AN IMAGE --- */}
-          {/* Un-comment this section if you upload 'detroit.jpg' to your public folder */}
-          {/* 
-          <img 
-            src="/detroit.jpg" 
-            className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay grayscale"
-            alt="Background"
-          />
-          */}
+          {/* Technical Grid Background */}
+          <div className="absolute inset-0 opacity-[0.03]" 
+               style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+          </div>
 
-          {/* --- OPTION 2: TECH GRID (Current Fallback) --- */}
-          <div className="absolute inset-0 bg-grid opacity-20"></div>
+          {/* Background Map */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+             <div className="w-[120%] h-[120%]">
+                <MichiganMap />
+             </div>
+          </div>
 
-          {/* GRADIENT OVERLAY */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#0f5149]/40 via-[#022c22]/90 to-[#022c22] z-0"></div>
-
-          <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-10 lg:mb-0 mt-4 lg:mt-0">
+          {/* Header */}
+          <div className="lg:absolute lg:top-12 lg:left-12 z-20 mb-12 lg:mb-0 mt-4 lg:mt-0">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-                protocol<span className="font-normal text-teal-300">LM</span>
+              <h1 className="text-lg font-bold tracking-tighter border-b border-blue-500/50 inline-block pb-2 mb-1">
+                PROTOCOL_LM
               </h1>
-              <div className="h-[1px] w-24 bg-teal-500/30"></div>
+              <div className="flex gap-2 text-[9px] uppercase tracking-widest text-blue-300/50">
+                <span>SYS.VER.2.4</span>
+                <span>•</span>
+                <span>MI.GOV.SYNC</span>
+              </div>
             </div>
           </div>
           
-          <div className="flex-1 flex flex-col justify-center z-10 relative">
-            <div className="max-w-lg mx-auto w-full pt-4 lg:mt-12">
-              <div className="grid gap-4">
-                <FeatureCard 
-                  delay="100ms"
-                  title="Enforcement Data"
-                  desc="Trained on Washtenaw, Wayne & Oakland County violation triggers."
-                  icon={IconShield}
-                  iconColor="text-teal-300 group-hover:text-teal-100"
-                  glowColor="bg-teal-500/30"
-                />
-                <FeatureCard 
-                  delay="200ms"
-                  title="Violation Risk"
-                  desc="Identify Priority, Foundation, and Core risks before they become fines."
-                  icon={IconWarning}
-                  iconColor="text-rose-400 group-hover:text-rose-200"
-                  glowColor="bg-rose-500/30"
-                />
-                <FeatureCard 
-                  delay="300ms"
-                  title="Unified Code"
-                  desc="FDA Food Code synthesized with Michigan Food Law."
-                  icon={IconGrid}
-                  iconColor="text-sky-400 group-hover:text-sky-200"
-                  glowColor="bg-sky-500/30"
-                />
-                <FeatureCard 
-                  delay="400ms"
-                  title="Hazmat Protocols"
-                  desc="Immediate guidance for contamination events."
-                  icon={IconHazmat}
-                  iconColor="text-amber-400 group-hover:text-amber-200"
-                  glowColor="bg-amber-500/30"
-                />
-              </div>
+          {/* Feature List */}
+          <div className="flex-1 flex flex-col justify-center z-10 pl-2">
+            <div className="max-w-md w-full pt-4 lg:mt-12 space-y-2">
+              <FeatureCard 
+                delay="100ms" title="Enforcement_Data" 
+                desc="Washtenaw / Wayne / Oakland violation triggers." icon={IconShield} 
+              />
+              <FeatureCard 
+                delay="200ms" title="Risk_Assessment" 
+                desc="Priority (P) vs. Core Analysis logic." icon={IconWarning} 
+              />
+              <FeatureCard 
+                delay="300ms" title="Unified_Code" 
+                desc="FDA 2022 + MI Modified Food Law integration." icon={IconGrid} 
+              />
+              <FeatureCard 
+                delay="400ms" title="Hazmat_Ops" 
+                desc="Standard Operating Procedures for contamination." icon={IconHazmat} 
+              />
             </div>
           </div>
 
           <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
-            <div className={`text-teal-400/50 text-[10px] font-bold uppercase tracking-widest flex gap-8 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-              <span>Encrypted</span>
-              <span>Private</span>
-              <span>Institutional</span>
+            <div className={`text-blue-200/30 text-[9px] font-bold uppercase tracking-[0.2em] flex flex-col gap-1 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+              <span>SECURE CONNECTION ESTABLISHED</span>
+              <span>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
             </div>
           </div>
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="w-full lg:w-1/2 bg-white relative px-8 py-6 flex flex-col lg:pb-40">
+        {/* RIGHT SIDE - The "Form" (Stark White) */}
+        <div className="w-full lg:w-1/2 bg-white relative px-10 py-10 flex flex-col lg:pb-40">
+          
           <div className="hidden lg:block lg:h-24"></div> 
+
           <div className="flex-1 flex flex-col justify-center">
             <div className="w-full max-w-md mx-auto">
               <div className="mb-12">
-                <h2 className="text-3xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-[1.1] text-balance">
-                  {view === 'signup' ? 'Join Michigan restaurant groups staying ahead of inspections.' : 'Welcome back.'}
+                <h2 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">
+                  Compliance Infrastructure.
                 </h2>
+                <p className="text-xs text-slate-500 uppercase tracking-widest font-bold border-l-2 border-slate-900 pl-3">
+                  For Michigan Restaurant Groups
+                </p>
               </div>
 
-              <div className="flex border-b border-slate-200 mb-8">
+              {/* Toggle Buttons */}
+              <div className="flex mb-8 gap-6 text-xs font-bold tracking-widest uppercase">
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`pb-2 text-xs font-bold uppercase tracking-wide mr-8 transition-all duration-200 border-b-2 ${view === 'signup' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+                  className={`pb-1 border-b-2 transition-all ${view === 'signup' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-300 hover:text-slate-500'}`}
                 >
-                  Create Account
+                  New_Account
                 </button>
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`pb-2 text-xs font-bold uppercase tracking-wide transition-all duration-200 border-b-2 ${view === 'login' ? 'text-slate-900 border-slate-900' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
+                  className={`pb-1 border-b-2 transition-all ${view === 'login' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-300 hover:text-slate-500'}`}
                 >
-                  Sign In
+                  Login
                 </button>
               </div>
 
               <form onSubmit={handleAuth} className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
+                <div className="group">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">Email Address</label>
                   <input 
                     type="email" 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
                     disabled={loading}
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none disabled:opacity-50" 
-                    placeholder="name@company.com" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none text-slate-900 text-sm rounded-none transition-all placeholder-slate-300 font-mono" 
+                    placeholder="user@domain.com" 
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Password</label>
+                <div className="group">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-focus-within:text-blue-600 transition-colors">Password</label>
                   <input 
                     type="password" 
                     value={password} 
@@ -253,22 +237,21 @@ export default function Home() {
                     required 
                     minLength={6}
                     disabled={loading}
-                    className="w-full px-0 py-3 border-b border-slate-300 focus:border-[#022c22] focus:ring-0 focus:outline-none text-slate-900 transition text-base md:text-sm bg-transparent placeholder-slate-400 rounded-none disabled:opacity-50" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none text-slate-900 text-sm rounded-none transition-all placeholder-slate-300 font-mono" 
                     placeholder="••••••••" 
                   />
                 </div>
                 
-                {/* Button matched to Pricing page style */}
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-[#022c22] hover:bg-[#0f3c3a] text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-xs uppercase tracking-widest"
+                  className="w-full bg-slate-900 hover:bg-blue-700 text-white font-bold py-4 rounded-none transition-all mt-6 text-xs uppercase tracking-[0.15em] border border-transparent hover:shadow-lg"
                 >
-                  {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Access Dashboard')}
+                  {loading ? 'AUTHENTICATING...' : (view === 'signup' ? 'INITIALIZE ACCOUNT' : 'ACCESS TERMINAL')}
                 </button>
 
                 {message && (
-                  <div className={`p-4 text-xs font-medium border ${message.type === 'error' ? 'bg-red-50 border-red-100 text-red-900' : 'bg-teal-50 border-teal-100 text-teal-900'}`}>
+                  <div className={`p-3 text-[10px] font-bold uppercase tracking-wide border-l-4 ${message.type === 'error' ? 'bg-red-50 border-red-500 text-red-900' : 'bg-blue-50 border-blue-500 text-blue-900'}`}>
                     {message.text}
                   </div>
                 )}
@@ -278,9 +261,9 @@ export default function Home() {
                 {view === 'signup' && (
                   <button 
                     onClick={() => router.push('/pricing')}
-                    className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-wider"
+                    className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-all uppercase tracking-widest"
                   >
-                    View Plans & Pricing
+                    [ View_Fee_Schedule ]
                   </button>
                 )}
               </div>
@@ -288,10 +271,10 @@ export default function Home() {
           </div>
 
           <div className="lg:absolute lg:bottom-12 lg:left-8 z-10 mt-10 lg:mt-0 text-center lg:text-left w-full">
-             <div className="flex justify-center lg:justify-start gap-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <a href="/terms" className="hover:text-slate-600 transition">Terms</a>
-                <a href="/privacy" className="hover:text-slate-600 transition">Privacy</a>
-                <a href="/contact" className="hover:text-slate-600 transition">Contact</a>
+             <div className="flex justify-center lg:justify-start gap-6 text-[9px] text-slate-300 font-bold uppercase tracking-widest">
+                <a href="/terms" className="hover:text-slate-900 transition">Terms</a>
+                <a href="/privacy" className="hover:text-slate-900 transition">Privacy</a>
+                <a href="/contact" className="hover:text-slate-900 transition">Support</a>
              </div>
           </div>
         </div>
