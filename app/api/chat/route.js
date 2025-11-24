@@ -210,15 +210,15 @@ export async function POST(request) {
       .eq('user_id', session.user.id)
       .single()
 
-    // --- UPDATED PLAN LIMITS ---
-    let limits = { requests: 100, images: 10 } // Default / Starter
+    // --- PLAN LIMITS UPDATED FOR 2-TIER MODEL ---
+    let limits = { requests: 200, images: 20 } // "Starter" is the new default base
 
     if (subscription?.plan === 'pro') {
       limits = { requests: 500, images: 50 }
     } else if (subscription?.plan === 'enterprise') {
-      limits = { requests: 5000, images: 500 }
+      limits = { requests: 5000, images: 500 } // Kept for legacy/admin use
     }
-    // ---------------------------
+    // --------------------------------------------
 
     if (profile.requests_used >= limits.requests) {
       return NextResponse.json({ error: 'Monthly request limit reached.' }, { status: 429 })
