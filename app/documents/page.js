@@ -40,11 +40,34 @@ export default function DocumentsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  // Check for successful payment on mount
+  // Auth & Subs Check
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.push('/'); return }
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed, requests_used, images_used, county')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!profile?.is_subscribed) { router.push('/pricing'); return }
+
+      setUserCounty(profile.county || 'washtenaw')
+      setSession(session)
+      setSubscriptionInfo({
+        requestsUsed: profile?.requests_used || 0,
+        requestLimit: 500 
+      })
+    }
+    checkAccess()
+  }, [supabase, router])
+
+  // Payment Success
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const sessionId = params.get('session_id')
-    
     if (sessionId) {
       setShowSuccessMessage(true)
       window.history.replaceState({}, '', '/documents')
@@ -52,37 +75,10 @@ export default function DocumentsPage() {
     }
   }, [])
 
-  // Initialize welcome message
+  // Load History
   useEffect(() => {
-    if (userCounty && messages.length === 0) {
-      setMessages([
-        { 
-          role: 'assistant', 
-          content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
-          citations: []
-        }
-      ])
-    }
-  }, [userCounty])
-
-  // Load chat history
-  useEffect(() => {
-    if (session) {
-      loadChatHistory()
-    }
+    if (session) loadChatHistory()
   }, [session])
-
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  // Auto-save
-  useEffect(() => {
-    if (messages.length > 1) {
-      saveCurrentChat()
-    }
-  }, [messages])
 
   const loadChatHistory = async () => {
     try {
@@ -93,15 +89,36 @@ export default function DocumentsPage() {
         setChatHistory(data.chats || [])
       }
     } catch (error) {
-      console.error('Error loading chat history:', error)
+      console.error('Error loading history:', error)
     } finally {
       setLoadingChats(false)
     }
   }
 
+  // Welcome
+  useEffect(() => {
+    if (userCounty && messages.length === 0) {
+      setMessages([{ 
+        role: 'assistant', 
+        content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
+        citations: []
+      }])
+    }
+  }, [userCounty])
+
+  // Auto Scroll/Save
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (messages.length > 1) saveCurrentChat()
+  }, [messages])
+
   const saveCurrentChat = async () => {
     if (!session || messages.length <= 1 || savingChat) return
     clearTimeout(saveTimeoutRef.current)
+    
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSavingChat(true)
@@ -117,6 +134,7 @@ export default function DocumentsPage() {
             county: userCounty
           })
         })
+
         if (response.ok) {
           const data = await response.json()
           setCurrentChatId(data.chat.id)
@@ -148,13 +166,11 @@ export default function DocumentsPage() {
 
   const startNewChat = () => {
     saveCurrentChat()
-    setMessages([
-      { 
-        role: 'assistant', 
-        content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
-        citations: []
-      }
-    ])
+    setMessages([{ 
+      role: 'assistant', 
+      content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
+      citations: []
+    }])
     setCurrentChatId(null)
     setIsSidebarOpen(false)
   }
@@ -176,7 +192,6 @@ export default function DocumentsPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     localStorage.clear()
-    sessionStorage.clear()
     router.push('/')
   }
 
@@ -190,9 +205,8 @@ export default function DocumentsPage() {
         credentials: 'include'
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to access billing portal')
-      if (data.url) window.location.href = data.url
-      else throw new Error('No portal URL returned')
+      if (!res.ok) throw new Error(data.error || 'Failed to access billing')
+      window.location.href = data.url
     } catch (error) {
       alert(`Billing Error: ${error.message}`)
     } finally {
@@ -201,12 +215,11 @@ export default function DocumentsPage() {
   }
 
   const handleCountyChange = async (newCounty) => {
-    if (!['washtenaw', 'wayne', 'oakland'].includes(newCounty)) return
     setIsUpdatingCounty(true)
     try {
       const { error } = await supabase
         .from('user_profiles')
-        .update({ county: newCounty, updated_at: new Date().toISOString() })
+        .update({ county: newCounty })
         .eq('id', session.user.id)
       if (error) throw error
       setUserCounty(newCounty)
@@ -220,16 +233,13 @@ export default function DocumentsPage() {
   }
 
   const handleCitationClick = (citation) => {
-    if (!citation || typeof citation !== 'object') return
-    const docName = citation.document || ''
+    if (!citation?.document) return
     const pageMatch = citation.pages?.toString().match(/\d+/)
-    const pageNum = pageMatch ? parseInt(pageMatch[0]) : 1
-
     setViewingPdf({
-      title: docName,
-      filename: `${docName}.pdf`,
+      title: citation.document,
+      filename: `${citation.document}.pdf`,
       county: userCounty,
-      targetPage: pageNum
+      targetPage: pageMatch ? parseInt(pageMatch[0]) : 1
     })
   }
 
@@ -247,7 +257,6 @@ export default function DocumentsPage() {
       parts.push({ type: 'citation', document: match[1], pages: match[2] })
       lastIndex = match.index + match[0].length
     }
-
     if (lastIndex < content.length) {
       parts.push({ type: 'text', content: content.slice(lastIndex) })
     }
@@ -255,14 +264,8 @@ export default function DocumentsPage() {
     return (
       <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
         {parts.map((part, i) =>
-          part.type === 'text' ? (
-            <span key={i}>{part.content}</span>
-          ) : (
-            <button
-              key={i}
-              onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide"
-            >
+          part.type === 'text' ? <span key={i}>{part.content}</span> : (
+            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               {part.document} <span className="opacity-50">| P.{part.pages}</span>
             </button>
@@ -305,7 +308,6 @@ export default function DocumentsPage() {
       })
 
       if (!response.ok) throw new Error('System error.')
-
       const data = await response.json()
 
       setMessages(prev => [
@@ -345,35 +347,12 @@ export default function DocumentsPage() {
     reader.readAsDataURL(file)
   }
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.push('/'); return }
-
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('is_subscribed, requests_used, images_used, county')
-        .eq('id', session.user.id)
-        .single()
-
-      if (!profile?.is_subscribed) { router.push('/pricing'); return }
-
-      setUserCounty(profile.county || 'washtenaw')
-      setSession(session)
-      setSubscriptionInfo({
-        requestsUsed: profile?.requests_used || 0,
-        requestLimit: 500
-      })
-    }
-    checkAccess()
-  }, [supabase, router])
-
   if (!session) return <div className="min-h-screen bg-white flex items-center justify-center font-mono text-xs text-slate-400">LOADING SYSTEM...</div>
 
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
       
-      {/* County Selector */}
+      {/* MODALS */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
@@ -383,18 +362,8 @@ export default function DocumentsPage() {
             </div>
             <div className="space-y-2">
               {Object.entries(COUNTY_NAMES).map(([key, name]) => (
-                <button
-                  key={key}
-                  onClick={() => handleCountyChange(key)}
-                  disabled={isUpdatingCounty}
-                  className={`w-full text-left p-4 border transition-all font-bold text-xs uppercase tracking-wide flex items-center justify-between ${
-                    userCounty === key 
-                      ? 'border-[#6b85a3] bg-slate-50 text-[#6b85a3]' 
-                      : 'border-slate-200 hover:border-slate-400 text-slate-500'
-                  }`}
-                >
-                  {name}
-                  {userCounty === key && <span>●</span>}
+                <button key={key} onClick={() => handleCountyChange(key)} disabled={isUpdatingCounty} className={`w-full text-left p-4 border transition-all font-bold text-xs uppercase tracking-wide flex items-center justify-between ${userCounty === key ? 'border-[#6b85a3] bg-slate-50 text-[#6b85a3]' : 'border-slate-200 hover:border-slate-400 text-slate-500'}`}>
+                  {name} {userCounty === key && <span>●</span>}
                 </button>
               ))}
             </div>
@@ -402,7 +371,6 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* PDF Viewer */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
           <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
@@ -411,221 +379,109 @@ export default function DocumentsPage() {
                 <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wide">{viewingPdf.title}</h3>
                 <p className="text-xs text-slate-500 font-mono">Page {viewingPdf.targetPage}</p>
               </div>
-              <button 
-                onClick={() => setViewingPdf(null)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-sm"
-              >
-                Close
-              </button>
+              <button onClick={() => setViewingPdf(null)} className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-sm">Close</button>
             </div>
-            <iframe
-              src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`}
-              className="flex-1 w-full bg-slate-50"
-              title="PDF Viewer"
-            />
+            <iframe src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`} className="flex-1 w-full bg-slate-50" title="PDF Viewer" />
           </div>
         </div>
       )}
 
-      {/* SIDEBAR (Dark Matte Slate) */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#0f172a] border-r border-slate-800 text-slate-300 flex flex-col z-40 overflow-hidden`}>
-        <div className="p-6 border-b border-slate-800">
+      {showSuccessMessage && (
+        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center">
+          <span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span>
+        </div>
+      )}
+
+      {/* SIDEBAR (LIGHT THEME) */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden`}>
+        <div className="p-6 border-b border-slate-200">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-lg font-bold tracking-tighter text-white">
-              protocol<span style={{ color: '#6b85a3' }}>LM</span>
-            </h1>
+            <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
             <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
 
-          <button
-            onClick={() => setShowCountySelector(true)}
-            className="w-full bg-slate-800/50 hover:bg-slate-800 text-white p-3 border border-slate-700 mb-3 flex items-center justify-between transition-colors group rounded-sm"
-          >
+          <button onClick={() => setShowCountySelector(true)} className="w-full bg-white hover:border-[#6b85a3] text-slate-700 p-3 border border-slate-300 mb-3 flex items-center justify-between transition-colors group rounded-sm">
             <div className="flex flex-col items-start">
               <span className="text-[9px] text-[#6b85a3] uppercase tracking-widest font-bold">Jurisdiction</span>
-              <span className="text-xs font-bold truncate text-slate-200">{COUNTY_NAMES[userCounty]}</span>
+              <span className="text-xs font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
             </div>
             <svg className="w-4 h-4 text-[#6b85a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
-          <button
-            onClick={startNewChat}
-            className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90"
-            style={{ backgroundColor: '#6b85a3' }}
-          >
+          <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90" style={{ backgroundColor: '#6b85a3' }}>
             <span>+</span> New Inquiry
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2">Record History</div>
+          <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">Record History</div>
           {loadingChats ? (
-            <div className="space-y-3 px-2 opacity-30">
-              <div className="h-8 bg-slate-700 rounded-sm w-3/4 animate-pulse"></div>
-              <div className="h-8 bg-slate-700 rounded-sm w-1/2 animate-pulse"></div>
-            </div>
+            <div className="space-y-3 px-2 opacity-50"><div className="h-8 bg-slate-200 rounded-sm w-3/4 animate-pulse"></div></div>
           ) : (
             chatHistory.map(chat => (
-              <div
-                key={chat.id}
-                onClick={() => loadChat(chat)}
-                className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-sm ${
-                  currentChatId === chat.id ? 'bg-slate-800 text-white border-l-2 border-[#6b85a3]' : 'hover:bg-slate-800/50 text-slate-400'
-                }`}
-              >
+              <div key={chat.id} onClick={() => loadChat(chat)} className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-sm ${currentChatId === chat.id ? 'bg-white border border-slate-300 border-l-4 border-l-[#6b85a3] text-slate-900' : 'hover:bg-slate-200 text-slate-500'}`}>
                 <div className="pr-6">
                   <p className="font-medium text-xs truncate font-mono">{chat.title}</p>
-                  <p className="text-[9px] opacity-50 mt-1 uppercase tracking-wider">
-                    {new Date(chat.updated_at).toLocaleDateString()}
-                  </p>
+                  <p className="text-[9px] opacity-50 mt-1 uppercase tracking-wider">{new Date(chat.updated_at).toLocaleDateString()}</p>
                 </div>
-                <button
-                  onClick={(e) => deleteChat(chat.id, e)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                >
-                  ✕
-                </button>
+                <button onClick={(e) => deleteChat(chat.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1">✕</button>
               </div>
             ))
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-800 bg-[#0f172a]">
+        <div className="p-4 border-t border-slate-200 bg-[#f1f5f9]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>
-              {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
-            </div>
+            <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate font-mono">
-                {session?.user?.email}
-              </p>
-              <p className="text-[9px] text-[#6b85a3] font-medium uppercase tracking-wider">
-                {subscriptionInfo?.requestsUsed} Queries Used
-              </p>
+              <p className="text-xs font-bold text-slate-900 truncate font-mono">{session?.user?.email}</p>
+              <p className="text-[9px] text-[#6b85a3] font-medium uppercase tracking-wider">{subscriptionInfo?.requestsUsed} Queries Used</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-400 hover:text-white bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">
-              Billing
-            </button>
-            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-400 hover:text-red-400 bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">
-              Log Out
-            </button>
+            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-500 hover:text-[#6b85a3] bg-white border border-slate-300 py-2 transition-all rounded-sm uppercase tracking-wide">Billing</button>
+            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-500 hover:text-red-500 bg-white border border-slate-300 py-2 transition-all rounded-sm uppercase tracking-wide">Log Out</button>
           </div>
         </div>
       </div>
 
-      {/* MAIN CHAT AREA (Clean White/Paper) */}
+      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative">
-        
-        {/* Header */}
         <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30">
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
           </div>
-          <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            {COUNTY_NAMES[userCounty]} Database // Active
-          </div>
+          <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
           <div className="w-6"></div> 
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[90%] lg:max-w-[80%] ${msg.role === 'assistant' ? 'w-full' : ''}`}>
                 <div className={`${msg.role === 'user' ? 'bg-[#6b85a3] text-white rounded-sm px-5 py-3 shadow-sm inline-block float-right' : 'text-slate-800 pl-0'}`}>
-                  {msg.image && (
-                    <img src={msg.image} alt="Analysis" className="mb-3 rounded-sm border border-white/20 max-w-sm w-full h-auto" />
-                  )}
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div>
-                      <span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span>
-                    </div>
-                  )}
-                  
-                  {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap leading-relaxed text-sm font-mono">{msg.content}</p>
-                  ) : (
-                    renderMessageContent(msg)
-                  )}
+                  {msg.image && <img src={msg.image} alt="Analysis" className="mb-3 rounded-sm border border-white/20 max-w-sm w-full h-auto" />}
+                  {msg.role === 'assistant' && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span></div>}
+                  {msg.role === 'user' ? <p className="whitespace-pre-wrap leading-relaxed text-sm font-mono">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
               </div>
             </div>
           ))}
-          
-          {isLoading && (
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div>
-              <span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span>
-            </div>
-          )}
+          {isLoading && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span></div>}
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {/* Input Area */}
         <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20">
-          {image && (
-            <div className="max-w-4xl mx-auto mb-3 px-1">
-              <div className="relative inline-block group">
-                <img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" />
-                <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-            </div>
-          )}
-
+          {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
             <div className="flex items-end gap-2 bg-[#f8fafc] border border-slate-300 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-sm">
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </button>
-
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Analyze this image..." : "Enter regulatory query..."}
-                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm"
-                disabled={isLoading}
-              />
-
-              <button
-                type="submit"
-                disabled={isLoading || (!input.trim() && !image) || !canSend}
-                className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${
-                  isLoading || (!input.trim() && !image) || !canSend
-                  ? 'bg-slate-200 text-slate-400'
-                  : 'text-white hover:opacity-90'
-                }`}
-                style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}
-              >
-                <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-              </button>
+              <input type="file" ref={fileInputRef} accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleImageSelect} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isLoading} className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></button>
+              <input value={input} onChange={e => setInput(e.target.value)} placeholder={image ? "Analyze this image..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
+              <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) || !canSend ? 'bg-slate-200 text-slate-400' : 'text-white hover:opacity-90'}`} style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}><svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
             </div>
-            
-            <div className="text-center mt-3">
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">
-                AI Guidance | Verify with Official Docs
-              </p>
-            </div>
+            <div className="text-center mt-3"><p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">AI Guidance | Verify with Official Docs</p></div>
           </form>
         </div>
       </div>
