@@ -1,72 +1,80 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (With Thinking State) ---
+// --- 1. THE LIVE TERMINAL (SMOOTH & FACTUAL) ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
-  const [phase, setPhase] = useState('question') // question, thinking, answer, reset
-
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
+  
+  // 100% Factual Scenarios based on MI Food Law & FDA 2022
   const scenarios = [
     {
-      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
-      a: "VIOLATION: Priority Foundation (Pf). Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days."
+      q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
+      a: "Priority Violation (P). Raw ground beef (155°F cook temp) must be stored BELOW whole cuts of beef (145°F cook temp) to prevent cross-contamination."
     },
     {
-      q: "QUERY: Can we store raw burger patties above cooked brisket?",
-      a: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F) must go BELOW ready-to-eat foods."
+      q: "QUERY: Inspector flagged the dishwasher final rinse at 152°F.",
+      a: "Priority Violation (P). High-temperature machines must reach 160°F at the utensil surface. Switch to 3-compartment sink sanitizing immediately until serviced."
     },
     {
-      q: "QUERY: Prep cook has a sore throat and fever.",
-      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics."
+      q: "QUERY: Employee just reported they have Norovirus.",
+      a: "Emergency Protocol. EXCLUDE the employee from the establishment immediately. They cannot return until 48 hours after symptoms have ended. Notify the Health Department."
     },
     {
-      q: "QUERY: Cooling procedure for large batch of chili?",
-      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands."
+      q: "QUERY: What is the max cooling time for the chili?",
+      a: "Process Control. Cool from 135°F to 70°F within 2 hours. Then from 70°F to 41°F within 4 additional hours. Total time cannot exceed 6 hours."
     },
     {
-      q: "QUERY: Quat sanitizer testing at 500ppm.",
-      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute to manufacturer specs (200-400ppm)."
+      q: "QUERY: Hand sink is blocked by a trash can.",
+      a: "Priority Foundation (Pf). Handwashing sinks must be accessible at all times and used for no other purpose. Move the obstruction immediately."
     },
     {
-      q: "QUERY: How long can we keep house-made ranch?",
-      a: "RULE: 7 Days max if held at 41°F. Day 1 is preparation day. Must be date-marked. Discard if undated."
+      q: "QUERY: We found mouse droppings in dry storage.",
+      a: "Priority Foundation (Pf). Contact PCO immediately. Discard any food with compromised packaging. Clean and sanitize the area. Check for entry points."
     },
     {
-      q: "QUERY: Found mouse droppings in dry storage.",
-      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact PCO. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
+      q: "QUERY: Date marking rule for opened deli ham?",
+      a: "Compliance Rule. TCS foods held longer than 24 hours must be marked. 7-day shelf life maximum, where the day of opening counts as Day 1. Hold at 41°F."
     },
     {
-      q: "QUERY: Hot holding temp dropped to 125°F.",
-      a: "CORRECTION: If <4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
+      q: "QUERY: Quat sanitizer bucket tested at 500ppm.",
+      a: "Priority Foundation (Pf). Chemical Hazard. Concentration is too high (toxic). Dilute immediately to manufacturer specs (typically 150-400ppm)."
     },
     {
-      q: "QUERY: Can employees drink from open cups in kitchen?",
-      a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
+      q: "QUERY: Reheating yesterday's soup for the hot well.",
+      a: "Critical Limit. You must reheat rapidly to 165°F for 15 seconds within 2 hours. Once reached, you can hold at 135°F."
+    },
+    {
+      q: "QUERY: Can we thaw frozen fish in vacuum packaging?",
+      a: "Critical Hazard. Remove fish from Reduced Oxygen Packaging (ROP) BEFORE thawing to prevent Clostridium botulinum growth."
     }
   ]
 
   useEffect(() => {
     const runSequence = async () => {
-      // 1. Show Question
-      setPhase('question')
+      // 1. Fade In Question
+      setShowQ(true)
+      
+      // 2. Wait for reading (Natural pause)
       await new Promise(r => setTimeout(r, 1500))
+      
+      // 3. Fade In Answer
+      setShowA(true)
 
-      // 2. Thinking
-      setPhase('thinking')
-      await new Promise(r => setTimeout(r, 1000))
+      // 4. Hold for reading (Longer for complex answers)
+      await new Promise(r => setTimeout(r, 5500))
 
-      // 3. Show Answer
-      setPhase('answer')
-      await new Promise(r => setTimeout(r, 5000)) // Read time
-
-      // 4. Reset
-      setPhase('reset')
-      await new Promise(r => setTimeout(r, 500))
+      // 5. Fade Out Both
+      setShowQ(false)
+      setShowA(false)
+      
+      // 6. Wait for fade out to finish, then swap index
+      await new Promise(r => setTimeout(r, 800))
       setIndex(prev => (prev + 1) % scenarios.length)
-      setPhase('question')
     }
 
     runSequence()
@@ -75,32 +83,24 @@ const LiveDataTerminal = () => {
   const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
       
       {/* QUESTION */}
-      <div className={`text-slate-500 mb-3 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'reset' ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.q}
       </div>
 
-      {/* THINKING STATE */}
-      {phase === 'thinking' && (
-        <div className="text-[#6b85a3] text-xs font-bold uppercase tracking-widest animate-pulse mb-2">
-          {`> ANALYZING REPOSITORY...`}
-        </div>
-      )}
-
       {/* ANSWER */}
-      {phase === 'answer' && (
-        <div className="text-[#6b85a3] font-bold animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {current.a}
-        </div>
-      )}
+      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        <span className="font-bold mr-2">PROTOCOL_LM:</span>
+        <span className="font-medium">{current.a}</span>
+      </div>
 
     </div>
   )
 }
 
-// --- 2. AUTH MODAL (Fixed Error Handling) ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -122,45 +122,33 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
     try {
       if (view === 'signup') {
-        // SIGNUP FLOW
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: redirectUrl, data: { county: 'washtenaw' } }
         })
-        
         if (error) throw error
-        
         if (data.session) {
-          // Auto-confirmed
-          window.location.href = '/pricing'
-        } else {
-          // Email confirm needed
+          const { data: profile } = await supabase.from('user_profiles').select('accepted_terms, accepted_privacy').eq('id', data.session.user.id).single()
+          if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
+          else window.location.href = '/pricing'
+        } else if (data.user && !data.session) {
           setMessage({ type: 'success', text: 'Verification link sent to email.' })
-          setLoading(false) // Stop loading so they see message
+          setLoading(false)
         }
       } else {
-        // LOGIN FLOW
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        
         if (error) throw error
-
-        // Check profile
         const { data: profile } = await supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
-        
-        if (profile?.is_subscribed) {
-          window.location.href = '/documents'
-        } else {
-          window.location.href = '/pricing'
-        }
+        if (profile?.is_subscribed) window.location.href = '/documents'
+        else window.location.href = '/pricing'
       }
     } catch (error) {
-      console.error("Auth Error:", error)
-      let msg = error.message
-      if (msg.includes("Invalid login")) msg = "Invalid email or password."
-      setMessage({ type: 'error', text: msg })
-      setLoading(false) // FIX: Ensure button un-freezes on error
+      setMessage({ type: 'error', text: error.message })
+      setLoading(false)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -195,7 +183,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
           >
             {loading ? 'Processing...' : 'Submit'}
           </button>
@@ -220,22 +208,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-function MainContent() {
+export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
-  const searchParams = useSearchParams()
    
   useEffect(() => {
     setMounted(true)
-    const authParam = searchParams.get('auth')
-    if (authParam) {
-      setAuthView(authParam)
-      setShowAuth(true)
-      window.history.replaceState({}, '', '/')
-    }
-  }, [searchParams])
+  }, [])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -270,7 +251,7 @@ function MainContent() {
         
         {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
-          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-nowrap">
+          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6">
             Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
@@ -299,13 +280,5 @@ function MainContent() {
       {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
-  )
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div></div>}>
-      <MainContent />
-    </Suspense>
   )
 }
