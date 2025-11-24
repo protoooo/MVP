@@ -77,10 +77,10 @@ function cleanAIResponse(text) {
   if (!text) return ""
   
   let cleaned = text
-    .replace(/\*\*/g, '')
-    .replace(/__/g, '')
-    .replace(/\*/g, '') 
-    .replace(/`/g, '')
+    .replace(/\*\*/g, '') // Remove bold
+    .replace(/__/g, '')   // Remove underline
+    .replace(/\*/g, '')   // Remove bullets/italics
+    .replace(/`/g, '')    // Remove code ticks
     .replace(/<script[^>]*>.*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
     .replace(/javascript:/gi, '')
@@ -88,7 +88,7 @@ function cleanAIResponse(text) {
     .replace(/([a-zA-Z0-9.])\[/g, '$1 [')
 
   if (cleaned.length > 50000) {
-    cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated for length]'
+    cleaned = cleaned.substring(0, 50000) + '\n\n...[Response truncated]'
   }
   
   return cleaned
@@ -142,52 +142,12 @@ function validateImageData(imageData) {
 
   try {
     const binaryString = atob(base64Data.substring(0, 100))
-    
     if (mimeType === 'image/jpeg') {
-      const hasJPEGMarker = binaryString.charCodeAt(0) === 0xFF && 
-                           binaryString.charCodeAt(1) === 0xD8
-      
-      if (!hasJPEGMarker) {
+      if (binaryString.charCodeAt(0) !== 0xFF || binaryString.charCodeAt(1) !== 0xD8) {
         throw new Error('Corrupted JPEG image')
       }
     }
-    
-    if (mimeType === 'image/png') {
-      const hasPNGSignature = binaryString.charCodeAt(0) === 0x89 && 
-                             binaryString.charCodeAt(1) === 0x50 &&
-                             binaryString.charCodeAt(2) === 0x4E &&
-                             binaryString.charCodeAt(3) === 0x47
-      
-      if (!hasPNGSignature) {
-        throw new Error('Corrupted PNG image')
-      }
-      
-      if (binaryString.length >= 24) {
-        const width = (binaryString.charCodeAt(16) << 24) | 
-                     (binaryString.charCodeAt(17) << 16) |
-                     (binaryString.charCodeAt(18) << 8) | 
-                     binaryString.charCodeAt(19)
-        
-        const height = (binaryString.charCodeAt(20) << 24) | 
-                      (binaryString.charCodeAt(21) << 16) |
-                      (binaryString.charCodeAt(22) << 8) | 
-                      binaryString.charCodeAt(23)
-        
-        const maxDimension = 4096
-        if (width > maxDimension || height > maxDimension) {
-          throw new Error(`Image dimensions too large (max ${maxDimension}x${maxDimension}). Got ${width}x${height}.`)
-        }
-        
-        if (width < 10 || height < 10) {
-          throw new Error('Image dimensions too small')
-        }
-      }
-    }
-    
   } catch (decodeError) {
-    if (decodeError.message.includes('dimensions') || decodeError.message.includes('Corrupted')) {
-      throw decodeError
-    }
     throw new Error('Failed to validate image format')
   }
 
@@ -200,7 +160,6 @@ function sanitizeMessages(messages) {
 
   return messages.map(msg => {
     if (!msg || typeof msg !== 'object') throw new Error('Invalid message format')
-    
     const role = msg.role === 'user' ? 'user' : 'assistant'
     const content = typeof msg.content === 'string' ? sanitizeString(msg.content, 5000) : ''
     
@@ -216,15 +175,12 @@ export async function POST(request) {
   console.log('🚀 Chat API called')
   
   if (!validateEnvironment()) {
-    return NextResponse.json(
-      { error: 'Service configuration error. Please contact support.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Service configuration error.' }, { status: 500 })
   }
 
   const supabase = createSupabaseServer()
-  
   const { data: { session } } = await supabase.auth.getSession()
+  
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -232,10 +188,7 @@ export async function POST(request) {
   const rateCheck = await checkRateLimit(session.user.id, 'chat')
   if (!rateCheck.allowed) {
     return NextResponse.json(
-      { 
-        error: 'Rate limit exceeded. Please wait before sending another message.',
-        resetTime: rateCheck.resetTime
-      },
+      { error: 'Rate limit exceeded.', resetTime: rateCheck.resetTime },
       { status: 429, headers: { 'Retry-After': rateCheck.retryAfter.toString() } }
     )
   }
@@ -257,23 +210,13 @@ export async function POST(request) {
       .eq('user_id', session.user.id)
       .single()
 
-    const limits = subscription?.plan === 'enterprise'
-      ? { requests: 5000, images: 500 }
-      : { requests: 500, images: 50 }
+    const limits = subscription?.plan === 'enterprise' ? { requests: 5000, images: 500 } : { requests: 500, images: 50 }
 
     if (profile.requests_used >= limits.requests) {
-      return NextResponse.json({ 
-        error: 'Monthly request limit reached.' 
-      }, { status: 429 })
+      return NextResponse.json({ error: 'Monthly request limit reached.' }, { status: 429 })
     }
 
-    let requestBody
-    try {
-      requestBody = await request.json()
-    } catch (e) {
-      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-    }
-
+    const requestBody = await request.json()
     const { messages, image, county } = requestBody
     const sanitizedMessages = sanitizeMessages(messages)
     const sanitizedCounty = sanitizeCounty(county || profile.county)
@@ -288,50 +231,34 @@ export async function POST(request) {
     }
 
     const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1]?.content || ""
-
     const credentials = getVertexCredentials()
-    const project = credentials.project_id
-
-    if (!project) {
-      logError(new Error('No GCP project ID'), { credentials: '***' })
-      return NextResponse.json(
-        { error: 'Service configuration error' },
-        { status: 500 }
-      )
-    }
-
+    
     const vertex_ai = new VertexAI({
-      project: project,
+      project: credentials.project_id,
       location: 'us-central1',
       googleAuthOptions: { credentials }
     })
 
     const model = 'gemini-2.0-flash-exp'
-
     let contextText = ""
-    let usedDocs = []
-
+    
+    // RAG Search Logic
     if (lastUserMessage.trim().length > 0 || validatedImage) {
       try {
-        console.log(`🔍 RAG Search starting for ${userCountyName}...`)
-        
         const searchQueries = []
         
-        // 1. High priority: Enforcement, Violations, Inspection Procedures
         searchQueries.push({
-          query: `${userCountyName} violation types priority core critical non-critical enforcement inspection`,
+          query: `${userCountyName} violation definitions priority core enforcement inspection`,
           weight: 1.0,
           purpose: 'county_enforcement'
         })
         
-        // 2. Specific User Question
         if (lastUserMessage.trim()) {
           searchQueries.push({
             query: `${userCountyName} ${lastUserMessage}`,
             weight: 0.9,
             purpose: 'county_specific'
           })
-          
           searchQueries.push({
             query: lastUserMessage,
             weight: 0.7,
@@ -339,171 +266,95 @@ export async function POST(request) {
           })
         }
         
-        // 3. Image Analysis Context (if applicable)
         if (validatedImage) {
           searchQueries.push({
-            query: `${userCountyName} food storage temperatures equipment cleaning cross contamination`,
+            query: `${userCountyName} storage cleanliness equipment maintenance temperature violation`,
             weight: 0.85,
             purpose: 'visual_compliance'
           })
         }
         
-        console.log(`📋 Executing ${searchQueries.length} search queries...`)
-        
         const allResults = []
-        
-        for (const { query, weight, purpose } of searchQueries) {
-          try {
-            console.log(`   🔎 ${purpose}: "${query.substring(0, 60)}..."`)
-            
-            const results = await searchDocuments(query, 15, sanitizedCounty)
-            
-            for (const result of results) {
-              result.searchWeight = weight
-              result.searchPurpose = purpose
-              result.adjustedScore = result.score * weight
-              allResults.push(result)
-            }
-            
-            console.log(`      ✓ Found ${results.length} docs (top score: ${results[0]?.score.toFixed(3) || 'N/A'})`)
-            
-          } catch (searchErr) {
-            console.error(`   ✗ Search failed for ${purpose}:`, searchErr.message)
-          }
+        for (const { query, weight } of searchQueries) {
+          const results = await searchDocuments(query, 15, sanitizedCounty)
+          results.forEach(r => {
+            r.adjustedScore = r.score * weight
+            allResults.push(r)
+          })
         }
         
-        console.log(`📊 Total retrieved: ${allResults.length} document chunks`)
-        
+        // Deduplicate
         const seenContent = new Map()
-        
         for (const doc of allResults) {
-          const contentKey = doc.text.substring(0, 100)
-          
-          if (!seenContent.has(contentKey)) {
-            seenContent.set(contentKey, doc)
-          } else {
-            const existing = seenContent.get(contentKey)
-            if (doc.adjustedScore > existing.adjustedScore) {
-              seenContent.set(contentKey, doc)
-            }
+          const key = doc.text.substring(0, 100)
+          if (!seenContent.has(key) || doc.adjustedScore > seenContent.get(key).adjustedScore) {
+            seenContent.set(key, doc)
           }
         }
         
         const uniqueResults = Array.from(seenContent.values())
-        console.log(`📌 Unique documents: ${uniqueResults.length}`)
         
-        // Prioritize County "Violation" and "Enforcement" docs
-        const countyEnforcementDocs = uniqueResults.filter(doc => {
-          const source = doc.source.toLowerCase()
-          return (
-            doc.county === sanitizedCounty &&
-            (source.includes('violation') || 
-             source.includes('enforcement') || 
-             source.includes('inspection') ||
-             source.includes('priority'))
-          )
-        })
+        // Prioritize County Docs
+        const countyDocs = uniqueResults.filter(doc => 
+          doc.county === sanitizedCounty && 
+          doc.source.toLowerCase().match(/(enforcement|violation|inspection)/)
+        )
+        const otherDocs = uniqueResults.filter(doc => !countyDocs.includes(doc))
         
-        const otherDocs = uniqueResults.filter(doc => !countyEnforcementDocs.includes(doc))
-        
-        console.log(`🎯 County enforcement/violation docs: ${countyEnforcementDocs.length}`)
-        console.log(`📚 Other docs: ${otherDocs.length}`)
-        
-        const topCountyDocs = countyEnforcementDocs
-          .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 10)
-        
-        const topOtherDocs = otherDocs
-          .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 20)
-        
-        const finalResults = [...topCountyDocs, ...topOtherDocs]
-          .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 30)
-        
-        console.log(`✅ Final context: ${finalResults.length} documents`)
-        
-        if (finalResults.length > 0) {
-          console.log(`   Top doc: ${finalResults[0].source} (score: ${finalResults[0].adjustedScore.toFixed(3)})`)
-          
-          contextText = finalResults.map((doc, idx) => 
-            `[DOCUMENT ${idx + 1}]
-SOURCE: ${doc.source}
-COUNTY: ${doc.county || sanitizedCounty}
-PAGE: ${doc.page || 'N/A'}
-CONTENT: ${doc.text}`
-          ).join("\n\n")
-          
-          usedDocs = finalResults.map(r => ({ 
-            document: r.source, 
-            pages: r.page || 'N/A',
-            county: r.county || sanitizedCounty
-          }))
-          
-        } else {
-          console.warn(`⚠️  No documents found for query`)
-        }
-        
-      } catch (searchErr) {
-        console.error('❌ RAG pipeline error:', searchErr)
-        console.error('   Stack:', searchErr.stack)
+        const finalResults = [
+          ...countyDocs.sort((a,b) => b.adjustedScore - a.adjustedScore).slice(0, 10),
+          ...otherDocs.sort((a,b) => b.adjustedScore - a.adjustedScore).slice(0, 20)
+        ].sort((a,b) => b.adjustedScore - a.adjustedScore).slice(0, 30)
+
+        contextText = finalResults.map((doc, idx) => 
+          `[ID:${idx}] SOURCE: ${doc.source} (Page ${doc.page || 'N/A'})\n${doc.text}`
+        ).join("\n\n")
+
+      } catch (e) {
+        console.error('RAG Error:', e)
       }
     }
 
-    console.log(`📝 Context length: ${contextText.length} characters`)
-    console.log(`📎 Documents in context: ${usedDocs.length}`)
+    const systemInstructionText = `You are ProtocolLM, an expert food safety consultant for ${userCountyName}. Your goal is to help businesses be compliant at all times.
 
-    const systemInstructionText = `You are ProtocolLM, an expert food safety compliance consultant for ${userCountyName}.
+**CORE BEHAVIORS:**
+1.  **Fluent & Natural:** Do NOT reference file names, page numbers, or "the documents" in your conversation. Speak like a knowledgeable human consultant. 
+    - BAD: "According to the Washtenaw Enforcement Guide, Page 2..."
+    - GOOD: "For Washtenaw County, this is considered a Priority violation because..."
+2.  **No Hallucinations:** You only know what is in the Context Documents. 
+3.  **Handling Unknowns:** If you do not know the answer based on the context:
+    - Do NOT guess.
+    - Do NOT tell them to "contact the health department."
+    - Instead, say: "I'm not sure about that specific detail based on my current records. Could you elaborate or show me another angle?" Or provide a general safe example from the FDA code if applicable (e.g., standard temp zones).
+4.  **County First:** Always prioritize ${userCountyName} enforcement rules over general state/federal code.
 
-Your goal is to help restaurants pass inspections and operate safely by identifying violations and citing the specific rules.
+**VIOLATION CLASSIFICATION:**
+Classify issues using specific county terms found in the context (Priority, Priority Foundation, Core). Explain *why* it fits that category based on the rules, but keep the explanation conversational.
 
-**INFORMATION HIERARCHY (Use in this order):**
-1. **County-Specific Documents**: (HIGHEST PRIORITY) Look for "Violation Types", "Enforcement Actions", and local inspection guides.
-2. **State Code**: Michigan Modified Food Code.
-3. **Federal Code**: FDA Food Code.
+**VISUAL ANALYSIS:**
+If looking at an image, actively hunt for:
+- **Storage:** FIFO issues, raw meat above ready-to-eat (cross-contamination), lack of labels.
+- **Cleanliness:** Grease buildup, dust on vents, dirty gaskets, pest signs.
+- **Maintenance:** Cracked tiles, gaps under doors, improvised repairs (duct tape).
+- **Temps:** Signs of spoilage or improper cooling methods.
+*If you see something, point it out gently and suggest the fix.*
 
-**VIOLATION CLASSIFICATION LOGIC (Critical):**
-You must classify violations using ${userCountyName}'s specific terminology found in the context documents.
-- Most modern county documents (post-2012) use:
-  - **Priority (P)**: Direct hazards to food safety (e.g., cooking temps, cross-contamination, handwashing). CORRECT IMMEDIATELY.
-  - **Priority Foundation (Pf)**: Tools/training that support safety (e.g., missing thermometer, no soap, equipment repair). CORRECT WITHIN 10 DAYS.
-  - **Core**: General sanitation/maintenance (e.g., dirty floors, lights out). CORRECT WITHIN 90 DAYS.
-- **Rules:** 
-  - If you see a violation, YOU MUST CLASSIFY IT (P, Pf, or Core) if the documents support it.
-  - If the context defines "Critical" vs "Non-Critical", clarify which system the county is currently using based on the document dates.
-
-**IMAGE ANALYSIS PROTOCOL:**
-When the user uploads an image (e.g., a cooler, prep table, or sink):
-1. **Observe**: Detail exactly what you see (e.g., "I see raw chicken stored above open vegetable containers").
-2. **Identify**: Name the specific violation (e.g., "Cross-contamination risk").
-3. **Classify**: Assign P, Pf, or Core based on the county documents.
-   - Example: "According to [Violation Types, Page 1], cross-contamination is a **Priority Violation**."
-4. **Remedy**: Tell them exactly how to fix it immediately.
-
-**RESPONSE GUIDELINES:**
-- **Tone**: Professional, authoritative, yet helpful. Use "You should" or "Ensure that," not "The operator shall."
-- **Citations**: STRICTLY cite sources for every claim. Format: [Document Name, Page X].
-- **Formatting**: Do NOT use markdown bold/italic (no **, *). Use plain text.
-- **Unknowns**: If a specific county classification isn't in the provided text, refer to the FDA code but state: "Please verify the specific enforcement classification with ${userCountyName} health department."
+**CITATION PROTOCOL (INTERNAL ONLY):**
+You must track your sources for the system, but hide them from the user.
+At the VERY END of your response, after your sign-off, create a hidden block listing sources used:
+[[SOURCE: Document Name, Page Number]]
+[[SOURCE: Document Name, Page Number]]
 
 **CONTEXT DOCUMENTS:**
-${contextText || 'No specific documents retrieved. Provide general FDA guidance and recommend verification.'}
-
-**REMEMBER**: You are protecting their business license. Be accurate. Violations are the enemy. Check ${userCountyName} enforcement docs first.`
+${contextText || 'No specific documents retrieved. Use general food safety knowledge.'}`
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
-      systemInstruction: {
-        parts: [{ text: systemInstructionText }]
-      },
-      generationConfig: {
-        temperature: 0.1,
-        topP: 0.8,
-        topK: 40
-      }
+      systemInstruction: { parts: [{ text: systemInstructionText }] },
+      generationConfig: { temperature: 0.1, topP: 0.8, topK: 40 }
     })
 
-    let fullPromptText = `USER QUESTION: ${lastUserMessage || "Analyze this image for health code compliance."}`
+    let fullPromptText = `USER QUESTION: ${lastUserMessage || "Analyze this image for compliance."}`
     
     if (sanitizedMessages.length > 1) {
       const history = sanitizedMessages.slice(-3, -1).map(m => `${m.role}: ${m.content}`).join('\n')
@@ -525,15 +376,13 @@ ${contextText || 'No specific documents retrieved. Provide general FDA guidance 
       contents: [{ role: 'user', parts: parts }]
     })
 
-    const response = await result.response
-    const rawText = response.candidates[0].content.parts[0].text
-
-    const cleanText = cleanAIResponse(rawText)
-
+    const rawText = await result.response.candidates[0].content.parts[0].text
+    
+    // Extract Citations for Metadata (Hidden from user text)
     const citations = []
-    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
+    const citationRegex = /\[\[SOURCE:\s*(.*?),\s*Page\s*([\d\-, ]+|N\/A)\]\]/gi
     let match
-    while ((match = citationRegex.exec(cleanText)) !== null) {
+    while ((match = citationRegex.exec(rawText)) !== null) {
       citations.push({ 
         document: match[1].trim(), 
         pages: match[2].trim(), 
@@ -541,13 +390,17 @@ ${contextText || 'No specific documents retrieved. Provide general FDA guidance 
       })
     }
 
+    // Clean text for display (Remove the [[SOURCE]] blocks and formatting)
+    let cleanText = cleanAIResponse(rawText.replace(citationRegex, ''))
+    cleanText = cleanText.trim()
+
     const updates = { requests_used: (profile.requests_used || 0) + 1 }
     if (validatedImage) updates.images_used = (profile.images_used || 0) + 1
     await supabase.from('user_profiles').update(updates).eq('id', session.user.id)
 
     return NextResponse.json({ 
       message: cleanText,
-      citations: citations,
+      citations: citations, // Sent to UI for pills, but not in text
       county: sanitizedCounty
     })
 
