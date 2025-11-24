@@ -4,23 +4,22 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE EXECUTIVE TERMINAL (Fade-In Answers) ---
-const TypewriterTerminal = () => {
-  const [currentQ, setCurrentQ] = useState('')
-  const [currentA, setCurrentA] = useState(null) // Null = hidden, String = visible
-  const [phase, setPhase] = useState('typing_q') 
-  const [scenarioIndex, setScenarioIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
+// --- 1. THE LIVE TERMINAL (Smooth Fade - No Typing) ---
+const LiveDataTerminal = () => {
+  const [index, setIndex] = useState(0)
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
-  // 10 High-Value Scenarios (Cleaned for readability)
+  // 10 High-Value Scenarios for Owners
   const scenarios = [
     {
-      q: "QUERY: Dishwasher final rinse is only hitting 150°F.",
-      a: "VIOLATION: Priority (P). High-temp machines must reach 160°F at the utensil surface (180°F manifold). Stop using until fixed."
+      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
+      a: "VIOLATION: Priority Foundation (Pf). Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days."
     },
     {
-      q: "QUERY: Can we store raw burger patties above the cooked brisket?",
-      a: "NEGATIVE: Priority (P). Raw ground meat (155°F cook temp) must go BELOW ready-to-eat foods to prevent drip contamination."
+      q: "QUERY: Can we store raw burger patties above cooked brisket?",
+      a: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F) must go BELOW ready-to-eat foods."
     },
     {
       q: "QUERY: Prep cook has a sore throat and fever.",
@@ -32,85 +31,67 @@ const TypewriterTerminal = () => {
     },
     {
       q: "QUERY: Quat sanitizer testing at 500ppm.",
-      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute immediately to manufacturer specs (200-400ppm)."
+      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute to manufacturer specs (200-400ppm)."
     },
     {
       q: "QUERY: How long can we keep house-made ranch?",
-      a: "RULE: 7 Days max if held at 41°F. Day 1 is the day of preparation. Must be date-marked. Discard if undated."
+      a: "RULE: 7 Days max if held at 41°F. Day 1 is preparation day. Must be date-marked. Discard if undated."
     },
     {
       q: "QUERY: Found mouse droppings in dry storage.",
-      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact Pest Control. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
+      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact PCO. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
     },
     {
       q: "QUERY: Hot holding temp dropped to 125°F.",
-      a: "CORRECTION: If less than 4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
+      a: "CORRECTION: If <4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
+    },
+    {
+      q: "QUERY: Can employees drink from open cups in kitchen?",
+      a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
     },
     {
       q: "QUERY: Thawing vacuum-sealed fish?",
-      a: "CRITICAL: Remove from packaging BEFORE thawing under refrigeration to prevent Botulism (C. botulinum) growth."
+      a: "CRITICAL: Remove from packaging BEFORE thawing to prevent Botulism (C. botulinum) growth."
     }
   ]
 
   useEffect(() => {
-    let timeout
-    const currentScenario = scenarios[scenarioIndex]
+    const runSequence = async () => {
+      // 1. Show Question
+      setShowQ(true)
+      
+      // 2. Wait, then Show Answer
+      await new Promise(r => setTimeout(r, 1500))
+      setShowA(true)
 
-    // Phase 1: Type Question (Simulates Input)
-    if (phase === 'typing_q') {
-      if (charIndex < currentScenario.q.length) {
-        timeout = setTimeout(() => {
-          setCurrentQ(currentScenario.q.slice(0, charIndex + 1))
-          setCharIndex(charIndex + 1)
-        }, 30) 
-      } else {
-        setPhase('processing')
-      }
-    
-    // Phase 2: Processing Delay (Brief pause)
-    } else if (phase === 'processing') {
-      timeout = setTimeout(() => {
-        setPhase('fade_in_answer')
-      }, 400) 
+      // 3. Hold for reading
+      await new Promise(r => setTimeout(r, 4500))
 
-    // Phase 3: Fade In Answer (Smooth, no typing)
-    } else if (phase === 'fade_in_answer') {
-      setCurrentA(currentScenario.a)
-      setPhase('reading')
-
-    // Phase 4: Read Time (Hold for user to read)
-    } else if (phase === 'reading') {
-      timeout = setTimeout(() => {
-        setPhase('reset')
-      }, 4500) 
-
-    // Phase 5: Reset for next
-    } else if (phase === 'reset') {
-      setCurrentQ('')
-      setCurrentA(null)
-      setCharIndex(0)
-      setPhase('typing_q')
-      setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+      // 4. Fade Out
+      setShowQ(false)
+      setShowA(false)
+      
+      // 5. Wait for fade out to finish, then swap index
+      await new Promise(r => setTimeout(r, 500))
+      setIndex(prev => (prev + 1) % scenarios.length)
     }
-    return () => clearTimeout(timeout)
-  }, [charIndex, phase, scenarioIndex])
+
+    runSequence()
+  }, [index])
+
+  const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
-      {/* THE QUESTION */}
-      <div className="text-slate-500 font-bold uppercase tracking-wide mb-3 min-h-[24px]">
-        {currentQ}
-        {/* Blinking cursor only during typing */}
-        {phase === 'typing_q' && (
-          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
-        )}
+      {/* QUESTION */}
+      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.q}
       </div>
 
-      {/* THE ANSWER (Fades in smoothly) */}
-      <div className={`text-[#6b85a3] font-bold transition-all duration-700 ease-out ${currentA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {currentA || "..."} 
-        {/* Placeholder dots to prevent layout jump, hidden by opacity */}
+      {/* ANSWER */}
+      <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.a}
       </div>
 
     </div>
@@ -261,10 +242,9 @@ export default function Home() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {/* Smaller, more technical header */}
+        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory<br/>Intelligence.
+            Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
@@ -272,8 +252,9 @@ export default function Home() {
         </div>
 
         {/* THE LIVE TERMINAL (CENTERPIECE) */}
-        <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <TypewriterTerminal />
+        {/* Floating text only. No box. */}
+        <div className={`w-full transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <LiveDataTerminal />
         </div>
 
       </div>
