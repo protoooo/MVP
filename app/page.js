@@ -178,7 +178,8 @@ export default function Home() {
           <div className="lg:absolute lg:bottom-12 lg:left-12 z-10 mt-10 lg:mt-0">
             <div className={`text-blue-200/30 text-[9px] font-bold uppercase tracking-[0.2em] flex flex-col gap-1 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
               <span>SECURE CONNECTION ESTABLISHED</span>
-              <span>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+              {/* FIXED: Use a static ID to prevent hydration mismatch errors */}
+              <span>ID: 8X29-AFF4-90B1-SEC</span>
             </div>
           </div>
         </div>
