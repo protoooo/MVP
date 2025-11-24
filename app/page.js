@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (NO CARD, JUST TEXT) ---
+// --- 1. THE LIVE TERMINAL (Centered, No Border, Equal Text) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
@@ -18,7 +18,7 @@ const TypewriterTerminal = () => {
     },
     {
       q: "QUERY: Proper storage for raw shell eggs?",
-      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below. [FDA 3-202.11]"
+      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below."
     },
     {
       q: "QUERY: Employee just vomited in the prep area.",
@@ -75,21 +75,20 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    // Removed bg-white, border, shadow. Just text.
-    <div className="w-full max-w-3xl font-mono text-base md:text-lg leading-relaxed min-h-[180px] flex flex-col justify-center relative">
-      {/* Left Accent Line to anchor the text */}
-      <div className="absolute left-0 top-4 bottom-4 w-1 bg-[#6b85a3]/30"></div>
+    // No border, No shadow, Dead Center text
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
-      <div className="whitespace-pre-wrap pl-6">
+      <div className="whitespace-pre-wrap">
         {displayText.split('\n\n').map((line, i) => (
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
+          // Font sizes are now EQUAL. Colors differ for contrast.
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-500 mb-3 font-medium uppercase tracking-wide' : 'text-[#6b85a3] font-bold'}>
             {line}
             {i === displayText.split('\n\n').length - 1 && (
               <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
             )}
           </div>
         ))}
-        {displayText === '' && <span className="inline-block w-2.5 h-5 bg-slate-300 animate-pulse align-middle ml-6"></span>}
+        {displayText === '' && <span className="inline-block w-2.5 h-5 bg-slate-300 animate-pulse align-middle"></span>}
       </div>
     </div>
   )
@@ -221,13 +220,11 @@ export default function Home() {
       {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* LOGO SIZE INCREASED */}
           <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
         <div className={`flex gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* BUTTONS SIZE INCREASED SLIGHTLY */}
           <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
             Sign In
           </button>
@@ -240,40 +237,31 @@ export default function Home() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT (Centered Above) */}
-        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 rounded-md shadow-sm">
-            Regulatory Intelligence Unit
-          </div>
-          <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Unified Regulatory<br/>Intelligence.
+        {/* HERO TEXT */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          {/* REMOVED THE BADGE HERE */}
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+            Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
-            The only compliance infrastructure trained on FDA Code 2022, Michigan Modified Food Law, and county-specific enforcement data for <strong>Washtenaw, Wayne, and Oakland.</strong>
+            The only compliance infrastructure trained on the Federal Food Code, Michigan Food Law, and specific enforcement data for <strong>Washtenaw, Wayne, and Oakland County.</strong>
           </p>
         </div>
 
         {/* THE LIVE TERMINAL (CENTERPIECE) */}
-        <div className={`w-full transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest mb-4">Live System Preview</div>
+        {/* Pushed down slightly with mt-4 */}
+        <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <TypewriterTerminal />
         </div>
 
       </div>
 
-      {/* FOOTER (Features) */}
+      {/* FOOTER (Simplified) */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          
-          <div className="flex flex-col md:flex-row gap-8 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
-            <span>Violation Risk Analysis</span>
-            <span>Hazmat Protocols</span>
-            <span>Priority P / Core Logic</span>
-          </div>
-
-          <div className="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-300">
-            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
-            <a href="/privacy" className="hover:text-[#6b85a3]">Privacy</a>
+        <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
+          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <a href="/terms" className="hover:text-[#6b85a3] transition">Terms</a>
+            <a href="/privacy" className="hover:text-[#6b85a3] transition">Privacy</a>
             <span>© 2025 protocolLM</span>
           </div>
         </div>
