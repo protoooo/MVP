@@ -4,92 +4,95 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Centered, No Border, Equal Text) ---
-const TypewriterTerminal = () => {
-  const [displayText, setDisplayText] = useState('')
-  const [phase, setPhase] = useState('typing_q') 
-  const [scenarioIndex, setScenarioIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
+// --- 1. THE LIVE TERMINAL (FADE ONLY - NO TYPING) ---
+const LiveDataTerminal = () => {
+  const [index, setIndex] = useState(0)
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
 
+  // 10 High-Value Scenarios for Owners
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
-      a: "ANALYSIS: Pf violation. Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days to avoid escalation."
+      a: "VIOLATION: Priority Foundation (Pf). Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days."
     },
     {
-      q: "QUERY: Proper storage for raw shell eggs?",
-      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below."
+      q: "QUERY: Can we store raw burger patties above cooked brisket?",
+      a: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F) must go BELOW ready-to-eat foods."
     },
     {
-      q: "QUERY: Employee just vomited in the prep area.",
-      a: "EMERGENCY PROTOCOL: 1. Stop service. 2. Isolate area (25ft radius). 3. Use Norovirus cleanup kit (chlorine > 1000ppm)."
+      q: "QUERY: Prep cook has a sore throat and fever.",
+      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics."
     },
     {
-      q: "QUERY: Cooling timeline for chili?",
-      a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
+      q: "QUERY: Cooling procedure for large batch of chili?",
+      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands."
     },
     {
-      q: "QUERY: Date marking requirements for deli meat?",
-      a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
+      q: "QUERY: Quat sanitizer testing at 500ppm.",
+      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute to manufacturer specs (200-400ppm)."
+    },
+    {
+      q: "QUERY: How long can we keep house-made ranch?",
+      a: "RULE: 7 Days max if held at 41°F. Day 1 is preparation day. Must be date-marked. Discard if undated."
+    },
+    {
+      q: "QUERY: Found mouse droppings in dry storage.",
+      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact PCO. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
+    },
+    {
+      q: "QUERY: Hot holding temp dropped to 125°F.",
+      a: "CORRECTION: If <4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
+    },
+    {
+      q: "QUERY: Can employees drink from open cups in kitchen?",
+      a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
+    },
+    {
+      q: "QUERY: Thawing vacuum-sealed fish?",
+      a: "CRITICAL: Remove from packaging BEFORE thawing to prevent Botulism (C. botulinum) growth."
     }
   ]
 
   useEffect(() => {
-    let timeout
-    const currentScenario = scenarios[scenarioIndex]
+    const runSequence = async () => {
+      // 1. Show Question (Fade In)
+      setShowQ(true)
+      
+      // 2. Wait, then Show Answer (Fade In)
+      await new Promise(r => setTimeout(r, 1500))
+      setShowA(true)
 
-    if (phase === 'typing_q') {
-      if (charIndex < currentScenario.q.length) {
-        timeout = setTimeout(() => {
-          setDisplayText(currentScenario.q.slice(0, charIndex + 1))
-          setCharIndex(charIndex + 1)
-        }, 35) 
-      } else {
-        setPhase('pause_q')
-      }
-    } else if (phase === 'pause_q') {
-      timeout = setTimeout(() => {
-        setPhase('typing_a')
-        setCharIndex(0) 
-      }, 600) 
-    } else if (phase === 'typing_a') {
-      if (charIndex < currentScenario.a.length) {
-        timeout = setTimeout(() => {
-          setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
-          setCharIndex(charIndex + 1)
-        }, 15) 
-      } else {
-        setPhase('pause_a')
-      }
-    } else if (phase === 'pause_a') {
-      timeout = setTimeout(() => {
-        setPhase('deleting')
-      }, 4500) 
-    } else if (phase === 'deleting') {
-      setDisplayText('')
-      setCharIndex(0)
-      setPhase('typing_q')
-      setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+      // 3. Hold for reading (Long pause)
+      await new Promise(r => setTimeout(r, 4500))
+
+      // 4. Fade Out Both
+      setShowQ(false)
+      setShowA(false)
+      
+      // 5. Swap Text while invisible
+      await new Promise(r => setTimeout(r, 500))
+      setIndex(prev => (prev + 1) % scenarios.length)
     }
-    return () => clearTimeout(timeout)
-  }, [charIndex, phase, scenarioIndex])
+
+    runSequence()
+  }, [index])
+
+  const current = scenarios[index]
 
   return (
-    // Centered, no border, simple text block
     <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
-      <div className="whitespace-pre-wrap">
-        {displayText.split('\n\n').map((line, i) => (
-          // Equal font sizing for Q and A
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
-            {line}
-            {i === displayText.split('\n\n').length - 1 && (
-              <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
-            )}
-          </div>
-        ))}
-        {displayText === '' && <span className="inline-block w-2.5 h-5 bg-slate-300 animate-pulse align-middle"></span>}
+      {/* QUESTION */}
+      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-700 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.q}
       </div>
+
+      {/* ANSWER */}
+      <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.a}
+      </div>
+
     </div>
   )
 }
@@ -102,7 +105,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
-  const router = useRouter()
+  const router = useRouter() // FIXED: Added router here so buttons work
 
   useEffect(() => {
     setView(defaultView)
@@ -195,6 +198,17 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
           </button>
         </div>
+        
+        {/* PRICING BUTTON INSIDE MODAL AS BACKUP */}
+        <div className="mt-2 text-center">
+          <button 
+            onClick={() => router.push('/pricing')}
+            className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono"
+          >
+            View Pricing
+          </button>
+        </div>
+
       </div>
     </div>
   )
@@ -204,6 +218,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
+  const router = useRouter()
    
   useEffect(() => {
     setMounted(true)
@@ -243,7 +258,7 @@ export default function Home() {
         {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory Intelligence.
+            Local Regulatory<br/>Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
@@ -252,7 +267,7 @@ export default function Home() {
 
         {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <TypewriterTerminal />
+          <LiveDataTerminal />
         </div>
 
       </div>
