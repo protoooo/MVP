@@ -39,7 +39,7 @@ export default function Home() {
           if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
           else window.location.href = '/pricing'
         } else if (data.user && !data.session) {
-          setMessage({ type: 'success', text: 'Verification email sent. Check inbox.' })
+          setMessage({ type: 'success', text: 'VERIFICATION_LINK_SENT' })
           setLoading(false)
         }
       } else {
@@ -73,105 +73,111 @@ export default function Home() {
       }
     } catch (error) {
       let errorMessage = error.message
-      if (error.message.includes('Invalid login credentials')) errorMessage = 'Invalid email or password.'
-      else if (error.message.includes('Email not confirmed')) errorMessage = 'Account pending confirmation.'
+      if (error.message.includes('Invalid login credentials')) errorMessage = 'CREDENTIALS_INVALID'
+      else if (error.message.includes('Email not confirmed')) errorMessage = 'ACCOUNT_PENDING'
       setMessage({ type: 'error', text: errorMessage })
       setLoading(false)
     }
   }
 
-  // --- ICONS ---
-  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8" strokeWidth="1.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>)
-  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8" strokeWidth="1.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>)
-  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8" strokeWidth="1.2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /><path d="M12 22V12" /></svg>)
+  // --- ICONS (Precision Style) ---
+  const IconShield = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>)
+  const IconWarning = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>)
+  const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-6 h-6" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /><path d="M12 22V12" /></svg>)
 
   const FeatureItem = ({ icon: Icon, title, desc }) => (
-    <div className="flex flex-col gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
-      <div className="text-teal-300 opacity-80">
+    <div className="flex flex-col gap-2 p-5 border border-slate-200 bg-white hover:border-slate-400 transition-colors">
+      <div className="text-slate-800">
         <Icon />
       </div>
       <div>
-        <h3 className="text-white font-bold text-lg tracking-wide mb-2">{title}</h3>
-        <p className="text-teal-100/60 text-sm leading-relaxed">{desc}</p>
+        <h3 className="text-slate-900 font-bold text-sm tracking-wide uppercase">{title}</h3>
+        <p className="text-slate-500 text-xs leading-relaxed mt-1">{desc}</p>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen w-full bg-[#022c22] font-sans selection:bg-teal-500 selection:text-white flex flex-col">
+    <div className="min-h-screen w-full bg-[#f1f5f9] font-mono text-slate-900 selection:bg-slate-300 selection:text-black flex flex-col">
       
+      {/* Technical Grid Background */}
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none" 
+           style={{ backgroundImage: 'linear-gradient(#0f172a 1px, transparent 1px), linear-gradient(90deg, #0f172a 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+      </div>
+
       {/* NAVBAR */}
-      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center z-20">
+      <nav className="w-full max-w-[1400px] mx-auto px-6 py-6 flex justify-between items-center z-20 relative border-b border-slate-300/50">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            protocol<span className="font-normal text-teal-400">LM</span>
+          <h1 className="text-lg font-bold tracking-tight text-slate-900">
+            PROTOCOL_LM<span className="text-slate-400">_SYS</span>
           </h1>
         </div>
-        <div className={`text-xs font-bold uppercase tracking-widest text-teal-400/60 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          Authorized Access Only
+        <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          MI_NETWORK_ACTIVE
         </div>
       </nav>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col justify-center relative w-full max-w-7xl mx-auto px-6 pb-20">
+      <div className="flex-1 flex flex-col justify-center relative w-full max-w-[1400px] mx-auto px-6 pb-20 pt-10">
         
-        {/* BACKGROUND GLOW */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="grid lg:grid-cols-12 gap-12 items-center relative z-10">
+        <div className="grid lg:grid-cols-12 gap-16 items-center relative z-10">
           
-          {/* LEFT SIDE: HUGE TYPOGRAPHY */}
+          {/* LEFT SIDE: DATA DISPLAY */}
           <div className="lg:col-span-7 space-y-12">
             <div className={`transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <h2 className="text-5xl lg:text-7xl font-bold text-white tracking-tight leading-[1.1]">
-                Regulatory<br />
-                <span className="text-teal-400">Intelligence</span> Unit.
+              <div className="inline-block border border-slate-300 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-4 bg-white">
+                Regulatory Intelligence Unit
+              </div>
+              <h2 className="text-4xl lg:text-6xl font-bold text-slate-900 tracking-tighter leading-none mb-6">
+                COMPLIANCE<br />
+                INFRASTRUCTURE.
               </h2>
-              <p className="text-xl text-teal-100/70 mt-6 max-w-lg leading-relaxed">
-                Unified compliance infrastructure for Michigan restaurant groups. Mitigate liability with county-level enforcement data.
+              <p className="text-lg text-slate-600 max-w-lg leading-relaxed border-l-2 border-slate-300 pl-4">
+                Unified enforcement data for Michigan restaurant groups. Mitigate liability with county-level precision.
               </p>
             </div>
 
-            {/* BIGGER FEATURE CARDS */}
-            <div className={`grid sm:grid-cols-3 gap-4 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-              <FeatureItem 
-                title="Enforcement" 
-                desc="Washtenaw, Wayne & Oakland triggers." 
-                icon={IconShield} 
-              />
-              <FeatureItem 
-                title="Risk Logic" 
-                desc="Priority (P) vs Core violation analysis." 
-                icon={IconWarning} 
-              />
-              <FeatureItem 
-                title="Unified Code" 
-                desc="FDA 2022 + MI Modified Food Law." 
-                icon={IconGrid} 
-              />
+            {/* FEATURE GRID */}
+            <div className={`grid sm:grid-cols-3 gap-0 border border-slate-300 bg-white shadow-sm transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <div className="p-6 border-r border-slate-300">
+                <div className="text-slate-900 mb-3"><IconShield /></div>
+                <h3 className="font-bold text-xs uppercase mb-1">Enforcement</h3>
+                <p className="text-[10px] text-slate-500">Washtenaw / Wayne / Oakland triggers.</p>
+              </div>
+              <div className="p-6 border-r border-slate-300">
+                <div className="text-slate-900 mb-3"><IconWarning /></div>
+                <h3 className="font-bold text-xs uppercase mb-1">Risk Logic</h3>
+                <p className="text-[10px] text-slate-500">Priority (P) vs Core analysis.</p>
+              </div>
+              <div className="p-6">
+                <div className="text-slate-900 mb-3"><IconGrid /></div>
+                <h3 className="font-bold text-xs uppercase mb-1">Unified Code</h3>
+                <p className="text-[10px] text-slate-500">FDA 2022 + MI Modified Law.</p>
+              </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE: THE LOGIN CARD (THE MONOLITH) */}
+          {/* RIGHT SIDE: THE LOGIN TERMINAL */}
           <div className="lg:col-span-5">
-            <div className={`bg-white rounded-3xl p-8 lg:p-10 shadow-2xl shadow-black/30 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
+            <div className={`bg-white border-2 border-slate-900 p-8 shadow-[8px_8px_0px_0px_rgba(15,23,42,0.1)] transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
               
-              <div className="mb-8">
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Dashboard Access</h3>
-                <p className="text-slate-500 text-sm">Enter credentials to initialize session.</p>
+              <div className="mb-8 border-b border-slate-200 pb-4">
+                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-wider">Terminal_Access</h3>
+                <p className="text-slate-500 text-xs mt-1">Enter authorized credentials.</p>
               </div>
 
               {/* TABS */}
-              <div className="flex p-1 bg-slate-100 rounded-xl mb-8">
+              <div className="flex mb-6 text-xs font-bold uppercase tracking-widest">
                 <button 
                   onClick={() => { setView('signup'); setMessage(null); }} 
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide rounded-lg transition-all ${view === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`flex-1 py-2 border-b-2 transition-all text-center ${view === 'signup' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
-                  New Account
+                  Register
                 </button>
                 <button 
                   onClick={() => { setView('login'); setMessage(null); }} 
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wide rounded-lg transition-all ${view === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  className={`flex-1 py-2 border-b-2 transition-all text-center ${view === 'login' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
                 >
                   Sign In
                 </button>
@@ -179,19 +185,19 @@ export default function Home() {
 
               <form onSubmit={handleAuth} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">Email Address</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Email_Address</label>
                   <input 
                     type="email" 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
                     disabled={loading}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#022c22] focus:ring-1 focus:ring-[#022c22] focus:outline-none text-slate-900 text-base transition-all placeholder-slate-400" 
-                    placeholder="name@company.com" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-400 rounded-none" 
+                    placeholder="CORP_ID@DOMAIN.COM" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-2">Password</label>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Passcode</label>
                   <input 
                     type="password" 
                     value={password} 
@@ -199,7 +205,7 @@ export default function Home() {
                     required 
                     minLength={6}
                     disabled={loading}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#022c22] focus:ring-1 focus:ring-[#022c22] focus:outline-none text-slate-900 text-base transition-all placeholder-slate-400" 
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-300 focus:border-slate-900 focus:ring-0 focus:outline-none text-slate-900 text-sm transition-all placeholder-slate-400 rounded-none" 
                     placeholder="••••••••" 
                   />
                 </div>
@@ -207,25 +213,25 @@ export default function Home() {
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full bg-[#022c22] hover:bg-[#064e3b] text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed mt-2 text-sm uppercase tracking-widest"
+                  className="w-full bg-slate-900 hover:bg-blue-900 text-white font-bold py-4 rounded-none shadow-sm transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed mt-2 text-xs uppercase tracking-[0.2em]"
                 >
-                  {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Secure Login')}
+                  {loading ? 'PROCESSING...' : (view === 'signup' ? 'INITIALIZE_ACCOUNT' : 'AUTHENTICATE')}
                 </button>
 
                 {message && (
-                  <div className={`p-4 rounded-xl text-xs font-medium flex items-center gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-teal-50 text-teal-800'}`}>
+                  <div className={`p-3 text-[10px] font-bold uppercase tracking-wide border ${message.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-800'}`}>
                     {message.text}
                   </div>
                 )}
               </form>
 
               {view === 'signup' && (
-                <div className="mt-8 text-center">
+                <div className="mt-6 text-center">
                   <button 
                     onClick={() => router.push('/pricing')}
-                    className="text-xs font-bold text-slate-400 hover:text-[#022c22] transition-colors uppercase tracking-wide"
+                    className="text-[10px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest border-b border-transparent hover:border-slate-900"
                   >
-                    View Pricing & Fees
+                    Ref: Fee_Structure.pdf
                   </button>
                 </div>
               )}
@@ -236,15 +242,15 @@ export default function Home() {
       </div>
 
       {/* FOOTER */}
-      <div className="w-full border-t border-white/10 py-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-teal-100/40 text-[10px] font-bold uppercase tracking-widest">
+      <div className="w-full border-t border-slate-200 py-6 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
             © 2025 protocolLM. Michigan.
           </div>
-          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-teal-100/60">
-            <a href="/terms" className="hover:text-white transition">Terms</a>
-            <a href="/privacy" className="hover:text-white transition">Privacy</a>
-            <a href="/contact" className="hover:text-white transition">Contact</a>
+          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <a href="/terms" className="hover:text-slate-900 transition">Terms_Svc</a>
+            <a href="/privacy" className="hover:text-slate-900 transition">Privacy_Pol</a>
+            <a href="/contact" className="hover:text-slate-900 transition">Admin_Contact</a>
           </div>
         </div>
       </div>
