@@ -4,79 +4,91 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL ---
-const LiveDataTerminal = () => {
-  const [index, setIndex] = useState(0)
-  const [showQ, setShowQ] = useState(false)
-  const [showA, setShowA] = useState(false)
+// --- 1. THE LIVE TERMINAL (Centered, No Border, Equal Text) ---
+const TypewriterTerminal = () => {
+  const [displayText, setDisplayText] = useState('')
+  const [phase, setPhase] = useState('typing_q') 
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
 
-  // 10 High-Value Scenarios for Owners
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
-      a: "VIOLATION: Priority Foundation (Pf). Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days."
+      a: "ANALYSIS: Pf violation. Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days to avoid escalation."
     },
     {
-      q: "QUERY: Can we store raw burger patties above cooked brisket?",
-      a: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F) must go BELOW ready-to-eat foods."
+      q: "QUERY: Proper storage for raw shell eggs?",
+      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below."
     },
     {
-      q: "QUERY: Prep cook has a sore throat and fever.",
-      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics."
+      q: "QUERY: Employee just vomited in the prep area.",
+      a: "EMERGENCY PROTOCOL: 1. Stop service. 2. Isolate area (25ft radius). 3. Use Norovirus cleanup kit (chlorine > 1000ppm)."
     },
     {
-      q: "QUERY: Cooling procedure for large batch of chili?",
-      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands."
+      q: "QUERY: Cooling timeline for chili?",
+      a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
     },
     {
-      q: "QUERY: Quat sanitizer testing at 500ppm.",
-      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute to manufacturer specs (200-400ppm)."
-    },
-    {
-      q: "QUERY: How long can we keep house-made ranch?",
-      a: "RULE: 7 Days max if held at 41°F. Day 1 is preparation day. Must be date-marked. Discard if undated."
-    },
-    {
-      q: "QUERY: Found mouse droppings in dry storage.",
-      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact PCO. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
-    },
-    {
-      q: "QUERY: Hot holding temp dropped to 125°F.",
-      a: "CORRECTION: If <4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
-    },
-    {
-      q: "QUERY: Can employees drink from open cups in kitchen?",
-      a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
-    },
-    {
-      q: "QUERY: Thawing vacuum-sealed fish?",
-      a: "CRITICAL: Remove from packaging BEFORE thawing to prevent Botulism (C. botulinum) growth."
+      q: "QUERY: Date marking requirements for deli meat?",
+      a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
     }
   ]
 
   useEffect(() => {
-    const runSequence = async () => {
-      setShowQ(true)
-      await new Promise(r => setTimeout(r, 1500))
-      setShowA(true)
-      await new Promise(r => setTimeout(r, 4500))
-      setShowQ(false)
-      setShowA(false)
-      await new Promise(r => setTimeout(r, 500))
-      setIndex(prev => (prev + 1) % scenarios.length)
-    }
-    runSequence()
-  }, [index])
+    let timeout
+    const currentScenario = scenarios[scenarioIndex]
 
-  const current = scenarios[index]
+    if (phase === 'typing_q') {
+      if (charIndex < currentScenario.q.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentScenario.q.slice(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
+        }, 35) 
+      } else {
+        setPhase('pause_q')
+      }
+    } else if (phase === 'pause_q') {
+      timeout = setTimeout(() => {
+        setPhase('typing_a')
+        setCharIndex(0) 
+      }, 600) 
+    } else if (phase === 'typing_a') {
+      if (charIndex < currentScenario.a.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
+        }, 15) 
+      } else {
+        setPhase('pause_a')
+      }
+    } else if (phase === 'pause_a') {
+      timeout = setTimeout(() => {
+        setPhase('deleting')
+      }, 4500) 
+    } else if (phase === 'deleting') {
+      setDisplayText('')
+      setCharIndex(0)
+      setPhase('typing_q')
+      setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+    }
+    return () => clearTimeout(timeout)
+  }, [charIndex, phase, scenarioIndex])
 
   return (
+    // Centered, no border, simple text block
     <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
-      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {current.q}
-      </div>
-      <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {current.a}
+      
+      <div className="whitespace-pre-wrap">
+        {displayText.split('\n\n').map((line, i) => (
+          // Equal font sizing for Q and A
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
+            {line}
+            {i === displayText.split('\n\n').length - 1 && (
+              <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
+            )}
+          </div>
+        ))}
+        {displayText === '' && <span className="inline-block w-2.5 h-5 bg-slate-300 animate-pulse align-middle"></span>}
       </div>
     </div>
   )
@@ -138,19 +150,48 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
+        
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">
           {view === 'signup' ? 'Initialize_Account' : 'Authenticate'}
         </h2>
+
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">
+          <input 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
+            placeholder="Email"
+          />
+          <input 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" 
+            placeholder="Password"
+          />
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
+          >
             {loading ? 'Processing...' : 'Submit'}
           </button>
         </form>
-        {message && <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
+
+        {message && (
+          <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+            {message.text}
+          </div>
+        )}
+
         <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <button onClick={() => { setView(view === 'signup' ? 'login' : 'signup'); setMessage(null); }} className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono">
+          <button 
+            onClick={() => { setView(view === 'signup' ? 'login' : 'signup'); setMessage(null); }}
+            className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono"
+          >
             {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
           </button>
         </div>
@@ -163,7 +204,6 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
-  const router = useRouter()
    
   useEffect(() => {
     setMounted(true)
@@ -184,25 +224,14 @@ export default function Home() {
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
-        
-        {/* NAV BUTTONS - Added Pricing */}
-        <div className={`flex items-center gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button 
-            onClick={() => router.push('/pricing')} 
-            className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors"
-          >
+        <div className={`flex gap-4 text-[11px] font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
             Pricing
           </button>
-          <button 
-            onClick={() => openAuth('login')} 
-            className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors"
-          >
+          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">
             Sign In
           </button>
-          <button 
-            onClick={() => openAuth('signup')} 
-            className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all"
-          >
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
             Create Account
           </button>
         </div>
@@ -213,17 +242,17 @@ export default function Home() {
         
         {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory<br/>Intelligence.
+          <h2 className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tight leading-tight mb-6">
+            Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL */}
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <LiveDataTerminal />
+          <TypewriterTerminal />
         </div>
 
       </div>
