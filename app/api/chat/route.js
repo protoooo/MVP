@@ -317,21 +317,21 @@ export async function POST(request) {
         
         const searchQueries = []
         
+        // 1. High priority: Enforcement, Violations, Inspection Procedures
         searchQueries.push({
-          query: `${userCountyName} enforcement inspection procedures priority foundation`,
+          query: `${userCountyName} violation types priority core critical non-critical enforcement inspection`,
           weight: 1.0,
           purpose: 'county_enforcement'
         })
         
+        // 2. Specific User Question
         if (lastUserMessage.trim()) {
           searchQueries.push({
             query: `${userCountyName} ${lastUserMessage}`,
             weight: 0.9,
             purpose: 'county_specific'
           })
-        }
-        
-        if (lastUserMessage.trim()) {
+          
           searchQueries.push({
             query: lastUserMessage,
             weight: 0.7,
@@ -339,17 +339,12 @@ export async function POST(request) {
           })
         }
         
+        // 3. Image Analysis Context (if applicable)
         if (validatedImage) {
           searchQueries.push({
-            query: `${userCountyName} equipment cleaning maintenance inspection requirements`,
+            query: `${userCountyName} food storage temperatures equipment cleaning cross contamination`,
             weight: 0.85,
-            purpose: 'equipment_regs'
-          })
-          
-          searchQueries.push({
-            query: `physical facility standards enforcement ${userCountyName}`,
-            weight: 0.85,
-            purpose: 'facility_standards'
+            purpose: 'visual_compliance'
           })
         }
         
@@ -397,36 +392,30 @@ export async function POST(request) {
         const uniqueResults = Array.from(seenContent.values())
         console.log(`📌 Unique documents: ${uniqueResults.length}`)
         
+        // Prioritize County "Violation" and "Enforcement" docs
         const countyEnforcementDocs = uniqueResults.filter(doc => {
           const source = doc.source.toLowerCase()
           return (
             doc.county === sanitizedCounty &&
-            (source.includes('enforcement') || 
+            (source.includes('violation') || 
+             source.includes('enforcement') || 
              source.includes('inspection') ||
-             source.includes('food service'))
+             source.includes('priority'))
           )
         })
         
-        const otherDocs = uniqueResults.filter(doc => {
-          const source = doc.source.toLowerCase()
-          return !(
-            doc.county === sanitizedCounty &&
-            (source.includes('enforcement') || 
-             source.includes('inspection') ||
-             source.includes('food service'))
-          )
-        })
+        const otherDocs = uniqueResults.filter(doc => !countyEnforcementDocs.includes(doc))
         
-        console.log(`🎯 County enforcement docs: ${countyEnforcementDocs.length}`)
+        console.log(`🎯 County enforcement/violation docs: ${countyEnforcementDocs.length}`)
         console.log(`📚 Other docs: ${otherDocs.length}`)
         
         const topCountyDocs = countyEnforcementDocs
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 8)
+          .slice(0, 10)
         
         const topOtherDocs = otherDocs
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
-          .slice(0, 22)
+          .slice(0, 20)
         
         const finalResults = [...topCountyDocs, ...topOtherDocs]
           .sort((a, b) => b.adjustedScore - a.adjustedScore)
@@ -466,45 +455,41 @@ CONTENT: ${doc.text}`
 
     const systemInstructionText = `You are ProtocolLM, an expert food safety compliance consultant for ${userCountyName}.
 
-Your knowledge base contains:
-1. **County-Specific Documents**: Enforcement procedures, violation classifications, inspection guidelines
-2. **State & Federal Code**: FDA Food Code, Michigan Modified Food Code
-3. **Technical Guidance**: Temperature charts, cleaning procedures, hazmat protocols
+Your goal is to help restaurants pass inspections and operate safely by identifying violations and citing the specific rules.
 
-**CRITICAL INSTRUCTIONS:**
+**INFORMATION HIERARCHY (Use in this order):**
+1. **County-Specific Documents**: (HIGHEST PRIORITY) Look for "Violation Types", "Enforcement Actions", and local inspection guides.
+2. **State Code**: Michigan Modified Food Code.
+3. **Federal Code**: FDA Food Code.
 
-1. **ALWAYS CHECK COUNTY DOCUMENTS FIRST**
-   - If a ${userCountyName} enforcement or inspection document appears in context, USE IT
-   - County documents define how violations are CLASSIFIED and ENFORCED locally
-   - Example: "According to ${userCountyName} enforcement procedures [Enforcement Action, Page 2], this is handled as..."
+**VIOLATION CLASSIFICATION LOGIC (Critical):**
+You must classify violations using ${userCountyName}'s specific terminology found in the context documents.
+- Most modern county documents (post-2012) use:
+  - **Priority (P)**: Direct hazards to food safety (e.g., cooking temps, cross-contamination, handwashing). CORRECT IMMEDIATELY.
+  - **Priority Foundation (Pf)**: Tools/training that support safety (e.g., missing thermometer, no soap, equipment repair). CORRECT WITHIN 10 DAYS.
+  - **Core**: General sanitation/maintenance (e.g., dirty floors, lights out). CORRECT WITHIN 90 DAYS.
+- **Rules:** 
+  - If you see a violation, YOU MUST CLASSIFY IT (P, Pf, or Core) if the documents support it.
+  - If the context defines "Critical" vs "Non-Critical", clarify which system the county is currently using based on the document dates.
 
-2. **CROSS-REFERENCE BETWEEN CODE AND ENFORCEMENT**
-   - State the RULE from FDA/MI Code
-   - State the CLASSIFICATION from County docs (Priority, Priority Foundation, Core) if available
-   - State the ENFORCEMENT APPROACH from County docs
-   
-3. **FORMAT YOUR RESPONSES**
-   - NO MARKDOWN (no **bold**, no *italic*)
-   - Citations: [Document Name, Page X]
-   - Be conversational but precise
-   - Use "you should" not "the operator shall"
+**IMAGE ANALYSIS PROTOCOL:**
+When the user uploads an image (e.g., a cooler, prep table, or sink):
+1. **Observe**: Detail exactly what you see (e.g., "I see raw chicken stored above open vegetable containers").
+2. **Identify**: Name the specific violation (e.g., "Cross-contamination risk").
+3. **Classify**: Assign P, Pf, or Core based on the county documents.
+   - Example: "According to [Violation Types, Page 1], cross-contamination is a **Priority Violation**."
+4. **Remedy**: Tell them exactly how to fix it immediately.
 
-4. **IMAGE ANALYSIS PROTOCOL**
-   When analyzing images:
-   a) Describe what you see specifically
-   b) Identify the violation with code reference
-   c) Classify using county documents if available (P, Pf, or Core)
-   d) Recommend immediate corrective action
-   e) Cite ALL sources used
+**RESPONSE GUIDELINES:**
+- **Tone**: Professional, authoritative, yet helpful. Use "You should" or "Ensure that," not "The operator shall."
+- **Citations**: STRICTLY cite sources for every claim. Format: [Document Name, Page X].
+- **Formatting**: Do NOT use markdown bold/italic (no **, *). Use plain text.
+- **Unknowns**: If a specific county classification isn't in the provided text, refer to the FDA code but state: "Please verify the specific enforcement classification with ${userCountyName} health department."
 
-5. **HANDLING MISSING INFO**
-   - If county classification isn't in context, say: "While the FDA Code addresses this [FDA_Code, Page X], I don't have ${userCountyName}'s specific enforcement classification in the current context. Contact your health department for enforcement details."
-   - Never guess at classifications
+**CONTEXT DOCUMENTS:**
+${contextText || 'No specific documents retrieved. Provide general FDA guidance and recommend verification.'}
 
-**YOUR DOCUMENT CONTEXT:**
-${contextText || 'No specific documents retrieved. Provide general guidance and recommend user verify with health department.'}
-
-**REMEMBER**: County enforcement documents are GOLD. Always check for them first.`
+**REMEMBER**: You are protecting their business license. Be accurate. Violations are the enemy. Check ${userCountyName} enforcement docs first.`
 
     const generativeModel = vertex_ai.getGenerativeModel({
       model: model,
@@ -518,7 +503,7 @@ ${contextText || 'No specific documents retrieved. Provide general guidance and 
       }
     })
 
-    let fullPromptText = `USER QUESTION: ${lastUserMessage || "Analyze this image."}`
+    let fullPromptText = `USER QUESTION: ${lastUserMessage || "Analyze this image for health code compliance."}`
     
     if (sanitizedMessages.length > 1) {
       const history = sanitizedMessages.slice(-3, -1).map(m => `${m.role}: ${m.content}`).join('\n')
