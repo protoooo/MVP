@@ -40,7 +40,7 @@ export default function DocumentsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  // --- 1. AUTH & SUBSCRIPTION CHECK ---
+  // Auth Check
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -64,7 +64,7 @@ export default function DocumentsPage() {
     checkAccess()
   }, [supabase, router])
 
-  // --- 2. PAYMENT SUCCESS HANDLER ---
+  // Payment Success
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const sessionId = params.get('session_id')
@@ -75,10 +75,19 @@ export default function DocumentsPage() {
     }
   }, [])
 
-  // --- 3. LOAD CHAT HISTORY ---
+  // Load History
   useEffect(() => {
     if (session) loadChatHistory()
   }, [session])
+
+  // Auto Scroll/Save
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (messages.length > 1) saveCurrentChat()
+  }, [messages])
 
   const loadChatHistory = async () => {
     try {
@@ -94,26 +103,6 @@ export default function DocumentsPage() {
       setLoadingChats(false)
     }
   }
-
-  // --- 4. WELCOME MESSAGE ---
-  useEffect(() => {
-    if (userCounty && messages.length === 0) {
-      setMessages([{ 
-        role: 'assistant', 
-        content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
-        citations: []
-      }])
-    }
-  }, [userCounty])
-
-  // --- 5. AUTO-SCROLL & AUTO-SAVE ---
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  useEffect(() => {
-    if (messages.length > 1) saveCurrentChat()
-  }, [messages])
 
   const saveCurrentChat = async () => {
     if (!session || messages.length <= 1 || savingChat) return
@@ -134,7 +123,6 @@ export default function DocumentsPage() {
             county: userCounty
           })
         })
-
         if (response.ok) {
           const data = await response.json()
           setCurrentChatId(data.chat.id)
@@ -157,7 +145,6 @@ export default function DocumentsPage() {
     }, 2000)
   }
 
-  // --- ACTIONS ---
   const loadChat = (chat) => {
     setMessages(chat.messages)
     setUserCounty(chat.county)
@@ -193,7 +180,6 @@ export default function DocumentsPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     localStorage.clear()
-    // FIX: Force hard reload/redirect to avoid Next.js caching issues
     window.location.href = '/'
   }
 
@@ -234,7 +220,49 @@ export default function DocumentsPage() {
     }
   }
 
-  // --- CORE MESSAGING FUNCTION ---
+  const handleCitationClick = (citation) => {
+    if (!citation?.document) return
+    const pageMatch = citation.pages?.toString().match(/\d+/)
+    setViewingPdf({
+      title: citation.document,
+      filename: `${citation.document}.pdf`,
+      county: userCounty,
+      targetPage: pageMatch ? parseInt(pageMatch[0]) : 1
+    })
+  }
+
+  const renderMessageContent = (msg) => {
+    const content = msg.content || ''
+    const parts = []
+    let lastIndex = 0
+    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
+    let match
+
+    while ((match = citationRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
+      }
+      parts.push({ type: 'citation', document: match[1], pages: match[2] })
+      lastIndex = match.index + match[0].length
+    }
+    if (lastIndex < content.length) {
+      parts.push({ type: 'text', content: content.slice(lastIndex) })
+    }
+
+    return (
+      <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
+        {parts.map((part, i) =>
+          part.type === 'text' ? <span key={i}>{part.content}</span> : (
+            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {part.document} <span className="opacity-50">| P.{part.pages}</span>
+            </button>
+          )
+        )}
+      </div>
+    )
+  }
+
   const handleSendMessage = async (e, overrideInput = null) => {
     if (e) e.preventDefault()
     
@@ -279,8 +307,7 @@ export default function DocumentsPage() {
       if (subscriptionInfo) {
         setSubscriptionInfo(prev => ({
           ...prev,
-          requestsUsed: prev.requestsUsed + 1,
-          imagesUsed: image ? prev.imagesUsed + 1 : prev.imagesUsed
+          requestsUsed: prev.requestsUsed + 1
         }))
       }
     } catch (err) {
@@ -296,18 +323,22 @@ export default function DocumentsPage() {
     }
   }
 
-  // --- FEATURE 1: MOCK AUDIT ---
   const runMockAudit = () => {
     startNewChat()
-    // Small delay to let the clear happen, then send the prompt
     setTimeout(() => {
-      handleSendMessage(null, "Initiate Mock Health Inspection Protocol. Guide me through checking the Handwashing Sink, Walk-in Cooler, Dish Machine, Dry Storage, and Prep Line. Ask me to upload photos for each area one by one. Score violations based on Priority (P) vs Core.")
+      handleSendMessage(null, "Initiate Mock Health Inspection Protocol. Guide me through checking Handwashing Sinks, Cooler Temps, Dish Machine, and Storage. Score violations based on Priority (P) vs Core.")
     }, 500)
   }
 
-  // --- FEATURE 2: MEMO GENERATOR ---
+  // --- PRINT / PDF FEATURE ---
   const generateMemo = () => {
-    handleSendMessage(null, "Based on the violations discussed in this session, generate a formal 'CORRECTIVE ACTION NOTICE' for my staff. Format it clearly with Topic, Code Reference, and Corrective Instruction. Keep it professional, stern, and ready to copy-paste.")
+    // 1. Ask AI to generate text
+    handleSendMessage(null, "Generate a formal 'CORRECTIVE ACTION NOTICE' based on our discussion. Format clearly with: Date, Violation Topic, Code Reference, and Required Action.")
+  }
+
+  const handlePrint = () => {
+    // 2. User clicks this AFTER the AI generates the text to print it
+    window.print()
   }
 
   const handleImageSelect = (e) => {
@@ -322,58 +353,24 @@ export default function DocumentsPage() {
     reader.readAsDataURL(file)
   }
 
-  // --- RENDER HELPERS ---
-  const handleCitationClick = (citation) => {
-    if (!citation?.document) return
-    const pageMatch = citation.pages?.toString().match(/\d+/)
-    setViewingPdf({
-      title: citation.document,
-      filename: `${citation.document}.pdf`,
-      county: userCounty,
-      targetPage: pageMatch ? parseInt(pageMatch[0]) : 1
-    })
-  }
-
-  const renderMessageContent = (msg) => {
-    const content = msg.content || ''
-    const parts = []
-    let lastIndex = 0
-    const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
-    let match
-
-    while ((match = citationRegex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
-      }
-      parts.push({ type: 'citation', document: match[1], pages: match[2] })
-      lastIndex = match.index + match[0].length
-    }
-    if (lastIndex < content.length) {
-      parts.push({ type: 'text', content: content.slice(lastIndex) })
-    }
-
-    return (
-      <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
-        {parts.map((part, i) =>
-          part.type === 'text' ? <span key={i}>{part.content}</span> : (
-            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              {part.document} <span className="opacity-50">| P.{part.pages}</span>
-            </button>
-          )
-        )}
-      </div>
-    )
-  }
-
   if (!session) return <div className="min-h-screen bg-white flex items-center justify-center font-mono text-xs text-slate-400">LOADING SYSTEM...</div>
 
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
       
+      {/* --- PRINT STYLES (Hidden unless printing) --- */}
+      <style jsx global>{`
+        @media print {
+          body * { visibility: hidden; }
+          .chat-container, .chat-container * { visibility: visible; }
+          .chat-container { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
       {/* MODALS */}
       {showCountySelector && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest">Select Jurisdiction</h3>
@@ -391,7 +388,7 @@ export default function DocumentsPage() {
       )}
 
       {viewingPdf && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 no-print">
           <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
             <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
               <div>
@@ -406,13 +403,13 @@ export default function DocumentsPage() {
       )}
 
       {showSuccessMessage && (
-        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center">
+        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center no-print">
           <span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span>
         </div>
       )}
 
-      {/* SIDEBAR (LIGHT THEME) */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden`}>
+      {/* SIDEBAR */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden no-print`}>
         <div className="p-6 border-b border-slate-200">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -427,12 +424,10 @@ export default function DocumentsPage() {
             <svg className="w-4 h-4 text-[#6b85a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
-          {/* MAIN BUTTON: NEW CHAT */}
           <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90 mb-3" style={{ backgroundColor: '#6b85a3' }}>
             <span>+</span> New Inquiry
           </button>
 
-          {/* FEATURE BUTTON: MOCK AUDIT */}
           <button onClick={runMockAudit} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm hover:border-[#6b85a3] hover:text-[#6b85a3]">
              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
              Run Mock Audit
@@ -472,8 +467,8 @@ export default function DocumentsPage() {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative">
-        <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative chat-container">
+        <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30 no-print">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
@@ -488,17 +483,17 @@ export default function DocumentsPage() {
               <div className={`max-w-[90%] lg:max-w-[80%] ${msg.role === 'assistant' ? 'w-full' : ''}`}>
                 <div className={`${msg.role === 'user' ? 'bg-[#6b85a3] text-white rounded-sm px-5 py-3 shadow-sm inline-block float-right' : 'text-slate-800 pl-0'}`}>
                   {msg.image && <img src={msg.image} alt="Analysis" className="mb-3 rounded-sm border border-white/20 max-w-sm w-full h-auto" />}
-                  {msg.role === 'assistant' && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span></div>}
+                  {msg.role === 'assistant' && <div className="flex items-center gap-2 mb-2 no-print"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span></div>}
                   {msg.role === 'user' ? <p className="whitespace-pre-wrap leading-relaxed text-sm font-mono">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
               </div>
             </div>
           ))}
-          {isLoading && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span></div>}
+          {isLoading && <div className="flex items-center gap-2 mb-2 no-print"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span></div>}
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20">
+        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
             <div className="flex items-end gap-2 bg-[#f8fafc] border border-slate-300 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-sm">
@@ -507,16 +502,22 @@ export default function DocumentsPage() {
               <input value={input} onChange={e => setInput(e.target.value)} placeholder={image ? "Analyze this image..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
               <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) || !canSend ? 'bg-slate-200 text-slate-400' : 'text-white hover:opacity-90'}`} style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}><svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
             </div>
+            
+            {/* ACTION BAR: MEMO & PRINT */}
             <div className="flex justify-between items-center mt-3">
-              
-              {/* --- FEATURE BUTTON: GENERATE MEMO --- */}
-              <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30 cursor-pointer">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Generate Staff Memo
-              </button>
-              
+              <div className="flex gap-4">
+                <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30 cursor-pointer">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Generate Memo
+                </button>
+                <button type="button" onClick={handlePrint} className="text-[10px] font-bold uppercase tracking-wide text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-1 cursor-pointer">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    Print / PDF
+                </button>
+              </div>
               <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">AI Guidance | Verify with Official Docs</p>
             </div>
+
           </form>
         </div>
       </div>
