@@ -193,7 +193,8 @@ export default function DocumentsPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     localStorage.clear()
-    router.push('/')
+    // FIX: Force hard reload/redirect to avoid Next.js caching issues
+    window.location.href = '/'
   }
 
   const handleManageSubscription = async () => {
@@ -306,7 +307,7 @@ export default function DocumentsPage() {
 
   // --- FEATURE 2: MEMO GENERATOR ---
   const generateMemo = () => {
-    handleSendMessage(null, "Based on the violations discussed in this session, generate a formal 'CORRECTIVE ACTION NOTICE' for my staff. Format it clearly with Topic, Code Reference, and Corrective Instruction. Keep it professional and stern.")
+    handleSendMessage(null, "Based on the violations discussed in this session, generate a formal 'CORRECTIVE ACTION NOTICE' for my staff. Format it clearly with Topic, Code Reference, and Corrective Instruction. Keep it professional, stern, and ready to copy-paste.")
   }
 
   const handleImageSelect = (e) => {
