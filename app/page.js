@@ -86,9 +86,9 @@ export default function Home() {
   const IconGrid = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 22V12" strokeLinecap="round" strokeLinejoin="round" /></svg>)
   const IconHazmat = () => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-full h-full icon-trace" strokeWidth="1"><circle cx="12" cy="8" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="8" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="15" r="2" strokeLinecap="round" strokeLinejoin="round" /><path d="M12 10v3" strokeLinecap="round" strokeLinejoin="round" /><path d="M10 13.5l-2 1" strokeLinecap="round" strokeLinejoin="round" /><path d="M14 13.5l2 1" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="12" r="9" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" /></svg>)
 
-  // --- MICHIGAN MAP TRACING COMPONENT ---
+  // --- MICHIGAN MAP COMPONENT (Uses separate class) ---
   const MichiganMap = () => (
-    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full icon-trace opacity-10 text-teal-300" strokeWidth="0.5">
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" className="w-full h-full map-trace opacity-10 text-teal-300" strokeWidth="0.5">
       {/* Lower Peninsula */}
       <path d="M120 170 L120 185 L70 185 L65 175 L60 150 L55 130 L60 110 L75 90 L100 75 L120 85 L130 100 L140 110 L145 130 L140 150 L135 160 L120 170 Z" strokeLinecap="round" strokeLinejoin="round" />
       {/* Upper Peninsula */}
@@ -115,19 +115,39 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white font-sans selection:bg-[#022c22] selection:text-white">
       <style jsx global>{`
+        /* SMALL ICONS ANIMATION */
         .icon-trace path, .icon-trace circle, .icon-trace line {
+          stroke-dasharray: 100;
+          stroke-dashoffset: 100;
+          animation: trace 3s ease-in-out forwards;
+        }
+        
+        /* BIG MAP ANIMATION (Needs longer path length) */
+        .map-trace path {
           stroke-dasharray: 1000;
           stroke-dashoffset: 1000;
-          animation: trace 4s ease-out forwards;
+          animation: trace 6s ease-out forwards;
         }
+
+        /* Hover effect for small icons */
         .group:hover .icon-trace path, 
         .group:hover .icon-trace circle,
         .group:hover .icon-trace line {
           animation: trace 2s ease-in-out infinite;
         }
+
         @keyframes trace {
-          0% { stroke-dashoffset: 1000; }
+          0% { stroke-dashoffset: 100; }
           100% { stroke-dashoffset: 0; }
+        }
+        
+        /* Override keyframe start for map specifically */
+        .map-trace path {
+           animation-name: traceMap;
+        }
+        @keyframes traceMap {
+           0% { stroke-dashoffset: 1000; }
+           100% { stroke-dashoffset: 0; }
         }
       `}</style>
 
@@ -136,10 +156,9 @@ export default function Home() {
         {/* LEFT SIDE */}
         <div className="w-full lg:w-1/2 bg-[#022c22] relative overflow-hidden px-8 py-6 flex flex-col lg:pb-40">
           
-          {/* BACKGROUND MAP */}
+          {/* BACKGROUND MAP - Positioned behind everything */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-             {/* Scaled up and rotated slightly to look like an architectural blueprint */}
-             <div className="w-[150%] h-[150%] -translate-x-10 translate-y-10 opacity-20">
+             <div className="w-[140%] h-[140%] -translate-x-5 translate-y-10 opacity-15 rotate-6">
                 <MichiganMap />
              </div>
           </div>
