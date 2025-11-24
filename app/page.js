@@ -4,33 +4,54 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Centered, No Border, Equal Text) ---
+// --- 1. THE LIVE TERMINAL (Slower, 10 Scenarios) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [charIndex, setCharIndex] = useState(0)
 
+  // 10 High-Value Scenarios for Owners/Managers
   const scenarios = [
     {
-      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
-      a: "ANALYSIS: Pf violation. Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days to avoid escalation."
+      q: "QUERY: Dishwasher final rinse is only hitting 150°F.",
+      a: "VIOLATION: Priority (P). High-temp machines must reach 160°F at the utensil surface (180°F manifold). Stop using until fixed or set up 3-comp sink sanitizing."
     },
     {
-      q: "QUERY: Proper storage for raw shell eggs?",
-      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below."
+      q: "QUERY: Can we store raw burger patties above the cooked brisket?",
+      a: "NEGATIVE: Priority (P). Raw ground meat (155°F cook temp) must go BELOW ready-to-eat foods to prevent drip contamination."
     },
     {
-      q: "QUERY: Employee just vomited in the prep area.",
-      a: "EMERGENCY PROTOCOL: 1. Stop service. 2. Isolate area (25ft radius). 3. Use Norovirus cleanup kit (chlorine > 1000ppm)."
+      q: "QUERY: Prep cook has a sore throat and fever.",
+      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics. [FDA 2-201.12]"
     },
     {
-      q: "QUERY: Cooling timeline for chili?",
-      a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
+      q: "QUERY: Cooling procedure for large batch of chili?",
+      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands or shallow pans."
     },
     {
-      q: "QUERY: Date marking requirements for deli meat?",
-      a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
+      q: "QUERY: Quat sanitizer testing at 500ppm.",
+      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute immediately to manufacturer specs (usually 200-400ppm)."
+    },
+    {
+      q: "QUERY: How long can we keep house-made ranch?",
+      a: "RULE: 7 Days max if held at 41°F. Day 1 is the day of preparation. Must be date-marked. Discard if undated."
+    },
+    {
+      q: "QUERY: Found mouse droppings in dry storage.",
+      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact Pest Control. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
+    },
+    {
+      q: "QUERY: Can employees drink from open cups in the kitchen?",
+      a: "NEGATIVE: Core Violation. Drinks must have a lid and a straw, stored below and away from food prep surfaces."
+    },
+    {
+      q: "QUERY: Hot holding temp dropped to 125°F.",
+      a: "CORRECTION: If less than 4 hours, reheat rapidly to 165°F, then hold at 135°F+. If time unknown, discard immediately."
+    },
+    {
+      q: "QUERY: Thawing vacuum-sealed fish?",
+      a: "CRITICAL: Remove from packaging BEFORE thawing under refrigeration to prevent Botulism (C. botulinum) growth."
     }
   ]
 
@@ -57,14 +78,14 @@ const TypewriterTerminal = () => {
         timeout = setTimeout(() => {
           setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
           setCharIndex(charIndex + 1)
-        }, 15) 
+        }, 35) // Slowed down answer speed (matched to Question speed)
       } else {
         setPhase('pause_a')
       }
     } else if (phase === 'pause_a') {
       timeout = setTimeout(() => {
         setPhase('deleting')
-      }, 4500) 
+      }, 4500) // Longer read time
     } else if (phase === 'deleting') {
       setDisplayText('')
       setCharIndex(0)
@@ -75,13 +96,10 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    // No border, No shadow, Dead Center text
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
-      
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
       <div className="whitespace-pre-wrap">
         {displayText.split('\n\n').map((line, i) => (
-          // Font sizes are now EQUAL. Colors differ for contrast.
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-500 mb-3 font-medium uppercase tracking-wide' : 'text-[#6b85a3] font-bold'}>
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
             {line}
             {i === displayText.split('\n\n').length - 1 && (
               <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
@@ -94,7 +112,7 @@ const TypewriterTerminal = () => {
   )
 }
 
-// --- 2. AUTH MODAL ---
+// --- 2. AUTH MODAL (Clean Text) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -147,12 +165,13 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/90 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
         
+        {/* Clean Headers (No Underscores) */}
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">
-          {view === 'signup' ? 'Initialize_Account' : 'Authenticate'}
+          {view === 'signup' ? 'Create Account' : 'Sign In'}
         </h2>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -177,7 +196,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             disabled={loading} 
             className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
           >
-            {loading ? 'Processing...' : 'Submit'}
+            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}
           </button>
         </form>
 
@@ -237,26 +256,24 @@ export default function Home() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {/* REMOVED THE BADGE HERE */}
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+        {/* HERO TEXT (Technical Monospace Style) */}
+        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <h2 className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tight leading-tight mb-6">
             Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
-            The only compliance infrastructure trained on the Federal Food Code, Michigan Food Law, and specific enforcement data for <strong>Washtenaw, Wayne, and Oakland County.</strong>
+            The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
         {/* THE LIVE TERMINAL (CENTERPIECE) */}
-        {/* Pushed down slightly with mt-4 */}
-        <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <TypewriterTerminal />
         </div>
 
       </div>
 
-      {/* FOOTER (Simplified) */}
+      {/* FOOTER */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
