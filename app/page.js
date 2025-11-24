@@ -4,33 +4,54 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Anti-Dizzy Version) ---
+// --- 1. THE LIVE TERMINAL (Smoother, Full Typing) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [charIndex, setCharIndex] = useState(0)
 
+  // 10 High-Value Scenarios
   const scenarios = [
     {
-      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
-      a: "ANALYSIS: Pf violation. Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days to avoid escalation."
+      q: "QUERY: Dishwasher final rinse is only hitting 150°F.",
+      a: "VIOLATION: Priority (P). High-temp machines must reach 160°F at the utensil surface (180°F manifold). Stop using until fixed or set up 3-comp sink sanitizing."
     },
     {
-      q: "QUERY: Proper storage for raw shell eggs?",
-      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below."
+      q: "QUERY: Can we store raw burger patties above the cooked brisket?",
+      a: "NEGATIVE: Priority (P). Raw ground meat (155°F cook temp) must go BELOW ready-to-eat foods to prevent drip contamination."
     },
     {
-      q: "QUERY: Employee just vomited in the prep area.",
-      a: "EMERGENCY PROTOCOL: 1. Stop service. 2. Isolate area (25ft radius). 3. Use Norovirus cleanup kit (chlorine > 1000ppm)."
+      q: "QUERY: Prep cook has a sore throat and fever.",
+      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics. [FDA 2-201.12]"
     },
     {
-      q: "QUERY: Cooling timeline for chili?",
-      a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
+      q: "QUERY: Cooling procedure for large batch of chili?",
+      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands or shallow pans."
     },
     {
-      q: "QUERY: Date marking requirements for deli meat?",
-      a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
+      q: "QUERY: Quat sanitizer testing at 500ppm.",
+      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute immediately to manufacturer specs (usually 200-400ppm)."
+    },
+    {
+      q: "QUERY: How long can we keep house-made ranch?",
+      a: "RULE: 7 Days max if held at 41°F. Day 1 is the day of preparation. Must be date-marked. Discard if undated."
+    },
+    {
+      q: "QUERY: Found mouse droppings in dry storage.",
+      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact Pest Control. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
+    },
+    {
+      q: "QUERY: Can employees drink from open cups in the kitchen?",
+      a: "NEGATIVE: Core Violation. Drinks must have a lid and a straw, stored below and away from food prep surfaces."
+    },
+    {
+      q: "QUERY: Hot holding temp dropped to 125°F.",
+      a: "CORRECTION: If less than 4 hours, reheat rapidly to 165°F, then hold at 135°F+. If time unknown, discard immediately."
+    },
+    {
+      q: "QUERY: Thawing vacuum-sealed fish?",
+      a: "CRITICAL: Remove from packaging BEFORE thawing under refrigeration to prevent Botulism (C. botulinum) growth."
     }
   ]
 
@@ -38,33 +59,40 @@ const TypewriterTerminal = () => {
     let timeout
     const currentScenario = scenarios[scenarioIndex]
 
-    // Phase 1: Type Question (Keep this, it's short and looks cool)
+    // Phase 1: Type Question (Human Speed)
     if (phase === 'typing_q') {
       if (charIndex < currentScenario.q.length) {
         timeout = setTimeout(() => {
           setDisplayText(currentScenario.q.slice(0, charIndex + 1))
           setCharIndex(charIndex + 1)
-        }, 35) 
+        }, 40) 
       } else {
-        setPhase('thinking')
+        setPhase('pause_q')
       }
     
-    // Phase 2: Thinking (Blinking cursor only - No motion sickness)
-    } else if (phase === 'thinking') {
+    // Phase 2: Thinking Pause
+    } else if (phase === 'pause_q') {
       timeout = setTimeout(() => {
-        setPhase('show_answer')
+        setPhase('typing_a')
+        setCharIndex(0) 
       }, 600) 
-    
-    // Phase 3: Show Answer Instantly (No typing movement)
-    } else if (phase === 'show_answer') {
-      setDisplayText(currentScenario.q + '\n\n' + currentScenario.a)
-      setPhase('read')
-    
+
+    // Phase 3: Type Answer (Data Stream Speed - Smooth)
+    } else if (phase === 'typing_a') {
+      if (charIndex < currentScenario.a.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
+        }, 15) // Fast enough to be cool, slow enough to read
+      } else {
+        setPhase('pause_a')
+      }
+
     // Phase 4: Read Time
-    } else if (phase === 'read') {
+    } else if (phase === 'pause_a') {
       timeout = setTimeout(() => {
         setPhase('deleting')
-      }, 4000) 
+      }, 4500) 
 
     // Phase 5: Reset
     } else if (phase === 'deleting') {
@@ -77,15 +105,13 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    // Centered, clean, static text container
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
-      
-      <div className="whitespace-pre-wrap transition-opacity duration-300">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
+      <div className="whitespace-pre-wrap">
         {displayText.split('\n\n').map((line, i) => (
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold animate-in fade-in duration-500'}>
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
             {line}
-            {/* Only show cursor on the last line being typed */}
-            {i === displayText.split('\n\n').length - 1 && phase !== 'read' && (
+            {/* Logic to move the cursor to the active line */}
+            {i === displayText.split('\n\n').length - 1 && (
               <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
             )}
           </div>
@@ -242,7 +268,7 @@ export default function Home() {
         {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory Intelligence.
+            Local Regulatory<br/>Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
