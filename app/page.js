@@ -4,14 +4,13 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Human Typing Q + Fade A) ---
+// --- 1. THE LIVE TERMINAL (SMOOTH & FACTUAL) ---
 const LiveDataTerminal = () => {
-  const [qText, setQText] = useState('')
-  const [aText, setAText] = useState('')
-  const [phase, setPhase] = useState('init') 
   const [index, setIndex] = useState(0)
-
-  // 100% Factual Scenarios (FDA/MI Code)
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
+  
+  // 100% Factual Scenarios based on MI Food Law & FDA 2022
   const scenarios = [
     {
       q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
@@ -55,75 +54,46 @@ const LiveDataTerminal = () => {
     }
   ]
 
-  // Realistic Human Typing Algorithm
-  const typeHuman = async (text) => {
-    let current = ''
-    for (let i = 0; i < text.length; i++) {
-      current += text[i]
-      setQText(current)
-      
-      // Base speed + Human Variance
-      let delay = Math.random() * 50 + 30; // 30ms to 80ms
-      
-      // Human pauses
-      if (text[i] === ' ') delay += 40; // Slight pause between words
-      if ([':', '.', '?'].includes(text[i])) delay += 200; // Think after punctuation
-      
-      await new Promise(r => setTimeout(r, delay))
-    }
-  }
-
   useEffect(() => {
     const runSequence = async () => {
-      const current = scenarios[index]
+      // 1. Fade In Question
+      setShowQ(true)
+      
+      // 2. Wait for reading (Natural pause)
+      await new Promise(r => setTimeout(r, 1500))
+      
+      // 3. Fade In Answer
+      setShowA(true)
 
-      // 1. Human Types Question
-      setPhase('typing_q')
-      setQText('') 
-      setAText('')
-      await typeHuman(current.q)
-
-      // 2. System Processing (Thinking)
-      setPhase('thinking')
-      await new Promise(r => setTimeout(r, 800))
-
-      // 3. System Response (Fade In)
-      setPhase('showing_a')
-      setAText(current.a) // Set text immediately, CSS handles fade
-
-      // 4. Hold for Reading
+      // 4. Hold for reading (Longer for complex answers)
       await new Promise(r => setTimeout(r, 5500))
 
-      // 5. Fade Out
-      setPhase('out')
-      await new Promise(r => setTimeout(r, 600))
+      // 5. Fade Out Both
+      setShowQ(false)
+      setShowA(false)
       
-      // Loop
+      // 6. Wait for fade out to finish, then swap index
+      await new Promise(r => setTimeout(r, 800))
       setIndex(prev => (prev + 1) % scenarios.length)
     }
 
     runSequence()
   }, [index])
 
+  const current = scenarios[index]
+
   return (
     <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative px-4">
       
-      {/* QUESTION (Human Typed) */}
-      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
-        {qText}
-        {phase === 'typing_q' && (
-          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
-        )}
+      {/* QUESTION */}
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.q}
       </div>
 
-      {/* ANSWER (Smooth Fade In) */}
-      <div className={`text-[#6b85a3] transition-all duration-700 ease-out transform ${phase === 'showing_a' || phase === 'out' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {aText && (
-          <>
-            <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
-            <span className="font-medium">{aText}</span>
-          </>
-        )}
+      {/* ANSWER */}
+      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
+        <span className="font-medium">{current.a}</span>
       </div>
 
     </div>
@@ -238,7 +208,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
@@ -290,39 +260,20 @@ export default function Home() {
         {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
-          {/* Status Bar */}
-          <div className="flex justify-center gap-4 mb-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-             <span className="flex items-center gap-2">
-               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-               DB: v2025.11
-             </span>
-             <span className="text-slate-300">|</span>
-             <span>WASHTENAW / WAYNE / OAKLAND</span>
-          </div>
-
-          {/* Header Smaller, One Line, No Period */}
-          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8 whitespace-normal lg:whitespace-nowrap">
-            Food Safety & Inspection Intelligence
+          {/* ONE LINE HEADER (No "Stripe" font, using Mono) */}
+          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
+            Food Safety & Inspection Intelligence.
           </h2>
-
-          {/* The Separator Line */}
-          <div className="w-full h-px bg-slate-200 max-w-2xl mx-auto mb-8"></div>
           
+          {/* SUBTEXT (FOCUSED ON VIOLATIONS) */}
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL */}
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
-          
-          {/* USE CASE TAGS */}
-          <div className="flex justify-center gap-8 mt-8 text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-60">
-            <span>[ AUDITS ]</span>
-            <span>[ TRAINING ]</span>
-            <span>[ INCIDENTS ]</span>
-          </div>
         </div>
 
       </div>
