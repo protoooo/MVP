@@ -4,15 +4,11 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (With "Thinking" State) ---
+// --- 1. THE LIVE TERMINAL (With Thinking State) ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
   const [phase, setPhase] = useState('question') // question, thinking, answer, reset
-  const [showQ, setShowQ] = useState(false)
-  const [showThinking, setShowThinking] = useState(false)
-  const [showA, setShowA] = useState(false)
 
-  // 10 High-Value Scenarios
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -49,10 +45,6 @@ const LiveDataTerminal = () => {
     {
       q: "QUERY: Can employees drink from open cups in kitchen?",
       a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
-    },
-    {
-      q: "QUERY: Thawing vacuum-sealed fish?",
-      a: "CRITICAL: Remove from packaging BEFORE thawing to prevent Botulism (C. botulinum) growth."
     }
   ]
 
@@ -60,28 +52,21 @@ const LiveDataTerminal = () => {
     const runSequence = async () => {
       // 1. Show Question
       setPhase('question')
-      setShowQ(true)
       await new Promise(r => setTimeout(r, 1500))
 
-      // 2. Thinking State (Simulates database lookup)
+      // 2. Thinking
       setPhase('thinking')
-      setShowThinking(true)
-      await new Promise(r => setTimeout(r, 1200)) // Thinking time
-      setShowThinking(false)
+      await new Promise(r => setTimeout(r, 1000))
 
       // 3. Show Answer
       setPhase('answer')
-      setShowA(true)
       await new Promise(r => setTimeout(r, 5000)) // Read time
 
-      // 4. Fade Out All
+      // 4. Reset
       setPhase('reset')
-      setShowQ(false)
-      setShowA(false)
-      
-      // 5. Reset & Loop
       await new Promise(r => setTimeout(r, 500))
       setIndex(prev => (prev + 1) % scenarios.length)
+      setPhase('question')
     }
 
     runSequence()
@@ -90,30 +75,32 @@ const LiveDataTerminal = () => {
   const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
       {/* QUESTION */}
-      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+      <div className={`text-slate-500 mb-3 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'reset' ? 'opacity-0' : 'opacity-100'}`}>
         {current.q}
       </div>
 
-      {/* THINKING INDICATOR (Only shows between Q and A) */}
+      {/* THINKING STATE */}
       {phase === 'thinking' && (
         <div className="text-[#6b85a3] text-xs font-bold uppercase tracking-widest animate-pulse mb-2">
-          {`> ANALYZING DATABASE...`}
+          {`> ANALYZING REPOSITORY...`}
         </div>
       )}
 
       {/* ANSWER */}
-      <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {showA ? current.a : ''}
-      </div>
+      {phase === 'answer' && (
+        <div className="text-[#6b85a3] font-bold animate-in fade-in slide-in-from-bottom-2 duration-500">
+          {current.a}
+        </div>
+      )}
 
     </div>
   )
 }
 
-// --- 2. AUTH MODAL ---
+// --- 2. AUTH MODAL (Fixed Error Handling) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -135,31 +122,45 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
     try {
       if (view === 'signup') {
+        // SIGNUP FLOW
         const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: redirectUrl, data: { county: 'washtenaw' } }
         })
+        
         if (error) throw error
+        
         if (data.session) {
-          const { data: profile } = await supabase.from('user_profiles').select('accepted_terms, accepted_privacy').eq('id', data.session.user.id).single()
-          if (!profile?.accepted_terms || !profile?.accepted_privacy) window.location.href = '/accept-terms'
-          else window.location.href = '/pricing'
-        } else if (data.user && !data.session) {
+          // Auto-confirmed
+          window.location.href = '/pricing'
+        } else {
+          // Email confirm needed
           setMessage({ type: 'success', text: 'Verification link sent to email.' })
-          setLoading(false)
+          setLoading(false) // Stop loading so they see message
         }
       } else {
+        // LOGIN FLOW
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        
         if (error) throw error
+
+        // Check profile
         const { data: profile } = await supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
-        if (profile?.is_subscribed) window.location.href = '/documents'
-        else window.location.href = '/pricing'
+        
+        if (profile?.is_subscribed) {
+          window.location.href = '/documents'
+        } else {
+          window.location.href = '/pricing'
+        }
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message })
-      setLoading(false)
+      console.error("Auth Error:", error)
+      let msg = error.message
+      if (msg.includes("Invalid login")) msg = "Invalid email or password."
+      setMessage({ type: 'error', text: msg })
+      setLoading(false) // FIX: Ensure button un-freezes on error
     }
   }
 
@@ -194,7 +195,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md"
+            className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? 'Processing...' : 'Submit'}
           </button>
@@ -244,6 +245,7 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
+      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
@@ -263,10 +265,12 @@ function MainContent() {
         </div>
       </nav>
 
+      {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
+        {/* HERO TEXT */}
         <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
-          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6">
+          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-nowrap">
             Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
@@ -274,12 +278,14 @@ function MainContent() {
           </p>
         </div>
 
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
 
       </div>
 
+      {/* FOOTER */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -290,6 +296,7 @@ function MainContent() {
         </div>
       </div>
 
+      {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
   )
