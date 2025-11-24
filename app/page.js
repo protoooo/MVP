@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Fixed Grammar & Content) ---
+// --- 1. THE LIVE TERMINAL (SMOOTH & FACTUAL) ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
   const [showQ, setShowQ] = useState(false)
   const [showA, setShowA] = useState(false)
   
   // 100% Factual Scenarios based on MI Food Law & FDA 2022
-  // Removed redundant "TYPE:" prefixes to fix double-colon issue
   const scenarios = [
     {
       q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
@@ -57,15 +56,27 @@ const LiveDataTerminal = () => {
 
   useEffect(() => {
     const runSequence = async () => {
+      // 1. Fade In Question
       setShowQ(true)
+      
+      // 2. Wait for reading (Natural pause)
       await new Promise(r => setTimeout(r, 1500))
+      
+      // 3. Fade In Answer
       setShowA(true)
-      await new Promise(r => setTimeout(r, 5500)) // Long read time
+
+      // 4. Hold for reading (Longer for complex answers)
+      await new Promise(r => setTimeout(r, 5500))
+
+      // 5. Fade Out Both
       setShowQ(false)
       setShowA(false)
+      
+      // 6. Wait for fade out to finish, then swap index
       await new Promise(r => setTimeout(r, 800))
       setIndex(prev => (prev + 1) % scenarios.length)
     }
+
     runSequence()
   }, [index])
 
@@ -97,7 +108,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -197,15 +207,22 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
+  const searchParams = useSearchParams()
    
   useEffect(() => {
     setMounted(true)
-  }, [])
+    const authParam = searchParams.get('auth')
+    if (authParam) {
+      setAuthView(authParam)
+      setShowAuth(true)
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -236,12 +253,19 @@ export default function Home() {
       </nav>
 
       {/* MAIN CONTENT - CENTERED */}
-      <div className="flex-1 w-full max-w-[1400px] mx-auto px-6 flex flex-col items-center justify-center">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT - FORCED ONE LINE & NEW COPY */}
-        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        {/* HERO TEXT */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
-          {/* Large screens: whitespace-nowrap forces one line. Small screens: wrap naturally. */}
+          {/* DATA TICKER */}
+          <div className="inline-block mb-8">
+             <span className="bg-slate-200/50 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-sm border border-slate-300 tracking-widest uppercase">
+                2025 PROJECTION: ~9,200 VIOLATIONS IN TARGET SECTOR
+             </span>
+          </div>
+
+          {/* ONE LINE HEADER */}
           <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
             Food Safety & Inspection Intelligence.
           </h2>
@@ -272,5 +296,13 @@ export default function Home() {
       {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
