@@ -4,63 +4,76 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE EXTENDED LIVE TERMINAL ---
+// --- 1. THE LIVE TERMINAL (Adjusted Speed) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [charIndex, setCharIndex] = useState(0)
 
-  // 15 Real-World Scenarios
   const scenarios = [
-    { q: "QUERY: Stacking order for walk-in cooler?", a: "PROTOCOL: 1. Ready-to-Eat (Top)\n2. Seafood (145°F)\n3. Whole Beef/Pork (145°F)\n4. Ground Meat (155°F)\n5. Poultry (Bottom - 165°F)" },
-    { q: "QUERY: Inspector found quaternary sanitizer at 100ppm.", a: "VIOLATION: Priority Foundation (Pf). Concentration too low. Must be 200-400ppm. Correct immediately." },
-    { q: "QUERY: Employee reported sore throat with fever.", a: "ACTION: EXCLUDE from establishment. Cannot return until medical clearance or 24hrs symptom-free on meds. [FDA 2-201.12]" },
-    { q: "QUERY: Max temperature for cold holding cheese?", a: "LIMIT: 41°F (5°C). If found above 41°F for >4 hours, discard immediately." },
-    { q: "QUERY: Can we use a 3-comp sink for handwashing?", a: "NEGATIVE: Priority Violation (P). Hands must be washed in a designated handwashing sink only." },
-    { q: "QUERY: Cooling timeline for chili?", a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours." },
-    { q: "QUERY: Storage of spray bottles?", a: "PROTOCOL: Must be stored below or away from food/prep surfaces. Violations are Priority (P) for chemical contamination risk." },
-    { q: "QUERY: Reheating leftover soup for hot holding.", a: "TARGET: Must reach 165°F for 15 seconds within 2 hours before holding at 135°F." },
-    { q: "QUERY: Bare hand contact with garnish?", a: "VIOLATION: Priority (P). Ready-to-eat foods require gloves, tongs, or deli tissue. Discard contaminated product." },
-    { q: "QUERY: Date marking requirements?", a: "RULE: TCS foods held >24hrs must be marked. 7 day shelf life (Day 1 = Prep Day). Store at 41°F or below." },
-    { q: "QUERY: Dish machine final rinse temp (High Temp).", a: "TARGET: Surface of utensils must reach 160°F. Manifold usually 180°F. Use thermolabel to verify." },
-    { q: "QUERY: Evidence of pests in dry storage.", a: "ACTION: Priority Foundation (Pf). Contact PCO immediately. Seal entry points. Discard contaminated packaging." },
-    { q: "QUERY: Thawing frozen fish in standing water?", a: "VIOLATION: Core/Pf. Thaw under running water (<70°F), in cooler (<41°F), or as part of cooking process." },
-    { q: "QUERY: Hair restraint requirements?", a: "CODE: Food employees must wear hair restraints (hats/nets) and beard nets to prevent contamination. [Core]" },
-    { q: "QUERY: Vomit event in dining room.", a: "EMERGENCY: Stop service. Isolate 25ft. Use Chlorine kit (1000-5000ppm). Double bag waste. Log incident." }
+    {
+      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
+      a: "ANALYSIS: Pf violation. Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days to avoid escalation."
+    },
+    {
+      q: "QUERY: Proper storage for raw shell eggs?",
+      a: "PROTOCOL: Store on bottom shelf (below ready-to-eat and cooked foods). Keep at 45°F or below. [FDA 3-202.11]"
+    },
+    {
+      q: "QUERY: Employee just vomited in the prep area.",
+      a: "EMERGENCY PROTOCOL: 1. Stop service. 2. Isolate area (25ft radius). 3. Use Norovirus cleanup kit (chlorine > 1000ppm)."
+    },
+    {
+      q: "QUERY: Cooling timeline for chili?",
+      a: "PROCESS: 135°F to 70°F within 2 hours. Then 70°F to 41°F within 4 additional hours. Total: 6 hours."
+    },
+    {
+      q: "QUERY: Can we use a 3-comp sink for handwashing?",
+      a: "NEGATIVE: Priority Violation (P). Hands must be washed in a designated handwashing sink only."
+    },
+    {
+      q: "QUERY: Date marking requirements for deli meat?",
+      a: "RULE: 7 day shelf life (Day 1 = Open Day). Must be stored at 41°F or below. Discard if undated."
+    }
   ]
 
   useEffect(() => {
     let timeout
     const currentScenario = scenarios[scenarioIndex]
 
+    // Typing Question
     if (phase === 'typing_q') {
       if (charIndex < currentScenario.q.length) {
         timeout = setTimeout(() => {
           setDisplayText(currentScenario.q.slice(0, charIndex + 1))
           setCharIndex(charIndex + 1)
-        }, 30) 
+        }, 35) 
       } else {
         setPhase('pause_q')
       }
+    // Pause before Answer
     } else if (phase === 'pause_q') {
       timeout = setTimeout(() => {
         setPhase('typing_a')
         setCharIndex(0) 
-      }, 400) 
+      }, 600) 
+    // Typing Answer (SLOWED DOWN)
     } else if (phase === 'typing_a') {
       if (charIndex < currentScenario.a.length) {
         timeout = setTimeout(() => {
           setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
           setCharIndex(charIndex + 1)
-        }, 10) // Faster typing for answers
+        }, 30) // Changed from 10ms to 30ms for readability
       } else {
         setPhase('pause_a')
       }
+    // Read Time
     } else if (phase === 'pause_a') {
       timeout = setTimeout(() => {
         setPhase('deleting')
-      }, 3000) // Read time
+      }, 4500) 
+    // Clear
     } else if (phase === 'deleting') {
       setDisplayText('')
       setCharIndex(0)
@@ -71,23 +84,26 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[200px] flex flex-col items-center text-center justify-center">
-      <div className="whitespace-pre-wrap">
+    <div className="w-full max-w-2xl bg-white border border-slate-200 p-8 font-mono text-sm leading-relaxed shadow-sm rounded-lg min-h-[160px] flex flex-col justify-center relative overflow-hidden">
+      {/* Left Accent Line */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#6b85a3]"></div>
+      
+      <div className="whitespace-pre-wrap pl-4">
         {displayText.split('\n\n').map((line, i) => (
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-4' : 'text-[#6b85a3] font-bold'}>
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-2 uppercase tracking-wider text-[10px]' : 'text-[#6b85a3] font-bold text-base'}>
             {line}
             {i === displayText.split('\n\n').length - 1 && (
-              <span className="inline-block w-2 h-5 bg-[#6b85a3] ml-1 animate-pulse align-middle opacity-50"></span>
+              <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 animate-pulse align-middle opacity-50"></span>
             )}
           </div>
         ))}
-        {displayText === '' && <span className="inline-block w-2 h-5 bg-slate-300 animate-pulse align-middle"></span>}
+        {displayText === '' && <span className="inline-block w-2 h-4 bg-slate-300 animate-pulse align-middle"></span>}
       </div>
     </div>
   )
 }
 
-// --- 2. AUTH MODAL (Clean Overlay) ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -127,7 +143,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        // Simple check for profile existence/subs
         const { data: profile } = await supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
         if (profile?.is_subscribed) window.location.href = '/documents'
         else window.location.href = '/pricing'
@@ -141,7 +156,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/90 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-lg relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
         
@@ -232,7 +247,7 @@ export default function Home() {
       <div className="flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* THE LIVE TERMINAL (HERO) */}
-        <div className={`w-full mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`w-full mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <TypewriterTerminal />
         </div>
 
@@ -242,22 +257,27 @@ export default function Home() {
             Unified Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed mb-8">
-            The only compliance infrastructure trained on FDA Code 2022, Michigan Modified Food Law, and county-specific enforcement data for Washtenaw, Wayne, and Oakland.
+            The only compliance infrastructure trained specifically on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the FDA Food Code 2022.
           </p>
-          
-          <div className="flex justify-center gap-8 text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-            <span>• Violation Risk Analysis</span>
-            <span>• Hazmat Protocols</span>
-            <span>• Priority P / Core Logic</span>
-          </div>
         </div>
 
       </div>
 
-      {/* FOOTER */}
-      <div className="w-full py-8 text-center">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-          © 2025 protocolLM
+      {/* FOOTER - Features moved here */}
+      <div className="w-full py-12 text-center bg-white border-t border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+          
+          {/* KEY FEATURES - Spaced nicely at bottom */}
+          <div className="flex flex-col md:flex-row gap-8 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+            <span>Violation Risk Analysis</span>
+            <span>Hazmat Protocols</span>
+            <span>Priority P / Core Logic</span>
+          </div>
+
+          {/* COPYRIGHT */}
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+            © 2025 protocolLM
+          </div>
         </div>
       </div>
 
