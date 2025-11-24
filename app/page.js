@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react' // Added Suspense
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter, useSearchParams } from 'next/navigation' // Added useSearchParams
+import { useRouter } from 'next/navigation'
 
 // --- 1. THE LIVE TERMINAL ---
 const LiveDataTerminal = () => {
@@ -187,26 +187,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// Main Content Logic
-function MainContent() {
+export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
-  const searchParams = useSearchParams() // Hook to read URL params
    
   useEffect(() => {
     setMounted(true)
-    
-    // Check for auth signal from Pricing page
-    const authParam = searchParams.get('auth')
-    if (authParam) {
-      setAuthView(authParam)
-      setShowAuth(true)
-      // Clean up URL
-      window.history.replaceState({}, '', '/')
-    }
-  }, [searchParams])
+  }, [])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -240,16 +229,16 @@ function MainContent() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory<br/>Intelligence.
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight mb-6">
+            Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL */}
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
@@ -270,14 +259,5 @@ function MainContent() {
       {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
-  )
-}
-
-// Wrapper for Suspense (Required for useSearchParams in Next.js)
-export default function Home() {
-  return (
-    <Suspense fallback={<div></div>}>
-      <MainContent />
-    </Suspense>
   )
 }
