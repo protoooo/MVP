@@ -4,6 +4,91 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
+// --- TYPEWRITER COMPONENT ---
+const TypewriterTerminal = () => {
+  const [displayText, setDisplayText] = useState('')
+  const [phase, setPhase] = useState('typing_q') // typing_q, pause_q, typing_a, pause_a, deleting
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
+
+  const scenarios = [
+    {
+      q: "> QUERY: How do I stack raw chicken in the walk-in?",
+      a: "RESPONSE: Raw poultry must be stored on the bottom shelf to prevent cross-contamination drip. [FDA 3-302.11]"
+    },
+    {
+      q: "> QUERY: Inspector cited a Priority Foundation for no hand soap.",
+      a: "RESPONSE: You have 10 days to correct Pf violations. Refill soap immediately to avoid escalation to Priority."
+    },
+    {
+      q: "> QUERY: What is the max temp for holding hot soup?",
+      a: "RESPONSE: Hot holding must be 135°F or above. If below for <4 hours, reheat to 165°F immediately."
+    },
+    {
+      q: "> QUERY: Can we use wood cutting boards for produce?",
+      a: "RESPONSE: Yes, hard maple or equivalent hard wood is permitted if smooth and free of cracks. [MI Food Law]"
+    }
+  ]
+
+  useEffect(() => {
+    let timeout
+
+    const currentScenario = scenarios[scenarioIndex]
+
+    if (phase === 'typing_q') {
+      if (charIndex < currentScenario.q.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentScenario.q.slice(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
+        }, 30) // Typing speed for Question
+      } else {
+        setPhase('pause_q')
+      }
+    } else if (phase === 'pause_q') {
+      timeout = setTimeout(() => {
+        setPhase('typing_a')
+        setCharIndex(0) // Reset for answer
+      }, 400) // Brief pause before answering
+    } else if (phase === 'typing_a') {
+      if (charIndex < currentScenario.a.length) {
+        timeout = setTimeout(() => {
+          setDisplayText(currentScenario.q + '\n\n' + currentScenario.a.slice(0, charIndex + 1))
+          setCharIndex(charIndex + 1)
+        }, 15) // Typing speed for Answer (Faster)
+      } else {
+        setPhase('pause_a')
+      }
+    } else if (phase === 'pause_a') {
+      timeout = setTimeout(() => {
+        setPhase('deleting')
+      }, 4000) // Read time
+    } else if (phase === 'deleting') {
+      setDisplayText('')
+      setCharIndex(0)
+      setPhase('typing_q')
+      setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+    }
+
+    return () => clearTimeout(timeout)
+  }, [charIndex, phase, scenarioIndex])
+
+  return (
+    <div className="w-full min-h-[140px] bg-white border border-slate-200 p-6 font-mono text-xs leading-relaxed shadow-sm">
+      <div className="whitespace-pre-wrap">
+        {displayText.split('\n\n').map((line, i) => (
+          <div key={i} className={line.startsWith('RESPONSE') ? 'text-[#6b85a3] font-bold mt-3' : 'text-slate-700'}>
+            {line}
+            {i === displayText.split('\n\n').length - 1 && (
+              <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 animate-pulse align-middle"></span>
+            )}
+          </div>
+        ))}
+        {displayText === '' && <span className="inline-block w-2 h-4 bg-[#6b85a3] animate-pulse align-middle"></span>}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -82,7 +167,7 @@ export default function Home() {
 
   // --- CLEAN TEXT FEATURE (No Icons) ---
   const FeatureItem = ({ title, desc }) => (
-    <div className="flex flex-col gap-2 p-6 bg-white border border-slate-200 hover:border-[#6b85a3] transition-colors duration-300">
+    <div className="flex flex-col gap-2 p-6 bg-white border border-slate-200 hover:border-[#6b85a3] transition-colors duration-300 h-full">
       <h3 className="text-slate-900 font-bold text-xs uppercase tracking-widest">{title}</h3>
       <div className="h-px w-8 bg-[#6b85a3]"></div>
       <p className="text-slate-500 text-xs leading-relaxed">{desc}</p>
@@ -93,7 +178,7 @@ export default function Home() {
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
       {/* HEADER */}
-      <nav className="w-full max-w-5xl mx-auto px-6 py-12 flex justify-between items-end border-b border-slate-200 pb-6">
+      <nav className="w-full max-w-6xl mx-auto px-6 py-12 flex justify-between items-end border-b border-slate-200 pb-6">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
@@ -105,25 +190,37 @@ export default function Home() {
       </nav>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-12 flex flex-col gap-16">
+      <div className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
         
         {/* INTRO SECTION */}
-        <div className={`grid md:grid-cols-2 gap-12 items-center transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div>
-            <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 shadow-sm">
-              Regulatory Intelligence Unit
+        <div className={`grid md:grid-cols-2 gap-16 items-start transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          
+          {/* Left Column: Copy & Typewriter */}
+          <div className="space-y-10">
+            <div>
+              <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 shadow-sm">
+                Regulatory Intelligence Unit
+              </div>
+              <h2 className="text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+                Compliance<br />
+                Infrastructure.
+              </h2>
+              <p className="text-sm text-slate-500 leading-relaxed border-l-2 border-[#6b85a3] pl-4">
+                Unified enforcement data for Michigan restaurant groups. Mitigate liability with county-level precision.
+              </p>
             </div>
-            <h2 className="text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-              Compliance<br />
-              Infrastructure.
-            </h2>
-            <p className="text-sm text-slate-500 leading-relaxed border-l-2 border-[#6b85a3] pl-4">
-              Unified enforcement data for Michigan restaurant groups. Mitigate liability with county-level precision.
-            </p>
+
+            {/* --- LIVE TYPEWRITER DEMO --- */}
+            <div className="relative">
+                <div className="absolute -top-3 left-4 px-2 bg-[#f8fafc] text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Live System Preview
+                </div>
+                <TypewriterTerminal />
+            </div>
           </div>
 
-          {/* FEATURES GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Right Column: Features Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 self-end">
             <FeatureItem 
               title="Enforcement Data" 
               desc="Trained on Washtenaw, Wayne & Oakland County violation triggers." 
@@ -221,18 +318,3 @@ export default function Home() {
       </div>
 
       {/* FOOTER */}
-      <div className="w-full py-8 mt-auto">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 pt-8">
-          <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            © 2025 protocolLM. Michigan.
-          </div>
-          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            <a href="/terms" className="hover:text-[#6b85a3] transition">Terms</a>
-            <a href="/privacy" className="hover:text-[#6b85a3] transition">Privacy</a>
-            <a href="/contact" className="hover:text-[#6b85a3] transition">Contact</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
