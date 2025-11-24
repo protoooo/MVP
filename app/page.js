@@ -1,99 +1,134 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (SMOOTH & FACTUAL) ---
+// --- 1. THE LIVE TERMINAL (Word Stream - Smooth & Readable) ---
 const LiveDataTerminal = () => {
-  const [index, setIndex] = useState(0)
-  const [showQ, setShowQ] = useState(false)
-  const [showA, setShowA] = useState(false)
-  
-  // 100% Factual Scenarios based on MI Food Law & FDA 2022
+  const [displayQ, setDisplayQ] = useState('')
+  const [displayA, setDisplayA] = useState('')
+  const [phase, setPhase] = useState('init') // q_in, thinking, a_in, hold, out
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+
+  // 10 High-Value Scenarios
   const scenarios = [
     {
-      q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
-      a: "Priority Violation (P). Raw ground beef (155°F cook temp) must be stored BELOW whole cuts of beef (145°F cook temp) to prevent cross-contamination."
+      q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
+      a: "VIOLATION: Priority Foundation (Pf). Likely temp < 160°F or sanitizer < 50ppm. Correct within 10 days."
     },
     {
-      q: "QUERY: Inspector flagged the dishwasher final rinse at 152°F.",
-      a: "Priority Violation (P). High-temperature machines must reach 160°F at the utensil surface. Switch to 3-compartment sink sanitizing immediately until serviced."
+      q: "QUERY: Can we store raw burger patties above cooked brisket?",
+      a: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F) must go BELOW ready-to-eat foods."
     },
     {
-      q: "QUERY: Employee just reported they have Norovirus.",
-      a: "Emergency Protocol. EXCLUDE the employee from the establishment immediately. They cannot return until 48 hours after symptoms have ended. Notify the Health Department."
+      q: "QUERY: Prep cook has a sore throat and fever.",
+      a: "ACTION: EXCLUDE immediately. High risk for Strep. Cannot return without medical clearance or 24hrs on antibiotics."
     },
     {
-      q: "QUERY: What is the max cooling time for the chili?",
-      a: "Process Control. Cool from 135°F to 70°F within 2 hours. Then from 70°F to 41°F within 4 additional hours. Total time cannot exceed 6 hours."
+      q: "QUERY: Cooling procedure for large batch of chili?",
+      a: "PROTOCOL: 135°F to 70°F in 2 hours. Then 70°F to 41°F in 4 hours. Total time: 6 hours. Use ice wands."
     },
     {
-      q: "QUERY: Hand sink is blocked by a trash can.",
-      a: "Priority Foundation (Pf). Handwashing sinks must be accessible at all times and used for no other purpose. Move the obstruction immediately."
+      q: "QUERY: Quat sanitizer testing at 500ppm.",
+      a: "VIOLATION: Priority Foundation (Pf). Too strong (Chemical Hazard). Dilute to manufacturer specs (200-400ppm)."
     },
     {
-      q: "QUERY: We found mouse droppings in dry storage.",
-      a: "Priority Foundation (Pf). Contact PCO immediately. Discard any food with compromised packaging. Clean and sanitize the area. Check for entry points."
+      q: "QUERY: How long can we keep house-made ranch?",
+      a: "RULE: 7 Days max if held at 41°F. Day 1 is preparation day. Must be date-marked. Discard if undated."
     },
     {
-      q: "QUERY: Date marking rule for opened deli ham?",
-      a: "Compliance Rule. TCS foods held longer than 24 hours must be marked. 7-day shelf life maximum, where the day of opening counts as Day 1. Hold at 41°F."
+      q: "QUERY: Found mouse droppings in dry storage.",
+      a: "EMERGENCY: Priority Foundation (Pf). 1. Contact PCO. 2. Discard affected food. 3. Sanitize area. 4. Seal entry points."
     },
     {
-      q: "QUERY: Quat sanitizer bucket tested at 500ppm.",
-      a: "Priority Foundation (Pf). Chemical Hazard. Concentration is too high (toxic). Dilute immediately to manufacturer specs (typically 150-400ppm)."
+      q: "QUERY: Hot holding temp dropped to 125°F.",
+      a: "CORRECTION: If <4 hours, reheat rapidly to 165°F. If time unknown, discard immediately."
     },
     {
-      q: "QUERY: Reheating yesterday's soup for the hot well.",
-      a: "Critical Limit. You must reheat rapidly to 165°F for 15 seconds within 2 hours. Once reached, you can hold at 135°F."
+      q: "QUERY: Can employees drink from open cups in kitchen?",
+      a: "NEGATIVE: Core Violation. Drinks must have a lid and straw, stored below/away from food prep surfaces."
     },
     {
-      q: "QUERY: Can we thaw frozen fish in vacuum packaging?",
-      a: "Critical Hazard. Remove fish from Reduced Oxygen Packaging (ROP) BEFORE thawing to prevent Clostridium botulinum growth."
+      q: "QUERY: Thawing vacuum-sealed fish?",
+      a: "CRITICAL: Remove from packaging BEFORE thawing to prevent Botulism (C. botulinum) growth."
     }
   ]
 
   useEffect(() => {
-    const runSequence = async () => {
-      // 1. Fade In Question
-      setShowQ(true)
-      
-      // 2. Wait for reading (Natural pause)
-      await new Promise(r => setTimeout(r, 1500))
-      
-      // 3. Fade In Answer
-      setShowA(true)
+    let timeout
+    const current = scenarios[scenarioIndex]
 
-      // 4. Hold for reading (Longer for complex answers)
-      await new Promise(r => setTimeout(r, 5500))
+    const animate = async () => {
+      // 1. QUESTION - "Scramble" In (Fast but readable)
+      setPhase('q_in')
+      const qChars = current.q.split('')
+      for (let i = 0; i <= qChars.length; i++) {
+        setDisplayQ(current.q.slice(0, i))
+        await new Promise(r => setTimeout(r, 20)) // Fast type for Q
+      }
 
-      // 5. Fade Out Both
-      setShowQ(false)
-      setShowA(false)
-      
-      // 6. Wait for fade out to finish, then swap index
-      await new Promise(r => setTimeout(r, 800))
-      setIndex(prev => (prev + 1) % scenarios.length)
+      // 2. THINKING (Brief Pause)
+      setPhase('thinking')
+      await new Promise(r => setTimeout(r, 600))
+
+      // 3. ANSWER - "Stream" In (Word by Word - Smooth)
+      setPhase('a_in')
+      const aWords = current.a.split(' ')
+      for (let i = 0; i <= aWords.length; i++) {
+        setDisplayA(aWords.slice(0, i).join(' '))
+        // Variable speed: Commas/Periods pause slightly longer for realism
+        const word = aWords[i-1] || ''
+        const delay = word.endsWith('.') || word.endsWith(',') ? 150 : 50
+        await new Promise(r => setTimeout(r, delay))
+      }
+
+      // 4. HOLD (Let them read)
+      setPhase('hold')
+      await new Promise(r => setTimeout(r, 4000))
+
+      // 5. FADE OUT (Clean wipe)
+      setPhase('out')
+      await new Promise(r => setTimeout(r, 500))
+
+      // Reset for next loop
+      setDisplayQ('')
+      setDisplayA('')
+      setScenarioIndex(prev => (prev + 1) % scenarios.length)
     }
 
-    runSequence()
-  }, [index])
-
-  const current = scenarios[index]
+    animate()
+  }, [scenarioIndex])
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
-      {/* QUESTION */}
-      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {current.q}
+      {/* QUESTION CONTAINER */}
+      <div className={`transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="text-slate-400 mb-4 font-bold text-xs uppercase tracking-widest">
+          {displayQ}
+          {/* Blinking Cursor on Question only while typing */}
+          {phase === 'q_in' && <span className="inline-block w-2 h-4 bg-slate-300 ml-1 animate-pulse align-middle"></span>}
+        </div>
       </div>
 
-      {/* ANSWER */}
-      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        <span className="font-bold mr-2">PROTOCOL_LM:</span>
-        <span className="font-medium">{current.a}</span>
+      {/* ANSWER CONTAINER */}
+      <div className={`transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        {/* Thinking Indicator */}
+        {phase === 'thinking' && (
+          <div className="text-[#6b85a3] text-xs font-bold uppercase tracking-widest animate-pulse">
+            Analyzing Protocol...
+          </div>
+        )}
+
+        {/* The Streamed Answer */}
+        {(phase === 'a_in' || phase === 'hold') && (
+          <div className="text-[#6b85a3] font-bold">
+            {displayA}
+            {/* Smooth Cursor on Answer */}
+            {phase === 'a_in' && <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 align-middle"></span>}
+          </div>
+        )}
       </div>
 
     </div>
@@ -146,8 +181,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       }
     } catch (error) {
       setMessage({ type: 'error', text: error.message })
-      setLoading(false)
-    } finally {
       setLoading(false)
     }
   }
@@ -208,15 +241,23 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+// Main Content Logic
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
   const router = useRouter()
+  const searchParams = useSearchParams()
    
   useEffect(() => {
     setMounted(true)
-  }, [])
+    const authParam = searchParams.get('auth')
+    if (authParam) {
+      setAuthView(authParam)
+      setShowAuth(true)
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -250,7 +291,7 @@ export default function Home() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6">
             Local Regulatory Intelligence.
           </h2>
@@ -259,7 +300,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL (CENTERPIECE) */}
+        {/* THE LIVE TERMINAL */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
@@ -277,8 +318,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
