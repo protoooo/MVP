@@ -4,14 +4,13 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Human Typing Simulation) ---
+// --- 1. THE LIVE TERMINAL (Human Typing + Smooth Fade) ---
 const LiveDataTerminal = () => {
   const [qText, setQText] = useState('')
   const [aText, setAText] = useState('')
   const [phase, setPhase] = useState('init') 
   const [index, setIndex] = useState(0)
 
-  // 10 Factual Scenarios (FDA/MI Code)
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -55,33 +54,22 @@ const LiveDataTerminal = () => {
     }
   ]
 
-  // Human Typing Logic
+  // Advanced Human Typing Logic
   const typeHuman = async (text, setter) => {
     let current = ''
     for (let i = 0; i < text.length; i++) {
       current += text[i]
       setter(current)
       
-      // Calculate "Human" Delay
-      const char = text[i]
-      let delay = Math.random() * 60 + 30; // Base: 30-90ms variance
+      // Base Speed: 50ms - 100ms (Slower than before)
+      let delay = Math.random() * 50 + 50; 
       
-      if (char === ' ') delay += 30; // Pause between words
-      if (['.', ',', ':', '?'].includes(char)) delay += 150; // Pause for punctuation
+      // Human characteristics:
+      if (text[i] === ' ') delay += 30; // Micro-pause between words
+      if (['.', ',', ':', '?'].includes(text[i])) delay += 250; // Long pause for punctuation
+      if (Math.random() < 0.05) delay += 400; // Occasional "thinking" pause (stutter)
       
       await new Promise(r => setTimeout(r, delay))
-    }
-  }
-
-  // Machine Streaming Logic (Faster, consistent)
-  const typeMachine = async (text, setter) => {
-    const words = text.split(' ')
-    let current = ''
-    for (let i = 0; i < words.length; i++) {
-      current += (i === 0 ? '' : ' ') + words[i]
-      setter(current)
-      // Fast, consistent data stream speed
-      await new Promise(r => setTimeout(r, 40)) 
     }
   }
 
@@ -89,24 +77,24 @@ const LiveDataTerminal = () => {
     const runSequence = async () => {
       const current = scenarios[index]
 
-      // 1. Human types the Question
+      // 1. Human types the Question (Variable speed)
       setPhase('typing_q')
       await typeHuman(current.q, setQText)
 
       // 2. Processing Pause (Thinking)
       setPhase('thinking')
-      await new Promise(r => setTimeout(r, 800))
+      await new Promise(r => setTimeout(r, 1200))
 
-      // 3. AI Streams the Answer
-      setPhase('typing_a')
-      await typeMachine(current.a, setAText)
+      // 3. Show Answer (Smooth Fade In)
+      setPhase('showing_a')
+      setAText(current.a)
 
       // 4. Read Time
-      await new Promise(r => setTimeout(r, 4500))
+      await new Promise(r => setTimeout(r, 5000))
 
       // 5. Fade Out / Reset
       setPhase('out')
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 600))
       
       setQText('')
       setAText('')
@@ -117,13 +105,13 @@ const LiveDataTerminal = () => {
   }, [index])
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative">
       
       {/* QUESTION */}
       <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
         {qText}
         {phase === 'typing_q' && (
-          <span className="inline-block w-2 h-4 bg-slate-300 ml-1 animate-pulse align-middle"></span>
+          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
         )}
       </div>
 
@@ -137,12 +125,11 @@ const LiveDataTerminal = () => {
           </div>
         )}
 
-        {/* The Answer */}
-        {(phase === 'typing_a' || phase === 'out') && (
-          <div className="text-[#6b85a3] font-bold">
+        {/* The Answer (Fade In) */}
+        {(phase === 'showing_a' || phase === 'out') && (
+          <div className="text-[#6b85a3] font-bold animate-in fade-in slide-in-from-bottom-2 duration-700">
             <span className="mr-2">PROTOCOL_LM:</span>
             {aText}
-            {phase === 'typing_a' && <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 align-middle"></span>}
           </div>
         )}
       </div>
@@ -257,6 +244,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
+// Main Content Logic
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -315,7 +303,7 @@ function MainContent() {
           </p>
         </div>
 
-        {/* THE LIVE TERMINAL */}
+        {/* THE LIVE TERMINAL (CENTERPIECE) */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <LiveDataTerminal />
         </div>
