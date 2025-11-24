@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Cleaned Up) ---
+// --- 1. THE LIVE TERMINAL (Centered, No Border, Equal Text) ---
 const TypewriterTerminal = () => {
   const [displayText, setDisplayText] = useState('')
   const [phase, setPhase] = useState('typing_q') 
   const [scenarioIndex, setScenarioIndex] = useState(0)
   const [charIndex, setCharIndex] = useState(0)
 
-  // Scenarios cleaned (No citations)
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -76,12 +75,13 @@ const TypewriterTerminal = () => {
   }, [charIndex, phase, scenarioIndex])
 
   return (
-    // Centered, no border, simple text block
-    <div className="w-full max-w-3xl mx-auto font-mono text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+    // No border, No shadow, Dead Center text
+    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+      
       <div className="whitespace-pre-wrap">
         {displayText.split('\n\n').map((line, i) => (
-          // Equal font sizing for Q and A
-          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-400 mb-3 uppercase tracking-wider text-xs font-bold' : 'text-[#6b85a3] font-bold'}>
+          // Font sizes are now EQUAL. Colors differ for contrast.
+          <div key={i} className={line.startsWith('QUERY') ? 'text-slate-500 mb-3 font-medium uppercase tracking-wide' : 'text-[#6b85a3] font-bold'}>
             {line}
             {i === displayText.split('\n\n').length - 1 && (
               <span className="inline-block w-2.5 h-5 bg-[#6b85a3] ml-1.5 animate-pulse align-middle opacity-60"></span>
@@ -238,27 +238,25 @@ export default function Home() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-20 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="inline-block px-3 py-1 bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-widest text-[#6b85a3] mb-6 rounded-md shadow-sm">
-            Regulatory Intelligence Unit
-          </div>
-          <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory<br/>Intelligence.
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          {/* REMOVED THE BADGE HERE */}
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+            Local Regulatory Intelligence.
           </h2>
-          {/* REORDERED SUBTEXT */}
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
-            The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the FDA Food Code.
+            The only compliance infrastructure trained on the Federal Food Code, Michigan Food Law, and specific enforcement data for <strong>Washtenaw, Wayne, and Oakland County.</strong>
           </p>
         </div>
 
         {/* THE LIVE TERMINAL (CENTERPIECE) */}
-        <div className={`w-full transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Pushed down slightly with mt-4 */}
+        <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <TypewriterTerminal />
         </div>
 
       </div>
 
-      {/* FOOTER (Cleaned Up) */}
+      {/* FOOTER (Simplified) */}
       <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
