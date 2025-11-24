@@ -4,13 +4,13 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (SMOOTH & FACTUAL) ---
+// --- 1. THE LIVE TERMINAL (Human Q / System A) ---
 const LiveDataTerminal = () => {
+  const [qText, setQText] = useState('')
+  const [aText, setAText] = useState('')
+  const [phase, setPhase] = useState('init') 
   const [index, setIndex] = useState(0)
-  const [showQ, setShowQ] = useState(false)
-  const [showA, setShowA] = useState(false)
-  
-  // 100% Factual Scenarios based on MI Food Law & FDA 2022
+
   const scenarios = [
     {
       q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
@@ -54,46 +54,74 @@ const LiveDataTerminal = () => {
     }
   ]
 
+  // Realistic Human Typing Algorithm
+  const typeHuman = async (text) => {
+    let current = ''
+    for (let i = 0; i < text.length; i++) {
+      current += text[i]
+      setQText(current)
+      
+      // Randomized "Human" Delays
+      let delay = Math.random() * 60 + 30; // 30-90ms base
+      if (text[i] === ' ') delay += 50;    // Pause between words
+      if ([':', '.', '?'].includes(text[i])) delay += 200; // Pause for thought
+      
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+
   useEffect(() => {
     const runSequence = async () => {
-      // 1. Fade In Question
-      setShowQ(true)
-      
-      // 2. Wait for reading (Natural pause)
-      await new Promise(r => setTimeout(r, 1500))
-      
-      // 3. Fade In Answer
-      setShowA(true)
+      const current = scenarios[index]
 
-      // 4. Hold for reading (Longer for complex answers)
+      // 1. Human Types Question
+      setPhase('typing_q')
+      setQText('') 
+      setAText('')
+      await typeHuman(current.q)
+
+      // 2. System Processing
+      setPhase('thinking')
+      await new Promise(r => setTimeout(r, 800))
+
+      // 3. System Response (Instant/Fade)
+      setPhase('showing_a')
+      setAText(current.a)
+
+      // 4. Hold for Reading
       await new Promise(r => setTimeout(r, 5500))
 
-      // 5. Fade Out Both
-      setShowQ(false)
-      setShowA(false)
+      // 5. Fade Out
+      setPhase('out')
+      await new Promise(r => setTimeout(r, 600))
       
-      // 6. Wait for fade out to finish, then swap index
-      await new Promise(r => setTimeout(r, 800))
+      // Loop
       setIndex(prev => (prev + 1) % scenarios.length)
     }
 
     runSequence()
   }, [index])
 
-  const current = scenarios[index]
-
   return (
     <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative px-4">
       
-      {/* QUESTION */}
-      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        {current.q}
+      {/* QUESTION AREA */}
+      <div className={`text-slate-400 mb-5 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        {qText}
+        {/* Cursor only shows during typing phase */}
+        {phase === 'typing_q' && (
+          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
+        )}
       </div>
 
-      {/* ANSWER */}
-      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
-        <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
-        <span className="font-medium">{current.a}</span>
+      {/* ANSWER AREA */}
+      <div className={`text-[#6b85a3] transition-all duration-1000 ease-out transform ${phase === 'showing_a' || phase === 'out' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {aText && (
+          <>
+            <span className="font-bold text-xs mr-3 tracking-widest text-slate-900">PROTOCOL_LM:</span>
+            <span className="font-medium">{aText}</span>
+          </>
+        )}
       </div>
 
     </div>
@@ -108,7 +136,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -208,7 +235,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-function MainContent() {
+export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
@@ -236,8 +263,7 @@ function MainContent() {
       {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* Logo Bigger */}
-          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
@@ -258,14 +284,16 @@ function MainContent() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
-          {/* ONE LINE HEADER (No "Stripe" font, using Mono) */}
-          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
+          {/* ONE LINE HEADER (No "Stripe" font) */}
+          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8 whitespace-normal lg:whitespace-nowrap">
             Food Safety & Inspection Intelligence.
           </h2>
+
+          {/* THE SEPARATOR LINE */}
+          <div className="w-full h-px bg-slate-200 max-w-2xl mx-auto mb-8"></div>
           
-          {/* SUBTEXT (FOCUSED ON VIOLATIONS) */}
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
@@ -292,13 +320,5 @@ function MainContent() {
       {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
-  )
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div></div>}>
-      <MainContent />
-    </Suspense>
   )
 }
