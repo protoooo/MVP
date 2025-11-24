@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (FADE ONLY - NO TYPING) ---
+// --- 1. THE LIVE TERMINAL ---
 const LiveDataTerminal = () => {
   const [index, setIndex] = useState(0)
   const [showQ, setShowQ] = useState(false)
@@ -56,43 +56,28 @@ const LiveDataTerminal = () => {
 
   useEffect(() => {
     const runSequence = async () => {
-      // 1. Show Question (Fade In)
       setShowQ(true)
-      
-      // 2. Wait, then Show Answer (Fade In)
       await new Promise(r => setTimeout(r, 1500))
       setShowA(true)
-
-      // 3. Hold for reading (Long pause)
       await new Promise(r => setTimeout(r, 4500))
-
-      // 4. Fade Out Both
       setShowQ(false)
       setShowA(false)
-      
-      // 5. Swap Text while invisible
       await new Promise(r => setTimeout(r, 500))
       setIndex(prev => (prev + 1) % scenarios.length)
     }
-
     runSequence()
   }, [index])
 
   const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
-      
-      {/* QUESTION */}
-      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-700 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+    <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
+      <div className={`text-slate-500 mb-4 font-medium uppercase tracking-wide transition-all duration-500 transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.q}
       </div>
-
-      {/* ANSWER */}
       <div className={`text-[#6b85a3] font-bold transition-all duration-700 transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
         {current.a}
       </div>
-
     </div>
   )
 }
@@ -105,7 +90,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
-  const router = useRouter() // FIXED: Added router here so buttons work
+  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -198,17 +183,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
           </button>
         </div>
-        
-        {/* PRICING BUTTON INSIDE MODAL AS BACKUP */}
-        <div className="mt-2 text-center">
-          <button 
-            onClick={() => router.push('/pricing')}
-            className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono"
-          >
-            View Pricing
-          </button>
-        </div>
-
       </div>
     </div>
   )
@@ -255,10 +229,10 @@ export default function Home() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
-        {/* HERO TEXT */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl md:text-4xl font-medium text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory<br/>Intelligence.
+        {/* HERO TEXT (Updated: No Line Break, Wider Container) */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+          <h2 className="text-3xl md:text-5xl font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-nowrap">
+            Local Regulatory Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
