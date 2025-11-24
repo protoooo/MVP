@@ -52,32 +52,32 @@ export default function DocumentsPage() {
     }
   }, [])
 
-  // Initialize welcome message when county changes
+  // Initialize welcome message
   useEffect(() => {
     if (userCounty && messages.length === 0) {
       setMessages([
         { 
           role: 'assistant', 
-          content: `System ready. Consultant active for ${COUNTY_NAMES[userCounty]}.`,
+          content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
           citations: []
         }
       ])
     }
   }, [userCounty])
 
-  // Load chat history when session is available
+  // Load chat history
   useEffect(() => {
     if (session) {
       loadChatHistory()
     }
   }, [session])
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Auto-save chat when messages change
+  // Auto-save
   useEffect(() => {
     if (messages.length > 1) {
       saveCurrentChat()
@@ -87,15 +87,10 @@ export default function DocumentsPage() {
   const loadChatHistory = async () => {
     try {
       setLoadingChats(true)
-      const response = await fetch('/api/chat-history', {
-        credentials: 'include'
-      })
-      
+      const response = await fetch('/api/chat-history', { credentials: 'include' })
       if (response.ok) {
         const data = await response.json()
         setChatHistory(data.chats || [])
-      } else {
-        console.error('Failed to load chat history')
       }
     } catch (error) {
       console.error('Error loading chat history:', error)
@@ -106,14 +101,11 @@ export default function DocumentsPage() {
 
   const saveCurrentChat = async () => {
     if (!session || messages.length <= 1 || savingChat) return
-
     clearTimeout(saveTimeoutRef.current)
-    
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSavingChat(true)
         const chatTitle = messages.find(m => m.role === 'user')?.content.substring(0, 40) || 'New Chat'
-        
         const response = await fetch('/api/chat-history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -125,11 +117,9 @@ export default function DocumentsPage() {
             county: userCounty
           })
         })
-
         if (response.ok) {
           const data = await response.json()
           setCurrentChatId(data.chat.id)
-          
           setChatHistory(prev => {
             const existing = prev.findIndex(c => c.id === data.chat.id)
             if (existing >= 0) {
@@ -161,7 +151,7 @@ export default function DocumentsPage() {
     setMessages([
       { 
         role: 'assistant', 
-        content: `System ready. Consultant active for ${COUNTY_NAMES[userCounty]}.`,
+        content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
         citations: []
       }
     ])
@@ -171,19 +161,12 @@ export default function DocumentsPage() {
 
   const deleteChat = async (chatId, e) => {
     e.stopPropagation()
-    if (!confirm('Are you sure you want to delete this chat?')) return
-
+    if (!confirm('Delete this record?')) return
     try {
-      const response = await fetch(`/api/chat-history?chatId=${chatId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
+      const response = await fetch(`/api/chat-history?chatId=${chatId}`, { method: 'DELETE', credentials: 'include' })
       if (response.ok) {
         setChatHistory(prev => prev.filter(c => c.id !== chatId))
-        if (currentChatId === chatId) {
-          startNewChat()
-        }
+        if (currentChatId === chatId) startNewChat()
       }
     } catch (error) {
       console.error('Error deleting chat:', error)
@@ -211,7 +194,6 @@ export default function DocumentsPage() {
       if (data.url) window.location.href = data.url
       else throw new Error('No portal URL returned')
     } catch (error) {
-      console.error('Portal error:', error)
       alert(`Billing Error: ${error.message}`)
     } finally {
       setLoadingPortal(false)
@@ -226,18 +208,12 @@ export default function DocumentsPage() {
         .from('user_profiles')
         .update({ county: newCounty, updated_at: new Date().toISOString() })
         .eq('id', session.user.id)
-
-      if (error) {
-        console.error('Error updating county:', error)
-        alert('Error updating county.')
-        return
-      }
+      if (error) throw error
       setUserCounty(newCounty)
       setShowCountySelector(false)
       startNewChat()
     } catch (error) {
-      console.error('County update error:', error)
-      alert('Failed to update county.')
+      alert('Failed to update jurisdiction.')
     } finally {
       setIsUpdatingCounty(false)
     }
@@ -268,11 +244,7 @@ export default function DocumentsPage() {
       if (match.index > lastIndex) {
         parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
       }
-      parts.push({
-        type: 'citation',
-        document: match[1],
-        pages: match[2]
-      })
+      parts.push({ type: 'citation', document: match[1], pages: match[2] })
       lastIndex = match.index + match[0].length
     }
 
@@ -281,7 +253,7 @@ export default function DocumentsPage() {
     }
 
     return (
-      <div className="whitespace-pre-wrap font-normal text-slate-800 leading-7">
+      <div className="whitespace-pre-wrap font-mono text-slate-700 text-sm leading-relaxed">
         {parts.map((part, i) =>
           part.type === 'text' ? (
             <span key={i}>{part.content}</span>
@@ -289,10 +261,10 @@ export default function DocumentsPage() {
             <button
               key={i}
               onClick={() => handleCitationClick(part)}
-              className="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 hover:border-teal-300 px-2 py-0.5 rounded text-[11px] font-semibold transition-colors mx-1 -translate-y-0.5 cursor-pointer"
+              className="inline-flex items-center gap-1 bg-slate-100 border border-slate-300 text-slate-600 hover:border-[#6b85a3] hover:text-[#6b85a3] px-2 py-0.5 rounded-sm text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              {part.document} <span className="opacity-60">| p.{part.pages}</span>
+              {part.document} <span className="opacity-50">| P.{part.pages}</span>
             </button>
           )
         )}
@@ -307,7 +279,7 @@ export default function DocumentsPage() {
     
     const sanitizedInput = input.trim()
     if (sanitizedInput.length > 5000) {
-      alert('Message too long (max 5000 characters).')
+      alert('Message too long.')
       return
     }
 
@@ -332,14 +304,10 @@ export default function DocumentsPage() {
         })
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        if (response.status === 429) throw new Error(errorData.error || 'Rate limit reached. Please wait a moment.')
-        else if (response.status === 403) throw new Error('Subscription required. Please check your account.')
-        else throw new Error(errorData.error || 'Network error occurred.')
-      }
+      if (!response.ok) throw new Error('System error.')
 
       const data = await response.json()
+
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: data.message, citations: data.citations }
@@ -353,11 +321,10 @@ export default function DocumentsPage() {
         }))
       }
     } catch (err) {
-      console.error('Chat error:', err)
       setError(err.message)
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `I encountered an error: ${err.message}. Please try again.`,
+        content: `System Error: ${err.message}`,
         citations: []
       }])
     } finally {
@@ -369,137 +336,50 @@ export default function DocumentsPage() {
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      alert('Only JPEG, PNG, and WebP images are allowed')
-      e.target.value = ''
-      return
-    }
     if (file.size > MAX_IMAGE_SIZE) {
-      alert('Image must be smaller than 5MB')
-      e.target.value = ''
+      alert('Image too large (Max 5MB)')
       return
     }
     const reader = new FileReader()
     reader.onloadend = () => setImage(reader.result)
-    reader.onerror = () => {
-      alert('Failed to read image file')
-      e.target.value = ''
-    }
     reader.readAsDataURL(file)
   }
 
-  // Check authentication and subscription
   useEffect(() => {
     const checkAccess = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-          router.push('/')
-          return
-        }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.push('/'); return }
 
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('is_subscribed, requests_used, images_used, county')
-          .eq('id', session.user.id)
-          .single()
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed, requests_used, images_used, county')
+        .eq('id', session.user.id)
+        .single()
 
-        if (profileError) {
-          if (profileError.code === 'PGRST116') router.push('/accept-terms')
-          else setError('Failed to load profile. Please refresh.')
-          return
-        }
+      if (!profile?.is_subscribed) { router.push('/pricing'); return }
 
-        if (!profile?.is_subscribed) {
-          router.push('/pricing')
-          return
-        }
-
-        setUserCounty(profile.county || 'washtenaw')
-
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('plan, status, trial_end, current_period_end')
-          .eq('user_id', session.user.id)
-          .single()
-
-        const limits = subscription?.plan === 'enterprise'
-          ? { requests: 5000, images: 500 }
-          : { requests: 500, images: 50 }
-
-        setSession(session)
-        setSubscriptionInfo({
-          plan: subscription?.plan || 'pro',
-          status: subscription?.status || 'active',
-          requestsUsed: profile?.requests_used || 0,
-          imagesUsed: profile?.images_used || 0,
-          requestLimit: limits.requests,
-          imageLimit: limits.images,
-          trialEnd: subscription?.trial_end ? new Date(subscription.trial_end) : null,
-          currentPeriodEnd: subscription?.current_period_end ? new Date(subscription.current_period_end) : null
-        })
-      } catch (error) {
-        console.error('Access check error:', error)
-        setError('Failed to verify access. Please refresh.')
-      }
+      setUserCounty(profile.county || 'washtenaw')
+      setSession(session)
+      setSubscriptionInfo({
+        requestsUsed: profile?.requests_used || 0,
+        requestLimit: 500
+      })
     }
     checkAccess()
   }, [supabase, router])
 
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
+  if (!session) return <div className="min-h-screen bg-white flex items-center justify-center font-mono text-xs text-slate-400">LOADING SYSTEM...</div>
 
   return (
-    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans">
-      {/* Success Message Banner */}
-      {showSuccessMessage && (
-        <div className="fixed top-0 left-0 right-0 z-[70] bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-4 shadow-lg animate-slideDown">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-white/20 rounded-full p-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Welcome to protocolLM! 🎉</h3>
-                <p className="text-sm text-teal-50">Your 30-day trial has started. Full access to all features is now active.</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowSuccessMessage(false)}
-              className="text-white/80 hover:text-white transition ml-4"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* County Selector Modal */}
+    <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
+      
+      {/* County Selector */}
       {showCountySelector && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Select Jurisdiction</h3>
-              <button 
-                onClick={() => setShowCountySelector(false)} 
-                className="text-slate-400 hover:text-slate-900 transition bg-slate-100 rounded-full p-1"
-                disabled={isUpdatingCounty}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
+              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest">Select Jurisdiction</h3>
+              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-900">✕</button>
             </div>
             <div className="space-y-2">
               {Object.entries(COUNTY_NAMES).map(([key, name]) => (
@@ -507,14 +387,14 @@ export default function DocumentsPage() {
                   key={key}
                   onClick={() => handleCountyChange(key)}
                   disabled={isUpdatingCounty}
-                  className={`w-full text-left p-4 border rounded-lg transition-all font-semibold flex items-center justify-between ${
+                  className={`w-full text-left p-4 border transition-all font-bold text-xs uppercase tracking-wide flex items-center justify-between ${
                     userCounty === key 
-                      ? 'border-[#022c22] bg-teal-50 text-[#022c22]' 
-                      : 'border-slate-200 hover:border-teal-600 hover:bg-white text-slate-600'
-                  } ${isUpdatingCounty ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'border-[#6b85a3] bg-slate-50 text-[#6b85a3]' 
+                      : 'border-slate-200 hover:border-slate-400 text-slate-500'
+                  }`}
                 >
                   {name}
-                  {userCounty === key && <span className="text-teal-700">●</span>}
+                  {userCounty === key && <span>●</span>}
                 </button>
               ))}
             </div>
@@ -522,22 +402,20 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* PDF Viewer Modal */}
+      {/* PDF Viewer */}
       {viewingPdf && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
-          <div className="bg-white w-full h-full max-w-6xl rounded-xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white flex-shrink-0">
+        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+          <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
               <div>
-                <h3 className="font-bold text-slate-900 text-lg">{viewingPdf.title}</h3>
-                <p className="text-sm text-slate-500">
-                  {viewingPdf.targetPage && `Jumped to Page ${viewingPdf.targetPage}`}
-                </p>
+                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wide">{viewingPdf.title}</h3>
+                <p className="text-xs text-slate-500 font-mono">Page {viewingPdf.targetPage}</p>
               </div>
               <button 
                 onClick={() => setViewingPdf(null)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-sm"
               >
-                Close Document
+                Close
               </button>
             </div>
             <iframe
@@ -549,182 +427,129 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#022c22] border-r border-teal-900 text-teal-100 flex flex-col z-40 overflow-hidden transition-all duration-300`}>
-        
-        <div className="relative z-10 flex flex-col h-full">
-          <div className="p-6 flex-shrink-0 border-b border-teal-900/50">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">protocol<span className="font-light text-teal-400">LM</span></h1>
-              </div>
-              <button className="md:hidden text-teal-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>✕</button>
-            </div>
-
-            <button
-              onClick={() => setShowCountySelector(true)}
-              className="w-full bg-teal-900/40 hover:bg-teal-900/60 text-white p-3 rounded-lg border border-teal-800/50 mb-3 flex items-center justify-between transition-colors group"
-            >
-              <div className="flex flex-col items-start">
-                <span className="text-[10px] text-teal-400 uppercase tracking-wider font-semibold">Jurisdiction</span>
-                <span className="text-xs font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
-              </div>
-              <svg className="w-4 h-4 text-teal-500 group-hover:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-
-            <button
-              onClick={startNewChat}
-              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold p-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-teal-900/20"
-            >
-              <span>+</span> New Chat
-            </button>
+      {/* SIDEBAR (Dark Matte Slate) */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#0f172a] border-r border-slate-800 text-slate-300 flex flex-col z-40 overflow-hidden`}>
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-lg font-bold tracking-tighter text-white">
+              protocol<span style={{ color: '#6b85a3' }}>LM</span>
+            </h1>
+            <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-            <div className="text-[10px] font-bold text-teal-500 uppercase tracking-widest mb-3 px-2">History</div>
-            {loadingChats ? (
-              <div className="space-y-3 px-2">
-                <div className="h-8 bg-teal-900/30 rounded w-3/4 animate-pulse"></div>
-                <div className="h-8 bg-teal-900/30 rounded w-1/2 animate-pulse"></div>
-              </div>
-            ) : chatHistory.length === 0 ? (
-              <p className="text-teal-600 text-xs px-2 italic">No chat history yet.</p>
-            ) : (
-              chatHistory.map(chat => (
-                <div
-                  key={chat.id}
-                  onClick={() => loadChat(chat)}
-                  className={`p-3 rounded-lg mb-1 group cursor-pointer transition-all relative ${
-                    currentChatId === chat.id ? 'bg-teal-800/50 text-white' : 'hover:bg-teal-900/30 text-teal-200'
-                  }`}
-                >
-                  <div className="pr-6">
-                    <p className="font-medium text-xs truncate">{chat.title}</p>
-                    <p className="text-[10px] opacity-60 mt-0.5">
-                      {new Date(chat.updated_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => deleteChat(chat.id, e)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-teal-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                    title="Delete chat"
-                  >
-                    ✕
-                  </button>
+          <button
+            onClick={() => setShowCountySelector(true)}
+            className="w-full bg-slate-800/50 hover:bg-slate-800 text-white p-3 border border-slate-700 mb-3 flex items-center justify-between transition-colors group rounded-sm"
+          >
+            <div className="flex flex-col items-start">
+              <span className="text-[9px] text-[#6b85a3] uppercase tracking-widest font-bold">Jurisdiction</span>
+              <span className="text-xs font-bold truncate text-slate-200">{COUNTY_NAMES[userCounty]}</span>
+            </div>
+            <svg className="w-4 h-4 text-[#6b85a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+
+          <button
+            onClick={startNewChat}
+            className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90"
+            style={{ backgroundColor: '#6b85a3' }}
+          >
+            <span>+</span> New Inquiry
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+          <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2">Record History</div>
+          {loadingChats ? (
+            <div className="space-y-3 px-2 opacity-30">
+              <div className="h-8 bg-slate-700 rounded-sm w-3/4 animate-pulse"></div>
+              <div className="h-8 bg-slate-700 rounded-sm w-1/2 animate-pulse"></div>
+            </div>
+          ) : (
+            chatHistory.map(chat => (
+              <div
+                key={chat.id}
+                onClick={() => loadChat(chat)}
+                className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-sm ${
+                  currentChatId === chat.id ? 'bg-slate-800 text-white border-l-2 border-[#6b85a3]' : 'hover:bg-slate-800/50 text-slate-400'
+                }`}
+              >
+                <div className="pr-6">
+                  <p className="font-medium text-xs truncate font-mono">{chat.title}</p>
+                  <p className="text-[9px] opacity-50 mt-1 uppercase tracking-wider">
+                    {new Date(chat.updated_at).toLocaleDateString()}
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
+                <button
+                  onClick={(e) => deleteChat(chat.id, e)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                >
+                  ✕
+                </button>
+              </div>
+            ))
+          )}
+        </div>
 
-          <div className="p-4 border-t border-teal-900 bg-[#01251d] flex-shrink-0">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 flex items-center justify-center text-[#022c22] font-bold text-xs bg-teal-400 rounded-full">
-                {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate">
-                  {session?.user?.email}
-                </p>
-                <p className="text-[10px] text-teal-400 font-medium capitalize flex items-center gap-1">
-                  {subscriptionInfo?.plan === 'enterprise' ? 'Enterprise' : 'Pro'} Plan
-                  {subscriptionInfo && (
-                    <span className="text-[9px] opacity-70">
-                      ({subscriptionInfo.requestsUsed}/{subscriptionInfo.requestLimit})
-                    </span>
-                  )}
-                </p>
-              </div>
+        <div className="p-4 border-t border-slate-800 bg-[#0f172a]">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>
+              {session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={handleManageSubscription}
-                disabled={loadingPortal}
-                className="text-[10px] font-bold text-teal-200 hover:text-white bg-teal-900/40 border border-teal-800 hover:border-teal-600 py-2 rounded transition-all disabled:opacity-50"
-              >
-                {loadingPortal ? '...' : 'Billing'}
-              </button>
-              <button 
-                onClick={handleSignOut}
-                className="text-[10px] font-bold text-teal-200 hover:text-red-400 bg-teal-900/40 border border-teal-800 hover:border-red-900/50 py-2 rounded transition-all"
-              >
-                Log Out
-              </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-white truncate font-mono">
+                {session?.user?.email}
+              </p>
+              <p className="text-[9px] text-[#6b85a3] font-medium uppercase tracking-wider">
+                {subscriptionInfo?.requestsUsed} Queries Used
+              </p>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-400 hover:text-white bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">
+              Billing
+            </button>
+            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-400 hover:text-red-400 bg-slate-800 border border-slate-700 py-2 transition-all rounded-sm uppercase tracking-wide">
+              Log Out
+            </button>
           </div>
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+      {/* MAIN CHAT AREA (Clean White/Paper) */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative">
         
         {/* Header */}
-        <div className="p-4 bg-white/90 backdrop-blur-sm border-b border-slate-100 text-slate-900 flex justify-between items-center z-30 flex-shrink-0">
+        <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30">
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-600 hover:text-slate-900">
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <div className="md:hidden font-bold text-slate-900">protocol<span className="font-normal text-teal-600">LM</span></div>
+            <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
           </div>
-          <div className="hidden md:block text-xs font-medium text-slate-400 uppercase tracking-wider">
-            {COUNTY_NAMES[userCounty]} Compliance Database
+          <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {COUNTY_NAMES[userCounty]} Database // Active
           </div>
           <div className="w-6"></div> 
         </div>
 
-        {/* Error Banner */}
-        {error && (
-          <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2 text-red-800 text-sm">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {error}
-            </div>
-            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
-
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-4 md:pb-8 pt-8 space-y-8">
+        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
           {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[90%] lg:max-w-[80%] ${
-                  msg.role === 'assistant' ? 'w-full' : ''
-                }`}
-              >
-                <div className={`
-                  ${msg.role === 'user' 
-                    ? 'bg-[#022c22] text-white rounded-2xl rounded-tr-sm px-5 py-3 shadow-md inline-block float-right' 
-                    : 'text-slate-800 pl-0' 
-                  }
-                `}>
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[90%] lg:max-w-[80%] ${msg.role === 'assistant' ? 'w-full' : ''}`}>
+                <div className={`${msg.role === 'user' ? 'bg-[#6b85a3] text-white rounded-sm px-5 py-3 shadow-sm inline-block float-right' : 'text-slate-800 pl-0'}`}>
                   {msg.image && (
-                    <div className="mb-3 rounded-lg overflow-hidden border border-white/20 max-w-sm">
-                      <img 
-                        src={msg.image} 
-                        alt="Analysis subject" 
-                        className="w-full h-auto" 
-                      />
-                    </div>
+                    <img src={msg.image} alt="Analysis" className="mb-3 rounded-sm border border-white/20 max-w-sm w-full h-auto" />
                   )}
-
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
-                      <span className="font-bold text-sm text-slate-900">ProtocolLM</span>
+                      <div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div>
+                      <span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span>
                     </div>
                   )}
                   
                   {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed text-sm font-mono">{msg.content}</p>
                   ) : (
                     renderMessageContent(msg)
                   )}
@@ -734,44 +559,29 @@ export default function DocumentsPage() {
           ))}
           
           {isLoading && (
-            <div className="flex justify-start w-full">
-               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 mb-1">
-                   <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
-                   <span className="font-bold text-sm text-slate-900">Thinking...</span>
-                </div>
-                <div className="flex items-center gap-1 ml-8">
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                </div>
-              </div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div>
+              <span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span>
             </div>
           )}
-          
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 p-4 md:p-6 bg-white/80 backdrop-blur border-t border-slate-200 z-20">
+        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20">
           {image && (
             <div className="max-w-4xl mx-auto mb-3 px-1">
               <div className="relative inline-block group">
-                <img src={image} alt="Preview" className="h-20 w-auto rounded-lg border border-slate-200 shadow-sm object-cover" />
-                <div className="absolute inset-0 bg-black/20 rounded-lg hidden group-hover:flex items-center justify-center transition-all">
-                   <button 
-                    onClick={() => setImage(null)}
-                    className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-sm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
-                </div>
+                <img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" />
+                <button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
             </div>
           )}
 
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
-            <div className="flex items-end gap-2 bg-white border border-slate-300 rounded-2xl shadow-sm p-2 focus-within:border-teal-600 focus-within:ring-1 focus-within:ring-teal-600 transition-all">
+            <div className="flex items-end gap-2 bg-[#f8fafc] border border-slate-300 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-sm">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -784,12 +594,7 @@ export default function DocumentsPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
-                className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
-                  image 
-                    ? 'bg-teal-100 text-teal-700' 
-                    : 'text-slate-400 hover:text-teal-600 hover:bg-teal-50'
-                }`}
-                title="Upload Image"
+                className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               </button>
@@ -797,29 +602,28 @@ export default function DocumentsPage() {
               <input
                 value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder={image ? "Ask a question about this image..." : "Type your question here..."}
-                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400"
+                placeholder={image ? "Analyze this image..." : "Enter regulatory query..."}
+                className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm"
                 disabled={isLoading}
-                maxLength={5000}
               />
 
               <button
                 type="submit"
                 disabled={isLoading || (!input.trim() && !image) || !canSend}
-                className={`p-2.5 rounded-xl font-bold transition-all flex-shrink-0 ${
+                className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${
                   isLoading || (!input.trim() && !image) || !canSend
-                  ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-                  : 'bg-[#022c22] text-white hover:bg-teal-900 shadow-md'
+                  ? 'bg-slate-200 text-slate-400'
+                  : 'text-white hover:opacity-90'
                 }`}
+                style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}
               >
                 <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
               </button>
             </div>
             
-            <div className="text-center mt-2">
-              <p className="text-[10px] text-slate-400">
-                AI can make mistakes. Please verify with cited documents.
-                {savingChat && <span className="ml-2 text-teal-600">● Saving...</span>}
+            <div className="text-center mt-3">
+              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">
+                AI Guidance | Verify with Official Docs
               </p>
             </div>
           </form>
