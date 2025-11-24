@@ -4,14 +4,14 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE LIVE TERMINAL (Word Stream - Smooth & Readable) ---
+// --- 1. THE LIVE TERMINAL (Human Typing Simulation) ---
 const LiveDataTerminal = () => {
-  const [displayQ, setDisplayQ] = useState('')
-  const [displayA, setDisplayA] = useState('')
-  const [phase, setPhase] = useState('init') // q_in, thinking, a_in, hold, out
-  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [qText, setQText] = useState('')
+  const [aText, setAText] = useState('')
+  const [phase, setPhase] = useState('init') 
+  const [index, setIndex] = useState(0)
 
-  // 10 High-Value Scenarios
+  // 10 Factual Scenarios (FDA/MI Code)
   const scenarios = [
     {
       q: "QUERY: Inspector flagged a 'Priority Foundation' on the dishwasher.",
@@ -55,78 +55,94 @@ const LiveDataTerminal = () => {
     }
   ]
 
+  // Human Typing Logic
+  const typeHuman = async (text, setter) => {
+    let current = ''
+    for (let i = 0; i < text.length; i++) {
+      current += text[i]
+      setter(current)
+      
+      // Calculate "Human" Delay
+      const char = text[i]
+      let delay = Math.random() * 60 + 30; // Base: 30-90ms variance
+      
+      if (char === ' ') delay += 30; // Pause between words
+      if (['.', ',', ':', '?'].includes(char)) delay += 150; // Pause for punctuation
+      
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+
+  // Machine Streaming Logic (Faster, consistent)
+  const typeMachine = async (text, setter) => {
+    const words = text.split(' ')
+    let current = ''
+    for (let i = 0; i < words.length; i++) {
+      current += (i === 0 ? '' : ' ') + words[i]
+      setter(current)
+      // Fast, consistent data stream speed
+      await new Promise(r => setTimeout(r, 40)) 
+    }
+  }
+
   useEffect(() => {
-    let timeout
-    const current = scenarios[scenarioIndex]
+    const runSequence = async () => {
+      const current = scenarios[index]
 
-    const animate = async () => {
-      // 1. QUESTION - "Scramble" In (Fast but readable)
-      setPhase('q_in')
-      const qChars = current.q.split('')
-      for (let i = 0; i <= qChars.length; i++) {
-        setDisplayQ(current.q.slice(0, i))
-        await new Promise(r => setTimeout(r, 20)) // Fast type for Q
-      }
+      // 1. Human types the Question
+      setPhase('typing_q')
+      await typeHuman(current.q, setQText)
 
-      // 2. THINKING (Brief Pause)
+      // 2. Processing Pause (Thinking)
       setPhase('thinking')
-      await new Promise(r => setTimeout(r, 600))
+      await new Promise(r => setTimeout(r, 800))
 
-      // 3. ANSWER - "Stream" In (Word by Word - Smooth)
-      setPhase('a_in')
-      const aWords = current.a.split(' ')
-      for (let i = 0; i <= aWords.length; i++) {
-        setDisplayA(aWords.slice(0, i).join(' '))
-        // Variable speed: Commas/Periods pause slightly longer for realism
-        const word = aWords[i-1] || ''
-        const delay = word.endsWith('.') || word.endsWith(',') ? 150 : 50
-        await new Promise(r => setTimeout(r, delay))
-      }
+      // 3. AI Streams the Answer
+      setPhase('typing_a')
+      await typeMachine(current.a, setAText)
 
-      // 4. HOLD (Let them read)
-      setPhase('hold')
-      await new Promise(r => setTimeout(r, 4000))
+      // 4. Read Time
+      await new Promise(r => setTimeout(r, 4500))
 
-      // 5. FADE OUT (Clean wipe)
+      // 5. Fade Out / Reset
       setPhase('out')
       await new Promise(r => setTimeout(r, 500))
-
-      // Reset for next loop
-      setDisplayQ('')
-      setDisplayA('')
-      setScenarioIndex(prev => (prev + 1) % scenarios.length)
+      
+      setQText('')
+      setAText('')
+      setIndex(prev => (prev + 1) % scenarios.length)
     }
 
-    animate()
-  }, [scenarioIndex])
+    runSequence()
+  }, [index])
 
   return (
     <div className="w-full max-w-3xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[160px] flex flex-col justify-center items-center text-center relative">
       
-      {/* QUESTION CONTAINER */}
-      <div className={`transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="text-slate-400 mb-4 font-bold text-xs uppercase tracking-widest">
-          {displayQ}
-          {/* Blinking Cursor on Question only while typing */}
-          {phase === 'q_in' && <span className="inline-block w-2 h-4 bg-slate-300 ml-1 animate-pulse align-middle"></span>}
-        </div>
+      {/* QUESTION */}
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        {qText}
+        {phase === 'typing_q' && (
+          <span className="inline-block w-2 h-4 bg-slate-300 ml-1 animate-pulse align-middle"></span>
+        )}
       </div>
 
-      {/* ANSWER CONTAINER */}
+      {/* ANSWER AREA */}
       <div className={`transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        
         {/* Thinking Indicator */}
         {phase === 'thinking' && (
           <div className="text-[#6b85a3] text-xs font-bold uppercase tracking-widest animate-pulse">
-            Analyzing Protocol...
+            Checking Enforcement DB...
           </div>
         )}
 
-        {/* The Streamed Answer */}
-        {(phase === 'a_in' || phase === 'hold') && (
+        {/* The Answer */}
+        {(phase === 'typing_a' || phase === 'out') && (
           <div className="text-[#6b85a3] font-bold">
-            {displayA}
-            {/* Smooth Cursor on Answer */}
-            {phase === 'a_in' && <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 align-middle"></span>}
+            <span className="mr-2">PROTOCOL_LM:</span>
+            {aText}
+            {phase === 'typing_a' && <span className="inline-block w-2 h-4 bg-[#6b85a3] ml-1 align-middle"></span>}
           </div>
         )}
       </div>
@@ -241,7 +257,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// Main Content Logic
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -291,9 +306,9 @@ function MainContent() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-16 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6">
-            Local Regulatory Intelligence.
+            Local Regulatory<br/>Intelligence.
           </h2>
           <p className="text-sm text-slate-500 leading-relaxed max-w-2xl mx-auto">
             The only compliance infrastructure trained specifically on enforcement data for <strong>Washtenaw, Wayne, and Oakland County</strong>, the Michigan Modified Food Law, and the Federal Food Code.
@@ -318,6 +333,7 @@ function MainContent() {
         </div>
       </div>
 
+      {/* AUTH MODAL */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
   )
