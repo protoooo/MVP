@@ -1,158 +1,101 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. MODERN CHAT DEMO (The Centerpiece) ---
-const DemoChatInterface = () => {
-  const [messages, setMessages] = useState([])
-  const [inputValue, setInputValue] = useState('')
-  const [phase, setPhase] = useState('start') // start, typing_q, thinking, streaming_a, done
+// --- 1. THE LIVE TERMINAL (Smooth Fade Animation) ---
+const LiveDataTerminal = () => {
+  const [index, setIndex] = useState(0)
+  const [showQ, setShowQ] = useState(false)
+  const [showA, setShowA] = useState(false)
   
-  const scrollRef = useRef(null)
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, inputValue])
-
-  const SEQUENCE = [
+  // 100% Factual Scenarios based on MI Food Law & FDA 2022
+  const scenarios = [
     {
-      user: "Can we store raw burger patties above cooked brisket?",
-      ai: "NEGATIVE: Priority Violation (P). Raw ground meat (155°F cook temp) must go BELOW whole cuts of beef and ready-to-eat foods to prevent drip contamination. \n\nCorrective Action: Move immediately to bottom shelf."
+      q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
+      a: "Priority Violation (P). Raw ground beef (155°F cook temp) must be stored BELOW whole cuts of beef (145°F cook temp) to prevent cross-contamination."
     },
     {
-      user: "Generate a staff memo for this.",
-      ai: "Generating Corrective Action Notice...\n\n[MEMO CREATED: Raw Beef Storage Protocol]\nReady for print/export."
+      q: "QUERY: Inspector flagged the dishwasher final rinse at 152°F.",
+      a: "Priority Violation (P). High-temperature machines must reach 160°F at the utensil surface. Switch to 3-compartment sink sanitizing immediately until serviced."
+    },
+    {
+      q: "QUERY: Employee just reported they have Norovirus.",
+      a: "Emergency Protocol. EXCLUDE the employee from the establishment immediately. They cannot return until 48 hours after symptoms have ended. Notify Health Dept."
+    },
+    {
+      q: "QUERY: What is the max cooling time for the chili?",
+      a: "Process Control. Cool from 135°F to 70°F within 2 hours. Then from 70°F to 41°F within 4 additional hours. Total time cannot exceed 6 hours."
+    },
+    {
+      q: "QUERY: Hand sink is blocked by a trash can.",
+      a: "Priority Foundation (Pf). Handwashing sinks must be accessible at all times and used for no other purpose. Move the obstruction immediately."
+    },
+    {
+      q: "QUERY: We found mouse droppings in dry storage.",
+      a: "Priority Foundation (Pf). Contact PCO immediately. Discard any food with compromised packaging. Clean and sanitize the area. Check for entry points."
+    },
+    {
+      q: "QUERY: Date marking rule for opened deli ham?",
+      a: "Compliance Rule. TCS foods held longer than 24 hours must be marked. 7-day shelf life maximum, where the day of opening counts as Day 1. Hold at 41°F."
+    },
+    {
+      q: "QUERY: Quat sanitizer bucket tested at 500ppm.",
+      a: "Priority Foundation (Pf). Chemical Hazard. Concentration is too high (toxic). Dilute immediately to manufacturer specs (typically 150-400ppm)."
+    },
+    {
+      q: "QUERY: Reheating yesterday's soup for the hot well.",
+      a: "Critical Limit. You must reheat rapidly to 165°F for 15 seconds within 2 hours. Once reached, you can hold at 135°F."
+    },
+    {
+      q: "QUERY: Can we thaw frozen fish in vacuum packaging?",
+      a: "Critical Hazard. Remove fish from Reduced Oxygen Packaging (ROP) BEFORE thawing to prevent Clostridium botulinum growth."
     }
   ]
 
   useEffect(() => {
-    let timeout
-    let currentStep = 0
+    const runSequence = async () => {
+      // 1. Fade In Question
+      setShowQ(true)
+      
+      // 2. Wait for reading (Natural pause)
+      await new Promise(r => setTimeout(r, 1500))
+      
+      // 3. Fade In Answer
+      setShowA(true)
 
-    const runSimulation = async () => {
-      while (true) { // Infinite Loop
-        setMessages([])
-        
-        for (const step of SEQUENCE) {
-          // 1. TYPE USER QUESTION (Human Style)
-          setPhase('typing_q')
-          let currentText = ""
-          for (let i = 0; i < step.user.length; i++) {
-            currentText += step.user[i]
-            setInputValue(currentText)
-            // Variable human speed
-            await new Promise(r => setTimeout(r, Math.random() * 50 + 30)) 
-          }
-          await new Promise(r => setTimeout(r, 600)) // Pause before sending
+      // 4. Hold for reading (Longer for complex answers)
+      await new Promise(r => setTimeout(r, 5500))
 
-          // 2. SEND MESSAGE
-          setInputValue('')
-          setMessages(prev => [...prev, { role: 'user', content: step.user }])
-          setPhase('thinking')
-          await new Promise(r => setTimeout(r, 800)) // Network latency
-
-          // 3. STREAM AI RESPONSE
-          setPhase('streaming_a')
-          let aiResponse = ""
-          const words = step.ai.split(' ')
-          
-          // Add empty AI message first
-          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-          
-          for (let i = 0; i < words.length; i++) {
-            aiResponse += (i === 0 ? '' : ' ') + words[i]
-            // Update last message
-            setMessages(prev => {
-              const newMsgs = [...prev]
-              newMsgs[newMsgs.length - 1].content = aiResponse
-              return newMsgs
-            })
-            await new Promise(r => setTimeout(r, 40)) // Smooth stream speed
-          }
-
-          await new Promise(r => setTimeout(r, 2000)) // Read time
-        }
-
-        // Reset after full sequence
-        await new Promise(r => setTimeout(r, 2000))
-      }
+      // 5. Fade Out Both
+      setShowQ(false)
+      setShowA(false)
+      
+      // 6. Wait for fade out to finish, then swap index
+      await new Promise(r => setTimeout(r, 800))
+      setIndex(prev => (prev + 1) % scenarios.length)
     }
 
-    runSimulation()
-    return () => clearTimeout(timeout)
-  }, [])
+    runSequence()
+  }, [index])
+
+  const current = scenarios[index]
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[450px] relative">
-      {/* Fake Header */}
-      <div className="h-12 border-b border-slate-100 bg-[#f8fafc] flex items-center px-4 gap-2">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-        </div>
-        <div className="ml-auto text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          Washtenaw County // Active
-        </div>
+    <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative px-4">
+      
+      {/* QUESTION */}
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-all duration-700 ease-in-out transform ${showQ ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {current.q}
       </div>
 
-      {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto space-y-6 bg-white">
-        {messages.length === 0 && phase !== 'typing_q' && (
-          <div className="h-full flex items-center justify-center text-slate-300 text-sm font-mono">
-            Awaiting Input...
-          </div>
-        )}
-        
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-xl text-sm leading-relaxed font-medium ${
-              msg.role === 'user' 
-                ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
-                : 'bg-slate-50 text-slate-700 rounded-tl-sm border border-slate-100'
-            }`}>
-               {/* Render Newlines */}
-               {msg.content.split('\n').map((line, j) => (
-                 <p key={j} className={j > 0 ? 'mt-2' : ''}>{line}</p>
-               ))}
-            </div>
-          </div>
-        ))}
-        
-        {phase === 'thinking' && (
-          <div className="flex justify-start">
-             <div className="bg-slate-50 px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1">
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-             </div>
-          </div>
-        )}
+      {/* ANSWER */}
+      <div className={`text-[#6b85a3] transition-all duration-1000 ease-in-out transform ${showA ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
+        <span className="font-medium">{current.a}</span>
       </div>
 
-      {/* Input Area (Static visual) */}
-      <div className="p-4 bg-white border-t border-slate-100">
-        <div className="w-full bg-[#f8fafc] border border-slate-200 rounded-lg p-3 flex items-center gap-3">
-           <div className="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center">
-              <span className="text-slate-300 text-xs font-bold">+</span>
-           </div>
-           <div className="flex-1 text-sm text-slate-700 font-medium relative">
-              {inputValue}
-              {phase === 'typing_q' && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-0.5 align-middle animate-pulse"></span>}
-              {!inputValue && phase !== 'typing_q' && <span className="text-slate-300">Ask a regulatory question...</span>}
-           </div>
-           <div className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-           </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -265,7 +208,8 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-export default function Home() {
+// Main Content Component
+function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
@@ -314,7 +258,7 @@ export default function Home() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-16">
         
         {/* HERO TEXT */}
-        <div className={`text-center mb-10 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
           <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
             Food Safety & Inspection Intelligence.
@@ -325,15 +269,15 @@ export default function Home() {
           </p>
         </div>
 
-        {/* THE LIVE CHAT DEMO */}
+        {/* THE LIVE TERMINAL */}
         <div className={`w-full mt-4 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <DemoChatInterface />
+          <LiveDataTerminal />
         </div>
 
       </div>
 
       {/* FOOTER */}
-      <div className="w-full py-12 text-center bg-[#f8fafc] border-t border-slate-200 mt-12">
+      <div className="w-full py-12 text-center bg-white border-t border-slate-200">
         <div className="max-w-6xl mx-auto px-6 flex justify-center items-center">
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
             <a href="/terms" className="hover:text-[#6b85a3] transition">Terms</a>
@@ -349,6 +293,7 @@ export default function Home() {
   )
 }
 
+// Export Home
 export default function Home() {
   return (
     <Suspense fallback={<div></div>}>
