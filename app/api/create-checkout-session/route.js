@@ -37,22 +37,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    // --- FIXED PLAN MAPPING ---
-    let planName = 'pro' // Fallback
+    // Your active $99/mo Price ID
+    const ACTIVE_PRICE_ID = 'price_1SVJyRDlSrKA3nbAGhdEZzXA'
+    
+    // Default to 'pro' to match your "Pro Access" UI badge
+    let planName = 'pro' 
 
-    if (priceId === 'price_1SWzz2DlSrKA3nbAR2I856jl') {
-      planName = 'starter'
-    } else if (priceId === 'price_1SVJvcDlSrKA3nbAlLcPCs52') {
-      planName = 'pro'
-    } else if (priceId === 'price_1SVJyRDlSrKA3nbAGhdEZzXA') {
-      planName = 'enterprise'
+    // Optional: Safety check to ensure we only process the correct ID
+    if (priceId !== ACTIVE_PRICE_ID) {
+      console.warn(`⚠️ Unexpected Price ID received: ${priceId}`)
     }
-    // --------------------------
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
     console.log('✅ Creating checkout session for:', session.user.email)
-    console.log('✅ Plan:', planName)
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
