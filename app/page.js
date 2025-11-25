@@ -13,48 +13,49 @@ const DemoChatInterface = () => {
   
   const scrollRef = useRef(null)
 
-  // Auto-scroll
+  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, inputValue, isThinking])
 
+  // RELATABLE, "EVERYDAY MISTAKE" SCENARIOS
   const SEQUENCE = [
     {
-      // 1. THE CLASSIC THAWING MISTAKE
+      // 1. THE CLASSIC NEWBIE MISTAKE (Thawing)
       text: "Can I just thaw the chicken on the prep table? It's frozen solid.",
       backspace: 0,
       correction: "",
-      response: "NEGATIVE: Priority Violation (P). Thawing at room temperature puts food in the Danger Zone (>41°F). \n\nPROTOCOL: Use cold running water, the walk-in cooler, or the microwave."
+      response: "NEGATIVE: Priority Violation (P). Thawing at room temperature puts food in the Danger Zone (>41°F). \n\nPROTOCOL: Use cold running water, the walk-in cooler, or the microwave. [FDA 3-501.13]"
     },
     {
-      // 2. THE "LAZY SANITIZER" SHORTCUT
-      text: "We keep the sani bucket out all day, just top it off.",
+      // 2. THE "LAZY SHORTCUT" (Sanitizing)
+      text: "Is wiping the cutting board with a bleach rag enough between raw beef and produce?",
       backspace: 0,
       correction: "",
-      response: "VIOLATION: Priority Foundation (Pf). Quat sanitizer degrades with time and food debris. You must dump and test with strips every 2-4 hours (Target: 200ppm)."
+      response: "CRITICAL: Priority Violation (P). Wiping is NOT sanitizing. You must Wash, Rinse, and Sanitize (3-step process) to prevent Salmonella transfer. [MI Food Law]"
     },
     {
-      // 3. THE "WIPE DOWN" MYTH (Cross Contamination)
-      text: "Is wiping the board with bleach enough between raw beef and produce?",
-      backspace: 0,
-      correction: "",
-      response: "CRITICAL: Priority Violation (P). Wiping is NOT sanitizing. You must Wash, Rinse, and Sanitize (3-step process) to prevent Salmonella transfer."
-    },
-    {
-      // 4. MISSING LOGS (Admin/Pf)
+      // 3. THE "I FORGOT" (Documentation/Admin)
       text: "We forgot to log cooler temps yesterday. Inspector is coming.",
       backspace: 0,
       correction: "",
-      response: "WARNING: Priority Foundation (Pf). Missing documentation is an automatic violation. \n\nACTION: Document the gap. Do not falsify data. Verify current temps are <41°F immediately."
+      response: "WARNING: Priority Foundation (Pf). Missing documentation is an automatic violation in Washtenaw/Wayne. \n\nACTION: Document the gap in the log. Do not falsify data. Verify current temps are <41°F immediately."
     },
     {
-      // 5. GENERATING THE WRITE-UP (Management Feature)
+      // 4. THE "WE'VE ALWAYS DONE IT THIS WAY" (Sanitizer Buckets)
+      text: "We keep the sani bucket out all day, just top it off when it gets low.",
+      backspace: 0,
+      correction: "",
+      response: "VIOLATION: Priority Foundation (Pf). Quat sanitizer degrades with time and food debris. You must dump and test with strips every 4 hours (Target: 200ppm)."
+    },
+    {
+      // 5. THE MANAGEMENT FIX (Memo Gen)
       text: "Generate a staff memo about the thawing rule.",
       backspace: 0,
       correction: "",
-      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Improper Thawing Procedures\nCODE: FDA 3-501.13\nACTION: All thawing must occur under refrigeration or running water. Counter thawing is prohibited effective immediately."
+      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Improper Thawing Procedures\nCODE: FDA 3-501.13\n\nINSTRUCTION: All thawing must occur under refrigeration or running water. Counter thawing is prohibited effective immediately.\n\n[Ready to Print]"
     }
   ]
 
@@ -66,7 +67,9 @@ const DemoChatInterface = () => {
     const typeChar = async (char) => {
       setInputValue(prev => prev + char)
       // Human Typing: Random speed + pauses
-      await wait(Math.random() * 60 + 30)
+      let speed = Math.random() * 60 + 30
+      if (char === ' ') speed += 50 
+      await wait(speed)
     }
 
     const backspace = async (count) => {
@@ -127,7 +130,7 @@ const DemoChatInterface = () => {
             await wait(40) 
           }
           
-          await wait(4000) // Read time
+          await wait(5000) // Longer Read time for these complex answers
         }
         await wait(2000)
         setMessages([])
@@ -139,7 +142,7 @@ const DemoChatInterface = () => {
   }, [])
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white border-2 border-slate-200/80 rounded-xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[480px] relative">
+    <div className="w-full max-w-3xl mx-auto bg-white border-2 border-slate-200/80 rounded-xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[450px] relative">
       
       {/* CHAT HEADER */}
       <div className="h-12 border-b border-slate-100 bg-[#f8fafc] flex items-center px-4 gap-2">
@@ -325,7 +328,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- MAIN CONTENT ---
+// Main Content Logic
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -354,7 +357,7 @@ function MainContent() {
       {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
+          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
@@ -372,12 +375,11 @@ function MainContent() {
       </nav>
 
       {/* MAIN CONTENT - CENTERED */}
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-24 md:pt-24">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-16">
         
-        {/* HERO TEXT (Small, Punchy Header) */}
+        {/* HERO TEXT (UPDATED TO YOUR EXACT PHRASING) */}
         <div className={`text-center mb-10 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
-          {/* Smaller Font Size (`text-2xl md:text-3xl`) to force one line naturally */}
           <h2 className="text-2xl md:text-3xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
             Train Your Team Before the Health Department Does.
           </h2>
@@ -387,7 +389,7 @@ function MainContent() {
           </p>
         </div>
 
-        {/* THE LIVE CHAT DEMO */}
+        {/* THE LIVE CHAT SIMULATION */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <DemoChatInterface />
         </div>
