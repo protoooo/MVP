@@ -4,21 +4,13 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. CHAT CONTENT (INSIDE THE PHONE) ---
-const DemoChatContent = ({ onKeyboardChange }) => {
+// --- 1. CHAT DEMO BOX ---
+const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false) 
   const [isThinking, setIsThinking] = useState(false)
-  const [pressedKey, setPressedKey] = useState(null)
   const scrollRef = useRef(null)
-
-  // Notify parent about keyboard visibility
-  useEffect(() => {
-    if (onKeyboardChange) {
-      onKeyboardChange(isTyping)
-    }
-  }, [isTyping, onKeyboardChange])
 
   // Auto-scroll
   useEffect(() => {
@@ -29,9 +21,7 @@ const DemoChatContent = ({ onKeyboardChange }) => {
 
   const SEQUENCE = [
     {
-      text: "Can I store raw chikin", 
-      backspace: 6, 
-      correction: "chicken above the cooked brisket?",
+      text: "Can I store raw chicken above the cooked brisket?",
       response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F) must be stored on the BOTTOM shelf to prevent cross-contamination."
     },
     {
@@ -50,51 +40,28 @@ const DemoChatContent = ({ onKeyboardChange }) => {
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
     const typeChar = async (char) => {
-      setPressedKey(char.toLowerCase())
       setInputValue(prev => prev + char)
       await wait(Math.random() * 50 + 30)
-      setPressedKey(null)
-    }
-
-    const backspace = async (count) => {
-      for (let i = 0; i < count; i++) {
-        setPressedKey('backspace')
-        setInputValue(prev => prev.slice(0, -1))
-        await wait(80)
-        setPressedKey(null)
-      }
     }
 
     const runSimulation = async () => {
       while (isMounted) {
         for (const step of SEQUENCE) {
-          // 1. Show keyboard first
+          // 1. User Types
           setIsTyping(true)
           await wait(500)
 
-          // 2. Start typing
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
 
-          if (step.backspace) {
-            await wait(400)
-            await backspace(step.backspace)
-            await wait(200)
-            for (const char of step.correction) {
-              if (!isMounted) return
-              await typeChar(char)
-            }
-          }
-
           await wait(500) 
           
           // 2. Send
-          const finalMsg = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
           setInputValue('')
           setIsTyping(false)
-          setMessages(prev => [...prev, { role: 'user', content: finalMsg }])
+          setMessages(prev => [...prev, { role: 'user', content: step.text }])
 
           // 3. Thinking
           setIsThinking(true)
@@ -128,137 +95,70 @@ const DemoChatContent = ({ onKeyboardChange }) => {
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-white font-sans">
-      {/* PHONE HEADER */}
-      <div className="h-14 bg-white border-b border-slate-100 flex items-end pb-3 px-5 justify-between shrink-0 z-10">
-        <span className="font-bold text-slate-900 text-[10px] tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
-        <div className="flex items-center gap-1.5 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-          <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-[7px] font-bold text-green-700 uppercase">Active</span>
+    <div className="flex flex-col h-[500px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
+      {/* HEADER */}
+      <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0">
+        <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
+        <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">Active</span>
         </div>
       </div>
 
       {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc]" style={{ paddingBottom: isTyping ? '330px' : '96px' }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc]">
         {messages.length === 0 && !isTyping && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
-             <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <div className="w-5 h-5 border-2 border-slate-100 rounded-full"></div>
+          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
+             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-6 h-6 border-2 border-slate-100 rounded-full"></div>
              </div>
-             <span className="text-[10px] font-bold uppercase tracking-widest">Ready</span>
+             <span className="text-xs font-bold uppercase tracking-widest">Ready</span>
           </div>
         )}
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[90%] px-4 py-3 rounded-2xl text-[11px] leading-relaxed font-medium shadow-sm ${
+            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm ${
               msg.role === 'user' 
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
             }`}>
-               <div className="whitespace-pre-wrap font-mono">{msg.content}</div>
+               <div className="whitespace-pre-wrap font-mono text-xs">{msg.content}</div>
             </div>
           </div>
         ))}
 
         {isThinking && (
            <div className="flex justify-start animate-in fade-in zoom-in duration-200">
-              <div className="bg-white px-3 py-2 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1 items-center shadow-sm">
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce"></div>
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1.5 items-center shadow-sm">
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
               </div>
            </div>
         )}
       </div>
 
-      {/* INPUT AREA (Flexible Height for wrapping) */}
-      <div className="absolute left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100" style={{ bottom: isTyping ? '165px' : '0' }}>
-        <div className="w-full bg-slate-50 border border-slate-200 rounded-[20px] px-4 py-3 flex items-end gap-3">
-           <div className="flex-1 text-[11px] text-slate-700 font-medium min-h-[16px] relative flex items-center flex-wrap">
+      {/* INPUT AREA */}
+      <div className="p-4 bg-white border-t border-slate-100">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3">
+           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
-              {isTyping && <span className="inline-block w-0.5 h-3 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-300">Ask a question...</span>}
+              {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-1 animate-pulse"></span>}
+              {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
            </div>
-           <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                  <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
            </div>
         </div>
       </div>
-
-      {/* KEYBOARD */}
-      {isTyping && (
-        <div className="absolute bottom-0 left-0 right-0 bg-[#d1d5db] px-1 py-2 space-y-1">
-          {/* Row 1 */}
-          <div className="flex gap-[2px] justify-center">
-            {['q','w','e','r','t','y','u','i','o','p'].map(k => (
-              <div key={k} className={`w-[9%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
-                {k.toUpperCase()}
-              </div>
-            ))}
-          </div>
-          {/* Row 2 */}
-          <div className="flex gap-[2px] justify-center px-3">
-            {['a','s','d','f','g','h','j','k','l'].map(k => (
-              <div key={k} className={`w-[9.5%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
-                {k.toUpperCase()}
-              </div>
-            ))}
-          </div>
-          {/* Row 3 */}
-          <div className="flex gap-[2px] justify-center">
-            <div className={`w-[12%] h-9 rounded flex items-center justify-center transition-all ${pressedKey === 'shift' ? 'bg-white scale-95' : 'bg-white/70'} shadow-sm`}>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M5 15l7-7 7 7"/></svg>
-            </div>
-            {['z','x','c','v','b','n','m'].map(k => (
-              <div key={k} className={`w-[9.5%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
-                {k.toUpperCase()}
-              </div>
-            ))}
-            <div className={`w-[12%] h-9 rounded flex items-center justify-center transition-all ${pressedKey === 'backspace' ? 'bg-white scale-95' : 'bg-white/70'} shadow-sm`}>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M12 14l-4-4m0 0l4-4m-4 4h12M3 12l3 3 3-3"/></svg>
-            </div>
-          </div>
-          {/* Row 4 */}
-          <div className="flex gap-[2px] justify-center">
-            <div className="w-[15%] h-9 rounded flex items-center justify-center bg-white/70 text-[10px] font-medium shadow-sm">123</div>
-            <div className={`flex-1 h-9 rounded flex items-center justify-center transition-all ${pressedKey === ' ' ? 'bg-white scale-95' : 'bg-white/90'} text-[10px] font-medium shadow-sm`}>space</div>
-            <div className="w-[15%] h-9 rounded flex items-center justify-center bg-[#6b85a3] text-white text-[10px] font-bold shadow-sm">Go</div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
-// --- 2. THE IPHONE 15 PRO FRAME ---
-const PhoneFrame = () => {
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
-  
-  return (
-    // Centered Container with Hover Effect - moves up when keyboard is visible
-    <div className={`relative flex items-center justify-center transform transition-all duration-500 hover:scale-[1.01] ${isKeyboardVisible ? '-translate-y-4' : 'translate-y-0'}`}>
-        <div className="relative w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/30 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden z-10">
-        {/* Screen */}
-        <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
-            <DemoChatContent onKeyboardChange={setIsKeyboardVisible} />
-        </div>
-
-        {/* Dynamic Island */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90px] h-[28px] bg-black rounded-full z-30 flex items-center justify-end pr-3">
-            <div className="w-2 h-2 bg-[#1a1a1a] rounded-full opacity-80"></div>
-        </div>
-        
-        {/* Gloss */}
-        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent pointer-events-none rounded-[3.5rem] z-40"></div>
-        </div>
-    </div>
-  )
-}
-
-// --- 3. AUTH MODAL ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -358,7 +258,6 @@ function MainContent() {
         <div className={`flex gap-6 text-xs font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
           <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Sign In</button>
-          {/* JOIN Button on Mobile */}
           <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
              <span className="hidden md:inline">Create Account</span>
              <span className="md:hidden">Join</span>
@@ -367,35 +266,40 @@ function MainContent() {
       </nav>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-12">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-16">
         
-        {/* LEFT: TEXT (Pushed down slightly for balance) */}
+        {/* LEFT: TEXT */}
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
+          <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
           </h2>
-          <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
+          <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
-          {/* Desktop Button */}
-          <button onClick={() => openAuth('signup')} className="hidden md:inline-block bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+          <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
             Start 30-Day Free Trial
           </button>
+          
+          {/* Device compatibility badge */}
+          <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
+            <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
+            <div className="flex gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H7V4h10v16z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 2 2h7l-2 3v1h8v-1l-2-3h7a2 2 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT: PHONE FRAME (Centered) */}
+        {/* RIGHT: CHAT DEMO */}
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-          <PhoneFrame />
-          {/* Mobile Button (Below Phone) */}
-          <button onClick={() => openAuth('signup')} className="md:hidden mt-8 bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg w-full max-w-[290px]">
-            Start 30-Day Free Trial
-          </button>
+          <DemoChatContent />
         </div>
 
       </div>
       
       {/* FOOTER */}
-      <div className="w-full py-8 text-center bg-white border-t border-slate-200">
+      <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-16">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
            <span>© 2025 protocolLM</span>
