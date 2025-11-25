@@ -1,8 +1,9 @@
-import { createClient } from '@/lib/supabase-server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { searchDocuments } from '@/lib/searchDocs'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
 
@@ -24,14 +25,37 @@ FORMATTING:
 
 export async function POST(req) {
   try {
-    const supabase = createClient()
+    // 1. Initialize Supabase Client Inline (No extra file needed)
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // Ignored for server components
+            }
+          },
+        },
+      }
+    )
+
+    // 2. Auth Check
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Rate Limiting & Subscription Check
+    // 3. Rate Limit Check
     const { success, limitReached } = await checkRateLimit(session.user.id)
     if (!success) {
       return NextResponse.json({ error: limitReached ? 'Monthly request limit reached.' : 'Rate limit exceeded.' }, { status: 429 })
@@ -44,7 +68,7 @@ export async function POST(req) {
     let context = ''
     let citations = []
 
-    // If text query, perform vector search
+    // 4. Vector Search (if text only)
     if (lastMessage.content && !image) {
       const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
       context = searchResults.map(doc => 
@@ -57,6 +81,7 @@ export async function POST(req) {
       }))
     }
 
+    // 5. Generate Content
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" })
 
     let promptParts = [
@@ -65,13 +90,11 @@ export async function POST(req) {
       { text: "USER INQUIRY:" }
     ]
 
-    // Handle History
     const recentMessages = messages.slice(-5) 
     recentMessages.forEach(msg => {
       promptParts.push({ text: `${msg.role === 'user' ? 'User' : 'System'}: ${msg.content}` })
     })
 
-    // Handle Image
     if (image) {
       const base64Data = image.split(',')[1]
       promptParts.push({
@@ -87,7 +110,7 @@ export async function POST(req) {
     const response = await result.response
     const text = response.text()
 
-    // Increment Usage Stats
+    // 6. Increment Usage
     const { error: updateError } = await supabase.rpc('increment_usage', { 
       user_id: session.user.id,
       is_image: !!image 
