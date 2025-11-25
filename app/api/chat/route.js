@@ -9,27 +9,6 @@ import path from 'path'
 
 export const maxDuration = 60
 
-// Helper to handle JSON credentials from Railway Variable
-function getVertexClient() {
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
-  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
-
-  if (!projectId) throw new Error('GOOGLE_CLOUD_PROJECT_ID is missing')
-  
-  // If we have the JSON string in Railway, use it
-  if (credentialsJson) {
-    // Write to a temporary file securely
-    const tempFilePath = path.join('/tmp', 'google-credentials.json')
-    fs.writeFileSync(tempFilePath, credentialsJson)
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath
-  }
-
-  return new VertexAI({
-    project: projectId,
-    location: 'us-central1'
-  })
-}
-
 const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine for food safety compliance. 
 Your role is to act as a strict, code-based consultant for restaurant owners and health inspectors.
 
@@ -46,11 +25,33 @@ FORMATTING:
 - When citing documents provided in context, use the format: [Document Name, Page X].
 - Bold key terms and code numbers.`
 
+// Helper to initialize Vertex AI with JSON from Railway
+function initVertexAI() {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
+  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
+  
+  if (!projectId) throw new Error('Missing GOOGLE_CLOUD_PROJECT_ID')
+  
+  if (credentialsJson) {
+    // Write the JSON string to a temp file so the SDK can read it
+    const tempFile = path.join('/tmp', 'google-credentials.json')
+    try {
+      fs.writeFileSync(tempFile, credentialsJson)
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFile
+    } catch (err) {
+      console.error('Error writing credentials file:', err)
+    }
+  }
+
+  return new VertexAI({ project: projectId, location: 'us-central1' })
+}
+
 export async function POST(req) {
   try {
     // 1. Initialize Vertex AI
-    const vertex_ai = getVertexClient()
-    const model = vertex_ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    const vertex = initVertexAI()
+    // Using the specific model you requested
+    const model = vertex.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // 2. Initialize Supabase
     const cookieStore = cookies()
@@ -65,10 +66,11 @@ export async function POST(req) {
       }
     )
 
+    // 3. Auth Check
     const { data: { session }, error: authError } = await supabase.auth.getSession()
     if (authError || !session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // 3. Rate Limit
+    // 4. Rate Limit
     try {
       const { success, limitReached } = await checkRateLimit(session.user.id)
       if (!success) return NextResponse.json({ error: limitReached ? 'Monthly request limit reached.' : 'Rate limit exceeded.' }, { status: 429 })
@@ -81,41 +83,49 @@ export async function POST(req) {
     let context = ''
     let citations = []
 
-    // 4. Search Documents
+    // 5. Search
     if (lastMessage.content && !image) {
       try {
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
-        if (searchResults?.length > 0) {
+        if (searchResults && searchResults.length > 0) {
            context = searchResults.map(doc => 
             `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`
           ).join('\n\n')
+          
           citations = searchResults.map(doc => ({
             document: doc.metadata.filename.replace('.pdf', ''),
             pages: [doc.metadata.page]
           }))
         }
       } catch (err) {
-        console.error('Search Failed:', err)
+        console.error('Search Warning:', err)
         context = "Notice: Local database search unavailable."
       }
     }
 
-    // 5. Construct Prompt for Vertex
-    const textPrompt = `${SYSTEM_PROMPT}\n\nCONTEXT FROM REGULATORY DATABASE:\n${context}\n\nUSER INQUIRY:\n${lastMessage.content}`
-    
-    // Construct Request Object for Vertex
+    // 6. Build Request for Vertex
     const request = {
-      contents: [{ role: 'user', parts: [{ text: textPrompt }] }]
+      contents: [
+        { 
+          role: 'user', 
+          parts: [
+            { text: SYSTEM_PROMPT },
+            { text: `CONTEXT:\n${context}` },
+            { text: `QUERY:\n${lastMessage.content}` }
+          ] 
+        }
+      ]
     }
 
-    // Add History
-    const history = messages.slice(0, -1).slice(-5)
+    // Add History (Simplified for Vertex stability)
+    const history = messages.slice(0, -1).slice(-3)
     if (history.length > 0) {
-       // Vertex format is slightly different, usually best to just include as context in single shot or simplistic history
-       // For stability, we stick to the main prompt injection above for now
+       // Prepend history as text context to avoid role mismatch errors in Vertex
+       const historyText = history.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')
+       request.contents[0].parts[1].text = `PREVIOUS CHAT:\n${historyText}\n\n${request.contents[0].parts[1].text}`
     }
 
-    // Add Image if present
+    // Add Image
     if (image) {
       const base64Data = image.split(',')[1]
       request.contents[0].parts.push({
@@ -123,11 +133,11 @@ export async function POST(req) {
       })
     }
 
-    const result = await model.generateContent(request)
-    const response = await result.response
+    const streamingResp = await model.generateContentStream(request)
+    const response = await streamingResp.response
     const text = response.candidates[0].content.parts[0].text
 
-    // 6. Update Stats
+    // 7. Update Stats
     supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
 
     return NextResponse.json({ message: text, citations: citations })
