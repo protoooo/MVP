@@ -108,12 +108,8 @@ export default function Pricing() {
             </p>
           </div>
 
-          <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative group hover:border-[#6b85a3] transition-all">
+          <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative group hover:border-[#6b85a3] transition-all duration-300">
             
-            <div className="bg-[#6b85a3] text-white text-center py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-300">
-              Pro Access
-            </div>
-
             <div className="p-8 md:p-10">
               <div className="flex justify-center items-baseline mb-10 text-slate-900">
                 <span className="text-6xl font-bold tracking-tighter">$99</span>
