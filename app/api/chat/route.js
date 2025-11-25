@@ -30,7 +30,12 @@ function initVertexAI() {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
   const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
   
-  if (!projectId) throw new Error('Missing GOOGLE_CLOUD_PROJECT_ID')
+  console.log('--- Initializing Vertex AI ---') // Debug Log
+
+  if (!projectId) {
+    console.error('❌ Missing GOOGLE_CLOUD_PROJECT_ID')
+    throw new Error('Missing Project ID')
+  }
   
   if (credentialsJson) {
     // Write the JSON string to a temp file so the SDK can read it
@@ -38,19 +43,23 @@ function initVertexAI() {
     try {
       fs.writeFileSync(tempFile, credentialsJson)
       process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFile
+      console.log('✅ Credentials file created at /tmp/google-credentials.json')
     } catch (err) {
-      console.error('Error writing credentials file:', err)
+      console.error('❌ Error writing credentials file:', err)
     }
+  } else {
+    console.warn('⚠️ No GOOGLE_CREDENTIALS_JSON found')
   }
 
   return new VertexAI({ project: projectId, location: 'us-central1' })
 }
 
 export async function POST(req) {
+  console.log('=== VERTEX CHAT REQUEST STARTED ===')
+
   try {
     // 1. Initialize Vertex AI
     const vertex = initVertexAI()
-    // Using the specific model you requested
     const model = vertex.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // 2. Initialize Supabase
@@ -68,7 +77,11 @@ export async function POST(req) {
 
     // 3. Auth Check
     const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (authError || !session) {
+      console.error('❌ Unauthorized request')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    console.log(`✅ User authenticated: ${session.user.email}`)
 
     // 4. Rate Limit
     try {
@@ -86,8 +99,10 @@ export async function POST(req) {
     // 5. Search
     if (lastMessage.content && !image) {
       try {
+        console.log(`🔍 Searching documents for ${county}...`)
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
         if (searchResults && searchResults.length > 0) {
+           console.log(`✅ Found ${searchResults.length} documents`)
            context = searchResults.map(doc => 
             `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`
           ).join('\n\n')
@@ -96,9 +111,11 @@ export async function POST(req) {
             document: doc.metadata.filename.replace('.pdf', ''),
             pages: [doc.metadata.page]
           }))
+        } else {
+          console.log('⚠️ No documents found')
         }
       } catch (err) {
-        console.error('Search Warning:', err)
+        console.error('❌ Search Warning:', err)
         context = "Notice: Local database search unavailable."
       }
     }
@@ -117,25 +134,27 @@ export async function POST(req) {
       ]
     }
 
-    // Add History (Simplified for Vertex stability)
+    // Add History
     const history = messages.slice(0, -1).slice(-3)
     if (history.length > 0) {
-       // Prepend history as text context to avoid role mismatch errors in Vertex
        const historyText = history.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')
        request.contents[0].parts[1].text = `PREVIOUS CHAT:\n${historyText}\n\n${request.contents[0].parts[1].text}`
     }
 
     // Add Image
     if (image) {
+      console.log('📸 Processing image...')
       const base64Data = image.split(',')[1]
       request.contents[0].parts.push({
         inlineData: { mimeType: 'image/jpeg', data: base64Data }
       })
     }
 
+    console.log('🤖 Sending request to Vertex AI (Gemini 2.0)...')
     const streamingResp = await model.generateContentStream(request)
     const response = await streamingResp.response
     const text = response.candidates[0].content.parts[0].text
+    console.log('✅ Response received from Vertex AI')
 
     // 7. Update Stats
     supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
@@ -143,7 +162,7 @@ export async function POST(req) {
     return NextResponse.json({ message: text, citations: citations })
 
   } catch (error) {
-    console.error('Vertex AI Error:', error)
+    console.error('❌ VERTEX AI CRASH:', error)
     return NextResponse.json({ error: `System processing error: ${error.message}` }, { status: 500 })
   }
 }
