@@ -29,7 +29,6 @@ export default function Pricing() {
     }
 
     try {
-      // THIS MUST MATCH YOUR $99 PRICE ID IN STRIPE
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
