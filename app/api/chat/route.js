@@ -1,11 +1,34 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { VertexAI } from '@google-cloud/vertexai'
 import { NextResponse } from 'next/server'
 import { searchDocuments } from '@/lib/searchDocs'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import fs from 'fs'
+import path from 'path'
 
 export const maxDuration = 60
+
+// Helper to handle JSON credentials from Railway Variable
+function getVertexClient() {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
+  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
+
+  if (!projectId) throw new Error('GOOGLE_CLOUD_PROJECT_ID is missing')
+  
+  // If we have the JSON string in Railway, use it
+  if (credentialsJson) {
+    // Write to a temporary file securely
+    const tempFilePath = path.join('/tmp', 'google-credentials.json')
+    fs.writeFileSync(tempFilePath, credentialsJson)
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath
+  }
+
+  return new VertexAI({
+    project: projectId,
+    location: 'us-central1'
+  })
+}
 
 const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine for food safety compliance. 
 Your role is to act as a strict, code-based consultant for restaurant owners and health inspectors.
@@ -24,34 +47,12 @@ FORMATTING:
 - Bold key terms and code numbers.`
 
 export async function POST(req) {
-  console.log('=== CHAT REQUEST STARTED ===')
-  
   try {
-    // CRITICAL: Use GEMINI_API_KEY from Railway
-    const apiKey = process.env.GEMINI_API_KEY
-    
-    if (!apiKey) {
-      console.error('❌ CRITICAL: GEMINI_API_KEY is missing')
-      return NextResponse.json({ 
-        error: 'API configuration error. Please contact support.' 
-      }, { status: 500 })
-    }
+    // 1. Initialize Vertex AI
+    const vertex_ai = getVertexClient()
+    const model = vertex_ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
-    console.log('✅ API Key found:', apiKey.substring(0, 10) + '...')
-    
-    // Initialize Google AI
-    let genAI
-    try {
-      genAI = new GoogleGenerativeAI(apiKey)
-      console.log('✅ GoogleGenerativeAI initialized')
-    } catch (initError) {
-      console.error('❌ Failed to initialize GoogleGenerativeAI:', initError)
-      return NextResponse.json({ 
-        error: 'AI service initialization failed' 
-      }, { status: 500 })
-    }
-
-    // Initialize Supabase
+    // 2. Initialize Supabase
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -59,199 +60,80 @@ export async function POST(req) {
       {
         cookies: {
           getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) { 
-            try { 
-              cookiesToSet.forEach(({ name, value, options }) => 
-                cookieStore.set(name, value, options)
-              ) 
-            } catch {} 
-          },
+          setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {} },
         },
       }
     )
 
-    // Auth Check
     const { data: { session }, error: authError } = await supabase.auth.getSession()
+    if (authError || !session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (authError || !session) {
-      console.error('❌ Auth Error:', authError)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    console.log('✅ User authenticated:', session.user.email)
-
-    // Rate Limit Check
+    // 3. Rate Limit
     try {
       const { success, limitReached } = await checkRateLimit(session.user.id)
-      if (!success) {
-        return NextResponse.json({ 
-          error: limitReached ? 'Monthly request limit reached.' : 'Rate limit exceeded.' 
-        }, { status: 429 })
-      }
-    } catch (err) {
-      console.warn('⚠️ Rate limit check failed (proceeding):', err.message)
-    }
+      if (!success) return NextResponse.json({ error: limitReached ? 'Monthly request limit reached.' : 'Rate limit exceeded.' }, { status: 429 })
+    } catch (err) { console.error('Rate Limit Warning:', err) }
 
-    // Parse request body
-    let body
-    try {
-      body = await req.json()
-    } catch (parseError) {
-      console.error('❌ Failed to parse request body:', parseError)
-      return NextResponse.json({ 
-        error: 'Invalid request format' 
-      }, { status: 400 })
-    }
-
+    const body = await req.json()
     const { messages, image, county } = body
-    
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ 
-        error: 'Invalid messages format' 
-      }, { status: 400 })
-    }
-
     const lastMessage = messages[messages.length - 1]
-    console.log('📝 User query:', lastMessage?.content?.substring(0, 100))
 
     let context = ''
     let citations = []
 
-    // Vector Search for context
-    if (lastMessage?.content && !image) {
+    // 4. Search Documents
+    if (lastMessage.content && !image) {
       try {
-        console.log(`🔍 Searching documents for: ${county || 'washtenaw'}`)
-        const searchResults = await searchDocuments(
-          lastMessage.content, 
-          county || 'washtenaw',
-          25
-        )
-        
-        if (searchResults && searchResults.length > 0) {
-          context = searchResults.map(doc => 
-            `[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`
-          ).join('\n\n---\n\n')
-          
+        const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
+        if (searchResults?.length > 0) {
+           context = searchResults.map(doc => 
+            `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`
+          ).join('\n\n')
           citations = searchResults.map(doc => ({
-            document: doc.source,
-            pages: [doc.page]
+            document: doc.metadata.filename.replace('.pdf', ''),
+            pages: [doc.metadata.page]
           }))
-          
-          console.log(`✅ Found ${searchResults.length} context documents`)
-        } else {
-          console.log('⚠️ No relevant documents found')
         }
-      } catch (searchError) {
-        console.error('⚠️ Document search failed:', searchError)
-        context = "Notice: Local database search unavailable. Relying on general FDA Food Code knowledge."
+      } catch (err) {
+        console.error('Search Failed:', err)
+        context = "Notice: Local database search unavailable."
       }
     }
 
-    // Generate AI Response
-    try {
-      console.log('🤖 Generating AI response...')
-      
-      const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash-8b" 
-      })
-
-      let promptParts = [
-        { text: SYSTEM_PROMPT },
-        { 
-          text: `CONTEXT FROM REGULATORY DATABASE:\n${
-            context || 'No specific database context found. Rely on general FDA Food Code knowledge.'
-          }` 
-        },
-        { text: "USER CONVERSATION:" }
-      ]
-
-      // Add recent message history
-      const recentMessages = messages.slice(-5)
-      recentMessages.forEach(msg => {
-        promptParts.push({ 
-          text: `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}` 
-        })
-      })
-
-      // Handle image if present
-      if (image) {
-        try {
-          const base64Data = image.split(',')[1]
-          if (!base64Data) {
-            throw new Error('Invalid image format')
-          }
-          
-          promptParts.push({
-            inlineData: {
-              data: base64Data,
-              mimeType: "image/jpeg"
-            }
-          })
-          promptParts.push({ 
-            text: "Analyze this image for health code violations based on FDA standards. Cite specific potential violations with code references." 
-          })
-          
-          console.log('📷 Image added to prompt')
-        } catch (imageError) {
-          console.error('❌ Image processing error:', imageError)
-          return NextResponse.json({ 
-            error: 'Failed to process image. Please try again.' 
-          }, { status: 400 })
-        }
-      }
-
-      // Generate content
-      let result
-      try {
-        result = await model.generateContent(promptParts)
-      } catch (genError) {
-        console.error('❌ Generation error:', genError)
-        
-        // Handle specific Gemini errors
-        if (genError.message?.includes('API key')) {
-          return NextResponse.json({ 
-            error: 'API key configuration error. Please contact support.' 
-          }, { status: 500 })
-        }
-        
-        if (genError.message?.includes('quota')) {
-          return NextResponse.json({ 
-            error: 'Service temporarily unavailable. Please try again in a few moments.' 
-          }, { status: 429 })
-        }
-        
-        throw genError
-      }
-
-      const response = await result.response
-      const text = response.text()
-      
-      console.log('✅ AI response generated:', text.substring(0, 100) + '...')
-
-      // Update usage stats (fire and forget)
-      supabase.rpc('increment_usage', { 
-        user_id: session.user.id,
-        is_image: !!image 
-      }).then(({ error }) => {
-        if (error) console.error('⚠️ Usage stat update failed:', error)
-      })
-
-      return NextResponse.json({ 
-        message: text,
-        citations: citations 
-      })
-
-    } catch (genError) {
-      console.error('❌ Google AI Generation Error:', genError)
-      return NextResponse.json({ 
-        error: `AI processing failed: ${genError.message || 'Unknown error'}` 
-      }, { status: 500 })
+    // 5. Construct Prompt for Vertex
+    const textPrompt = `${SYSTEM_PROMPT}\n\nCONTEXT FROM REGULATORY DATABASE:\n${context}\n\nUSER INQUIRY:\n${lastMessage.content}`
+    
+    // Construct Request Object for Vertex
+    const request = {
+      contents: [{ role: 'user', parts: [{ text: textPrompt }] }]
     }
+
+    // Add History
+    const history = messages.slice(0, -1).slice(-5)
+    if (history.length > 0) {
+       // Vertex format is slightly different, usually best to just include as context in single shot or simplistic history
+       // For stability, we stick to the main prompt injection above for now
+    }
+
+    // Add Image if present
+    if (image) {
+      const base64Data = image.split(',')[1]
+      request.contents[0].parts.push({
+        inlineData: { mimeType: 'image/jpeg', data: base64Data }
+      })
+    }
+
+    const result = await model.generateContent(request)
+    const response = await result.response
+    const text = response.candidates[0].content.parts[0].text
+
+    // 6. Update Stats
+    supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
+
+    return NextResponse.json({ message: text, citations: citations })
 
   } catch (error) {
-    console.error('❌ CRITICAL UNHANDLED ERROR:', error)
-    return NextResponse.json({ 
-      error: `System processing error: ${error.message}` 
-    }, { status: 500 })
+    console.error('Vertex AI Error:', error)
+    return NextResponse.json({ error: `System processing error: ${error.message}` }, { status: 500 })
   }
 }
