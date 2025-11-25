@@ -95,7 +95,7 @@ const DemoChatContent = () => {
   }, [])
 
   return (
-    <div className="flex flex-col h-[500px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
       {/* HEADER */}
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0">
         <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
@@ -106,7 +106,7 @@ const DemoChatContent = () => {
       </div>
 
       {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc] min-h-0">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
@@ -140,8 +140,8 @@ const DemoChatContent = () => {
       </div>
 
       {/* INPUT AREA */}
-      <div className="p-4 bg-white border-t border-slate-100">
-        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className="p-4 bg-white border-t border-slate-100 shrink-0">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-1 animate-pulse"></span>}
