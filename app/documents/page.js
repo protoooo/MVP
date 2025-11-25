@@ -40,7 +40,7 @@ export default function DocumentsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  // 1. AUTH
+  // --- AUTH & SETUP ---
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -56,12 +56,14 @@ export default function DocumentsPage() {
 
       setUserCounty(profile.county || 'washtenaw')
       setSession(session)
-      setSubscriptionInfo({ requestsUsed: profile?.requests_used || 0 })
+      setSubscriptionInfo({
+        requestsUsed: profile?.requests_used || 0,
+        requestLimit: 500
+      })
     }
     checkAccess()
   }, [supabase, router])
 
-  // 2. PAYMENT SUCCESS
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const sessionId = params.get('session_id')
@@ -72,7 +74,6 @@ export default function DocumentsPage() {
     }
   }, [])
 
-  // 3. LOAD HISTORY
   useEffect(() => {
     if (session) loadChatHistory()
   }, [session])
@@ -92,7 +93,6 @@ export default function DocumentsPage() {
     }
   }
 
-  // 4. WELCOME
   useEffect(() => {
     if (userCounty && messages.length === 0) {
       setMessages([{ 
@@ -103,7 +103,6 @@ export default function DocumentsPage() {
     }
   }, [userCounty])
 
-  // 5. AUTO SCROLL/SAVE
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -314,7 +313,8 @@ export default function DocumentsPage() {
       if (subscriptionInfo) {
         setSubscriptionInfo(prev => ({
           ...prev,
-          requestsUsed: prev.requestsUsed + 1
+          requestsUsed: prev.requestsUsed + 1,
+          imagesUsed: image ? prev.imagesUsed + 1 : prev.imagesUsed
         }))
       }
     } catch (err) {
@@ -330,6 +330,8 @@ export default function DocumentsPage() {
     }
   }
 
+  // --- FEATURES ---
+  
   const runMockAudit = () => {
     startNewChat()
     setTimeout(() => {
@@ -338,7 +340,12 @@ export default function DocumentsPage() {
   }
 
   const generateMemo = () => {
-    handleSendMessage(null, "Based on the violations discussed in this session, generate a formal 'CORRECTIVE ACTION NOTICE' for my staff. Format it clearly with Topic, Code Reference, and Corrective Instruction. Keep it professional, stern, and ready to copy-paste.")
+    handleSendMessage(null, "Based on the violations discussed, generate a formal 'CORRECTIVE ACTION NOTICE'. Format clearly with: Date, Violation Topic, Code Reference, and Required Action.")
+  }
+
+  // NEW: Print to PDF Function
+  const handlePrint = () => {
+    window.print()
   }
 
   const handleImageSelect = (e) => {
@@ -358,9 +365,23 @@ export default function DocumentsPage() {
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
       
+      {/* --- PRINT STYLES --- */}
+      {/* Hides sidebar/input, expands chat to full width for clean PDF export */}
+      <style jsx global>{`
+        @media print {
+          body * { visibility: hidden; }
+          .chat-container, .chat-container * { visibility: visible; }
+          .chat-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+          .no-print { display: none !important; }
+          /* Clean up chat bubbles for print */
+          .bg-\[\#6b85a3\] { background-color: #f1f5f9 !important; color: black !important; border: 1px solid #ccc; }
+          .text-white { color: black !important; }
+        }
+      `}</style>
+
       {/* MODALS */}
       {showCountySelector && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-slate-900 uppercase tracking-widest">Select Jurisdiction</h3>
@@ -378,7 +399,7 @@ export default function DocumentsPage() {
       )}
 
       {viewingPdf && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+        <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 no-print">
           <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
             <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
               <div>
@@ -393,13 +414,13 @@ export default function DocumentsPage() {
       )}
 
       {showSuccessMessage && (
-        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center">
+        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center no-print">
           <span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span>
         </div>
       )}
 
-      {/* SIDEBAR (LIGHT THEME) */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden`}>
+      {/* SIDEBAR */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden no-print`}>
         <div className="p-6 border-b border-slate-200">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -414,12 +435,10 @@ export default function DocumentsPage() {
             <svg className="w-4 h-4 text-[#6b85a3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
 
-          {/* MAIN BUTTON: NEW CHAT */}
           <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm shadow-sm hover:opacity-90 mb-3" style={{ backgroundColor: '#6b85a3' }}>
             <span>+</span> New Inquiry
           </button>
 
-          {/* FEATURE BUTTON: MOCK AUDIT */}
           <button onClick={runMockAudit} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-sm hover:border-[#6b85a3] hover:text-[#6b85a3]">
              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
              Run Mock Audit
@@ -459,8 +478,8 @@ export default function DocumentsPage() {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative">
-        <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative chat-container">
+        <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30 no-print">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
@@ -475,17 +494,17 @@ export default function DocumentsPage() {
               <div className={`max-w-[90%] lg:max-w-[80%] ${msg.role === 'assistant' ? 'w-full' : ''}`}>
                 <div className={`${msg.role === 'user' ? 'bg-[#6b85a3] text-white rounded-sm px-5 py-3 shadow-sm inline-block float-right' : 'text-slate-800 pl-0'}`}>
                   {msg.image && <img src={msg.image} alt="Analysis" className="mb-3 rounded-sm border border-white/20 max-w-sm w-full h-auto" />}
-                  {msg.role === 'assistant' && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span></div>}
+                  {msg.role === 'assistant' && <div className="flex items-center gap-2 mb-2 no-print"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-900 font-mono uppercase tracking-wide">Protocol_LM</span></div>}
                   {msg.role === 'user' ? <p className="whitespace-pre-wrap leading-relaxed text-sm font-mono">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
               </div>
             </div>
           ))}
-          {isLoading && <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span></div>}
+          {isLoading && <div className="flex items-center gap-2 mb-2 no-print"><div className="w-5 h-5 rounded-sm flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: '#6b85a3' }}>AI</div><span className="font-bold text-xs text-slate-400 font-mono uppercase tracking-wide animate-pulse">Processing...</span></div>}
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20">
+        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
             <div className="flex items-end gap-2 bg-[#f8fafc] border border-slate-300 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-sm">
@@ -494,15 +513,21 @@ export default function DocumentsPage() {
               <input value={input} onChange={e => setInput(e.target.value)} placeholder={image ? "Analyze this image..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
               <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) || !canSend ? 'bg-slate-200 text-slate-400' : 'text-white hover:opacity-90'}`} style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}><svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
             </div>
+            
             <div className="flex justify-between items-center mt-3">
               
-              {/* --- FEATURE BUTTON: GENERATE MEMO --- */}
+              {/* GENERATE MEMO */}
               <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30 cursor-pointer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                 Generate Staff Memo
               </button>
-              
-              <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wide">AI Guidance | Verify with Official Docs</p>
+
+              {/* PRINT PDF */}
+              <button type="button" onClick={handlePrint} disabled={messages.length === 0} className="text-[10px] font-bold uppercase tracking-wide text-slate-400 hover:text-[#6b85a3] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-30">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                Print / Save PDF
+              </button>
+
             </div>
           </form>
         </div>
