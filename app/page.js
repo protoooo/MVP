@@ -299,7 +299,7 @@ function MainContent() {
         <div className={`text-center mb-8 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
           <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-4 whitespace-normal lg:whitespace-nowrap">
-            Food Safety & Inspection Intelligence.
+            Food Safety & Compliance System
           </h2>
           
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
