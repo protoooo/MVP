@@ -8,12 +8,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 const DemoChatInterface = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false) // User typing state
-  const [isThinking, setIsThinking] = useState(false) // AI thinking state
+  const [isTyping, setIsTyping] = useState(false)
+  const [isThinking, setIsThinking] = useState(false)
   
   const scrollRef = useRef(null)
 
-  // Auto-scroll to bottom
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -22,21 +22,39 @@ const DemoChatInterface = () => {
 
   const SEQUENCE = [
     {
-      // Scenario 1: The Typo Correction (Human behavior)
-      text: "Can I store raw chikin", 
-      backspace: 6, 
-      correction: "chicken above the cooked brisket?",
-      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F cook temp) must be stored on the BOTTOM shelf to prevent cross-contamination drip onto beef/brisket."
+      // 1. THE CLASSIC THAWING MISTAKE
+      text: "Can I just thaw the chicken on the prep table? It's frozen solid.",
+      backspace: 0,
+      correction: "",
+      response: "NEGATIVE: Priority Violation (P). Thawing at room temperature puts food in the Danger Zone (>41°F). \n\nPROTOCOL: Use cold running water, the walk-in cooler, or the microwave."
     },
     {
-      // Scenario 2: Quick follow up
-      text: "Generate a corrective action memo for this.",
-      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Poultry Storage Hierarchy\nCODE: FDA 3-302.11\nACTION: Effective immediately, all raw poultry must be moved to the bottom shelf. Discard any ready-to-eat items found below raw chicken."
+      // 2. THE "LAZY SANITIZER" SHORTCUT
+      text: "We keep the sani bucket out all day, just top it off.",
+      backspace: 0,
+      correction: "",
+      response: "VIOLATION: Priority Foundation (Pf). Quat sanitizer degrades with time and food debris. You must dump and test with strips every 2-4 hours (Target: 200ppm)."
     },
     {
-      // Scenario 3: New Topic
-      text: "Inspector found the Quat sanitizer at 500ppm.",
-      response: "VIOLATION: Priority Foundation (Pf). Chemical Hazard. Concentration is too high (Toxic). Dilute immediately to manufacturer specs (typically 200-400ppm)."
+      // 3. THE "WIPE DOWN" MYTH (Cross Contamination)
+      text: "Is wiping the board with bleach enough between raw beef and produce?",
+      backspace: 0,
+      correction: "",
+      response: "CRITICAL: Priority Violation (P). Wiping is NOT sanitizing. You must Wash, Rinse, and Sanitize (3-step process) to prevent Salmonella transfer."
+    },
+    {
+      // 4. MISSING LOGS (Admin/Pf)
+      text: "We forgot to log cooler temps yesterday. Inspector is coming.",
+      backspace: 0,
+      correction: "",
+      response: "WARNING: Priority Foundation (Pf). Missing documentation is an automatic violation. \n\nACTION: Document the gap. Do not falsify data. Verify current temps are <41°F immediately."
+    },
+    {
+      // 5. GENERATING THE WRITE-UP (Management Feature)
+      text: "Generate a staff memo about the thawing rule.",
+      backspace: 0,
+      correction: "",
+      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Improper Thawing Procedures\nCODE: FDA 3-501.13\nACTION: All thawing must occur under refrigeration or running water. Counter thawing is prohibited effective immediately."
     }
   ]
 
@@ -47,7 +65,7 @@ const DemoChatInterface = () => {
 
     const typeChar = async (char) => {
       setInputValue(prev => prev + char)
-      // Randomize typing speed (30ms - 90ms) for realism
+      // Human Typing: Random speed + pauses
       await wait(Math.random() * 60 + 30)
     }
 
@@ -60,21 +78,18 @@ const DemoChatInterface = () => {
 
     const runSimulation = async () => {
       while (isMounted) {
-        // Loop through scenarios
         for (const step of SEQUENCE) {
-          
-          // 1. USER TYPES IN INPUT BOX
+          // 1. TYPE QUESTION
           setIsTyping(true)
-          await wait(1000) // Pause before starting
+          await wait(1000)
 
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
 
-          // 2. Handle Typos (if any)
           if (step.backspace) {
-            await wait(400) // Realize mistake
+            await wait(400)
             await backspace(step.backspace)
             await wait(200)
             for (const char of step.correction) {
@@ -83,25 +98,23 @@ const DemoChatInterface = () => {
             }
           }
 
-          await wait(600) // Pause before hitting enter
+          await wait(600) 
           
-          // 3. SEND MESSAGE (Move from Input to Bubble)
+          // 2. SEND
           const fullUserMessage = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
-          
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: fullUserMessage }])
 
-          // 4. AI THINKING
+          // 3. THINKING
           setIsThinking(true)
-          await wait(1200) // Processing time
+          await wait(1500)
           setIsThinking(false)
 
-          // 5. AI STREAMS RESPONSE
+          // 4. STREAM ANSWER (Fast Machine Speed)
           let currentResponse = ""
           const words = step.response.split(' ')
           
-          // Add empty message placeholder
           setMessages(prev => [...prev, { role: 'assistant', content: '' }])
           
           for (let i = 0; i < words.length; i++) {
@@ -111,28 +124,24 @@ const DemoChatInterface = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(40) // Fast AI stream speed
+            await wait(40) 
           }
           
           await wait(4000) // Read time
         }
-
-        // Clear and Restart Sequence
-        await wait(1000)
+        await wait(2000)
         setMessages([])
       }
     }
 
     runSimulation()
-
     return () => { isMounted = false }
   }, [])
 
   return (
-    // CHAT WINDOW CONTAINER (Light Steel Blue Border)
-    <div className="w-full max-w-3xl mx-auto bg-white border-2 border-[#6b85a3]/30 rounded-xl shadow-2xl shadow-[#6b85a3]/10 overflow-hidden flex flex-col h-[480px] relative">
+    <div className="w-full max-w-3xl mx-auto bg-white border-2 border-slate-200/80 rounded-xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[480px] relative">
       
-      {/* HEADER */}
+      {/* CHAT HEADER */}
       <div className="h-12 border-b border-slate-100 bg-[#f8fafc] flex items-center px-4 gap-2">
         <div className="flex gap-1.5">
           <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
@@ -147,7 +156,7 @@ const DemoChatInterface = () => {
         </div>
       </div>
 
-      {/* MESSAGES SCROLL AREA */}
+      {/* MESSAGES AREA */}
       <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto space-y-6 bg-white scroll-smooth">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
@@ -159,7 +168,7 @@ const DemoChatInterface = () => {
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
             <div className={`max-w-[85%] px-5 py-3 rounded-xl text-sm leading-relaxed font-medium shadow-sm ${
               msg.role === 'user' 
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
@@ -184,22 +193,19 @@ const DemoChatInterface = () => {
         )}
       </div>
 
-      {/* INPUT AREA (This updates visually now!) */}
+      {/* INPUT AREA */}
       <div className="p-4 bg-white border-t border-slate-100">
         <div className="w-full bg-[#f8fafc] border border-slate-200 rounded-lg p-3 flex items-center gap-3 shadow-inner">
            <div className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center">
               <span className="text-slate-400 text-[10px] font-bold">+</span>
            </div>
            
-           {/* The Input Field Simulation */}
            <div className="flex-1 text-sm text-slate-700 font-mono font-medium h-[20px] overflow-hidden relative flex items-center">
               {inputValue}
-              {/* Cursor Blinks only when typing in the box */}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
               {!inputValue && !isTyping && <span className="text-slate-300 text-xs uppercase tracking-wide">Enter regulatory query...</span>}
            </div>
 
-           {/* Send Button - Lights up when typing */}
            <div className={`w-7 h-7 rounded-md flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
@@ -319,7 +325,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// Main Content Logic
+// --- MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -348,7 +354,7 @@ function MainContent() {
       {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/90 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tighter text-slate-900">
             protocol<span style={{ color: '#6b85a3' }}>LM</span>
           </h1>
         </div>
@@ -366,13 +372,14 @@ function MainContent() {
       </nav>
 
       {/* MAIN CONTENT - CENTERED */}
-      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-24 md:pt-32">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-24 md:pt-24">
         
-        {/* HERO TEXT (Moved Up) */}
+        {/* HERO TEXT (Small, Punchy Header) */}
         <div className={`text-center mb-10 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
-          <h2 className="text-3xl md:text-4xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
-            Food Safety & Inspection Intelligence.
+          {/* Smaller Font Size (`text-2xl md:text-3xl`) to force one line naturally */}
+          <h2 className="text-2xl md:text-3xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
+            Train Your Team Before the Health Department Does.
           </h2>
           
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
@@ -380,7 +387,7 @@ function MainContent() {
           </p>
         </div>
 
-        {/* THE REAL-TIME CHAT DEMO */}
+        {/* THE LIVE CHAT DEMO */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <DemoChatInterface />
         </div>
