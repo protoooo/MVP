@@ -139,7 +139,7 @@ const DemoChatContent = ({ onKeyboardChange }) => {
       </div>
 
       {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc]" style={{ paddingBottom: isTyping ? '200px' : '96px' }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc]" style={{ paddingBottom: isTyping ? '330px' : '96px' }}>
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
@@ -173,7 +173,7 @@ const DemoChatContent = ({ onKeyboardChange }) => {
       </div>
 
       {/* INPUT AREA (Flexible Height for wrapping) */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100">
+      <div className="absolute left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100" style={{ bottom: isTyping ? '165px' : '0' }}>
         <div className="w-full bg-slate-50 border border-slate-200 rounded-[20px] px-4 py-3 flex items-end gap-3">
            <div className="flex-1 text-[11px] text-slate-700 font-medium min-h-[16px] relative flex items-center flex-wrap">
               {inputValue}
@@ -239,7 +239,7 @@ const PhoneFrame = () => {
   
   return (
     // Centered Container with Hover Effect - moves up when keyboard is visible
-    <div className={`relative flex items-center justify-center transform transition-all duration-500 hover:scale-[1.01] ${isKeyboardVisible ? '-translate-y-8' : 'translate-y-0'}`}>
+    <div className={`relative flex items-center justify-center transform transition-all duration-500 hover:scale-[1.01] ${isKeyboardVisible ? '-translate-y-4' : 'translate-y-0'}`}>
         <div className="relative w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/30 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden z-10">
         {/* Screen */}
         <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
