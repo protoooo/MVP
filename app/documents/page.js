@@ -40,7 +40,6 @@ export default function DocumentsPage() {
   const supabase = createClient()
   const router = useRouter()
 
-  // --- AUTH & SETUP ---
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -58,7 +57,7 @@ export default function DocumentsPage() {
       setSession(session)
       setSubscriptionInfo({
         requestsUsed: profile?.requests_used || 0,
-        requestLimit: 500
+        requestLimit: '∞'
       })
     }
     checkAccess()
@@ -330,22 +329,15 @@ export default function DocumentsPage() {
     }
   }
 
-  // --- FEATURES ---
-  
   const runMockAudit = () => {
     startNewChat()
     setTimeout(() => {
-      handleSendMessage(null, "Initiate Mock Health Inspection Protocol. Guide me through checking Handwashing Sinks, Cooler Temps, Dish Machine, and Storage. Score violations based on Priority (P) vs Core.")
+      handleSendMessage(null, "Conduct a detailed mock health inspection walkthrough. Please check these critical areas: (1) Employee Hygiene (Handwashing/Gloves), (2) Cold Holding Temperatures, (3) Chemical Storage & Labeling, (4) Cross-Contamination risks in storage. For each, describe exactly what to look for based on code, what constitutes a Priority (P) violation, and how to correct it immediately. End with a score calculation method.")
     }, 500)
   }
 
   const generateMemo = () => {
-    handleSendMessage(null, "Based on the violations discussed, generate a formal 'CORRECTIVE ACTION NOTICE'. Format clearly with: Date, Violation Topic, Code Reference, and Required Action.")
-  }
-
-  // NEW: Print to PDF Function
-  const handlePrint = () => {
-    window.print()
+    handleSendMessage(null, "Generate a formal Staff Memo based on the violations we just discussed. Format it specifically with: 'DATE:', 'TO: All Staff', 'FROM: Management', and 'SUBJECT: IMMEDIATE CORRECTIVE ACTIONS'. List the specific violations, the code reference, the reason it is dangerous, and the mandatory new procedure. Keep tone strict but professional.")
   }
 
   const handleImageSelect = (e) => {
@@ -365,21 +357,18 @@ export default function DocumentsPage() {
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
       
-      {/* --- PRINT STYLES --- */}
-      {/* Hides sidebar/input, expands chat to full width for clean PDF export */}
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
           .chat-container, .chat-container * { visibility: visible; }
           .chat-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
           .no-print { display: none !important; }
-          /* Clean up chat bubbles for print */
           .bg-\[\#6b85a3\] { background-color: #f1f5f9 !important; color: black !important; border: 1px solid #ccc; }
           .text-white { color: black !important; }
         }
       `}</style>
 
-      {/* MODALS */}
+      {/* County Selector Modal */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
@@ -398,6 +387,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {/* PDF Viewer Modal */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 no-print">
           <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
@@ -413,15 +403,17 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {/* Success Notification */}
       {showSuccessMessage && (
         <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center no-print">
           <span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span>
         </div>
       )}
 
-      {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:block inset-y-0 left-0 w-full sm:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex flex-col z-40 overflow-hidden no-print`}>
-        <div className="p-6 border-b border-slate-200">
+      {/* Sidebar */}
+      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:flex inset-y-0 left-0 w-full md:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex-col z-40 overflow-hidden no-print h-full`}>
+        {/* Sidebar Header & Actions */}
+        <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
             <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
@@ -445,6 +437,7 @@ export default function DocumentsPage() {
           </button>
         </div>
 
+        {/* Chat History List */}
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
           <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">Record History</div>
           {loadingChats ? (
@@ -462,7 +455,8 @@ export default function DocumentsPage() {
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-200 bg-[#f1f5f9]">
+        {/* User Profile / Billing - Pinned to Bottom */}
+        <div className="p-4 border-t border-slate-200 bg-[#f1f5f9] flex-shrink-0 mt-auto">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
             <div className="flex-1 min-w-0">
@@ -477,17 +471,28 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative chat-container">
+        {/* Header */}
         <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30 no-print">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
           </div>
-          <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
-          <div className="w-6"></div> 
+          
+          <div className="flex items-center gap-2">
+             <button onClick={generateMemo} className="hidden sm:flex bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                Generate Staff Memo
+             </button>
+             <button onClick={() => window.print()} className="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Print / Save PDF
+             </button>
+          </div>
         </div>
 
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -504,6 +509,7 @@ export default function DocumentsPage() {
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
+        {/* Input Area */}
         <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
@@ -511,24 +517,11 @@ export default function DocumentsPage() {
               <input type="file" ref={fileInputRef} accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleImageSelect} />
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isLoading} className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></button>
               <input value={input} onChange={e => setInput(e.target.value)} placeholder={image ? "Analyze this image..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
-              <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) || !canSend ? 'bg-slate-200 text-slate-400' : 'text-white hover:opacity-90'}`} style={{ backgroundColor: isLoading || (!input.trim() && !image) ? undefined : '#6b85a3' }}><svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
-            </div>
-            
-            <div className="flex justify-between items-center mt-3">
-              
-              {/* GENERATE MEMO */}
-              <button type="button" onClick={generateMemo} disabled={isLoading || messages.length < 2} className="text-[10px] font-bold uppercase tracking-wide text-[#6b85a3] hover:text-slate-600 transition-colors flex items-center gap-1 disabled:opacity-30 cursor-pointer">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                Generate Staff Memo
+              <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-sm ${isLoading || (!input.trim() && !image) ? 'text-slate-300' : 'text-white bg-[#6b85a3] hover:opacity-90'}`}>
+                {isLoading ? <svg className="w-5 h-5 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
               </button>
-
-              {/* PRINT PDF */}
-              <button type="button" onClick={handlePrint} disabled={messages.length === 0} className="text-[10px] font-bold uppercase tracking-wide text-slate-400 hover:text-[#6b85a3] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-30">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                Print / Save PDF
-              </button>
-
             </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center uppercase tracking-wider">ProtocolLM generates regulatory guidance. Verify with official county documents.</p>
           </form>
         </div>
       </div>
