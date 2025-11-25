@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function Pricing() {
-  const [loadingId, setLoadingId] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -18,28 +18,23 @@ export default function Pricing() {
     checkAuth()
   }, [supabase])
 
-  const handleCheckout = async (priceId, planName) => {
-    setLoadingId(priceId)
+  const handleCheckout = async () => {
+    setLoading(true)
     
     const { data: { session } } = await supabase.auth.getSession()
     
-    // --- LOGIC CHANGE HERE ---
     if (!session) {
-      // No ugly alert. Send them to home with a signal to open the signup modal.
       router.push('/?auth=signup')
       return
     }
 
     try {
+      // THIS MUST MATCH YOUR $99 PRICE ID IN STRIPE
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          priceId: priceId,
-        }),
+        body: JSON.stringify({ priceId: 'price_1SVJyRDlSrKA3nbAGhdEZzXA' }), 
       })
 
       const data = await res.json()
@@ -47,46 +42,31 @@ export default function Pricing() {
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert('Something went wrong. Please try again.')
-        setLoadingId(null)
+        alert('System busy. Please try again.')
       }
     } catch (error) {
       console.error(error)
-      alert('Error starting checkout.')
-      setLoadingId(null)
+      alert('Connection error.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  // --- ICONS ---
-  const IconCircle = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#6b85a3]">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 8v8M8 12h8" strokeOpacity="0.5" />
-    </svg>
-  )
-
-  const IconCube = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#6b85a3]">
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-      <path d="M3.27 6.96L12 12.01l8.73-5.05" strokeOpacity="0.5" />
-      <path d="M12 22.08V12" strokeOpacity="0.5" />
-    </svg>
-  )
-
-  const IconStack = () => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#6b85a3]">
-      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      <path d="M12 22V7" strokeOpacity="0.5" />
-    </svg>
+  const FeatureItem = ({ text }) => (
+    <div className="flex items-center gap-3 text-xs font-bold text-slate-600">
+      <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full shrink-0"></div>
+      {text}
+    </div>
   )
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      <header className="fixed top-0 w-full border-b border-slate-200 bg-[#f8fafc]/90 backdrop-blur-sm z-50">
+      {/* Header */}
+      <header className="border-b border-slate-200 bg-[#f8fafc]/90 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="group">
-            <span className="text-lg font-bold tracking-tighter text-slate-900">
+            <span className="text-xl font-bold tracking-tighter text-slate-900">
               protocol<span style={{ color: '#6b85a3' }}>LM</span>
             </span>
           </button>
@@ -101,74 +81,54 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div className="flex-1 flex items-center justify-center w-full px-6 pt-20 pb-12">
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl w-full items-stretch">
-          
-          {/* STARTER CARD */}
-          <div className="group bg-white border border-slate-200 rounded-sm p-8 hover:border-[#6b85a3]/50 transition-all duration-300 flex flex-col h-full shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest mb-2">Starter</h2>
-                <p className="text-slate-500 text-xs">Single location basic access</p>
-              </div>
-              <IconCircle />
-            </div>
-            <div className="flex items-baseline mb-8">
-              <span className="text-4xl font-bold text-slate-900 tracking-tighter">$19</span>
-              <span className="ml-2 text-slate-400 text-xs">/month</span>
-            </div>
-            <div className="flex-1 space-y-4 mb-12">
-              {['200 Queries / Month', '20 Image Analyses', 'State & Federal Code Access', 'Email Support'].map((item, i) => (
-                <div key={i} className="flex items-center text-xs text-slate-600">
-                  <div className="w-1 h-1 bg-slate-300 rounded-full mr-3 group-hover:bg-[#6b85a3] transition-colors"></div>
-                  {item}
-                </div>
-              ))}
-            </div>
-            <button 
-              onClick={() => handleCheckout('price_1SWzz2DlSrKA3nbAR2I856jl', 'Starter')} 
-              disabled={loadingId !== null}
-              className="w-full bg-white hover:bg-[#f1f5f9] text-slate-600 hover:text-[#6b85a3] font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest border border-slate-200"
-            >
-              {loadingId === 'price_1SWzz2DlSrKA3nbAR2I856jl' ? 'Processing...' : 'Start Trial'}
-            </button>
+      <div className="flex-1 flex items-center justify-center w-full px-6 py-16">
+        
+        <div className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">
+              Full Access License
+            </h1>
+            <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+              Complete access to the Regulatory Intelligence System for your entire team.
+            </p>
           </div>
 
-          {/* PRO CARD */}
-          <div className="group bg-white border-2 border-[#6b85a3] rounded-sm p-8 shadow-xl shadow-slate-200/50 transition-all duration-300 flex flex-col relative h-full transform md:-translate-y-2">
-            <div className="absolute top-0 right-0 bg-[#6b85a3] text-white text-[9px] font-bold px-3 py-1 uppercase tracking-wide z-20">
-              Recommended
+          {/* THE SINGLE CARD */}
+          <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative">
+            
+            <div className="bg-[#6b85a3] text-white text-center py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-300">
+              Washtenaw / Wayne / Oakland Active
             </div>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-xs font-bold text-[#6b85a3] uppercase tracking-widest mb-2">Pro</h2>
-                <p className="text-slate-500 text-xs">Enhanced intelligence</p>
-              </div>
-              <IconCube />
-            </div>
-            <div className="flex items-baseline mb-8">
-              <span className="text-4xl font-bold text-slate-900 tracking-tighter">$49</span>
-              <span className="ml-2 text-slate-400 text-xs">/month</span>
-            </div>
-            <div className="flex-1 space-y-4 mb-12">
-              {['500 Queries / Month', '50 Image Analyses', 'State & Federal Code Access', 'Standard Support'].map((item, i) => (
-                <div key={i} className="flex items-center text-xs text-slate-900 font-bold">
-                  <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full mr-3"></div>
-                  {item}
-                </div>
-              ))}
-            </div>
-            <button 
-              onClick={() => handleCheckout('price_1SVJvcDlSrKA3nbAlLcPCs52', 'Pro')} 
-              disabled={loadingId !== null}
-              className="w-full text-white font-bold py-3.5 rounded-md transition-all duration-300 disabled:opacity-50 text-[10px] uppercase tracking-widest shadow-md hover:shadow-lg hover:opacity-90"
-              style={{ backgroundColor: '#6b85a3' }}
-            >
-              {loadingId === 'price_1SVJvcDlSrKA3nbAlLcPCs52' ? 'Processing...' : 'Start Trial'}
-            </button>
-          </div>
 
+            <div className="p-8 md:p-10">
+              <div className="flex justify-center items-baseline mb-10 text-slate-900">
+                <span className="text-6xl font-bold tracking-tighter">$99</span>
+                <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/month</span>
+              </div>
+
+              <div className="space-y-5 mb-10 pl-4 border-l-2 border-slate-100">
+                <FeatureItem text="Unlimited Regulatory Queries" />
+                <FeatureItem text="500 Image Analyses / Month" />
+                <FeatureItem text="Mock Audit Workflow" />
+                <FeatureItem text="Corrective Action Generator" />
+                <FeatureItem text="Priority Email Support" />
+              </div>
+
+              <button 
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full bg-[#0f172a] hover:bg-[#6b85a3] text-white font-bold py-4 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl"
+              >
+                {loading ? 'Processing...' : 'Start 30-Day Free Trial'}
+              </button>
+              
+              <p className="text-center text-[10px] text-slate-400 mt-6 font-medium">
+                Cancel anytime. 30-day money-back guarantee.
+              </p>
+            </div>
+          </div>
         </div>
+
       </div>
 
       <div className="py-8 border-t border-slate-200 text-center">
