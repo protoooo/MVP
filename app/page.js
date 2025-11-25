@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE REAL-TIME CHAT SIMULATION (Modern UI) ---
+// --- 1. THE REAL-TIME CHAT SIMULATION ---
 const DemoChatInterface = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -22,19 +22,16 @@ const DemoChatInterface = () => {
 
   const SEQUENCE = [
     {
-      // Scenario 1: Typo Correction
       text: "Can I store raw chikin", 
       backspace: 6, 
       correction: "chicken above the cooked brisket?",
-      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F cook temp) must be stored on the BOTTOM shelf to prevent cross-contamination drip onto beef/brisket."
+      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F cook temp) must be stored on the BOTTOM shelf to prevent cross-contamination drip onto ready-to-eat foods."
     },
     {
-      // Scenario 2: Follow up
       text: "Generate a corrective action memo for this.",
       response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Poultry Storage Hierarchy\nCODE: FDA 3-302.11\nACTION: Effective immediately, all raw poultry must be moved to the bottom shelf. Discard any ready-to-eat items found below raw chicken."
     },
     {
-      // Scenario 3: New Topic
       text: "Inspector found the Quat sanitizer at 500ppm.",
       response: "VIOLATION: Priority Foundation (Pf). Chemical Hazard. Concentration is too high (Toxic). Dilute immediately to manufacturer specs (typically 200-400ppm)."
     }
@@ -60,7 +57,6 @@ const DemoChatInterface = () => {
     const runSimulation = async () => {
       while (isMounted) {
         for (const step of SEQUENCE) {
-          // 1. User Types
           setIsTyping(true)
           await wait(1000)
 
@@ -81,21 +77,17 @@ const DemoChatInterface = () => {
 
           await wait(600) 
           
-          // 2. Send
           const fullUserMessage = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: fullUserMessage }])
 
-          // 3. Thinking
           setIsThinking(true)
-          await wait(1500)
+          await wait(1200) 
           setIsThinking(false)
 
-          // 4. Stream Response
           let currentResponse = ""
           const words = step.response.split(' ')
-          
           setMessages(prev => [...prev, { role: 'assistant', content: '' }])
           
           for (let i = 0; i < words.length; i++) {
@@ -108,10 +100,9 @@ const DemoChatInterface = () => {
             await wait(40) 
           }
           
-          await wait(4000) // Read time
+          await wait(4000) 
         }
-        // Reset
-        await wait(2000)
+        await wait(1000)
         setMessages([])
       }
     }
@@ -121,10 +112,7 @@ const DemoChatInterface = () => {
   }, [])
 
   return (
-    // THE CHAT BOX CONTAINER
     <div className="w-full max-w-3xl mx-auto bg-white border-2 border-slate-200/80 rounded-xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[480px] relative">
-      
-      {/* CHAT HEADER (Grey Bar) */}
       <div className="h-12 border-b border-slate-100 bg-[#f8fafc] flex items-center px-4 gap-2">
         <div className="flex gap-1.5">
           <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
@@ -139,7 +127,6 @@ const DemoChatInterface = () => {
         </div>
       </div>
 
-      {/* MESSAGES AREA */}
       <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto space-y-6 bg-white scroll-smooth">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
@@ -149,7 +136,6 @@ const DemoChatInterface = () => {
              <span className="text-[10px] font-mono uppercase tracking-widest">System Ready</span>
           </div>
         )}
-        
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
             <div className={`max-w-[85%] px-5 py-3 rounded-xl text-sm leading-relaxed font-medium shadow-sm ${
@@ -164,7 +150,6 @@ const DemoChatInterface = () => {
             </div>
           </div>
         ))}
-
         {isThinking && (
           <div className="flex justify-start animate-in fade-in duration-300">
              <div className="bg-[#f8fafc] px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1.5 items-center h-[38px]">
@@ -176,19 +161,16 @@ const DemoChatInterface = () => {
         )}
       </div>
 
-      {/* INPUT AREA */}
       <div className="p-4 bg-white border-t border-slate-100">
         <div className="w-full bg-[#f8fafc] border border-slate-200 rounded-lg p-3 flex items-center gap-3 shadow-inner">
            <div className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center">
               <span className="text-slate-400 text-[10px] font-bold">+</span>
            </div>
-           
            <div className="flex-1 text-sm text-slate-700 font-mono font-medium h-[20px] overflow-hidden relative flex items-center">
               {inputValue}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
               {!inputValue && !isTyping && <span className="text-slate-300 text-xs uppercase tracking-wide">Enter regulatory query...</span>}
            </div>
-
            <div className={`w-7 h-7 rounded-md flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
@@ -357,19 +339,19 @@ function MainContent() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-16">
         
-        {/* HERO TEXT (Updated) */}
-        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        {/* HERO TEXT */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full max-w-3xl mx-auto`}>
           
           <h2 className="text-2xl md:text-3xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
-            Train Your Team Before the Health Department Does
+            Train Your Team Before the Health Department Does.
           </h2>
           
-          <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
-            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Avoid violations and prepare for health inspections with intelligence trained on <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE CHAT DEMO (Chat Box UI) */}
+        {/* THE LIVE CHAT DEMO */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <DemoChatInterface />
         </div>
