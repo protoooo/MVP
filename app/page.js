@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. CHAT DEMO BOX ---
+// --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -12,7 +12,6 @@ const DemoChatContent = () => {
   const [isThinking, setIsThinking] = useState(false)
   const scrollRef = useRef(null)
 
-  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -25,12 +24,32 @@ const DemoChatContent = () => {
       response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F) must be stored on the BOTTOM shelf to prevent cross-contamination."
     },
     {
-      text: "Generate a corrective action memo.",
-      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Poultry Storage\nCODE: FDA 3-302.11\nACTION: Move raw poultry to bottom shelf immediately. Discard contaminated ready-to-eat items."
+      text: "Inspector found sanitizer at 500ppm.",
+      response: "VIOLATION: Priority Foundation (Pf). Chemical Hazard. Concentration is too high (Toxic). Dilute immediately to 200-400ppm."
     },
     {
-      text: "Inspector found the Quat sanitizer at 500ppm.",
-      response: "VIOLATION: Priority Foundation (Pf). Chemical Hazard. Concentration is too high (Toxic). Dilute immediately to 200-400ppm."
+      text: "We don't have soap at the handwash sink right now.",
+      response: "Priority Foundation Violation. Lack of soap creates conditions for Priority violation (improper handwashing). Must correct immediately."
+    },
+    {
+      text: "Employee washed hands in the 3-comp sink.",
+      response: "Priority Violation. Handwashing must occur ONLY at designated handwash sinks. Retrain staff immediately."
+    },
+    {
+      text: "Walk-in cooler running at 43°F all day.",
+      response: "Priority Violation. Potentially Hazardous Foods must be held at 41°F or below. Repair equipment immediately or discard affected food."
+    },
+    {
+      text: "Can I cool soup overnight on the counter?",
+      response: "Priority Violation. Improper cooling procedure. Use ice bath or shallow pans. Must reach 70°F within 2 hours, then 41°F within 4 more."
+    },
+    {
+      text: "No thermometer in the kitchen today.",
+      response: "Priority Foundation Violation. Calibrated thermometers required to verify safe food temps. Obtain immediately."
+    },
+    {
+      text: "Employees eating in the prep area.",
+      response: "Core Violation. Employee meals must be stored/consumed in designated areas away from food prep."
     }
   ]
 
@@ -47,7 +66,6 @@ const DemoChatContent = () => {
     const runSimulation = async () => {
       while (isMounted) {
         for (const step of SEQUENCE) {
-          // 1. User Types
           setIsTyping(true)
           await wait(500)
 
@@ -58,17 +76,14 @@ const DemoChatContent = () => {
 
           await wait(500) 
           
-          // 2. Send
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
 
-          // 3. Thinking
           setIsThinking(true)
           await wait(1200)
           setIsThinking(false)
 
-          // 4. Response (Streamed fast)
           let currentResponse = ""
           const words = step.response.split(' ')
           setMessages(prev => [...prev, { role: 'assistant', content: '' }])
@@ -83,7 +98,7 @@ const DemoChatContent = () => {
             await wait(30) 
           }
           
-          await wait(3500) // Read time
+          await wait(3500)
         }
         await wait(1000)
         setMessages([])
@@ -96,7 +111,6 @@ const DemoChatContent = () => {
 
   return (
     <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
-      {/* HEADER */}
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0">
         <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
@@ -105,7 +119,6 @@ const DemoChatContent = () => {
         </div>
       </div>
 
-      {/* CHAT AREA */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc] min-h-0">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
@@ -139,7 +152,6 @@ const DemoChatContent = () => {
         )}
       </div>
 
-      {/* INPUT AREA */}
       <div className="p-4 bg-white border-t border-slate-100 shrink-0">
         <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
@@ -158,7 +170,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 2. AUTH MODAL ---
+// --- AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -250,12 +262,11 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
-        <div className={`flex gap-6 text-xs font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
           <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Sign In</button>
           <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
@@ -265,10 +276,8 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* MAIN CONTENT */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-16">
         
-        {/* LEFT: TEXT */}
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -280,7 +289,6 @@ function MainContent() {
             Start 30-Day Free Trial
           </button>
           
-          {/* Device compatibility badge */}
           <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
             <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
             <div className="flex gap-2">
@@ -291,14 +299,12 @@ function MainContent() {
           </div>
         </div>
 
-        {/* RIGHT: CHAT DEMO */}
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
 
       </div>
       
-      {/* FOOTER */}
       <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-16">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
