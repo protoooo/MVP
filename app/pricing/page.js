@@ -108,7 +108,7 @@ export default function Pricing() {
             </p>
           </div>
 
-          <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative">
+          <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative group hover:border-[#6b85a3] transition-all">
             
             <div className="bg-[#6b85a3] text-white text-center py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-300">
               Pro Access
