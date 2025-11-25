@@ -85,10 +85,10 @@ export default function Pricing() {
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">
-              Full Access License
+              Professional Access
             </h1>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-              Complete access to the Regulatory Intelligence System for your entire team.
+            <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+              AI-powered regulatory intelligence for food service operations in Michigan.
             </p>
           </div>
 
@@ -96,12 +96,12 @@ export default function Pricing() {
           <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative">
             
             <div className="bg-[#6b85a3] text-white text-center py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-300">
-              Washtenaw / Wayne / Oakland Active
+              Washtenaw / Wayne / Oakland Counties
             </div>
 
             <div className="p-8 md:p-10">
               <div className="flex justify-center items-baseline mb-10 text-slate-900">
-                <span className="text-6xl font-bold tracking-tighter">$99</span>
+                <span className="text-6xl font-bold tracking-tighter">$75</span>
                 <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/month</span>
               </div>
 
@@ -110,21 +110,28 @@ export default function Pricing() {
                 <FeatureItem text="500 Image Analyses / Month" />
                 <FeatureItem text="Mock Audit Workflow" />
                 <FeatureItem text="Corrective Action Generator" />
-                <FeatureItem text="Priority Email Support" />
+                <FeatureItem text="Email Support" />
               </div>
 
               <button 
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full bg-[#0f172a] hover:bg-[#6b85a3] text-white font-bold py-4 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl"
+                className="w-full bg-[#0f172a] hover:bg-[#6b85a3] text-white font-bold py-4 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
               >
                 {loading ? 'Processing...' : 'Start 30-Day Free Trial'}
               </button>
               
               <p className="text-center text-[10px] text-slate-400 mt-6 font-medium">
-                Cancel anytime. 30-day money-back guarantee.
+                Cancel anytime. No long-term contract required.
               </p>
             </div>
+          </div>
+
+          {/* Value Prop */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-500 italic">
+              One failed inspection costs more than 6 months of protocolLM.
+            </p>
           </div>
         </div>
 
