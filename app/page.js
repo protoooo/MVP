@@ -4,218 +4,120 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- 1. THE REAL-TIME CHAT SIMULATION ---
-const DemoChatInterface = () => {
-  const [messages, setMessages] = useState([])
-  const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [isThinking, setIsThinking] = useState(false)
-  
-  const scrollRef = useRef(null)
+// --- 1. THE LIVE TERMINAL (Human Typing Q + Fade A) ---
+const LiveDataTerminal = () => {
+  const [qText, setQText] = useState('')
+  const [aText, setAText] = useState('')
+  const [phase, setPhase] = useState('init') 
+  const [index, setIndex] = useState(0)
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, inputValue, isThinking])
-
-  // RELATABLE, "EVERYDAY MISTAKE" SCENARIOS
-  const SEQUENCE = [
+  // 10 Real-World Scenarios
+  const scenarios = [
     {
-      // 1. THE CLASSIC NEWBIE MISTAKE (Thawing)
-      text: "Can I just thaw the chicken on the prep table? It's frozen solid.",
-      backspace: 0,
-      correction: "",
-      response: "NEGATIVE: Priority Violation (P). Thawing at room temperature puts food in the Danger Zone (>41°F). \n\nPROTOCOL: Use cold running water, the walk-in cooler, or the microwave. [FDA 3-501.13]"
+      q: "QUERY: Can I just thaw the chicken on the prep table? It's frozen solid.",
+      a: "NEGATIVE: Priority Violation (P). Thawing at room temperature puts food in the Danger Zone (>41°F). PROTOCOL: Use cold running water, the walk-in cooler, or the microwave."
     },
     {
-      // 2. THE "LAZY SHORTCUT" (Sanitizing)
-      text: "Is wiping the cutting board with a bleach rag enough between raw beef and produce?",
-      backspace: 0,
-      correction: "",
-      response: "CRITICAL: Priority Violation (P). Wiping is NOT sanitizing. You must Wash, Rinse, and Sanitize (3-step process) to prevent Salmonella transfer. [MI Food Law]"
+      q: "QUERY: Is wiping the cutting board with a bleach rag enough between raw beef and produce?",
+      a: "CRITICAL: Priority Violation (P). Wiping is NOT sanitizing. You must Wash, Rinse, and Sanitize (3-step process) to prevent Salmonella transfer."
     },
     {
-      // 3. THE "I FORGOT" (Documentation/Admin)
-      text: "We forgot to log cooler temps yesterday. Inspector is coming.",
-      backspace: 0,
-      correction: "",
-      response: "WARNING: Priority Foundation (Pf). Missing documentation is an automatic violation in Washtenaw/Wayne. \n\nACTION: Document the gap in the log. Do not falsify data. Verify current temps are <41°F immediately."
+      q: "QUERY: We forgot to log cooler temps yesterday. Inspector is coming.",
+      a: "WARNING: Priority Foundation (Pf). Missing documentation is an automatic violation. ACTION: Document the gap in the log. Do not falsify data. Verify current temps immediately."
     },
     {
-      // 4. THE "WE'VE ALWAYS DONE IT THIS WAY" (Sanitizer Buckets)
-      text: "We keep the sani bucket out all day, just top it off when it gets low.",
-      backspace: 0,
-      correction: "",
-      response: "VIOLATION: Priority Foundation (Pf). Quat sanitizer degrades with time and food debris. You must dump and test with strips every 4 hours (Target: 200ppm)."
+      q: "QUERY: We keep the sani bucket out all day, just top it off when it gets low.",
+      a: "VIOLATION: Priority Foundation (Pf). Quat sanitizer degrades with time and food debris. You must dump and test with strips every 4 hours (Target: 200ppm)."
     },
     {
-      // 5. THE MANAGEMENT FIX (Memo Gen)
-      text: "Generate a staff memo about the thawing rule.",
-      backspace: 0,
-      correction: "",
-      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Improper Thawing Procedures\nCODE: FDA 3-501.13\n\nINSTRUCTION: All thawing must occur under refrigeration or running water. Counter thawing is prohibited effective immediately.\n\n[Ready to Print]"
+      q: "QUERY: Can I store raw burger patties on the same shelf as the brisket?",
+      a: "NEGATIVE: Priority Violation (P). Raw ground beef (155°F cook temp) must be stored BELOW whole cuts of beef (145°F cook temp) to prevent cross-contamination."
+    },
+    {
+      q: "QUERY: Inspector flagged the dishwasher final rinse at 152°F.",
+      a: "VIOLATION: Priority (P). High-temperature machines must reach 160°F at the utensil surface. Switch to 3-compartment sink sanitizing immediately until serviced."
+    },
+    {
+      q: "QUERY: Employee just reported they have Norovirus.",
+      a: "EMERGENCY PROTOCOL: EXCLUDE the employee from the establishment immediately. They cannot return until 48 hours after symptoms have ended. Notify Health Dept."
+    },
+    {
+      q: "QUERY: Hand sink is blocked by a trash can.",
+      a: "VIOLATION: Priority Foundation (Pf). Handwashing sinks must be accessible at all times and used for no other purpose. Move the obstruction immediately."
     }
   ]
 
+  // Realistic Human Typing Algorithm
+  const typeHuman = async (text) => {
+    let current = ''
+    for (let i = 0; i < text.length; i++) {
+      current += text[i]
+      setQText(current)
+      
+      // Base speed + Human Variance
+      let delay = Math.random() * 50 + 30; 
+      
+      // Human pauses
+      if (text[i] === ' ') delay += 40; 
+      if ([':', '.', '?'].includes(text[i])) delay += 200; 
+      
+      await new Promise(r => setTimeout(r, delay))
+    }
+  }
+
   useEffect(() => {
-    let isMounted = true
-    
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+    const runSequence = async () => {
+      const current = scenarios[index]
 
-    const typeChar = async (char) => {
-      setInputValue(prev => prev + char)
-      // Human Typing: Random speed + pauses
-      let speed = Math.random() * 60 + 30
-      if (char === ' ') speed += 50 
-      await wait(speed)
+      // 1. Human Types Question
+      setPhase('typing_q')
+      setQText('') 
+      setAText('')
+      await typeHuman(current.q)
+
+      // 2. System Processing (Thinking)
+      setPhase('thinking')
+      await new Promise(r => setTimeout(r, 800))
+
+      // 3. System Response (Fade In)
+      setPhase('showing_a')
+      setAText(current.a) 
+
+      // 4. Hold for Reading
+      await new Promise(r => setTimeout(r, 5500))
+
+      // 5. Fade Out
+      setPhase('out')
+      await new Promise(r => setTimeout(r, 600))
+      
+      // Loop
+      setIndex(prev => (prev + 1) % scenarios.length)
     }
 
-    const backspace = async (count) => {
-      for (let i = 0; i < count; i++) {
-        setInputValue(prev => prev.slice(0, -1))
-        await wait(100)
-      }
-    }
-
-    const runSimulation = async () => {
-      while (isMounted) {
-        for (const step of SEQUENCE) {
-          // 1. TYPE QUESTION
-          setIsTyping(true)
-          await wait(1000)
-
-          for (const char of step.text) {
-            if (!isMounted) return
-            await typeChar(char)
-          }
-
-          if (step.backspace) {
-            await wait(400)
-            await backspace(step.backspace)
-            await wait(200)
-            for (const char of step.correction) {
-              if (!isMounted) return
-              await typeChar(char)
-            }
-          }
-
-          await wait(600) 
-          
-          // 2. SEND
-          const fullUserMessage = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
-          setInputValue('')
-          setIsTyping(false)
-          setMessages(prev => [...prev, { role: 'user', content: fullUserMessage }])
-
-          // 3. THINKING
-          setIsThinking(true)
-          await wait(1500)
-          setIsThinking(false)
-
-          // 4. STREAM ANSWER (Fast Machine Speed)
-          let currentResponse = ""
-          const words = step.response.split(' ')
-          
-          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-          
-          for (let i = 0; i < words.length; i++) {
-            currentResponse += (i === 0 ? '' : ' ') + words[i]
-            setMessages(prev => {
-              const newMsgs = [...prev]
-              newMsgs[newMsgs.length - 1].content = currentResponse
-              return newMsgs
-            })
-            await wait(40) 
-          }
-          
-          await wait(5000) // Longer Read time for these complex answers
-        }
-        await wait(2000)
-        setMessages([])
-      }
-    }
-
-    runSimulation()
-    return () => { isMounted = false }
-  }, [])
+    runSequence()
+  }, [index])
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white border-2 border-slate-200/80 rounded-xl shadow-2xl shadow-slate-200/50 overflow-hidden flex flex-col h-[450px] relative">
+    <div className="w-full max-w-4xl mx-auto font-mono text-sm md:text-base leading-relaxed min-h-[180px] flex flex-col justify-center items-center text-center relative px-4">
       
-      {/* CHAT HEADER */}
-      <div className="h-12 border-b border-slate-100 bg-[#f8fafc] flex items-center px-4 gap-2">
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-        </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Washtenaw County DB // Active
-          </span>
-        </div>
-      </div>
-
-      {/* MESSAGES AREA */}
-      <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto space-y-6 bg-white scroll-smooth">
-        {messages.length === 0 && !isTyping && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
-             <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-slate-200 rounded-full"></div>
-             </div>
-             <span className="text-[10px] font-mono uppercase tracking-widest">System Ready</span>
-          </div>
-        )}
-        
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-xl text-sm leading-relaxed font-medium shadow-sm ${
-              msg.role === 'user' 
-                ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
-                : 'bg-[#f8fafc] text-slate-700 rounded-tl-sm border border-slate-100'
-            }`}>
-               <div className="whitespace-pre-wrap font-mono text-xs md:text-sm">
-                 {msg.role === 'assistant' && <span className="block text-[9px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">protocol_lm</span>}
-                 {msg.content}
-               </div>
-            </div>
-          </div>
-        ))}
-
-        {isThinking && (
-          <div className="flex justify-start animate-in fade-in duration-300">
-             <div className="bg-[#f8fafc] px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1.5 items-center h-[38px]">
-                <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-             </div>
-          </div>
+      {/* QUESTION (Human Typed) */}
+      <div className={`text-slate-400 mb-4 font-medium uppercase tracking-wide transition-opacity duration-500 ${phase === 'out' ? 'opacity-0' : 'opacity-100'}`}>
+        {qText}
+        {phase === 'typing_q' && (
+          <span className="inline-block w-2.5 h-5 bg-slate-300 ml-1.5 animate-pulse align-middle"></span>
         )}
       </div>
 
-      {/* INPUT AREA */}
-      <div className="p-4 bg-white border-t border-slate-100">
-        <div className="w-full bg-[#f8fafc] border border-slate-200 rounded-lg p-3 flex items-center gap-3 shadow-inner">
-           <div className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center">
-              <span className="text-slate-400 text-[10px] font-bold">+</span>
-           </div>
-           
-           <div className="flex-1 text-sm text-slate-700 font-mono font-medium h-[20px] overflow-hidden relative flex items-center">
-              {inputValue}
-              {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-300 text-xs uppercase tracking-wide">Enter regulatory query...</span>}
-           </div>
-
-           <div className={`w-7 h-7 rounded-md flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-           </div>
-        </div>
+      {/* ANSWER (Smooth Fade In) */}
+      <div className={`text-[#6b85a3] transition-all duration-700 ease-out transform ${phase === 'showing_a' || phase === 'out' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+        {aText && (
+          <>
+            <span className="font-bold mr-2 tracking-wide text-slate-900">PROTOCOL_LM:</span>
+            <span className="font-medium">{aText}</span>
+          </>
+        )}
       </div>
+
     </div>
   )
 }
@@ -328,7 +230,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// Main Content Logic
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -377,21 +278,31 @@ function MainContent() {
       {/* MAIN CONTENT - CENTERED */}
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center pt-16">
         
-        {/* HERO TEXT (UPDATED TO YOUR EXACT PHRASING) */}
-        <div className={`text-center mb-10 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
+        {/* HERO TEXT */}
+        <div className={`text-center mb-12 transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} w-full`}>
           
+          {/* System Status Pill */}
+          <div className="flex justify-center gap-4 mb-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+             <span className="flex items-center gap-2">
+               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+               DB: v2025.11
+             </span>
+             <span className="text-slate-300">|</span>
+             <span>WASHTENAW / WAYNE / OAKLAND</span>
+          </div>
+
           <h2 className="text-2xl md:text-3xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-6 whitespace-normal lg:whitespace-nowrap">
-            Train Your Team Before the Health Department Does.
+            Train Your Team Before the Health Department Does
           </h2>
           
           <p className="text-sm text-slate-500 leading-relaxed max-w-3xl mx-auto">
-            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
+            Avoid violations and prevent fines with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
         </div>
 
-        {/* THE LIVE CHAT SIMULATION */}
+        {/* THE LIVE CHAT DEMO */}
         <div className={`w-full mt-2 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <DemoChatInterface />
+          <LiveDataTerminal />
         </div>
 
       </div>
