@@ -4,12 +4,51 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+// --- VIRTUAL KEYBOARD COMPONENT ---
+const VirtualKeyboard = ({ activeKey }) => {
+  const rows = [
+    ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+    ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+  ]
+
+  const getKeyStyle = (key) => {
+    const isActive = activeKey?.toLowerCase() === key.toLowerCase()
+    const baseStyle = "h-9 rounded-md flex items-center justify-center text-sm font-semibold shadow-[0_1px_0_rgba(0,0,0,0.3)] transition-all duration-75"
+    const colorStyle = isActive ? "bg-slate-300 scale-95" : "bg-white text-slate-900"
+    // Width adjustments
+    const width = key === 'space' ? 'w-full max-w-[180px]' : 'w-[28px] md:w-[30px]'
+    
+    return `${baseStyle} ${colorStyle} ${width}`
+  }
+
+  return (
+    <div className="bg-[#d1d5db] p-2 pb-6 pt-3 flex flex-col gap-3 w-full shrink-0 select-none">
+      {rows.map((row, i) => (
+        <div key={i} className="flex justify-center gap-1.5">
+          {row.map((k) => (
+            <div key={k} className={getKeyStyle(k)}>
+              {k.toUpperCase()}
+            </div>
+          ))}
+        </div>
+      ))}
+      <div className="flex justify-center gap-1.5 px-1">
+         <div className={`h-9 rounded-md flex items-center justify-center px-4 bg-[#b3b9c2] text-slate-700 font-bold text-xs shadow-[0_1px_0_rgba(0,0,0,0.3)] ${activeKey === '123' ? 'scale-95 bg-slate-400' : ''}`}>123</div>
+         <div className={getKeyStyle('space')}></div>
+         <div className={`h-9 rounded-md flex items-center justify-center px-4 bg-[#b3b9c2] text-slate-700 font-bold text-xs shadow-[0_1px_0_rgba(0,0,0,0.3)] ${activeKey === 'return' ? 'scale-95 bg-slate-400' : ''}`}>Go</div>
+      </div>
+    </div>
+  )
+}
+
 // --- 1. CHAT CONTENT (INSIDE THE PHONE) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false) 
   const [isThinking, setIsThinking] = useState(false)
+  const [pressedKey, setPressedKey] = useState(null)
   const scrollRef = useRef(null)
 
   // Auto-scroll
@@ -24,7 +63,7 @@ const DemoChatContent = () => {
       text: "Can I store raw chikin", 
       backspace: 6, 
       correction: "chicken above the cooked brisket?",
-      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F) must be stored on the BOTTOM shelf to prevent cross-contamination."
+      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F cook temp) must be stored on the BOTTOM shelf to prevent cross-contamination."
     },
     {
       text: "Generate a corrective action memo.",
@@ -42,13 +81,20 @@ const DemoChatContent = () => {
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
     const typeChar = async (char) => {
+      setPressedKey(char) // Press key
       setInputValue(prev => prev + char)
-      await wait(Math.random() * 50 + 30)
+      await wait(50) // Hold key
+      setPressedKey(null) // Release key
+      // Wait for next keystroke
+      await wait(Math.random() * 30 + 30)
     }
 
     const backspace = async (count) => {
       for (let i = 0; i < count; i++) {
+        setPressedKey('backspace') // Visual only (mapped mentally)
         setInputValue(prev => prev.slice(0, -1))
+        await wait(50)
+        setPressedKey(null)
         await wait(80)
       }
     }
@@ -62,7 +108,7 @@ const DemoChatContent = () => {
 
           for (const char of step.text) {
             if (!isMounted) return
-            await typeChar(char)
+            await typeChar(char === ' ' ? 'space' : char)
           }
 
           if (step.backspace) {
@@ -71,13 +117,17 @@ const DemoChatContent = () => {
             await wait(200)
             for (const char of step.correction) {
               if (!isMounted) return
-              await typeChar(char)
+              await typeChar(char === ' ' ? 'space' : char)
             }
           }
 
           await wait(500) 
           
-          // 2. Send
+          // 2. Send (Press Return)
+          setPressedKey('return')
+          await wait(100)
+          setPressedKey(null)
+
           const finalMsg = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
           setInputValue('')
           setIsTyping(false)
@@ -117,7 +167,7 @@ const DemoChatContent = () => {
   return (
     <div className="flex flex-col h-full bg-white font-sans">
       {/* PHONE HEADER */}
-      <div className="h-14 bg-white border-b border-slate-100 flex items-end pb-3 px-5 justify-between shrink-0 z-10">
+      <div className="h-12 bg-white border-b border-slate-100 flex items-end pb-2 px-5 justify-between shrink-0 z-10">
         <span className="font-bold text-slate-900 text-[10px] tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-1.5 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
           <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
@@ -126,7 +176,7 @@ const DemoChatContent = () => {
       </div>
 
       {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc] pb-24">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc]">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
              <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
@@ -138,7 +188,7 @@ const DemoChatContent = () => {
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[90%] px-4 py-3 rounded-2xl text-[11px] leading-relaxed font-medium shadow-sm ${
+            <div className={`max-w-[90%] px-3 py-2 rounded-xl text-[11px] leading-relaxed font-medium shadow-sm ${
               msg.role === 'user' 
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
@@ -159,13 +209,13 @@ const DemoChatContent = () => {
         )}
       </div>
 
-      {/* INPUT AREA (Flexible Height for wrapping) */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-md border-t border-slate-100">
-        <div className="w-full bg-slate-50 border border-slate-200 rounded-[20px] px-4 py-3 flex items-end gap-3">
-           <div className="flex-1 text-[11px] text-slate-700 font-medium min-h-[16px] relative flex items-center flex-wrap">
+      {/* INPUT AREA */}
+      <div className="p-3 bg-white border-t border-slate-100">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-[20px] px-3 py-2 flex items-end gap-3">
+           <div className="flex-1 text-[11px] text-slate-800 font-medium min-h-[16px] relative flex items-center flex-wrap">
               {inputValue}
               {isTyping && <span className="inline-block w-0.5 h-3 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-300">Ask a question...</span>}
+              {!inputValue && !isTyping && <span className="text-slate-400">Message...</span>}
            </div>
            <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -174,6 +224,12 @@ const DemoChatContent = () => {
            </div>
         </div>
       </div>
+
+      {/* KEYBOARD */}
+      <div className={`transition-all duration-500 ease-in-out ${isTyping ? 'h-auto opacity-100' : 'h-0 opacity-0 overflow-hidden'}`}>
+         <VirtualKeyboard activeKey={pressedKey} />
+      </div>
+
     </div>
   )
 }
@@ -181,22 +237,15 @@ const DemoChatContent = () => {
 // --- 2. THE IPHONE 15 PRO FRAME ---
 const PhoneFrame = () => {
   return (
-    // Centered Container with Hover Effect
-    <div className="relative flex items-center justify-center transform transition-transform hover:scale-[1.01] duration-700">
-        <div className="relative w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/30 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden z-10">
-        {/* Screen */}
-        <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
-            <DemoChatContent />
-        </div>
-
-        {/* Dynamic Island */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90px] h-[28px] bg-black rounded-full z-30 flex items-center justify-end pr-3">
-            <div className="w-2 h-2 bg-[#1a1a1a] rounded-full opacity-80"></div>
-        </div>
-        
-        {/* Gloss */}
-        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent pointer-events-none rounded-[3.5rem] z-40"></div>
-        </div>
+    // Added -mt-8 to move phone up slightly
+    <div className="relative mx-auto w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/20 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden transform transition-transform hover:scale-[1.01] duration-700 z-10 -mt-8">
+      <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
+          <DemoChatContent />
+      </div>
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90px] h-[28px] bg-black rounded-full z-30 flex items-center justify-end pr-3">
+          <div className="w-2 h-2 bg-[#1a1a1a] rounded-full opacity-80"></div>
+      </div>
+      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent pointer-events-none rounded-[3.5rem] z-40"></div>
     </div>
   )
 }
@@ -268,7 +317,6 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -276,35 +324,28 @@ function MainContent() {
         <div className={`flex gap-6 text-xs font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
           <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Sign In</button>
-          {/* JOIN Button on Mobile */}
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
-             <span className="hidden md:inline">Create Account</span>
-             <span className="md:hidden">Join</span>
-          </button>
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">Create Account</button>
         </div>
       </nav>
 
-      {/* MAIN CONTENT */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-12">
         
-        {/* LEFT: TEXT (Pushed down slightly for balance) */}
+        {/* LEFT: TEXT */}
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
           </h2>
-          <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
+          <p className="text-sm text-slate-500 leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
-          {/* Desktop Button */}
-          <button onClick={() => openAuth('signup')} className="hidden md:inline-block bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+          <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
             Start 30-Day Free Trial
           </button>
         </div>
 
-        {/* RIGHT: PHONE FRAME (Centered) */}
-        <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+        {/* RIGHT: PHONE FRAME */}
+        <div className={`flex-1 flex justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <PhoneFrame />
-          {/* Mobile Button (Below Phone) */}
           <button onClick={() => openAuth('signup')} className="md:hidden mt-8 bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg w-full max-w-[290px]">
             Start 30-Day Free Trial
           </button>
@@ -312,7 +353,6 @@ function MainContent() {
 
       </div>
       
-      {/* FOOTER */}
       <div className="w-full py-8 text-center bg-white border-t border-slate-200">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
