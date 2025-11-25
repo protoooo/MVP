@@ -61,7 +61,6 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
-      {/* Header */}
       <header className="border-b border-slate-200 bg-[#f8fafc]/90 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <button onClick={() => router.push('/')} className="group">
@@ -69,14 +68,31 @@ export default function Pricing() {
               protocol<span style={{ color: '#6b85a3' }}>LM</span>
             </span>
           </button>
-          {!isAuthenticated && (
-            <button 
-              onClick={() => router.push('/?auth=login')}
-              className="text-[10px] font-bold text-slate-500 hover:text-[#6b85a3] uppercase tracking-widest transition"
-            >
-              Log in
-            </button>
-          )}
+          <div className="flex gap-4">
+            {!isAuthenticated ? (
+              <>
+                <button 
+                  onClick={() => router.push('/?auth=login')}
+                  className="text-[10px] font-bold text-slate-500 hover:text-[#6b85a3] uppercase tracking-widest transition"
+                >
+                  Sign In
+                </button>
+                <button 
+                  onClick={() => router.push('/?auth=signup')}
+                  className="text-[10px] font-bold text-[#6b85a3] border border-[#6b85a3] px-4 py-2 rounded-lg hover:bg-[#6b85a3] hover:text-white uppercase tracking-widest transition"
+                >
+                  Create Account
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => router.push('/documents')}
+                className="text-[10px] font-bold text-slate-500 hover:text-[#6b85a3] uppercase tracking-widest transition"
+              >
+                Dashboard
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -85,23 +101,22 @@ export default function Pricing() {
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 tracking-tight">
-              Professional Access
+              Washtenaw / Wayne / Oakland Counties
             </h1>
             <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-              AI-powered regulatory intelligence for food service operations in Michigan.
+              Regulatory intelligence for food service operations in Michigan.
             </p>
           </div>
 
-          {/* THE SINGLE CARD */}
           <div className="bg-white border border-slate-300 rounded-lg shadow-xl overflow-hidden relative">
             
             <div className="bg-[#6b85a3] text-white text-center py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-300">
-              Washtenaw / Wayne / Oakland Counties
+              Pro Access
             </div>
 
             <div className="p-8 md:p-10">
               <div className="flex justify-center items-baseline mb-10 text-slate-900">
-                <span className="text-6xl font-bold tracking-tighter">$75</span>
+                <span className="text-6xl font-bold tracking-tighter">$99</span>
                 <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/month</span>
               </div>
 
@@ -116,7 +131,7 @@ export default function Pricing() {
               <button 
                 onClick={handleCheckout}
                 disabled={loading}
-                className="w-full bg-[#0f172a] hover:bg-[#6b85a3] text-white font-bold py-4 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+                className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-4 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
               >
                 {loading ? 'Processing...' : 'Start 30-Day Free Trial'}
               </button>
@@ -127,7 +142,6 @@ export default function Pricing() {
             </div>
           </div>
 
-          {/* Value Prop */}
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-500 italic">
               One failed inspection costs more than 6 months of protocolLM.
