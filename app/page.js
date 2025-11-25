@@ -5,12 +5,20 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // --- 1. CHAT CONTENT (INSIDE THE PHONE) ---
-const DemoChatContent = () => {
+const DemoChatContent = ({ onKeyboardChange }) => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false) 
   const [isThinking, setIsThinking] = useState(false)
+  const [pressedKey, setPressedKey] = useState(null)
   const scrollRef = useRef(null)
+
+  // Notify parent about keyboard visibility
+  useEffect(() => {
+    if (onKeyboardChange) {
+      onKeyboardChange(isTyping)
+    }
+  }, [isTyping, onKeyboardChange])
 
   // Auto-scroll
   useEffect(() => {
@@ -42,14 +50,18 @@ const DemoChatContent = () => {
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
     const typeChar = async (char) => {
+      setPressedKey(char.toLowerCase())
       setInputValue(prev => prev + char)
       await wait(Math.random() * 50 + 30)
+      setPressedKey(null)
     }
 
     const backspace = async (count) => {
       for (let i = 0; i < count; i++) {
+        setPressedKey('backspace')
         setInputValue(prev => prev.slice(0, -1))
         await wait(80)
+        setPressedKey(null)
       }
     }
 
@@ -174,19 +186,63 @@ const DemoChatContent = () => {
            </div>
         </div>
       </div>
+
+      {/* KEYBOARD */}
+      {isTyping && (
+        <div className="absolute bottom-0 left-0 right-0 bg-[#d1d5db] px-1 py-2 space-y-1">
+          {/* Row 1 */}
+          <div className="flex gap-[2px] justify-center">
+            {['q','w','e','r','t','y','u','i','o','p'].map(k => (
+              <div key={k} className={`w-[9%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
+                {k.toUpperCase()}
+              </div>
+            ))}
+          </div>
+          {/* Row 2 */}
+          <div className="flex gap-[2px] justify-center px-3">
+            {['a','s','d','f','g','h','j','k','l'].map(k => (
+              <div key={k} className={`w-[9.5%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
+                {k.toUpperCase()}
+              </div>
+            ))}
+          </div>
+          {/* Row 3 */}
+          <div className="flex gap-[2px] justify-center">
+            <div className={`w-[12%] h-9 rounded flex items-center justify-center transition-all ${pressedKey === 'shift' ? 'bg-white scale-95' : 'bg-white/70'} shadow-sm`}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M5 15l7-7 7 7"/></svg>
+            </div>
+            {['z','x','c','v','b','n','m'].map(k => (
+              <div key={k} className={`w-[9.5%] h-9 rounded flex items-center justify-center text-[11px] font-medium transition-all ${pressedKey === k ? 'bg-white scale-95' : 'bg-white/90'} text-slate-900 shadow-sm`}>
+                {k.toUpperCase()}
+              </div>
+            ))}
+            <div className={`w-[12%] h-9 rounded flex items-center justify-center transition-all ${pressedKey === 'backspace' ? 'bg-white scale-95' : 'bg-white/70'} shadow-sm`}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M12 14l-4-4m0 0l4-4m-4 4h12M3 12l3 3 3-3"/></svg>
+            </div>
+          </div>
+          {/* Row 4 */}
+          <div className="flex gap-[2px] justify-center">
+            <div className="w-[15%] h-9 rounded flex items-center justify-center bg-white/70 text-[10px] font-medium shadow-sm">123</div>
+            <div className={`flex-1 h-9 rounded flex items-center justify-center transition-all ${pressedKey === ' ' ? 'bg-white scale-95' : 'bg-white/90'} text-[10px] font-medium shadow-sm`}>space</div>
+            <div className="w-[15%] h-9 rounded flex items-center justify-center bg-[#6b85a3] text-white text-[10px] font-bold shadow-sm">Go</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // --- 2. THE IPHONE 15 PRO FRAME ---
 const PhoneFrame = () => {
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+  
   return (
-    // Centered Container with Hover Effect
-    <div className="relative flex items-center justify-center transform transition-transform hover:scale-[1.01] duration-700">
+    // Centered Container with Hover Effect - moves up when keyboard is visible
+    <div className={`relative flex items-center justify-center transform transition-all duration-500 hover:scale-[1.01] ${isKeyboardVisible ? '-translate-y-8' : 'translate-y-0'}`}>
         <div className="relative w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/30 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden z-10">
         {/* Screen */}
         <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
-            <DemoChatContent />
+            <DemoChatContent onKeyboardChange={setIsKeyboardVisible} />
         </div>
 
         {/* Dynamic Island */}
@@ -213,22 +269,47 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   useEffect(() => { setView(defaultView); setMessage(null) }, [isOpen, defaultView])
 
-  const handleAuth = async (e) => {
-    e.preventDefault(); setLoading(true); setMessage(null)
-    try {
-      if (view === 'signup') {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`, data: { county: 'washtenaw' } } })
+  const handleAuth = (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
+    
+    if (view === 'signup') {
+      supabase.auth.signUp({ 
+        email, 
+        password, 
+        options: { 
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`, 
+          data: { county: 'washtenaw' } 
+        } 
+      }).then(({ data, error }) => {
         if (error) throw error
-        if (data.session) window.location.href = '/pricing'
-        else setMessage({ type: 'success', text: 'Verification link sent.' })
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (data.session) {
+          window.location.href = '/pricing'
+        } else {
+          setMessage({ type: 'success', text: 'Verification link sent.' })
+        }
+      }).catch(error => {
+        setMessage({ type: 'error', text: error.message })
+      }).finally(() => {
+        setLoading(false)
+      })
+    } else {
+      supabase.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
         if (error) throw error
-        const { data: profile } = await supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
-        if (profile?.is_subscribed) window.location.href = '/documents'
-        else window.location.href = '/pricing'
-      }
-    } catch (error) { setMessage({ type: 'error', text: error.message }) } finally { setLoading(false) }
+        return supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
+      }).then(({ data: profile }) => {
+        if (profile?.is_subscribed) {
+          window.location.href = '/documents'
+        } else {
+          window.location.href = '/pricing'
+        }
+      }).catch(error => {
+        setMessage({ type: 'error', text: error.message })
+      }).finally(() => {
+        setLoading(false)
+      })
+    }
   }
 
   if (!isOpen) return null
@@ -237,11 +318,11 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
         <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
-        <form onSubmit={handleAuth} className="space-y-4">
+        <div className="space-y-4">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Email" />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
-        </form>
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+        </div>
         {message && <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
         <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
       </div>
