@@ -1,256 +1,139 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- VIRTUAL KEYBOARD COMPONENT ---
-const VirtualKeyboard = ({ activeKey }) => {
-  const rows = [
-    ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-    ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-    ['z', 'x', 'c', 'v', 'b', 'n', 'm']
-  ]
-
-  const getKeyStyle = (key) => {
-    const isActive = activeKey?.toLowerCase() === key.toLowerCase()
-    const baseStyle = "h-9 rounded-md flex items-center justify-center text-sm font-semibold shadow-[0_1px_0_rgba(0,0,0,0.3)] transition-all duration-75"
-    const colorStyle = isActive ? "bg-slate-300 scale-95" : "bg-white text-slate-900"
-    // Width adjustments
-    const width = key === 'space' ? 'w-full max-w-[180px]' : 'w-[28px] md:w-[30px]'
-    
-    return `${baseStyle} ${colorStyle} ${width}`
-  }
-
-  return (
-    <div className="bg-[#d1d5db] p-2 pb-6 pt-3 flex flex-col gap-3 w-full shrink-0 select-none">
-      {rows.map((row, i) => (
-        <div key={i} className="flex justify-center gap-1.5">
-          {row.map((k) => (
-            <div key={k} className={getKeyStyle(k)}>
-              {k.toUpperCase()}
-            </div>
-          ))}
-        </div>
-      ))}
-      <div className="flex justify-center gap-1.5 px-1">
-         <div className={`h-9 rounded-md flex items-center justify-center px-4 bg-[#b3b9c2] text-slate-700 font-bold text-xs shadow-[0_1px_0_rgba(0,0,0,0.3)] ${activeKey === '123' ? 'scale-95 bg-slate-400' : ''}`}>123</div>
-         <div className={getKeyStyle('space')}></div>
-         <div className={`h-9 rounded-md flex items-center justify-center px-4 bg-[#b3b9c2] text-slate-700 font-bold text-xs shadow-[0_1px_0_rgba(0,0,0,0.3)] ${activeKey === 'return' ? 'scale-95 bg-slate-400' : ''}`}>Go</div>
-      </div>
-    </div>
-  )
-}
-
-// --- 1. CHAT CONTENT (INSIDE THE PHONE) ---
-const DemoChatContent = () => {
-  const [messages, setMessages] = useState([])
-  const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false) 
-  const [isThinking, setIsThinking] = useState(false)
-  const [pressedKey, setPressedKey] = useState(null)
-  const scrollRef = useRef(null)
-
-  // Auto-scroll
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
-  }, [messages, inputValue, isThinking])
-
-  const SEQUENCE = [
-    {
-      text: "Can I store raw chikin", 
-      backspace: 6, 
-      correction: "chicken above the cooked brisket?",
-      response: "NEGATIVE: Priority Violation (P). Raw poultry (165°F cook temp) must be stored on the BOTTOM shelf to prevent cross-contamination."
-    },
-    {
-      text: "Generate a corrective action memo.",
-      response: "CORRECTIVE ACTION NOTICE\n\nTOPIC: Poultry Storage\nCODE: FDA 3-302.11\nACTION: Move raw poultry to bottom shelf immediately. Discard contaminated ready-to-eat items."
-    },
-    {
-      text: "Inspector found the Quat sanitizer at 500ppm.",
-      response: "VIOLATION: Priority Foundation (Pf). Chemical Hazard. Concentration is too high (Toxic). Dilute immediately to 200-400ppm."
-    }
-  ]
+// --- 1. THE LIVING BLUEPRINT (Schematic Animation) ---
+const LiveBlueprint = () => {
+  const [activeZone, setActiveZone] = useState(0) // 0: Draw, 1: Cooler, 2: Prep, 3: Sink
 
   useEffect(() => {
-    let isMounted = true
-    
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+    const loop = async () => {
+      while (true) {
+        // Phase 0: Idle / Draw (Wait for lines to finish)
+        setActiveZone(0)
+        await new Promise(r => setTimeout(r, 2000))
 
-    const typeChar = async (char) => {
-      setPressedKey(char) // Press key
-      setInputValue(prev => prev + char)
-      await wait(50) // Hold key
-      setPressedKey(null) // Release key
-      // Wait for next keystroke
-      await wait(Math.random() * 30 + 30)
-    }
+        // Phase 1: Scan Walk-In
+        setActiveZone(1)
+        await new Promise(r => setTimeout(r, 4000))
+        setActiveZone(0)
+        await new Promise(r => setTimeout(r, 800))
 
-    const backspace = async (count) => {
-      for (let i = 0; i < count; i++) {
-        setPressedKey('backspace') // Visual only (mapped mentally)
-        setInputValue(prev => prev.slice(0, -1))
-        await wait(50)
-        setPressedKey(null)
-        await wait(80)
+        // Phase 2: Scan Prep Table
+        setActiveZone(2)
+        await new Promise(r => setTimeout(r, 4000))
+        setActiveZone(0)
+        await new Promise(r => setTimeout(r, 800))
+
+        // Phase 3: Scan Sink
+        setActiveZone(3)
+        await new Promise(r => setTimeout(r, 4000))
       }
     }
-
-    const runSimulation = async () => {
-      while (isMounted) {
-        for (const step of SEQUENCE) {
-          // 1. User Types
-          setIsTyping(true)
-          await wait(1000)
-
-          for (const char of step.text) {
-            if (!isMounted) return
-            await typeChar(char === ' ' ? 'space' : char)
-          }
-
-          if (step.backspace) {
-            await wait(400)
-            await backspace(step.backspace)
-            await wait(200)
-            for (const char of step.correction) {
-              if (!isMounted) return
-              await typeChar(char === ' ' ? 'space' : char)
-            }
-          }
-
-          await wait(500) 
-          
-          // 2. Send (Press Return)
-          setPressedKey('return')
-          await wait(100)
-          setPressedKey(null)
-
-          const finalMsg = step.backspace ? step.text.slice(0, -step.backspace) + step.correction : step.text
-          setInputValue('')
-          setIsTyping(false)
-          setMessages(prev => [...prev, { role: 'user', content: finalMsg }])
-
-          // 3. Thinking
-          setIsThinking(true)
-          await wait(1200)
-          setIsThinking(false)
-
-          // 4. Response (Streamed fast)
-          let currentResponse = ""
-          const words = step.response.split(' ')
-          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-          
-          for (let i = 0; i < words.length; i++) {
-            currentResponse += (i === 0 ? '' : ' ') + words[i]
-            setMessages(prev => {
-              const newMsgs = [...prev]
-              newMsgs[newMsgs.length - 1].content = currentResponse
-              return newMsgs
-            })
-            await wait(30) 
-          }
-          
-          await wait(3500) // Read time
-        }
-        await wait(1000)
-        setMessages([])
-      }
-    }
-
-    runSimulation()
-    return () => { isMounted = false }
+    loop()
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-white font-sans">
-      {/* PHONE HEADER */}
-      <div className="h-12 bg-white border-b border-slate-100 flex items-end pb-2 px-5 justify-between shrink-0 z-10">
-        <span className="font-bold text-slate-900 text-[10px] tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
-        <div className="flex items-center gap-1.5 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-          <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-[7px] font-bold text-green-700 uppercase">Active</span>
-        </div>
+    <div className="relative w-full max-w-lg aspect-square flex items-center justify-center bg-slate-50 rounded-full border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden">
+      
+      {/* RADAR GRID BACKGROUND */}
+      <div className="absolute inset-0 opacity-[0.05]" 
+           style={{ backgroundImage: 'radial-gradient(#64748b 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
       </div>
 
-      {/* CHAT AREA */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f8fafc]">
-        {messages.length === 0 && !isTyping && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
-             <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <div className="w-5 h-5 border-2 border-slate-100 rounded-full"></div>
-             </div>
-             <span className="text-[10px] font-bold uppercase tracking-widest">Ready</span>
-          </div>
-        )}
+      <style jsx>{`
+        .draw-path {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: draw 3s ease-out forwards;
+        }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
         
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[90%] px-3 py-2 rounded-xl text-[11px] leading-relaxed font-medium shadow-sm ${
-              msg.role === 'user' 
-                ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
-                : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
-            }`}>
-               <div className="whitespace-pre-wrap font-mono">{msg.content}</div>
-            </div>
-          </div>
-        ))}
+        .pulse-ring {
+          animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+          0% { transform: scale(0.8); opacity: 0.8; }
+          100% { transform: scale(2.5); opacity: 0; }
+        }
+        
+        .pop-in { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; transform: scale(0.9) translateY(10px); }
+        @keyframes pop-in { to { opacity: 1; transform: scale(1) translateY(0); } }
+      `}</style>
 
-        {isThinking && (
-           <div className="flex justify-start animate-in fade-in zoom-in duration-200">
-              <div className="bg-white px-3 py-2 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1 items-center shadow-sm">
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce"></div>
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                 <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
-              </div>
-           </div>
-        )}
-      </div>
+      <svg viewBox="0 0 400 400" className="w-full h-full p-8">
+        
+        {/* --- ARCHITECTURE (Static Lines) --- */}
+        <g stroke="#94a3b8" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+           
+           {/* Walk-In Cooler (Left) */}
+           <path d="M50 120 L130 120 L130 280 M50 280 L50 120" className="draw-path" />
+           <path d="M120 180 L120 220" strokeWidth="3" className="draw-path" /> 
+           <text x="50" y="110" fontSize="9" fill="#94a3b8" fontFamily="monospace" fontWeight="bold" letterSpacing="1">UNIT: WALK-IN</text>
 
-      {/* INPUT AREA */}
-      <div className="p-3 bg-white border-t border-slate-100">
-        <div className="w-full bg-slate-50 border border-slate-200 rounded-[20px] px-3 py-2 flex items-end gap-3">
-           <div className="flex-1 text-[11px] text-slate-800 font-medium min-h-[16px] relative flex items-center flex-wrap">
-              {inputValue}
-              {isTyping && <span className="inline-block w-0.5 h-3 bg-[#6b85a3] ml-0.5 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-400">Message...</span>}
-           </div>
-           <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                 <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-           </div>
-        </div>
-      </div>
+           {/* Prep Table (Center) */}
+           <path d="M160 200 L280 200 L280 210 L160 210 Z" className="draw-path" style={{animationDelay: '0.5s'}} />
+           <path d="M170 210 L170 280 M270 210 L270 280" className="draw-path" style={{animationDelay: '0.5s'}} />
+           <rect x="200" y="196" width="40" height="4" fill="#cbd5e1" stroke="none" />
+           <text x="185" y="295" fontSize="9" fill="#94a3b8" fontFamily="monospace" fontWeight="bold" letterSpacing="1">STATION: PREP</text>
 
-      {/* KEYBOARD */}
-      <div className={`transition-all duration-500 ease-in-out ${isTyping ? 'h-auto opacity-100' : 'h-0 opacity-0 overflow-hidden'}`}>
-         <VirtualKeyboard activeKey={pressedKey} />
-      </div>
+           {/* 3-Comp Sink (Right) */}
+           <path d="M300 180 L380 180 L380 220 L300 220 Z" className="draw-path" style={{animationDelay: '1s'}} />
+           <path d="M320 180 V160 M360 180 V160" className="draw-path" style={{animationDelay: '1s'}} />
+           <path d="M320 160 Q340 130 360 160" className="draw-path" style={{animationDelay: '1s'}} />
+           <path d="M310 220 L310 280 M370 220 L370 280" className="draw-path" style={{animationDelay: '1s'}} />
+           <text x="310" y="150" fontSize="9" fill="#94a3b8" fontFamily="monospace" fontWeight="bold" letterSpacing="1">UNIT: SINK</text>
+        </g>
 
+        {/* --- ACTIVE SCANNERS --- */}
+        
+        {/* ZONE 1: COOLER VIOLATION (Red) */}
+        <g style={{ display: activeZone === 1 ? 'block' : 'none' }}>
+           <circle cx="90" cy="200" r="4" fill="#ef4444" />
+           <circle cx="90" cy="200" r="4" stroke="#ef4444" strokeWidth="1" fill="none" className="pulse-ring" />
+           <path d="M90 200 L90 160 L150 160" stroke="#ef4444" strokeWidth="1" fill="none" strokeDasharray="4" />
+           
+           <g transform="translate(150, 140)" className="pop-in">
+             <rect width="140" height="40" fill="white" stroke="#ef4444" strokeWidth="1" rx="4" filter="drop-shadow(0px 4px 6px rgba(239,68,68,0.2))" />
+             <text x="10" y="15" fontSize="8" fill="#ef4444" fontWeight="bold" fontFamily="monospace">⚠ PRIORITY VIOLATION</text>
+             <text x="10" y="28" fontSize="8" fill="#334155" fontFamily="sans-serif" fontWeight="bold">Raw chicken above RTE.</text>
+           </g>
+        </g>
+
+        {/* ZONE 2: PREP VIOLATION (Blue - Protocol) */}
+        <g style={{ display: activeZone === 2 ? 'block' : 'none' }}>
+           <circle cx="220" cy="195" r="4" fill="#6b85a3" />
+           <circle cx="220" cy="195" r="4" stroke="#6b85a3" strokeWidth="1" fill="none" className="pulse-ring" />
+           <path d="M220 195 L220 140" stroke="#6b85a3" strokeWidth="1" fill="none" strokeDasharray="4" />
+           
+           <g transform="translate(150, 100)" className="pop-in">
+             <rect width="140" height="40" fill="white" stroke="#6b85a3" strokeWidth="1" rx="4" filter="drop-shadow(0px 4px 6px rgba(107,133,163,0.2))" />
+             <text x="10" y="15" fontSize="8" fill="#6b85a3" fontWeight="bold" fontFamily="monospace">ℹ THAWING PROTOCOL</text>
+             <text x="10" y="28" fontSize="8" fill="#334155" fontFamily="sans-serif" fontWeight="bold">Use running water &lt;70°F.</text>
+           </g>
+        </g>
+
+        {/* ZONE 3: SINK VIOLATION (Amber) */}
+        <g style={{ display: activeZone === 3 ? 'block' : 'none' }}>
+           <circle cx="340" cy="200" r="4" fill="#f59e0b" />
+           <circle cx="340" cy="200" r="4" stroke="#f59e0b" strokeWidth="1" fill="none" className="pulse-ring" />
+           <path d="M340 200 L340 240 L260 240" stroke="#f59e0b" strokeWidth="1" fill="none" strokeDasharray="4" />
+           
+           <g transform="translate(120, 220)" className="pop-in">
+             <rect width="140" height="40" fill="white" stroke="#f59e0b" strokeWidth="1" rx="4" filter="drop-shadow(0px 4px 6px rgba(245,158,11,0.2))" />
+             <text x="10" y="15" fontSize="8" fill="#b45309" fontWeight="bold" fontFamily="monospace">⚠ PRIORITY FOUNDATION</text>
+             <text x="10" y="28" fontSize="8" fill="#334155" fontFamily="sans-serif" fontWeight="bold">Quat Sanitizer &lt; 150ppm.</text>
+           </g>
+        </g>
+
+      </svg>
     </div>
   )
 }
 
-// --- 2. THE IPHONE 15 PRO FRAME ---
-const PhoneFrame = () => {
-  return (
-    // Added -mt-8 to move phone up slightly
-    <div className="relative mx-auto w-[290px] h-[580px] md:w-[350px] md:h-[700px] bg-black rounded-[3.5rem] shadow-2xl shadow-slate-400/20 ring-[6px] ring-[#454545] border-[3px] border-[#2a2a2a] overflow-hidden transform transition-transform hover:scale-[1.01] duration-700 z-10 -mt-8">
-      <div className="absolute inset-0 bg-white rounded-[3.2rem] overflow-hidden border-[6px] border-black">
-          <DemoChatContent />
-      </div>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-[90px] h-[28px] bg-black rounded-full z-30 flex items-center justify-end pr-3">
-          <div className="w-2 h-2 bg-[#1a1a1a] rounded-full opacity-80"></div>
-      </div>
-      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent pointer-events-none rounded-[3.5rem] z-40"></div>
-    </div>
-  )
-}
-
-// --- 3. AUTH MODAL ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -317,6 +200,7 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
+      {/* HEADER */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -328,6 +212,7 @@ function MainContent() {
         </div>
       </nav>
 
+      {/* MAIN CONTENT */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-12">
         
         {/* LEFT: TEXT */}
@@ -343,16 +228,14 @@ function MainContent() {
           </button>
         </div>
 
-        {/* RIGHT: PHONE FRAME */}
+        {/* RIGHT: THE LIVING BLUEPRINT (No more phone glitching) */}
         <div className={`flex-1 flex justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-          <PhoneFrame />
-          <button onClick={() => openAuth('signup')} className="md:hidden mt-8 bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg w-full max-w-[290px]">
-            Start 30-Day Free Trial
-          </button>
+          <LiveBlueprint />
         </div>
 
       </div>
       
+      {/* FOOTER */}
       <div className="w-full py-8 text-center bg-white border-t border-slate-200">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
