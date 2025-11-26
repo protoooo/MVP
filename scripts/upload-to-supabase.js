@@ -35,17 +35,15 @@ async function uploadEmbeddings() {
     
     console.log(`\n📂 Uploading ${county}: ${documents.length} records`);
 
-    // Batch upload to avoid timeouts
     const BATCH_SIZE = 50;
     for (let i = 0; i < documents.length; i += BATCH_SIZE) {
       const batch = documents.slice(i, i + BATCH_SIZE);
-      
       const { error } = await supabase.from('documents').insert(batch);
 
       if (error) {
         console.error(`   ❌ Error uploading batch ${i}:`, error.message);
       } else {
-        process.stdout.write('.'); // Progress dot
+        process.stdout.write('.'); 
       }
     }
     console.log(`\n✅ ${county} Complete`);
