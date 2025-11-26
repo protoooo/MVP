@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Fixed Dimensions) ---
+// --- CHAT DEMO BOX (Fixed Dimensions, Enterprise Look) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -105,33 +105,39 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0">
-      <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
-        <span className="font-bold text-[#023E8A] text-sm tracking-tighter">protocol<span className="text-[#0077B6]">LM</span></span>
-        <div className="flex items-center gap-2 bg-[#F0F9FF] px-3 py-1 rounded-full border border-[#90E0EF]">
-          <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-pulse"></div>
-          <span className="text-[9px] font-bold text-[#0077B6] uppercase tracking-wide">Active</span>
+    // Updated container to look like an iPad Pro / High-end Dashboard
+    <div className="flex flex-col h-[600px] w-full max-w-[550px] bg-white font-sans rounded-[32px] shadow-[0_30px_60px_-12px_rgba(2,62,138,0.15)] overflow-hidden relative z-0 transform-gpu shrink-0 border-[6px] border-slate-50 ring-1 ring-black/5">
+      
+      {/* Header - Looks like native OS */}
+      <div className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
+        <div className="flex flex-col">
+            <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#0077B6]">LM</span></span>
+            <span className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">Enterprise Instance</span>
+        </div>
+        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+          <div className="w-1.5 h-1.5 bg-[#10b981] rounded-full animate-pulse"></div>
+          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Live</span>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F0F9FF] min-h-0 relative z-10">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 min-h-0 relative z-10 scroll-smooth">
         {messages.length === 0 && !isTyping && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
-             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <div className="w-6 h-6 border-2 border-slate-100 rounded-full"></div>
+          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
+             <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 border-4 border-slate-100 rounded-full"></div>
              </div>
-             <span className="text-xs font-bold uppercase tracking-widest text-[#0077B6]/40">System Ready</span>
+             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Awaiting Input</span>
           </div>
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 ${
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out`}>
+            <div className={`max-w-[85%] px-6 py-4 rounded-2xl text-[13px] leading-6 font-medium shadow-sm relative z-20 ${
               msg.role === 'user' 
-                ? 'bg-[#0077B6] text-white rounded-tr-sm' 
-                : 'bg-white text-slate-700 rounded-tl-sm border border-[#90E0EF]'
+                ? 'bg-[#023E8A] text-white rounded-br-sm shadow-md shadow-blue-900/10' 
+                : 'bg-white text-slate-600 rounded-bl-sm border border-slate-100 shadow-sm'
             }`}>
-               <div className="whitespace-pre-wrap font-sans text-xs relative z-30">
+               <div className="whitespace-pre-wrap font-sans relative z-30">
                  {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
                </div>
             </div>
@@ -139,25 +145,25 @@ const DemoChatContent = () => {
         ))}
 
         {isThinking && (
-           <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
-              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm">
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+           <div className="flex justify-start animate-in fade-in zoom-in duration-300 relative z-20">
+              <div className="bg-white px-5 py-4 rounded-2xl rounded-bl-sm border border-slate-100 flex gap-2 items-center shadow-sm">
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
               </div>
            </div>
         )}
       </div>
 
       <div className="p-4 bg-white border-t border-slate-100 shrink-0 relative z-20">
-        <div className="w-full bg-[#F0F9FF] border border-[#90E0EF] rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
-           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 flex items-center gap-4 min-h-[60px] transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-[#0077B6]">
+           <div className="flex-1 text-sm text-slate-800 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
-              {isTyping && <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
+              {isTyping && <span className="inline-block w-0.5 h-4 bg-[#023E8A] ml-1 animate-pulse"></span>}
+              {!inputValue && !isTyping && <span className="text-slate-400 font-medium">Ask protocolLM...</span>}
            </div>
-           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'}`}>
-              <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-[#023E8A] text-white shadow-lg shadow-blue-900/20' : 'bg-slate-200 text-slate-400'}`}>
+              <svg className="w-4 h-4 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                  <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
            </div>
@@ -176,7 +182,8 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      setCount(progress * end)
+      const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+      setCount(ease * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
     window.requestAnimationFrame(step)
@@ -185,7 +192,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
 }
 
-// --- AUTH MODAL ---
+// --- AUTH MODAL (Polished) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -193,7 +200,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => { setView(defaultView); setMessage(null) }, [isOpen, defaultView])
 
@@ -242,17 +248,17 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#023E8A]/20 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-3xl relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-[#023E8A]">✕</button>
-        <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
-        <div className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password" />
-          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-3xl relative animate-in slide-in-from-bottom-4 zoom-in-95 duration-300">
+        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors">✕</button>
+        <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
+        <div className="space-y-3">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-4 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0077B6] focus:ring-2 focus:ring-blue-100 outline-none text-slate-900 text-sm font-medium placeholder-slate-400 rounded-xl transition-all" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-4 bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0077B6] focus:ring-2 focus:ring-blue-100 outline-none text-slate-900 text-sm font-medium placeholder-slate-400 rounded-xl transition-all" placeholder="Password" />
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#023E8A] hover:bg-[#0077B6] text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-900/10 active:scale-[0.98]">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
         </div>
-        {message && <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#0077B6] font-sans">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
+        {message && <div className={`mt-4 p-3 text-xs font-medium border rounded-xl ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
+        <div className="mt-6 pt-6 border-t border-slate-50 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-[#023E8A] font-medium transition-colors">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
       </div>
     </div>
   )
@@ -275,92 +281,130 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen w-full bg-white font-sans text-slate-900 flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND (Opacity 34%) */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-         <div className="relative w-full h-full animate-drift">
-           <Image 
-             src="/background.png" 
-             alt="Background" 
-             fill 
-             className="object-cover opacity-[0.34]" 
-             priority
-           />
-         </div>
-         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
+      {/* BACKGROUND: Technical Grid (Engineering feel) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
       </div>
 
-      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
-        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
-        </div>
-        <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
-          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
-             <span className="hidden md:inline">Create Account</span>
-             <span className="md:hidden">Join</span>
-          </button>
+      {/* NAV: Floating "Dock" Style - Very trendy/high-end */}
+      <nav className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-1000 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-xl shadow-slate-200/40 rounded-full px-2 py-2 flex items-center gap-1">
+            <div className="pl-5 pr-6 flex items-center gap-2 border-r border-slate-100">
+                <div className="w-3 h-3 bg-[#023E8A] rounded-sm rotate-45"></div>
+                <h1 className="text-base font-bold tracking-tight text-[#023E8A]">protocol<span className="text-[#0077B6]">LM</span></h1>
+            </div>
+            
+            <div className="flex items-center gap-1 pl-2">
+                <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-[#0077B6] hover:bg-slate-50 rounded-full transition-all">Pricing</button>
+                <button onClick={() => openAuth('login')} className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-[#0077B6] hover:bg-slate-50 rounded-full transition-all">Log In</button>
+                <button onClick={() => openAuth('signup')} className="ml-1 px-5 py-2.5 bg-[#023E8A] text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-[#0077B6] hover:shadow-lg hover:shadow-blue-900/20 transition-all active:scale-95">
+                    Request Access
+                </button>
+            </div>
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
-        <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className="flex-1 w-full max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-center pt-32 pb-16 gap-16 relative z-10">
+        
+        {/* LEFT COLUMN: Copy & Stats */}
+        <div className={`flex-1 w-full max-w-2xl flex flex-col transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
-          {/* HEADER: Two balanced lines */}
-          <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
-            Train Your Team Before<br className="hidden md:block"/>
-            The Health Department Does.
+          <div className="inline-flex self-start items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-[#0077B6] mb-8">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#0077B6] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0077B6]"></span>
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Updated for 2025 Regulations</span>
+          </div>
+
+          <h2 className="text-5xl lg:text-7xl font-bold text-slate-900 tracking-[-0.03em] leading-[1.1] mb-8">
+            Protect your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#023E8A] to-[#0077B6]">franchise assets.</span>
           </h2>
           
-          <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
-            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
+          <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-lg mb-12">
+            Health inspections are public record. ProtocolLM uses enforcement data from <strong>Washtenaw, Wayne, and Oakland County</strong> to predict risks before they become fines.
           </p>
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-            <span className="relative z-10">Start 30-Day Free Trial</span>
-            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
-          </button>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-16">
+            <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#023E8A] text-white pl-8 pr-12 py-4 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-[#00306d] transition-all shadow-xl shadow-blue-900/20 hover:shadow-2xl hover:-translate-y-0.5 active:scale-95">
+              <span className="relative z-10">Start Trial</span>
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 transition-transform group-hover:translate-x-1">→</div>
+              <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
+            </button>
+            <button className="px-8 py-4 rounded-xl border border-slate-200 font-bold text-sm uppercase tracking-widest text-slate-600 hover:border-slate-400 hover:bg-slate-50 transition-all">
+                View Coverage Map
+            </button>
+          </div>
           
-          {/* STATS CARDS - BIGGER & DARKER */}
-          <div className="mt-12 grid grid-cols-3 gap-4">
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                 <CountUp end={12} suffix="%" duration={2500} />
+          {/* BENTO GRID STATS - Heavy, distinct cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-300 group">
+               <div className="flex items-end gap-1 mb-2">
+                  <span className="text-4xl font-bold text-slate-900 tracking-tighter group-hover:text-[#023E8A] transition-colors"><CountUp end={12} suffix="%" duration={2000} /></span>
+                  <span className="text-red-500 text-lg mb-1.5">↓</span>
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Revenue Drop</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Immediate loss in annual sales after one bad grade.</p>
+               <div className="h-px w-full bg-slate-100 mb-3 group-hover:bg-blue-50 transition-colors"></div>
+               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Revenue Risk</div>
+               <p className="text-xs text-slate-500 font-medium leading-normal">Annual sales drop following a sub-par inspection grade.</p>
              </div>
              
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                 <CountUp end={75} prefix="$" suffix="k" duration={2500} />
+             <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg shadow-slate-900/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+               <div className="flex items-end gap-1 mb-2 relative z-10">
+                  <span className="text-4xl font-bold text-white tracking-tighter"><CountUp end={75} prefix="$" suffix="k" duration={2200} /></span>
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Avg. Incident</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Legal fees, fines, and lost business revenue.</p>
+               <div className="h-px w-full bg-slate-800 mb-3 relative z-10"></div>
+               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 relative z-10">Incident Cost</div>
+               <p className="text-xs text-slate-400 font-medium leading-normal relative z-10">Average legal fees and fines per major violation.</p>
              </div>
              
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                 <CountUp end={2.5} suffix="x" decimals={1} duration={2500} />
+             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-300 group">
+               <div className="flex items-end gap-1 mb-2">
+                  <span className="text-4xl font-bold text-slate-900 tracking-tighter group-hover:text-[#023E8A] transition-colors"><CountUp end={2.5} suffix="x" decimals={1} duration={2400} /></span>
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Fine Hike</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Fines often double or triple for repeat violations.</p>
+               <div className="h-px w-full bg-slate-100 mb-3 group-hover:bg-blue-50 transition-colors"></div>
+               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Penalty Multiplier</div>
+               <p className="text-xs text-slate-500 font-medium leading-normal">Increase in fines for repeat offenses in MI.</p>
              </div>
           </div>
 
         </div>
         
-        <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-          <DemoChatContent />
+        {/* RIGHT COLUMN: The Product */}
+        <div className={`flex-1 flex flex-col items-center lg:items-end justify-center perspective-1000 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
+            <div className="relative group">
+                {/* Decorative Elements behind the chat */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-100 to-slate-100 rounded-[40px] blur-2xl opacity-50 group-hover:opacity-75 transition-opacity duration-700"></div>
+                <DemoChatContent />
+                
+                {/* Floating "Trusted" Badge */}
+                <div className="absolute -bottom-6 -left-6 bg-white py-3 px-5 rounded-xl shadow-lg border border-slate-100 flex items-center gap-3 animate-bounce" style={{animationDuration: '3s'}}>
+                    <div className="flex -space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white"></div>
+                        <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white"></div>
+                        <div className="w-8 h-8 rounded-full bg-slate-400 border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <div className="text-xs font-bold text-slate-900">500+ Locations</div>
+                        <div className="text-[10px] text-slate-500 font-medium">Monitoring Active</div>
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
 
-      <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto">
-        <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-           <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
-           <span>© 2025 protocolLM</span>
-           <a href="/privacy" className="hover:text-[#0077B6]">Privacy</a>
+      <div className="w-full py-6 bg-white border-t border-slate-100 relative z-10 mt-auto">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+           <span>© 2025 Protocol Systems Inc.</span>
+           <div className="flex gap-6">
+                <a href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</a>
+                <a href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</a>
+                <a href="/security" className="hover:text-slate-900 transition-colors">Security</a>
+           </div>
         </div>
       </div>
 
@@ -368,8 +412,6 @@ function MainContent() {
       
       <style jsx global>{`
         @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
-        @keyframes drift { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
       `}</style>
     </div>
   )
