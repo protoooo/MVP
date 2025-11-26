@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- LIVE ENFORCEMENT TICKER (The "Bloomberg Terminal" Feel) ---
+// --- LIVE ENFORCEMENT TICKER (Fixed Syntax) ---
 const Ticker = () => {
   return (
     <div className="w-full bg-[#0F172A] text-white overflow-hidden py-2 border-b border-slate-800 relative z-50">
@@ -16,7 +16,8 @@ const Ticker = () => {
         <span className="text-slate-500">|</span>
         <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span>OAKLAND: Risk Control Plan Approved</span>
         <span className="text-slate-500">|</span>
-        <span className="flex items-center gap-2">MACOMB: Cold Holding Failure (38°F -> 45°F)</span>
+        {/* FIXED: Changed '->' to '&rarr;' to prevent build error */}
+        <span className="flex items-center gap-2">MACOMB: Cold Holding Failure (38°F &rarr; 45°F)</span>
         <span className="text-slate-500">|</span>
         <span className="text-blue-400">PROTOCOL_LM: ACTIVE MONITORING 524 LOCATIONS</span>
       </div>
@@ -63,7 +64,7 @@ const DemoChatContent = () => {
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
     const typeChar = async (char) => {
       setInputValue(prev => prev + char)
-      await wait(Math.random() * 20 + 10) // Faster typing for "pro" feel
+      await wait(Math.random() * 20 + 10) 
     }
 
     const runSimulation = async () => {
@@ -77,7 +78,7 @@ const DemoChatContent = () => {
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
           setIsThinking(true)
-          await wait(1200) // Faster thinking
+          await wait(1200) 
           setIsThinking(false)
           let currentResponse = ""
           const words = step.response.split(' ')
@@ -89,7 +90,7 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(15) // Rapid response rendering
+            await wait(15) 
           }
           await wait(5000)
         }
@@ -105,7 +106,7 @@ const DemoChatContent = () => {
     for (const key of keywords) {
       if (text.includes(key)) {
         const parts = text.split(key)
-        return <span><span className="font-bold text-[#023E8A]">{key}</span>{parts[1]}</span>
+        return <span key={key}><span className="font-bold text-[#023E8A]">{key}</span>{parts[1]}</span>
       }
     }
     return text
@@ -289,7 +290,7 @@ function MainContent() {
 
           <div className="flex gap-4 w-full sm:w-auto">
             <button onClick={() => openAuth('signup')} className="flex-1 sm:flex-none bg-[#0F172A] text-white px-8 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/20 active:scale-95 flex items-center justify-center gap-2">
-               Deploy Instance <span className="text-slate-400">→</span>
+               Deploy Instance <span className="text-slate-400">&rarr;</span>
             </button>
             <button className="flex-1 sm:flex-none px-8 py-4 rounded-xl border border-slate-200 bg-white font-bold text-xs uppercase tracking-widest text-slate-600 hover:border-slate-400 transition-all shadow-sm active:scale-95">
                View Demo
