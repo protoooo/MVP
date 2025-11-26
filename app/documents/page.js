@@ -12,6 +12,60 @@ const COUNTY_NAMES = {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
+// --- NEW COMPONENT: Framer-style Mode Selector ---
+const ModeSelector = ({ currentMode, onSelect, onClose }) => {
+  const modes = [
+    { id: 'chat', label: 'Standard Query', icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+    )},
+    { id: 'image', label: 'Image Analysis', icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+    )},
+    { id: 'audit', label: 'Mock Audit Protocol', icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+    )}
+  ]
+
+  return (
+    <div className="absolute bottom-full left-0 mb-3 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-2">Select Mode</div>
+      <div className="space-y-1">
+        {modes.map((mode) => (
+          <button
+            key={mode.id}
+            onClick={() => { onSelect(mode.id); onClose(); }}
+            className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
+              currentMode === mode.id 
+                ? 'bg-slate-50 text-[#6b85a3]' 
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`${currentMode === mode.id ? 'text-[#6b85a3]' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                {mode.icon}
+              </div>
+              {mode.label}
+            </div>
+            
+            {/* Custom Checkbox Animation */}
+            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 ${
+              currentMode === mode.id 
+                ? 'border-[#6b85a3] bg-[#6b85a3]' 
+                : 'border-slate-300 group-hover:border-slate-400'
+            }`}>
+              {currentMode === mode.id && (
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function DocumentsPage() {
   const [session, setSession] = useState(null)
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
@@ -20,6 +74,10 @@ export default function DocumentsPage() {
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  
+  // New State for Mode Selector
+  const [activeMode, setActiveMode] = useState('chat') // 'chat', 'image', 'audit'
+  const [showModeMenu, setShowModeMenu] = useState(false)
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -190,6 +248,7 @@ export default function DocumentsPage() {
     )
   }
 
+  // Modified to handle the "Mock Audit" selection from menu
   const handleSendMessage = async (e, overrideInput = null) => {
     if (e) e.preventDefault()
     const textToSend = overrideInput || input
@@ -230,6 +289,15 @@ export default function DocumentsPage() {
     }, 500)
   }
 
+  const handleMenuSelection = (mode) => {
+    setActiveMode(mode)
+    if (mode === 'audit') {
+      runMockAudit()
+    } else if (mode === 'image') {
+      fileInputRef.current?.click()
+    }
+  }
+
   const generateMemo = () => handleSendMessage(null, "Generate a formal Staff Memo based on our conversation. Format it with: DATE, TO: All Staff, FROM: Management, SUBJECT: Corrective Actions Required. List each violation discussed, the specific code section it violates, why it matters, and the required corrective action.")
   const handlePrint = () => window.print()
   const handleImageSelect = (e) => {
@@ -245,7 +313,6 @@ export default function DocumentsPage() {
 
   return (
     <div className="fixed inset-0 flex bg-[#f8fafc] text-slate-900 overflow-hidden font-mono">
-      
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
@@ -261,7 +328,6 @@ export default function DocumentsPage() {
         }
       `}</style>
 
-      {/* MODALS */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-2xl">
@@ -297,7 +363,6 @@ export default function DocumentsPage() {
 
       {showSuccessMessage && <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center no-print"><span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span></div>}
 
-      {/* SIDEBAR - Rounded & Softer */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:flex inset-y-0 left-0 w-full md:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex-col z-40 overflow-hidden no-print h-full`}>
         <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex justify-between items-center mb-8">
@@ -315,11 +380,6 @@ export default function DocumentsPage() {
 
           <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-xl shadow-sm hover:opacity-90 mb-3" style={{ backgroundColor: '#6b85a3' }}>
             <span>+</span> New Inquiry
-          </button>
-
-          <button onClick={runMockAudit} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-xl hover:border-[#6b85a3] hover:text-[#6b85a3]">
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-             Run Mock Audit
           </button>
         </div>
 
@@ -353,7 +413,6 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative chat-container">
         <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30 no-print">
           <div className="flex items-center gap-3">
@@ -362,14 +421,8 @@ export default function DocumentsPage() {
           </div>
           <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
           <div className="flex items-center gap-2">
-             <button onClick={generateMemo} className="hidden sm:flex bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors shadow-sm">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                Generate Staff Memo
-             </button>
-             <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Print / Save PDF
-             </button>
+             <button onClick={generateMemo} className="hidden sm:flex bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors shadow-sm">Generate Memo</button>
+             <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm">Save PDF</button>
           </div>
         </div>
 
@@ -389,13 +442,25 @@ export default function DocumentsPage() {
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print">
+        {/* NEW INPUT AREA WITH FLOATING MENU */}
+        <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print relative">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-xl border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
+          
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2 focus-within:border-[#6b85a3] focus-within:ring-1 focus-within:ring-[#6b85a3] transition-all rounded-2xl shadow-sm relative">
+              
               <input type="file" ref={fileInputRef} accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleImageSelect} />
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isLoading} className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0 rounded-xl hover:bg-slate-200"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></button>
-              <input value={input} onChange={e => setInput(e.target.value)} placeholder={image ? "Analyze this image..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
+              
+              {/* MODE MENU BUTTON */}
+              <div className="relative">
+                <button type="button" onClick={() => setShowModeMenu(!showModeMenu)} className="p-2.5 text-slate-400 hover:text-[#6b85a3] transition-colors flex-shrink-0 rounded-xl hover:bg-slate-200 bg-white border border-slate-200 shadow-sm">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                </button>
+                {showModeMenu && <ModeSelector currentMode={activeMode} onSelect={handleMenuSelection} onClose={() => setShowModeMenu(false)} />}
+              </div>
+
+              <input value={input} onChange={e => setInput(e.target.value)} placeholder={activeMode === 'image' ? "Upload an image to analyze..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-mono text-sm" disabled={isLoading} />
+              
               <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-xl ${isLoading || (!input.trim() && !image) ? 'text-slate-300' : 'text-white bg-[#6b85a3] hover:opacity-90 shadow-md'}`}>
                 {isLoading ? <svg className="w-5 h-5 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
               </button>
