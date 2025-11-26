@@ -4,7 +4,7 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Terms of Service</h1>
-          <p className="text-slate-600">Last updated: November 22, 2024</p>
+          <p className="text-slate-600">Last updated: November 25, 2025</p>
         </div>
 
         <div className="prose prose-slate max-w-none">
@@ -22,9 +22,10 @@ export default function TermsOfService() {
               protocolLM is an AI-powered compliance assistant for Michigan restaurants. The Service provides:
             </p>
             <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Access to food safety regulations and documentation</li>
-              <li>AI-assisted interpretation of compliance requirements</li>
+              <li>Access to food safety regulations and official county documentation</li>
+              <li>AI-assisted interpretation of compliance requirements via Chat</li>
               <li>Image analysis for equipment and facility compliance</li>
+              <li>Mock Audit workflows and Staff Memo generation</li>
               <li>County-specific guidance (Washtenaw, Wayne, Oakland)</li>
             </ul>
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 my-4">
@@ -64,20 +65,13 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-bold text-slate-900 mb-3 mt-6">4.2 Subscription Plans</h3>
             <div className="bg-slate-50 p-4 rounded-lg mb-4">
-              <p className="text-slate-700 mb-2"><strong>Pro Plan - $49/month</strong></p>
+              <p className="text-slate-700 mb-2"><strong>Standard Operator Access - $99/month</strong></p>
               <ul className="list-disc pl-6 text-slate-700 space-y-1 text-sm">
-                <li>500 queries per month</li>
-                <li>50 image analyses per month</li>
+                <li>Unlimited Regulatory Queries</li>
+                <li>500 Image Analyses per month</li>
                 <li>Unlimited document access</li>
-              </ul>
-            </div>
-            <div className="bg-slate-50 p-4 rounded-lg mb-4">
-              <p className="text-slate-700 mb-2"><strong>Enterprise Plan - $99/month</strong></p>
-              <ul className="list-disc pl-6 text-slate-700 space-y-1 text-sm">
-                <li>5,000 queries per month</li>
-                <li>500 image analyses per month</li>
-                <li>Unlimited document access</li>
-                <li>Priority support</li>
+                <li>Mock Audit & Memo Tools</li>
+                <li>Email Support</li>
               </ul>
             </div>
 
@@ -92,7 +86,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-bold text-slate-900 mb-3 mt-6">4.4 Cancellation</h3>
             <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>You may cancel your subscription at any time</li>
+              <li>You may cancel your subscription at any time via the Billing Portal</li>
               <li>Cancellation takes effect at the end of the current billing period</li>
               <li>No refunds for partial months</li>
               <li>Access continues until the end of the paid period</li>
@@ -105,19 +99,19 @@ export default function TermsOfService() {
             <h3 className="text-xl font-bold text-slate-900 mb-3 mt-6">5.1 Usage Limits</h3>
             <p className="text-slate-700 mb-4">Your plan includes monthly limits on:</p>
             <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Number of queries (questions asked)</li>
-              <li>Number of image analyses</li>
-              <li>Rate limits (20 requests per minute)</li>
+              <li><strong>Text Queries:</strong> Unlimited (Subject to Fair Use Policy to prevent automated scraping or abuse).</li>
+              <li><strong>Image Analysis:</strong> 500 images per month.</li>
+              <li><strong>Rate Limits:</strong> Standard rate limits apply to prevent system overload.</li>
             </ul>
             <p className="text-slate-700 mb-4">
-              Limits reset at the start of each billing cycle. Excessive use beyond reasonable limits may result 
+              Image analysis limits reset at the start of each billing cycle. Excessive use beyond reasonable human operation may result 
               in temporary service restrictions.
             </p>
 
             <h3 className="text-xl font-bold text-slate-900 mb-3 mt-6">5.2 Prohibited Uses</h3>
             <p className="text-slate-700 mb-4">You may NOT:</p>
             <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Share your account credentials with others</li>
+              <li>Share your account credentials with others (One license per establishment recommended)</li>
               <li>Use the Service for illegal activities</li>
               <li>Attempt to reverse engineer or copy the Service</li>
               <li>Upload malicious content or viruses</li>
