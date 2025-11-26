@@ -7,13 +7,28 @@ import { useRouter } from 'next/navigation'
 export default function Pricing() {
   const [loading, setLoading] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false) // NEW STATE
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      setIsAuthenticated(!!session)
+      
+      if (session) {
+        setIsAuthenticated(true)
+        
+        // CHECK SUBSCRIPTION STATUS
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed')
+          .eq('id', session.user.id)
+          .single()
+          
+        if (profile?.is_subscribed) {
+          setIsSubscribed(true)
+        }
+      }
     }
     checkAuth()
   }, [supabase])
@@ -23,6 +38,7 @@ export default function Pricing() {
     const { data: { session } } = await supabase.auth.getSession()
     
     if (!session) {
+      // Pass the plan they wanted so we can redirect them back later if needed
       router.push('/?auth=signup')
       return
     }
@@ -53,6 +69,7 @@ export default function Pricing() {
       
       <header className="fixed top-0 w-full border-b border-[#90E0EF] bg-[#F0F9FF]/95 backdrop-blur-sm z-50 h-20 flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
+          {/* BACK BUTTON & LOGO */}
           <div className="flex items-center gap-6">
              <button onClick={() => router.push('/')} className="text-slate-400 hover:text-[#0077B6] transition-colors">
                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -69,7 +86,15 @@ export default function Pricing() {
                 <button onClick={() => router.push('/?auth=signup')} className="text-[#0077B6] border border-[#0077B6] px-4 py-2 rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95">Create Account</button>
               </>
             ) : (
-              <button onClick={() => router.push('/documents')} className="text-slate-500 hover:text-[#0077B6] transition-colors">Dashboard</button>
+              // FIX: Only show Dashboard button if they are SUBSCRIBED
+              isSubscribed ? (
+                <button onClick={() => router.push('/documents')} className="text-slate-500 hover:text-[#0077B6] transition-colors">Dashboard</button>
+              ) : (
+                <div className="text-[#023E8A] flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#0077B6] rounded-full animate-pulse"></div>
+                  Select a Plan
+                </div>
+              )
             )}
           </div>
         </div>
