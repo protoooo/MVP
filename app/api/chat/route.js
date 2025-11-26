@@ -9,20 +9,19 @@ export const maxDuration = 60
 
 const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine.
 
-**CRITICAL INSTRUCTION: PRIORITIZE LOCAL DATA**
-1. You have access to specific County Enforcement Manuals (Washtenaw, Wayne, Oakland) in your context.
-2. **ALWAYS cite the Local/County document FIRST.** Only cite the FDA Food Code as a secondary backup.
-3. If the context contains a document like "Washtenaw Enforcement Action", use it. Do NOT say "I don't have specific knowledge." The knowledge is in the context provided below.
-4. If asked about violations, list the specific Priority (P) or Priority Foundation (Pf) items found in the context.
+**CORE INSTRUCTIONS:**
+1. **Visual & Textual Analysis:** When analyzing images, comparing the visual evidence strictly against the provided **Regulatory Context** (Local County Codes) and the FDA Food Code.
+2. **Prioritize Local Data:** ALWAYS cite the Local/County document found in the context FIRST. 
+3. **Resourcefulness:** If the image shows a specific equipment setup (e.g., a 3-comp sink), use the context to find the specific air-gap or plumbing rules for that county and verify if the image matches the rule.
+4. **Citations:** Format citations as **[Source Name, Page X]**.
 
 FORMATTING:
 - Use Markdown.
-- Format Citations as: **[Source Name, Page X]**
-- Be direct and professional.`
+- Be direct, professional, and authoritative.`
 
 export async function POST(req) {
   try {
-    // 1. Initialize Google AI (Matches your Script)
+    // 1. Initialize Google AI
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
     
@@ -50,32 +49,39 @@ export async function POST(req) {
     if (!limitCheck.success) {
       return NextResponse.json({ error: limitCheck.message || 'Limit reached' }, { status: 429 })
     }
-
+    
+    // Image Limit Check
     const body = await req.json()
     const { messages, image, county } = body
-    const lastMessage = messages[messages.length - 1]
+    
+    if (image) {
+      if (limitCheck.currentImages >= limitCheck.imageLimit) {
+        return NextResponse.json({ error: `Image limit reached for ${limitCheck.plan} plan.` }, { status: 429 })
+      }
+    }
 
+    const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
-    // 4. Search (The Critical Step)
-    if (lastMessage.content && !image) {
+    // 4. SEARCH (Updated: Runs even if image exists, as long as there is text)
+    if (lastMessage.content) {
       try {
-        console.log(`🔍 Searching for: "${lastMessage.content}" in ${county}`)
+        console.log(`🔍 Searching for context in: ${county}`)
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
         
         if (searchResults && searchResults.length > 0) {
            console.log(`✅ Found ${searchResults.length} documents`)
            context = searchResults.map(doc => 
-            `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`
+            `[Source: ${doc.metadata.filename || doc.source}, Page ${doc.metadata.page || doc.page}]\nContent: ${doc.text || doc.content}`
           ).join('\n\n')
           
           citations = searchResults.map(doc => ({
-            document: doc.metadata.filename.replace('.pdf', ''),
-            pages: [doc.metadata.page]
+            document: (doc.metadata.filename || doc.source).replace('.pdf', ''),
+            pages: [doc.metadata.page || doc.page]
           }))
         } else {
-          console.log('⚠️ No local documents matched. Falling back to general knowledge.')
+          console.log('⚠️ No local documents matched.')
         }
       } catch (err) {
         console.error('Search Error:', err)
@@ -86,13 +92,14 @@ export async function POST(req) {
     const prompt = [
       { text: SYSTEM_PROMPT },
       { text: `USER CURRENT JURISDICTION: ${county || 'washtenaw'}` },
-      { text: `RETRIEVED REGULATORY CONTEXT:\n${context || 'No specific local documents found. Use general FDA code.'}` },
+      { text: `OFFICIAL REGULATORY CONTEXT:\n${context || 'No specific local documents found. Rely on FDA Food Code.'}` },
       { text: `USER QUERY: ${lastMessage.content}` }
     ]
 
     if (image) {
       const base64Data = image.split(',')[1]
       prompt.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
+      prompt.push({ text: "Analyze the image above specifically against the Regulatory Context provided." })
     }
 
     const result = await model.generateContent(prompt)
