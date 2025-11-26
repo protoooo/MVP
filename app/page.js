@@ -18,18 +18,23 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
+  // UPDATED: Hyper-Local Scenarios (Washtenaw, Oakland, Wayne Specific)
   const SEQUENCE = [
     {
-      text: "Walk-in cooler is reading 45°F. Repair tech can't come until tomorrow. Do I have to throw away $800 of inventory?",
-      response: "CRITICAL ACTION REQUIRED: FDA Code 3-501.16 requires TCS foods be ≤41°F. If food has been >41°F for more than 4 hours, it MUST be discarded to prevent liability. If <4 hours, move to working cooler or ice immediately."
+      text: "We got cited for the same 'Cold Holding' violation twice. The inspector mentioned an 'Administrative Conference'. What is that?",
+      response: "MANDATORY ACTION: According to Washtenaw Enforcement Procedure Sec 6.2, an Administrative Conference is required when a 'chronic violation' exists (cited on 3 of last 5 inspections). You must present a risk control plan to the Health Officer or face license limitation."
     },
     {
-      text: "Head cook showed up vomiting but says he can work the grill. We are fully booked tonight.",
-      response: "ABSOLUTELY NOT. FDA Code 2-201.12 mandates IMMEDIATE EXCLUSION for vomiting/diarrhea. Allowing him to work risks a Norovirus outbreak and permanent closure. Send him home until symptom-free for 24 hours."
+      text: "My head chef quit. Do I have to close if no one else is a Certified Food Manager?",
+      response: "NO, BUT TIME IS LIMITED. Oakland County Sanitary Code Article IV, Section 4.4 allows a grace period of 3 months to replace a Certified Food Service Manager. You must notify the Health Division immediately to avoid penalties."
     },
     {
-      text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
-      response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
+      text: "Can I put a consumer advisory on the menu for 'Rare' burgers for the kids' menu to be safe?",
+      response: "VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of any consumer advisory or parental permission."
+    },
+    {
+      text: "The floor drain in the prep area is backing up water when we run the dishwasher. Can we keep serving if we mop it up?",
+      response: "IMMINENT HEALTH HAZARD. Washtenaw County Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure without a hearing. You must cease operations until the backup is fixed and sanitized to prevent summary suspension."
     }
   ]
 
@@ -213,10 +218,10 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- DATA INGESTION BEAM ANIMATION (FIXED CENTER LINE) ---
+// --- DATA INGESTION BEAM ANIMATION (3 SOURCES) ---
 const DataIngestionSection = () => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
+    <div className="w-full max-w-5xl mx-auto pt-32 pb-32 text-center">
       <div className="mb-16">
         <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
         <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
@@ -235,7 +240,7 @@ const DataIngestionSection = () => {
           ))}
         </div>
 
-        {/* SVG BEAMS (3 Paths - Center Line Fixed) */}
+        {/* SVG BEAMS (3 Paths) */}
         <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
            <div className="w-full max-w-3xl h-full relative">
              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
@@ -247,11 +252,11 @@ const DataIngestionSection = () => {
                </defs>
                
                {/* Left Path */}
-               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
-               {/* Center Path (Thicker, Straight Down) */}
-               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               {/* Center Path */}
+               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
                {/* Right Path */}
-               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
                
                {/* Animated Particles */}
                <circle r="3" fill="#6b85a3">
@@ -267,7 +272,7 @@ const DataIngestionSection = () => {
            </div>
         </div>
 
-        {/* CENTRAL BRAIN (Clean, No Border) */}
+        {/* CENTRAL BRAIN */}
         <div className="z-10 mt-auto transform translate-y-4">
           <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
             <span className="font-bold text-xl tracking-tight">protocol<span className="text-white/80">LM</span></span>
@@ -295,11 +300,11 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] font-sans text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
+    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
+          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
@@ -336,6 +341,7 @@ function MainContent() {
         </div>
       </div>
 
+      {/* NEW DATA INGESTION SECTION */}
       <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <DataIngestionSection />
       </div>
