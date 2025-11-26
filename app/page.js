@@ -1,144 +1,320 @@
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase-server'
-import { redirect } from 'next/navigation'
-import Image from 'next/image'
-import DemoChat from '@/components/DemoChat'
+'use client'
 
-export default async function Home() {
-  const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { createClient } from '@/lib/supabase-browser'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-  if (session) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('is_subscribed')
-      .eq('id', session.user.id)
-      .single()
-    
-    if (profile?.is_subscribed) {
-      redirect('/documents')
+// --- CHAT DEMO BOX ---
+const DemoChatContent = () => {
+  const [messages, setMessages] = useState([])
+  const [inputValue, setInputValue] = useState('')
+  const [isTyping, setIsTyping] = useState(false) 
+  const [isThinking, setIsThinking] = useState(false)
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }
+  }, [messages, inputValue, isThinking])
 
-  const demoScenarios = [
+  // UPDATED: High-Stakes "Money & Liability" Scenarios
+  const SEQUENCE = [
     {
-      q: "The walk-in cooler is reading 45°F. The repair tech can't come until tomorrow morning. Do I have to throw away $800 of prepped inventory or can we save it?",
-      a: "This is a critical situation. FDA Code 3-501.16 requires TCS foods be held at 41°F or below. If the food has been above 41°F for more than 4 hours, it must be discarded immediately to prevent liability. If less than 4 hours, you can move it to a working cooler or pack with ice. Do not risk serving it."
+      text: "Walk-in cooler is reading 45°F. Repair tech can't come until tomorrow. Do I have to throw away $800 of inventory?",
+      response: "CRITICAL ACTION REQUIRED: FDA Code 3-501.16 requires TCS foods be ≤41°F. If food has been >41°F for more than 4 hours, it MUST be discarded to prevent liability. If <4 hours, move to working cooler or ice immediately."
     },
     {
-      q: "My head line cook showed up with a 'stomach bug' (vomiting) but says he's fine to work if he just stays on the grill. We are fully booked. Can I let him work?",
-      a: "Absolutely not. FDA Code 2-201.12 mandates EXCLUSION for employees with vomiting or diarrhea. Keeping him on the line risks a Norovirus outbreak, which could permanently shut down your business and lead to lawsuits. Send him home immediately for at least 24 hours after symptoms stop."
+      text: "Head cook showed up vomiting but says he can work the grill. We are fully booked tonight.",
+      response: "ABSOLUTELY NOT. FDA Code 2-201.12 mandates IMMEDIATE EXCLUSION for vomiting/diarrhea. Allowing him to work risks a Norovirus outbreak and permanent closure. Send him home until symptom-free for 24 hours."
     },
     {
-      q: "I caught the prep team thawing frozen chicken in a sink of stagnant warm water to 'speed it up'. They say running water costs too much money. Who is right?",
-      a: "You are. Stagnant warm water is a major bacterial hazard and a Priority Violation (3-501.13). Thawing must be done under cool running water (70°F or below), in the fridge, or as part of cooking. Using warm stagnant water breeds Salmonella and ruins the product quality."
+      text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
+      response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
     },
     {
-      q: "The hot water handle broke off the handwash sink in the kitchen. We have a pair of pliers there to turn it on. Is that a violation?",
-      a: "Yes, it is a Priority Foundation violation (5-202.12). Handwashing sinks must be 'easily accessible' and maintained in good repair. Inspectors often cite this because pliers are not sanitary and discourage staff from washing hands. Fix it immediately or risk a follow-up inspection fee."
+      text: "Prep team is thawing chicken in stagnant warm water to 'speed it up'.",
+      response: "PRIORITY VIOLATION (P). FDA Code 3-501.13. Thawing must occur under cool running water (<70°F) or in refrigeration. Stagnant warm water breeds Salmonella rapidly. Discard product if temp exceeds 41°F for 4 hours."
     },
     {
-      q: "We found mouse droppings in the dry storage corner this morning. Pest control is coming Friday. Do we have to self-close the restaurant today?",
-      a: "Imminent Health Hazard. FDA Code 8-404.11 usually requires immediate cessation of operations if there is a 'gross insanitary occurrence' like a rodent infestation that contaminates food. If it is isolated and you can sanitize/discard affected product immediately, you may stay open, but if active pests are seen in food areas, you must close to protect your license."
+      text: "Customer wants a rare burger for their 6-year-old child. They are refusing to pay if we don't make it.",
+      response: "REFUSE SERVICE. FDA Code 3-801.11(C) prohibits serving undercooked ground meat to Highly Susceptible Populations (children). It is a major liability trap. The server is legally correct to refuse."
     },
     {
-      q: "A customer ordered a burger 'Rare' for their 6-year-old child. My server refused. The customer is furious and refusing to pay. What is the actual rule?",
-      a: "Your server is correct. FDA Code 3-801.11(C) prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children, elderly). Even with a consumer advisory, you cannot legally serve a rare burger to a child. It is a liability trap."
+      text: "Hot water handle broke off the handwash sink. Can we use pliers to turn it on?",
+      response: "PRIORITY FOUNDATION VIOLATION (5-202.12). Handwashing sinks must be 'easily accessible' and in good repair. Inspectors will cite this immediately. Fix it or designate a new handwash station instantly."
     }
   ]
 
+  useEffect(() => {
+    let isMounted = true
+    
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+    const typeChar = async (char) => {
+      setInputValue(prev => prev + char)
+      await wait(Math.random() * 30 + 20) // Slightly faster typing for longer text
+    }
+
+    const runSimulation = async () => {
+      while (isMounted) {
+        for (const step of SEQUENCE) {
+          setIsTyping(true)
+          await wait(500)
+
+          for (const char of step.text) {
+            if (!isMounted) return
+            await typeChar(char)
+          }
+
+          await wait(500) 
+          
+          setInputValue('')
+          setIsTyping(false)
+          setMessages(prev => [...prev, { role: 'user', content: step.text }])
+
+          setIsThinking(true)
+          await wait(1500) // Little more thinking time for complex answers
+          setIsThinking(false)
+
+          let currentResponse = ""
+          const words = step.response.split(' ')
+          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+          
+          for (let i = 0; i < words.length; i++) {
+            currentResponse += (i === 0 ? '' : ' ') + words[i]
+            setMessages(prev => {
+              const newMsgs = [...prev]
+              newMsgs[newMsgs.length - 1].content = currentResponse
+              return newMsgs
+            })
+            await wait(20) // Faster reading speed
+          }
+          
+          await wait(4000) // Longer pause to read the advice
+        }
+        await wait(1000)
+        setMessages([])
+      }
+    }
+
+    runSimulation()
+    return () => { isMounted = false }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white">
-      {/* Navigation */}
-      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
-        <div className="font-bold text-2xl tracking-tighter">
-          protocol<span className="text-[#6b85a3]">LM</span>
+    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0">
+        <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
+        <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">Active</span>
         </div>
-        <div className="flex items-center gap-6 sm:gap-8">
-          <Link href="/pricing" className="text-sm sm:text-base font-bold text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider">
-            Pricing
-          </Link>
-          <Link href="/auth?view=sign-in" className="text-sm sm:text-base font-bold text-slate-600 hover:text-slate-900 transition-colors uppercase tracking-wider">
-            Sign In
-          </Link>
-          <Link href="/auth?view=sign-up" className="hidden sm:block bg-slate-900 text-white px-5 py-2.5 rounded-sm font-bold text-sm sm:text-base transition-all hover:bg-[#6b85a3] uppercase tracking-wider shadow-sm hover:shadow-md">
-            Create Account
-          </Link>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc] min-h-0">
+        {messages.length === 0 && !isTyping && (
+          <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
+             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-6 h-6 border-2 border-slate-100 rounded-full"></div>
+             </div>
+             <span className="text-xs font-bold uppercase tracking-widest">Ready</span>
+          </div>
+        )}
+        
+        {messages.map((msg, i) => (
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm ${
+              msg.role === 'user' 
+                ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
+                : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
+            }`}>
+               <div className="whitespace-pre-wrap font-mono text-xs">{msg.content}</div>
+            </div>
+          </div>
+        ))}
+
+        {isThinking && (
+           <div className="flex justify-start animate-in fade-in zoom-in duration-200">
+              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1.5 items-center shadow-sm">
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
+                 <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+              </div>
+           </div>
+        )}
+      </div>
+
+      <div className="p-4 bg-white border-t border-slate-100 shrink-0">
+        <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
+           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
+              {inputValue}
+              {isTyping && <span className="inline-block w-0.5 h-4 bg-[#6b85a3] ml-1 animate-pulse"></span>}
+              {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
+           </div>
+           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                 <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- AUTH MODAL ---
+const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState(null)
+  const [view, setView] = useState(defaultView)
+  const supabase = createClient()
+  const router = useRouter()
+
+  useEffect(() => { setView(defaultView); setMessage(null) }, [isOpen, defaultView])
+
+  const handleAuth = (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
+    
+    if (view === 'signup') {
+      supabase.auth.signUp({ 
+        email, 
+        password, 
+        options: { 
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`, 
+          data: { county: 'washtenaw' } 
+        } 
+      }).then(({ data, error }) => {
+        if (error) throw error
+        if (data.session) {
+          window.location.href = '/pricing'
+        } else {
+          setMessage({ type: 'success', text: 'Verification link sent.' })
+        }
+      }).catch(error => {
+        setMessage({ type: 'error', text: error.message })
+      }).finally(() => {
+        setLoading(false)
+      })
+    } else {
+      supabase.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
+        if (error) throw error
+        return supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
+      }).then(({ data: profile }) => {
+        if (profile?.is_subscribed) {
+          window.location.href = '/documents'
+        } else {
+          window.location.href = '/pricing'
+        }
+      }).catch(error => {
+        setMessage({ type: 'error', text: error.message })
+      }).finally(() => {
+        setLoading(false)
+      })
+    }
+  }
+
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
+        <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
+        <div className="space-y-4">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Password" />
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+        </div>
+        {message && <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
+        <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
+      </div>
+    </div>
+  )
+}
+
+// --- MAIN CONTENT ---
+function MainContent() {
+  const [mounted, setMounted] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const [authView, setAuthView] = useState('login')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+   
+  useEffect(() => {
+    setMounted(true)
+    const authParam = searchParams.get('auth')
+    if (authParam) { setAuthView(authParam); setShowAuth(true); window.history.replaceState({}, '', '/') }
+  }, [searchParams])
+
+  const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
+
+  return (
+    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
+      
+      <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
+        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
+        </div>
+        <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
+          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Sign In</button>
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
+             <span className="hidden md:inline">Create Account</span>
+             <span className="md:hidden">Join</span>
+          </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-16">
         
-        {/* Left Column: Copy */}
-        <div className="space-y-8 max-w-2xl">
-          <div className="inline-block bg-white border border-slate-200 px-3 py-1 rounded-sm">
-            <span className="text-[10px] sm:text-xs font-bold text-[#6b85a3] uppercase tracking-[0.2em]">Regulatory Intelligence</span>
-          </div>
-          
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-            Your health inspector <br />
-            <span className="text-[#6b85a3]">is already here.</span>
-          </h1>
-          
-          <p className="text-lg text-slate-600 leading-relaxed max-w-lg">
-            Instant answers to health code violations, unexpected inspections, and compliance anxiety. Built on your county's specific regulatory database.
+        <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
+            Train Your Team Before the Health Department Does.
+          </h2>
+          <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
+            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 pt-2">
-            <Link href="/auth?view=sign-up" className="bg-[#6b85a3] text-white px-8 py-4 rounded-sm font-bold text-sm transition-all hover:bg-slate-800 text-center uppercase tracking-widest shadow-lg hover:shadow-xl translate-y-0 hover:-translate-y-1">
-              Start Free Trial
-            </Link>
-            <Link href="/pricing" className="bg-white border border-slate-300 text-slate-700 px-8 py-4 rounded-sm font-bold text-sm transition-all hover:border-slate-800 hover:text-slate-900 text-center uppercase tracking-widest">
-              View Coverage
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-4">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white"></div>
-              <div className="w-8 h-8 rounded-full bg-slate-400 border-2 border-white"></div>
+          <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+            Start 30-Day Free Trial
+          </button>
+          
+          <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
+            <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
+            <div className="flex gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H7V4h10v16z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 2 2h7l-2 3v1h8v-1l-2-3h7a2 2 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
             </div>
-            <span>Trusted by 500+ Establishments</span>
           </div>
         </div>
 
-        {/* Right Column: Interactive Demo */}
-        <div className="relative w-full max-w-lg mx-auto lg:ml-auto">
-          <div className="absolute -inset-1 bg-gradient-to-r from-slate-200 to-[#6b85a3] opacity-20 blur-2xl rounded-sm"></div>
-          <div className="relative bg-white border border-slate-200 shadow-2xl rounded-sm overflow-hidden h-[500px] flex flex-col">
-            {/* Fake Browser Header */}
-            <div className="bg-slate-50 border-b border-slate-100 p-3 flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-400/80"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80"></div>
-                <div className="w-2.5 h-2.5 rounded-full bg-green-400/80"></div>
-              </div>
-              <div className="mx-auto bg-white border border-slate-200 px-3 py-0.5 rounded-sm text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                protocol_lm_system_active
-              </div>
-            </div>
-
-            {/* Chat Area */}
-            <DemoChat scenarios={demoScenarios} />
-          </div>
+        <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+          <DemoChatContent />
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            © 2024 Protocol Systems
-          </div>
-          <div className="flex gap-6">
-            <Link href="/terms" className="text-xs font-bold text-slate-400 hover:text-slate-900 uppercase tracking-wider">Terms</Link>
-            <Link href="/privacy" className="text-xs font-bold text-slate-400 hover:text-slate-900 uppercase tracking-wider">Privacy</Link>
-          </div>
+      </div>
+      
+      <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-16">
+        <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+           <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
+           <span>© 2025 protocolLM</span>
+           <a href="/privacy" className="hover:text-[#6b85a3]">Privacy</a>
         </div>
-      </footer>
+      </div>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
   )
 }
