@@ -226,7 +226,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#023E8A]/20 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-xl relative">
+      <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-3xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-[#023E8A]">✕</button>
         <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
         <div className="space-y-4">
@@ -269,7 +269,7 @@ function MainContent() {
            className="object-cover opacity-25" 
            priority
          />
-         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
+         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
       <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
@@ -286,8 +286,7 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (MOVED UP & STATS ADDED) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-8 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -299,22 +298,24 @@ function MainContent() {
             Start 30-Day Free Trial
           </button>
           
-          {/* NEW: COMPACT METRICS (Under Button) */}
-          <div className="mt-10 pt-6 border-t border-slate-200/60 grid grid-cols-3 gap-4">
-             <div className="text-left">
-               <div className="text-2xl font-bold text-[#023E8A] tracking-tighter">12%</div>
+          {/* NEW: GLASSMORPHISM STATS CARDS */}
+          <div className="mt-10 grid grid-cols-3 gap-4">
+             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">12%</div>
                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Revenue Drop</div>
+               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Immediate loss after one bad grade.</p>
              </div>
-             <div className="text-left">
-               <div className="text-2xl font-bold text-[#023E8A] tracking-tighter">$75k</div>
-               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Avg. Cost</div>
+             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">$75k</div>
+               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Avg. Incident</div>
+               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Legal fees, fines, and lost sales.</p>
              </div>
-             <div className="text-left">
-               <div className="text-2xl font-bold text-[#023E8A] tracking-tighter">2.5x</div>
+             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">2.5x</div>
                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Fine Hike</div>
+               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Doubled fines for repeat violations.</p>
              </div>
           </div>
-          {/* ---------------------------------- */}
 
         </div>
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
