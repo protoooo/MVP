@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- CHAT DEMO BOX ---
+// --- CHAT DEMO BOX (High Stakes Scenarios + Glitch Fix) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -30,6 +30,10 @@ const DemoChatContent = () => {
     {
       text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
       response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
+    },
+    {
+      text: "Prep team is thawing chicken in stagnant warm water to 'speed it up'.",
+      response: "PRIORITY VIOLATION (P). FDA Code 3-501.13. Thawing must occur under cool running water (<70°F) or in refrigeration. Stagnant warm water breeds Salmonella rapidly. Discard product if temp exceeds 41°F for 4 hours."
     }
   ]
 
@@ -80,7 +84,7 @@ const DemoChatContent = () => {
   }, [])
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative z-0">
+    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative z-0 transform-gpu">
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
         <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
@@ -101,18 +105,18 @@ const DemoChatContent = () => {
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative ${
+            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 ${
               msg.role === 'user' 
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
             }`}>
-               <div className="whitespace-pre-wrap font-mono text-xs relative z-10">{msg.content}</div>
+               <div className="whitespace-pre-wrap font-mono text-xs relative z-30">{msg.content}</div>
             </div>
           </div>
         ))}
 
         {isThinking && (
-           <div className="flex justify-start animate-in fade-in zoom-in duration-200">
+           <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
               <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-slate-100 flex gap-1.5 items-center shadow-sm">
                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
@@ -213,6 +217,70 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
+// --- DATA INGESTION BEAM ANIMATION ---
+const DataIngestionSection = () => {
+  return (
+    <div className="w-full max-w-4xl mx-auto py-20 text-center">
+      <div className="mb-12">
+        <h3 className="text-2xl font-bold text-slate-900 tracking-tight mb-4">Localized Regulatory Intelligence</h3>
+        <p className="text-slate-500 max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model's context window.</p>
+      </div>
+      
+      <div className="relative h-[300px] flex flex-col items-center justify-between px-4">
+        {/* TOP SOURCES */}
+        <div className="flex flex-wrap justify-center gap-4 md:gap-8 w-full z-10">
+          {['FDA Food Code 2022', 'Washtenaw Data', 'Wayne Data', 'Oakland Data'].map((src, i) => (
+            <div key={i} className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+              <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
+              {src}
+            </div>
+          ))}
+        </div>
+
+        {/* SVG BEAMS */}
+        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none">
+           <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 300">
+             <defs>
+               <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                 <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.5" />
+                 <stop offset="100%" stopColor="#6b85a3" stopOpacity="1" />
+               </linearGradient>
+             </defs>
+             
+             {/* Static Paths */}
+             <path d="M150 40 C 150 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
+             <path d="M320 40 C 320 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
+             <path d="M480 40 C 480 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
+             <path d="M650 40 C 650 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
+             
+             {/* Animated Particles */}
+             <circle r="3" fill="#6b85a3">
+               <animateMotion dur="2.5s" repeatCount="indefinite" path="M150 40 C 150 150, 400 150, 400 250" />
+             </circle>
+             <circle r="3" fill="#6b85a3">
+               <animateMotion dur="3s" begin="0.2s" repeatCount="indefinite" path="M320 40 C 320 150, 400 150, 400 250" />
+             </circle>
+             <circle r="3" fill="#6b85a3">
+               <animateMotion dur="2.8s" begin="0.5s" repeatCount="indefinite" path="M480 40 C 480 150, 400 150, 400 250" />
+             </circle>
+             <circle r="3" fill="#6b85a3">
+               <animateMotion dur="3.2s" begin="0.8s" repeatCount="indefinite" path="M650 40 C 650 150, 400 150, 400 250" />
+             </circle>
+           </svg>
+        </div>
+
+        {/* CENTRAL BRAIN */}
+        <div className="z-10 mt-auto transform translate-y-4">
+          <div className="bg-[#6b85a3] text-white px-10 py-5 rounded-2xl shadow-2xl flex items-center gap-3 border-4 border-white">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <span className="font-bold text-lg tracking-tight">protocol<span className="text-white/80">LM</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
@@ -231,7 +299,8 @@ function MainContent() {
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
-      <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
+      
+      <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
@@ -245,7 +314,7 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-32 pb-12 gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -269,14 +338,20 @@ function MainContent() {
           <DemoChatContent />
         </div>
       </div>
+
+      {/* NEW SECTION */}
+      <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <DataIngestionSection />
+      </div>
       
-      <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-16">
+      <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-12">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
            <span>© 2025 protocolLM</span>
            <a href="/privacy" className="hover:text-[#6b85a3]">Privacy</a>
         </div>
       </div>
+
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
   )
