@@ -130,17 +130,20 @@ export default function DocumentsPage() {
         })
         if (response.ok) {
           const data = await response.json()
-          setCurrentChatId(data.chat.id)
-          setChatHistory(prev => {
-            const existing = prev.findIndex(c => c.id === data.chat.id)
-            if (existing >= 0) {
-              const updated = [...prev]
-              updated[existing] = data.chat
-              return updated
-            } else {
-              return [data.chat, ...prev].slice(0, 50)
-            }
-          })
+          // If chat was deleted while saving, data.chat might be null (handled by API)
+          if (data.chat) {
+            setCurrentChatId(data.chat.id)
+            setChatHistory(prev => {
+              const existing = prev.findIndex(c => c.id === data.chat.id)
+              if (existing >= 0) {
+                const updated = [...prev]
+                updated[existing] = data.chat
+                return updated
+              } else {
+                return [data.chat, ...prev].slice(0, 50)
+              }
+            })
+          }
         }
       } catch (error) {
         console.error('Error saving chat:', error)
@@ -158,7 +161,9 @@ export default function DocumentsPage() {
   }
 
   const startNewChat = () => {
-    saveCurrentChat()
+    // Force save before clearing if needed
+    if (currentChatId && messages.length > 1) saveCurrentChat()
+    
     setMessages([{ 
       role: 'assistant', 
       content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
@@ -171,14 +176,23 @@ export default function DocumentsPage() {
   const deleteChat = async (chatId, e) => {
     e.stopPropagation()
     if (!confirm('Delete this record?')) return
+    
+    // Optimistic update
+    setChatHistory(prev => prev.filter(c => c.id !== chatId))
+    if (currentChatId === chatId) {
+        setCurrentChatId(null)
+        setMessages([{ 
+          role: 'assistant', 
+          content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
+          citations: []
+        }])
+    }
+
     try {
-      const response = await fetch(`/api/chat-history?chatId=${chatId}`, { method: 'DELETE', credentials: 'include' })
-      if (response.ok) {
-        setChatHistory(prev => prev.filter(c => c.id !== chatId))
-        if (currentChatId === chatId) startNewChat()
-      }
+      await fetch(`/api/chat-history?chatId=${chatId}`, { method: 'DELETE', credentials: 'include' })
     } catch (error) {
       console.error('Error deleting chat:', error)
+      loadChatHistory() // Revert if failed
     }
   }
 
@@ -301,7 +315,12 @@ export default function DocumentsPage() {
         })
       })
 
-      if (!response.ok) throw new Error('System error.')
+      // Handle rate limit or other API errors gracefully
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || 'System error.')
+      }
+      
       const data = await response.json()
 
       setMessages(prev => [
@@ -410,7 +429,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - FIX: h-full, flex-col, and mt-auto for bottom section */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:flex inset-y-0 left-0 w-full md:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex-col z-40 overflow-hidden no-print h-full`}>
         {/* Sidebar Header & Actions */}
         <div className="p-6 border-b border-slate-200 flex-shrink-0">
@@ -455,7 +474,7 @@ export default function DocumentsPage() {
           )}
         </div>
 
-        {/* User Profile / Billing - Pinned to Bottom */}
+        {/* User Profile / Billing - FIX: Pinned to Bottom with mt-auto */}
         <div className="p-4 border-t border-slate-200 bg-[#f1f5f9] flex-shrink-0 mt-auto">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
@@ -481,11 +500,12 @@ export default function DocumentsPage() {
           </div>
           
           <div className="flex items-center gap-2">
-             <button onClick={generateMemo} className="hidden sm:flex bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors">
+             {/* FIX: Darker Slate-800 buttons */}
+             <button onClick={generateMemo} className="hidden sm:flex bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 Generate Staff Memo
              </button>
-             <button onClick={() => window.print()} className="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
+             <button onClick={() => window.print()} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                 Print / Save PDF
              </button>
