@@ -72,9 +72,7 @@ export default function Pricing() {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center w-full px-4 pt-24 pb-12">
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full items-stretch">
-          
           {/* STARTER */}
           <div className="bg-white border border-slate-200 rounded-xl p-8 flex flex-col hover:border-slate-400 transition-colors shadow-sm">
             <div className="mb-6">
@@ -91,7 +89,7 @@ export default function Pricing() {
               <li className="flex items-start gap-3 text-xs font-bold text-slate-600"><CheckIcon />County Document Access</li>
               <li className="flex items-start gap-3 text-xs font-bold text-slate-400"><XIcon />No Mock Audits</li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SXXMWDlSrKA3nbAQowl0jTE', 'starter')} disabled={loading !== null} className="w-full bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900 font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all">
+            <button onClick={() => handleCheckout('price_1SXXMWDlSrKA3nbAQowl0jTE', 'starter')} disabled={loading !== null} className="w-full bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-900 hover:text-slate-900 font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all active:scale-95">
               {loading === 'starter' ? 'Processing...' : 'Select Starter'}
             </button>
           </div>
@@ -113,7 +111,7 @@ export default function Pricing() {
               <li className="flex items-start gap-3 text-xs font-bold text-slate-700"><CheckIcon color="text-[#6b85a3]" />Full Database Access</li>
               <li className="flex items-start gap-3 text-xs font-bold text-slate-400"><XIcon />No Mock Audits</li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SXXNcDlSrKA3nbAVqQKY8Jr', 'pro')} disabled={loading !== null} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all shadow-md">
+            <button onClick={() => handleCheckout('price_1SXXNcDlSrKA3nbAVqQKY8Jr', 'pro')} disabled={loading !== null} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95">
               {loading === 'pro' ? 'Processing...' : 'Select Pro'}
             </button>
           </div>
@@ -134,11 +132,10 @@ export default function Pricing() {
               <li className="flex items-start gap-3 text-xs font-bold text-slate-900"><CheckIcon color="text-slate-900" />Mock Audit Workflow</li>
               <li className="flex items-start gap-3 text-xs font-bold text-slate-900"><CheckIcon color="text-slate-900" />Staff Memo Generator</li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SXXOvDlSrKA3nbArPSohz15', 'enterprise')} disabled={loading !== null} className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all shadow-md">
+            <button onClick={() => handleCheckout('price_1SXXOvDlSrKA3nbArPSohz15', 'enterprise')} disabled={loading !== null} className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 rounded-lg text-[10px] uppercase tracking-widest transition-all shadow-md active:scale-95">
               {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
             </button>
           </div>
-
         </div>
 
         <div className="mt-10 text-center max-w-md mx-auto opacity-80">
@@ -147,7 +144,6 @@ export default function Pricing() {
             "One failed inspection costs more than 5 years of the Enterprise plan."
           </p>
         </div>
-
       </div>
     </div>
   )
