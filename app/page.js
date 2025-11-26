@@ -279,13 +279,7 @@ function MainContent() {
       
       {/* BACKGROUND IMAGE (OPACITY 38%) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <Image 
-           src="/background.png" 
-           alt="Background" 
-           fill 
-           className="object-cover opacity-[0.38]" 
-           priority
-         />
+         <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.38]" priority />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
@@ -303,14 +297,17 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-8 pb-12 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-20 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before<br className="hidden md:block"/> The Health Department Does.
           </h2>
-          <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
+          
+          {/* UPDATED SUBTEXT: Larger & Bolder */}
+          <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
+          
           <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
             <span className="relative z-10">Start 30-Day Free Trial</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
@@ -353,24 +350,3 @@ function MainContent() {
       <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
-           <span>© 2025 protocolLM</span>
-           <a href="/privacy" className="hover:text-[#0077B6]">Privacy</a>
-        </div>
-      </div>
-
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
-      
-      <style jsx global>{`
-        @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
-      `}</style>
-    </div>
-  )
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div></div>}>
-      <MainContent />
-    </Suspense>
-  )
-}
