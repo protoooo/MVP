@@ -286,7 +286,8 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-8 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-16 pb-12 gap-16 relative z-10">
+        
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -298,26 +299,27 @@ function MainContent() {
             Start 30-Day Free Trial
           </button>
           
-          {/* NEW: GLASSMORPHISM STATS CARDS */}
+          {/* NEW: LARGER, DARKER, GLASS CARDS */}
           <div className="mt-10 grid grid-cols-3 gap-4">
-             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">12%</div>
-               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Revenue Drop</div>
-               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Immediate loss after one bad grade.</p>
+             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
+               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">12%</div>
+               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Revenue Drop</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Immediate loss in annual sales after one bad grade.</p>
              </div>
-             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">$75k</div>
-               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Avg. Incident</div>
-               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Legal fees, fines, and lost sales.</p>
+             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
+               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">$75k</div>
+               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Avg. Incident</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Cost of legal fees, fines, and lost business.</p>
              </div>
-             <div className="bg-white/50 border border-white p-3 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 transition-colors">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">2.5x</div>
-               <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Fine Hike</div>
-               <p className="text-[10px] text-slate-400 mt-1 leading-tight">Doubled fines for repeat violations.</p>
+             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
+               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">2.5x</div>
+               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Fine Hike</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Fines double or triple for repeat violations.</p>
              </div>
           </div>
 
         </div>
+        
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
