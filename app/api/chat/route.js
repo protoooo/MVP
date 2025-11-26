@@ -1,7 +1,7 @@
 import { VertexAI } from '@google-cloud/vertexai'
 import { NextResponse } from 'next/server'
 import { searchDocuments } from '@/lib/searchDocs'
-import { checkRateLimit } from '@/lib/rateLimit' // Re-enabled
+import { checkRateLimit } from '@/lib/rateLimit' 
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import fs from 'fs'
@@ -9,21 +9,18 @@ import path from 'path'
 
 export const maxDuration = 60
 
-const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine for food safety compliance. 
-Your role is to act as a strict, code-based consultant for restaurant owners and health inspectors.
+const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine.
+Directives:
+1. Strict Compliance: Base answers on FDA Food Code & Local Ordinances.
+2. Citations: Cite specific code sections (e.g., "FDA 3-501.16").
+3. Format: Use Markdown.
+4. Mock Audits: If asked for an audit, output a Markdown Table with columns: [Item, Status, Code Ref, Correction].`
 
-CORE DIRECTIVES:
-1.  **Strict Compliance:** Base all answers *only* on the provided context (FDA Food Code, Local County Ordinances).
-2.  **Citations are Mandatory:** You MUST cite specific code sections (e.g., "FDA 3-501.16") for every claim.
-3.  **No Fluff:** Be concise and professional.
-4.  **Mock Audits:** If asked for a Mock Audit, format the output as a Markdown Table with columns: [Item, Code Ref, P/Pf/C, Status, Corrective Action].
-5.  **Staff Memos:** Use formal "TO/FROM/DATE/SUBJECT" format.`
-
-// ... (initVertexAI helper remains the same as before) ...
 function initVertexAI() {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
   const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
   if (!projectId) throw new Error('Missing Project ID')
+  
   if (credentialsJson) {
     const tempFile = path.join('/tmp', 'google-credentials.json')
     try {
@@ -51,24 +48,26 @@ export async function POST(req) {
       }
     )
 
-    const { data: { session }, error: authError } = await supabase.auth.getSession()
-    if (authError || !session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
     const { messages, image, county } = body
     
-    // RATE LIMIT CHECK
+    // --- RATE LIMIT CHECK ---
     const limitCheck = await checkRateLimit(session.user.id)
+    
     if (!limitCheck.success) {
-      return NextResponse.json({ error: limitCheck.limitReached ? 'Monthly limit reached.' : 'Subscription error.' }, { status: 429 })
+      return NextResponse.json({ error: limitCheck.message || 'Subscription error.' }, { status: 429 })
     }
     
-    // IMAGE LIMIT CHECK
+    // Special check for Images
     if (image) {
       if (limitCheck.currentImages >= limitCheck.imageLimit) {
-        return NextResponse.json({ error: 'Image analysis limit reached for this month. Upgrade to Enterprise for more.' }, { status: 429 })
+        return NextResponse.json({ error: `Image limit reached for ${limitCheck.plan} plan. Upgrade for more.` }, { status: 429 })
       }
     }
+    // ------------------------
 
     const lastMessage = messages[messages.length - 1]
     let context = ''
@@ -100,6 +99,7 @@ export async function POST(req) {
     const response = await streamingResp.response
     const text = response.candidates[0].content.parts[0].text
 
+    // Increment Usage
     supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
 
     return NextResponse.json({ message: text, citations: citations })
