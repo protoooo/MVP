@@ -5,38 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- ANIMATED COUNT UP COMPONENT ---
-const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    let startTimestamp = null
-    const step = (timestamp) => {
-      if (!startTimestamp) startTimestamp = timestamp
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      
-      // Ease-out function for smooth landing
-      const easeOut = 1 - Math.pow(1 - progress, 3)
-      
-      setCount(progress * end)
-      
-      if (progress < 1) {
-        window.requestAnimationFrame(step)
-      }
-    }
-    window.requestAnimationFrame(step)
-  }, [end, duration])
-
-  return (
-    <span>
-      {prefix}
-      {count.toFixed(decimals)}
-      {suffix}
-    </span>
-  )
-}
-
-// --- CHAT DEMO BOX ---
+// --- CHAT DEMO BOX (Unchanged) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -198,6 +167,25 @@ const DemoChatContent = () => {
   )
 }
 
+// --- COUNT UP ANIMATION ---
+const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let startTimestamp = null
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      setCount(progress * end)
+      if (progress < 1) window.requestAnimationFrame(step)
+    }
+    window.requestAnimationFrame(step)
+  }, [end, duration])
+
+  return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
+}
+
 // --- AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
@@ -318,35 +306,34 @@ function MainContent() {
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          
-          {/* SHINY CTA BUTTON */}
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-            <span className="relative z-10">Start 30-Day Free Trial</span>
-            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
+          <button onClick={() => openAuth('signup')} className="bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+            Start 30-Day Free Trial
           </button>
           
-          {/* ANIMATED STATS CARDS */}
-          <div className="mt-10 grid grid-cols-3 gap-4">
-             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+          {/* NEW: BIGGER, BOLDER, DARKER STATS */}
+          <div className="mt-12 grid grid-cols-3 gap-4">
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter">
                  <CountUp end={12} suffix="%" />
                </div>
-               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Revenue Drop</div>
-               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Immediate loss in sales after one bad grade.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Revenue Drop</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Immediate loss in annual sales after one bad grade.</p>
              </div>
-             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+             
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter">
                  <CountUp end={75} prefix="$" suffix="k" />
                </div>
-               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Avg. Incident</div>
-               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Legal fees, fines, and lost business revenue.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Avg. Incident</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Legal fees, fines, and lost business revenue.</p>
              </div>
-             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
-               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+             
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter">
                  <CountUp end={2.5} suffix="x" decimals={1} />
                </div>
-               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Fine Hike</div>
-               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Fines double or triple for chronic repeat violations.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Fine Hike</div>
+               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Fines often double or triple for repeat violations.</p>
              </div>
           </div>
 
@@ -367,12 +354,8 @@ function MainContent() {
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
       
-      {/* SHINE ANIMATION STYLE */}
       <style jsx global>{`
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 200%; }
-        }
+        @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
       `}</style>
     </div>
   )
