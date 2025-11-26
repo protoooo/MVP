@@ -4,7 +4,7 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-          <p className="text-slate-600">Last updated: November 22, 2024</p>
+          <p className="text-slate-600">Last updated: November 25, 2025</p>
         </div>
 
         <div className="prose prose-slate max-w-none">
@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
               <div className="bg-slate-50 p-4 rounded-lg">
                 <h3 className="font-bold text-slate-900 mb-2">Google Vertex AI (AI Processing)</h3>
                 <p className="text-slate-700 text-sm">
-                  Processes your queries and images to generate compliance guidance. Images are analyzed in real-time and not permanently stored by Google.
+                  Processes your queries and images using Gemini 2.0 models to generate compliance guidance. Images are analyzed in real-time and not permanently stored by Google for model training.
                   <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener">
                     View Google Cloud Privacy Policy
                   </a>
