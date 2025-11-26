@@ -7,7 +7,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 function createSupabaseServer() {
   const cookieStore = cookies()
-  
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -37,20 +36,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    // Your active $99/mo Price ID
-    const ACTIVE_PRICE_ID = 'price_1SVJyRDlSrKA3nbAGhdEZzXA'
-    
-    // Default to 'pro' to match your "Pro Access" UI badge
-    let planName = 'pro' 
+    // --- PLAN MAPPING ---
+    let planName = 'pro' // Default fallback
 
-    // Optional: Safety check to ensure we only process the correct ID
-    if (priceId !== ACTIVE_PRICE_ID) {
-      console.warn(`⚠️ Unexpected Price ID received: ${priceId}`)
+    if (priceId === 'price_1SXXMWDlSrKA3nbAQowl0jTE') {
+      planName = 'starter'
+    } else if (priceId === 'price_1SXXNcDlSrKA3nbAVqQKY8Jr') {
+      planName = 'pro'
+    } else if (priceId === 'price_1SXXOvDlSrKA3nbArPSohz15') {
+      planName = 'enterprise'
     }
+    // --------------------
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-
-    console.log('✅ Creating checkout session for:', session.user.email)
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -69,7 +67,7 @@ export async function POST(request) {
         plan: planName,
       },
       subscription_data: {
-        trial_period_days: 30,
+        trial_period_days: 30, // All plans get the trial
         metadata: {
           userId: session.user.id,
           plan: planName,
