@@ -39,14 +39,6 @@ const DemoChatContent = () => {
     {
       text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
       response: "CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage."
-    },
-    {
-      text: "We want to start vacuum packing our steaks. Do we need a special permit?",
-      response: "YES. Reduced Oxygen Packaging (ROP) requires a HACCP Plan and often a Variance under Michigan Modified Food Code 3-502.11. You must submit this plan to the regulatory authority for approval BEFORE starting."
-    },
-    {
-      text: "What is the exact cooling requirement for the chili we made this morning?",
-      response: "TWO-STAGE COOLING: FDA Code 3-501.14. 1) Cool from 135°F to 70°F within 2 hours. 2) Cool from 70°F to 41°F within the next 4 hours (Total 6 hours). If you miss the first 2-hour window, you must reheat to 165°F and restart."
     }
   ]
 
@@ -249,6 +241,85 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
+// --- NEW: FINANCIAL REALITY SECTION ---
+const ImpactMetrics = () => (
+  <div className="w-full max-w-5xl mx-auto px-6 mb-20">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Metric 1 */}
+      <div className="bg-white/70 backdrop-blur-sm border border-[#0077B6]/10 p-6 rounded-2xl shadow-sm text-center hover:border-[#0077B6]/30 transition-colors">
+        <div className="text-4xl font-bold text-[#023E8A] mb-1 tracking-tighter">12%</div>
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Revenue Drop</div>
+        <p className="text-xs text-slate-400 mt-2 font-medium">Immediate loss in annual revenue following a single poor health inspection grade.</p>
+      </div>
+      
+      {/* Metric 2 */}
+      <div className="bg-white/70 backdrop-blur-sm border border-[#0077B6]/10 p-6 rounded-2xl shadow-sm text-center hover:border-[#0077B6]/30 transition-colors">
+        <div className="text-4xl font-bold text-[#023E8A] mb-1 tracking-tighter">$75k</div>
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Avg. Incident Cost</div>
+        <p className="text-xs text-slate-400 mt-2 font-medium">Average cost of legal fees, fines, and lost revenue per foodborne illness outbreak.</p>
+      </div>
+      
+      {/* Metric 3 */}
+      <div className="bg-white/70 backdrop-blur-sm border border-[#0077B6]/10 p-6 rounded-2xl shadow-sm text-center hover:border-[#0077B6]/30 transition-colors">
+        <div className="text-4xl font-bold text-[#023E8A] mb-1 tracking-tighter">2.5x</div>
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Repeat Fines</div>
+        <p className="text-xs text-slate-400 mt-2 font-medium">Most counties double or triple fines for "Chronic" or repeat priority violations.</p>
+      </div>
+    </div>
+    <p className="text-center text-[10px] text-slate-400/70 mt-6 italic font-medium">Sources: Harvard Business School, Johns Hopkins Public Health, Local Enforcement Schedules.</p>
+  </div>
+)
+
+// --- DATA INGESTION BEAM ANIMATION ---
+const DataIngestionSection = () => {
+  return (
+    <div className="w-full max-w-5xl mx-auto pt-10 pb-32 text-center">
+      <div className="mb-16">
+        <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
+        <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
+      </div>
+      
+      <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
+        <div className="grid grid-cols-3 gap-8 w-full max-w-3xl z-10">
+          {['Washtenaw County', 'Wayne County', 'Oakland County'].map((src, i) => (
+            <div key={i} className="flex justify-center">
+              <div className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
+                <div className="w-2 h-2 bg-[#0077B6] rounded-full animate-pulse"></div>
+                {src}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
+           <div className="w-full max-w-3xl h-full relative">
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
+               <defs>
+                 <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                   <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
+                   <stop offset="100%" stopColor="#0077B6" stopOpacity="0.8" />
+                 </linearGradient>
+               </defs>
+               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               <circle r="4" fill="#0077B6"><animateMotion dur="3s" repeatCount="indefinite" path="M130 60 C 130 200, 400 180, 400 280" /></circle>
+               <circle r="4" fill="#0077B6"><animateMotion dur="3s" begin="0.5s" repeatCount="indefinite" path="M400 60 L 400 280" /></circle>
+               <circle r="4" fill="#0077B6"><animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M670 60 C 670 200, 400 180, 400 280" /></circle>
+             </svg>
+           </div>
+        </div>
+
+        <div className="z-10 mt-auto transform translate-y-4">
+          <div className="bg-[#0077B6] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#0077B6]/20 flex items-center justify-center">
+            <span className="font-bold text-xl tracking-tighter">protocol<span className="text-white/80">LM</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
@@ -268,16 +339,16 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* --- BACKGROUND IMAGE (UPDATED: Opacity 25% for visibility) --- */}
+      {/* BACKGROUND with 35% Opacity */}
       <div className="absolute inset-0 z-0 pointer-events-none">
          <Image 
            src="/background.png" 
            alt="Background" 
            fill 
-           className="object-cover opacity-25" 
+           className="object-cover opacity-35" 
            priority
          />
-         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
+         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
@@ -294,19 +365,20 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-28 pb-24 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-28 pb-16 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
           </h2>
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
-            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
+            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
           <button onClick={() => openAuth('signup')} className="bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
             Start 30-Day Free Trial
           </button>
           
-          <div className="mt-10 pt-8 border-t border-[#90E0EF]">
+          {/* COMPACT DATA LABEL (Replaces old beam) */}
+          <div className="mt-10 pt-8 border-t border-slate-200/60">
              <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6">
                 {['Washtenaw', 'Wayne', 'Oakland', 'Michigan', 'Federal'].map((src, i) => (
                   <div key={i} className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
@@ -323,6 +395,16 @@ function MainContent() {
         </div>
       </div>
 
+      {/* IMPACT METRICS (NEW SECTION) */}
+      <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <ImpactMetrics />
+      </div>
+
+      {/* FULL DATA BEAM SECTION (Below Metrics) */}
+      <div className={`transition-opacity duration-1000 delay-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <DataIngestionSection />
+      </div>
+      
       <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
