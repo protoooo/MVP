@@ -18,7 +18,6 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // UPDATED: High-Stakes "Money & Liability" Scenarios
   const SEQUENCE = [
     {
       text: "Walk-in cooler is reading 45°F. Repair tech can't come until tomorrow. Do I have to throw away $800 of inventory?",
@@ -31,29 +30,15 @@ const DemoChatContent = () => {
     {
       text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
       response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
-    },
-    {
-      text: "Prep team is thawing chicken in stagnant warm water to 'speed it up'.",
-      response: "PRIORITY VIOLATION (P). FDA Code 3-501.13. Thawing must occur under cool running water (<70°F) or in refrigeration. Stagnant warm water breeds Salmonella rapidly. Discard product if temp exceeds 41°F for 4 hours."
-    },
-    {
-      text: "Customer wants a rare burger for their 6-year-old child. They are refusing to pay if we don't make it.",
-      response: "REFUSE SERVICE. FDA Code 3-801.11(C) prohibits serving undercooked ground meat to Highly Susceptible Populations (children). It is a major liability trap. The server is legally correct to refuse."
-    },
-    {
-      text: "Hot water handle broke off the handwash sink. Can we use pliers to turn it on?",
-      response: "PRIORITY FOUNDATION VIOLATION (5-202.12). Handwashing sinks must be 'easily accessible' and in good repair. Inspectors will cite this immediately. Fix it or designate a new handwash station instantly."
     }
   ]
 
   useEffect(() => {
     let isMounted = true
-    
     const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
-
     const typeChar = async (char) => {
       setInputValue(prev => prev + char)
-      await wait(Math.random() * 30 + 20) // Slightly faster typing for longer text
+      await wait(Math.random() * 30 + 20)
     }
 
     const runSimulation = async () => {
@@ -61,26 +46,20 @@ const DemoChatContent = () => {
         for (const step of SEQUENCE) {
           setIsTyping(true)
           await wait(500)
-
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
-
           await wait(500) 
-          
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
-
           setIsThinking(true)
-          await wait(1500) // Little more thinking time for complex answers
+          await wait(1500)
           setIsThinking(false)
-
           let currentResponse = ""
           const words = step.response.split(' ')
           setMessages(prev => [...prev, { role: 'assistant', content: '' }])
-          
           for (let i = 0; i < words.length; i++) {
             currentResponse += (i === 0 ? '' : ' ') + words[i]
             setMessages(prev => {
@@ -88,23 +67,21 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(20) // Faster reading speed
+            await wait(20)
           }
-          
-          await wait(4000) // Longer pause to read the advice
+          await wait(4000)
         }
         await wait(1000)
         setMessages([])
       }
     }
-
     runSimulation()
     return () => { isMounted = false }
   }, [])
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
-      <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0">
+    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative z-0">
+      <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
         <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -112,7 +89,7 @@ const DemoChatContent = () => {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc] min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8fafc] min-h-0 relative z-10">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
@@ -124,12 +101,12 @@ const DemoChatContent = () => {
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm ${
+            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative ${
               msg.role === 'user' 
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
             }`}>
-               <div className="whitespace-pre-wrap font-mono text-xs">{msg.content}</div>
+               <div className="whitespace-pre-wrap font-mono text-xs relative z-10">{msg.content}</div>
             </div>
           </div>
         ))}
@@ -145,7 +122,7 @@ const DemoChatContent = () => {
         )}
       </div>
 
-      <div className="p-4 bg-white border-t border-slate-100 shrink-0">
+      <div className="p-4 bg-white border-t border-slate-100 shrink-0 relative z-20">
         <div className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
@@ -254,7 +231,6 @@ function MainContent() {
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
-      
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-20 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -270,7 +246,6 @@ function MainContent() {
       </nav>
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 gap-16">
-        
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -281,7 +256,6 @@ function MainContent() {
           <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
             Start 30-Day Free Trial
           </button>
-          
           <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
             <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
             <div className="flex gap-2">
@@ -291,11 +265,9 @@ function MainContent() {
             </div>
           </div>
         </div>
-
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
-
       </div>
       
       <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-16">
@@ -305,7 +277,6 @@ function MainContent() {
            <a href="/privacy" className="hover:text-[#6b85a3]">Privacy</a>
         </div>
       </div>
-
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
     </div>
   )
