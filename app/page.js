@@ -176,7 +176,6 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      const easeOut = 1 - Math.pow(1 - progress, 3)
       setCount(progress * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
@@ -278,9 +277,9 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND */}
+      {/* BACKGROUND IMAGE (OPACITY 35%) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <Image src="/background.png" alt="Background" fill className="object-cover opacity-25" priority />
+         <Image src="/background.png" alt="Background" fill className="object-cover opacity-35" priority />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
@@ -306,11 +305,12 @@ function MainContent() {
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          <button onClick={() => openAuth('signup')} className="bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-            Start 30-Day Free Trial
+          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+            <span className="relative z-10">Start 30-Day Free Trial</span>
+            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          {/* NEW: BIGGER, BOLDER, DARKER STATS */}
+          {/* STATS CARDS */}
           <div className="mt-12 grid grid-cols-3 gap-4">
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter">
