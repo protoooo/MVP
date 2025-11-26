@@ -18,18 +18,19 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
+  // UPDATED: Specific County Document Citations
   const SEQUENCE = [
     {
-      text: "Walk-in cooler is reading 45°F. Repair tech can't come until tomorrow. Do I have to throw away $800 of inventory?",
-      response: "CRITICAL ACTION REQUIRED: FDA Code 3-501.16 requires TCS foods be ≤41°F. If food has been >41°F for more than 4 hours, it MUST be discarded to prevent liability. If <4 hours, move to working cooler or ice immediately."
+      text: "We got a 'Chronic Violation' notice from Washtenaw County. What does that actually mean?",
+      response: "ACTION REQUIRED: According to 'Washtenaw Enforcement Action Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2). You must submit a Risk Control Plan immediately."
     },
     {
-      text: "Head cook showed up vomiting but says he can work the grill. We are fully booked tonight.",
-      response: "ABSOLUTELY NOT. FDA Code 2-201.12 mandates IMMEDIATE EXCLUSION for vomiting/diarrhea. Allowing him to work risks a Norovirus outbreak and permanent closure. Send him home until symptom-free for 24 hours."
+      text: "Oakland County inspector said our new manager needs certification. Is there a grace period?",
+      response: "YES. 'Oakland County Sanitary Code Article IV, Sec 4.4' grants a 3-month grace period to replace a Certified Food Service Manager if the previous one left employment. You must notify the Health Division immediately."
     },
     {
-      text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
-      response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
+      text: "Can we use the 3-compartment sink to thaw chicken if we are busy?",
+      response: "VIOLATION. Michigan Modified Food Code 3-501.13 requires thawing under running water <70°F. Using a warewashing sink for food prep without a full clean/sanitize step in between is a Cross-Contamination risk."
     }
   ]
 
@@ -82,7 +83,8 @@ const DemoChatContent = () => {
   return (
     <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative z-0 transform-gpu">
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
-        <span className="font-bold text-slate-900 text-sm tracking-tight">protocol<span className="text-[#6b85a3]">LM</span></span>
+        {/* THE "3M" LOOK: Heavy Bold, Tight Tracking */}
+        <span className="font-bold text-slate-900 text-sm tracking-tighter">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
           <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">Active</span>
@@ -213,30 +215,67 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- COMPACT DATA FLOW (FITS IN HERO) ---
-const CompactDataFlow = () => {
+// --- DATA INGESTION BEAM ANIMATION (FIXED) ---
+const DataIngestionSection = () => {
   return (
-    <div className="mt-8 pt-8 border-t border-slate-100">
-       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Trained on Local Intelligence</p>
-       <div className="flex items-center gap-3">
-         <div className="flex -space-x-2">
-            {/* Washtenaw */}
-            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm text-[8px] font-bold text-[#6b85a3] z-30" title="Washtenaw">WA</div>
-            {/* Wayne */}
-            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm text-[8px] font-bold text-[#6b85a3] z-20" title="Wayne">WY</div>
-            {/* Oakland */}
-            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm text-[8px] font-bold text-[#6b85a3] z-10" title="Oakland">OK</div>
-         </div>
-         
-         {/* Connecting Line */}
-         <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-[#6b85a3]"></div>
-         
-         {/* Target */}
-         <div className="flex items-center gap-2 bg-[#6b85a3]/10 px-3 py-1 rounded-full border border-[#6b85a3]/20">
-           <div className="w-1.5 h-1.5 rounded-full bg-[#6b85a3] animate-pulse"></div>
-           <span className="text-[10px] font-bold text-[#6b85a3]">ProtocolLM</span>
-         </div>
-       </div>
+    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
+      <div className="mb-16">
+        <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
+        <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
+      </div>
+      
+      <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
+        {/* TOP SOURCES (3 Items) */}
+        <div className="grid grid-cols-3 gap-8 w-full max-w-3xl z-10">
+          {['Washtenaw County', 'Wayne County', 'Oakland County'].map((src, i) => (
+            <div key={i} className="flex justify-center">
+              <div className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
+                <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
+                {src}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* SVG BEAMS (FIXED VISIBILITY) */}
+        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
+           <div className="w-full max-w-3xl h-full relative">
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
+               <defs>
+                 <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                   <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
+                   <stop offset="100%" stopColor="#6b85a3" stopOpacity="0.8" />
+                 </linearGradient>
+               </defs>
+               
+               {/* Left Path */}
+               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               {/* Center Path */}
+               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               {/* Right Path */}
+               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               
+               {/* Animated Particles - LARGER & FASTER */}
+               <circle r="4" fill="#6b85a3">
+                 <animateMotion dur="2.5s" repeatCount="indefinite" path="M130 60 C 130 200, 400 180, 400 280" />
+               </circle>
+               <circle r="4" fill="#6b85a3">
+                 <animateMotion dur="2.5s" begin="0.3s" repeatCount="indefinite" path="M400 60 L 400 280" />
+               </circle>
+               <circle r="4" fill="#6b85a3">
+                 <animateMotion dur="2.5s" begin="0.6s" repeatCount="indefinite" path="M670 60 C 670 200, 400 180, 400 280" />
+               </circle>
+             </svg>
+           </div>
+        </div>
+
+        {/* CENTRAL BRAIN (Clean, Shadow Only) */}
+        <div className="z-10 mt-auto transform translate-y-4">
+          <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
+            <span className="font-bold text-xl tracking-tighter">protocol<span className="text-white/80">LM</span></span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -274,7 +313,7 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-40 pb-32 gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -285,14 +324,23 @@ function MainContent() {
           <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95">
             Start 30-Day Free Trial
           </button>
-          
-          {/* COMPACT DATA FLOW INTEGRATION */}
-          <CompactDataFlow />
-
+          <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
+            <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
+            <div className="flex gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H7V4h10v16z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 2 2h7l-2 3v1h8v-1l-2-3h7a2 2 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+            </div>
+          </div>
         </div>
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
+      </div>
+
+      {/* NEW DATA INGESTION SECTION */}
+      <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <DataIngestionSection />
       </div>
       
       <div className="w-full py-8 text-center bg-white border-t border-slate-200">
