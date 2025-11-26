@@ -5,32 +5,38 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Stripe/Apple Aesthetic) ---
-const DemoChatContent = () => {
+// --- SECURITY SCANNER CHAT (CrowdStrike/Fortinet Style) ---
+const SecurityChat = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false) 
-  const [isThinking, setIsThinking] = useState(false)
+  const [status, setStatus] = useState('active') // active, scanning, threat_detected, secure
   const scrollRef = useRef(null)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, inputValue, isThinking])
+  }, [messages, inputValue, status])
 
   const SEQUENCE = [
     {
-      text: "The GM just quit. Can we run the shift without a certified manager?",
-      response: "RISK ALERT: Operating without a Certified Food Manager violates 'Oakland Sanitary Code Sec 4.4'. You have a 90-day grace period, but you MUST notify the department within 24 hours to avoid a closure order."
+      text: "Kitchen manager wants to cool the chili in the walk-in using 5-gallon buckets.",
+      scanTime: 2000,
+      threatLevel: "HIGH",
+      response: "VIOLATION DETECTED: This violates cooling parameters (Sec 3-501.14). 5-gallon buckets have insufficient surface area for rapid cooling. THREAT: Product will not reach 41°F within 6 hours. ACTION: Use shallow pans (2 inches max) or blast chiller immediately."
     },
     {
-      text: "Inspector found a backed-up drain in the prep area.",
-      response: "CRITICAL: This is an 'Imminent Health Hazard' (sewage backup). Per Washtenaw Enforcement Procedure 5.0, you must VOLUNTARILY CLOSE the affected area immediately. Failure to do so will result in a forced shutdown and public notice."
+      text: "Dish machine is reading 155°F on the final rinse.",
+      scanTime: 1500,
+      threatLevel: "CRITICAL",
+      response: "SANITATION FAILURE: 155°F is below the critical limit of 180°F for high-temp machines (Sec 4-501.112). Equipment is not sanitizing. ACTION: Switch to chemical sanitization or close dish pit until booster heater is serviced."
     },
     {
-      text: "What's the fine if we get cited for the same thing twice?",
-      response: "FINANCIAL IMPACT: Repeat priority violations often trigger 'Administrative Conferences'. In Wayne County, this escalates to fines doubling (approx $500-$1000) and potential license limitation. It puts the franchise agreement in jeopardy."
+      text: "Can we store raw chicken above the beef if both are sealed?",
+      scanTime: 1200,
+      threatLevel: "MEDIUM",
+      response: "STORAGE HAZARD: Negative. Chicken (165°F cook temp) must strictly be stored BELOW beef (155°F) to prevent cross-contamination from drip. Sealing does not negate vertical storage hierarchy (Sec 3-302.11)."
     }
   ]
 
@@ -45,6 +51,8 @@ const DemoChatContent = () => {
     const runSimulation = async () => {
       while (isMounted) {
         for (const step of SEQUENCE) {
+          // 1. User Types
+          setStatus('active')
           setIsTyping(true)
           await wait(800)
           for (const char of step.text) { if (!isMounted) return; await typeChar(char) }
@@ -52,12 +60,17 @@ const DemoChatContent = () => {
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
-          setIsThinking(true)
-          await wait(1000) 
-          setIsThinking(false)
+          
+          // 2. "Scanning" Phase (The Cybersecurity Vibe)
+          setStatus('scanning')
+          await wait(step.scanTime)
+
+          // 3. Threat Detection & Response
+          setStatus(step.threatLevel === 'CRITICAL' ? 'threat_detected' : 'secure')
           let currentResponse = ""
           const words = step.response.split(' ')
-          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+          setMessages(prev => [...prev, { role: 'assistant', content: '', threat: step.threatLevel }])
+          
           for (let i = 0; i < words.length; i++) {
             currentResponse += (i === 0 ? '' : ' ') + words[i]
             setMessages(prev => {
@@ -67,7 +80,7 @@ const DemoChatContent = () => {
             })
             await wait(15) 
           }
-          await wait(5000)
+          await wait(4000)
         }
         setMessages([])
       }
@@ -76,77 +89,123 @@ const DemoChatContent = () => {
     return () => { isMounted = false }
   }, [])
 
-  const formatContent = (text) => {
-    const keywords = ["RISK ALERT", "CRITICAL", "FINANCIAL IMPACT"]
-    for (const key of keywords) {
-      if (text.includes(key)) {
-        const parts = text.split(key)
-        return <span key={key}><span className="font-bold text-[#CD3636]">{key}</span>{parts[1]}</span>
-      }
-    }
-    return text
+  const formatContent = (text, threat) => {
+    const isCritical = threat === 'CRITICAL' || threat === 'HIGH';
+    const colorClass = isCritical ? 'text-red-600' : 'text-orange-600';
+    
+    // Highlight key alerts
+    const keywords = ["VIOLATION DETECTED", "SANITATION FAILURE", "STORAGE HAZARD", "ACTION:", "THREAT:"];
+    
+    // Simple parser to highlight keywords
+    let formattedText = text;
+    keywords.forEach(key => {
+        if (formattedText.includes(key)) {
+            const parts = formattedText.split(key);
+            formattedText = (
+                <span>
+                    {parts[0]}
+                    <span className={`font-bold ${key.includes("ACTION") ? 'text-slate-900' : colorClass}`}>{key}</span>
+                    {parts[1]}
+                </span>
+            );
+        }
+    });
+    return formattedText;
   }
 
   return (
-    // Fixed Dimensions, Heavy Shadow, "Floating App" Feel
-    <div className="flex flex-col h-[520px] w-full md:w-[460px] bg-white/80 backdrop-blur-xl rounded-[24px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] border border-white/50 ring-1 ring-black/5 overflow-hidden relative z-20 shrink-0 transform-gpu transition-all hover:scale-[1.005] duration-700">
+    // "Fortinet" Appliance Look: Thick borders, status lights, rigid structure
+    <div className="flex flex-col h-[540px] w-full md:w-[500px] bg-[#F8FAFC] rounded-xl shadow-[0_0_0_1px_rgba(15,23,42,0.08),0_20px_40px_-10px_rgba(15,23,42,0.15)] overflow-hidden relative z-20 shrink-0 border-t-4 border-t-[#0F172A]">
       
-      {/* Header */}
-      <div className="h-16 bg-white/50 backdrop-blur-md border-b border-slate-200/50 flex items-center px-6 justify-between shrink-0">
-        <div className="flex flex-col">
-            <span className="font-bold text-slate-800 text-[13px] tracking-tight">Protocol Intelligence</span>
-            <span className="text-[10px] text-slate-400 font-medium">Michigan Enforcement Database</span>
+      {/* Header: Threat Monitor Bar */}
+      <div className="h-14 bg-white border-b border-slate-200 flex items-center px-5 justify-between shrink-0">
+        <div className="flex items-center gap-3">
+             <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">Liability_Shield™</span>
+                <span className="text-[9px] font-mono text-slate-400">WASHTENAW_NODE_04</span>
+             </div>
         </div>
-        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-            <div className="w-2 h-2 bg-[#0055FF] rounded-full shadow-[0_0_10px_rgba(0,85,255,0.5)] animate-pulse"></div>
+        
+        {/* Dynamic Status Indicator */}
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+            status === 'scanning' ? 'bg-blue-50 border-blue-100 text-blue-700' :
+            status === 'threat_detected' ? 'bg-red-50 border-red-100 text-red-700' :
+            'bg-emerald-50 border-emerald-100 text-emerald-700'
+        }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${
+                status === 'scanning' ? 'bg-blue-600 animate-pulse' :
+                status === 'threat_detected' ? 'bg-red-600 animate-ping' :
+                'bg-emerald-600'
+            }`}></div>
+            {status === 'scanning' ? 'ANALYZING THREAT...' : 
+             status === 'threat_detected' ? 'RISK DETECTED' : 'SYSTEM SECURE'}
         </div>
       </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-        {messages.length === 0 && !isTyping && (
-          <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
-             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-             </div>
-             <span className="text-xs font-semibold text-slate-400">System Secure</span>
-          </div>
-        )}
-        
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-            <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm border ${
-              msg.role === 'user' 
-                ? 'bg-[#0A2540] text-white border-[#0A2540] rounded-br-none' 
-                : 'bg-white text-slate-600 border-slate-100 rounded-bl-none'
-            }`}>
-               {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
-            </div>
-          </div>
-        ))}
+      {/* Messages: Security Log Style */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-5 bg-[#F1F5F9] font-mono text-sm relative">
+        {/* Subtle Grid Background for that "CrowdStrike" Map feel */}
+        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:20px_20px]"></div>
 
-        {isThinking && (
-           <div className="flex justify-start animate-in fade-in zoom-in duration-300">
-              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none border border-slate-100 flex gap-1.5 shadow-sm items-center">
-                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"></div>
-                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+        {messages.length === 0 && !isTyping && (
+           <div className="absolute inset-0 flex items-center justify-center z-10">
+              <div className="flex flex-col items-center gap-3 opacity-30">
+                 <div className="w-16 h-16 border-2 border-slate-400 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 border-2 border-slate-400 rounded-full flex items-center justify-center">
+                         <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                    </div>
+                 </div>
+                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Awaiting Incident Data</div>
               </div>
            </div>
         )}
+
+        {messages.map((msg, i) => (
+          <div key={i} className={`relative z-10 flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+            
+            {msg.role === 'assistant' && (
+                <div className="flex items-center gap-2 mb-1.5">
+                    {msg.threat === 'CRITICAL' || msg.threat === 'HIGH' ? (
+                        <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                    ) : (
+                        <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    )}
+                    <span className={`text-[9px] font-bold uppercase ${msg.threat === 'CRITICAL' ? 'text-red-700' : 'text-slate-500'}`}>
+                        {msg.threat === 'CRITICAL' ? 'Critical Violation' : 'Regulatory Response'}
+                    </span>
+                </div>
+            )}
+
+            <div className={`max-w-[90%] p-4 rounded-lg text-xs leading-5 shadow-sm border ${
+              msg.role === 'user' 
+                ? 'bg-white text-slate-700 border-slate-200' 
+                : msg.threat === 'CRITICAL' || msg.threat === 'HIGH'
+                    ? 'bg-red-50 text-slate-800 border-red-100' // Red tint for "Threats"
+                    : 'bg-white text-slate-600 border-slate-200'
+            }`}>
+               {msg.role === 'assistant' ? formatContent(msg.content, msg.threat) : msg.content}
+            </div>
+          </div>
+        ))}
+        
+        {/* Scanning Animation */}
+        {status === 'scanning' && (
+           <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-100 bg-blue-50/50 animate-in fade-in relative z-10">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Scanning Regulatory Database...</span>
+           </div>
+        )}
       </div>
 
-      {/* Input */}
-      <div className="p-4 bg-white/50 backdrop-blur-md border-t border-slate-200/50 shrink-0">
-        <div className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm transition-all focus-within:ring-2 focus-within:ring-[#0055FF]/20 focus-within:border-[#0055FF]">
-           <div className="flex-1 text-[13px] text-slate-700 font-medium h-5 flex items-center overflow-hidden">
+      {/* Input: Command Line Feel */}
+      <div className="p-4 bg-white border-t border-slate-200 shrink-0 z-20">
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-300 px-4 py-3 rounded-md focus-within:ring-2 focus-within:ring-slate-900 focus-within:border-transparent transition-all">
+           <span className="text-slate-400 font-mono text-xs">&gt;</span>
+           <div className="flex-1 font-mono text-xs text-slate-800 h-4 flex items-center">
               {inputValue}
-              {isTyping && <span className="w-0.5 h-4 bg-[#0055FF] ml-0.5 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-300">Ask about liability...</span>}
+              {isTyping && <span className="w-1.5 h-3 bg-slate-800 ml-1 animate-pulse"></span>}
+              {!inputValue && !isTyping && <span className="text-slate-400">Enter operational query...</span>}
            </div>
-           <button className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${inputValue ? 'bg-[#0055FF] text-white shadow-md' : 'bg-slate-100 text-slate-300'}`}>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-           </button>
         </div>
       </div>
     </div>
@@ -169,7 +228,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
 }
 
-// --- AUTH MODAL ---
+// --- AUTH MODAL (Clean, Corporate) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [view, setView] = useState(defaultView)
   const [email, setEmail] = useState('')
@@ -178,26 +237,29 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A2540]/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-full max-w-[360px] bg-white shadow-2xl p-8 rounded-[24px] relative animate-in zoom-in-95 duration-300 slide-in-from-bottom-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-[400px] bg-white shadow-2xl p-10 rounded-xl relative animate-in slide-in-from-bottom-4 duration-300">
         <button onClick={onClose} className="absolute top-6 right-6 text-slate-300 hover:text-slate-800 transition-colors">✕</button>
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-[#0A2540] tracking-tight mb-2">{view === 'signup' ? 'Request Access' : 'Sign In'}</h2>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">Secure portal for multi-unit operators.</p>
+        <div className="mb-8 border-l-4 border-[#0F172A] pl-4">
+          <h2 className="text-lg font-bold text-[#0F172A] tracking-wide uppercase mb-1">{view === 'signup' ? 'New Deployment' : 'Operator Login'}</h2>
+          <p className="text-xs text-slate-500 font-medium">Authentication required.</p>
         </div>
         <div className="space-y-4">
           <div className="space-y-1">
-             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider ml-1">Work Email</label>
-             <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#0055FF] focus:ring-1 focus:ring-[#0055FF] transition-all placeholder:text-slate-300" placeholder="name@company.com" />
+             <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Corporate ID / Email</label>
+             <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded text-sm font-medium outline-none focus:border-[#0F172A] focus:ring-1 focus:ring-[#0F172A] transition-all" />
           </div>
           <div className="space-y-1">
-             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider ml-1">Password</label>
-             <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#0055FF] focus:ring-1 focus:ring-[#0055FF] transition-all placeholder:text-slate-300" placeholder="••••••••" />
+             <label className="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Password</label>
+             <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded text-sm font-medium outline-none focus:border-[#0F172A] focus:ring-1 focus:ring-[#0F172A] transition-all" />
           </div>
-          <button className="w-full bg-[#0055FF] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest hover:bg-[#0044CC] hover:shadow-lg hover:shadow-blue-500/20 transition-all active:scale-[0.98] mt-2">{loading ? 'Processing...' : (view === 'signup' ? 'Start Trial' : 'Access Dashboard')}</button>
+          <button className="w-full bg-[#0F172A] text-white font-bold py-4 rounded text-xs uppercase tracking-widest hover:bg-[#1E293B] hover:shadow-lg transition-all active:scale-[0.98] mt-2 flex justify-center items-center gap-2">
+             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+             {loading ? 'Authenticating...' : (view === 'signup' ? 'Initiate Trial' : 'Secure Login')}
+          </button>
         </div>
-        <div className="mt-8 pt-6 border-t border-slate-50 text-center">
-            <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-[11px] font-bold text-slate-400 hover:text-[#0055FF] transition-colors">{view === 'signup' ? 'Have an account? Sign in' : 'No account? Request access'}</button>
+        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+            <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#0F172A] transition-colors">{view === 'signup' ? 'Already Deployed? Login' : 'Need Access? Contact Sales'}</button>
         </div>
       </div>
     </div>
@@ -217,122 +279,128 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#FDFDFD] font-sans text-slate-900 flex flex-col relative overflow-hidden selection:bg-[#0055FF] selection:text-white">
+    <div className="min-h-screen w-full bg-[#FAFAFA] font-sans text-slate-900 flex flex-col relative overflow-hidden selection:bg-[#0F172A] selection:text-white">
       
-      {/* Background: Very subtle mesh, high-end clean feel */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-         <div className="absolute top-0 left-0 w-full h-[800px] bg-gradient-to-b from-blue-50/50 via-white to-white"></div>
-         <div className="absolute -top-[400px] -right-[200px] w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl"></div>
+      {/* Background: Clean, minimal map pattern (CrowdStrike style) */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+          <div className="absolute inset-0 bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:16px_16px]"></div>
       </div>
 
-      {/* NAV: Floating "Island" - Cleaner, smaller */}
-      <nav className={`fixed top-6 left-0 right-0 z-50 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="max-w-fit mx-auto bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-2 py-2 flex items-center gap-2">
-            <div className="pl-4 pr-6 flex items-center gap-2.5">
-                <div className="w-5 h-5 bg-[#0055FF] rounded-md flex items-center justify-center shadow-sm">
-                   <div className="w-2.5 h-2.5 border-2 border-white rounded-full"></div>
+      {/* NAV: High-End "Dock" */}
+      <nav className={`fixed top-8 left-0 right-0 z-50 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="max-w-fit mx-auto bg-white/90 backdrop-blur-xl border border-slate-200 shadow-xl shadow-slate-200/50 rounded-full px-2 py-2 flex items-center gap-4">
+            <div className="pl-6 pr-6 flex items-center gap-3 border-r border-slate-100">
+                {/* Logo Icon */}
+                <div className="w-5 h-5 bg-[#0F172A] rotate-45 flex items-center justify-center">
+                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-                <span className="text-sm font-bold tracking-tight text-[#0A2540]">protocol<span className="text-[#0055FF]">LM</span></span>
+                <span className="text-sm font-bold tracking-tight text-[#0F172A]">protocol<span className="text-slate-400">LM</span></span>
             </div>
-            <div className="hidden md:flex items-center gap-1 pl-4 border-l border-slate-100">
-                <button onClick={() => router.push('/pricing')} className="px-4 py-1.5 text-[11px] font-bold text-slate-500 hover:text-[#0A2540] transition-colors">Pricing</button>
-                <button onClick={() => openAuth('login')} className="px-4 py-1.5 text-[11px] font-bold text-slate-500 hover:text-[#0A2540] transition-colors">Sign In</button>
+            
+            <div className="hidden md:flex items-center gap-2 pl-2">
+                <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-[#0F172A] transition-colors">Pricing</button>
+                <button onClick={() => openAuth('login')} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-[#0F172A] transition-colors">Login</button>
             </div>
-            <button onClick={() => openAuth('signup')} className="ml-1 px-5 py-2 bg-[#0A2540] text-white text-[11px] font-bold uppercase tracking-wide rounded-full hover:bg-[#051525] hover:shadow-lg hover:shadow-slate-900/10 transition-all active:scale-95">
+            <button onClick={() => openAuth('signup')} className="ml-2 px-6 py-2.5 bg-[#0F172A] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-slate-800 hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
                 Get Protected
             </button>
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between pt-36 pb-20 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-[1300px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between pt-40 pb-20 gap-20 relative z-10">
         
-        {/* LEFT COLUMN: Copy & Financial Stats */}
+        {/* LEFT COLUMN: The "Security Pitch" */}
         <div className={`flex-1 max-w-[600px] flex flex-col items-start transition-all duration-1000 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
-          <h1 className="text-5xl lg:text-[4.5rem] font-bold text-[#0A2540] leading-[1.05] tracking-tight mb-8">
-            Protect the <br/>
-            <span className="text-[#0055FF]">bottom line.</span>
+          <div className="inline-flex items-center gap-2 mb-8 px-3 py-1 bg-white border border-slate-200 rounded-full shadow-sm">
+             <svg className="w-3 h-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Enterprise Liability Defense</span>
+          </div>
+
+          <h1 className="text-5xl lg:text-7xl font-bold text-[#0F172A] leading-[1] tracking-tight mb-8">
+            Your reputation <br/>
+            <span className="text-slate-400">firewall.</span>
           </h1>
           
-          <p className="text-[17px] text-slate-500 font-medium leading-relaxed max-w-lg mb-12">
-            Health inspections aren't just bureaucracy—they are financial risks. We monitor <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data to prevent revenue loss.
+          <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-lg mb-12">
+            Health inspections are the greatest threat to franchise valuation. ProtocolLM uses enforcement intelligence to detect and block violations before they become public record.
           </p>
 
-          {/* FINANCIAL LOSS CARDS (Robinhood Style) */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+          {/* FINANCIAL THREAT CARDS (Rebranded as Security Threats) */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-5 mb-12">
              
-             {/* Card 1: Revenue Drop */}
-             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
-                <div className="flex justify-between items-start mb-4">
-                   <div className="p-2 bg-red-50 rounded-lg text-red-600 group-hover:bg-red-100 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Revenue</span>
+             {/* Card 1 */}
+             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm hover:border-red-100 hover:shadow-lg hover:shadow-red-500/5 transition-all duration-300 group cursor-default relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Revenue Threat</div>
+                <div className="text-3xl font-bold text-[#0F172A] mb-1 flex items-center gap-2">
+                   <CountUp end={12} suffix="%" duration={2000} />
+                   <span className="text-xs text-red-500 font-normal">LOSS</span>
                 </div>
-                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={12} suffix="%" duration={2000} /></div>
-                <div className="text-[11px] font-medium text-slate-500 leading-tight">Drop in sales after one bad grade.</div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Projected annual sales drop after one Critical Violation.</div>
              </div>
 
-             {/* Card 2: Incident Cost */}
-             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
-                <div className="flex justify-between items-start mb-4">
-                   <div className="p-2 bg-slate-50 rounded-lg text-slate-600 group-hover:bg-slate-100 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg Cost</span>
+             {/* Card 2 */}
+             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm hover:border-orange-100 hover:shadow-lg hover:shadow-orange-500/5 transition-all duration-300 group cursor-default relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Incident Cost</div>
+                <div className="text-3xl font-bold text-[#0F172A] mb-1 flex items-center gap-2">
+                   <CountUp end={75} prefix="$" suffix="k" duration={2200} />
+                   <span className="text-xs text-orange-500 font-normal">AVG</span>
                 </div>
-                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={75} prefix="$" suffix="k" duration={2200} /></div>
-                <div className="text-[11px] font-medium text-slate-500 leading-tight">Legal fees & lost business per incident.</div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Legal fees, fines, and PR crisis management per incident.</div>
              </div>
 
-             {/* Card 3: Fine Hike */}
-             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
-                <div className="flex justify-between items-start mb-4">
-                   <div className="p-2 bg-slate-50 rounded-lg text-slate-600 group-hover:bg-slate-100 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                   </div>
-                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fines</span>
+             {/* Card 3 */}
+             <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm hover:border-slate-300 hover:shadow-lg transition-all duration-300 group cursor-default relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-slate-800"></div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Penalty Multiplier</div>
+                <div className="text-3xl font-bold text-[#0F172A] mb-1 flex items-center gap-2">
+                   <CountUp end={2.5} suffix="x" decimals={1} duration={2400} />
+                   <span className="text-xs text-slate-400 font-normal">HIKE</span>
                 </div>
-                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={2.5} suffix="x" decimals={1} duration={2400} /></div>
-                <div className="text-[11px] font-medium text-slate-500 leading-tight">Penalty multiplier for repeat violations.</div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Automatic fine escalation for repeat offenders.</div>
              </div>
           </div>
 
-          <button onClick={() => openAuth('signup')} className="w-full sm:w-auto bg-[#0A2540] text-white px-8 py-4 rounded-xl font-bold text-[13px] uppercase tracking-widest hover:bg-[#051525] transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98]">
-            Start 30-Day Risk Audit
+          <button onClick={() => openAuth('signup')} className="bg-[#0F172A] text-white px-10 py-5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-[#1E293B] transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] flex items-center gap-3 w-full sm:w-auto justify-center">
+            <span>Activate Liability Shield</span>
+            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
           </button>
 
         </div>
 
-        {/* RIGHT COLUMN: Chat Demo */}
+        {/* RIGHT COLUMN: The "Security Console" */}
         <div className={`flex-1 flex justify-center lg:justify-end transition-all duration-1000 delay-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
-            <div className="relative group">
-                {/* Subtle blue glow behind chat */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/50 rounded-full blur-[80px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                <DemoChatContent />
+            <div className="relative">
+                {/* Decorative "Security Lines" */}
+                <div className="absolute -top-10 -right-10 w-64 h-64 border border-dashed border-slate-200 rounded-full animate-[spin_60s_linear_infinite]"></div>
+                <div className="absolute -bottom-10 -left-10 w-64 h-64 border border-dashed border-slate-200 rounded-full animate-[spin_40s_linear_infinite_reverse]"></div>
                 
-                {/* Trust Badge */}
-                <div className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] border border-white flex items-center gap-3 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700 delay-500">
-                    <div className="flex -space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-[#0A2540] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">M</div>
-                        <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white"></div>
-                        <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white"></div>
+                <SecurityChat />
+                
+                {/* "Secured By" Badge */}
+                <div className="absolute -bottom-6 -right-6 bg-white py-4 px-6 rounded-lg shadow-xl border border-slate-100 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+                    <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                     </div>
                     <div>
-                        <div className="text-[11px] font-bold text-[#0A2540]">Trusted by Franchises</div>
-                        <div className="text-[9px] font-medium text-slate-400">Syncing 500+ Locations</div>
+                        <div className="text-[11px] font-bold text-[#0F172A] uppercase tracking-wide">Protocol Secured</div>
+                        <div className="text-[10px] font-medium text-slate-500">Monitoring 524 Locations</div>
                     </div>
                 </div>
             </div>
         </div>
       </div>
 
-      <div className="w-full py-8 border-t border-slate-100 relative z-10 mt-auto bg-white/50 backdrop-blur-sm">
-        <div className="max-w-[1280px] mx-auto px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
-           <span>© 2025 Protocol Systems</span>
-           <div className="flex gap-6">
-                <a href="#" className="hover:text-[#0055FF] transition-colors">Privacy</a>
-                <a href="#" className="hover:text-[#0055FF] transition-colors">Terms</a>
+      <div className="w-full py-10 border-t border-slate-200 relative z-10 mt-auto bg-white">
+        <div className="max-w-[1300px] mx-auto px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+           <span>© 2025 Protocol Systems Inc. Detroit, MI</span>
+           <div className="flex gap-8">
+                <a href="#" className="hover:text-[#0F172A] transition-colors">Data Security</a>
+                <a href="#" className="hover:text-[#0F172A] transition-colors">Compliance Map</a>
+                <a href="#" className="hover:text-[#0F172A] transition-colors">Terms</a>
            </div>
         </div>
       </div>
