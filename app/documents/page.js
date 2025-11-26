@@ -12,7 +12,7 @@ const COUNTY_NAMES = {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-// --- NEW COMPONENT: Framer-style Mode Selector ---
+// --- NEW COMPONENT: Clean Mode Selector ---
 const ModeSelector = ({ currentMode, onSelect, onClose }) => {
   const modes = [
     { id: 'chat', label: 'Standard Query', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg> },
@@ -100,7 +100,11 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     if (userCounty && messages.length === 0) {
-      setMessages([{ role: 'assistant', content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`, citations: [] }])
+      setMessages([{ 
+        role: 'assistant', 
+        content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
+        citations: []
+      }])
     }
   }, [userCounty])
 
@@ -264,6 +268,7 @@ export default function DocumentsPage() {
     else if (mode === 'image') fileInputRef.current?.click()
   }
 
+  const generateMemo = () => handleSendMessage(null, "Generate a formal Staff Memo based on our conversation. Format it with: DATE, TO: All Staff, FROM: Management, SUBJECT: Corrective Actions Required. List each violation discussed, the specific code section it violates, why it matters, and the required corrective action.")
   const handlePrint = () => window.print()
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
@@ -293,6 +298,7 @@ export default function DocumentsPage() {
         }
       `}</style>
 
+      {/* MODALS */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-2xl">
@@ -387,7 +393,10 @@ export default function DocumentsPage() {
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
           </div>
           <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
-          <div className="w-6"></div> 
+          <div className="flex items-center gap-2">
+             <button onClick={generateMemo} className="hidden sm:flex bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors shadow-sm">Generate Memo</button>
+             <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm">Save PDF</button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
@@ -398,7 +407,7 @@ export default function DocumentsPage() {
                   {msg.image && <img src={msg.image} alt="Analysis" className="mb-3 rounded-xl border border-white/20 max-w-sm w-full h-auto" />}
                   {msg.role === 'assistant' && (
                     <div className="flex items-center gap-2 mb-2 no-print">
-                      <div className="w-2 h-2 rounded-full bg-[#6b85a3]"></div> {/* Clean Dot instead of AI badge */}
+                      <div className="w-2 h-2 rounded-full bg-[#6b85a3]"></div>
                       <span className="font-bold text-xs text-slate-900 font-sans tracking-tight">ProtocolLM</span>
                     </div>
                   )}
@@ -412,6 +421,25 @@ export default function DocumentsPage() {
         </div>
 
         <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print relative">
+          
+          {/* --- NEW: QUICK ACTION CHIPS (No Emojis, Clean Style) --- */}
+          {messages.length === 0 && !image && (
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar">
+              <button onClick={() => setInput("My prep cook has a sore throat and fever. What is the exact FDA exclusion rule?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full hover:border-[#6b85a3] hover:text-[#6b85a3] transition-colors whitespace-nowrap">
+                Sick Employee Rule
+              </button>
+              <button onClick={() => setInput("What is the max cooling time for chili from 135F to 70F? And what if we miss it?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full hover:border-[#6b85a3] hover:text-[#6b85a3] transition-colors whitespace-nowrap">
+                Cooling Requirements
+              </button>
+              <button onClick={() => setInput("We found mouse droppings in dry storage. Do we need to close immediately?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full hover:border-[#6b85a3] hover:text-[#6b85a3] transition-colors whitespace-nowrap">
+                Pest / Imminent Hazard
+              </button>
+              <button onClick={() => setInput("Create a cleaning schedule checklist for the meat slicer based on FDA code.")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full hover:border-[#6b85a3] hover:text-[#6b85a3] transition-colors whitespace-nowrap">
+                Slicer Cleaning
+              </button>
+            </div>
+          )}
+
           {image && <div className="max-w-6xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-xl border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           
           <form onSubmit={handleSendMessage} className="max-w-6xl mx-auto relative">
@@ -430,7 +458,6 @@ export default function DocumentsPage() {
               
               <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-xl active:scale-95 ${isLoading || (!input.trim() && !image) ? 'text-slate-300' : 'text-white bg-[#6b85a3] hover:opacity-90 shadow-md'}`}>
                 {isLoading ? <svg className="w-5 h-5 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : 
-                /* ROTATED SEND ICON */
                 <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
               </button>
             </div>
