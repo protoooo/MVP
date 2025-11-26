@@ -18,19 +18,35 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // UPDATED: Specific County Document Citations
+  // UPDATED: 7 Hyper-Local Scenarios (Washtenaw, Oakland, Wayne/MI)
   const SEQUENCE = [
     {
-      text: "We got a 'Chronic Violation' notice from Washtenaw County. What does that actually mean?",
-      response: "ACTION REQUIRED: According to 'Washtenaw Enforcement Action Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2). You must submit a Risk Control Plan immediately."
+      text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
+      response: "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
     },
     {
-      text: "Oakland County inspector said our new manager needs certification. Is there a grace period?",
-      response: "YES. 'Oakland County Sanitary Code Article IV, Sec 4.4' grants a 3-month grace period to replace a Certified Food Service Manager if the previous one left employment. You must notify the Health Division immediately."
+      text: "Our certified manager quit yesterday. Do we have to close the kitchen?",
+      response: "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties."
     },
     {
-      text: "Can we use the 3-compartment sink to thaw chicken if we are busy?",
-      response: "VIOLATION. Michigan Modified Food Code 3-501.13 requires thawing under running water <70°F. Using a warewashing sink for food prep without a full clean/sanitize step in between is a Cross-Contamination risk."
+      text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
+      response: "VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission."
+    },
+    {
+      text: "The floor drain is backing up in the dish room. Can we just mop it and keep serving?",
+      response: "IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized."
+    },
+    {
+      text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
+      response: "CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage."
+    },
+    {
+      text: "We want to start vacuum packing our steaks. Do we need a special permit?",
+      response: "YES. Reduced Oxygen Packaging (ROP) requires a HACCP Plan and often a Variance under Michigan Modified Food Code 3-502.11. You must submit this plan to the regulatory authority for approval BEFORE starting."
+    },
+    {
+      text: "What is the exact cooling requirement for the chili we made this morning?",
+      response: "TWO-STAGE COOLING: FDA Code 3-501.14. 1) Cool from 135°F to 70°F within 2 hours. 2) Cool from 70°F to 41°F within the next 4 hours (Total 6 hours). If you miss the first 2-hour window, you must reheat to 165°F and restart."
     }
   ]
 
@@ -83,7 +99,6 @@ const DemoChatContent = () => {
   return (
     <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative z-0 transform-gpu">
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
-        {/* THE "3M" LOOK: Heavy Bold, Tight Tracking */}
         <span className="font-bold text-slate-900 text-sm tracking-tighter">protocol<span className="text-[#6b85a3]">LM</span></span>
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
           <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -215,71 +230,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- DATA INGESTION BEAM ANIMATION (FIXED) ---
-const DataIngestionSection = () => {
-  return (
-    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
-      <div className="mb-16">
-        <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
-        <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
-      </div>
-      
-      <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
-        {/* TOP SOURCES (3 Items) */}
-        <div className="grid grid-cols-3 gap-8 w-full max-w-3xl z-10">
-          {['Washtenaw County', 'Wayne County', 'Oakland County'].map((src, i) => (
-            <div key={i} className="flex justify-center">
-              <div className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
-                <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
-                {src}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* SVG BEAMS (FIXED VISIBILITY) */}
-        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
-           <div className="w-full max-w-3xl h-full relative">
-             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
-               <defs>
-                 <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                   <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
-                   <stop offset="100%" stopColor="#6b85a3" stopOpacity="0.8" />
-                 </linearGradient>
-               </defs>
-               
-               {/* Left Path */}
-               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
-               {/* Center Path */}
-               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
-               {/* Right Path */}
-               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
-               
-               {/* Animated Particles - LARGER & FASTER */}
-               <circle r="4" fill="#6b85a3">
-                 <animateMotion dur="2.5s" repeatCount="indefinite" path="M130 60 C 130 200, 400 180, 400 280" />
-               </circle>
-               <circle r="4" fill="#6b85a3">
-                 <animateMotion dur="2.5s" begin="0.3s" repeatCount="indefinite" path="M400 60 L 400 280" />
-               </circle>
-               <circle r="4" fill="#6b85a3">
-                 <animateMotion dur="2.5s" begin="0.6s" repeatCount="indefinite" path="M670 60 C 670 200, 400 180, 400 280" />
-               </circle>
-             </svg>
-           </div>
-        </div>
-
-        {/* CENTRAL BRAIN (Clean, Shadow Only) */}
-        <div className="z-10 mt-auto transform translate-y-4">
-          <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
-            <span className="font-bold text-xl tracking-tighter">protocol<span className="text-white/80">LM</span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // --- MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
@@ -301,6 +251,7 @@ function MainContent() {
       
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* MATCHING LOGO FONT: Bold, Tracking-Tighter */}
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -313,7 +264,7 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-40 pb-32 gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -324,23 +275,23 @@ function MainContent() {
           <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95">
             Start 30-Day Free Trial
           </button>
-          <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
-            <span className="text-xs uppercase tracking-widest font-bold">Works on any device</span>
-            <div className="flex gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H7V4h10v16z"/></svg>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 2 2h7l-2 3v1h8v-1l-2-3h7a2 2 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
-            </div>
+          
+          {/* SIMPLE COMPACT DATA LABEL (No Animation) */}
+          <div className="mt-8 pt-6 border-t border-slate-100">
+             <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                {['Washtenaw', 'Wayne', 'Oakland', 'Michigan', 'Federal'].map((src, i) => (
+                  <div key={i} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full"></div>
+                    {src}
+                  </div>
+                ))}
+             </div>
           </div>
+
         </div>
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
-      </div>
-
-      {/* NEW DATA INGESTION SECTION */}
-      <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-        <DataIngestionSection />
       </div>
       
       <div className="w-full py-8 text-center bg-white border-t border-slate-200">
