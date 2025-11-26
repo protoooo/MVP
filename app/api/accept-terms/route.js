@@ -31,6 +31,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Must accept both terms and privacy policy' }, { status: 400 })
     }
 
+    // ✅ ADDED: Get user's IP and user agent for audit trail
+    const clientIp = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+
     const { error } = await supabase
       .from('user_profiles')
       .update({ 
@@ -42,6 +48,9 @@ export async function POST(request) {
       .eq('id', session.user.id)
 
     if (error) throw error
+
+    // ✅ ADDED: Log acceptance for audit trail
+    console.log(`✅ Terms accepted by user ${session.user.id} from IP: ${clientIp}`);
 
     return NextResponse.json({ success: true })
   } catch (error) {
