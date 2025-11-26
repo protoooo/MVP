@@ -31,6 +31,22 @@ const DemoChatContent = () => {
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
       response: "VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission."
+    },
+    {
+      text: "The floor drain is backing up in the dish room. Can we just mop it and keep serving?",
+      response: "IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized."
+    },
+    {
+      text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
+      response: "CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage."
+    },
+    {
+      text: "We want to start vacuum packing our steaks. Do we need a special permit?",
+      response: "YES. Reduced Oxygen Packaging (ROP) requires a HACCP Plan and often a Variance under Michigan Modified Food Code 3-502.11. You must submit this plan to the regulatory authority for approval BEFORE starting."
+    },
+    {
+      text: "What is the exact cooling requirement for the chili we made this morning?",
+      response: "TWO-STAGE COOLING: FDA Code 3-501.14. 1) Cool from 135°F to 70°F within 2 hours. 2) Cool from 70°F to 41°F within the next 4 hours (Total 6 hours). If you miss the first 2-hour window, you must reheat to 165°F and restart."
     }
   ]
 
@@ -80,7 +96,7 @@ const DemoChatContent = () => {
     return () => { isMounted = false }
   }, [])
 
-  // Highlight Logic (Using Deep Navy for emphasis instead of Eggplant)
+  // Highlight Logic
   const formatContent = (text) => {
     const keywords = ["CRITICAL ACTION", "VIOLATION", "IMMINENT HEALTH HAZARD", "CORE VIOLATION", "ACTION REQUIRED"]
     for (const key of keywords) {
@@ -252,13 +268,13 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* --- BACKGROUND IMAGE (Subtle) --- */}
+      {/* --- BACKGROUND IMAGE (UPDATED: Opacity 25% for visibility) --- */}
       <div className="absolute inset-0 z-0 pointer-events-none">
          <Image 
            src="/background.png" 
            alt="Background" 
            fill 
-           className="object-cover opacity-20" 
+           className="object-cover opacity-25" 
            priority
          />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
@@ -266,7 +282,6 @@ function MainContent() {
 
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* Dark Blue Logo */}
           <h1 className="text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -281,7 +296,6 @@ function MainContent() {
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-28 pb-24 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {/* Dark Blue Header */}
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
           </h2>
