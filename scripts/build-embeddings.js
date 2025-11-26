@@ -9,7 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function generateEmbeddings() {
-  // 1. Get API Key (Use the AIza... string, it's easier for scripts)
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     console.error('❌ Missing GEMINI_API_KEY');
@@ -20,7 +19,7 @@ async function generateEmbeddings() {
   const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
   const documentsDir = path.join(__dirname, '../public/documents');
-  const outputDir = path.join(__dirname, '../public/documents'); // Save JSONs next to folders
+  const outputDir = path.join(__dirname, '../public/documents'); 
   
   const counties = ['washtenaw', 'wayne', 'oakland'];
   
@@ -46,16 +45,12 @@ async function generateEmbeddings() {
       try {
         const data = await pdf(dataBuffer);
         const text = data.text;
-        
-        // Split text into chunks (approx 1000 chars)
         const chunks = text.match(/[\s\S]{1,1000}/g) || [];
         
         console.log(`   📄 ${file}: ${chunks.length} chunks`);
 
         for (let i = 0; i < chunks.length; i++) {
           const chunk = chunks[i].replace(/\n/g, ' ');
-          
-          // Generate Embedding
           const result = await model.embedContent(chunk);
           const embedding = result.embedding.values;
 
@@ -65,7 +60,7 @@ async function generateEmbeddings() {
             metadata: {
               filename: file,
               county: county,
-              page: i + 1 // Rough approximation of page
+              page: i + 1 
             }
           });
         }
@@ -74,7 +69,6 @@ async function generateEmbeddings() {
       }
     }
 
-    // Save to JSON
     const outputPath = path.join(outputDir, `${county}-embeddings.json`);
     fs.writeFileSync(outputPath, JSON.stringify(countyEmbeddings, null, 2));
     console.log(`✅ Saved ${countyEmbeddings.length} vectors to ${outputPath}`);
