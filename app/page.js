@@ -350,3 +350,24 @@ function MainContent() {
       <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
+           <span>© 2025 protocolLM</span>
+           <a href="/privacy" className="hover:text-[#0077B6]">Privacy</a>
+        </div>
+      </div>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
+      
+      <style jsx global>{`
+        @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
+      `}</style>
+    </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <MainContent />
+    </Suspense>
+  )
+}
