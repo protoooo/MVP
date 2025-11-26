@@ -5,31 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- LIVE ENFORCEMENT TICKER (Fixed Syntax) ---
-const Ticker = () => {
-  return (
-    <div className="w-full bg-[#0F172A] text-white overflow-hidden py-2 border-b border-slate-800 relative z-50">
-      <div className="animate-marquee whitespace-nowrap flex gap-12 text-[10px] font-mono tracking-widest uppercase items-center">
-        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>WASHTENAW: Priority Violation (Sec 4-501.114)</span>
-        <span className="text-slate-500">|</span>
-        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-orange-500"></span>WAYNE: Imminent Health Hazard (Sewage)</span>
-        <span className="text-slate-500">|</span>
-        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span>OAKLAND: Risk Control Plan Approved</span>
-        <span className="text-slate-500">|</span>
-        {/* FIXED: Changed '->' to '&rarr;' to prevent build error */}
-        <span className="flex items-center gap-2">MACOMB: Cold Holding Failure (38°F &rarr; 45°F)</span>
-        <span className="text-slate-500">|</span>
-        <span className="text-blue-400">PROTOCOL_LM: ACTIVE MONITORING 524 LOCATIONS</span>
-      </div>
-      <style jsx>{`
-        .animate-marquee { animation: marquee 30s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-      `}</style>
-    </div>
-  )
-}
-
-// --- CHAT DEMO BOX (Architecturally Locked) ---
+// --- CHAT DEMO BOX (Stripe/Apple Aesthetic) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -37,7 +13,6 @@ const DemoChatContent = () => {
   const [isThinking, setIsThinking] = useState(false)
   const scrollRef = useRef(null)
 
-  // Auto-scroll that adheres to the container bounds
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -46,16 +21,16 @@ const DemoChatContent = () => {
 
   const SEQUENCE = [
     {
-      text: "Inspector just flagged 'Cold Holding' at 44°F. Do we toss the product?",
-      response: "ANALYSIS: If product has been above 41°F for <2 hours, you may RAPIDLY COOL it. If >2 hours (or unknown), DISCARD IMMEDIATELY per MI Food Code 3-501.16. Document the corrective action log now to avoid a Priority Violation citation."
+      text: "The GM just quit. Can we run the shift without a certified manager?",
+      response: "RISK ALERT: Operating without a Certified Food Manager violates 'Oakland Sanitary Code Sec 4.4'. You have a 90-day grace period, but you MUST notify the department within 24 hours to avoid a closure order."
     },
     {
-      text: "Can I use the 3-comp sink for thawing chicken if prep is full?",
-      response: "NEGATIVE. Cross-contamination risk (Sec 3-501.13). Thawing must occur under running water <70°F in a designated prep sink with an air gap. Using the 3-comp sink constitutes a Priority Foundation violation."
+      text: "Inspector found a backed-up drain in the prep area.",
+      response: "CRITICAL: This is an 'Imminent Health Hazard' (sewage backup). Per Washtenaw Enforcement Procedure 5.0, you must VOLUNTARILY CLOSE the affected area immediately. Failure to do so will result in a forced shutdown and public notice."
     },
     {
-      text: "Employee came in with a sore throat but no fever. Send home?",
-      response: "RESTRICT, DO NOT EXCLUDE. Per FDA Food Code 2-201.12: If serving a Highly Susceptible Population (children/elderly), you must EXCLUDE. For general service, RESTRICT from open food/clean equipment. If fever develops, EXCLUDE immediately."
+      text: "What's the fine if we get cited for the same thing twice?",
+      response: "FINANCIAL IMPACT: Repeat priority violations often trigger 'Administrative Conferences'. In Wayne County, this escalates to fines doubling (approx $500-$1000) and potential license limitation. It puts the franchise agreement in jeopardy."
     }
   ]
 
@@ -78,7 +53,7 @@ const DemoChatContent = () => {
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
           setIsThinking(true)
-          await wait(1200) 
+          await wait(1000) 
           setIsThinking(false)
           let currentResponse = ""
           const words = step.response.split(' ')
@@ -102,81 +77,76 @@ const DemoChatContent = () => {
   }, [])
 
   const formatContent = (text) => {
-    const keywords = ["NEGATIVE", "ANALYSIS", "RESTRICT", "EXCLUDE", "DISCARD IMMEDIATELY"]
+    const keywords = ["RISK ALERT", "CRITICAL", "FINANCIAL IMPACT"]
     for (const key of keywords) {
       if (text.includes(key)) {
         const parts = text.split(key)
-        return <span key={key}><span className="font-bold text-[#023E8A]">{key}</span>{parts[1]}</span>
+        return <span key={key}><span className="font-bold text-[#CD3636]">{key}</span>{parts[1]}</span>
       }
     }
     return text
   }
 
   return (
-    // CONTAINER: STRICT DIMENSIONS. NO FLEX GROW.
-    <div className="flex flex-col h-[550px] w-full md:w-[480px] bg-white rounded-3xl shadow-[0_50px_100px_-20px_rgba(50,50,93,0.25)] border border-slate-200 overflow-hidden relative z-20 shrink-0 transform-gpu transition-all hover:scale-[1.01] duration-500 ring-1 ring-slate-900/5">
+    // Fixed Dimensions, Heavy Shadow, "Floating App" Feel
+    <div className="flex flex-col h-[520px] w-full md:w-[460px] bg-white/80 backdrop-blur-xl rounded-[24px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] border border-white/50 ring-1 ring-black/5 overflow-hidden relative z-20 shrink-0 transform-gpu transition-all hover:scale-[1.005] duration-700">
       
-      {/* Header: OS-Level Blur */}
-      <div className="h-14 bg-white/90 backdrop-blur-md border-b border-slate-100 flex items-center px-5 justify-between shrink-0 z-30">
-        <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-red-500 border border-red-600 shadow-inner"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500 border border-yellow-600 shadow-inner"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500 border border-green-600 shadow-inner"></div>
+      {/* Header */}
+      <div className="h-16 bg-white/50 backdrop-blur-md border-b border-slate-200/50 flex items-center px-6 justify-between shrink-0">
+        <div className="flex flex-col">
+            <span className="font-bold text-slate-800 text-[13px] tracking-tight">Protocol Intelligence</span>
+            <span className="text-[10px] text-slate-400 font-medium">Michigan Enforcement Database</span>
         </div>
-        <div className="font-mono text-[10px] text-slate-400 uppercase tracking-widest">
-            Protocol_LM <span className="text-slate-300">v2.4.0</span>
+        <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+            <div className="w-2 h-2 bg-[#0055FF] rounded-full shadow-[0_0_10px_rgba(0,85,255,0.5)] animate-pulse"></div>
         </div>
       </div>
 
-      {/* Messages Area: STRICT SCROLLING */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 relative z-10 scrollbar-hide">
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
         {messages.length === 0 && !isTyping && (
-           <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-3 opacity-30">
-                 <svg className="w-12 h-12 mx-auto text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-                 <div className="text-[10px] font-bold uppercase tracking-widest">Compliance Engine Ready</div>
-              </div>
-           </div>
+          <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
+             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+             </div>
+             <span className="text-xs font-semibold text-slate-400">System Secure</span>
+          </div>
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-3 duration-300`}>
-            <div className={`max-w-[85%] p-4 rounded-2xl text-[12px] leading-relaxed font-medium shadow-sm border ${
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+            <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm border ${
               msg.role === 'user' 
-                ? 'bg-slate-900 text-white rounded-br-none border-slate-800' 
-                : 'bg-white text-slate-600 rounded-bl-none border-slate-200'
+                ? 'bg-[#0A2540] text-white border-[#0A2540] rounded-br-none' 
+                : 'bg-white text-slate-600 border-slate-100 rounded-bl-none'
             }`}>
-               {msg.role === 'assistant' && (
-                 <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100">
-                    <div className="w-3 h-3 bg-blue-600 rounded-sm"></div>
-                    <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Regulation Database</span>
-                 </div>
-               )}
-               <div className="whitespace-pre-wrap">{msg.role === 'assistant' ? formatContent(msg.content) : msg.content}</div>
+               {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
             </div>
           </div>
         ))}
+
         {isThinking && (
-           <div className="flex justify-start animate-in fade-in duration-200">
-              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none border border-slate-200 shadow-sm flex gap-1">
-                 <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce"></span>
-                 <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '100ms'}}></span>
-                 <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '200ms'}}></span>
+           <div className="flex justify-start animate-in fade-in zoom-in duration-300">
+              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none border border-slate-100 flex gap-1.5 shadow-sm items-center">
+                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                 <div className="w-1.5 h-1.5 bg-slate-300 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
               </div>
            </div>
         )}
       </div>
 
-      {/* Input Area: FIXED HEIGHT */}
-      <div className="p-4 bg-white border-t border-slate-100 shrink-0 z-30">
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-xl transition-all focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500">
-           <div className="flex-1 text-xs font-medium text-slate-700 truncate h-5 flex items-center">
-              {inputValue}<span className={`w-0.5 h-4 bg-blue-600 ml-0.5 ${isTyping ? 'animate-pulse' : 'hidden'}`}></span>
-              {!inputValue && !isTyping && <span className="text-slate-400">Ask about Michigan Food Code...</span>}
+      {/* Input */}
+      <div className="p-4 bg-white/50 backdrop-blur-md border-t border-slate-200/50 shrink-0">
+        <div className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 shadow-sm transition-all focus-within:ring-2 focus-within:ring-[#0055FF]/20 focus-within:border-[#0055FF]">
+           <div className="flex-1 text-[13px] text-slate-700 font-medium h-5 flex items-center overflow-hidden">
+              {inputValue}
+              {isTyping && <span className="w-0.5 h-4 bg-[#0055FF] ml-0.5 animate-pulse"></span>}
+              {!inputValue && !isTyping && <span className="text-slate-300">Ask about liability...</span>}
            </div>
-           <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${inputValue ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
-              <svg className="w-3 h-3 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-           </div>
+           <button className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${inputValue ? 'bg-[#0055FF] text-white shadow-md' : 'bg-slate-100 text-slate-300'}`}>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+           </button>
         </div>
       </div>
     </div>
@@ -191,7 +161,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      setCount((1 - Math.pow(1 - progress, 3)) * end) // Cubic Ease Out
+      setCount((1 - Math.pow(1 - progress, 3)) * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
     window.requestAnimationFrame(step)
@@ -208,20 +178,26 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white shadow-2xl p-8 rounded-2xl relative animate-in zoom-in-95 duration-200">
-        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-900">✕</button>
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">{view === 'signup' ? 'Franchise Access' : 'Owner Login'}</h2>
-          <p className="text-xs text-slate-500 mt-1">Secure authentication for multi-unit operators.</p>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0A2540]/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="w-full max-w-[360px] bg-white shadow-2xl p-8 rounded-[24px] relative animate-in zoom-in-95 duration-300 slide-in-from-bottom-4">
+        <button onClick={onClose} className="absolute top-6 right-6 text-slate-300 hover:text-slate-800 transition-colors">✕</button>
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-[#0A2540] tracking-tight mb-2">{view === 'signup' ? 'Request Access' : 'Sign In'}</h2>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">Secure portal for multi-unit operators.</p>
         </div>
         <div className="space-y-4">
-          <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all" placeholder="Corporate Email" />
-          <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all" placeholder="Password" />
-          <button className="w-full bg-[#0F172A] text-white font-bold py-3 rounded-lg text-xs uppercase tracking-widest hover:bg-slate-800 transition-all">{loading ? 'Verifying...' : 'Access Portal'}</button>
+          <div className="space-y-1">
+             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider ml-1">Work Email</label>
+             <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#0055FF] focus:ring-1 focus:ring-[#0055FF] transition-all placeholder:text-slate-300" placeholder="name@company.com" />
+          </div>
+          <div className="space-y-1">
+             <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider ml-1">Password</label>
+             <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-[#0055FF] focus:ring-1 focus:ring-[#0055FF] transition-all placeholder:text-slate-300" placeholder="••••••••" />
+          </div>
+          <button className="w-full bg-[#0055FF] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest hover:bg-[#0044CC] hover:shadow-lg hover:shadow-blue-500/20 transition-all active:scale-[0.98] mt-2">{loading ? 'Processing...' : (view === 'signup' ? 'Start Trial' : 'Access Dashboard')}</button>
         </div>
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-            <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600">{view === 'signup' ? 'Existing Operator? Sign In' : 'Request Instance? Contact Sales'}</button>
+        <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+            <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-[11px] font-bold text-slate-400 hover:text-[#0055FF] transition-colors">{view === 'signup' ? 'Have an account? Sign in' : 'No account? Request access'}</button>
         </div>
       </div>
     </div>
@@ -241,106 +217,123 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAFA] font-sans text-slate-900 flex flex-col relative overflow-hidden selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen w-full bg-[#FDFDFD] font-sans text-slate-900 flex flex-col relative overflow-hidden selection:bg-[#0055FF] selection:text-white">
       
-      {/* BACKGROUND: Subtle Grid + Grain */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.4]">
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+      {/* Background: Very subtle mesh, high-end clean feel */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+         <div className="absolute top-0 left-0 w-full h-[800px] bg-gradient-to-b from-blue-50/50 via-white to-white"></div>
+         <div className="absolute -top-[400px] -right-[200px] w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl"></div>
       </div>
 
-      <Ticker />
-
-      {/* NAV: Floating Glass Pill */}
-      <nav className={`fixed top-14 left-0 right-0 z-40 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-        <div className="max-w-fit mx-auto bg-white/70 backdrop-blur-md border border-slate-200 shadow-xl shadow-slate-200/50 rounded-full px-1.5 py-1.5 flex items-center gap-2">
-            <div className="pl-4 pr-6 flex items-center gap-2 border-r border-slate-200/60">
-                <div className="w-4 h-4 bg-[#023E8A] rounded-[4px] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+      {/* NAV: Floating "Island" - Cleaner, smaller */}
+      <nav className={`fixed top-6 left-0 right-0 z-50 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+        <div className="max-w-fit mx-auto bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-2 py-2 flex items-center gap-2">
+            <div className="pl-4 pr-6 flex items-center gap-2.5">
+                <div className="w-5 h-5 bg-[#0055FF] rounded-md flex items-center justify-center shadow-sm">
+                   <div className="w-2.5 h-2.5 border-2 border-white rounded-full"></div>
                 </div>
-                <span className="text-sm font-bold tracking-tight text-slate-900">protocol<span className="text-blue-600">LM</span></span>
+                <span className="text-sm font-bold tracking-tight text-[#0A2540]">protocol<span className="text-[#0055FF]">LM</span></span>
             </div>
-            <div className="flex items-center">
-                <button onClick={() => router.push('/pricing')} className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Enterprise Plans</button>
-                <button onClick={() => openAuth('login')} className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 transition-colors">Login</button>
-                <button onClick={() => openAuth('signup')} className="ml-2 px-5 py-2.5 bg-[#0F172A] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-slate-800 hover:scale-105 transition-all shadow-lg shadow-slate-900/20">Get Coverage</button>
+            <div className="hidden md:flex items-center gap-1 pl-4 border-l border-slate-100">
+                <button onClick={() => router.push('/pricing')} className="px-4 py-1.5 text-[11px] font-bold text-slate-500 hover:text-[#0A2540] transition-colors">Pricing</button>
+                <button onClick={() => openAuth('login')} className="px-4 py-1.5 text-[11px] font-bold text-slate-500 hover:text-[#0A2540] transition-colors">Sign In</button>
             </div>
+            <button onClick={() => openAuth('signup')} className="ml-1 px-5 py-2 bg-[#0A2540] text-white text-[11px] font-bold uppercase tracking-wide rounded-full hover:bg-[#051525] hover:shadow-lg hover:shadow-slate-900/10 transition-all active:scale-95">
+                Get Protected
+            </button>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 lg:px-12 pt-32 lg:pt-40 pb-20 flex flex-col lg:flex-row items-center gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-[1280px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between pt-36 pb-20 gap-16 relative z-10">
         
-        {/* LEFT: Copy */}
-        <div className={`flex-1 max-w-2xl flex flex-col items-start transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+        {/* LEFT COLUMN: Copy & Financial Stats */}
+        <div className={`flex-1 max-w-[600px] flex flex-col items-start transition-all duration-1000 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-md shadow-sm mb-8">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-[9px] font-mono uppercase tracking-widest text-slate-500">Live in Michigan (Region 4)</span>
-          </div>
-
-          <h1 className="text-6xl lg:text-[5rem] font-bold text-slate-900 leading-[0.95] tracking-tighter mb-8">
-            Standardize your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-blue-500">regulatory shield.</span>
+          <h1 className="text-5xl lg:text-[4.5rem] font-bold text-[#0A2540] leading-[1.05] tracking-tight mb-8">
+            Protect the <br/>
+            <span className="text-[#0055FF]">bottom line.</span>
           </h1>
           
-          <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-xl mb-10">
-            A unified intelligence layer for Owner/Operators. ProtocolLM ingests health codes and county-specific enforcement procedures to prevent violations across your entire portfolio.
+          <p className="text-[17px] text-slate-500 font-medium leading-relaxed max-w-lg mb-12">
+            Health inspections aren't just bureaucracy—they are financial risks. We monitor <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data to prevent revenue loss.
           </p>
 
-          <div className="flex gap-4 w-full sm:w-auto">
-            <button onClick={() => openAuth('signup')} className="flex-1 sm:flex-none bg-[#0F172A] text-white px-8 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/20 active:scale-95 flex items-center justify-center gap-2">
-               Deploy Instance <span className="text-slate-400">&rarr;</span>
-            </button>
-            <button className="flex-1 sm:flex-none px-8 py-4 rounded-xl border border-slate-200 bg-white font-bold text-xs uppercase tracking-widest text-slate-600 hover:border-slate-400 transition-all shadow-sm active:scale-95">
-               View Demo
-            </button>
+          {/* FINANCIAL LOSS CARDS (Robinhood Style) */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+             
+             {/* Card 1: Revenue Drop */}
+             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
+                <div className="flex justify-between items-start mb-4">
+                   <div className="p-2 bg-red-50 rounded-lg text-red-600 group-hover:bg-red-100 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
+                   </div>
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Revenue</span>
+                </div>
+                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={12} suffix="%" duration={2000} /></div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Drop in sales after one bad grade.</div>
+             </div>
+
+             {/* Card 2: Incident Cost */}
+             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
+                <div className="flex justify-between items-start mb-4">
+                   <div className="p-2 bg-slate-50 rounded-lg text-slate-600 group-hover:bg-slate-100 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                   </div>
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg Cost</span>
+                </div>
+                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={75} prefix="$" suffix="k" duration={2200} /></div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Legal fees & lost business per incident.</div>
+             </div>
+
+             {/* Card 3: Fine Hike */}
+             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group cursor-default">
+                <div className="flex justify-between items-start mb-4">
+                   <div className="p-2 bg-slate-50 rounded-lg text-slate-600 group-hover:bg-slate-100 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                   </div>
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fines</span>
+                </div>
+                <div className="text-3xl font-bold text-[#0A2540] mb-1"><CountUp end={2.5} suffix="x" decimals={1} duration={2400} /></div>
+                <div className="text-[11px] font-medium text-slate-500 leading-tight">Penalty multiplier for repeat violations.</div>
+             </div>
           </div>
 
-          {/* STATS: High-End "Bento" Cards */}
-          <div className="grid grid-cols-3 gap-4 mt-16 w-full">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform">
-                <div className="text-3xl font-bold text-slate-900 tracking-tighter mb-1"><CountUp end={94} suffix="%" duration={2000} /></div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inspection Pass Rate</div>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform">
-                <div className="text-3xl font-bold text-slate-900 tracking-tighter mb-1"><CountUp end={12} suffix="m" duration={2500} /></div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Regulations Indexed</div>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-transform">
-                <div className="text-3xl font-bold text-slate-900 tracking-tighter mb-1">0.4<span className="text-lg text-slate-400">s</span></div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Query Latency</div>
-            </div>
-          </div>
+          <button onClick={() => openAuth('signup')} className="w-full sm:w-auto bg-[#0A2540] text-white px-8 py-4 rounded-xl font-bold text-[13px] uppercase tracking-widest hover:bg-[#051525] transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98]">
+            Start 30-Day Risk Audit
+          </button>
+
         </div>
 
-        {/* RIGHT: The Product (Scale correction for mobile) */}
-        <div className={`flex-1 flex justify-center items-center w-full transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-           <div className="relative w-full max-w-[500px] flex justify-center transform lg:scale-100 scale-[0.85] origin-top">
-              {/* Decorative 'Server Rack' Lines */}
-              <div className="absolute -right-12 top-10 bottom-10 w-[1px] bg-gradient-to-b from-transparent via-slate-200 to-transparent"></div>
-              <div className="absolute -right-16 top-20 bottom-20 w-[1px] bg-gradient-to-b from-transparent via-slate-200 to-transparent"></div>
-              
-              <DemoChatContent />
-              
-              {/* "Approved Vendor" Badge */}
-              <div className="absolute -bottom-8 right-0 bg-white py-2 px-4 rounded-lg shadow-lg border border-slate-100 flex items-center gap-3">
-                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Washtenaw County Sync: Active</span>
-              </div>
-           </div>
+        {/* RIGHT COLUMN: Chat Demo */}
+        <div className={`flex-1 flex justify-center lg:justify-end transition-all duration-1000 delay-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
+            <div className="relative group">
+                {/* Subtle blue glow behind chat */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/50 rounded-full blur-[80px] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                <DemoChatContent />
+                
+                {/* Trust Badge */}
+                <div className="absolute -bottom-8 -left-8 bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] border border-white flex items-center gap-3 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-700 delay-500">
+                    <div className="flex -space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-[#0A2540] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">M</div>
+                        <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white"></div>
+                        <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white"></div>
+                    </div>
+                    <div>
+                        <div className="text-[11px] font-bold text-[#0A2540]">Trusted by Franchises</div>
+                        <div className="text-[9px] font-medium text-slate-400">Syncing 500+ Locations</div>
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
 
-      <div className="border-t border-slate-200 bg-white py-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">© 2025 Protocol Systems Inc. / Detroit, MI</div>
-             <div className="flex gap-6 opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500">
-                {/* Fake Partner Logos for Social Proof */}
-                <div className="h-6 w-20 bg-slate-200 rounded"></div>
-                <div className="h-6 w-20 bg-slate-200 rounded"></div>
-                <div className="h-6 w-20 bg-slate-200 rounded"></div>
-             </div>
+      <div className="w-full py-8 border-t border-slate-100 relative z-10 mt-auto bg-white/50 backdrop-blur-sm">
+        <div className="max-w-[1280px] mx-auto px-6 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+           <span>© 2025 Protocol Systems</span>
+           <div className="flex gap-6">
+                <a href="#" className="hover:text-[#0055FF] transition-colors">Privacy</a>
+                <a href="#" className="hover:text-[#0055FF] transition-colors">Terms</a>
+           </div>
         </div>
       </div>
       
