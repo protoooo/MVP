@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-// --- CHAT DEMO BOX (High Stakes Scenarios + Glitch Fix) ---
+// --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -30,10 +30,6 @@ const DemoChatContent = () => {
     {
       text: "Found mouse droppings in dry storage this morning. Do we have to self-close?",
       response: "IMMINENT HEALTH HAZARD: FDA Code 8-404.11. If active pests or contaminated food are found, you must cease operations immediately. Isolate the area. If limited to one distinct area and no food is affected, you may be able to operate, but proceed with extreme caution."
-    },
-    {
-      text: "Prep team is thawing chicken in stagnant warm water to 'speed it up'.",
-      response: "PRIORITY VIOLATION (P). FDA Code 3-501.13. Thawing must occur under cool running water (<70°F) or in refrigeration. Stagnant warm water breeds Salmonella rapidly. Discard product if temp exceeds 41°F for 4 hours."
     }
   ]
 
@@ -217,63 +213,66 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- DATA INGESTION BEAM ANIMATION ---
+// --- DATA INGESTION BEAM ANIMATION (UPDATED: 5 Sources, No Border, Clean Font) ---
 const DataIngestionSection = () => {
   return (
-    <div className="w-full max-w-4xl mx-auto py-20 text-center">
-      <div className="mb-12">
-        <h3 className="text-2xl font-bold text-slate-900 tracking-tight mb-4">Localized Regulatory Intelligence</h3>
-        <p className="text-slate-500 max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model's context window.</p>
+    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
+      <div className="mb-16">
+        <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
+        <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
       </div>
       
-      <div className="relative h-[300px] flex flex-col items-center justify-between px-4">
-        {/* TOP SOURCES */}
-        <div className="flex flex-wrap justify-center gap-4 md:gap-8 w-full z-10">
-          {['FDA Food Code 2022', 'Washtenaw Data', 'Wayne Data', 'Oakland Data'].map((src, i) => (
-            <div key={i} className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+      <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
+        {/* TOP SOURCES (5 items) */}
+        <div className="flex flex-wrap justify-center gap-4 w-full z-10">
+          {['Washtenaw', 'Wayne', 'Oakland', 'Michigan', 'Federal'].map((src, i) => (
+            <div key={i} className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
               <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
               {src}
             </div>
           ))}
         </div>
 
-        {/* SVG BEAMS */}
+        {/* SVG BEAMS (5 Paths) */}
         <div className="absolute inset-0 z-0 overflow-visible pointer-events-none">
-           <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 300">
+           <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 350">
              <defs>
                <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                 <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.5" />
-                 <stop offset="100%" stopColor="#6b85a3" stopOpacity="1" />
+                 <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
+                 <stop offset="100%" stopColor="#6b85a3" stopOpacity="0.8" />
                </linearGradient>
              </defs>
              
-             {/* Static Paths */}
-             <path d="M150 40 C 150 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
-             <path d="M320 40 C 320 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
-             <path d="M480 40 C 480 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
-             <path d="M650 40 C 650 150, 400 150, 400 250" stroke="url(#beamGradient)" strokeWidth="1" fill="none" />
+             {/* Static Paths (Coordinates for 5 items: 10%, 30%, 50%, 70%, 90%) */}
+             <path d="M150 50 C 150 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+             <path d="M325 50 C 325 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+             <path d="M500 50 C 500 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+             <path d="M675 50 C 675 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+             <path d="M850 50 C 850 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
              
-             {/* Animated Particles */}
+             {/* Animated Particles (Staggered) */}
              <circle r="3" fill="#6b85a3">
-               <animateMotion dur="2.5s" repeatCount="indefinite" path="M150 40 C 150 150, 400 150, 400 250" />
+               <animateMotion dur="3s" repeatCount="indefinite" path="M150 50 C 150 200, 500 180, 500 280" />
              </circle>
              <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" begin="0.2s" repeatCount="indefinite" path="M320 40 C 320 150, 400 150, 400 250" />
+               <animateMotion dur="3s" begin="0.2s" repeatCount="indefinite" path="M325 50 C 325 200, 500 180, 500 280" />
              </circle>
              <circle r="3" fill="#6b85a3">
-               <animateMotion dur="2.8s" begin="0.5s" repeatCount="indefinite" path="M480 40 C 480 150, 400 150, 400 250" />
+               <animateMotion dur="3s" begin="0.4s" repeatCount="indefinite" path="M500 50 C 500 200, 500 180, 500 280" />
              </circle>
              <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3.2s" begin="0.8s" repeatCount="indefinite" path="M650 40 C 650 150, 400 150, 400 250" />
+               <animateMotion dur="3s" begin="0.6s" repeatCount="indefinite" path="M675 50 C 675 200, 500 180, 500 280" />
+             </circle>
+             <circle r="3" fill="#6b85a3">
+               <animateMotion dur="3s" begin="0.8s" repeatCount="indefinite" path="M850 50 C 850 200, 500 180, 500 280" />
              </circle>
            </svg>
         </div>
 
-        {/* CENTRAL BRAIN */}
+        {/* CENTRAL BRAIN (Clean, No Icon, No White Border) */}
         <div className="z-10 mt-auto transform translate-y-4">
-          <div className="bg-[#6b85a3] text-white px-10 py-5 rounded-2xl shadow-2xl flex items-center gap-3 border-4 border-white">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            <span className="font-bold text-lg tracking-tight">protocol<span className="text-white/80">LM</span></span>
+          <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
+            <span className="font-bold text-xl tracking-tight">protocol<span className="text-white/80">LM</span></span>
           </div>
         </div>
       </div>
@@ -314,7 +313,7 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-32 pb-12 gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-32 pb-32 gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -339,12 +338,12 @@ function MainContent() {
         </div>
       </div>
 
-      {/* NEW SECTION */}
+      {/* NEW DATA INGESTION SECTION */}
       <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <DataIngestionSection />
       </div>
       
-      <div className="w-full py-8 text-center bg-white border-t border-slate-200 mt-12">
+      <div className="w-full py-8 text-center bg-white border-t border-slate-200">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
            <span>© 2025 protocolLM</span>
