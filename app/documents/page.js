@@ -130,7 +130,7 @@ export default function DocumentsPage() {
         })
         if (response.ok) {
           const data = await response.json()
-          // If chat was deleted while saving, data.chat might be null (handled by API)
+          // Check if chat exists (it might have been deleted during save)
           if (data.chat) {
             setCurrentChatId(data.chat.id)
             setChatHistory(prev => {
@@ -161,9 +161,9 @@ export default function DocumentsPage() {
   }
 
   const startNewChat = () => {
-    // Force save before clearing if needed
+    // Force save existing before clearing if valid
     if (currentChatId && messages.length > 1) saveCurrentChat()
-    
+
     setMessages([{ 
       role: 'assistant', 
       content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[userCounty]}.`,
@@ -179,6 +179,7 @@ export default function DocumentsPage() {
     
     // Optimistic update
     setChatHistory(prev => prev.filter(c => c.id !== chatId))
+    
     if (currentChatId === chatId) {
         setCurrentChatId(null)
         setMessages([{ 
@@ -315,7 +316,6 @@ export default function DocumentsPage() {
         })
       })
 
-      // Handle rate limit or other API errors gracefully
       if (!response.ok) {
         const errData = await response.json()
         throw new Error(errData.error || 'System error.')
@@ -351,12 +351,16 @@ export default function DocumentsPage() {
   const runMockAudit = () => {
     startNewChat()
     setTimeout(() => {
-      handleSendMessage(null, "Conduct a detailed mock health inspection walkthrough. Please check these critical areas: (1) Employee Hygiene (Handwashing/Gloves), (2) Cold Holding Temperatures, (3) Chemical Storage & Labeling, (4) Cross-Contamination risks in storage. For each, describe exactly what to look for based on code, what constitutes a Priority (P) violation, and how to correct it immediately. End with a score calculation method.")
+      handleSendMessage(null, "Conduct a formal Mock Health Inspection based on the FDA Food Code. \n\nOutput the results as a structured Markdown Table with these columns: \n| Area | Observation/Question | Priority (P/Pf/C) | Corrective Action |\n\nCheck these 5 critical areas:\n1. Handwashing & Personal Hygiene\n2. Time/Temperature Control (Cold Holding)\n3. Cross-Contamination & Storage\n4. Chemical Storage & Labeling\n5. Dishwashing & Sanitization\n\nAt the end, calculate a projected score out of 100 based on standard deductions.")
     }, 500)
   }
 
   const generateMemo = () => {
-    handleSendMessage(null, "Generate a formal Staff Memo based on the violations we just discussed. Format it specifically with: 'DATE:', 'TO: All Staff', 'FROM: Management', and 'SUBJECT: IMMEDIATE CORRECTIVE ACTIONS'. List the specific violations, the code reference, the reason it is dangerous, and the mandatory new procedure. Keep tone strict but professional.")
+    handleSendMessage(null, "Generate a formal Staff Memo based on our conversation. Format it with: DATE, TO: All Staff, FROM: Management, SUBJECT: Corrective Actions Required. List each violation discussed, the specific code section it violates, why it matters, and the required corrective action.")
+  }
+
+  const handlePrint = () => {
+    window.print()
   }
 
   const handleImageSelect = (e) => {
@@ -381,13 +385,18 @@ export default function DocumentsPage() {
           body * { visibility: hidden; }
           .chat-container, .chat-container * { visibility: visible; }
           .chat-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
-          .no-print { display: none !important; }
-          .bg-\[\#6b85a3\] { background-color: #f1f5f9 !important; color: black !important; border: 1px solid #ccc; }
+          /* Professional Print Styles */
+          .no-print, form, .p-4.border-t, .bg-white\/80 { display: none !important; }
+          .bg-\[\#6b85a3\] { background-color: white !important; color: black !important; border: 1px solid #000; }
           .text-white { color: black !important; }
+          .text-slate-800 { color: black !important; }
+          /* Clean Tables */
+          table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 12px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background-color: #f3f4f6; font-weight: bold; }
         }
       `}</style>
 
-      {/* County Selector Modal */}
       {showCountySelector && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm no-print">
           <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-sm">
@@ -406,7 +415,6 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* PDF Viewer Modal */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 no-print">
           <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-sm">
@@ -422,16 +430,13 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* Success Notification */}
       {showSuccessMessage && (
         <div className="fixed top-0 left-0 right-0 z-[70] bg-[#6b85a3] text-white px-6 py-4 shadow-lg flex justify-center no-print">
           <span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span>
         </div>
       )}
 
-      {/* Sidebar - FIX: h-full, flex-col, and mt-auto for bottom section */}
       <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:flex inset-y-0 left-0 w-full md:w-72 bg-[#f1f5f9] border-r border-slate-200 text-slate-600 flex-col z-40 overflow-hidden no-print h-full`}>
-        {/* Sidebar Header & Actions */}
         <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-lg font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
@@ -456,7 +461,6 @@ export default function DocumentsPage() {
           </button>
         </div>
 
-        {/* Chat History List */}
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
           <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-2">Record History</div>
           {loadingChats ? (
@@ -474,7 +478,6 @@ export default function DocumentsPage() {
           )}
         </div>
 
-        {/* User Profile / Billing - FIX: Pinned to Bottom with mt-auto */}
         <div className="p-4 border-t border-slate-200 bg-[#f1f5f9] flex-shrink-0 mt-auto">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-sm" style={{ backgroundColor: '#6b85a3' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
@@ -490,29 +493,25 @@ export default function DocumentsPage() {
         </div>
       </div>
 
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative chat-container">
-        {/* Header */}
         <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-slate-200 text-slate-900 flex justify-between items-center z-30 no-print">
           <div className="flex items-center gap-3">
             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
             <div className="md:hidden font-bold text-slate-900 tracking-tight">protocol<span style={{ color: '#6b85a3' }}>LM</span></div>
           </div>
-          
+          <div className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
           <div className="flex items-center gap-2">
-             {/* FIX: Darker Slate-800 buttons */}
              <button onClick={generateMemo} className="hidden sm:flex bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                 Generate Staff Memo
              </button>
-             <button onClick={() => window.print()} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
+             <button onClick={handlePrint} className="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                 Print / Save PDF
              </button>
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -529,7 +528,6 @@ export default function DocumentsPage() {
           <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {/* Input Area */}
         <div className="flex-shrink-0 p-6 bg-white border-t border-slate-200 z-20 no-print">
           {image && <div className="max-w-4xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-sm border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
           <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto relative">
