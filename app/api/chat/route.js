@@ -1,41 +1,35 @@
-import { VertexAI } from '@google-cloud/vertexai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 import { searchDocuments } from '@/lib/searchDocs'
-import { checkRateLimit } from '@/lib/rateLimit' 
+import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import fs from 'fs'
-import path from 'path'
 
 export const maxDuration = 60
 
 const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine.
-Directives:
-1. Strict Compliance: Base answers on FDA Food Code & Local Ordinances.
-2. Citations: Cite specific code sections (e.g., "FDA 3-501.16").
-3. Format: Use Markdown.
-4. Mock Audits: If asked for an audit, output a Markdown Table with columns: [Item, Status, Code Ref, Correction].`
 
-function initVertexAI() {
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID
-  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON
-  if (!projectId) throw new Error('Missing Project ID')
-  
-  if (credentialsJson) {
-    const tempFile = path.join('/tmp', 'google-credentials.json')
-    try {
-      fs.writeFileSync(tempFile, credentialsJson)
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFile
-    } catch (err) { console.error(err) }
-  }
-  return new VertexAI({ project: projectId, location: 'us-central1' })
-}
+**CRITICAL INSTRUCTION: PRIORITIZE LOCAL DATA**
+1. You have access to specific County Enforcement Manuals (Washtenaw, Wayne, Oakland) in your context.
+2. **ALWAYS cite the Local/County document FIRST.** Only cite the FDA Food Code as a secondary backup.
+3. If the context contains a document like "Washtenaw Enforcement Action", use it. Do NOT say "I don't have specific knowledge." The knowledge is in the context provided below.
+4. If asked about violations, list the specific Priority (P) or Priority Foundation (Pf) items found in the context.
+
+FORMATTING:
+- Use Markdown.
+- Format Citations as: **[Source Name, Page X]**
+- Be direct and professional.`
 
 export async function POST(req) {
   try {
-    const vertex = initVertexAI()
-    const model = vertex.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    // 1. Initialize Google AI (Matches your Script)
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+    if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
+    
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
+    // 2. Initialize Supabase
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -51,61 +45,67 @@ export async function POST(req) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // 3. Rate Limit
+    const limitCheck = await checkRateLimit(session.user.id)
+    if (!limitCheck.success) {
+      return NextResponse.json({ error: limitCheck.message || 'Limit reached' }, { status: 429 })
+    }
+
     const body = await req.json()
     const { messages, image, county } = body
-    
-    // --- RATE LIMIT CHECK ---
-    const limitCheck = await checkRateLimit(session.user.id)
-    
-    if (!limitCheck.success) {
-      return NextResponse.json({ error: limitCheck.message || 'Subscription error.' }, { status: 429 })
-    }
-    
-    // Special check for Images
-    if (image) {
-      if (limitCheck.currentImages >= limitCheck.imageLimit) {
-        return NextResponse.json({ error: `Image limit reached for ${limitCheck.plan} plan. Upgrade for more.` }, { status: 429 })
-      }
-    }
-    // ------------------------
-
     const lastMessage = messages[messages.length - 1]
+
     let context = ''
     let citations = []
 
+    // 4. Search (The Critical Step)
     if (lastMessage.content && !image) {
       try {
+        console.log(`🔍 Searching for: "${lastMessage.content}" in ${county}`)
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
-        if (searchResults?.length > 0) {
-           context = searchResults.map(doc => `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`).join('\n\n')
-           citations = searchResults.map(doc => ({ document: doc.metadata.filename.replace('.pdf', ''), pages: [doc.metadata.page] }))
+        
+        if (searchResults && searchResults.length > 0) {
+           console.log(`✅ Found ${searchResults.length} documents`)
+           context = searchResults.map(doc => 
+            `[Source: ${doc.metadata.filename}, Page ${doc.metadata.page}]\nContent: ${doc.pageContent}`
+          ).join('\n\n')
+          
+          citations = searchResults.map(doc => ({
+            document: doc.metadata.filename.replace('.pdf', ''),
+            pages: [doc.metadata.page]
+          }))
+        } else {
+          console.log('⚠️ No local documents matched. Falling back to general knowledge.')
         }
-      } catch (err) { console.error('Search Warning:', err) }
+      } catch (err) {
+        console.error('Search Error:', err)
+      }
     }
 
-    const request = {
-      contents: [{ 
-          role: 'user', 
-          parts: [{ text: SYSTEM_PROMPT }, { text: `CONTEXT:\n${context}` }, { text: `QUERY:\n${lastMessage.content}` }] 
-      }]
-    }
+    // 5. Generate
+    const prompt = [
+      { text: SYSTEM_PROMPT },
+      { text: `USER CURRENT JURISDICTION: ${county || 'washtenaw'}` },
+      { text: `RETRIEVED REGULATORY CONTEXT:\n${context || 'No specific local documents found. Use general FDA code.'}` },
+      { text: `USER QUERY: ${lastMessage.content}` }
+    ]
 
     if (image) {
       const base64Data = image.split(',')[1]
-      request.contents[0].parts.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
+      prompt.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
     }
 
-    const streamingResp = await model.generateContentStream(request)
-    const response = await streamingResp.response
-    const text = response.candidates[0].content.parts[0].text
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const text = response.text()
 
-    // Increment Usage
+    // 6. Update Usage
     supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
 
     return NextResponse.json({ message: text, citations: citations })
 
   } catch (error) {
-    console.error('API Error:', error)
-    return NextResponse.json({ error: `System processing error: ${error.message}` }, { status: 500 })
+    console.error('Chat Route Error:', error)
+    return NextResponse.json({ error: `System Error: ${error.message}` }, { status: 500 })
   }
 }
