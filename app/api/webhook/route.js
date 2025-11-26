@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// FIX #2: Validate environment variables before use
+// ✅ FIX: Validate environment variables on startup
 if (!process.env.STRIPE_SECRET_KEY) {
   console.error('❌ STRIPE_SECRET_KEY is missing');
+  throw new Error('STRIPE_SECRET_KEY must be configured');
 }
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
   console.error('❌ STRIPE_WEBHOOK_SECRET is missing');
+  throw new Error('STRIPE_WEBHOOK_SECRET must be configured');
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -17,7 +19,7 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
-  // FIX #2: Validate webhook secret exists
+  // Validate webhook secret exists
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
     console.error('❌ Webhook secret not configured');
     return NextResponse.json({ 
@@ -58,7 +60,12 @@ export async function POST(req) {
         console.log(`💳 Checkout completed for user ${userId}, plan: ${plan || 'unknown'}`);
 
         const subscription = await stripe.subscriptions.retrieve(session.subscription);
-        const isTrialing = subscription.status === 'trialing';
+
+        // ✅ ADDED: Validate subscription exists
+        if (!subscription) {
+          console.error('❌ Could not retrieve subscription from Stripe');
+          break;
+        }
 
         const { error: subError } = await supabase
           .from('subscriptions')
@@ -84,6 +91,7 @@ export async function POST(req) {
           .update({ 
             is_subscribed: true,
             requests_used: 0,
+            images_used: 0, // ✅ ADDED: Reset image count on new subscription
             updated_at: new Date().toISOString()
           })
           .eq('id', userId);
@@ -231,12 +239,13 @@ export async function POST(req) {
               .from('user_profiles')
               .update({ 
                 requests_used: 0,
+                images_used: 0, // ✅ ADDED: Reset image counter on payment
                 is_subscribed: true,
                 updated_at: new Date().toISOString()
               })
               .eq('id', sub.user_id);
 
-            console.log(`🔄 Reset request counter for user ${sub.user_id}`);
+            console.log(`🔄 Reset request & image counters for user ${sub.user_id}`);
           }
         }
         break;
