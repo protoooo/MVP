@@ -18,7 +18,7 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // UPDATED: 7 Hyper-Local Scenarios (Washtenaw, Oakland, Wayne/MI)
+  // Hyper-Local Scenarios
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
@@ -39,14 +39,6 @@ const DemoChatContent = () => {
     {
       text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
       response: "CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage."
-    },
-    {
-      text: "We want to start vacuum packing our steaks. Do we need a special permit?",
-      response: "YES. Reduced Oxygen Packaging (ROP) requires a HACCP Plan and often a Variance under Michigan Modified Food Code 3-502.11. You must submit this plan to the regulatory authority for approval BEFORE starting."
-    },
-    {
-      text: "What is the exact cooling requirement for the chili we made this morning?",
-      response: "TWO-STAGE COOLING: FDA Code 3-501.14. 1) Cool from 135°F to 70°F within 2 hours. 2) Cool from 70°F to 41°F within the next 4 hours (Total 6 hours). If you miss the first 2-hour window, you must reheat to 165°F and restart."
     }
   ]
 
@@ -251,7 +243,6 @@ function MainContent() {
       
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* MATCHING LOGO FONT: Bold, Tracking-Tighter */}
           <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -264,7 +255,7 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-28 pb-24 gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -276,11 +267,11 @@ function MainContent() {
             Start 30-Day Free Trial
           </button>
           
-          {/* SIMPLE COMPACT DATA LABEL (No Animation) */}
-          <div className="mt-8 pt-6 border-t border-slate-100">
-             <div className="flex flex-wrap justify-center md:justify-start gap-4">
+          {/* SIMPLE COMPACT DATA LABEL - Moved UP, Darker, Larger */}
+          <div className="mt-10 pt-8 border-t border-slate-200">
+             <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6">
                 {['Washtenaw', 'Wayne', 'Oakland', 'Michigan', 'Federal'].map((src, i) => (
-                  <div key={i} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <div key={i} className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-[#6b85a3] rounded-full"></div>
                     {src}
                   </div>
@@ -293,7 +284,8 @@ function MainContent() {
           <DemoChatContent />
         </div>
       </div>
-      
+
+      {/* No Footer Links, just Copyright */}
       <div className="w-full py-8 text-center bg-white border-t border-slate-200">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
            <a href="/terms" className="hover:text-[#6b85a3]">Terms</a>
