@@ -53,11 +53,16 @@ export default function Pricing() {
       
       <header className="fixed top-0 w-full border-b border-slate-200 bg-[#f8fafc]/95 backdrop-blur-sm z-50 h-20 flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <button onClick={() => router.push('/')} className="group">
-            <span className="text-3xl font-bold tracking-tighter text-slate-900">
-              protocol<span style={{ color: '#6b85a3' }}>LM</span>
-            </span>
-          </button>
+          {/* BACK BUTTON + LOGO */}
+          <div className="flex items-center gap-6">
+             <button onClick={() => router.push('/')} className="text-slate-400 hover:text-slate-600 transition-colors">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+             </button>
+             <span className="text-3xl font-bold tracking-tighter text-slate-900 cursor-default">
+               protocol<span style={{ color: '#6b85a3' }}>LM</span>
+             </span>
+          </div>
+
           <div className="flex gap-6 text-sm font-bold uppercase tracking-widest">
             {!isAuthenticated ? (
               <>
