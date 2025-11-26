@@ -213,63 +213,69 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- DATA INGESTION BEAM ANIMATION (UPDATED: 5 Sources, No Border, Clean Font) ---
+// --- DATA INGESTION BEAM ANIMATION (3 SOURCES) ---
 const DataIngestionSection = () => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
+    <div className="w-full max-w-5xl mx-auto pt-32 pb-32 text-center">
       <div className="mb-16">
         <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
         <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
       </div>
       
       <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
-        {/* TOP SOURCES (5 items) */}
-        <div className="flex flex-wrap justify-center gap-4 w-full z-10">
-          {['Washtenaw', 'Wayne', 'Oakland', 'Michigan', 'Federal'].map((src, i) => (
-            <div key={i} className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-              <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
-              {src}
+        {/* TOP SOURCES (3 Items - Fixed Width for Alignment) */}
+        <div className="grid grid-cols-3 gap-8 w-full max-w-3xl z-10">
+          {['Washtenaw County', 'Wayne County', 'Oakland County'].map((src, i) => (
+            <div key={i} className="flex justify-center">
+              <div className="bg-white border border-slate-200 px-5 py-2.5 rounded-lg shadow-sm text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 whitespace-nowrap">
+                <div className="w-2 h-2 bg-[#6b85a3] rounded-full animate-pulse"></div>
+                {src}
+              </div>
             </div>
           ))}
         </div>
 
-        {/* SVG BEAMS (5 Paths) */}
-        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none">
-           <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 350">
-             <defs>
-               <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                 <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
-                 <stop offset="100%" stopColor="#6b85a3" stopOpacity="0.8" />
-               </linearGradient>
-             </defs>
-             
-             {/* Static Paths (Coordinates for 5 items: 10%, 30%, 50%, 70%, 90%) */}
-             <path d="M150 50 C 150 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-             <path d="M325 50 C 325 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-             <path d="M500 50 C 500 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-             <path d="M675 50 C 675 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-             <path d="M850 50 C 850 200, 500 180, 500 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-             
-             {/* Animated Particles (Staggered) */}
-             <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" repeatCount="indefinite" path="M150 50 C 150 200, 500 180, 500 280" />
-             </circle>
-             <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" begin="0.2s" repeatCount="indefinite" path="M325 50 C 325 200, 500 180, 500 280" />
-             </circle>
-             <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" begin="0.4s" repeatCount="indefinite" path="M500 50 C 500 200, 500 180, 500 280" />
-             </circle>
-             <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" begin="0.6s" repeatCount="indefinite" path="M675 50 C 675 200, 500 180, 500 280" />
-             </circle>
-             <circle r="3" fill="#6b85a3">
-               <animateMotion dur="3s" begin="0.8s" repeatCount="indefinite" path="M850 50 C 850 200, 500 180, 500 280" />
-             </circle>
-           </svg>
+        {/* SVG BEAMS (3 Paths - Perfectly Aligned to Grid) */}
+        <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
+           <div className="w-full max-w-3xl h-full relative">
+             <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
+               <defs>
+                 <linearGradient id="beamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                   <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.4" />
+                   <stop offset="100%" stopColor="#6b85a3" stopOpacity="0.8" />
+                 </linearGradient>
+               </defs>
+               
+               {/* 
+                  Grid Alignment Logic: 
+                  Left Card Center ~ 16% (130px)
+                  Middle Card Center = 50% (400px)
+                  Right Card Center ~ 84% (670px)
+                  Target Brain = 50% (400px)
+               */}
+
+               {/* Left Path */}
+               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               {/* Center Path (Straight Down) */}
+               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               {/* Right Path */}
+               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               
+               {/* Animated Particles */}
+               <circle r="3" fill="#6b85a3">
+                 <animateMotion dur="3s" repeatCount="indefinite" path="M130 60 C 130 200, 400 180, 400 280" />
+               </circle>
+               <circle r="3" fill="#6b85a3">
+                 <animateMotion dur="3s" begin="0.5s" repeatCount="indefinite" path="M400 60 L 400 280" />
+               </circle>
+               <circle r="3" fill="#6b85a3">
+                 <animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M670 60 C 670 200, 400 180, 400 280" />
+               </circle>
+             </svg>
+           </div>
         </div>
 
-        {/* CENTRAL BRAIN (Clean, No Icon, No White Border) */}
+        {/* CENTRAL BRAIN */}
         <div className="z-10 mt-auto transform translate-y-4">
           <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
             <span className="font-bold text-xl tracking-tight">protocol<span className="text-white/80">LM</span></span>
