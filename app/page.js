@@ -277,9 +277,15 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND IMAGE (OPACITY 35%) */}
+      {/* BACKGROUND IMAGE (OPACITY 38%) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <Image src="/background.png" alt="Background" fill className="object-cover opacity-35" priority />
+         <Image 
+           src="/background.png" 
+           alt="Background" 
+           fill 
+           className="object-cover opacity-[0.38]" 
+           priority
+         />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
@@ -297,10 +303,10 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-16 pb-12 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-8 pb-12 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
-            Train Your Team Before the Health Department Does.
+            Train Your Team Before<br className="hidden md:block"/> The Health Department Does.
           </h2>
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
