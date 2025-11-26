@@ -5,40 +5,36 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Unchanged) ---
+// --- 1. CHAT DEMO BOX (With "Intelligent Scanning" Animation) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false) 
   const [isThinking, setIsThinking] = useState(false)
+  const [thinkingStep, setThinkingStep] = useState('') // New "Smart" State
   const scrollRef = useRef(null)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, inputValue, isThinking])
+  }, [messages, inputValue, isThinking, thinkingStep])
 
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
-      response: "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
+      response: "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan.",
+      county: "Washtenaw"
     },
     {
       text: "Our certified manager quit yesterday. Do we have to close the kitchen?",
-      response: "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties."
+      response: "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties.",
+      county: "Oakland"
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: "VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission."
-    },
-    {
-      text: "The floor drain is backing up in the dish room. Can we just mop it and keep serving?",
-      response: "IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized."
-    },
-    {
-      text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
-      response: "CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage."
+      response: "VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.",
+      county: "State/Federal"
     }
   ]
 
@@ -53,6 +49,7 @@ const DemoChatContent = () => {
     const runSimulation = async () => {
       while (isMounted) {
         for (const step of SEQUENCE) {
+          // 1. Typing User Question
           setIsTyping(true)
           await wait(500)
           for (const char of step.text) {
@@ -63,9 +60,23 @@ const DemoChatContent = () => {
           setInputValue('')
           setIsTyping(false)
           setMessages(prev => [...prev, { role: 'user', content: step.text }])
+
+          // 2. "Smart Thinking" Animation (The 50k Touch)
           setIsThinking(true)
-          await wait(1500)
+          
+          setThinkingStep(`Accessing ${step.county} Database...`)
+          await wait(800)
+          
+          setThinkingStep("Verifying Enforcement Codes...")
+          await wait(800)
+          
+          setThinkingStep("Formulating Compliance Plan...")
+          await wait(800)
+          
           setIsThinking(false)
+          setThinkingStep('')
+
+          // 3. Typing Response
           let currentResponse = ""
           const words = step.response.split(' ')
           setMessages(prev => [...prev, { role: 'assistant', content: '' }])
@@ -138,13 +149,17 @@ const DemoChatContent = () => {
           </div>
         ))}
 
+        {/* THE NEW "SMART" THINKING ANIMATION */}
         {isThinking && (
-           <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
-              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm">
+           <div className="flex flex-col justify-start animate-in fade-in zoom-in duration-200 relative z-20 gap-2">
+              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm w-fit">
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
               </div>
+              <span className="text-[10px] font-bold text-[#0077B6] pl-2 uppercase tracking-wider animate-pulse">
+                {thinkingStep}
+              </span>
            </div>
         )}
       </div>
@@ -167,7 +182,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- COUNT UP ANIMATION ---
+// --- 2. ANIMATED COUNT UP COMPONENT ---
 const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
   const [count, setCount] = useState(0)
 
@@ -176,7 +191,9 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      setCount(progress * end)
+      // Ease-out expo for premium feel
+      const easeOut = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
+      setCount(easeOut * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
     window.requestAnimationFrame(step)
@@ -185,7 +202,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
 }
 
-// --- AUTH MODAL ---
+// --- 3. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -258,7 +275,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- MAIN CONTENT ---
+// --- 4. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -277,9 +294,15 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND IMAGE (OPACITY 38%) */}
+      {/* BACKGROUND IMAGE (OPACITY 35%) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.38]" priority />
+         <Image 
+           src="/background.png" 
+           alt="Background" 
+           fill 
+           className="object-cover opacity-[0.35]" 
+           priority
+         />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
@@ -297,17 +320,14 @@ function MainContent() {
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-20 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before<br className="hidden md:block"/> The Health Department Does.
           </h2>
-          
-          {/* UPDATED SUBTEXT: Larger & Bolder */}
           <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          
           <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
             <span className="relative z-10">Start 30-Day Free Trial</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
