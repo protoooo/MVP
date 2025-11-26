@@ -106,7 +106,7 @@ const DemoChatContent = () => {
                 ? 'bg-[#6b85a3] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-slate-100'
             }`}>
-               <div className="whitespace-pre-wrap font-mono text-xs relative z-30">{msg.content}</div>
+               <div className="whitespace-pre-wrap font-sans text-xs relative z-30">{msg.content}</div>
             </div>
           </div>
         ))}
@@ -130,8 +130,8 @@ const DemoChatContent = () => {
               {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
            </div>
            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#6b85a3]' : 'bg-slate-200'}`}>
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                 <path d="M5 12h14M12 5l7 7-7 7" />
+              <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                 <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
            </div>
         </div>
@@ -200,30 +200,30 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#f8fafc]/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-slate-200 shadow-2xl p-8 rounded-xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900">✕</button>
-        <h2 className="text-xl font-bold text-slate-900 mb-6 font-mono tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
+        <h2 className="text-xl font-bold text-slate-900 mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
         <div className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 rounded-lg" placeholder="Password" />
-          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#f8fafc] border border-slate-200 focus:border-[#6b85a3] focus:ring-0 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password" />
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#6b85a3] hover:bg-[#5a728a] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all shadow-md active:scale-95">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
         </div>
-        {message && <div className={`mt-4 p-3 text-xs font-mono border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#6b85a3] font-mono">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
+        {message && <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
+        <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#6b85a3] font-sans">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
       </div>
     </div>
   )
 }
 
-// --- DATA INGESTION BEAM ANIMATION (3 SOURCES) ---
+// --- DATA INGESTION BEAM ANIMATION (FIXED CENTER LINE) ---
 const DataIngestionSection = () => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-32 pb-32 text-center">
+    <div className="w-full max-w-5xl mx-auto pt-20 pb-32 text-center">
       <div className="mb-16">
         <h3 className="text-3xl font-bold text-slate-900 tracking-tighter mb-4">Localized Regulatory Intelligence</h3>
         <p className="text-slate-600 font-medium max-w-2xl mx-auto">We don't just guess. We inject official county enforcement data and the full FDA Code directly into the model.</p>
       </div>
       
       <div className="relative h-[350px] flex flex-col items-center justify-between px-4">
-        {/* TOP SOURCES (3 Items - Fixed Width for Alignment) */}
+        {/* TOP SOURCES (3 Items) */}
         <div className="grid grid-cols-3 gap-8 w-full max-w-3xl z-10">
           {['Washtenaw County', 'Wayne County', 'Oakland County'].map((src, i) => (
             <div key={i} className="flex justify-center">
@@ -235,7 +235,7 @@ const DataIngestionSection = () => {
           ))}
         </div>
 
-        {/* SVG BEAMS (3 Paths - Perfectly Aligned to Grid) */}
+        {/* SVG BEAMS (3 Paths - Center Line Fixed) */}
         <div className="absolute inset-0 z-0 overflow-visible pointer-events-none flex justify-center">
            <div className="w-full max-w-3xl h-full relative">
              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 800 350">
@@ -246,20 +246,12 @@ const DataIngestionSection = () => {
                  </linearGradient>
                </defs>
                
-               {/* 
-                  Grid Alignment Logic: 
-                  Left Card Center ~ 16% (130px)
-                  Middle Card Center = 50% (400px)
-                  Right Card Center ~ 84% (670px)
-                  Target Brain = 50% (400px)
-               */}
-
                {/* Left Path */}
-               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
-               {/* Center Path (Straight Down) */}
-               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               <path d="M130 60 C 130 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
+               {/* Center Path (Thicker, Straight Down) */}
+               <path d="M400 60 L 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
                {/* Right Path */}
-               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="1.5" fill="none" />
+               <path d="M670 60 C 670 200, 400 180, 400 280" stroke="url(#beamGradient)" strokeWidth="2" fill="none" />
                
                {/* Animated Particles */}
                <circle r="3" fill="#6b85a3">
@@ -275,7 +267,7 @@ const DataIngestionSection = () => {
            </div>
         </div>
 
-        {/* CENTRAL BRAIN */}
+        {/* CENTRAL BRAIN (Clean, No Border) */}
         <div className="z-10 mt-auto transform translate-y-4">
           <div className="bg-[#6b85a3] text-white px-12 py-6 rounded-2xl shadow-2xl shadow-[#6b85a3]/20 flex items-center justify-center">
             <span className="font-bold text-xl tracking-tight">protocol<span className="text-white/80">LM</span></span>
@@ -303,31 +295,31 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] font-mono text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
+    <div className="min-h-screen w-full bg-[#f8fafc] font-sans text-slate-900 selection:bg-[#6b85a3] selection:text-white flex flex-col">
       
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#f8fafc]/95 backdrop-blur-sm">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tighter text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">protocol<span style={{ color: '#6b85a3' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Pricing</button>
           <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#6b85a3] transition-colors">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all">
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#6b85a3] border border-[#6b85a3] rounded-lg hover:bg-[#6b85a3] hover:text-white transition-all active:scale-95">
              <span className="hidden md:inline">Create Account</span>
              <span className="md:hidden">Join</span>
           </button>
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-32 pb-32 gap-16">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-40 pb-32 gap-16">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-4xl md:text-5xl font-mono font-medium text-slate-900 tracking-tight leading-tight mb-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
           </h2>
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data, the Michigan Modified Food Law, and the Federal Food Code.
           </p>
-          <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+          <button onClick={() => openAuth('signup')} className="bg-[#6b85a3] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#5a728a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95">
             Start 30-Day Free Trial
           </button>
           <div className="mt-8 flex items-center justify-center md:justify-start gap-3 text-slate-400">
@@ -344,7 +336,6 @@ function MainContent() {
         </div>
       </div>
 
-      {/* NEW DATA INGESTION SECTION */}
       <div className={`transition-opacity duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         <DataIngestionSection />
       </div>
