@@ -5,7 +5,38 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Unchanged) ---
+// --- ANIMATED COUNT UP COMPONENT ---
+const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    let startTimestamp = null
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+      
+      // Ease-out function for smooth landing
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      
+      setCount(progress * end)
+      
+      if (progress < 1) {
+        window.requestAnimationFrame(step)
+      }
+    }
+    window.requestAnimationFrame(step)
+  }, [end, duration])
+
+  return (
+    <span>
+      {prefix}
+      {count.toFixed(decimals)}
+      {suffix}
+    </span>
+  )
+}
+
+// --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -88,7 +119,6 @@ const DemoChatContent = () => {
     return () => { isMounted = false }
   }, [])
 
-  // Highlight Logic
   const formatContent = (text) => {
     const keywords = ["CRITICAL ACTION", "VIOLATION", "IMMINENT HEALTH HAZARD", "CORE VIOLATION", "ACTION REQUIRED"]
     for (const key of keywords) {
@@ -262,13 +292,7 @@ function MainContent() {
       
       {/* BACKGROUND */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-         <Image 
-           src="/background.png" 
-           alt="Background" 
-           fill 
-           className="object-cover opacity-25" 
-           priority
-         />
+         <Image src="/background.png" alt="Background" fill className="object-cover opacity-25" priority />
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/50 to-[#F0F9FF]/95"></div>
       </div>
 
@@ -287,7 +311,6 @@ function MainContent() {
       </nav>
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-16 pb-12 gap-16 relative z-10">
-        
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before the Health Department Does.
@@ -295,26 +318,35 @@ function MainContent() {
           <p className="text-base text-slate-600 font-medium leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          <button onClick={() => openAuth('signup')} className="bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-            Start 30-Day Free Trial
+          
+          {/* SHINY CTA BUTTON */}
+          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+            <span className="relative z-10">Start 30-Day Free Trial</span>
+            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          {/* NEW: LARGER, DARKER, GLASS CARDS */}
+          {/* ANIMATED STATS CARDS */}
           <div className="mt-10 grid grid-cols-3 gap-4">
-             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
-               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">12%</div>
-               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Revenue Drop</div>
-               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Immediate loss in annual sales after one bad grade.</p>
+             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+                 <CountUp end={12} suffix="%" />
+               </div>
+               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Revenue Drop</div>
+               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Immediate loss in sales after one bad grade.</p>
              </div>
-             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
-               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">$75k</div>
-               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Avg. Incident</div>
-               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Cost of legal fees, fines, and lost business.</p>
+             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+                 <CountUp end={75} prefix="$" suffix="k" />
+               </div>
+               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Avg. Incident</div>
+               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Legal fees, fines, and lost business revenue.</p>
              </div>
-             <div className="bg-white/60 border border-white/80 p-4 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 transition-colors">
-               <div className="text-4xl font-bold text-[#023E8A] tracking-tighter">2.5x</div>
-               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-1">Fine Hike</div>
-               <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Fines double or triple for repeat violations.</p>
+             <div className="bg-white/40 border border-white p-4 rounded-xl backdrop-blur-sm shadow-sm hover:bg-white/80 hover:shadow-xl hover:shadow-[#0077B6]/10 hover:-translate-y-1 transition-all duration-300 cursor-default">
+               <div className="text-3xl font-bold text-[#023E8A] tracking-tighter">
+                 <CountUp end={2.5} suffix="x" decimals={1} />
+               </div>
+               <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1">Fine Hike</div>
+               <p className="text-[11px] text-slate-600 mt-2 font-medium leading-tight">Fines double or triple for chronic repeat violations.</p>
              </div>
           </div>
 
@@ -334,6 +366,14 @@ function MainContent() {
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
+      
+      {/* SHINE ANIMATION STYLE */}
+      <style jsx global>{`
+        @keyframes shine {
+          0% { left: -100%; }
+          100% { left: 200%; }
+        }
+      `}</style>
     </div>
   )
 }
