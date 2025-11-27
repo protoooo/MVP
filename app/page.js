@@ -105,7 +105,8 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0">
+    // Changed height to responsive: h-[400px] on mobile, h-[500px] on desktop to fit screens better
+    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto">
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
         <span className="font-bold text-[#023E8A] text-sm tracking-tighter">protocol<span className="text-[#0077B6]">LM</span></span>
         <div className="flex items-center gap-2 bg-[#F0F9FF] px-3 py-1 rounded-full border border-[#90E0EF]">
@@ -413,37 +414,38 @@ function MainContent() {
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
       </div>
 
-      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
+      <nav className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
         </div>
-        <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
-          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
+        <div className={`flex gap-2 md:gap-6 text-[10px] md:text-sm font-bold uppercase tracking-widest items-center transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <button onClick={() => router.push('/pricing')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
+          <button onClick={() => openAuth('login')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
+          <button onClick={() => openAuth('signup')} className="px-3 md:px-5 py-2 md:py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
              <span className="hidden md:inline">Create Account</span>
              <span className="md:hidden">Join</span>
           </button>
         </div>
       </nav>
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 pb-8 md:pt-20 md:pb-12 gap-10 md:gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           
-          <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
+          <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-6 md:mb-8">
             Train Your Team Before<br className="hidden md:block"/>
             The Health Department Does.
           </h2>
           
-          <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
+          <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-8 md:mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm">
             <span className="relative z-10">Start 30-Day Free Trial</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          <div className="mt-12 grid grid-cols-3 gap-4">
+          {/* Changed grid-cols-3 to grid-cols-1 sm:grid-cols-3 to stack on mobile */}
+          <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={12} suffix="%" duration={2500} />
@@ -471,7 +473,7 @@ function MainContent() {
 
         </div>
         
-        <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+        <div className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
       </div>
