@@ -56,7 +56,6 @@ export default function DocumentsPage() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [userEmail, setUserEmail] = useState('')
-  const [queryCount, setQueryCount] = useState(null) // Kept state, though logic for count wasn't in snippet
   const [loadingUser, setLoadingUser] = useState(true)
 
   const scrollRef = useRef(null)
@@ -194,17 +193,11 @@ export default function DocumentsPage() {
       {/* --- SIDEBAR (Desktop) --- */}
       <aside className="hidden lg:flex lg:flex-col w-72 bg-white border-r border-slate-200 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30">
         
-        {/* Brand */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-blue-500/20 shadow-lg">
-               <span className="text-white font-bold text-sm">P</span>
-            </div>
-            <div>
-               <div className="text-sm font-bold text-slate-900 tracking-tight leading-none">protocol<span className="text-blue-600">LM</span></div>
-               <div className="text-[10px] font-medium text-slate-400 tracking-wide uppercase mt-1">Intelligence Suite</div>
-            </div>
-          </div>
+        {/* Brand - UPDATED: Removed Icon, Removed Subtitle, Bigger Text */}
+        <div className="h-20 flex items-center px-6 border-b border-slate-100">
+           <div className="text-2xl font-bold text-slate-900 tracking-tight">
+              protocol<span className="text-blue-600">LM</span>
+           </div>
         </div>
 
         {/* Navigation Content */}
@@ -264,13 +257,10 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* User Footer */}
+        {/* User Footer - UPDATED: Removed Icon */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold text-xs shadow-md">
-              {userEmail ? userEmail[0].toUpperCase() : 'O'}
-            </div>
-            <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex-1 min-w-0 px-1">
               <p className="text-xs font-bold text-slate-900 truncate">{loadingUser ? 'Loading...' : 'Operator'}</p>
               <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
             </div>
@@ -291,15 +281,17 @@ export default function DocumentsPage() {
         {/* Header (Desktop & Mobile) */}
         <header className="h-16 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0">
           <div className="flex items-center gap-4">
-             {/* Mobile Logo */}
-             <div className="lg:hidden w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">P</div>
+             {/* Mobile Logo (Updated to match desktop style somewhat) */}
+             <div className="lg:hidden text-lg font-bold text-slate-900 tracking-tight">
+                protocol<span className="text-blue-600">LM</span>
+             </div>
              
-             <div>
+             <div className="hidden lg:block">
                 <h1 className="text-sm lg:text-base font-bold text-slate-900 flex items-center gap-2">
                   {COUNTY_LABELS[activeCounty]}
                   <span className="hidden lg:inline-flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                 </h1>
-                <p className="hidden lg:block text-xs text-slate-500 font-medium">AI Regulatory Compliance Assistant</p>
+                <p className="text-xs text-slate-500 font-medium">Verified Regulatory Intelligence Platform</p>
              </div>
           </div>
 
@@ -320,7 +312,7 @@ export default function DocumentsPage() {
           </div>
         </header>
 
-        {/* Chat Container (Layout Fix: Flex Column + Overflow Hidden) */}
+        {/* Chat Container */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
           {/* Messages Scroll Area */}
@@ -332,12 +324,12 @@ export default function DocumentsPage() {
                 <div className="h-full flex flex-col items-center justify-center min-h-[400px]">
                    <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/50 flex items-center justify-center mb-6">
                       <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                    </div>
-                   <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">Compliance Intelligence</h2>
+                   <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">Protocol Compliance</h2>
                    <p className="text-sm text-slate-500 max-w-sm text-center mb-8">
-                      Expert regulatory guidance for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>. Ask about codes, violations, or procedures.
+                      Authorized documentation loaded for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>. Ask specific regulatory questions.
                    </p>
                    
                    {/* Centered Suggestions (Only show when empty) */}
@@ -396,7 +388,7 @@ export default function DocumentsPage() {
              )}
           </div>
 
-          {/* Fixed Input Bar (Always visible, no scroll needed) */}
+          {/* Fixed Input Bar - UPDATED: Removed Disclaimer */}
           <div className="flex-shrink-0 z-20 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-4 lg:px-20 py-4 pb-safe">
              <div className="max-w-4xl mx-auto relative">
                 <form onSubmit={handleSend} className="relative group">
@@ -438,11 +430,6 @@ export default function DocumentsPage() {
                       </button>
                    </div>
                 </form>
-                <div className="text-center mt-2">
-                   <p className="text-[10px] text-slate-400 font-medium">
-                      AI Compliance can make mistakes. Verify critical actions with {COUNTY_LABELS[activeCounty]} Health Dept.
-                   </p>
-                </div>
              </div>
           </div>
         </div>
