@@ -77,7 +77,6 @@ export default function Pricing() {
              </button>
              
              <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-                <div className="w-8 h-8 bg-[#0077B6] rounded-lg flex items-center justify-center text-white font-bold text-lg">P</div>
                 <span className="font-bold text-xl text-slate-800 tracking-tight">protocol<span className="text-[#0077B6]">LM</span></span>
              </div>
           </div>
