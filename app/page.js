@@ -105,33 +105,52 @@ const DemoChatContent = () => {
   }
 
   return (
-    // Changed height to responsive: h-[400px] on mobile, h-[500px] on desktop to fit screens better
+    // Fixed visual hero card, responsive height
     <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto">
+      {/* Top chrome */}
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
-        <span className="font-bold text-[#023E8A] text-sm tracking-tighter">protocol<span className="text-[#0077B6]">LM</span></span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[#023E8A] text-sm tracking-tighter flex items-center gap-1">
+            <span className="inline-flex h-6 w-6 rounded-lg bg-[#023E8A] text-[10px] text-white items-center justify-center font-bold">
+              PLM
+            </span>
+            protocol<span className="text-[#0077B6]">LM</span>
+          </span>
+          <span className="hidden md:inline text-[10px] font-semibold text-slate-400 border-l border-slate-200 pl-2">
+            Live compliance demo
+          </span>
+        </div>
         <div className="flex items-center gap-2 bg-[#F0F9FF] px-3 py-1 rounded-full border border-[#90E0EF]">
-          <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-pulse"></div>
-          <span className="text-[9px] font-bold text-[#0077B6] uppercase tracking-wide">Active</span>
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span className="text-[9px] font-bold text-[#0077B6] uppercase tracking-wide">Risk Engine Online</span>
         </div>
       </div>
 
+      {/* Chat area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F0F9FF] min-h-0 relative z-10">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <div className="w-6 h-6 border-2 border-slate-100 rounded-full"></div>
+                <div className="w-6 h-6 border-2 border-slate-100 rounded-full border-t-[#0077B6] animate-spin"></div>
              </div>
-             <span className="text-xs font-bold uppercase tracking-widest text-[#0077B6]/40">System Ready</span>
+             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#0077B6]/60">
+               READY TO INTERCEPT VIOLATIONS
+             </span>
           </div>
         )}
         
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 ${
-              msg.role === 'user' 
-                ? 'bg-[#0077B6] text-white rounded-tr-sm' 
-                : 'bg-white text-slate-700 rounded-tl-sm border border-[#90E0EF]'
-            }`}>
+          <div 
+            key={i} 
+            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+          >
+            <div
+              className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 ${
+                msg.role === 'user' 
+                  ? 'bg-[#0077B6] text-white rounded-tr-sm' 
+                  : 'bg-white text-slate-700 rounded-tl-sm border border-[#90E0EF]'
+              }`}
+            >
                <div className="whitespace-pre-wrap font-sans text-xs relative z-30">
                  {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
                </div>
@@ -145,17 +164,25 @@ const DemoChatContent = () => {
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+                 <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline">
+                   Cross-checking local code & FDA Food Code…
+                 </span>
               </div>
            </div>
         )}
       </div>
 
+      {/* Faux input */}
       <div className="p-4 bg-white border-t border-slate-100 shrink-0 relative z-20">
         <div className="w-full bg-[#F0F9FF] border border-[#90E0EF] rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse"></span>}
-              {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
+              {!inputValue && !isTyping && (
+                <span className="text-slate-400 text-xs">
+                  “What actually happens if this store fails its next inspection?”
+                </span>
+              )}
            </div>
            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'}`}>
               <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -219,7 +246,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       })
 
       if (error) throw error
-      // OAuth will redirect automatically, no need to do anything else
+      // OAuth will redirect automatically
     } catch (error) {
       console.error('Google sign-in error:', error)
       setMessage({ type: 'error', text: error.message })
@@ -333,7 +360,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
             required 
-            className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" 
+            className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg:white focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" 
             placeholder="Email" 
           />
           
@@ -392,7 +419,11 @@ function MainContent() {
   useEffect(() => {
     setMounted(true)
     const authParam = searchParams.get('auth')
-    if (authParam) { setAuthView(authParam); setShowAuth(true); window.history.replaceState({}, '', '/') }
+    if (authParam) { 
+      setAuthView(authParam); 
+      setShowAuth(true); 
+      window.history.replaceState({}, '', '/') 
+    }
   }, [searchParams])
 
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
@@ -414,70 +445,120 @@ function MainContent() {
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
       </div>
 
+      {/* NAV */}
       <nav className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#023E8A]">
+            protocol<span style={{ color: '#0077B6' }}>LM</span>
+          </h1>
+          <p className="hidden md:block text-[10px] font-semibold tracking-[0.25em] text-slate-400 uppercase mt-1">
+            Built for multi-unit operators in Southeast Michigan
+          </p>
         </div>
         <div className={`flex gap-2 md:gap-6 text-[10px] md:text-sm font-bold uppercase tracking-widest items-center transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => router.push('/pricing')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
-          <button onClick={() => openAuth('login')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-3 md:px-5 py-2 md:py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
-             <span className="hidden md:inline">Create Account</span>
+          <button 
+            onClick={() => router.push('/pricing')} 
+            className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors"
+          >
+            Pricing
+          </button>
+          <button 
+            onClick={() => openAuth('login')} 
+            className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors"
+          >
+            Sign In
+          </button>
+          <button 
+            onClick={() => openAuth('signup')} 
+            className="px-3 md:px-5 py-2 md:py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm"
+          >
+             <span className="hidden md:inline">Get ProtocolLM</span>
              <span className="md:hidden">Join</span>
           </button>
         </div>
       </nav>
 
+      {/* HERO (no extra sections, still single-screen layout) */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 pb-8 md:pt-20 md:pb-12 gap-10 md:gap-16 relative z-10">
+        {/* Left: value prop & money story */}
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           
-          <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-6 md:mb-8">
-            Train Your Team Before<br className="hidden md:block"/>
-            The Health Department Does.
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-white/60 border border-white/80 backdrop-blur text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Protect inspection grades & revenue
+          </div>
+
+          <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-4 md:mb-6">
+            Turn surprise inspections<br className="hidden md:block" />
+            into a line-item you control.
           </h2>
           
-          <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-8 md:mb-10">
-            Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
+          <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-4 md:mb-5">
+            protocol<span className="text-[#0077B6] font-bold">LM</span> trains your crew on{' '}
+            <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement rules, so you
+            avoid closures, repeat fines, and six-figure brand damage across your stores.
           </p>
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm">
-            <span className="relative z-10">Start 30-Day Free Trial</span>
-            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
+
+          <p className="text-[11px] md:text-xs text-slate-500 font-semibold uppercase tracking-[0.25em] mb-5">
+            One avoided closure can pay for protocolLM for years.
+          </p>
+
+          <button 
+            onClick={() => openAuth('signup')} 
+            className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm"
+          >
+            <span className="relative z-10">Start 30-Day Pilot For Your Stores</span>
+            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          {/* Changed grid-cols-3 to grid-cols-1 sm:grid-cols-3 to stack on mobile */}
+          {/* KPI STRIP – same footprint, just more money framing */}
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={12} suffix="%" duration={2500} />
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Revenue Drop</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Immediate loss in annual sales after one bad grade.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">
+                 Revenue Drop / Unit
+               </div>
+               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">
+                 Typical year-one sales hit after a public bad grade.
+               </p>
              </div>
              
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={75} prefix="$" suffix="k" duration={2500} />
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Avg. Incident</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Legal fees, fines, and lost business revenue.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">
+                 Avg. Incident Cost
+               </div>
+               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">
+                 Legal, remediation, labor, and lost traffic for one major event.
+               </p>
              </div>
              
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={2.5} suffix="x" decimals={1} duration={2500} />
                </div>
-               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Fine Hike</div>
-               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Fines often double or triple for repeat violations.</p>
+               <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">
+                 Repeat Fine Multiplier
+               </div>
+               <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">
+                 Fines and scrutiny climb when the same issue shows up twice.
+               </p>
              </div>
           </div>
 
         </div>
         
+        {/* Right: demo chat box */}
         <div className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
       </div>
 
+      {/* FOOTER */}
       <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
