@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Refined UI) ---
+// --- CHAT DEMO BOX (UI Refined, Logic Unchanged) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -19,7 +19,7 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // --- LOGIC UNTOUCHED ---
+  // --- LOGIC ---
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
@@ -105,48 +105,46 @@ const DemoChatContent = () => {
     return text
   }
 
-  // --- REFINED CHAT UI ---
   return (
-    <div className="flex flex-col h-[520px] w-full max-w-[650px] font-sans rounded-3xl overflow-hidden relative z-0 transform-gpu shrink-0 backdrop-blur-xl bg-white/70 border border-white/60 shadow-[0_20px_50px_-12px_rgba(0,119,182,0.25)] ring-1 ring-white/50">
+    <div className="flex flex-col h-[500px] w-full max-w-[650px] font-sans rounded-3xl overflow-hidden relative z-0 transform-gpu shrink-0 backdrop-blur-xl bg-white/70 border border-white/60 shadow-[0_20px_50px_-12px_rgba(0,119,182,0.25)] ring-1 ring-white/50">
       
       {/* Header - Glass Effect */}
-      <div className="h-16 border-b border-[#0077B6]/10 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/40 backdrop-blur-md">
+      <div className="h-14 border-b border-[#0077B6]/10 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-400/80"></div>
-            <div className="w-3 h-3 rounded-full bg-amber-400/80"></div>
-            <div className="w-3 h-3 rounded-full bg-green-400/80"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-red-400/80"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-green-400/80"></div>
           </div>
-          <div className="h-6 w-px bg-slate-300/50 mx-2"></div>
-          <span className="font-bold text-[#023E8A] text-sm tracking-tight">protocol<span className="text-[#0077B6]">LM</span> <span className="text-slate-400 font-medium text-xs ml-1">/ assistant</span></span>
+          <div className="h-5 w-px bg-slate-300/50 mx-2"></div>
+          <span className="font-bold text-[#023E8A] text-xs tracking-tight">protocol<span className="text-[#0077B6]">LM</span> <span className="text-slate-400 font-medium ml-1">/ assistant</span></span>
         </div>
         
-        <div className="flex items-center gap-2 bg-[#0077B6]/5 px-3 py-1.5 rounded-full border border-[#0077B6]/10 shadow-inner">
-          <span className="relative flex h-2 w-2">
+        <div className="flex items-center gap-2 bg-[#0077B6]/5 px-2.5 py-1 rounded-full border border-[#0077B6]/10 shadow-inner">
+          <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0077B6]"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0077B6]"></span>
           </span>
-          <span className="text-[10px] font-bold text-[#023E8A] uppercase tracking-wider">Live</span>
+          <span className="text-[9px] font-bold text-[#023E8A] uppercase tracking-wider">Live</span>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 relative z-10 scroll-smooth">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-5 min-h-0 relative z-10 scroll-smooth">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-             <div className="w-16 h-16 rounded-2xl bg-white/50 border border-white flex items-center justify-center shadow-lg shadow-blue-900/5 backdrop-blur-sm">
-                <svg className="w-8 h-8 text-[#0077B6]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+             <div className="w-14 h-14 rounded-2xl bg-white/50 border border-white flex items-center justify-center shadow-lg shadow-blue-900/5 backdrop-blur-sm">
+                <div className="w-6 h-6 rounded-full border-2 border-slate-200"></div>
              </div>
              <div className="text-center">
-                <p className="text-sm font-bold text-[#023E8A] tracking-wide">SYSTEM READY</p>
-                <p className="text-xs text-slate-500 mt-1">Awaiting health code inquiry...</p>
+                <p className="text-xs font-bold text-[#023E8A] tracking-wide">SYSTEM READY</p>
              </div>
           </div>
         )}
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-            <div className={`max-w-[85%] px-6 py-4 rounded-3xl text-[13px] md:text-sm leading-relaxed font-medium shadow-sm relative z-20 backdrop-blur-sm ${
+            <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium shadow-sm relative z-20 backdrop-blur-sm ${
               msg.role === 'user' 
                 ? 'bg-gradient-to-br from-[#0077B6] to-[#023E8A] text-white rounded-tr-sm shadow-blue-900/20' 
                 : 'bg-white/80 text-slate-700 rounded-tl-sm border border-white/60 shadow-slate-200/50'
@@ -160,7 +158,7 @@ const DemoChatContent = () => {
 
         {isThinking && (
            <div className="flex justify-start animate-in fade-in zoom-in duration-300 relative z-20">
-             <div className="bg-white/80 px-4 py-3 rounded-2xl rounded-tl-sm border border-white/60 flex gap-1.5 items-center shadow-sm backdrop-blur-sm">
+             <div className="bg-white/80 px-4 py-2.5 rounded-2xl rounded-tl-sm border border-white/60 flex gap-1.5 items-center shadow-sm backdrop-blur-sm">
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
@@ -171,14 +169,14 @@ const DemoChatContent = () => {
 
       {/* Input Area */}
       <div className="p-4 bg-white/40 border-t border-white/50 shrink-0 relative z-20 backdrop-blur-md">
-        <div className="w-full bg-white/60 border border-white/80 shadow-inner rounded-xl px-5 py-4 flex items-center gap-4 min-h-[60px] ring-1 ring-[#0077B6]/5 focus-within:ring-[#0077B6]/20 transition-all">
+        <div className="w-full bg-white/60 border border-white/80 shadow-inner rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px] ring-1 ring-[#0077B6]/5 focus-within:ring-[#0077B6]/20 transition-all">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
              {inputValue}
              {isTyping && <span className="inline-block w-0.5 h-5 bg-[#0077B6] ml-1 animate-pulse rounded-full"></span>}
              {!inputValue && !isTyping && <span className="text-slate-400 font-normal">Ask a compliance question...</span>}
            </div>
-           <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md ${inputValue ? 'bg-gradient-to-tr from-[#023E8A] to-[#0077B6] scale-100 opacity-100' : 'bg-slate-200 scale-90 opacity-50'}`}>
-              <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 shadow-md ${inputValue ? 'bg-gradient-to-tr from-[#023E8A] to-[#0077B6] scale-100 opacity-100' : 'bg-slate-200 scale-90 opacity-50'}`}>
+              <svg className="w-3.5 h-3.5 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                  <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
            </div>
@@ -206,7 +204,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
 }
 
-// --- AUTH MODAL (Refined UI) ---
+// --- AUTH MODAL (UI Refined) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -316,27 +314,28 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
+    // Changed: h-screen and overflow-hidden ensures no scrolling (One Page look)
+    <div className="h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND - UNCHANGED (Opacity 34%) */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* BACKGROUND IMAGE - Moved up & Lowered Opacity */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
          <div className="relative w-full h-full animate-drift">
            <Image 
              src="/background.png" 
              alt="Background" 
              fill 
-             className="object-cover opacity-[0.34]" 
+             // Changed: object-top (moves it up) and opacity-[0.14] (14% opacity)
+             className="object-cover object-top opacity-[0.14]" 
              priority
            />
          </div>
-         {/* Refined gradient overlay for better text contrast while keeping background visible */}
-         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/20 to-[#F0F9FF]/95 mix-blend-overlay"></div>
-         <div className="absolute inset-0 bg-gradient-to-t from-[#F0F9FF] via-transparent to-transparent"></div>
+         {/* Subtle overlay gradients */}
+         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/80 via-transparent to-[#F0F9FF]/80"></div>
       </div>
 
-      {/* NAVBAR - Frosted Glass */}
-      <nav className="w-full fixed top-0 left-0 right-0 z-40 transition-all border-b border-white/40 bg-white/60 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      {/* NAVBAR */}
+      <nav className="w-full shrink-0 z-40 transition-all border-b border-white/40 bg-white/60 backdrop-blur-xl h-20">
+        <div className="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             <h1 className="text-2xl font-black tracking-tighter text-[#023E8A] flex items-center gap-1">
                 <div className="w-8 h-8 bg-gradient-to-tr from-[#023E8A] to-[#0077B6] rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
@@ -356,78 +355,76 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-32 pb-16 gap-12 lg:gap-20 relative z-10">
+      {/* HERO SECTION - Flexbox ensures it fills remaining space nicely */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10">
         
         {/* Left Column: Copy */}
-        <div className={`flex-1 text-center lg:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className={`flex-1 text-center lg:text-left transition-all duration-1000 delay-100 flex flex-col justify-center ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0077B6]/10 border border-[#0077B6]/20 text-[#0077B6] font-bold text-[10px] uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0077B6]/10 border border-[#0077B6]/20 text-[#0077B6] font-bold text-[10px] uppercase tracking-widest mb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 self-center lg:self-start">
              <span className="w-2 h-2 rounded-full bg-[#0077B6]"></span>
              Now Available for Michigan
           </div>
 
-          <h2 className="text-5xl lg:text-6xl xl:text-7xl font-extrabold text-[#023E8A] tracking-tighter leading-[1.1] mb-8">
+          <h2 className="text-5xl lg:text-6xl xl:text-7xl font-extrabold text-[#023E8A] tracking-tighter leading-[1.1] mb-6">
             Train Your Team<br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0077B6] to-[#48CAE4]">Before The Health</span><br/>
             Department Does.
           </h2>
           
-          <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0 mb-10">
+          <p className="text-lg text-slate-600 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0 mb-8">
             Avoid violations and prepare for health inspections with AI intelligence trained directly on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#023E8A] text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-[#0077B6] transition-all shadow-[0_20px_40px_-15px_rgba(2,62,138,0.4)] hover:shadow-[0_20px_40px_-10px_rgba(2,62,138,0.5)] hover:-translate-y-1 active:scale-95 border border-white/10">
+          {/* Changed: Reverted to Original Button, Removed View Demo */}
+          <div className="flex justify-center lg:justify-start">
+              <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
                 <span className="relative z-10">Start 30-Day Free Trial</span>
                 <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
               </button>
-              <button className="px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[#023E8A] bg-white border border-slate-200 hover:bg-slate-50 hover:border-[#0077B6]/30 transition-all shadow-sm hover:shadow-md">
-                 View Demo
-              </button>
           </div>
           
-          {/* STATS CARDS - Refined Glass Look */}
-          <div className="mt-16 grid grid-cols-3 gap-4 lg:gap-6">
-              <div className="bg-white/60 border border-white p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
+          {/* STATS CARDS - Tightened top margin (mt-10) to fit on one screen */}
+          <div className="mt-10 grid grid-cols-3 gap-4 lg:gap-6">
+              <div className="bg-white/60 border border-white p-4 lg:p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#023E8A] to-[#0077B6] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#023E8A] to-[#0077B6] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                   <CountUp end={12} suffix="%" duration={2500} />
                 </div>
-                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-3">Revenue Drop</div>
+                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Revenue Drop</div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1 font-medium leading-tight">Annual sales loss after one bad grade.</p>
               </div>
               
-              <div className="bg-white/60 border border-white p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
+              <div className="bg-white/60 border border-white p-4 lg:p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#023E8A] to-[#0077B6] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#023E8A] to-[#0077B6] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                   <CountUp end={75} prefix="$" suffix="k" duration={2500} />
                 </div>
-                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-3">Avg. Incident</div>
+                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Avg. Incident</div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1 font-medium leading-tight">Legal fees, fines, and lost revenue.</p>
               </div>
               
-              <div className="bg-white/60 border border-white p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
+              <div className="bg-white/60 border border-white p-4 lg:p-5 rounded-2xl backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/80 hover:-translate-y-1 transition-all duration-300 cursor-default group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#023E8A] to-[#0077B6] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#023E8A] to-[#0077B6] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                   <CountUp end={2.5} suffix="x" decimals={1} duration={2500} />
                 </div>
-                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-3">Fine Hike</div>
+                <div className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Fine Hike</div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1 font-medium leading-tight">Multiplier for repeat violations.</p>
               </div>
           </div>
 
         </div>
         
-        {/* Right Column: Chat Demo with Glow Effect */}
+        {/* Right Column: Chat Demo */}
         <div className={`flex-1 flex flex-col items-center justify-center transition-all duration-1000 delay-300 relative ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
-          {/* Glow Behind Chat */}
           <div className="absolute inset-0 bg-[#48CAE4] opacity-20 blur-[100px] rounded-full pointer-events-none transform translate-y-10"></div>
           <DemoChatContent />
         </div>
       </div>
 
-      <div className="w-full py-8 text-center border-t border-white/50 bg-white/30 backdrop-blur-sm relative z-10 mt-auto">
+      {/* Footer - Minimal to ensure fit */}
+      <div className="w-full py-4 text-center border-t border-white/50 bg-white/30 backdrop-blur-sm relative z-10 shrink-0">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6] transition-colors">Terms</a>
            <span>© 2025 protocolLM</span>
