@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
-import SessionGuard from '@/components/SessionGuard' // <--- 1. IMPORT ADDED
+import SessionGuard from '@/components/SessionGuard' 
 
 // --- CONSTANTS (Unchanged) ---
 const COUNTY_LABELS = {
@@ -59,7 +59,7 @@ export default function DocumentsPage() {
   
   // User State
   const [userEmail, setUserEmail] = useState('')
-  const [userId, setUserId] = useState(null) // <--- 2. STATE ADDED
+  const [userId, setUserId] = useState(null) 
   const [loadingUser, setLoadingUser] = useState(true)
 
   const scrollRef = useRef(null)
@@ -82,7 +82,7 @@ export default function DocumentsPage() {
 
         if (!cancelled) {
           setUserEmail(user.email || '')
-          setUserId(user.id) // <--- 3. CAPTURE ID HERE
+          setUserId(user.id) 
         }
       } catch (err) {
         console.error('Error loading user', err)
@@ -107,25 +107,29 @@ export default function DocumentsPage() {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
 
-  // --- HANDLERS (Unchanged) ---
+  // --- HANDLERS (UPDATED) ---
   async function handleSend(e) {
     if (e) e.preventDefault()
     const trimmed = input.trim()
     if (!trimmed || isSending) return
 
     const newUserMessage = { role: 'user', content: trimmed }
+    
+    // Add user message to UI immediately
     setMessages((prev) => [...prev, newUserMessage])
     setInput('')
     setIsSending(true)
 
+    // Add empty assistant message (loader)
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
     try {
+      // FIX: Send messages array, not single message string
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: trimmed,
+          messages: [...messages, newUserMessage], // <-- Sending full history + new message
           county: activeCounty
         })
       })
@@ -144,11 +148,9 @@ export default function DocumentsPage() {
       }
 
       const data = await res.json()
-      const replyText =
-        data?.answer ||
-        data?.response ||
-        data?.message ||
-        'Response received, but in an unexpected format.'
+      
+      // FIX: Expecting 'message' from the simplified API, not 'answer'
+      const replyText = data?.message || 'Response received, but in an unexpected format.'
 
       setMessages((prev) => {
         const updated = [...prev]
@@ -195,7 +197,7 @@ export default function DocumentsPage() {
   return (
     <div className="fixed inset-0 h-full w-full bg-[#F8FAFC] text-slate-900 flex overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
       
-      {/* 4. ACTIVATE SESSION GUARD (Invisible) */}
+      {/* SESSION GUARD */}
       {userId && <SessionGuard userId={userId} />}
       
       {/* --- SIDEBAR (Desktop) --- */}
