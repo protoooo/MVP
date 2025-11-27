@@ -52,7 +52,7 @@ const Icons = {
   )
 }
 
-// --- THINKING INDICATOR (ChatGPT / Claude style, but subtle) ---
+// --- THINKING INDICATOR ---
 const ThinkingIndicator = () => (
   <div className="flex items-center gap-3">
     <div className="relative w-9 h-9">
@@ -68,7 +68,7 @@ const ThinkingIndicator = () => (
     <div className="flex flex-col">
       <span className="text-xs font-medium text-slate-600">Analyzing regulations...</span>
       <span className="text-[10px] text-slate-400">
-        Cross-checking FDA Food Code & {`local guidance`}
+        Cross-checking FDA Food Code & local guidance
       </span>
     </div>
   </div>
@@ -480,7 +480,7 @@ export default function DocumentsPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center font-sans text-sm text-slate-200">
         <div className="bg-slate-900/60 border border-slate-800 rounded-3xl px-6 py-5 shadow-2xl flex items-center gap-4">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0077B6] to-sky-400 flex items-center justify-center text-white font-bold text-xs">
-            PLM
+            LM
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -489,7 +489,9 @@ export default function DocumentsPage() {
               </span>
               <span className="text-[11px] text-slate-400">Preparing dashboard...</span>
             </div>
-            <p className="text-xs text-slate-300">Securely validating your subscription & jurisdiction.</p>
+            <p className="text-xs text-slate-300">
+              Securely validating your subscription & jurisdiction.
+            </p>
           </div>
         </div>
 
@@ -730,7 +732,7 @@ export default function DocumentsPage() {
 
       {/* --- MAIN CHAT AREA --- */}
       <div className="flex-1 flex flex-col relative bg-white chat-container">
-        {/* soft background like pro dashboards */}
+        {/* subtle background */}
         <div
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#eff6ff_0,_transparent_55%),radial-gradient(ellipse_at_bottom,_#e0f2fe_0,_transparent_55%)] opacity-70"
           aria-hidden="true"
@@ -760,40 +762,45 @@ export default function DocumentsPage() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 pb-48 pt-6">
             <div className="max-w-3xl mx-auto space-y-8">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${
-                    msg.role === 'user' ? 'justify-end' : 'justify-start'
-                  } animate-in fade-in slide-in-from-bottom-1 duration-150`}
-                >
-                  {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mr-4 shadow-sm mt-0.5 text-[#0077B6] self-start">
-                      <Icons.Globe />
-                    </div>
-                  )}
+              {messages.map((msg, i) => {
+                const isUser = msg.role === 'user'
+                return (
                   <div
-                    className={`max-w-[100%] sm:max-w-[85%] ${
-                      msg.role === 'user'
-                        ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md'
-                        : 'text-slate-800 mt-1 bg-white/80 backdrop-blur border border-slate-100 rounded-2xl px-5 py-3 shadow-sm'
-                    }`}
+                    key={i}
+                    className={`flex ${
+                      isUser ? 'justify-end' : 'justify-start'
+                    } items-end gap-3`}
                   >
-                    {msg.image && (
-                      <img
-                        src={msg.image}
-                        alt="Uploaded content"
-                        className="mb-4 rounded-xl border border-white/20 max-w-sm"
-                      />
+                    {!isUser && (
+                      <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm text-[#0077B6]">
+                        <Icons.Globe />
+                      </div>
                     )}
-                    {msg.role === 'user' ? (
-                      <p className="text-[15px] leading-relaxed">{msg.content}</p>
-                    ) : (
-                      renderMessageContent(msg)
-                    )}
+
+                    <div
+                      className={`max-w-[100%] sm:max-w-[80%] ${
+                        isUser
+                          ? 'bg-[#0077B6] text-white px-4 py-2.5 rounded-2xl rounded-br-sm shadow-sm'
+                          : 'bg-white/95 text-slate-800 px-4 py-3 rounded-2xl rounded-tl-sm border border-slate-100 shadow-sm'
+                      }`}
+                    >
+                      {msg.image && (
+                        <img
+                          src={msg.image}
+                          alt="Uploaded content"
+                          className="mb-3 rounded-xl border border-white/40 max-w-sm"
+                        />
+                      )}
+
+                      {isUser ? (
+                        <p className="text-[14px] leading-relaxed">{msg.content}</p>
+                      ) : (
+                        renderMessageContent(msg)
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
               {isLoading && (
                 <div className="flex justify-start">
