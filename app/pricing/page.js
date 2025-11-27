@@ -102,19 +102,17 @@ export default function Pricing() {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Starter</h3>
               <div className="flex items-baseline text-slate-900">
-                {/* Updated to $49 */}
                 <span className="text-5xl font-bold tracking-tighter">$49</span>
                 <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/mo</span>
               </div>
               <p className="text-sm text-slate-500 mt-4 leading-relaxed">Essential compliance for single locations.</p>
             </div>
             <ul className="space-y-4 mb-8 flex-1 border-t border-slate-100 pt-6">
-              <li className="flex items-start gap-3 text-sm font-medium text-slate-600"><CheckIcon />100 Text Queries / Mo</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-slate-600"><CheckIcon />500 Text Queries / Mo</li>
               <li className="flex items-start gap-3 text-sm font-medium text-slate-400"><XIcon />No Image Analysis</li>
               <li className="flex items-start gap-3 text-sm font-medium text-slate-600"><CheckIcon />County Document Access</li>
               <li className="flex items-start gap-3 text-sm font-medium text-slate-400"><XIcon />No Mock Audits</li>
             </ul>
-            {/* Updated ID for Starter */}
             <button onClick={() => handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')} disabled={loading !== null} className="w-full bg-slate-50 border border-slate-200 text-slate-600 hover:border-[#0077B6] hover:text-[#0077B6] hover:bg-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all active:scale-95">
               {loading === 'starter' ? 'Processing...' : 'Select Starter'}
             </button>
@@ -126,7 +124,6 @@ export default function Pricing() {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[#0077B6] uppercase tracking-widest mb-2">Pro</h3>
               <div className="flex items-baseline text-slate-900">
-                {/* Updated to $99 */}
                 <span className="text-5xl font-bold tracking-tighter">$99</span>
                 <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/mo</span>
               </div>
@@ -134,11 +131,10 @@ export default function Pricing() {
             </div>
             <ul className="space-y-4 mb-8 flex-1 border-t border-slate-100 pt-6">
               <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><CheckIcon color="text-[#0077B6]" />Unlimited Text Queries</li>
-              <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><CheckIcon color="text-[#0077B6]" />50 Image Analyses / Mo</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><CheckIcon color="text-[#0077B6]" />100 Image Analyses / Mo</li>
               <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><CheckIcon color="text-[#0077B6]" />Full Database Access</li>
-              <li className="flex items-start gap-3 text-sm font-medium text-slate-400"><XIcon />No Mock Audits</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><CheckIcon color="text-[#0077B6]" />Mock Audit Workflow</li>
             </ul>
-            {/* Updated ID for Pro */}
             <button onClick={() => handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')} disabled={loading !== null} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-95">
               {loading === 'pro' ? 'Processing...' : 'Select Pro'}
             </button>
@@ -149,7 +145,6 @@ export default function Pricing() {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[#023E8A] uppercase tracking-widest mb-2">Enterprise</h3>
               <div className="flex items-baseline text-slate-900">
-                {/* Updated to $199 */}
                 <span className="text-5xl font-bold tracking-tighter">$199</span>
                 <span className="ml-2 text-slate-400 text-xs font-bold uppercase">/mo</span>
               </div>
@@ -161,7 +156,6 @@ export default function Pricing() {
               <li className="flex items-start gap-3 text-sm font-medium text-slate-900"><CheckIcon color="text-[#023E8A]" />Mock Audit Workflow</li>
               <li className="flex items-start gap-3 text-sm font-medium text-slate-900"><CheckIcon color="text-[#023E8A]" />Staff Memo Generator</li>
             </ul>
-            {/* Updated ID for Enterprise */}
             <button onClick={() => handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')} disabled={loading !== null} className="w-full bg-[#023E8A] hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-95">
               {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
             </button>
