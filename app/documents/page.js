@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import SessionGuard from '@/components/SessionGuard' // <--- 1. IMPORT ADDED
 
 // --- CONSTANTS (Unchanged) ---
 const COUNTY_LABELS = {
@@ -46,7 +47,7 @@ export default function DocumentsPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // --- STATE (Unchanged) ---
+  // --- STATE ---
   const [activeCounty, setActiveCounty] = useState('washtenaw')
   const [systemStatus, setSystemStatus] = useState(
     'System ready. Regulatory Intelligence active for Washtenaw County.'
@@ -55,13 +56,16 @@ export default function DocumentsPage() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
+  
+  // User State
   const [userEmail, setUserEmail] = useState('')
+  const [userId, setUserId] = useState(null) // <--- 2. STATE ADDED
   const [loadingUser, setLoadingUser] = useState(true)
 
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
 
-  // --- EFFECTS (Unchanged) ---
+  // --- EFFECTS ---
   useEffect(() => {
     let cancelled = false
 
@@ -78,6 +82,7 @@ export default function DocumentsPage() {
 
         if (!cancelled) {
           setUserEmail(user.email || '')
+          setUserId(user.id) // <--- 3. CAPTURE ID HERE
         }
       } catch (err) {
         console.error('Error loading user', err)
@@ -190,10 +195,13 @@ export default function DocumentsPage() {
   return (
     <div className="fixed inset-0 h-full w-full bg-[#F8FAFC] text-slate-900 flex overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
       
+      {/* 4. ACTIVATE SESSION GUARD (Invisible) */}
+      {userId && <SessionGuard userId={userId} />}
+      
       {/* --- SIDEBAR (Desktop) --- */}
       <aside className="hidden lg:flex lg:flex-col w-72 bg-white border-r border-slate-200 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30">
         
-        {/* Brand - UPDATED: Removed Icon, Removed Subtitle, Bigger Text */}
+        {/* Brand */}
         <div className="h-20 flex items-center px-6 border-b border-slate-100">
            <div className="text-2xl font-bold text-slate-900 tracking-tight">
               protocol<span className="text-blue-600">LM</span>
@@ -257,7 +265,7 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* User Footer - UPDATED: Removed Icon */}
+        {/* User Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
             <div className="flex-1 min-w-0 px-1">
@@ -281,7 +289,7 @@ export default function DocumentsPage() {
         {/* Header (Desktop & Mobile) */}
         <header className="h-16 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0">
           <div className="flex items-center gap-4">
-             {/* Mobile Logo (Updated to match desktop style somewhat) */}
+             {/* Mobile Logo */}
              <div className="lg:hidden text-lg font-bold text-slate-900 tracking-tight">
                 protocol<span className="text-blue-600">LM</span>
              </div>
@@ -332,7 +340,7 @@ export default function DocumentsPage() {
                       Authorized documentation loaded for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>. Ask specific regulatory questions.
                    </p>
                    
-                   {/* Centered Suggestions (Only show when empty) */}
+                   {/* Centered Suggestions */}
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                       {suggestions.map((text, idx) => (
                          <button
@@ -388,7 +396,7 @@ export default function DocumentsPage() {
              )}
           </div>
 
-          {/* Fixed Input Bar - UPDATED: Removed Disclaimer */}
+          {/* Fixed Input Bar */}
           <div className="flex-shrink-0 z-20 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-4 lg:px-20 py-4 pb-safe">
              <div className="max-w-4xl mx-auto relative">
                 <form onSubmit={handleSend} className="relative group">
