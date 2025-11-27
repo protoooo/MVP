@@ -7,11 +7,11 @@ import Image from 'next/image'
 
 // --- CHAT DEMO BOX (Fixed Dimensions) ---
 const DemoChatContent = () => {
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<any[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
-  const scrollRef = useRef(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -49,9 +49,10 @@ const DemoChatContent = () => {
 
   useEffect(() => {
     let isMounted = true
-    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-    const typeChar = async (char) => {
-      setInputValue((prev) => prev + char)
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+    const typeChar = async (char: string) => {
+      setInputValue(prev => prev + char)
       await wait(Math.random() * 30 + 20)
     }
 
@@ -60,42 +61,51 @@ const DemoChatContent = () => {
         for (const step of SEQUENCE) {
           setIsTyping(true)
           await wait(500)
+
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
+
           await wait(500)
           setInputValue('')
           setIsTyping(false)
-          setMessages((prev) => [...prev, { role: 'user', content: step.text }])
+
+          setMessages(prev => [...prev, { role: 'user', content: step.text }])
+
           setIsThinking(true)
           await wait(1500)
           setIsThinking(false)
+
           let currentResponse = ''
           const words = step.response.split(' ')
-          setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+
           for (let i = 0; i < words.length; i++) {
             currentResponse += (i === 0 ? '' : ' ') + words[i]
-            setMessages((prev) => {
+            setMessages(prev => {
               const newMsgs = [...prev]
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
             await wait(20)
           }
+
           await wait(4000)
         }
+
         await wait(1000)
         setMessages([])
       }
     }
+
     runSimulation()
     return () => {
       isMounted = false
     }
   }, [])
 
-  const formatContent = (text) => {
+  const formatContent = (text: string) => {
     const keywords = [
       'CRITICAL ACTION',
       'VIOLATION',
@@ -130,7 +140,7 @@ const DemoChatContent = () => {
           </span>
         </div>
         <div className="flex items-center gap-2 bg-[#F0F9FF] px-3 py-1 rounded-full border border-[#90E0EF]">
-          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
           <span className="text-[9px] font-bold text-[#0077B6] uppercase tracking-wide">
             Online
           </span>
@@ -145,7 +155,7 @@ const DemoChatContent = () => {
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-              <div className="w-6 h-6 border-2 border-slate-100 rounded-full border-t-[#0077B6] animate-spin"></div>
+              <div className="w-6 h-6 border-2 border-slate-100 rounded-full border-t-[#0077B6] animate-spin" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#0077B6]/60">
               SYSTEM READY
@@ -177,17 +187,17 @@ const DemoChatContent = () => {
         {isThinking && (
           <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
             <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm">
-              <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
+              <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" />
               <div
                 className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"
                 style={{ animationDelay: '100ms' }}
-              ></div>
+              />
               <div
                 className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"
                 style={{ animationDelay: '200ms' }}
-              ></div>
+              />
               <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline">
-                Cross-checking local code & FDA Food Code…
+                Cross-checking local code &amp; FDA Food Code…
               </span>
             </div>
           </div>
@@ -200,12 +210,11 @@ const DemoChatContent = () => {
           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
             {inputValue}
             {isTyping && (
-              <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse"></span>
+              <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse" />
             )}
-            {!inputValue && !isTyping && (
-              <span className="text-slate-400 text-xs">
-                “What actually happens if this store fails its next inspection?”
-              </span>
+            {/* neutral placeholder only before first message */}
+            {!inputValue && !isTyping && messages.length === 0 && (
+              <span className="text-slate-400 text-xs">Ask a question…</span>
             )}
           </div>
           <div
@@ -230,12 +239,24 @@ const DemoChatContent = () => {
 }
 
 // --- COUNT UP ANIMATION ---
-const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
+const CountUp = ({
+  end,
+  duration = 2000,
+  prefix = '',
+  suffix = '',
+  decimals = 0
+}: {
+  end: number
+  duration?: number
+  prefix?: string
+  suffix?: string
+  decimals?: number
+}) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    let startTimestamp = null
-    const step = (timestamp) => {
+    let startTimestamp: number | null = null
+    const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
       setCount(progress * end)
@@ -254,12 +275,20 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
 }
 
 // --- AUTH MODAL WITH GOOGLE SIGN-IN ---
-const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
+const AuthModal = ({
+  isOpen,
+  onClose,
+  defaultView = 'login'
+}: {
+  isOpen: boolean
+  onClose: () => void
+  defaultView?: 'login' | 'signup'
+}) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState(null)
-  const [view, setView] = useState(defaultView)
+  const [message, setMessage] = useState<null | { type: 'error' | 'success'; text: string }>(null)
+  const [view, setView] = useState<'login' | 'signup'>(defaultView)
   const supabase = createClient()
   const router = useRouter()
 
@@ -273,7 +302,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     setMessage(null)
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -285,14 +314,14 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
       })
 
       if (error) throw error
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google sign-in error:', error)
       setMessage({ type: 'error', text: error.message })
       setLoading(false)
     }
   }
 
-  const handleAuth = async (e) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
@@ -329,7 +358,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', data.session.user.id)
+          .eq('id', data.session?.user.id)
           .single()
 
         if (!profile?.accepted_terms || !profile?.accepted_privacy) {
@@ -340,7 +369,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           window.location.href = '/pricing'
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       setMessage({ type: 'error', text: error.message })
     } finally {
       setLoading(false)
@@ -363,6 +392,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           {view === 'signup' ? 'Create Account' : 'Sign In'}
         </h2>
 
+        {/* Google sign-in */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
@@ -391,20 +421,22 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           </span>
         </button>
 
+        {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
+            <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-xs">
             <span className="px-2 bg-white text-slate-500">Or continue with email</span>
           </div>
         </div>
 
+        {/* Email/password form */}
         <form onSubmit={handleAuth} className="space-y-4">
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
             required
             className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg"
             placeholder="Email"
@@ -413,7 +445,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             required
             minLength={6}
             className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg"
@@ -460,13 +492,13 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
-  const [authView, setAuthView] = useState('login')
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login')
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     setMounted(true)
-    const authParam = searchParams.get('auth')
+    const authParam = searchParams.get('auth') as 'login' | 'signup' | null
     if (authParam) {
       setAuthView(authParam)
       setShowAuth(true)
@@ -474,7 +506,7 @@ function MainContent() {
     }
   }, [searchParams])
 
-  const openAuth = (view) => {
+  const openAuth = (view: 'login' | 'signup') => {
     setAuthView(view)
     setShowAuth(true)
   }
@@ -488,20 +520,16 @@ function MainContent() {
             src="/background.png"
             alt="Background"
             fill
-            className="object-cover opacity-[0.42]"
+            className="object-cover opacity-[0.24]"
             priority
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
       </div>
 
       {/* NAV */}
       <nav className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
-        <div
-          className={`transition-all duration-1000 ${
-            mounted ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
+        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#023E8A]">
             protocol<span style={{ color: '#0077B6' }}>LM</span>
           </h1>
@@ -549,9 +577,8 @@ function MainContent() {
 
           <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-4 md:mb-5">
             protocol<span className="text-[#0077B6] font-bold">LM</span> gives your team
-            instant answers from{' '}
-            <strong>Washtenaw, Wayne, and Oakland County</strong> rules, so they handle
-            violations correctly before an inspector or customer ever sees them.
+            instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> rules,
+            so they handle violations correctly before an inspector or customer ever sees them.
           </p>
 
           <p className="text-[11px] md:text-xs text-slate-500 font-semibold uppercase tracking-[0.25em] mb-5">
@@ -563,9 +590,10 @@ function MainContent() {
             className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm"
           >
             <span className="relative z-10">Start 30-Day Trial For Your Store</span>
-            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
+            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]" />
           </button>
 
+          {/* Stats */}
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
@@ -661,7 +689,7 @@ function MainContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div></div>}>
+    <Suspense fallback={<div />}>
       <MainContent />
     </Suspense>
   )
