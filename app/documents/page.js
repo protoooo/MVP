@@ -467,10 +467,10 @@ export default function DocumentsPage() {
             
             {messages.length < 2 && !image && (
                <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">❄️ Cooling Requirements</button>
-                  <button onClick={() => setInput("Employee has a sore throat and fever. Exclusion?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">🤒 Employee Health</button>
-                  <button onClick={() => setInput("Found mouse droppings in dry storage.")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">🐀 Pest Control Action</button>
-                  <button onClick={() => setInput("What foods require date marking? 7 day rule?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">📅 Date Marking Rules</button>
+                  <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">Cooling Requirements</button>
+                  <button onClick={() => setInput("Employee has a sore throat and fever. Exclusion?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">Employee Health</button>
+                  <button onClick={() => setInput("Found mouse droppings in dry storage.")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">Pest Control Action</button>
+                  <button onClick={() => setInput("What foods require date marking? 7 day rule?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">Date Marking Rules</button>
                </div>
             )}
 
