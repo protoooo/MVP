@@ -17,13 +17,11 @@ export default function Pricing() {
       
       if (session) {
         setIsAuthenticated(true)
-        
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
           .eq('id', session.user.id)
           .single()
-          
         if (profile?.is_subscribed) {
           setIsSubscribed(true)
         }
@@ -63,7 +61,7 @@ export default function Pricing() {
   )
 
   return (
-    <div className="min-h-screen bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col">
+    <div className="min-h-screen bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col overflow-x-hidden">
       
       <header className="fixed top-0 w-full border-b border-[#90E0EF] bg-[#F0F9FF]/95 backdrop-blur-sm z-50 h-20 flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
@@ -78,15 +76,15 @@ export default function Pricing() {
              </div>
           </div>
 
-          <div className="flex gap-4 md:gap-6 text-sm font-bold uppercase tracking-widest">
+          <div className="flex gap-4 md:gap-6 text-sm font-bold uppercase tracking-widest items-center">
             {!isAuthenticated ? (
               <>
                 <button onClick={() => router.push('/?auth=login')} className="text-slate-500 hover:text-[#0077B6] transition-colors hidden md:block">Sign In</button>
-                <button onClick={() => router.push('/?auth=signup')} className="text-[#0077B6] border border-[#0077B6] px-4 py-2 rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 text-xs md:text-sm">Create Account</button>
+                <button onClick={() => router.push('/?auth=signup')} className="text-[#0077B6] border border-[#0077B6] px-3 py-2 rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 text-xs md:text-sm whitespace-nowrap">Create Account</button>
               </>
             ) : (
               !isSubscribed && (
-                <div className="text-[#023E8A] flex items-center gap-2">
+                <div className="text-[#023E8A] flex items-center gap-2 text-xs md:text-sm">
                   <div className="w-2 h-2 bg-[#0077B6] rounded-full animate-pulse"></div>
                   Select a Plan
                 </div>
@@ -96,11 +94,11 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 pt-24 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full items-stretch">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 pt-24 pb-12 pb-safe">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 max-w-6xl w-full items-stretch">
           
           {/* STARTER */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col hover:border-[#0077B6]/30 transition-colors shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col hover:border-[#0077B6]/30 transition-colors shadow-sm relative z-0">
             <div className="mb-6">
               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Starter</h3>
               <div className="flex items-baseline text-slate-900">
@@ -143,7 +141,7 @@ export default function Pricing() {
           </div>
 
           {/* ENTERPRISE */}
-          <div className="bg-white border border-[#023E8A] rounded-2xl p-8 flex flex-col shadow-md">
+          <div className="bg-white border border-[#023E8A] rounded-2xl p-8 flex flex-col shadow-md relative z-0">
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[#023E8A] uppercase tracking-widest mb-2">Enterprise</h3>
               <div className="flex items-baseline text-slate-900">
@@ -171,6 +169,9 @@ export default function Pricing() {
           </p>
         </div>
       </div>
+      <style jsx global>{`
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+      `}</style>
     </div>
   )
 }
