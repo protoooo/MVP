@@ -195,64 +195,137 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const supabase = createClient()
   const router = useRouter()
 
-  useEffect(() => { setView(defaultView); setMessage(null) }, [isOpen, defaultView])
+  useEffect(() => { 
+    setView(defaultView)
+    setMessage(null) 
+  }, [isOpen, defaultView])
 
-  const handleAuth = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
     
-    if (view === 'signup') {
-      supabase.auth.signUp({ 
-        email, 
-        password, 
-        options: { 
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`, 
-          data: { county: 'washtenaw' } 
-        } 
-      }).then(({ data, error }) => {
+    try {
+      if (view === 'signup') {
+        // Sign up with email confirmation
+        const { data, error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { 
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: { county: 'washtenaw' }
+          } 
+        })
+
         if (error) throw error
-        if (data.session) {
-          window.location.href = '/pricing'
-        } else {
-          setMessage({ type: 'success', text: 'Verification link sent.' })
+
+        // Check if email confirmation is required
+        if (data?.user && !data?.session) {
+          setMessage({ 
+            type: 'success', 
+            text: 'Check your email to confirm your account!' 
+          })
+        } else if (data?.session) {
+          // Email confirmation disabled - redirect immediately
+          window.location.href = '/accept-terms'
         }
-      }).catch(error => {
-        setMessage({ type: 'error', text: error.message })
-      }).finally(() => {
-        setLoading(false)
-      })
-    } else {
-      supabase.auth.signInWithPassword({ email, password }).then(({ data, error }) => {
+      } else {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({ 
+          email, 
+          password 
+        })
+
         if (error) throw error
-        return supabase.from('user_profiles').select('is_subscribed').eq('id', data.session.user.id).single()
-      }).then(({ data: profile }) => {
-        if (profile?.is_subscribed) {
+
+        // Check subscription status
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed, accepted_terms, accepted_privacy')
+          .eq('id', data.session.user.id)
+          .single()
+
+        // Route based on profile state
+        if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+          window.location.href = '/accept-terms'
+        } else if (profile?.is_subscribed) {
           window.location.href = '/documents'
         } else {
           window.location.href = '/pricing'
         }
-      }).catch(error => {
-        setMessage({ type: 'error', text: error.message })
-      }).finally(() => {
-        setLoading(false)
-      })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message })
+    } finally {
+      setLoading(false)
     }
   }
 
   if (!isOpen) return null
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#023E8A]/20 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-3xl relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-[#023E8A]">✕</button>
-        <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
-        <div className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password" />
-          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-slate-400 hover:text-[#023E8A]"
+        >
+          ✕
+        </button>
+        
+        <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">
+          {view === 'signup' ? 'Create Account' : 'Sign In'}
+        </h2>
+        
+        <form onSubmit={handleAuth} className="space-y-4">
+          <input 
+            type="email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" 
+            placeholder="Email" 
+          />
+          
+          <input 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            minLength={6}
+            className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" 
+            placeholder="Password (min 6 characters)" 
+          />
+          
+          <button 
+            type="submit"
+            disabled={loading} 
+            className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}
+          </button>
+        </form>
+        
+        {message && (
+          <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${
+            message.type === 'error' 
+              ? 'bg-red-50 text-red-600 border-red-100' 
+              : 'bg-green-50 text-green-600 border-green-100'
+          }`}>
+            {message.text}
+          </div>
+        )}
+        
+        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+          <button 
+            onClick={() => setView(view === 'signup' ? 'login' : 'signup')} 
+            className="text-xs text-slate-400 hover:text-[#0077B6] font-sans"
+          >
+            {view === 'signup' 
+              ? 'Already have an account? Sign In' 
+              : 'Need access? Create Account'}
+          </button>
         </div>
-        {message && <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#0077B6] font-sans">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
       </div>
     </div>
   )
