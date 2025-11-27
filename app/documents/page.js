@@ -68,6 +68,9 @@ export default function DocumentsPage() {
     'System ready. Regulatory Intelligence active for Washtenaw County.'
   )
 
+  // We need a way to show or hide the mobile chat history overlay
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false); 
+  
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
@@ -111,12 +114,14 @@ export default function DocumentsPage() {
   useEffect(() => {
     setSystemStatus(`System ready. ${COUNTY_STATUS[activeCounty] || ''}`)
     setMessages([])
+    setIsMobileChatOpen(false); // Close chat when county changes
   }, [activeCounty])
 
   useEffect(() => {
     if (!scrollRef.current) return
+    // Scroll to bottom only if the chat is open (on mobile) or when a message is sent (desktop/mobile)
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [messages])
+  }, [messages, isMobileChatOpen])
 
   async function handleSend(e) {
     if (e) e.preventDefault()
@@ -130,6 +135,10 @@ export default function DocumentsPage() {
 
     // Add empty assistant message for thinking animation
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+    
+    // Open chat overlay on mobile after sending the first message
+    if (!isMobileChatOpen) setIsMobileChatOpen(true);
+
 
     try {
       const res = await fetch('/api/chat', {
@@ -203,12 +212,160 @@ export default function DocumentsPage() {
 
   const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
   const unitsInActiveCounty = FRANCHISEE_UNITS.filter(u => u.county === activeCounty);
+  
+  // RENDER HELPER FUNCTION for the Input Bar (used in both desktop and mobile layouts)
+  const renderInputBar = (isMobileFooter = false) => (
+    <div className={classNames(
+      "px-4 py-2.5 flex-shrink-0",
+      isMobileFooter ? 'bg-white border-t border-slate-200' : 'bg-slate-50 border-t border-slate-200'
+    )}>
+      {/* Suggestion tiles - above input (only show on empty chat and if not mobile footer) */}
+      {messages.length === 0 && !isMobileFooter && (
+        <div className="mb-2.5 grid grid-cols-1 gap-2">
+          {suggestions.slice(0, 2).map((text, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSuggestionClick(text)}
+              className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
+            >
+              <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
+                →
+              </span>
+              <span className="leading-relaxed group-hover:text-slate-900 line-clamp-2">{text}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      <form onSubmit={handleSend} className="max-w-5xl mx-auto flex items-center gap-2.5 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-11 px-3">
+        <button
+          type="button"
+          onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
+          className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all flex-shrink-0"
+          aria-label="Use example question"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+
+        <input
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
+          className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 font-medium h-full px-2"
+        />
+
+        <button
+          type="submit" // Changed to submit for form handling
+          disabled={isSending || !input.trim()}
+          className={classNames(
+            'flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-95 flex-shrink-0',
+            input.trim()
+              ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
+              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+          )}
+          aria-label="Send question"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="w-3.5 h-3.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 4l16 8-16 8 3-8-3-8z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 12h6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </form>
+    </div>
+  );
+  
+  // RENDER HELPER FUNCTION for the Messages (used in both desktop and mobile overlays)
+  const renderMessagesPanel = () => (
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 custom-scroll min-h-0"
+      >
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center py-6">
+            <div className="w-14 h-14 mb-4 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-base font-bold text-slate-900 mb-1.5">
+              Compliance Intelligence Ready
+            </p>
+            <p className="text-sm text-slate-600 max-w-xs mx-auto leading-relaxed">
+              Get instant, auditable answers to critical regulatory questions.
+            </p>
+          </div>
+        ) : (
+          messages.map((msg, idx) => {
+            const isUser = msg.role === 'user'
+            const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
+            
+            return (
+              <div
+                key={idx}
+                className={classNames(
+                  'flex animate-fadeIn',
+                  isUser ? 'justify-end' : 'justify-start'
+                )}
+              >
+                <div
+                  className={classNames(
+                    'max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed shadow-sm',
+                    isUser
+                      ? 'bg-blue-600 text-white rounded-br-sm'
+                      : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
+                  )}
+                >
+                  {isLastAssistant && msg.content === '' ? (
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
+                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
+                        <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
+                      </div>
+                      <span className="text-slate-600 text-xs font-medium">Processing query...</span>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+  );
+
 
   return (
     <div className="h-screen w-full bg-[#F8FAFB] text-slate-900 flex overflow-hidden font-sans">
+      
       {/* LEFT SIDEBAR (No functional changes) */}
       <aside className="hidden lg:flex lg:flex-col w-80 border-r border-slate-200 bg-white shadow-sm">
-        {/* Logo */}
+        {/* Logo and Jurisdictions remain the same */}
+        {/* ... (Existing Logo and Jurisdictions code) ... */}
         <div className="px-8 py-5 border-b border-slate-200">
           <div className="text-xl font-bold text-slate-900">
             protocol<span className="text-blue-600">LM</span>
@@ -217,8 +374,6 @@ export default function DocumentsPage() {
             Compliance Intelligence
           </div>
         </div>
-
-        {/* Jurisdictions */}
         <div className="px-6 py-5 border-b border-slate-200">
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
@@ -256,13 +411,13 @@ export default function DocumentsPage() {
             })}
           </div>
         </div>
-
-        {/* History (No functional changes) */}
+        
+        {/* History remains the same */}
         <div className="px-6 py-5 flex-1 overflow-hidden">
           <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-3">
             Query History
           </p>
-          <div className="text-xs text-slate-600 h-full overflow-y-auto"> {/* Added h-full and overflow for better scroll */}
+          <div className="text-xs text-slate-600 h-full overflow-y-auto">
             {messages.length === 0 ? (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 text-center">
                 <div className="w-10 h-10 mx-auto mb-2.5 rounded-full bg-slate-100 flex items-center justify-center">
@@ -297,7 +452,7 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Bottom User (No functional changes) */}
+        {/* Bottom User remains the same */}
         <div className="mt-auto border-t border-slate-200 px-6 py-3.5 bg-slate-50">
           <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm">
             <div className="flex-1 min-w-0">
@@ -375,10 +530,11 @@ export default function DocumentsPage() {
         </header>
 
         {/* CONTENT: TWO PANEL LAYOUT (DASHBOARD & CHAT) */}
-        <section className="flex-1 flex px-4 lg:px-6 py-3 gap-4 overflow-hidden min-h-0">
+        {/* Added pb-16 to the section for mobile so content isn't hidden under the fixed footer */}
+        <section className="flex-1 flex px-4 lg:px-6 py-3 gap-4 overflow-hidden min-h-0 lg:pb-3 pb-20"> 
 
-          {/* 1. STRATEGIC DASHBOARD (Executive View - 70% Width) */}
-          <div className="flex-[3] bg-white border border-slate-200 rounded-xl shadow-lg p-6 overflow-y-auto custom-scroll">
+          {/* 1. STRATEGIC DASHBOARD (Executive View - Always visible) */}
+          <div className="flex-1 lg:flex-[3] bg-white border border-slate-200 rounded-xl shadow-lg p-6 overflow-y-auto custom-scroll">
             <h2 className="text-xl font-extrabold text-slate-900 mb-4 tracking-tight">
               Operational Excellence: Compliance & Risk Overview
             </h2>
@@ -474,11 +630,10 @@ export default function DocumentsPage() {
               </table>
             </div>
             {/* End Unit Risk Table */}
-
           </div>
 
-          {/* 2. COMPLIANCE CHAT (Utility Tool - 30% Width) */}
-          <div className="flex-[2] max-w-lg flex flex-col"> {/* Increased width slightly */}
+          {/* 2. COMPLIANCE CHAT (Utility Tool - Desktop Only) */}
+          <div className="hidden lg:block lg:flex-[2] max-w-lg flex flex-col">
             <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col min-h-0">
               
               {/* Chat Panel Header */}
@@ -491,152 +646,73 @@ export default function DocumentsPage() {
                 </p>
               </div>
 
-              {/* Messages Panel (Existing logic) */}
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 custom-scroll min-h-0"
-              >
-                {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-6">
-                    <div className="w-14 h-14 mb-4 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
-                      <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-base font-bold text-slate-900 mb-1.5">
-                      Compliance Intelligence Ready
-                    </p>
-                    <p className="text-sm text-slate-600 max-w-xs mx-auto leading-relaxed">
-                      Get instant, auditable answers to critical regulatory questions.
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg, idx) => {
-                    const isUser = msg.role === 'user'
-                    const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className={classNames(
-                          'flex animate-fadeIn',
-                          isUser ? 'justify-end' : 'justify-start'
-                        )}
-                      >
-                        <div
-                          className={classNames(
-                            'max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed shadow-sm',
-                            isUser
-                              ? 'bg-blue-600 text-white rounded-br-sm'
-                              : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
-                          )}
-                        >
-                          {isLastAssistant && msg.content === '' ? (
-                            <div className="flex items-center gap-2.5">
-                              <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
-                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
-                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
-                              </div>
-                              <span className="text-slate-600 text-xs font-medium">Processing query...</span>
-                            </div>
-                          ) : (
-                            <div className="whitespace-pre-wrap">{msg.content}</div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
-              </div>
+              {/* Messages Panel */}
+              {renderMessagesPanel()}
 
-              {/* INPUT BAR (Existing logic) */}
-              <div className="border-t border-slate-200 bg-slate-50 px-4 py-2.5 flex-shrink-0">
-                {/* Suggestion tiles - above input */}
-                {messages.length === 0 && (
-                  <div className="mb-2.5 grid grid-cols-1 gap-2">
-                    {suggestions.slice(0, 2).map((text, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSuggestionClick(text)}
-                        className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
-                      >
-                        <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
-                          →
-                        </span>
-                        <span className="leading-relaxed group-hover:text-slate-900 line-clamp-2">{text}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2.5 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-11 px-3">
-                  <button
-                    type="button"
-                    onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all flex-shrink-0"
-                    aria-label="Use example question"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
-                    className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 font-medium h-full px-2"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={handleSend}
-                    disabled={isSending || !input.trim()}
-                    className={classNames(
-                      'flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-95 flex-shrink-0',
-                      input.trim()
-                        ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    )}
-                    aria-label="Send question"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M4 4l16 8-16 8 3-8-3-8z"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M10 12h6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              {/* End Input Bar */}
+              {/* INPUT BAR (Desktop version) */}
+              {renderInputBar(false)}
             </div>
           </div>
-          {/* End Chat Panel */}
+          {/* End Desktop Chat Panel */}
 
         </section>
         {/* END CONTENT */}
       </main>
+      
+      {/* MOBILE CHAT HISTORY OVERLAY */}
+      {isMobileChatOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-white/90 backdrop-blur-sm flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shadow-sm flex-shrink-0">
+            <h3 className="text-lg font-bold text-slate-900">
+              Compliance Chat
+            </h3>
+            <button
+              onClick={() => setIsMobileChatOpen(false)}
+              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Messages Panel */}
+          {renderMessagesPanel()}
+
+          {/* Input Bar is rendered below, outside of this component */}
+        </div>
+      )}
+
+      {/* FIXED MOBILE FOOTER (Always visible on mobile/tablet screens for action) */}
+      <footer className="fixed bottom-0 left-0 right-0 lg:hidden z-50 bg-white border-t border-slate-200">
+        {/* Show a button to open chat history if the history is empty */}
+        {messages.length === 0 && (
+          <div className="px-4 pt-2.5">
+            <button
+              onClick={() => setIsMobileChatOpen(true)}
+              className="w-full text-center bg-blue-50 border border-blue-200 text-blue-600 rounded-lg text-xs font-semibold py-2 mb-2 hover:bg-blue-100"
+            >
+              Consult ProtocolLM Assistant
+            </button>
+          </div>
+        )}
+        
+        {/* If chat history exists, show the input bar directly */}
+        {renderInputBar(true)}
+
+        {/* Action Button for Chat Overlay (when messages exist) */}
+        {messages.length > 0 && !isMobileChatOpen && (
+          <div className="px-4 pb-2.5 pt-1">
+            <button
+              onClick={() => setIsMobileChatOpen(true)}
+              className="w-full text-center bg-blue-600 text-white rounded-lg text-xs font-semibold py-2 hover:bg-blue-700 transition-colors shadow-lg"
+            >
+              View Conversation ({messages.filter(m => m.role === 'user').length} queries)
+            </button>
+          </div>
+        )}
+      </footer>
 
       {/* Style block remains the same */}
       <style jsx global>{`
