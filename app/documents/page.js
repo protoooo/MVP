@@ -13,14 +13,15 @@ const COUNTY_NAMES = {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
-// --- ICONS (Cleaned up for modern look) ---
+// --- ICONS ---
 const Icons = {
   Chat: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
   Image: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
   Audit: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
   Send: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>,
   Plus: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>,
-  Menu: () => <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+  Menu: () => <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>,
+  Globe: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
 }
 
 // --- MODE SELECTOR COMPONENT ---
@@ -67,7 +68,6 @@ export default function DocumentsPage() {
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   
   const [messages, setMessages] = useState([])
   const [chatHistory, setChatHistory] = useState([])
@@ -105,7 +105,7 @@ export default function DocumentsPage() {
         return 
       }
 
-      // FIX: Force lowercase to match COUNTY_NAMES keys
+      // CODE TO HANDLE CASE SENSITIVITY AUTOMATICALLY
       const countyKey = profile.county ? profile.county.toLowerCase() : 'washtenaw'
       
       setUserCounty(countyKey)
@@ -210,10 +210,8 @@ export default function DocumentsPage() {
     try {
       const { error } = await supabase.from('user_profiles').update({ county: newCounty }).eq('id', session.user.id)
       if (error) throw error
-      // FIX: Ensure state update forces re-render of welcome message logic
       setUserCounty(newCounty)
       setShowCountySelector(false)
-      // Reset chat to trigger the new welcome message with correct county
       setMessages([{ role: 'assistant', content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[newCounty]}.`, citations: [] }])
       setCurrentChatId(null)
     } catch (error) { alert('Failed to update jurisdiction.') } finally { setIsUpdatingCounty(false) }
@@ -327,7 +325,6 @@ export default function DocumentsPage() {
           .chat-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; background: white !important; }
           .no-print, form, .input-bar { display: none !important; }
         }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -373,7 +370,6 @@ export default function DocumentsPage() {
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative w-72 h-full bg-slate-50 border-r border-slate-200 z-40 transition-transform duration-300 ease-in-out flex flex-col no-print`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-8">
-             {/* Logo */}
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-[#0077B6] rounded-lg flex items-center justify-center text-white font-bold text-lg">P</div>
               <span className="font-bold text-lg text-slate-800 tracking-tight">protocol<span className="text-[#0077B6]">LM</span></span>
@@ -445,16 +441,16 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 pb-40 pt-6">
+        <div className="flex-1 overflow-y-auto px-4 pb-48 pt-6">
           <div className="max-w-3xl mx-auto space-y-8">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mr-4 shadow-sm mt-1 text-[#0077B6]">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mr-4 shadow-sm mt-0.5 text-[#0077B6] self-start">
+                    <Icons.Globe />
                   </div>
                 )}
-                <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md' : 'text-slate-800'}`}>
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md' : 'text-slate-800 mt-1'}`}>
                    {msg.image && <img src={msg.image} alt="Uploaded content" className="mb-4 rounded-xl border border-white/20 max-w-sm" />}
                    {msg.role === 'user' ? <p className="text-[15px] leading-relaxed">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
@@ -471,16 +467,17 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Input Area - Floating & Clean */}
+        {/* Input Area */}
         <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center z-20 input-bar">
           <div className="w-full max-w-3xl flex flex-col items-center">
             
-            {/* Suggestions Chips (Only on empty chat) */}
+            {/* UPDATED: Suggestions Chips Grid (Fixed Width) */}
             {messages.length < 2 && !image && (
-               <div className="flex flex-wrap justify-center gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">❄️ Cooling Requirements</button>
-                  <button onClick={() => setInput("Employee has a sore throat and fever. Exclusion?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">🤒 Employee Health</button>
-                  <button onClick={() => setInput("Found mouse droppings in dry storage.")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">🐀 Pest Control</button>
+               <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">❄️ Cooling Requirements</button>
+                  <button onClick={() => setInput("Employee has a sore throat and fever. Exclusion?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">🤒 Employee Health</button>
+                  <button onClick={() => setInput("Found mouse droppings in dry storage.")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">🐀 Pest Control Action</button>
+                  <button onClick={() => setInput("What foods require date marking? 7 day rule?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">📅 Date Marking Rules</button>
                </div>
             )}
 
@@ -490,7 +487,6 @@ export default function DocumentsPage() {
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
               
               <div className="flex items-center p-2">
-                {/* Mode Button */}
                 <div className="relative">
                   <button type="button" onClick={() => setShowModeMenu(!showModeMenu)} className="p-3 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#0077B6] transition-all">
                      <Icons.Plus />
