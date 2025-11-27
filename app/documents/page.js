@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
+// --- CONFIGURATION ---
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -12,31 +13,45 @@ const COUNTY_NAMES = {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
+// --- ICONS (Cleaned up for modern look) ---
+const Icons = {
+  Chat: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
+  Image: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Audit: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+  Send: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>,
+  Plus: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>,
+  Menu: () => <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+}
+
 // --- MODE SELECTOR COMPONENT ---
 const ModeSelector = ({ currentMode, onSelect, onClose }) => {
   const modes = [
-    { id: 'chat', label: 'Standard Query', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg> },
-    { id: 'image', label: 'Image Analysis', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
-    { id: 'audit', label: 'Mock Audit Protocol', icon: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg> }
+    { id: 'chat', label: 'Standard Query', icon: <Icons.Chat /> },
+    { id: 'image', label: 'Image Analysis', icon: <Icons.Image /> },
+    { id: 'audit', label: 'Mock Audit Protocol', icon: <Icons.Audit /> }
   ]
 
   return (
-    <div className="absolute bottom-full left-0 mb-3 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+    <div className="absolute bottom-16 left-0 w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 animate-in fade-in slide-in-from-bottom-4 duration-300 z-50">
       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 py-2">Select Mode</div>
       <div className="space-y-1">
         {modes.map((mode) => (
           <button
             key={mode.id}
             onClick={() => { onSelect(mode.id); onClose(); }}
-            className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-medium transition-all duration-200 group ${currentMode === mode.id ? 'bg-[#F0F9FF] text-[#0077B6]' : 'text-slate-600 hover:bg-[#F0F9FF]'}`}
+            className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
+              currentMode === mode.id 
+              ? 'bg-slate-100 text-slate-900' 
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`${currentMode === mode.id ? 'text-[#0077B6]' : 'text-slate-400 group-hover:text-slate-600'}`}>{mode.icon}</div>
+              <div className={`${currentMode === mode.id ? 'text-[#0077B6]' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                {mode.icon}
+              </div>
               {mode.label}
             </div>
-            <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 ${currentMode === mode.id ? 'border-[#0077B6] bg-[#0077B6]' : 'border-slate-300 group-hover:border-slate-400'}`}>
-              {currentMode === mode.id && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
-            </div>
+            {currentMode === mode.id && <div className="w-2 h-2 rounded-full bg-[#0077B6]"></div>}
           </button>
         ))}
       </div>
@@ -48,7 +63,7 @@ export default function DocumentsPage() {
   const [session, setSession] = useState(null)
   const [subscriptionInfo, setSubscriptionInfo] = useState(null)
   const [userCounty, setUserCounty] = useState('washtenaw')
-  const [isChecking, setIsChecking] = useState(true) // <--- NEW: PREVENTS FLASHING
+  const [isChecking, setIsChecking] = useState(true)
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
@@ -79,7 +94,6 @@ export default function DocumentsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.push('/'); return }
 
-      // Check Subscription
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('is_subscribed, requests_used, images_used, county')
@@ -91,18 +105,17 @@ export default function DocumentsPage() {
         return 
       }
 
-      // Only allow access if we pass checks
-      setUserCounty(profile.county || 'washtenaw')
+      // FIX: Force lowercase to match COUNTY_NAMES keys
+      const countyKey = profile.county ? profile.county.toLowerCase() : 'washtenaw'
+      
+      setUserCounty(countyKey)
       setSession(session)
       setSubscriptionInfo({ requestsUsed: profile?.requests_used || 0 })
-      setIsChecking(false) // <--- UNLOCK SCREEN
+      setIsChecking(false)
     }
     checkAccess()
   }, [supabase, router])
 
-  // ... (Keep all loadChatHistory, saveCurrentChat, etc. EXACTLY the same)
-  // Just forcing the isChecking logic above.
-  
   useEffect(() => { if (session) loadChatHistory() }, [session])
 
   const loadChatHistory = async () => {
@@ -197,9 +210,12 @@ export default function DocumentsPage() {
     try {
       const { error } = await supabase.from('user_profiles').update({ county: newCounty }).eq('id', session.user.id)
       if (error) throw error
+      // FIX: Ensure state update forces re-render of welcome message logic
       setUserCounty(newCounty)
       setShowCountySelector(false)
-      startNewChat()
+      // Reset chat to trigger the new welcome message with correct county
+      setMessages([{ role: 'assistant', content: `System ready. Regulatory Intelligence active for ${COUNTY_NAMES[newCounty]}.`, citations: [] }])
+      setCurrentChatId(null)
     } catch (error) { alert('Failed to update jurisdiction.') } finally { setIsUpdatingCounty(false) }
   }
 
@@ -223,12 +239,11 @@ export default function DocumentsPage() {
     if (lastIndex < content.length) parts.push({ type: 'text', content: content.slice(lastIndex) })
 
     return (
-      <div className="whitespace-pre-wrap font-sans text-slate-700 text-sm leading-relaxed">
+      <div className="whitespace-pre-wrap font-sans text-slate-700 text-[15px] leading-7">
         {parts.map((part, i) =>
           part.type === 'text' ? <span key={i}>{part.content}</span> : (
-            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-600 hover:border-[#0077B6] hover:text-[#0077B6] px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide shadow-sm">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              {part.document} <span className="opacity-50">| P.{part.pages}</span>
+            <button key={i} onClick={() => handleCitationClick(part)} className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 px-2 py-0.5 rounded-md text-[11px] font-bold transition-all mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide">
+              {part.document} <span className="opacity-60">P.{part.pages}</span>
             </button>
           )
         )}
@@ -295,45 +310,43 @@ export default function DocumentsPage() {
 
   if (isChecking || !session) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center font-sans text-xs text-slate-400 flex-col gap-4">
-        <div className="w-8 h-8 border-2 border-slate-200 border-t-[#0077B6] rounded-full animate-spin"></div>
-        VERIFYING ACCESS...
+      <div className="min-h-screen bg-white flex items-center justify-center font-sans text-sm text-slate-400 flex-col gap-4">
+        <div className="w-8 h-8 border-2 border-slate-100 border-t-[#0077B6] rounded-full animate-spin"></div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 flex bg-[#F0F9FF] text-slate-900 overflow-hidden font-sans">
-      {/* ... (Rest of your JSX remains exactly the same as the "Blue Theme" version) ... */}
-      {/* I'm saving space, but paste the rest of the Component here */}
+    <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans selection:bg-blue-100">
       
+      {/* --- PRINT STYLES --- */}
       <style jsx global>{`
         @media print {
           body * { visibility: hidden; }
           .chat-container, .chat-container * { visibility: visible; }
           .chat-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; background: white !important; }
-          .no-print, form, .p-4.border-t, .bg-white\/80 { display: none !important; }
-          .bg-\[\#0077B6\] { background-color: white !important; color: black !important; border: 1px solid #000; font-weight: bold; }
-          .text-white { color: black !important; }
-          .text-slate-800 { color: black !important; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-          th { background-color: #f3f4f6; font-weight: bold; }
+          .no-print, form, .input-bar { display: none !important; }
         }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
       `}</style>
 
-      {/* MODALS (County, PDF, Success) */}
+      {/* --- MODALS --- */}
       {showCountySelector && (
-        <div className="fixed inset-0 z-50 bg-[#023E8A]/20 flex items-center justify-center p-4 backdrop-blur-sm no-print">
-          <div className="bg-white shadow-2xl max-w-md w-full p-6 border border-slate-200 rounded-2xl">
+        <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 no-print">
+          <div className="bg-white shadow-2xl max-w-sm w-full p-6 border border-slate-100 rounded-3xl ring-1 ring-slate-900/5">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-[#023E8A] uppercase tracking-widest">Select Jurisdiction</h3>
-              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-[#023E8A]">✕</button>
+              <h3 className="font-semibold text-slate-900">Select Jurisdiction</h3>
+              <button onClick={() => setShowCountySelector(false)} className="text-slate-400 hover:text-slate-600 transition-colors">✕</button>
             </div>
             <div className="space-y-2">
               {Object.entries(COUNTY_NAMES).map(([key, name]) => (
-                <button key={key} onClick={() => handleCountyChange(key)} disabled={isUpdatingCounty} className={`w-full text-left p-4 border transition-all font-bold text-xs uppercase tracking-wide flex items-center justify-between rounded-xl ${userCounty === key ? 'border-[#0077B6] bg-[#F0F9FF] text-[#0077B6]' : 'border-slate-200 hover:border-[#0077B6] text-slate-500'}`}>
-                  {name} {userCounty === key && <span>●</span>}
+                <button key={key} onClick={() => handleCountyChange(key)} disabled={isUpdatingCounty} 
+                  className={`w-full text-left p-4 transition-all font-medium text-sm flex items-center justify-between rounded-2xl ${userCounty === key ? 'bg-[#0077B6] text-white shadow-md transform scale-[1.02]' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                  {name} {userCounty === key && <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">ACTIVE</span>}
                 </button>
               ))}
             </div>
@@ -342,149 +355,166 @@ export default function DocumentsPage() {
       )}
 
       {viewingPdf && (
-        <div className="fixed inset-0 z-[60] bg-[#023E8A]/50 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 no-print">
-          <div className="bg-white w-full h-full max-w-6xl overflow-hidden shadow-2xl flex flex-col rounded-2xl">
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white">
+        <div className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 no-print">
+          <div className="bg-white w-full h-full max-w-5xl shadow-2xl flex flex-col rounded-2xl ring-1 ring-slate-900/5">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-[#023E8A] text-sm uppercase tracking-wide">{viewingPdf.title}</h3>
-                <p className="text-xs text-slate-500 font-mono">Page {viewingPdf.targetPage}</p>
+                <h3 className="font-semibold text-slate-900">{viewingPdf.title}</h3>
+                <p className="text-xs text-slate-500">Page {viewingPdf.targetPage}</p>
               </div>
-              <button onClick={() => setViewingPdf(null)} className="bg-[#F0F9FF] hover:bg-[#0077B6] hover:text-white text-[#0077B6] px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-xl transition-colors">Close</button>
+              <button onClick={() => setViewingPdf(null)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 text-xs font-bold rounded-lg transition-colors">Close</button>
             </div>
             <iframe src={`/documents/${userCounty}/${viewingPdf.filename}${viewingPdf.targetPage ? `#page=${viewingPdf.targetPage}` : ''}`} className="flex-1 w-full bg-slate-50" title="PDF Viewer" />
           </div>
         </div>
       )}
 
-      {showSuccessMessage && <div className="fixed top-0 left-0 right-0 z-[70] bg-[#0077B6] text-white px-6 py-4 shadow-lg flex justify-center no-print"><span className="text-xs font-bold uppercase tracking-widest">Account Active. Welcome to protocolLM.</span></div>}
-
-      {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} md:relative md:flex inset-y-0 left-0 w-full md:w-72 bg-[#F0F9FF] border-r border-[#90E0EF] text-slate-600 flex-col z-40 overflow-hidden no-print h-full`}>
-        <div className="p-6 border-b border-[#90E0EF] flex-shrink-0">
+      {/* --- SIDEBAR --- */}
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative w-72 h-full bg-slate-50 border-r border-slate-200 z-40 transition-transform duration-300 ease-in-out flex flex-col no-print`}>
+        <div className="p-6">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-lg font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
+             {/* Logo */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#0077B6] rounded-lg flex items-center justify-center text-white font-bold text-lg">P</div>
+              <span className="font-bold text-lg text-slate-800 tracking-tight">protocol<span className="text-[#0077B6]">LM</span></span>
+            </div>
             <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
           </div>
 
-          <button onClick={() => setShowCountySelector(true)} className="w-full bg-white hover:border-[#0077B6] text-slate-700 p-3 border border-[#90E0EF] mb-3 flex items-center justify-between transition-colors group rounded-xl shadow-sm">
-            <div className="flex flex-col items-start">
-              <span className="text-[9px] text-[#0077B6] uppercase tracking-widest font-bold">Jurisdiction</span>
-              <span className="text-xs font-bold truncate">{COUNTY_NAMES[userCounty]}</span>
-            </div>
-            <svg className="w-4 h-4 text-[#0077B6]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+          <button onClick={startNewChat} className="w-full bg-white hover:shadow-md text-slate-700 font-medium p-3 border border-slate-200 rounded-xl flex items-center gap-3 transition-all duration-200 group active:scale-95 mb-6">
+            <div className="bg-slate-100 text-slate-500 group-hover:bg-[#0077B6] group-hover:text-white rounded-lg p-1.5 transition-colors"><Icons.Plus /></div>
+            <span className="text-sm">New Inquiry</span>
           </button>
 
-          <button onClick={startNewChat} className="w-full text-white font-bold p-3 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest rounded-xl shadow-sm hover:opacity-90 mb-3 active:scale-95" style={{ backgroundColor: '#0077B6' }}>
-            <span>+</span> New Inquiry
-          </button>
+          <div className="flex flex-col gap-1">
+             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Jurisdiction</div>
+             <button onClick={() => setShowCountySelector(true)} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-200/50 transition-colors text-left group">
+                <span className="text-sm font-semibold text-slate-700">{COUNTY_NAMES[userCounty]}</span>
+                <span className="text-xs text-[#0077B6] font-medium opacity-0 group-hover:opacity-100 transition-opacity">Change</span>
+             </button>
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-          <div className="text-[9px] font-bold text-[#0077B6] uppercase tracking-widest mb-3 px-2">Record History</div>
-          {loadingChats ? <div className="space-y-3 px-2 opacity-50"><div className="h-8 bg-[#90E0EF] rounded-xl w-3/4 animate-pulse"></div></div> : 
+        <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-2">History</div>
+          {loadingChats ? 
+            <div className="space-y-3 px-2 opacity-50"><div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse"></div><div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse"></div></div> 
+            : 
             chatHistory.map(chat => (
-              <div key={chat.id} onClick={() => loadChat(chat)} className={`p-3 mb-1 cursor-pointer transition-all relative group rounded-xl ${currentChatId === chat.id ? 'bg-white border border-[#0077B6] shadow-sm text-[#023E8A]' : 'hover:bg-white/50 text-slate-500'}`}>
-                <div className="pr-6">
-                  <p className="font-medium text-xs truncate font-sans">{chat.title}</p>
-                  <p className="text-[9px] opacity-50 mt-1 uppercase tracking-wider">{new Date(chat.updated_at).toLocaleDateString()}</p>
-                </div>
-                <button onClick={(e) => deleteChat(chat.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1">✕</button>
+              <div key={chat.id} onClick={() => loadChat(chat)} className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all mb-0.5 ${currentChatId === chat.id ? 'bg-[#0077B6]/10 text-[#0077B6]' : 'text-slate-600 hover:bg-slate-200/50'}`}>
+                <p className="text-sm truncate w-48 font-medium">{chat.title}</p>
+                <button onClick={(e) => deleteChat(chat.id, e)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 p-1 rounded-md transition-all">✕</button>
               </div>
             ))
           }
         </div>
 
-        <div className="p-4 border-t border-[#90E0EF] bg-[#F0F9FF] flex-shrink-0 mt-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 flex items-center justify-center text-white font-bold text-xs rounded-full" style={{ backgroundColor: '#0077B6' }}>{session?.user?.email ? session.user.email[0].toUpperCase() : 'U'}</div>
+        <div className="p-4 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center gap-3 mb-4 p-2 rounded-xl bg-white border border-slate-100 shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0077B6] to-blue-400 text-white flex items-center justify-center font-bold text-xs">
+              {session?.user?.email?.[0].toUpperCase()}
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-[#023E8A] truncate font-sans">{session?.user?.email}</p>
-              <p className="text-[9px] text-[#0077B6] font-medium uppercase tracking-wider">{subscriptionInfo?.requestsUsed} Queries Used</p>
+              <p className="text-xs font-bold text-slate-900 truncate">{session?.user?.email}</p>
+              <p className="text-[10px] text-slate-500">{subscriptionInfo?.requestsUsed} queries used</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={handleManageSubscription} className="text-[9px] font-bold text-slate-500 hover:text-[#0077B6] bg-white border border-[#90E0EF] py-2 transition-all rounded-xl uppercase tracking-wide active:scale-95">Billing</button>
-            <button onClick={handleSignOut} className="text-[9px] font-bold text-slate-500 hover:text-red-500 bg-white border border-[#90E0EF] py-2 transition-all rounded-xl uppercase tracking-wide active:scale-95">Log Out</button>
+             <button onClick={handleManageSubscription} className="text-xs font-medium text-slate-600 hover:text-[#0077B6] hover:bg-white p-2 rounded-lg transition-all text-center">Billing</button>
+             <button onClick={handleSignOut} className="text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-white p-2 rounded-lg transition-all text-center">Log Out</button>
           </div>
         </div>
       </div>
 
-      {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#F0F9FF] relative chat-container">
-        <div className="p-4 bg-[#F0F9FF]/95 backdrop-blur-sm border-b border-[#90E0EF] text-slate-900 flex justify-between items-center z-30 no-print">
+      {/* --- MAIN CHAT AREA --- */}
+      <div className="flex-1 flex flex-col relative bg-white chat-container">
+        
+        {/* Header */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md z-30 no-print sticky top-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-[#0077B6]"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
-            <div className="md:hidden font-bold text-[#023E8A] tracking-tight">protocol<span style={{ color: '#0077B6' }}>LM</span></div>
+             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500 hover:text-slate-900"><Icons.Menu /></button>
+             <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-800">{COUNTY_NAMES[userCounty]}</span>
+                <span className="text-[10px] font-medium text-green-600 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Database Active</span>
+             </div>
           </div>
-          <div className="hidden md:block text-[10px] font-bold text-[#0077B6] uppercase tracking-widest">{COUNTY_NAMES[userCounty]} Database // Active</div>
           <div className="flex items-center gap-2">
-             <button onClick={generateMemo} className="hidden sm:flex bg-white border border-[#0077B6]/20 hover:bg-[#0077B6] hover:text-white text-[#0077B6] px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider items-center gap-2 transition-colors shadow-sm">Generate Memo</button>
-             <button onClick={handlePrint} className="bg-white border border-[#0077B6]/20 hover:bg-[#0077B6] hover:text-white text-[#0077B6] px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-colors shadow-sm">Save PDF</button>
+             <button onClick={generateMemo} className="text-xs font-medium text-slate-500 hover:text-[#0077B6] px-3 py-1.5 rounded-full hover:bg-blue-50 transition-colors">Generate Memo</button>
+             <button onClick={handlePrint} className="text-xs font-medium text-slate-500 hover:text-[#0077B6] px-3 py-1.5 rounded-full hover:bg-blue-50 transition-colors">Download PDF</button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 md:px-12 pb-8 pt-8 space-y-8">
-          {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[90%] lg:max-w-[80%] ${msg.role === 'assistant' ? 'w-full' : ''}`}>
-                <div className={`px-5 py-3 shadow-sm ${msg.role === 'user' ? 'bg-[#0077B6] text-white rounded-2xl rounded-tr-sm float-right' : 'bg-white text-slate-700 border border-[#90E0EF] rounded-2xl rounded-tl-sm'}`}>
-                  {msg.image && <img src={msg.image} alt="Analysis" className="mb-3 rounded-xl border border-white/20 max-w-sm w-full h-auto" />}
-                  {msg.role === 'assistant' && (
-                    <div className="flex items-center gap-2 mb-2 no-print">
-                      <div className="w-2 h-2 rounded-full bg-[#0077B6]"></div>
-                      <span className="font-bold text-xs text-[#023E8A] font-sans tracking-tight">ProtocolLM</span>
-                    </div>
-                  )}
-                  {msg.role === 'user' ? <p className="whitespace-pre-wrap leading-relaxed text-sm font-sans">{msg.content}</p> : renderMessageContent(msg)}
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto px-4 pb-40 pt-6">
+          <div className="max-w-3xl mx-auto space-y-8">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'assistant' && (
+                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 mr-4 shadow-sm mt-1 text-[#0077B6]">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                  </div>
+                )}
+                <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md' : 'text-slate-800'}`}>
+                   {msg.image && <img src={msg.image} alt="Uploaded content" className="mb-4 rounded-xl border border-white/20 max-w-sm" />}
+                   {msg.role === 'user' ? <p className="text-[15px] leading-relaxed">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
               </div>
-            </div>
-          ))}
-          {isLoading && <div className="flex items-center gap-2 mb-2 no-print"><div className="w-2 h-2 rounded-full bg-[#0077B6] animate-pulse"></div><span className="font-bold text-xs text-[#0077B6]/50 font-sans tracking-wide">Thinking...</span></div>}
-          <div ref={messagesEndRef} className="h-4" />
+            ))}
+            
+            {isLoading && (
+               <div className="flex justify-start">
+                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center mr-4 shadow-sm"><div className="w-2 h-2 bg-[#0077B6] rounded-full animate-bounce"></div></div>
+                  <span className="text-slate-400 text-sm mt-2">Thinking...</span>
+               </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        <div className="flex-shrink-0 p-6 bg-white border-t border-[#90E0EF] z-20 no-print relative">
-          
-          {/* QUICK CHIPS */}
-          {messages.length === 0 && !image && (
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar">
-              <button onClick={() => setInput("My prep cook has a sore throat and fever. What is the exact FDA exclusion rule?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-[#F0F9FF] border border-[#90E0EF] px-3 py-1.5 rounded-full hover:border-[#0077B6] hover:text-[#0077B6] transition-colors whitespace-nowrap">
-                Sick Employee Rule
-              </button>
-              <button onClick={() => setInput("What is the max cooling time for chili from 135F to 70F? And what if we miss it?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-[#F0F9FF] border border-[#90E0EF] px-3 py-1.5 rounded-full hover:border-[#0077B6] hover:text-[#0077B6] transition-colors whitespace-nowrap">
-                Cooling Requirements
-              </button>
-              <button onClick={() => setInput("We found mouse droppings in dry storage. Do we need to close immediately?")} className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-[#F0F9FF] border border-[#90E0EF] px-3 py-1.5 rounded-full hover:border-[#0077B6] hover:text-[#0077B6] transition-colors whitespace-nowrap">
-                Pest / Imminent Hazard
-              </button>
-            </div>
-          )}
+        {/* Input Area - Floating & Clean */}
+        <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center z-20 input-bar">
+          <div className="w-full max-w-3xl flex flex-col items-center">
+            
+            {/* Suggestions Chips (Only on empty chat) */}
+            {messages.length < 2 && !image && (
+               <div className="flex flex-wrap justify-center gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">❄️ Cooling Requirements</button>
+                  <button onClick={() => setInput("Employee has a sore throat and fever. Exclusion?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">🤒 Employee Health</button>
+                  <button onClick={() => setInput("Found mouse droppings in dry storage.")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-2 rounded-full border border-slate-200 shadow-sm transition-all">🐀 Pest Control</button>
+               </div>
+            )}
 
-          {image && <div className="max-w-6xl mx-auto mb-3 px-1"><div className="relative inline-block group"><img src={image} alt="Preview" className="h-16 w-auto rounded-xl border border-slate-300 shadow-sm" /><button onClick={() => setImage(null)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div>}
-          
-          <form onSubmit={handleSendMessage} className="max-w-6xl mx-auto relative">
-            <div className="flex items-center gap-2 bg-[#F0F9FF] border border-[#90E0EF] p-2 focus-within:border-[#0077B6] focus-within:ring-1 focus-within:ring-[#0077B6] transition-all rounded-2xl shadow-sm relative">
+            {image && <div className="bg-white p-2 rounded-xl shadow-lg border border-slate-100 mb-2 flex items-center gap-3"><img src={image} className="h-10 w-10 rounded-lg object-cover" /><span className="text-xs text-slate-500">Image attached</span><button onClick={() => setImage(null)} className="text-slate-400 hover:text-red-500">✕</button></div>}
+
+            <form onSubmit={handleSendMessage} className="w-full relative shadow-2xl rounded-3xl bg-white border border-slate-200 hover:border-blue-300 transition-colors group">
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
               
-              <input type="file" ref={fileInputRef} accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleImageSelect} />
-              
-              <div className="relative">
-                <button type="button" onClick={() => setShowModeMenu(!showModeMenu)} className="p-2.5 text-slate-400 hover:text-[#0077B6] transition-colors flex-shrink-0 rounded-xl hover:bg-white bg-transparent border border-transparent hover:border-[#90E0EF] hover:shadow-sm">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              <div className="flex items-center p-2">
+                {/* Mode Button */}
+                <div className="relative">
+                  <button type="button" onClick={() => setShowModeMenu(!showModeMenu)} className="p-3 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#0077B6] transition-all">
+                     <Icons.Plus />
+                  </button>
+                  {showModeMenu && <ModeSelector currentMode={activeMode} onSelect={handleMenuSelection} onClose={() => setShowModeMenu(false)} />}
+                </div>
+
+                <input 
+                  value={input} 
+                  onChange={e => setInput(e.target.value)} 
+                  placeholder={activeMode === 'image' ? "Upload an image..." : `Ask anything about ${COUNTY_NAMES[userCounty]} regulations...`}
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 text-[15px] h-12"
+                  disabled={isLoading}
+                />
+                
+                <button type="submit" disabled={!input.trim() && !image} className={`p-2 rounded-full transition-all duration-200 ${input.trim() || image ? 'bg-[#0077B6] text-white shadow-md hover:scale-105 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}>
+                  <Icons.Send />
                 </button>
-                {showModeMenu && <ModeSelector currentMode={activeMode} onSelect={handleMenuSelection} onClose={() => setShowModeMenu(false)} />}
               </div>
-
-              <input value={input} onChange={e => setInput(e.target.value)} placeholder={activeMode === 'image' ? "Upload an image to analyze..." : "Enter regulatory query..."} className="flex-1 min-w-0 py-3 bg-transparent border-none focus:ring-0 text-slate-900 placeholder-slate-400 font-sans text-sm" disabled={isLoading} />
-              
-              <button type="submit" disabled={isLoading || (!input.trim() && !image) || !canSend} className={`p-2.5 font-bold transition-all flex-shrink-0 rounded-xl active:scale-95 ${isLoading || (!input.trim() && !image) ? 'text-slate-300' : 'text-white bg-[#0077B6] hover:opacity-90 shadow-md'}`}>
-                {isLoading ? <svg className="w-5 h-5 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : 
-                <svg className="w-5 h-5 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>}
-              </button>
-            </div>
-            <p className="text-[10px] text-[#0077B6]/60 mt-2 text-center uppercase tracking-wider">ProtocolLM generates regulatory guidance. Verify with official county documents.</p>
-          </form>
+            </form>
+            <p className="text-[10px] text-slate-400 mt-3 font-medium">AI generated content. Verify with official {COUNTY_NAMES[userCounty]} documents.</p>
+          </div>
         </div>
+
       </div>
     </div>
   )
