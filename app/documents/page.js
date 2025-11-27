@@ -1,475 +1,370 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-browser'
 
-// --- CONFIGURATION ---
+// ---- CONFIGURATION ----
+
 const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
-  oakland: 'Oakland County'
-}
-
-const COUNTY_TAGLINES = {
-  washtenaw: 'Database Active',
-  wayne: 'Database Active',
-  oakland: 'Database Active'
-}
-
-const COUNTY_PLACEHOLDERS = {
-  washtenaw: 'Ask anything about Washtenaw County regulations…',
-  wayne: 'Ask anything about Wayne County regulations…',
-  oakland: 'Ask anything about Oakland County regulations…'
+  oakland: 'Oakland County',
 }
 
 const SUGGESTED_QUERIES = {
   washtenaw: [
-    'Cooling requirements',
-    'Corrective action for repeat violations',
-    'Employee illness reporting',
-    'Date marking rules'
+    'Inspector wrote us up for a repeat cooling violation. What do we need to change before they come back?',
+    'We had a minor sewage backup under the dish machine. Do we have to close the store?',
+    'My line cook came in with diarrhea but says it\'s from “bad takeout”. Can they work today?',
+    'How should we document corrective action so the next inspection report looks clean?',
   ],
   wayne: [
-    'Cooling requirements',
-    'Employee health policy',
-    'Pest control action',
-    'Sewage backup procedures'
+    'We just got a complaint about undercooked chicken on DoorDash. What steps should we take in Wayne County?',
+    'Our certified manager quit and we don’t have a replacement yet. What are we required to do?',
+    'What exactly triggers an “imminent health hazard” closure for this county?',
+    'How much trouble are we in if we failed to date mark prep from yesterday?',
   ],
   oakland: [
-    'Cooling requirements',
-    'Employee health',
-    'Pest control action',
-    'Date marking rules'
-  ]
+    'If our mall location fails its next inspection, what happens to our license and how fast?',
+    'What is the correct two-step cooling process for chili in Oakland County?',
+    'We found mouse droppings on a shelf before opening. Can we still operate today?',
+    'What should my managers do the week before a scheduled inspection to protect our grade?',
+  ],
 }
 
-// Helper: call your backend agent API
-async function callAgent({ county, message, signal }) {
-  const res = await fetch('/api/query', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    signal,
-    body: JSON.stringify({ county, message })
-  })
+// ---- SMALL ICON COMPONENTS ----
 
-  if (!res.ok) {
-    throw new Error('Something went wrong. Please try again.')
-  }
-
-  const data = await res.json()
-  return data.answer || 'No answer returned from agent.'
+function GlobeIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        className="fill-none stroke-current"
+        strokeWidth="1.6"
+      />
+      <ellipse
+        cx="12"
+        cy="12"
+        rx="4.5"
+        ry="9"
+        className="fill-none stroke-current"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M3 12h18M12 3c2.5 2 3.8 4.4 3.8 7s-1.3 5-3.8 7c-2.5-2-3.8-4.4-3.8-7s1.3-5 3.8-7Z"
+        className="fill-none stroke-current"
+        strokeWidth="1.6"
+      />
+    </svg>
+  )
 }
+
+function PlusIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <path
+        d="M12 5v14M5 12h14"
+        className="stroke-current"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function ArrowRightIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
+      <path
+        d="M5 12h12M13 6l6 6-6 6"
+        className="stroke-current"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+// ---- MAIN PAGE ----
 
 export default function DocumentsPage() {
   const [activeCounty, setActiveCounty] = useState('oakland')
-  const [messagesByCounty, setMessagesByCounty] = useState({
-    washtenaw: [],
-    wayne: [],
-    oakland: []
-  })
+  const [messages, setMessages] = useState([]) // {role: 'user' | 'assistant', content: string}[]
   const [inputValue, setInputValue] = useState('')
-  const [isThinking, setIsThinking] = useState(false)
-  const [systemReadyShown, setSystemReadyShown] = useState(true)
-  const [userEmail, setUserEmail] = useState('')
-  const [queryCount, setQueryCount] = useState(null)
+  const [isSending, setIsSending] = useState(false)
+  const messagesEndRef = useRef(null)
 
-  const scrollRef = useRef(null)
-  const abortRef = useRef(null)
-
-  const supabase = createClient()
-  const router = useRouter()
-
-  // Load user info / query count
+  // Scroll to bottom when messages change
   useEffect(() => {
-    let isMounted = true
-
-    const loadProfile = async () => {
-      try {
-        const { data: userData } = await supabase.auth.getUser()
-        if (!isMounted) return
-
-        const email = userData?.user?.email || ''
-        setUserEmail(email)
-
-        if (!userData?.user?.id) return
-
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('query_count')
-          .eq('id', userData.user.id)
-          .single()
-
-        if (profile && typeof profile.query_count === 'number') {
-          setQueryCount(profile.query_count)
-        }
-      } catch (err) {
-        console.error(err)
-      }
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
+  }, [messages, isSending])
 
-    loadProfile()
-    return () => {
-      isMounted = false
-    }
-  }, [supabase])
+  const handleSend = async (textOverride) => {
+    const trimmed = (textOverride ?? inputValue).trim()
+    if (!trimmed || isSending) return
 
-  // Auto-scroll conversation
-  useEffect(() => {
-    if (!scrollRef.current) return
-    const container = scrollRef.current
-    container.scrollTop = container.scrollHeight
-  }, [messagesByCounty, activeCounty, isThinking])
-
-  const currentMessages = messagesByCounty[activeCounty] || []
-
-  const handleCountyChange = (county) => {
-    setActiveCounty(county)
+    // push user message
+    setMessages((prev) => [...prev, { role: 'user', content: trimmed }])
     setInputValue('')
-    setSystemReadyShown(true)
-  }
-
-  const handleSuggestionClick = (text) => {
-    setInputValue(text)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const trimmed = inputValue.trim()
-    if (!trimmed || isThinking) return
-
-    // Cancel in-flight request
-    if (abortRef.current) {
-      abortRef.current.abort()
-    }
-    const controller = new AbortController()
-    abortRef.current = controller
-
-    const newUserMessage = {
-      id: Date.now() + '-user',
-      role: 'user',
-      content: trimmed
-    }
-
-    setMessagesByCounty((prev) => ({
-      ...prev,
-      [activeCounty]: [...(prev[activeCounty] || []), newUserMessage]
-    }))
-
-    setInputValue('')
-    setIsThinking(true)
-    setSystemReadyShown(false)
+    setIsSending(true)
 
     try {
-      const answer = await callAgent({
-        county: activeCounty,
-        message: trimmed,
-        signal: controller.signal
-      })
+      // TODO: replace this with your real API / streaming logic
+      // Example:
+      // const res = await fetch('/api/query', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     county: activeCounty,
+      //     question: trimmed,
+      //     history: messages,
+      //   }),
+      // })
+      // const data = await res.json()
+      // const answer = data.answer ?? 'No answer returned.'
 
-      const newAssistantMessage = {
-        id: Date.now() + '-assistant',
-        role: 'assistant',
-        content: answer
-      }
+      const fakeAnswer =
+        'This is a placeholder response. Paste your real protocolLM API call into handleSend so franchisees see county-specific guidance here.'
 
-      setMessagesByCounty((prev) => ({
-        ...prev,
-        [activeCounty]: [...(prev[activeCounty] || []), newAssistantMessage]
-      }))
+      const answer = fakeAnswer
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: answer }])
     } catch (err) {
-      if (err.name === 'AbortError') return
-
-      const errorMessage = {
-        id: Date.now() + '-error',
-        role: 'assistant',
-        content:
-          'There was a problem getting a response. Please verify your connection and try again.'
-      }
-
-      setMessagesByCounty((prev) => ({
+      console.error(err)
+      setMessages((prev) => [
         ...prev,
-        [activeCounty]: [...(prev[activeCounty] || []), errorMessage]
-      }))
+        {
+          role: 'assistant',
+          content:
+            'Sorry — something went wrong while contacting protocolLM. Please try again, or check your connection.',
+        },
+      ])
     } finally {
-      setIsThinking(false)
+      setIsSending(false)
     }
   }
 
+  const handleSuggestionClick = (q) => {
+    handleSend(q)
+  }
+
+  const currentSuggestions = SUGGESTED_QUERIES[activeCounty] || []
+
   return (
-    <div className="min-h-screen w-full bg-[#F5F9FC] text-slate-900 flex">
-      {/* LEFT SIDEBAR */}
-      <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-100 bg-white/80 backdrop-blur-sm">
-        <div className="px-6 pt-6 pb-4">
-          <div className="text-xl font-bold tracking-tight text-[#023E8A]">
+    <div className="min-h-screen flex bg-[#F3F6FB] text-slate-900">
+      {/* SIDEBAR */}
+      <aside className="w-64 border-r border-slate-200 bg-[#F8FAFF] flex flex-col">
+        <div className="px-6 pt-6 pb-4 border-b border-slate-200">
+          <div className="text-[22px] font-bold tracking-tight text-[#023E8A]">
             protocol<span className="text-[#0077B6]">LM</span>
           </div>
         </div>
 
-        <div className="px-6 pt-4 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-          Jurisdiction
+        <div className="px-6 pt-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-3">
+            Jurisdiction
+          </p>
+          <div className="space-y-2">
+            {(['washtenaw', 'wayne', 'oakland'] as const).map((county) => {
+              const isActive = activeCounty === county
+              return (
+                <button
+                  key={county}
+                  type="button"
+                  onClick={() => setActiveCounty(county)}
+                  className={`w-full text-left text-sm font-semibold px-3 py-2 rounded-xl border transition-all ${
+                    isActive
+                      ? 'bg-[#EEF3FF] border-[#CBD5FF] text-[#1D2A5B]'
+                      : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-200'
+                  }`}
+                >
+                  {COUNTY_NAMES[county]}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        <div className="px-4 space-y-1">
-          {Object.keys(COUNTY_NAMES).map((key) => (
-            <button
-              key={key}
-              onClick={() => handleCountyChange(key)}
-              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-all border ${
-                activeCounty === key
-                  ? 'bg-white text-[#023E8A] border-slate-200 shadow-sm shadow-slate-200/70 hover:bg-white active:scale-[0.97]'
-                  : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-50 active:scale-[0.97]'
-              }`}
-            >
-              {COUNTY_NAMES[key]}
-            </button>
-          ))}
-        </div>
-
-        <div className="px-6 pt-8 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-          History
-        </div>
-
-        <div className="flex-1 px-4 pb-4 space-y-1 overflow-y-auto">
-          {currentMessages
-            .filter((m) => m.role === 'user')
-            .slice(-6)
-            .reverse()
-            .map((m) => (
-              <div
-                key={m.id}
-                className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 line-clamp-2"
-              >
-                {m.content}
-              </div>
-            ))}
-
-          {currentMessages.filter((m) => m.role === 'user').length === 0 && (
-            <div className="text-[11px] text-slate-400 italic">
+        <div className="px-6 pt-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-2">
+            History
+          </p>
+          {messages.length === 0 ? (
+            <p className="text-xs text-slate-400 leading-relaxed">
               No questions yet. Your first inquiry will appear here.
-            </div>
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400">
+              Session in progress. (You can wire this to your real history list.)
+            </p>
           )}
         </div>
 
-        {/* Account card */}
-        <div className="border-t border-slate-100 px-4 py-4">
-          <div className="w-full rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3 flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-slate-700 truncate">
-                {userEmail || 'Signed in'}
-              </span>
-              {queryCount !== null && (
-                <span className="text-[11px] text-slate-400">
-                  {queryCount} queries used
-                </span>
-              )}
-            </div>
-            <button
-              onClick={() => router.push('/billing')}
-              className="text-[11px] font-semibold text-[#0077B6] hover:text-[#023E8A] active:scale-95 transition-transform"
-            >
-              Billing
-            </button>
-          </div>
-
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut()
-              router.push('/')
-            }}
-            className="mt-3 text-[11px] text-slate-400 hover:text-red-500 active:scale-95 transition-transform"
-          >
-            Log Out
-          </button>
+        <div className="mt-auto px-6 py-4 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between">
+          <span>Signed in</span>
+          {/* You can replace this with real email / query count */}
+          <span className="font-semibold">protocolLM user</span>
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN AREA */}
       <main className="flex-1 flex flex-col">
-        {/* Top bar */}
-        <header className="px-4 md:px-10 pt-4 md:pt-6 pb-3 flex items-center justify-between border-b border-slate-100 bg-white/70 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="md:hidden text-lg font-bold tracking-tight text-[#023E8A]">
-              protocol<span className="text-[#0077B6]">LM</span>
+        {/* Header */}
+        <header className="px-6 md:px-10 py-4 md:py-5 border-b border-slate-200 bg-[#FDFEFF] flex items-center justify-between">
+          <div>
+            <div className="text-sm md:text-base font-semibold text-slate-900">
+              {COUNTY_NAMES[activeCounty]}
             </div>
-            <div>
-              <div className="text-sm md:text-base font-semibold text-slate-800">
-                {COUNTY_NAMES[activeCounty]}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="text-[11px] font-semibold text-emerald-600">
-                  {COUNTY_TAGLINES[activeCounty]}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-[11px] font-semibold text-emerald-700">
+                Database Active
+              </span>
             </div>
           </div>
         </header>
 
-        {/* Conversation area */}
-        <div className="flex-1 flex flex-col px-4 md:px-10 pt-4 md:pt-8 pb-28 md:pb-32 bg-gradient-to-br from-[#F5F9FC] via-[#F7FBFF] to-[#EEF4FB]">
-          {/* System ready line */}
-          {systemReadyShown && currentMessages.length === 0 && (
-            <div className="max-w-3xl mx-auto md:mx-0 md:ml-8 mb-4 md:mb-6">
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <GlobeIcon className="w-4 h-4 text-[#0077B6]" />
-                <span>
-                  System ready. Regulatory Intelligence active for{' '}
-                  {COUNTY_NAMES[activeCounty]}.
-                </span>
-              </div>
+        {/* Conversation */}
+        <div className="flex-1 flex flex-col relative overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-4 md:pt-6 pb-32">
+            {/* System ready line */}
+            <div className="flex items-center gap-2 text-[13px] md:text-sm text-slate-700 mb-4">
+              <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 text-[#0077B6]" />
+              <span>
+                You’re in the {COUNTY_NAMES[activeCounty]} compliance channel. Ask how to
+                handle violations, closures, or inspection findings for this county.
+              </span>
             </div>
-          )}
 
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto max-w-3xl mx-auto md:mx-0 md:ml-8 space-y-4 md:space-y-5 pr-1"
-          >
-            {currentMessages.length === 0 && !isThinking && !systemReadyShown && (
-              <div className="text-sm text-slate-400 mt-10">
-                Start by asking a question or choose a preset below.
-              </div>
-            )}
+            {/* Messages */}
+            <div className="space-y-4 md:space-y-5">
+              {messages.map((msg, index) => {
+                const isUser = msg.role === 'user'
+                if (isUser) {
+                  return (
+                    <div key={index} className="flex justify-end">
+                      <div className="max-w-xl rounded-2xl rounded-tr-md bg-[#0077B6] text-white px-4 md:px-5 py-3 md:py-3.5 text-sm md:text-[15px] leading-relaxed shadow-md">
+                        {msg.content}
+                      </div>
+                    </div>
+                  )
+                }
 
-            {currentMessages.map((msg) => {
-              if (msg.role === 'user') {
                 return (
-                  <div key={msg.id} className="flex justify-end">
-                    <div className="max-w-xl rounded-2xl rounded-br-sm bg-[#0077B6] text-white text-sm px-4 py-3 shadow-sm">
+                  <div
+                    key={index}
+                    className="flex items-start gap-2 md:gap-3 max-w-3xl"
+                  >
+                    <div className="mt-1">
+                      <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 text-[#0077B6]" />
+                    </div>
+                    <div className="flex-1 rounded-2xl rounded-tl-md bg-white border border-slate-200 px-4 md:px-5 py-3 md:py-3.5 text-sm md:text-[15px] leading-relaxed text-slate-800 shadow-sm">
                       {msg.content}
                     </div>
                   </div>
                 )
-              }
+              })}
 
-              return (
-                <div key={msg.id} className="flex items-start gap-3">
+              {isSending && (
+                <div className="flex items-start gap-2 md:gap-3 max-w-3xl">
                   <div className="mt-1">
-                    <GlobeIcon className="w-4 h-4 text-[#0077B6]" />
+                    <GlobeIcon className="w-4 h-4 md:w-5 md:h-5 text-[#0077B6]" />
                   </div>
-                  <div className="max-w-xl rounded-2xl rounded-tl-sm bg-white text-sm text-slate-800 px-4 py-3 shadow-sm border border-slate-100">
-                    {msg.content}
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3 py-2 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: '120ms' }}
+                    ></span>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: '240ms' }}
+                    ></span>
                   </div>
                 </div>
-              )
-            })}
+              )}
 
-            {isThinking && (
-              <div className="flex items-center gap-3 mt-2">
-                <div className="mt-1">
-                  <GlobeIcon className="w-4 h-4 text-[#0077B6]" />
-                </div>
-                <div className="inline-flex items-center gap-1.5 bg-white border border-slate-100 rounded-full px-3 py-2 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0077B6] animate-bounce" />
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-[#0077B6] animate-bounce"
-                    style={{ animationDelay: '80ms' }}
-                  />
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-[#0077B6] animate-bounce"
-                    style={{ animationDelay: '160ms' }}
-                  />
-                  <span className="text-[11px] text-slate-500 font-medium ml-1 hidden md:inline">
-                    Reviewing county code & FDA Food Code…
-                  </span>
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Suggestions */}
+            {currentSuggestions.length > 0 && (
+              <div className="mt-8 max-w-3xl">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold mb-3">
+                  Try questions your managers actually ask
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {currentSuggestions.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => handleSuggestionClick(q)}
+                      className="px-4 py-3 rounded-2xl bg-[#F3F6FF] hover:bg-[#E5EBFF] text-[12px] md:text-[13px] text-slate-800 border border-[#CBD5FF] shadow-[0_4px_12px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_22px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-[1px] active:scale-95 text-left"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Suggested queries */}
-          <div className="max-w-3xl mx-auto md:mx-0 md:ml-8 mt-6 flex flex-wrap gap-3">
-            {SUGGESTED_QUERIES[activeCounty].map((q) => (
-              <button
-                key={q}
-                type="button"
-                onClick={() => handleSuggestionClick(q)}
-                className="px-4 py-2 rounded-full bg-white/80 hover:bg-white text-xs md:text-[13px] text-slate-600 border border-slate-100 shadow-sm hover:-translate-y-[1px] hover:shadow-md active:scale-95 transition-all"
-              >
-                {q}
-              </button>
-            ))}
+          {/* Input bar */}
+          <div className="absolute inset-x-0 bottom-0 border-t border-slate-200 bg-[#F8FAFF]/95 backdrop-blur-sm">
+            <div className="max-w-5xl mx-auto px-4 md:px-6 pt-3 pb-2">
+              <div className="flex items-center gap-3 bg-white border border-slate-300 rounded-full h-14 px-3 md:px-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-8 h-8 rounded-full border border-slate-300 text-slate-500 hover:bg-slate-50 active:scale-95 transition-all"
+                  aria-label="New inquiry"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                </button>
+
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSend()
+                    }
+                  }}
+                  placeholder={`Ask anything about ${COUNTY_NAMES[activeCounty]} regulations…`}
+                  className="flex-1 bg-transparent border-none outline-none text-sm md:text-[15px] text-slate-800 placeholder:text-slate-400"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => handleSend()}
+                  disabled={!inputValue.trim() || isSending}
+                  className={`flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full transition-all ${
+                    !inputValue.trim() || isSending
+                      ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      : 'bg-[#0077B6] text-white hover:bg-[#023E8A] shadow-md hover:shadow-lg active:scale-95'
+                  }`}
+                  aria-label="Send"
+                >
+                  <ArrowRightIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="mt-2 text-[10px] text-center text-slate-400">
+                AI generated content. Verify with official {COUNTY_NAMES[activeCounty]} documents.
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Bottom input bar */}
-        <form
-          onSubmit={handleSubmit}
-          className="fixed left-0 right-0 bottom-0 z-20 bg-gradient-to-t from-[#F5F9FC] to-[#F5F9FC]/90 border-t border-slate-100 px-3 md:px-10 py-3 md:py-4"
-        >
-          <div className="max-w-3xl mx-auto flex flex-col gap-2">
-            <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.06)] px-3 md:px-4 py-1.5 md:py-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMessagesByCounty((prev) => ({
-                    ...prev,
-                    [activeCounty]: []
-                  }))
-                  setSystemReadyShown(true)
-                  setInputValue('')
-                }}
-                className="flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 text-lg leading-none transition-all active:scale-95"
-              >
-                +
-              </button>
-
-              <textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                rows={1}
-                placeholder={COUNTY_PLACEHOLDERS[activeCounty]}
-                className="flex-1 resize-none border-none outline-none text-sm md:text-[15px] text-slate-800 placeholder:text-slate-400 bg-transparent py-1 md:py-1.5 px-1 leading-[1.35]"
-              />
-
-              <button
-                type="submit"
-                disabled={!inputValue.trim() || isThinking}
-                className={`flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full transition-all ${
-                  inputValue.trim() && !isThinking
-                    ? 'bg-[#0077B6] text-white shadow-md hover:bg-[#023E8A] active:scale-95'
-                    : 'bg-slate-100 text-slate-400 cursor-default'
-                }`}
-              >
-                <span className="sr-only">Send</span>
-                <svg
-                  className="w-4 h-4 md:w-5 md:h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h13" />
-                  <path d="M12 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="text-[10px] text-slate-400 text-center md:text-left px-1">
-              AI generated content. Verify with official {COUNTY_NAMES[activeCounty]} documents.
-            </div>
-          </div>
-        </form>
       </main>
     </div>
-  )
-}
-
-// Simple globe icon
-function GlobeIcon({ className }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    >
-      <circle cx="12" cy="12" r="8" />
-      <path d="M4 12h16" />
-      <path d="M12 4a9 9 0 0 1 0 16" />
-      <path d="M12 4a9 9 0 0 0 0 16" />
-    </svg>
   )
 }
