@@ -64,7 +64,7 @@ export default function DocumentsPage() {
 
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
-  const fileInputRef = useRef(null) // Ref for the hidden file input
+  const fileInputRef = useRef(null) 
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -103,7 +103,6 @@ export default function DocumentsPage() {
 
   // --- HANDLERS ---
 
-  // 1. Handle Image Selection
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -113,34 +112,29 @@ export default function DocumentsPage() {
       }
       reader.readAsDataURL(file)
     }
-    // Reset input so same file can be selected again if needed
     e.target.value = ''
   }
 
-  // 2. Remove Image
   const removeImage = () => {
     setSelectedImage(null)
   }
 
-  // 3. Handle Send
   async function handleSend(e) {
     if (e) e.preventDefault()
     
-    // Allow sending if there is text OR an image
     const trimmed = input.trim()
     if ((!trimmed && !selectedImage) || isSending) return
 
-    // Construct user message object
     const newUserMessage = { 
       role: 'user', 
       content: trimmed,
-      image: selectedImage // Add image to local state for display
+      image: selectedImage 
     }
     
     setMessages((prev) => [...prev, newUserMessage])
     setInput('')
-    const imageToSend = selectedImage // Capture for API call
-    setSelectedImage(null) // Clear preview immediately
+    const imageToSend = selectedImage 
+    setSelectedImage(null) 
     setIsSending(true)
 
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
@@ -150,8 +144,8 @@ export default function DocumentsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newUserMessage], // Full history
-          image: imageToSend, // Send the base64 image string
+          messages: [...messages, newUserMessage], 
+          image: imageToSend, 
           county: activeCounty
         })
       })
@@ -274,7 +268,7 @@ export default function DocumentsPage() {
                       <div key={idx} className="group relative flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm hover:border-slate-100 border border-transparent transition-all cursor-default">
                          <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors flex-shrink-0"></div>
                          <span className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
-                           {m.content || '[Image Upload]'}
+                           {m.content || '[Image Analysis]'}
                          </span>
                       </div>
                     ))}
@@ -377,8 +371,8 @@ export default function DocumentsPage() {
              )}
           </div>
 
-          {/* Fixed Input Bar */}
-          <div className="flex-shrink-0 z-20 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-4 lg:px-20 py-4 pb-safe">
+          {/* Fixed Input Bar with Cushion */}
+          <div className="flex-shrink-0 z-20 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-4 lg:px-20 pt-4 pb-safe">
              <div className="max-w-4xl mx-auto relative">
                 
                 {/* Image Preview Area */}
@@ -457,7 +451,10 @@ export default function DocumentsPage() {
 
       {/* Styles */}
       <style jsx global>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+        /* This provides the specific cushion you requested */
+        .pb-safe { 
+           padding-bottom: calc(env(safe-area-inset-bottom) + 20px); 
+        }
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
