@@ -186,25 +186,40 @@ export default function DocumentsPage() {
   const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-[#F0F9FF] via-[#F5FAFF] to-white text-slate-900 flex overflow-hidden font-sans">
+    <div className="h-screen w-full bg-[#F8FAFB] text-slate-900 flex overflow-hidden font-sans">
       {/* LEFT SIDEBAR */}
-      <aside className="hidden lg:flex lg:flex-col w-72 border-r border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-sm">
+      <aside className="hidden lg:flex lg:flex-col w-80 border-r border-slate-200 bg-white shadow-sm">
         {/* Logo */}
-        <div className="px-7 pt-7 pb-5 border-b border-slate-100">
-          <div className="text-xl font-bold tracking-tight text-slate-900">
-            protocol<span className="text-[#0077B6]">LM</span>
+        <div className="px-8 py-6 border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-xl font-bold text-slate-900">
+                protocol<span className="text-blue-600">LM</span>
+              </div>
+              <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
+                Compliance Intelligence
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Jurisdictions */}
-        <div className="px-6 pt-7 pb-6">
+        <div className="px-6 py-6 border-b border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-              Jurisdiction
+            <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+              Active Jurisdiction
             </p>
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] font-bold text-emerald-600 uppercase">Live</span>
+            </div>
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {['washtenaw', 'wayne', 'oakland'].map((county) => {
               const isActive = activeCounty === county
               return (
@@ -212,23 +227,20 @@ export default function DocumentsPage() {
                   key={county}
                   onClick={() => setActiveCounty(county)}
                   className={classNames(
-                    'group w-full text-left px-4 py-3.5 rounded-xl text-sm font-semibold border transition-all duration-300 ease-out relative overflow-hidden',
+                    'w-full text-left px-4 py-3 rounded-lg text-sm font-semibold border-2 transition-all duration-200',
                     isActive
-                      ? 'bg-gradient-to-r from-[#0077B6]/5 to-[#0077B6]/10 border-[#0077B6]/40 text-[#023E8A] shadow-lg shadow-[#0077B6]/5 scale-[1.02]'
-                      : 'bg-white/80 border-slate-200/80 text-slate-600 hover:bg-white hover:border-[#90E0EF]/60 hover:text-[#0077B6] hover:shadow-md hover:scale-[1.01] active:scale-[0.99]'
+                      ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                   )}
                 >
-                  <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <span>{COUNTY_LABELS[county]}</span>
                     {isActive && (
-                      <svg className="w-4 h-4 text-[#0077B6]" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
                   </div>
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0077B6]/0 via-[#0077B6]/5 to-[#0077B6]/0 animate-shimmer" />
-                  )}
                 </button>
               )
             })}
@@ -236,35 +248,35 @@ export default function DocumentsPage() {
         </div>
 
         {/* History */}
-        <div className="px-6 pt-6 pb-6 flex-1 overflow-hidden">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-4">
-            Recent Activity
+        <div className="px-6 py-6 flex-1 overflow-hidden">
+          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-4">
+            Query History
           </p>
-          <div className="text-xs text-slate-500 leading-relaxed">
+          <div className="text-xs text-slate-600">
             {messages.length === 0 ? (
-              <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-4 text-center">
-                <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
-                <span className="text-slate-400 text-[11px] block">No queries yet</span>
-                <span className="text-slate-400 text-[10px] block mt-1">Start a conversation</span>
+                <span className="text-slate-500 text-xs block font-medium">No queries yet</span>
+                <span className="text-slate-400 text-[10px] block mt-1">Begin consultation below</span>
               </div>
             ) : (
-              <ul className="space-y-2 max-h-80 overflow-y-auto custom-scroll pr-2">
+              <ul className="space-y-2 max-h-96 overflow-y-auto custom-scroll pr-2">
                 {messages
                   .filter((m) => m.role === 'user')
-                  .slice(-8)
+                  .slice(-10)
                   .reverse()
                   .map((m, idx) => (
                     <li
                       key={idx}
-                      className="group cursor-pointer bg-white border border-slate-200/60 hover:border-[#90E0EF]/60 rounded-lg px-3.5 py-2.5 transition-all duration-200 hover:shadow-sm hover:bg-slate-50/50"
+                      className="cursor-pointer bg-white border border-slate-200 hover:border-blue-300 rounded-lg px-3.5 py-2.5 transition-all duration-150 hover:shadow-sm"
                     >
-                      <div className="flex items-start gap-2">
-                        <span className="text-[10px] text-slate-400 mt-0.5 group-hover:text-[#0077B6]">●</span>
-                        <span className="text-[11px] text-slate-600 group-hover:text-slate-900 line-clamp-2 leading-relaxed">
+                      <div className="flex items-start gap-2.5">
+                        <span className="text-[10px] text-slate-400 mt-1">●</span>
+                        <span className="text-[11px] text-slate-700 line-clamp-2 leading-relaxed flex-1">
                           {m.content}
                         </span>
                       </div>
@@ -276,28 +288,31 @@ export default function DocumentsPage() {
         </div>
 
         {/* Bottom User */}
-        <div className="mt-auto border-t border-slate-100 px-5 py-4 bg-slate-50/50">
-          <div className="flex items-center justify-between gap-3 bg-white border border-slate-200/60 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all">
+        <div className="mt-auto border-t border-slate-200 px-6 py-4 bg-slate-50">
+          <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
             <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                {userEmail ? userEmail.charAt(0).toUpperCase() : '?'}
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-0.5">
-                  Account
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                  Operator
                 </p>
                 <p className="text-xs font-semibold text-slate-800 truncate">
                   {loadingUser ? 'Loading…' : userEmail || 'Unknown user'}
                 </p>
                 {queryCount !== null && (
                   <p className="text-[10px] text-slate-500 mt-0.5">
-                    {queryCount} queries
+                    {queryCount} queries used
                   </p>
                 )}
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider px-2 py-1 rounded-md hover:bg-rose-50"
+              className="text-[10px] font-bold text-slate-500 hover:text-red-600 transition-colors uppercase tracking-wider px-2.5 py-1.5 rounded-md hover:bg-red-50"
             >
-              Exit
+              Sign Out
             </button>
           </div>
         </div>
@@ -306,108 +321,82 @@ export default function DocumentsPage() {
       {/* MAIN AREA */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="w-full border-b border-slate-200/60 bg-white/95 backdrop-blur-xl px-5 lg:px-8 py-4 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
-            {/* Mobile logo */}
-            <div className="lg:hidden">
-              <div className="text-base font-bold tracking-tight text-slate-900">
-                protocol<span className="text-[#0077B6]">LM</span>
+        <header className="w-full border-b border-slate-200 bg-white px-6 lg:px-8 py-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {/* Mobile logo */}
+              <div className="lg:hidden flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div className="text-base font-bold text-slate-900">
+                  protocol<span className="text-blue-600">LM</span>
+                </div>
               </div>
-            </div>
-            <div className="hidden lg:block">
-              <div className="flex items-center gap-3">
-                <h1 className="text-lg font-bold text-slate-900">
-                  {COUNTY_LABELS[activeCounty]}
-                </h1>
-                <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-50 to-emerald-100/50 px-3 py-1.5 border border-emerald-200/60 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/50" />
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-[0.15em]">
-                    Live
+              <div className="hidden lg:block">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl font-bold text-slate-900">
+                    {COUNTY_LABELS[activeCounty]}
+                  </h1>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">
+                      System Active
+                    </span>
                   </span>
-                </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-1.5 font-medium">
+                  AI-Powered Regulatory Intelligence Platform
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1.5 font-medium">
-                Real-time regulatory intelligence for operational compliance
-              </p>
             </div>
-          </div>
 
-          {/* Mobile county selector */}
-          <div className="lg:hidden flex items-center gap-1.5">
-            {['washtenaw', 'wayne', 'oakland'].map((county) => {
-              const isActive = activeCounty === county
-              return (
-                <button
-                  key={county}
-                  onClick={() => setActiveCounty(county)}
-                  className={classNames(
-                    'px-3 py-2 rounded-lg text-[10px] font-bold border transition-all uppercase tracking-wide',
-                    isActive
-                      ? 'bg-[#0077B6] text-white border-[#0077B6] shadow-md'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-[#90E0EF] active:scale-95'
-                  )}
-                >
-                  {COUNTY_LABELS[county].split(' ')[0]}
-                </button>
-              )
-            })}
+            {/* Mobile county selector */}
+            <div className="lg:hidden flex items-center gap-1.5">
+              {['washtenaw', 'wayne', 'oakland'].map((county) => {
+                const isActive = activeCounty === county
+                return (
+                  <button
+                    key={county}
+                    onClick={() => setActiveCounty(county)}
+                    className={classNames(
+                      'px-2.5 py-1.5 rounded-md text-[10px] font-bold border-2 transition-all uppercase tracking-wide',
+                      isActive
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-slate-600 border-slate-300 hover:border-slate-400'
+                    )}
+                  >
+                    {COUNTY_LABELS[county].split(' ')[0]}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </header>
 
         {/* CONTENT */}
-        <section className="flex-1 flex flex-col px-5 lg:px-8 pt-4 pb-4 gap-3 overflow-hidden">
-          {/* Status banner */}
-          <div className="inline-flex items-center gap-3 bg-white/95 border border-slate-200/60 rounded-2xl px-5 py-2.5 shadow-md backdrop-blur-sm max-w-2xl hover:shadow-lg transition-all">
-            <span
-              className={classNames(
-                'text-base',
-                isSending ? 'animate-[ruminate_1.6s_ease-in-out_infinite]' : ''
-              )}
-              aria-hidden="true"
-            >
-              🌐
-            </span>
-            <p className="text-[13px] font-semibold text-slate-700">
-              {systemStatus}
-            </p>
-          </div>
-
-          {/* Suggestion tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 max-w-7xl">
-            {suggestions.map((text, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSuggestionClick(text)}
-                className="group text-left bg-white/95 border border-slate-200/60 hover:border-[#0077B6]/40 hover:bg-white rounded-2xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium shadow-sm hover:shadow-lg transition-all duration-300 flex items-start gap-2 active:scale-[0.98] hover:scale-[1.01]"
-              >
-                <span className="mt-0.5 text-slate-300 group-hover:text-[#0077B6] transition-colors text-sm">
-                  →
-                </span>
-                <span className="leading-relaxed group-hover:text-slate-900">{text}</span>
-              </button>
-            ))}
-          </div>
-
+        <section className="flex-1 flex flex-col px-4 lg:px-8 py-4 gap-3 overflow-hidden min-h-0">
           {/* CHAT PANEL */}
-          <div className="flex-1 bg-white/95 border border-slate-200/60 rounded-3xl shadow-xl overflow-hidden flex flex-col backdrop-blur-sm">
+          <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col min-h-0">
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 lg:px-8 py-5 space-y-4 custom-scroll"
+              className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 space-y-4 custom-scroll min-h-0"
             >
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-14 h-14 mb-5 rounded-2xl bg-gradient-to-br from-[#0077B6]/10 to-[#0077B6]/5 border border-[#0077B6]/20 flex items-center justify-center shadow-sm">
-                    <svg className="w-7 h-7 text-[#0077B6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <div className="h-full flex flex-col items-center justify-center text-center py-8">
+                  <div className="w-16 h-16 mb-5 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
                   </div>
-                  <p className="text-[13px] font-bold text-slate-700 mb-1.5">
-                    Start with a real operational scenario
+                  <p className="text-base font-bold text-slate-900 mb-2">
+                    Compliance Intelligence Ready
                   </p>
-                  <p className="text-[11px] text-slate-500 max-w-xl mx-auto leading-relaxed px-4">
-                    Example: "We found raw chicken stored over lettuce during prep. What should we document and fix before an inspector arrives?"
+                  <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                    Ask questions about regulations, get instant compliance guidance, and ensure your operations meet all requirements.
                   </p>
                 </div>
               ) : (
@@ -425,23 +414,23 @@ export default function DocumentsPage() {
                     >
                       <div
                         className={classNames(
-                          'max-w-[85%] rounded-2xl px-5 py-3.5 text-[13px] leading-relaxed shadow-md backdrop-blur-sm',
+                          'max-w-[80%] rounded-xl px-5 py-3.5 text-sm leading-relaxed shadow-sm',
                           isUser
-                            ? 'bg-gradient-to-br from-[#0077B6] to-[#0077B6]/90 text-white rounded-br-md border border-[#0077B6]/20'
-                            : 'bg-white text-slate-800 rounded-bl-md border border-slate-200/60'
+                            ? 'bg-blue-600 text-white rounded-br-sm'
+                            : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
                         )}
                       >
                         {isLastAssistant && msg.content === '' ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2.5">
                             <div className="flex gap-1">
                               <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
                               <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
                               <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
                             </div>
-                            <span className="text-slate-500 text-xs">Analyzing regulations...</span>
+                            <span className="text-slate-600 text-xs font-medium">Analyzing regulatory data...</span>
                           </div>
                         ) : (
-                          msg.content
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
                         )}
                       </div>
                     </div>
@@ -451,12 +440,31 @@ export default function DocumentsPage() {
             </div>
 
             {/* INPUT BAR */}
-            <div className="border-t border-slate-200/60 bg-gradient-to-b from-slate-50/50 to-white px-5 lg:px-6 py-3.5">
-              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-2xl border-2 border-slate-200/60 bg-white shadow-lg focus-within:border-[#0077B6]/60 focus-within:shadow-xl transition-all h-12 px-3">
+            <div className="border-t border-slate-200 bg-slate-50 px-4 lg:px-6 py-3 flex-shrink-0">
+              {/* Suggestion tiles - above input */}
+              {messages.length === 0 && (
+                <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto">
+                  {suggestions.map((text, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSuggestionClick(text)}
+                      className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3.5 py-2.5 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
+                    >
+                      <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
+                        →
+                      </span>
+                      <span className="leading-relaxed group-hover:text-slate-900 line-clamp-2">{text}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-12 px-3">
                 <button
                   type="button"
                   onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/60 text-slate-500 hover:text-[#0077B6] hover:border-[#0077B6]/60 hover:from-[#EFF6FF] hover:to-white active:scale-95 transition-all shadow-sm hover:shadow-md"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
                   aria-label="Use example question"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -471,7 +479,7 @@ export default function DocumentsPage() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
-                  className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-800 placeholder-slate-400 font-medium h-full px-2"
+                  className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 font-medium h-full px-2"
                 />
 
                 <button
@@ -479,10 +487,10 @@ export default function DocumentsPage() {
                   onClick={handleSend}
                   disabled={isSending || !input.trim()}
                   className={classNames(
-                    'flex h-9 w-9 items-center justify-center rounded-xl transition-all shadow-md active:scale-95',
+                    'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95',
                     input.trim()
-                      ? 'bg-gradient-to-br from-[#0077B6] to-[#023E8A] text-white shadow-[#0077B6]/20 hover:shadow-lg hover:shadow-[#0077B6]/30 hover:scale-105'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                      ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   )}
                   aria-label="Send question"
                 >
@@ -521,42 +529,16 @@ export default function DocumentsPage() {
           background: transparent;
         }
         .custom-scroll::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, rgba(148, 163, 184, 0.4), rgba(148, 163, 184, 0.6));
+          background: rgba(148, 163, 184, 0.5);
           border-radius: 999px;
           border: 2px solid transparent;
           background-clip: padding-box;
         }
         .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, rgba(0, 119, 182, 0.4), rgba(0, 119, 182, 0.6));
+          background: rgba(59, 130, 246, 0.6);
           border-radius: 999px;
           border: 2px solid transparent;
           background-clip: padding-box;
-        }
-
-        @keyframes ruminate {
-          0%, 100% {
-            transform: translateY(0) rotate(0deg);
-            filter: drop-shadow(0 0 0 rgba(0, 119, 182, 0));
-          }
-          25% {
-            transform: translateY(-2px) rotate(-5deg);
-          }
-          50% {
-            transform: translateY(0) rotate(0deg);
-            filter: drop-shadow(0 0 6px rgba(0, 119, 182, 0.5));
-          }
-          75% {
-            transform: translateY(2px) rotate(5deg);
-          }
-        }
-
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
         }
 
         @keyframes fadeIn {
@@ -568,10 +550,6 @@ export default function DocumentsPage() {
             opacity: 1;
             transform: translateY(0);
           }
-        }
-
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
         }
 
         .animate-fadeIn {
