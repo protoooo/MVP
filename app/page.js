@@ -7,11 +7,12 @@ import Image from 'next/image'
 
 // --- CHAT DEMO BOX (Fixed Dimensions) ---
 const DemoChatContent = () => {
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const [hasStarted, setHasStarted] = useState(false) // controls placeholder
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -21,7 +22,8 @@ const DemoChatContent = () => {
 
   const SEQUENCE = [
     {
-      text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
+      text:
+        "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
       response:
         "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
     },
@@ -49,63 +51,74 @@ const DemoChatContent = () => {
 
   useEffect(() => {
     let isMounted = true
-    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-    const typeChar = async (char: string) => {
-      setInputValue(prev => prev + char)
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+    const typeChar = async (char) => {
+      setInputValue((prev) => prev + char)
       await wait(Math.random() * 30 + 20)
     }
 
     const runSimulation = async () => {
+      setHasStarted(true) // after this, we never show the empty placeholder again
+
       while (isMounted) {
         for (const step of SEQUENCE) {
-          setIsTyping(true)
-          await wait(500)
+          if (!isMounted) return
 
+          // type question
+          setIsTyping(true)
+          setInputValue('')
+          await wait(500)
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
 
-          await wait(500)
+          // "send" question
+          await wait(400)
+          setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
 
-          setMessages(prev => [...prev, { role: 'user', content: step.text }])
-
+          // thinking
           setIsThinking(true)
-          await wait(1500)
+          await wait(1200)
           setIsThinking(false)
 
+          // stream answer word by word
           let currentResponse = ''
           const words = step.response.split(' ')
-          setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+          setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
           for (let i = 0; i < words.length; i++) {
+            if (!isMounted) return
             currentResponse += (i === 0 ? '' : ' ') + words[i]
-            setMessages(prev => {
+            setMessages((prev) => {
               const newMsgs = [...prev]
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(20)
+            await wait(25)
           }
 
-          await wait(4000)
+          await wait(3500)
         }
 
-        await wait(1000)
-        setMessages([])
+        // brief pause between loops; keep last few messages so box never looks empty
+        await wait(1200)
+        setMessages((prev) => prev.slice(-6))
       }
     }
 
     runSimulation()
+
     return () => {
       isMounted = false
     }
   }, [])
 
-  const formatContent = (text: string) => {
+  const formatContent = (text) => {
     const keywords = [
       'CRITICAL ACTION',
       'VIOLATION',
@@ -152,7 +165,8 @@ const DemoChatContent = () => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F0F9FF] min-h-0 relative z-10"
       >
-        {messages.length === 0 && !isTyping && (
+        {/* Empty state only before the first message ever starts */}
+        {!hasStarted && !isTyping && messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
               <div className="w-6 h-6 border-2 border-slate-100 rounded-full border-t-[#0077B6] animate-spin" />
@@ -197,7 +211,7 @@ const DemoChatContent = () => {
                 style={{ animationDelay: '200ms' }}
               />
               <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline">
-                Cross-checking local code &amp; FDA Food Code…
+                Cross-checking local code & FDA Food Code…
               </span>
             </div>
           </div>
@@ -212,9 +226,10 @@ const DemoChatContent = () => {
             {isTyping && (
               <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse" />
             )}
-            {/* neutral placeholder only before first message */}
-            {!inputValue && !isTyping && messages.length === 0 && (
-              <span className="text-slate-400 text-xs">Ask a question…</span>
+            {!inputValue && !isTyping && (
+              <span className="text-slate-400 text-xs">
+                “What actually happens if this store fails its next inspection?”
+              </span>
             )}
           </div>
           <div
@@ -239,24 +254,12 @@ const DemoChatContent = () => {
 }
 
 // --- COUNT UP ANIMATION ---
-const CountUp = ({
-  end,
-  duration = 2000,
-  prefix = '',
-  suffix = '',
-  decimals = 0
-}: {
-  end: number
-  duration?: number
-  prefix?: string
-  suffix?: string
-  decimals?: number
-}) => {
+const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    let startTimestamp: number | null = null
-    const step = (timestamp: number) => {
+    let startTimestamp = null
+    const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
       setCount(progress * end)
@@ -275,20 +278,12 @@ const CountUp = ({
 }
 
 // --- AUTH MODAL WITH GOOGLE SIGN-IN ---
-const AuthModal = ({
-  isOpen,
-  onClose,
-  defaultView = 'login'
-}: {
-  isOpen: boolean
-  onClose: () => void
-  defaultView?: 'login' | 'signup'
-}) => {
+const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<null | { type: 'error' | 'success'; text: string }>(null)
-  const [view, setView] = useState<'login' | 'signup'>(defaultView)
+  const [message, setMessage] = useState(null)
+  const [view, setView] = useState(defaultView)
   const supabase = createClient()
   const router = useRouter()
 
@@ -314,14 +309,14 @@ const AuthModal = ({
       })
 
       if (error) throw error
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google sign-in error:', error)
       setMessage({ type: 'error', text: error.message })
       setLoading(false)
     }
   }
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
@@ -358,7 +353,7 @@ const AuthModal = ({
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', data.session?.user.id)
+          .eq('id', data.session.user.id)
           .single()
 
         if (!profile?.accepted_terms || !profile?.accepted_privacy) {
@@ -369,7 +364,7 @@ const AuthModal = ({
           window.location.href = '/pricing'
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       setMessage({ type: 'error', text: error.message })
     } finally {
       setLoading(false)
@@ -392,7 +387,6 @@ const AuthModal = ({
           {view === 'signup' ? 'Create Account' : 'Sign In'}
         </h2>
 
-        {/* Google sign-in */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
@@ -421,7 +415,6 @@ const AuthModal = ({
           </span>
         </button>
 
-        {/* Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200" />
@@ -431,12 +424,11 @@ const AuthModal = ({
           </div>
         </div>
 
-        {/* Email/password form */}
         <form onSubmit={handleAuth} className="space-y-4">
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg"
             placeholder="Email"
@@ -445,7 +437,7 @@ const AuthModal = ({
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
             className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg"
@@ -492,13 +484,13 @@ const AuthModal = ({
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login')
+  const [authView, setAuthView] = useState('login')
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     setMounted(true)
-    const authParam = searchParams.get('auth') as 'login' | 'signup' | null
+    const authParam = searchParams.get('auth')
     if (authParam) {
       setAuthView(authParam)
       setShowAuth(true)
@@ -506,7 +498,7 @@ function MainContent() {
     }
   }, [searchParams])
 
-  const openAuth = (view: 'login' | 'signup') => {
+  const openAuth = (view) => {
     setAuthView(view)
     setShowAuth(true)
   }
@@ -529,7 +521,11 @@ function MainContent() {
 
       {/* NAV */}
       <nav className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
-        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div
+          className={`transition-all duration-1000 ${
+            mounted ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#023E8A]">
             protocol<span style={{ color: '#0077B6' }}>LM</span>
           </h1>
@@ -577,8 +573,9 @@ function MainContent() {
 
           <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-4 md:mb-5">
             protocol<span className="text-[#0077B6] font-bold">LM</span> gives your team
-            instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> rules,
-            so they handle violations correctly before an inspector or customer ever sees them.
+            instant answers from{' '}
+            <strong>Washtenaw, Wayne, and Oakland County</strong> rules, so they handle
+            violations correctly before an inspector or customer ever sees them.
           </p>
 
           <p className="text-[11px] md:text-xs text-slate-500 font-semibold uppercase tracking-[0.25em] mb-5">
@@ -593,7 +590,6 @@ function MainContent() {
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]" />
           </button>
 
-          {/* Stats */}
           <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
@@ -689,7 +685,7 @@ function MainContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div />}>
+    <Suspense fallback={<div></div>}>
       <MainContent />
     </Suspense>
   )
