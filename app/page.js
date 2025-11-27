@@ -481,14 +481,14 @@ function MainContent() {
 
   return (
     <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
-      {/* BACKGROUND (more faint ~8%) */}
+      {/* BACKGROUND */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="relative w-full h-full animate-drift">
           <Image
             src="/background.png"
             alt="Background"
             fill
-            className="object-cover opacity-[0.08]"
+            className="object-cover opacity-[0.24]"
             priority
           />
         </div>
@@ -544,11 +544,11 @@ function MainContent() {
           <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-4 md:mb-6">
             Train Your Team Before
             <br className="hidden md:block" />
-            The Health Department Does.
+            The Health Department Arrives.
           </h2>
 
           <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-4 md:mb-5">
-            protocol<span className="text-[#0077B6] font-bold">LM</span> gives your crew
+            protocol<span className="text-[#0077B6] font-bold">LM</span> gives your team
             instant answers from{' '}
             <strong>Washtenaw, Wayne, and Oakland County</strong> rules, so they handle
             violations correctly before an inspector or customer ever sees them.
@@ -562,7 +562,7 @@ function MainContent() {
             onClick={() => openAuth('signup')}
             className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm"
           >
-            <span className="relative z-10">Start 30-Day Pilot For Your Stores</span>
+            <span className="relative z-10">Start 30-Day Trial For Your Store</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
 
