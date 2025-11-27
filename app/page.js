@@ -185,7 +185,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   return <span>{prefix}{count.toFixed(decimals)}{suffix}</span>
 }
 
-// --- AUTH MODAL ---
+// --- AUTH MODAL WITH GOOGLE SIGN-IN ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -200,6 +200,33 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     setMessage(null) 
   }, [isOpen, defaultView])
 
+  // Google Sign-In Handler
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setMessage(null)
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      })
+
+      if (error) throw error
+      // OAuth will redirect automatically, no need to do anything else
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      setMessage({ type: 'error', text: error.message })
+      setLoading(false)
+    }
+  }
+
+  // Password Auth Handler
   const handleAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -207,7 +234,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     
     try {
       if (view === 'signup') {
-        // Sign up with email confirmation
         const { data, error } = await supabase.auth.signUp({ 
           email, 
           password,
@@ -219,18 +245,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
         if (error) throw error
 
-        // Check if email confirmation is required
         if (data?.user && !data?.session) {
           setMessage({ 
             type: 'success', 
             text: 'Check your email to confirm your account!' 
           })
         } else if (data?.session) {
-          // Email confirmation disabled - redirect immediately
           window.location.href = '/accept-terms'
         }
       } else {
-        // Sign in
         const { data, error } = await supabase.auth.signInWithPassword({ 
           email, 
           password 
@@ -238,14 +261,12 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
         if (error) throw error
 
-        // Check subscription status
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
           .eq('id', data.session.user.id)
           .single()
 
-        // Route based on profile state
         if (!profile?.accepted_terms || !profile?.accepted_privacy) {
           window.location.href = '/accept-terms'
         } else if (profile?.is_subscribed) {
@@ -276,7 +297,35 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">
           {view === 'signup' ? 'Create Account' : 'Sign In'}
         </h2>
+
+        {/* Google Sign-In Button */}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border-2 border-slate-200 hover:border-[#0077B6] hover:shadow-md rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span className="text-sm font-semibold text-slate-700">
+            Continue with Google
+          </span>
+        </button>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-white text-slate-500">Or continue with email</span>
+          </div>
+        </div>
         
+        {/* Email/Password Form */}
         <form onSubmit={handleAuth} className="space-y-4">
           <input 
             type="email" 
@@ -381,7 +430,6 @@ function MainContent() {
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           
-          {/* HEADER: Two balanced lines */}
           <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before<br className="hidden md:block"/>
             The Health Department Does.
@@ -395,7 +443,6 @@ function MainContent() {
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          {/* STATS CARDS - BIGGER & DARKER */}
           <div className="mt-12 grid grid-cols-3 gap-4">
              <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
                <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
