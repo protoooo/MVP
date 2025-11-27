@@ -44,7 +44,7 @@ const SUGGESTED_QUERIES = {
   ]
 }
 
-// Helper to call your backend – change URL/body shape to match your existing API
+// Helper: call your backend agent API
 async function callAgent({ county, message, signal }) {
   const res = await fetch('/api/query', {
     method: 'POST',
@@ -58,7 +58,6 @@ async function callAgent({ county, message, signal }) {
   }
 
   const data = await res.json()
-  // Expecting { answer: string }
   return data.answer || 'No answer returned from agent.'
 }
 
@@ -74,13 +73,14 @@ export default function DocumentsPage() {
   const [systemReadyShown, setSystemReadyShown] = useState(true)
   const [userEmail, setUserEmail] = useState('')
   const [queryCount, setQueryCount] = useState(null)
+
   const scrollRef = useRef(null)
   const abortRef = useRef(null)
 
   const supabase = createClient()
   const router = useRouter()
 
-  // Load user email and query count from Supabase
+  // Load user info / query count
   useEffect(() => {
     let isMounted = true
 
@@ -114,7 +114,7 @@ export default function DocumentsPage() {
     }
   }, [supabase])
 
-  // Scroll to bottom when messages change
+  // Auto-scroll conversation
   useEffect(() => {
     if (!scrollRef.current) return
     const container = scrollRef.current
@@ -138,7 +138,7 @@ export default function DocumentsPage() {
     const trimmed = inputValue.trim()
     if (!trimmed || isThinking) return
 
-    // Cancel any in-flight request
+    // Cancel in-flight request
     if (abortRef.current) {
       abortRef.current.abort()
     }
@@ -186,6 +186,7 @@ export default function DocumentsPage() {
         content:
           'There was a problem getting a response. Please verify your connection and try again.'
       }
+
       setMessagesByCounty((prev) => ({
         ...prev,
         [activeCounty]: [...(prev[activeCounty] || []), errorMessage]
@@ -214,10 +215,10 @@ export default function DocumentsPage() {
             <button
               key={key}
               onClick={() => handleCountyChange(key)}
-              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold transition-all border ${
                 activeCounty === key
-                  ? 'bg-[#E3F2FF] text-[#023E8A]'
-                  : 'text-slate-500 hover:bg-slate-50'
+                  ? 'bg-white text-[#023E8A] border-slate-200 shadow-sm shadow-slate-200/70 hover:bg-white active:scale-[0.97]'
+                  : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-50 active:scale-[0.97]'
               }`}
             >
               {COUNTY_NAMES[key]}
@@ -265,7 +266,7 @@ export default function DocumentsPage() {
             </div>
             <button
               onClick={() => router.push('/billing')}
-              className="text-[11px] font-semibold text-[#0077B6] hover:text-[#023E8A]"
+              className="text-[11px] font-semibold text-[#0077B6] hover:text-[#023E8A] active:scale-95 transition-transform"
             >
               Billing
             </button>
@@ -276,7 +277,7 @@ export default function DocumentsPage() {
               await supabase.auth.signOut()
               router.push('/')
             }}
-            className="mt-3 text-[11px] text-slate-400 hover:text-red-500"
+            className="mt-3 text-[11px] text-slate-400 hover:text-red-500 active:scale-95 transition-transform"
           >
             Log Out
           </button>
@@ -285,7 +286,7 @@ export default function DocumentsPage() {
 
       {/* MAIN CONTENT */}
       <main className="flex-1 flex flex-col">
-        {/* Top bar (mobile header + county info) */}
+        {/* Top bar */}
         <header className="px-4 md:px-10 pt-4 md:pt-6 pb-3 flex items-center justify-between border-b border-slate-100 bg-white/70 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="md:hidden text-lg font-bold tracking-tight text-[#023E8A]">
@@ -307,11 +308,11 @@ export default function DocumentsPage() {
 
         {/* Conversation area */}
         <div className="flex-1 flex flex-col px-4 md:px-10 pt-4 md:pt-8 pb-28 md:pb-32 bg-gradient-to-br from-[#F5F9FC] via-[#F7FBFF] to-[#EEF4FB]">
-          {/* System ready line (no bubble) */}
+          {/* System ready line */}
           {systemReadyShown && currentMessages.length === 0 && (
             <div className="max-w-3xl mx-auto md:mx-0 md:ml-8 mb-4 md:mb-6">
-              <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                <GlobeIcon className="w-3.5 h-3.5 text-[#0077B6]" />
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <GlobeIcon className="w-4 h-4 text-[#0077B6]" />
                 <span>
                   System ready. Regulatory Intelligence active for{' '}
                   {COUNTY_NAMES[activeCounty]}.
@@ -341,7 +342,6 @@ export default function DocumentsPage() {
                 )
               }
 
-              // assistant messages
               return (
                 <div key={msg.id} className="flex items-start gap-3">
                   <div className="mt-1">
@@ -384,7 +384,7 @@ export default function DocumentsPage() {
                 key={q}
                 type="button"
                 onClick={() => handleSuggestionClick(q)}
-                className="px-4 py-2 rounded-full bg-white/80 hover:bg-white text-xs md:text-[13px] text-slate-600 border border-slate-100 shadow-sm hover:-translate-y-[1px] hover:shadow-md transition-all"
+                className="px-4 py-2 rounded-full bg-white/80 hover:bg-white text-xs md:text-[13px] text-slate-600 border border-slate-100 shadow-sm hover:-translate-y-[1px] hover:shadow-md active:scale-95 transition-all"
               >
                 {q}
               </button>
@@ -398,7 +398,7 @@ export default function DocumentsPage() {
           className="fixed left-0 right-0 bottom-0 z-20 bg-gradient-to-t from-[#F5F9FC] to-[#F5F9FC]/90 border-t border-slate-100 px-3 md:px-10 py-3 md:py-4"
         >
           <div className="max-w-3xl mx-auto flex flex-col gap-2">
-            <div className="flex items-stretch gap-2 rounded-2xl bg-white border border-slate-200 shadow-[0_8px_20px_rgba(15,23,42,0.04)] px-3 md:px-4 py-1.5 md:py-2">
+            <div className="flex items-center gap-2 rounded-2xl bg-white border border-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.06)] px-3 md:px-4 py-1.5 md:py-2">
               <button
                 type="button"
                 onClick={() => {
@@ -409,7 +409,7 @@ export default function DocumentsPage() {
                   setSystemReadyShown(true)
                   setInputValue('')
                 }}
-                className="flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 text-lg leading-none transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-500 text-lg leading-none transition-all active:scale-95"
               >
                 +
               </button>
@@ -419,7 +419,7 @@ export default function DocumentsPage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 rows={1}
                 placeholder={COUNTY_PLACEHOLDERS[activeCounty]}
-                className="flex-1 resize-none border-none outline-none text-sm md:text-[15px] text-slate-800 placeholder:text-slate-400 bg-transparent py-1 md:py-1.5 px-1"
+                className="flex-1 resize-none border-none outline-none text-sm md:text-[15px] text-slate-800 placeholder:text-slate-400 bg-transparent py-1 md:py-1.5 px-1 leading-[1.35]"
               />
 
               <button
@@ -427,7 +427,7 @@ export default function DocumentsPage() {
                 disabled={!inputValue.trim() || isThinking}
                 className={`flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full transition-all ${
                   inputValue.trim() && !isThinking
-                    ? 'bg-[#0077B6] text-white shadow-md hover:bg-[#023E8A]'
+                    ? 'bg-[#0077B6] text-white shadow-md hover:bg-[#023E8A] active:scale-95'
                     : 'bg-slate-100 text-slate-400 cursor-default'
                 }`}
               >
@@ -455,7 +455,7 @@ export default function DocumentsPage() {
   )
 }
 
-// Simple globe icon, no circle, aligns with text baseline
+// Simple globe icon
 function GlobeIcon({ className }) {
   return (
     <svg
@@ -468,8 +468,8 @@ function GlobeIcon({ className }) {
     >
       <circle cx="12" cy="12" r="8" />
       <path d="M4 12h16" />
-      <path d="M12 4a9 9 0 010 16" />
-      <path d="M12 4a9 9 0 000 16" />
+      <path d="M12 4a9 9 0 0 1 0 16" />
+      <path d="M12 4a9 9 0 0 0 0 16" />
     </svg>
   )
 }
