@@ -144,8 +144,8 @@ const DemoChatContent = () => {
            <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
               <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm [transform:translateZ(5px)]">
                  <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [transform:translateZ(2px)]"></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}} [transform:translateZ(2px)]></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}} [transform:translateZ(2px)]></div>
+                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [animation-delay:100ms] [transform:translateZ(2px)]"></div>
+                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [animation-delay:200ms] [transform:translateZ(2px)]"></div>
               </div>
            </div>
         )}
@@ -158,7 +158,7 @@ const DemoChatContent = () => {
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse"></span>}
               {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
            </div>
-           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 [transform:rotateY(180deg)_translateZ(5px)] ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'}`}>
+           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'} [transform:rotateY(180deg)_translateZ(5px)]`}>
               <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                  <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
