@@ -190,27 +190,18 @@ export default function DocumentsPage() {
       {/* LEFT SIDEBAR */}
       <aside className="hidden lg:flex lg:flex-col w-80 border-r border-slate-200 bg-white shadow-sm">
         {/* Logo */}
-        <div className="px-8 py-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div>
-              <div className="text-xl font-bold text-slate-900">
-                protocol<span className="text-blue-600">LM</span>
-              </div>
-              <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">
-                Compliance Intelligence
-              </div>
-            </div>
+        <div className="px-8 py-5 border-b border-slate-200">
+          <div className="text-xl font-bold text-slate-900">
+            protocol<span className="text-blue-600">LM</span>
+          </div>
+          <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+            Compliance Intelligence
           </div>
         </div>
 
         {/* Jurisdictions */}
-        <div className="px-6 py-6 border-b border-slate-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="px-6 py-5 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
               Active Jurisdiction
             </p>
@@ -227,7 +218,7 @@ export default function DocumentsPage() {
                   key={county}
                   onClick={() => setActiveCounty(county)}
                   className={classNames(
-                    'w-full text-left px-4 py-3 rounded-lg text-sm font-semibold border-2 transition-all duration-200',
+                    'w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold border-2 transition-all duration-200',
                     isActive
                       ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-sm'
                       : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
@@ -248,15 +239,15 @@ export default function DocumentsPage() {
         </div>
 
         {/* History */}
-        <div className="px-6 py-6 flex-1 overflow-hidden">
-          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-4">
+        <div className="px-6 py-5 flex-1 overflow-hidden">
+          <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-3">
             Query History
           </p>
           <div className="text-xs text-slate-600">
             {messages.length === 0 ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 text-center">
+                <div className="w-10 h-10 mx-auto mb-2.5 rounded-full bg-slate-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
@@ -288,25 +279,20 @@ export default function DocumentsPage() {
         </div>
 
         {/* Bottom User */}
-        <div className="mt-auto border-t border-slate-200 px-6 py-4 bg-slate-50">
-          <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white text-sm font-bold shadow-md">
-                {userEmail ? userEmail.charAt(0).toUpperCase() : '?'}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                  Operator
+        <div className="mt-auto border-t border-slate-200 px-6 py-3.5 bg-slate-50">
+          <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                Operator
+              </p>
+              <p className="text-xs font-semibold text-slate-800 truncate">
+                {loadingUser ? 'Loading…' : userEmail || 'Unknown user'}
+              </p>
+              {queryCount !== null && (
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  {queryCount} queries used
                 </p>
-                <p className="text-xs font-semibold text-slate-800 truncate">
-                  {loadingUser ? 'Loading…' : userEmail || 'Unknown user'}
-                </p>
-                {queryCount !== null && (
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    {queryCount} queries used
-                  </p>
-                )}
-              </div>
+              )}
             </div>
             <button
               onClick={handleSignOut}
@@ -321,19 +307,12 @@ export default function DocumentsPage() {
       {/* MAIN AREA */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="w-full border-b border-slate-200 bg-white px-6 lg:px-8 py-4 shadow-sm">
+        <header className="w-full border-b border-slate-200 bg-white px-6 lg:px-8 py-3.5 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {/* Mobile logo */}
-              <div className="lg:hidden flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div className="text-base font-bold text-slate-900">
-                  protocol<span className="text-blue-600">LM</span>
-                </div>
+              <div className="lg:hidden text-base font-bold text-slate-900">
+                protocol<span className="text-blue-600">LM</span>
               </div>
               <div className="hidden lg:block">
                 <div className="flex items-center gap-3">
@@ -347,8 +326,8 @@ export default function DocumentsPage() {
                     </span>
                   </span>
                 </div>
-                <p className="text-xs text-slate-600 mt-1.5 font-medium">
-                  AI-Powered Regulatory Intelligence Platform
+                <p className="text-xs text-slate-600 mt-1 font-medium">
+                  Real-time Regulatory Intelligence Platform
                 </p>
               </div>
             </div>
@@ -377,22 +356,22 @@ export default function DocumentsPage() {
         </header>
 
         {/* CONTENT */}
-        <section className="flex-1 flex flex-col px-4 lg:px-8 py-4 gap-3 overflow-hidden min-h-0">
+        <section className="flex-1 flex flex-col px-4 lg:px-6 py-3 gap-2.5 overflow-hidden min-h-0">
           {/* CHAT PANEL */}
           <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col min-h-0">
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 space-y-4 custom-scroll min-h-0"
+              className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 space-y-3.5 custom-scroll min-h-0"
             >
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                  <div className="w-16 h-16 mb-5 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                <div className="h-full flex flex-col items-center justify-center text-center py-6">
+                  <div className="w-14 h-14 mb-4 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
+                    <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <p className="text-base font-bold text-slate-900 mb-2">
+                  <p className="text-base font-bold text-slate-900 mb-1.5">
                     Compliance Intelligence Ready
                   </p>
                   <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
@@ -414,7 +393,7 @@ export default function DocumentsPage() {
                     >
                       <div
                         className={classNames(
-                          'max-w-[80%] rounded-xl px-5 py-3.5 text-sm leading-relaxed shadow-sm',
+                          'max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed shadow-sm',
                           isUser
                             ? 'bg-blue-600 text-white rounded-br-sm'
                             : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
@@ -427,7 +406,7 @@ export default function DocumentsPage() {
                               <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
                               <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
                             </div>
-                            <span className="text-slate-600 text-xs font-medium">Analyzing regulatory data...</span>
+                            <span className="text-slate-600 text-xs font-medium">Processing query...</span>
                           </div>
                         ) : (
                           <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -440,16 +419,16 @@ export default function DocumentsPage() {
             </div>
 
             {/* INPUT BAR */}
-            <div className="border-t border-slate-200 bg-slate-50 px-4 lg:px-6 py-3 flex-shrink-0">
+            <div className="border-t border-slate-200 bg-slate-50 px-4 lg:px-6 py-2.5 flex-shrink-0">
               {/* Suggestion tiles - above input */}
               {messages.length === 0 && (
-                <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto">
+                <div className="mb-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto">
                   {suggestions.map((text, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => handleSuggestionClick(text)}
-                      className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3.5 py-2.5 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
+                      className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
                     >
                       <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
                         →
@@ -460,14 +439,14 @@ export default function DocumentsPage() {
                 </div>
               )}
               
-              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-12 px-3">
+              <div className="max-w-5xl mx-auto flex items-center gap-2.5 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-11 px-3">
                 <button
                   type="button"
                   onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all flex-shrink-0"
                   aria-label="Use example question"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                   </svg>
                 </button>
@@ -487,7 +466,7 @@ export default function DocumentsPage() {
                   onClick={handleSend}
                   disabled={isSending || !input.trim()}
                   className={classNames(
-                    'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95',
+                    'flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-95 flex-shrink-0',
                     input.trim()
                       ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -496,7 +475,7 @@ export default function DocumentsPage() {
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    className="w-4 h-4"
+                    className="w-3.5 h-3.5"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
