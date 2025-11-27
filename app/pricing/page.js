@@ -18,7 +18,6 @@ export default function Pricing() {
       if (session) {
         setIsAuthenticated(true)
         
-        // CHECK SUBSCRIPTION STATUS
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('is_subscribed')
@@ -64,13 +63,11 @@ export default function Pricing() {
   )
 
   return (
-    // CHANGED: font-mono -> font-sans to match dashboard
     <div className="min-h-screen bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col">
       
       <header className="fixed top-0 w-full border-b border-[#90E0EF] bg-[#F0F9FF]/95 backdrop-blur-sm z-50 h-20 flex items-center">
         <div className="w-full max-w-7xl mx-auto px-6 flex items-center justify-between">
           
-          {/* UPDATED LOGO TO MATCH DASHBOARD */}
           <div className="flex items-center gap-6">
              <button onClick={() => router.push('/')} className="text-slate-400 hover:text-[#0077B6] transition-colors">
                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -88,9 +85,7 @@ export default function Pricing() {
                 <button onClick={() => router.push('/?auth=signup')} className="text-[#0077B6] border border-[#0077B6] px-4 py-2 rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 text-xs md:text-sm">Create Account</button>
               </>
             ) : (
-              isSubscribed ? (
-                <button onClick={() => router.push('/documents')} className="bg-[#0077B6] text-white px-4 py-2 rounded-lg hover:bg-[#023E8A] transition-colors shadow-md">Dashboard</button>
-              ) : (
+              !isSubscribed && (
                 <div className="text-[#023E8A] flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#0077B6] rounded-full animate-pulse"></div>
                   Select a Plan
