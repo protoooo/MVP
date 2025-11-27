@@ -110,6 +110,9 @@ export default function DocumentsPage() {
     setInput('')
     setIsSending(true)
 
+    // Add empty assistant message for thinking animation
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -122,14 +125,14 @@ export default function DocumentsPage() {
 
       if (!res.ok) {
         console.error('Chat API error', await res.text())
-        setMessages((prev) => [
-          ...prev,
-          {
+        setMessages((prev) => {
+          const updated = [...prev]
+          updated[updated.length - 1] = {
             role: 'assistant',
-            content:
-              'There was a problem reaching the server. Please verify your connection and try again.'
+            content: 'There was a problem reaching the server. Please verify your connection and try again.'
           }
-        ])
+          return updated
+        })
         return
       }
 
@@ -140,23 +143,24 @@ export default function DocumentsPage() {
         data?.message ||
         'Response received, but in an unexpected format.'
 
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
           role: 'assistant',
           content: replyText
         }
-      ])
+        return updated
+      })
     } catch (err) {
       console.error('Send error', err)
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
           role: 'assistant',
-          content:
-            'There was a network error while processing this question. Please try again.'
+          content: 'There was a network error while processing this question. Please try again.'
         }
-      ])
+        return updated
+      })
     } finally {
       setIsSending(false)
     }
@@ -172,6 +176,13 @@ export default function DocumentsPage() {
     router.push('/')
   }
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
   const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
 
   return (
@@ -180,13 +191,8 @@ export default function DocumentsPage() {
       <aside className="hidden lg:flex lg:flex-col w-72 border-r border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-sm">
         {/* Logo */}
         <div className="px-7 pt-7 pb-5 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0077B6] to-[#023E8A] flex items-center justify-center shadow-sm">
-              <span className="text-white text-xs font-bold">P</span>
-            </div>
-            <div className="text-xl font-bold tracking-tight text-slate-900">
-              protocol<span className="text-[#0077B6]">LM</span>
-            </div>
+          <div className="text-xl font-bold tracking-tight text-slate-900">
+            protocol<span className="text-[#0077B6]">LM</span>
           </div>
         </div>
 
@@ -273,9 +279,6 @@ export default function DocumentsPage() {
         <div className="mt-auto border-t border-slate-100 px-5 py-4 bg-slate-50/50">
           <div className="flex items-center justify-between gap-3 bg-white border border-slate-200/60 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0077B6] to-[#023E8A] flex items-center justify-center text-white text-sm font-bold shadow-sm flex-shrink-0">
-                {loadingUser ? '...' : (userEmail[0]?.toUpperCase() || 'U')}
-              </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-0.5">
                   Account
@@ -306,10 +309,7 @@ export default function DocumentsPage() {
         <header className="w-full border-b border-slate-200/60 bg-white/95 backdrop-blur-xl px-5 lg:px-8 py-4 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-4">
             {/* Mobile logo */}
-            <div className="lg:hidden flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0077B6] to-[#023E8A] flex items-center justify-center shadow-sm">
-                <span className="text-white text-[10px] font-bold">P</span>
-              </div>
+            <div className="lg:hidden">
               <div className="text-base font-bold tracking-tight text-slate-900">
                 protocol<span className="text-[#0077B6]">LM</span>
               </div>
@@ -355,33 +355,33 @@ export default function DocumentsPage() {
         </header>
 
         {/* CONTENT */}
-        <section className="flex-1 flex flex-col px-5 lg:px-8 pt-6 pb-5 gap-5 overflow-hidden">
+        <section className="flex-1 flex flex-col px-5 lg:px-8 pt-4 pb-4 gap-3 overflow-hidden">
           {/* Status banner */}
-          <div className="inline-flex items-center gap-3 bg-white/95 border border-slate-200/60 rounded-2xl px-5 py-3 shadow-md backdrop-blur-sm max-w-2xl hover:shadow-lg transition-all">
+          <div className="inline-flex items-center gap-3 bg-white/95 border border-slate-200/60 rounded-2xl px-5 py-2.5 shadow-md backdrop-blur-sm max-w-2xl hover:shadow-lg transition-all">
             <span
               className={classNames(
-                'text-lg',
+                'text-base',
                 isSending ? 'animate-[ruminate_1.6s_ease-in-out_infinite]' : ''
               )}
               aria-hidden="true"
             >
               🌐
             </span>
-            <p className="text-sm font-semibold text-slate-700">
+            <p className="text-[13px] font-semibold text-slate-700">
               {systemStatus}
             </p>
           </div>
 
           {/* Suggestion tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-7xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 max-w-7xl">
             {suggestions.map((text, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => handleSuggestionClick(text)}
-                className="group text-left bg-white/95 border border-slate-200/60 hover:border-[#0077B6]/40 hover:bg-white rounded-2xl px-4 py-3.5 text-[13px] text-slate-700 font-medium shadow-sm hover:shadow-lg transition-all duration-300 flex items-start gap-2.5 active:scale-[0.98] hover:scale-[1.01]"
+                className="group text-left bg-white/95 border border-slate-200/60 hover:border-[#0077B6]/40 hover:bg-white rounded-2xl px-3.5 py-2.5 text-[12px] text-slate-700 font-medium shadow-sm hover:shadow-lg transition-all duration-300 flex items-start gap-2 active:scale-[0.98] hover:scale-[1.01]"
               >
-                <span className="mt-0.5 text-slate-300 group-hover:text-[#0077B6] transition-colors text-base">
+                <span className="mt-0.5 text-slate-300 group-hover:text-[#0077B6] transition-colors text-sm">
                   →
                 </span>
                 <span className="leading-relaxed group-hover:text-slate-900">{text}</span>
@@ -394,59 +394,72 @@ export default function DocumentsPage() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto px-5 lg:px-8 py-6 space-y-4 custom-scroll"
+              className="flex-1 overflow-y-auto px-5 lg:px-8 py-5 space-y-4 custom-scroll"
             >
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center">
-                  <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-[#0077B6]/10 to-[#0077B6]/5 border border-[#0077B6]/20 flex items-center justify-center shadow-sm">
-                    <svg className="w-8 h-8 text-[#0077B6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-14 h-14 mb-5 rounded-2xl bg-gradient-to-br from-[#0077B6]/10 to-[#0077B6]/5 border border-[#0077B6]/20 flex items-center justify-center shadow-sm">
+                    <svg className="w-7 h-7 text-[#0077B6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                     </svg>
                   </div>
-                  <p className="text-sm font-bold text-slate-700 mb-2">
+                  <p className="text-[13px] font-bold text-slate-700 mb-1.5">
                     Start with a real operational scenario
                   </p>
-                  <p className="text-xs text-slate-500 max-w-xl mx-auto leading-relaxed px-4">
+                  <p className="text-[11px] text-slate-500 max-w-xl mx-auto leading-relaxed px-4">
                     Example: "We found raw chicken stored over lettuce during prep. What should we document and fix before an inspector arrives?"
                   </p>
                 </div>
               ) : (
-                messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={classNames(
-                      'flex animate-fadeIn',
-                      msg.role === 'user' ? 'justify-end' : 'justify-start'
-                    )}
-                  >
+                messages.map((msg, idx) => {
+                  const isUser = msg.role === 'user'
+                  const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
+                  
+                  return (
                     <div
+                      key={idx}
                       className={classNames(
-                        'max-w-[85%] rounded-2xl px-5 py-3.5 text-[13px] leading-relaxed shadow-md backdrop-blur-sm',
-                        msg.role === 'user'
-                          ? 'bg-gradient-to-br from-[#0077B6] to-[#0077B6]/90 text-white rounded-br-md border border-[#0077B6]/20'
-                          : 'bg-white text-slate-800 rounded-bl-md border border-slate-200/60'
+                        'flex animate-fadeIn',
+                        isUser ? 'justify-end' : 'justify-start'
                       )}
                     >
-                      {msg.content}
+                      <div
+                        className={classNames(
+                          'max-w-[85%] rounded-2xl px-5 py-3.5 text-[13px] leading-relaxed shadow-md backdrop-blur-sm',
+                          isUser
+                            ? 'bg-gradient-to-br from-[#0077B6] to-[#0077B6]/90 text-white rounded-br-md border border-[#0077B6]/20'
+                            : 'bg-white text-slate-800 rounded-bl-md border border-slate-200/60'
+                        )}
+                      >
+                        {isLastAssistant && msg.content === '' ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
+                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
+                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
+                            </div>
+                            <span className="text-slate-500 text-xs">Analyzing regulations...</span>
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
 
             {/* INPUT BAR */}
-            <form
-              onSubmit={handleSend}
-              className="border-t border-slate-200/60 bg-gradient-to-b from-slate-50/50 to-white px-5 lg:px-6 py-4"
-            >
-              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-2xl border-2 border-slate-200/60 bg-white shadow-lg focus-within:border-[#0077B6]/60 focus-within:shadow-xl transition-all h-14 px-3">
+            <div className="border-t border-slate-200/60 bg-gradient-to-b from-slate-50/50 to-white px-5 lg:px-6 py-3.5">
+              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-2xl border-2 border-slate-200/60 bg-white shadow-lg focus-within:border-[#0077B6]/60 focus-within:shadow-xl transition-all h-12 px-3">
                 <button
                   type="button"
                   onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/60 text-slate-500 hover:text-[#0077B6] hover:border-[#0077B6]/60 hover:from-[#EFF6FF] hover:to-white active:scale-95 transition-all shadow-sm hover:shadow-md"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/60 text-slate-500 hover:text-[#0077B6] hover:border-[#0077B6]/60 hover:from-[#EFF6FF] hover:to-white active:scale-95 transition-all shadow-sm hover:shadow-md"
                   aria-label="Use example question"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                   </svg>
                 </button>
@@ -456,15 +469,17 @@ export default function DocumentsPage() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
-                  className="flex-1 bg-transparent border-none outline-none text-sm text-slate-800 placeholder-slate-400 font-medium h-full px-2"
+                  className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-800 placeholder-slate-400 font-medium h-full px-2"
                 />
 
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSend}
                   disabled={isSending || !input.trim()}
                   className={classNames(
-                    'flex h-10 w-10 items-center justify-center rounded-xl transition-all shadow-md active:scale-95',
+                    'flex h-9 w-9 items-center justify-center rounded-xl transition-all shadow-md active:scale-95',
                     input.trim()
                       ? 'bg-gradient-to-br from-[#0077B6] to-[#023E8A] text-white shadow-[#0077B6]/20 hover:shadow-lg hover:shadow-[#0077B6]/30 hover:scale-105'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
@@ -473,7 +488,7 @@ export default function DocumentsPage() {
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -493,11 +508,7 @@ export default function DocumentsPage() {
                   </svg>
                 </button>
               </div>
-
-              <p className="mt-3 text-[10px] text-center text-slate-400 font-medium tracking-wide">
-                AI-generated guidance • Always verify with official county documents
-              </p>
-            </form>
+            </div>
           </div>
         </section>
       </main>
