@@ -1,172 +1,81 @@
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-white">
+    // Changed: bg-[#F0F9FF] and font-sans
+    <div className="min-h-screen bg-[#F0F9FF] font-sans selection:bg-[#0077B6] selection:text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Privacy Policy</h1>
-          <p className="text-slate-600">Last updated: November 25, 2025</p>
+        <div className="mb-10 text-center md:text-left">
+          <h1 className="text-4xl font-bold text-[#023E8A] mb-2 tracking-tight">Privacy Policy</h1>
+          <p className="text-[#0077B6] font-bold text-xs uppercase tracking-widest">Last updated: November 25, 2025</p>
         </div>
 
-        <div className="prose prose-slate max-w-none">
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">1. Information We Collect</h2>
-            <p className="text-slate-700 mb-4">
-              We collect information that you provide directly to us when you:
-            </p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Create an account (email address, password)</li>
-              <li>Subscribe to our service (payment information via Stripe)</li>
-              <li>Use our chat feature (queries, uploaded images, chat history)</li>
-              <li>Contact customer support</li>
+        <div className="prose prose-slate max-w-none prose-headings:text-[#023E8A] prose-a:text-[#0077B6] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#023E8A]">
+          
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <h2 className="text-2xl font-bold mb-4">1. Information We Collect</h2>
+            <ul className="list-disc pl-6 text-slate-700 space-y-2">
+              <li>Account details (email address, password)</li>
+              <li>Payment information (processed securely via Stripe)</li>
+              <li>Usage data (chat queries, uploaded images)</li>
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">2. How We Use Your Information</h2>
-            <p className="text-slate-700 mb-4">We use the information we collect to:</p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Provide, maintain, and improve our services</li>
-              <li>Process your subscription payments</li>
-              <li>Generate AI-powered responses to your queries</li>
-              <li>Analyze uploaded images for compliance guidance</li>
-              <li>Send you technical notices and support messages</li>
-              <li>Enforce our terms and conditions</li>
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <h2 className="text-2xl font-bold mb-4">2. How We Use Information</h2>
+            <ul className="list-disc pl-6 text-slate-700 space-y-2">
+              <li>To provide AI-powered compliance guidance</li>
+              <li>To process subscription payments</li>
+              <li>To improve model accuracy and service quality</li>
+              <li>To send necessary technical alerts</li>
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">3. Third-Party Services</h2>
-            <p className="text-slate-700 mb-4">
-              We use the following third-party services to operate protocolLM:
-            </p>
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <h2 className="text-2xl font-bold mb-6">3. Third-Party Services</h2>
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-bold text-slate-900 mb-2">Supabase (Database & Authentication)</h3>
-                <p className="text-slate-700 text-sm">
-                  Stores your account information, subscription status, and chat history. 
-                  <a href="https://supabase.com/privacy" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener">
-                    View Supabase Privacy Policy
-                  </a>
-                </p>
+              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
+                <h3 className="font-bold text-[#023E8A] mb-1">Supabase</h3>
+                <p className="text-slate-600 text-sm mb-2">Database & Authentication. Stores chat history and user profiles.</p>
+                <a href="https://supabase.com/privacy" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Supabase Privacy Policy →</a>
               </div>
               
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-bold text-slate-900 mb-2">Google Vertex AI (AI Processing)</h3>
-                <p className="text-slate-700 text-sm">
-                  Processes your queries and images using Gemini 2.0 models to generate compliance guidance. Images are analyzed in real-time and not permanently stored by Google for model training.
-                  <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener">
-                    View Google Cloud Privacy Policy
-                  </a>
-                </p>
+              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
+                <h3 className="font-bold text-[#023E8A] mb-1">Google Vertex AI</h3>
+                <p className="text-slate-600 text-sm mb-2">AI Processing. Analyzes queries/images. Data is not used for model training.</p>
+                <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Google Cloud Policy →</a>
               </div>
               
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-bold text-slate-900 mb-2">Stripe (Payment Processing)</h3>
-                <p className="text-slate-700 text-sm">
-                  Handles all payment transactions. We do not store your credit card information.
-                  <a href="https://stripe.com/privacy" className="text-blue-600 hover:underline ml-1" target="_blank" rel="noopener">
-                    View Stripe Privacy Policy
-                  </a>
-                </p>
+              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
+                <h3 className="font-bold text-[#023E8A] mb-1">Stripe</h3>
+                <p className="text-slate-600 text-sm mb-2">Payment Processing. We do not store credit card numbers.</p>
+                <a href="https://stripe.com/privacy" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Stripe Policy →</a>
               </div>
             </div>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">4. Data Retention</h2>
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <h2 className="text-2xl font-bold mb-4">4. Data Retention</h2>
             <p className="text-slate-700 mb-4">
-              We retain your information for as long as your account is active or as needed to provide you services. If you cancel your subscription:
+              If you cancel your subscription:
             </p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Account information is retained for 90 days</li>
-              <li>Chat history is retained for 90 days</li>
-              <li>Payment records are retained for 7 years (legal requirement)</li>
+            <ul className="list-disc pl-6 text-slate-700 space-y-2">
+              <li>Account & Chat data is retained for <strong>90 days</strong></li>
+              <li>Payment records are retained for <strong>7 years</strong> (legal requirement)</li>
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">5. Your Rights</h2>
-            <p className="text-slate-700 mb-4">You have the right to:</p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li><strong>Access:</strong> Request a copy of your personal data</li>
-              <li><strong>Correction:</strong> Update incorrect information</li>
-              <li><strong>Deletion:</strong> Request deletion of your account and data</li>
-              <li><strong>Export:</strong> Download your chat history</li>
-              <li><strong>Opt-out:</strong> Unsubscribe from marketing emails (if any)</li>
-            </ul>
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <h2 className="text-2xl font-bold mb-4">5. Contact Us</h2>
             <p className="text-slate-700">
-              To exercise these rights, email us at{' '}
-              <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
+              <strong>Email:</strong>{' '}
+              <a href="mailto:austinrnorthrop@gmail.com" className="text-[#0077B6] hover:underline font-bold">
                 austinrnorthrop@gmail.com
               </a>
             </p>
           </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">6. Security</h2>
-            <p className="text-slate-700 mb-4">
-              We implement industry-standard security measures including:
-            </p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Encrypted data transmission (HTTPS/TLS)</li>
-              <li>Encrypted data storage</li>
-              <li>Regular security audits</li>
-              <li>Rate limiting to prevent abuse</li>
-              <li>Secure authentication via Supabase</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">7. Cookies and Tracking</h2>
-            <p className="text-slate-700 mb-4">
-              We use essential cookies for:
-            </p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2 mb-4">
-              <li>Authentication (keeping you logged in)</li>
-              <li>Session management</li>
-              <li>Security and fraud prevention</li>
-            </ul>
-            <p className="text-slate-700">
-              We do not use advertising or tracking cookies.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">8. Children's Privacy</h2>
-            <p className="text-slate-700">
-              protocolLM is not intended for users under 18 years of age. We do not knowingly collect information from minors.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">9. Changes to This Policy</h2>
-            <p className="text-slate-700">
-              We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">10. Contact Us</h2>
-            <p className="text-slate-700 mb-2">
-              If you have questions about this privacy policy, please contact us:
-            </p>
-            <div className="bg-slate-50 p-4 rounded-lg">
-              <p className="text-slate-700">
-                <strong>Email:</strong>{' '}
-                <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:underline">
-                  austinrnorthrop@gmail.com
-                </a>
-              </p>
-              <p className="text-slate-700 mt-2">
-                <strong>Business:</strong> protocolLM<br />
-                <strong>Location:</strong> Michigan, United States
-              </p>
-            </div>
-          </section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200">
-          <a href="/" className="text-blue-600 hover:underline">
+        <div className="mt-12 pt-8 border-t border-[#90E0EF] text-center">
+          <a href="/" className="inline-flex items-center gap-2 text-[#0077B6] font-bold uppercase tracking-widest text-xs hover:text-[#023E8A] transition-colors">
             ← Back to Home
           </a>
         </div>
