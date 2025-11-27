@@ -324,7 +324,7 @@ function MainContent() {
              src="/background.png" 
              alt="Background" 
              fill 
-             // Changed: object-top (moves it up) and opacity-[0.14] (14% opacity)
+             // KEY CHANGE 1: object-top (moves it up) and opacity-[0.14] (14% opacity)
              className="object-cover object-top opacity-[0.14]" 
              priority
            />
@@ -333,7 +333,7 @@ function MainContent() {
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/80 via-transparent to-[#F0F9FF]/80"></div>
       </div>
 
-      {/* NAVBAR */}
+      {/* NAVBAR (Unchanged) */}
       <nav className="w-full shrink-0 z-40 transition-all border-b border-white/40 bg-white/60 backdrop-blur-xl h-20">
         <div className="max-w-7xl mx-auto px-6 h-full flex justify-between items-center">
             <div className={`transition-all duration-700 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
@@ -376,7 +376,7 @@ function MainContent() {
             Avoid violations and prepare for health inspections with AI intelligence trained directly on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
           
-          {/* Changed: Reverted to Original Button, Removed View Demo */}
+          {/* KEY CHANGE 2: Removed "View Demo" button */}
           <div className="flex justify-center lg:justify-start">
               <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
                 <span className="relative z-10">Start 30-Day Free Trial</span>
