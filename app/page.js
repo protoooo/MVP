@@ -426,7 +426,7 @@ function MainContent() {
           </p>
 
           <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm">
-            <span className="relative z-10">Start 30-Day Trial For Your Store</span>
+            <span className="relative z-10">Start 30-Day Free Trial</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]" />
           </button>
 
