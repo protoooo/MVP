@@ -488,7 +488,7 @@ function MainContent() {
             src="/background.png"
             alt="Background"
             fill
-            className="object-cover opacity-[0.24]"
+            className="object-cover opacity-[0.42]"
             priority
           />
         </div>
