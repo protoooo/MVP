@@ -21,9 +21,14 @@ FORMATTING:
 
 export async function POST(req) {
   try {
+    console.log('🚀 Chat API called')
+    
     // 1. Initialize Google AI
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
+    if (!apiKey) {
+      console.error('❌ Missing API Key')
+      return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
+    }
     
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
@@ -36,83 +41,122 @@ export async function POST(req) {
       {
         cookies: {
           getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {} },
+          setAll(cookiesToSet) { 
+            try { 
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) 
+            } catch {} 
+          },
         },
       }
     )
 
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session) {
+      console.error('❌ No session found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // 3. Rate Limit
+    console.log('✅ User authenticated:', session.user.id)
+
+    // 3. Rate Limit Check
     const limitCheck = await checkRateLimit(session.user.id)
     if (!limitCheck.success) {
+      console.warn('⚠️ Rate limit hit:', limitCheck.message)
       return NextResponse.json({ error: limitCheck.message || 'Limit reached' }, { status: 429 })
     }
     
-    // Image Limit Check
+    // 4. Parse Request Body
     const body = await req.json()
-    const { messages, image, county } = body
+    console.log('📥 Request body:', { hasMessage: !!body.message, hasImage: !!body.image, county: body.county })
     
+    const { message, image, county } = body
+    
+    if (!message && !image) {
+      return NextResponse.json({ error: 'Message or image required' }, { status: 400 })
+    }
+    
+    // Image Limit Check
     if (image) {
       if (limitCheck.currentImages >= limitCheck.imageLimit) {
+        console.warn('⚠️ Image limit reached')
         return NextResponse.json({ error: `Image limit reached for ${limitCheck.plan} plan.` }, { status: 429 })
       }
     }
 
-    const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
-    // 4. SEARCH (Updated: Runs even if image exists, as long as there is text)
-    if (lastMessage.content) {
+    // 5. SEARCH for Context
+    if (message) {
       try {
-        console.log(`🔍 Searching for context in: ${county}`)
-        const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
+        console.log(`🔍 Searching for context in: ${county || 'washtenaw'}`)
+        const searchResults = await searchDocuments(message, county || 'washtenaw')
         
         if (searchResults && searchResults.length > 0) {
-           console.log(`✅ Found ${searchResults.length} documents`)
-           context = searchResults.map(doc => 
-            `[Source: ${doc.metadata.filename || doc.source}, Page ${doc.metadata.page || doc.page}]\nContent: ${doc.text || doc.content}`
+          console.log(`✅ Found ${searchResults.length} documents`)
+          context = searchResults.map(doc => 
+            `[Source: ${doc.source}, Page ${doc.page}]\nContent: ${doc.text}`
           ).join('\n\n')
           
           citations = searchResults.map(doc => ({
-            document: (doc.metadata.filename || doc.source).replace('.pdf', ''),
-            pages: [doc.metadata.page || doc.page]
+            document: doc.source.replace('.pdf', ''),
+            pages: [doc.page]
           }))
         } else {
           console.log('⚠️ No local documents matched.')
         }
       } catch (err) {
-        console.error('Search Error:', err)
+        console.error('❌ Search Error:', err)
       }
     }
 
-    // 5. Generate
+    // 6. Build Prompt
     const prompt = [
       { text: SYSTEM_PROMPT },
       { text: `USER CURRENT JURISDICTION: ${county || 'washtenaw'}` },
       { text: `OFFICIAL REGULATORY CONTEXT:\n${context || 'No specific local documents found. Rely on FDA Food Code.'}` },
-      { text: `USER QUERY: ${lastMessage.content}` }
+      { text: `USER QUERY: ${message}` }
     ]
 
     if (image) {
       const base64Data = image.split(',')[1]
-      prompt.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
+      prompt.push({ 
+        inlineData: { 
+          mimeType: 'image/jpeg', 
+          data: base64Data 
+        } 
+      })
       prompt.push({ text: "Analyze the image above specifically against the Regulatory Context provided." })
     }
 
+    // 7. Generate Response
+    console.log('🤖 Generating AI response...')
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
+    console.log('✅ AI response generated')
 
-    // 6. Update Usage
-    supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
+    // 8. Update Usage Counter
+    try {
+      await supabase.rpc('increment_usage', { 
+        user_id: session.user.id, 
+        is_image: !!image 
+      })
+      console.log('✅ Usage updated')
+    } catch (usageError) {
+      console.error('⚠️ Failed to update usage:', usageError)
+      // Don't fail the request if usage tracking fails
+    }
 
-    return NextResponse.json({ message: text, citations: citations })
+    return NextResponse.json({ 
+      message: text, 
+      citations: citations 
+    })
 
   } catch (error) {
-    console.error('Chat Route Error:', error)
-    return NextResponse.json({ error: `System Error: ${error.message}` }, { status: 500 })
+    console.error('❌ Chat Route Error:', error)
+    return NextResponse.json({ 
+      error: `System Error: ${error.message}` 
+    }, { status: 500 })
   }
 }
