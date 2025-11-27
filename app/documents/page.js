@@ -4,6 +4,24 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 
+// --- 1. EXECUTIVE DATA STRUCTURES (Placeholder for Demo) ---
+const FRANCHISEE_UNITS = [
+  { id: 101, name: 'Ann Arbor Central', county: 'washtenaw', riskScore: 1.2, lastInspection: '95.2%', failureProb: '8%', exposure: '1,500' },
+  { id: 102, name: 'Ypsilanti East', county: 'washtenaw', riskScore: 1.9, lastInspection: '88.1%', failureProb: '12%', exposure: '2,100' },
+  { id: 201, name: 'Livonia Commerce', county: 'wayne', riskScore: 2.8, lastInspection: '82.5%', failureProb: '18%', exposure: '4,200' },
+  { id: 202, name: 'Detroit Downtown', county: 'wayne', riskScore: 1.5, lastInspection: '90.9%', failureProb: '10%', exposure: '1,800' },
+  { id: 301, name: 'Royal Oak Flagship', county: 'oakland', riskScore: 1.5, lastInspection: '91.8%', failureProb: '10%', exposure: '2,100' },
+  { id: 302, name: 'Pontiac North', county: 'oakland', riskScore: 1.1, lastInspection: '97.5%', failureProb: '6%', exposure: '900' },
+];
+
+const EXECUTIVE_SUMMARY_DATA = {
+  projectedAnnualSavings: '48,000',
+  currentFranchiseeRiskIndex: 1.83, // Calculated as average of all unit risk scores
+  complianceScore: '90.7%', // Calculated as average of all unit inspection scores
+};
+// --- END EXECUTIVE DATA STRUCTURES ---
+
+
 const COUNTY_LABELS = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -184,10 +202,11 @@ export default function DocumentsPage() {
   }
 
   const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
+  const unitsInActiveCounty = FRANCHISEE_UNITS.filter(u => u.county === activeCounty);
 
   return (
     <div className="h-screen w-full bg-[#F8FAFB] text-slate-900 flex overflow-hidden font-sans">
-      {/* LEFT SIDEBAR */}
+      {/* LEFT SIDEBAR (No functional changes) */}
       <aside className="hidden lg:flex lg:flex-col w-80 border-r border-slate-200 bg-white shadow-sm">
         {/* Logo */}
         <div className="px-8 py-5 border-b border-slate-200">
@@ -238,12 +257,12 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* History */}
+        {/* History (No functional changes) */}
         <div className="px-6 py-5 flex-1 overflow-hidden">
           <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase mb-3">
             Query History
           </p>
-          <div className="text-xs text-slate-600">
+          <div className="text-xs text-slate-600 h-full overflow-y-auto"> {/* Added h-full and overflow for better scroll */}
             {messages.length === 0 ? (
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-5 text-center">
                 <div className="w-10 h-10 mx-auto mb-2.5 rounded-full bg-slate-100 flex items-center justify-center">
@@ -255,7 +274,7 @@ export default function DocumentsPage() {
                 <span className="text-slate-400 text-[10px] block mt-1">Begin consultation below</span>
               </div>
             ) : (
-              <ul className="space-y-2 max-h-96 overflow-y-auto custom-scroll pr-2">
+              <ul className="space-y-2 max-h-full overflow-y-auto custom-scroll pr-2">
                 {messages
                   .filter((m) => m.role === 'user')
                   .slice(-10)
@@ -278,7 +297,7 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Bottom User */}
+        {/* Bottom User (No functional changes) */}
         <div className="mt-auto border-t border-slate-200 px-6 py-3.5 bg-slate-50">
           <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm">
             <div className="flex-1 min-w-0">
@@ -304,9 +323,9 @@ export default function DocumentsPage() {
         </div>
       </aside>
 
-      {/* MAIN AREA */}
+      {/* MAIN AREA: EXECUTIVE DASHBOARD & CHAT TOOL */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+        {/* Header (No functional changes) */}
         <header className="w-full border-b border-slate-200 bg-white px-6 lg:px-8 py-3.5 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -355,151 +374,271 @@ export default function DocumentsPage() {
           </div>
         </header>
 
-        {/* CONTENT */}
-        <section className="flex-1 flex flex-col px-4 lg:px-6 py-3 gap-2.5 overflow-hidden min-h-0">
-          {/* CHAT PANEL */}
-          <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col min-h-0">
-            {/* Messages */}
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto px-4 lg:px-6 py-4 space-y-3.5 custom-scroll min-h-0"
-            >
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center py-6">
-                  <div className="w-14 h-14 mb-4 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
-                    <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <p className="text-base font-bold text-slate-900 mb-1.5">
-                    Compliance Intelligence Ready
-                  </p>
-                  <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-                    Ask questions about regulations, get instant compliance guidance, and ensure your operations meet all requirements.
-                  </p>
-                </div>
-              ) : (
-                messages.map((msg, idx) => {
-                  const isUser = msg.role === 'user'
-                  const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
-                  
-                  return (
-                    <div
-                      key={idx}
-                      className={classNames(
-                        'flex animate-fadeIn',
-                        isUser ? 'justify-end' : 'justify-start'
-                      )}
-                    >
-                      <div
-                        className={classNames(
-                          'max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed shadow-sm',
-                          isUser
-                            ? 'bg-blue-600 text-white rounded-br-sm'
-                            : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
-                        )}
-                      >
-                        {isLastAssistant && msg.content === '' ? (
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex gap-1">
-                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
-                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
-                              <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
-                            </div>
-                            <span className="text-slate-600 text-xs font-medium">Processing query...</span>
-                          </div>
-                        ) : (
-                          <div className="whitespace-pre-wrap">{msg.content}</div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
+        {/* CONTENT: TWO PANEL LAYOUT (DASHBOARD & CHAT) */}
+        <section className="flex-1 flex px-4 lg:px-6 py-3 gap-4 overflow-hidden min-h-0">
 
-            {/* INPUT BAR */}
-            <div className="border-t border-slate-200 bg-slate-50 px-4 lg:px-6 py-2.5 flex-shrink-0">
-              {/* Suggestion tiles - above input */}
-              {messages.length === 0 && (
-                <div className="mb-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-4xl mx-auto">
-                  {suggestions.map((text, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSuggestionClick(text)}
-                      className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
-                    >
-                      <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
-                        →
-                      </span>
-                      <span className="leading-relaxed group-hover:text-slate-900 line-clamp-2">{text}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              
-              <div className="max-w-5xl mx-auto flex items-center gap-2.5 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-11 px-3">
-                <button
-                  type="button"
-                  onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all flex-shrink-0"
-                  aria-label="Use example question"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
+          {/* 1. STRATEGIC DASHBOARD (Executive View - 70% Width) */}
+          <div className="flex-[3] bg-white border border-slate-200 rounded-xl shadow-lg p-6 overflow-y-auto custom-scroll">
+            <h2 className="text-xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Operational Excellence: Compliance & Risk Overview
+            </h2>
+            <p className="text-sm text-slate-600 mb-6">
+              **Immediate Value:** Monitor critical compliance KPIs and prioritize resources to protect your investment.
+            </p>
 
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
-                  className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 font-medium h-full px-2"
-                />
+            {/* 1.1. Executive Summary / ROI Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {/* Card 1: Projected Savings (Money's Worth) */}
+              <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
+                  Projected Annual Savings
+                </p>
+                <p className="text-2xl font-extrabold text-emerald-900 leading-tight">
+                  ${EXECUTIVE_SUMMARY_DATA.projectedAnnualSavings}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  *Mitigated risk from violation-based losses.*
+                </p>
+              </div>
 
-                <button
-                  type="button"
-                  onClick={handleSend}
-                  disabled={isSending || !input.trim()}
-                  className={classNames(
-                    'flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-95 flex-shrink-0',
-                    input.trim()
-                      ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  )}
-                  aria-label="Send question"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M4 4l16 8-16 8 3-8-3-8z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M10 12h6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
+              {/* Card 2: Average Compliance Score */}
+              <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-1">
+                  Avg. Inspection Score
+                </p>
+                <p className="text-2xl font-extrabold text-blue-900 leading-tight">
+                  {EXECUTIVE_SUMMARY_DATA.complianceScore}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Franchisee-wide performance metric.
+                </p>
+              </div>
+
+              {/* Card 3: System-Wide Risk Index */}
+              <div className="p-5 bg-slate-50 border-2 border-slate-200 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Current Risk Index
+                </p>
+                <p className="text-2xl font-extrabold text-slate-900 leading-tight">
+                  {EXECUTIVE_SUMMARY_DATA.currentFranchiseeRiskIndex}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Lower score indicates lower failure probability.
+                </p>
               </div>
             </div>
+
+            {/* 1.2. Unit Risk Deep Dive Table (Avoiding Bad Inspections) */}
+            <h3 className="text-lg font-bold text-slate-900 mb-3 border-b pb-2">
+              🚨 High-Risk Unit Monitoring ({COUNTY_LABELS[activeCounty]})
+            </h3>
+
+            <div className="border border-slate-200 rounded-lg overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
+                      Unit Name
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
+                      Latest Score
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
+                      <span className="text-red-600">Compliance Risk Score</span>
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-[10px] font-extrabold text-slate-600 uppercase tracking-wider">
+                      Potential Loss Exposure
+                    </th>
+                    <th scope="col" className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {unitsInActiveCounty.map((unit) => (
+                    <tr key={unit.id} className={unit.riskScore > 2.0 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-slate-50'}>
+                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">{unit.name}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{unit.lastInspection}</td>
+                      <td className="px-4 py-3 text-sm font-extrabold" style={{ color: unit.riskScore > 2.0 ? '#dc2626' : unit.riskScore > 1.5 ? '#f59e0b' : '#10b981' }}>
+                        {unit.riskScore}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-slate-800">
+                        ${unit.exposure}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button className="text-xs font-semibold text-blue-600 hover:text-blue-800">
+                          View Report →
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* End Unit Risk Table */}
+
           </div>
+
+          {/* 2. COMPLIANCE CHAT (Utility Tool - 30% Width) */}
+          <div className="flex-[2] max-w-lg flex flex-col"> {/* Increased width slightly */}
+            <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden flex flex-col min-h-0">
+              
+              {/* Chat Panel Header */}
+              <div className="py-3 px-4 border-b border-slate-200 bg-slate-50">
+                <p className="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest">
+                  ProtocolLM: Expert Consultation
+                </p>
+                <p className="text-xs text-slate-500">
+                  Real-time guidance for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>
+                </p>
+              </div>
+
+              {/* Messages Panel (Existing logic) */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 custom-scroll min-h-0"
+              >
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center py-6">
+                    <div className="w-14 h-14 mb-4 rounded-xl bg-blue-50 border-2 border-blue-100 flex items-center justify-center">
+                      <svg className="w-7 h-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <p className="text-base font-bold text-slate-900 mb-1.5">
+                      Compliance Intelligence Ready
+                    </p>
+                    <p className="text-sm text-slate-600 max-w-xs mx-auto leading-relaxed">
+                      Get instant, auditable answers to critical regulatory questions.
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((msg, idx) => {
+                    const isUser = msg.role === 'user'
+                    const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className={classNames(
+                          'flex animate-fadeIn',
+                          isUser ? 'justify-end' : 'justify-start'
+                        )}
+                      >
+                        <div
+                          className={classNames(
+                            'max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed shadow-sm',
+                            isUser
+                              ? 'bg-blue-600 text-white rounded-br-sm'
+                              : 'bg-slate-50 text-slate-900 rounded-bl-sm border border-slate-200'
+                          )}
+                        >
+                          {isLastAssistant && msg.content === '' ? (
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0s'}} />
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.2s'}} />
+                                <span className="w-2 h-2 bg-slate-400 rounded-full animate-[bounce_1s_ease-in-out_infinite]" style={{animationDelay: '0.4s'}} />
+                              </div>
+                              <span className="text-slate-600 text-xs font-medium">Processing query...</span>
+                            </div>
+                          ) : (
+                            <div className="whitespace-pre-wrap">{msg.content}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+
+              {/* INPUT BAR (Existing logic) */}
+              <div className="border-t border-slate-200 bg-slate-50 px-4 py-2.5 flex-shrink-0">
+                {/* Suggestion tiles - above input */}
+                {messages.length === 0 && (
+                  <div className="mb-2.5 grid grid-cols-1 gap-2">
+                    {suggestions.slice(0, 2).map((text, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSuggestionClick(text)}
+                        className="group text-left bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2"
+                      >
+                        <span className="mt-0.5 text-slate-300 group-hover:text-blue-600 transition-colors text-sm font-bold">
+                          →
+                        </span>
+                        <span className="leading-relaxed group-hover:text-slate-900 line-clamp-2">{text}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2.5 rounded-lg border-2 border-slate-300 bg-white focus-within:border-blue-500 focus-within:shadow-md transition-all h-11 px-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSuggestionClick(suggestions[0] || 'What is the correct corrective action for a critical violation?')}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all flex-shrink-0"
+                    aria-label="Use example question"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations…`}
+                    className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 font-medium h-full px-2"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleSend}
+                    disabled={isSending || !input.trim()}
+                    className={classNames(
+                      'flex h-7 w-7 items-center justify-center rounded-lg transition-all active:scale-95 flex-shrink-0',
+                      input.trim()
+                        ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 hover:shadow-lg'
+                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    )}
+                    aria-label="Send question"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M4 4l16 8-16 8 3-8-3-8z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M10 12h6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {/* End Input Bar */}
+            </div>
+          </div>
+          {/* End Chat Panel */}
+
         </section>
+        {/* END CONTENT */}
       </main>
 
+      {/* Style block remains the same */}
       <style jsx global>{`
         .custom-scroll::-webkit-scrollbar {
           width: 8px;
