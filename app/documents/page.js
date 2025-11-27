@@ -56,7 +56,7 @@ export default function DocumentsPage() {
     'System ready. Regulatory Intelligence active for Washtenaw County.'
   )
 
-  const [messages, setMessages] = useState([]) // { role: 'user' | 'assistant', content: string }[]
+  const [messages, setMessages] = useState([]) // { role, content }
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [userEmail, setUserEmail] = useState('')
@@ -85,8 +85,7 @@ export default function DocumentsPage() {
           setUserEmail(user.email || '')
         }
 
-        // optional: if you track query count in a table, you can fetch here.
-        // we keep it visual only so there is no backend dependency.
+        // If you have a query counter table, you can setQueryCount(...) here.
       } catch (err) {
         console.error('Error loading user', err)
       } finally {
@@ -103,7 +102,6 @@ export default function DocumentsPage() {
   // ---- UPDATE SYSTEM STATUS WHEN COUNTY CHANGES ----
   useEffect(() => {
     setSystemStatus(`System ready. ${COUNTY_STATUS[activeCounty] || ''}`)
-    // clear messages when switching jurisdictions to avoid confusion
     setMessages([])
   }, [activeCounty])
 
@@ -179,9 +177,7 @@ export default function DocumentsPage() {
   // ---- SUGGESTION CLICK ----
   function handleSuggestionClick(text) {
     setInput(text)
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
+    if (inputRef.current) inputRef.current.focus()
   }
 
   // ---- SIGN OUT ----
@@ -193,7 +189,7 @@ export default function DocumentsPage() {
   const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
 
   return (
-    <div className="min-h-screen w-full bg-[#F5FAFF] text-slate-900 flex">
+    <div className="h-screen w-full bg-[#F5FAFF] text-slate-900 flex overflow-hidden">
       {/* LEFT SIDEBAR */}
       <aside className="hidden md:flex md:flex-col w-64 border-r border-slate-200 bg-white/80 backdrop-blur-sm">
         {/* logo */}
@@ -282,9 +278,9 @@ export default function DocumentsPage() {
       </aside>
 
       {/* MAIN AREA */}
-      <main className="flex-1 flex flex-col">
-        {/* top bar (mobile + main header) */}
-        <header className="w-full border-b border-slate-200 bg-white/80 backdrop-blur-sm px-4 md:px-8 py-4 flex items-center justify-between">
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* header */}
+        <header className="w-full border-b border-slate-200 bg-white/80 backdrop-blur-sm px-4 md:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* mobile logo */}
             <div className="md:hidden text-lg font-bold tracking-tight text-[#023E8A]">
@@ -330,15 +326,19 @@ export default function DocumentsPage() {
           </div>
         </header>
 
-        {/* content area */}
-        <section className="flex-1 flex flex-col px-4 md:px-8 pt-6 pb-4 gap-4">
+        {/* CONTENT: locked to viewport height via flex */}
+        <section className="flex-1 flex flex-col px-4 md:px-8 pt-3 pb-3 gap-3 overflow-hidden">
           {/* system status banner */}
-          <div className="inline-flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm max-w-xl">
-            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#E0F2FE] border border-[#BAE6FD]">
-              <span className="text-[13px]" aria-hidden="true">
-                🌐
-              </span>
-            </div>
+          <div className="inline-flex items-center gap-3 bg-white/90 border border-slate-200 rounded-2xl px-4 py-2.5 shadow-sm max-w-xl">
+            <span
+              className={classNames(
+                'text-[15px] md:text-[16px]',
+                isSending ? 'animate-[ruminate_1.6s_ease-in-out_infinite]' : ''
+              )}
+              aria-hidden="true"
+            >
+              🌐
+            </span>
             <p className="text-[13px] md:text-sm font-medium text-slate-700">
               {systemStatus}
             </p>
@@ -351,7 +351,7 @@ export default function DocumentsPage() {
                 key={idx}
                 type="button"
                 onClick={() => handleSuggestionClick(text)}
-                className="group text-left bg-white/80 border border-slate-200 hover:border-[#90E0EF] hover:bg-white rounded-2xl px-3.5 py-3 text-[12px] md:text-[13px] text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2 active:scale-[0.98]"
+                className="group text-left bg-white/90 border border-slate-200 hover:border-[#90E0EF] hover:bg-white rounded-2xl px-3.5 py-3 text-[12px] md:text-[13px] text-slate-700 font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-start gap-2 active:scale-[0.98]"
               >
                 <span className="mt-[2px] text-slate-400 group-hover:text-[#0077B6]">
                   ●
@@ -361,8 +361,9 @@ export default function DocumentsPage() {
             ))}
           </div>
 
-          {/* messages area */}
-          <div className="flex-1 min-h-[220px] bg-gradient-to-b from-white/40 to-white/80 border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+          {/* CHAT PANEL */}
+          <div className="flex-1 bg-gradient-to-b from-white/60 to-white/90 border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            {/* messages */}
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-3 custom-scroll"
@@ -372,7 +373,7 @@ export default function DocumentsPage() {
                   <p className="text-[13px] font-medium">
                     Start with a real situation your team has faced.
                   </p>
-                  <p className="text-[12px] mt-1">
+                  <p className="text-[12px] mt-1 max-w-xl mx-auto">
                     Example: “We found raw chicken stored over lettuce during prep. What
                     should we document and fix before an inspector arrives?”
                   </p>
@@ -401,12 +402,12 @@ export default function DocumentsPage() {
               )}
             </div>
 
-            {/* bottom input bar */}
+            {/* INPUT BAR */}
             <form
               onSubmit={handleSend}
-              className="border-t border-slate-200 bg-white px-3 md:px-4 py-3"
+              className="border-t border-slate-200 bg-white/95 px-3 md:px-4 py-3"
             >
-              <div className="max-w-5xl mx-auto flex items-center gap-3 rounded-full border border-[#90E0EF] bg-[#F8FBFF] shadow-sm focus-within:border-[#0077B6] focus-within:shadow-md transition-all">
+              <div className="max-w-5xl mx-auto flex items-center gap-2 md:gap-3 rounded-full border border-[#90E0EF] bg-[#F8FBFF] shadow-sm focus-within:border-[#0077B6] focus-within:shadow-md transition-all h-12 md:h-13 px-2 md:px-3">
                 <button
                   type="button"
                   onClick={() =>
@@ -415,10 +416,10 @@ export default function DocumentsPage() {
                         'What is the correct corrective action for a critical violation?'
                     )
                   }
-                  className="ml-1 flex h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-[#EFF6FF] hover:border-[#0077B6] active:scale-[0.95] transition-all"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:text-[#0077B6] hover:border-[#0077B6]/60 hover:bg-[#EFF6FF] active:scale-[0.95] transition-all"
                   aria-label="Use example question"
                 >
-                  +
+                  <span className="text-lg leading-none">+</span>
                 </button>
 
                 <input
@@ -427,14 +428,14 @@ export default function DocumentsPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={`Ask anything about ${COUNTY_LABELS[activeCounty]} regulations…`}
-                  className="flex-1 bg-transparent border-none outline-none text-[13px] md:text-[14px] text-slate-800 placeholder-slate-400 h-9"
+                  className="flex-1 bg-transparent border-none outline-none text-[13px] md:text-[14px] text-slate-800 placeholder-slate-400 h-full px-1"
                 />
 
                 <button
                   type="submit"
                   disabled={isSending || !input.trim()}
                   className={classNames(
-                    'mr-1 flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-[0.95]',
+                    'flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-[0.95]',
                     input.trim()
                       ? 'bg-[#0077B6] text-white shadow-md hover:bg-[#023E8A]'
                       : 'bg-slate-200 text-slate-500 cursor-not-allowed'
@@ -448,11 +449,17 @@ export default function DocumentsPage() {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M5 12L4 4l16 8-16 8 1-8 9-0.5L5 12z"
+                      d="M4 4l16 8-16 8 3-8-3-8z"
                       stroke="currentColor"
-                      strokeWidth="1.6"
+                      strokeWidth="1.7"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                    />
+                    <path
+                      d="M10 12h6"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
                     />
                   </svg>
                 </button>
@@ -467,7 +474,7 @@ export default function DocumentsPage() {
         </section>
       </main>
 
-      {/* simple custom scrollbar styling */}
+      {/* GLOBAL STYLES */}
       <style jsx global>{`
         .custom-scroll::-webkit-scrollbar {
           width: 6px;
@@ -478,6 +485,27 @@ export default function DocumentsPage() {
         .custom-scroll::-webkit-scrollbar-thumb {
           background-color: rgba(148, 163, 184, 0.6);
           border-radius: 999px;
+        }
+
+        @keyframes ruminate {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            filter: drop-shadow(0 0 0 rgba(37, 99, 235, 0));
+          }
+          25% {
+            transform: translateY(-1px) rotate(-4deg);
+          }
+          50% {
+            transform: translateY(0) rotate(0deg);
+            filter: drop-shadow(0 0 4px rgba(37, 99, 235, 0.45));
+          }
+          75% {
+            transform: translateY(1px) rotate(4deg);
+          }
+          100% {
+            transform: translateY(0) rotate(0deg);
+            filter: drop-shadow(0 0 0 rgba(37, 99, 235, 0));
+          }
         }
       `}</style>
     </div>
