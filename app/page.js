@@ -410,7 +410,7 @@ function MainContent() {
       </nav>
 
       {/* HERO */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 pb-8 md:pt-20 md:pb-12 gap-10 md:gap-16 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-8 md:pt-12 md:pb-12 gap-10 md:gap-16 relative z-10">
         {/* Left */}
         <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-4 md:mb-6">
