@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
-import SessionGuard from '@/components/SessionGuard' 
+import SessionGuard from '@/components/SessionGuard'
 
-// --- CONSTANTS (Unchanged) ---
+// --- CONSTANTS ---
 const COUNTY_LABELS = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
@@ -49,40 +49,36 @@ export default function DocumentsPage() {
 
   // --- STATE ---
   const [activeCounty, setActiveCounty] = useState('washtenaw')
-  const [systemStatus, setSystemStatus] = useState(
-    'System ready. Regulatory Intelligence active for Washtenaw County.'
-  )
-
+  const [systemStatus, setSystemStatus] = useState('System ready.')
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   
+  // Image State
+  const [selectedImage, setSelectedImage] = useState(null)
+  
   // User State
   const [userEmail, setUserEmail] = useState('')
-  const [userId, setUserId] = useState(null) 
+  const [userId, setUserId] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
 
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const fileInputRef = useRef(null) // Ref for the hidden file input
 
   // --- EFFECTS ---
   useEffect(() => {
     let cancelled = false
-
     async function loadUser() {
       try {
-        const {
-          data: { user }
-        } = await supabase.auth.getUser()
-
+        const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           router.push('/')
           return
         }
-
         if (!cancelled) {
           setUserEmail(user.email || '')
-          setUserId(user.id) 
+          setUserId(user.id)
         }
       } catch (err) {
         console.error('Error loading user', err)
@@ -90,16 +86,14 @@ export default function DocumentsPage() {
         if (!cancelled) setLoadingUser(false)
       }
     }
-
     loadUser()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [router, supabase])
 
   useEffect(() => {
     setSystemStatus(`System ready. ${COUNTY_STATUS[activeCounty] || ''}`)
     setMessages([])
+    setSelectedImage(null)
   }, [activeCounty])
 
   useEffect(() => {
@@ -107,29 +101,57 @@ export default function DocumentsPage() {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages])
 
-  // --- HANDLERS (UPDATED) ---
+  // --- HANDLERS ---
+
+  // 1. Handle Image Selection
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSelectedImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+    // Reset input so same file can be selected again if needed
+    e.target.value = ''
+  }
+
+  // 2. Remove Image
+  const removeImage = () => {
+    setSelectedImage(null)
+  }
+
+  // 3. Handle Send
   async function handleSend(e) {
     if (e) e.preventDefault()
-    const trimmed = input.trim()
-    if (!trimmed || isSending) return
-
-    const newUserMessage = { role: 'user', content: trimmed }
     
-    // Add user message to UI immediately
+    // Allow sending if there is text OR an image
+    const trimmed = input.trim()
+    if ((!trimmed && !selectedImage) || isSending) return
+
+    // Construct user message object
+    const newUserMessage = { 
+      role: 'user', 
+      content: trimmed,
+      image: selectedImage // Add image to local state for display
+    }
+    
     setMessages((prev) => [...prev, newUserMessage])
     setInput('')
+    const imageToSend = selectedImage // Capture for API call
+    setSelectedImage(null) // Clear preview immediately
     setIsSending(true)
 
-    // Add empty assistant message (loader)
     setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
     try {
-      // FIX: Send messages array, not single message string
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newUserMessage], // <-- Sending full history + new message
+          messages: [...messages, newUserMessage], // Full history
+          image: imageToSend, // Send the base64 image string
           county: activeCounty
         })
       })
@@ -148,8 +170,6 @@ export default function DocumentsPage() {
       }
 
       const data = await res.json()
-      
-      // FIX: Expecting 'message' from the simplified API, not 'answer'
       const replyText = data?.message || 'Response received, but in an unexpected format.'
 
       setMessages((prev) => {
@@ -202,18 +222,13 @@ export default function DocumentsPage() {
       
       {/* --- SIDEBAR (Desktop) --- */}
       <aside className="hidden lg:flex lg:flex-col w-72 bg-white border-r border-slate-200 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30">
-        
-        {/* Brand */}
         <div className="h-20 flex items-center px-6 border-b border-slate-100">
            <div className="text-2xl font-bold text-slate-900 tracking-tight">
               protocol<span className="text-blue-600">LM</span>
            </div>
         </div>
 
-        {/* Navigation Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scroll">
-          
-          {/* Jurisdiction Selector */}
           <div>
             <div className="px-2 mb-3 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jurisdiction</span>
@@ -241,7 +256,6 @@ export default function DocumentsPage() {
             </div>
           </div>
 
-          {/* History List */}
           <div className="flex-1">
              <div className="px-2 mb-3">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recent Queries</span>
@@ -259,7 +273,9 @@ export default function DocumentsPage() {
                     .map((m, idx) => (
                       <div key={idx} className="group relative flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-white hover:shadow-sm hover:border-slate-100 border border-transparent transition-all cursor-default">
                          <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors flex-shrink-0"></div>
-                         <span className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">{m.content}</span>
+                         <span className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed">
+                           {m.content || '[Image Upload]'}
+                         </span>
                       </div>
                     ))}
                 </div>
@@ -267,18 +283,13 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* User Footer */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
             <div className="flex-1 min-w-0 px-1">
               <p className="text-xs font-bold text-slate-900 truncate">{loadingUser ? 'Loading...' : 'Operator'}</p>
               <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50"
-              title="Sign Out"
-            >
+            <button onClick={handleSignOut} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-md hover:bg-red-50" title="Sign Out">
                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>
           </div>
@@ -288,14 +299,10 @@ export default function DocumentsPage() {
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-white lg:bg-[#F8FAFC]">
         
-        {/* Header (Desktop & Mobile) */}
+        {/* Header */}
         <header className="h-16 flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0">
           <div className="flex items-center gap-4">
-             {/* Mobile Logo */}
-             <div className="lg:hidden text-lg font-bold text-slate-900 tracking-tight">
-                protocol<span className="text-blue-600">LM</span>
-             </div>
-             
+             <div className="lg:hidden text-lg font-bold text-slate-900 tracking-tight">protocol<span className="text-blue-600">LM</span></div>
              <div className="hidden lg:block">
                 <h1 className="text-sm lg:text-base font-bold text-slate-900 flex items-center gap-2">
                   {COUNTY_LABELS[activeCounty]}
@@ -304,18 +311,9 @@ export default function DocumentsPage() {
                 <p className="text-xs text-slate-500 font-medium">Verified Regulatory Intelligence Platform</p>
              </div>
           </div>
-
-          {/* Mobile County Toggle */}
           <div className="lg:hidden flex bg-slate-100 p-1 rounded-lg">
               {['washtenaw', 'wayne', 'oakland'].map((county) => (
-                  <button
-                      key={county}
-                      onClick={() => setActiveCounty(county)}
-                      className={classNames(
-                          'w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-bold transition-all',
-                          activeCounty === county ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
-                      )}
-                  >
+                  <button key={county} onClick={() => setActiveCounty(county)} className={classNames('w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-bold transition-all', activeCounty === county ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600')}>
                       {county.charAt(0).toUpperCase()}
                   </button>
               ))}
@@ -325,11 +323,8 @@ export default function DocumentsPage() {
         {/* Chat Container */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
           
-          {/* Messages Scroll Area */}
-          <div 
-             ref={scrollRef}
-             className="flex-1 overflow-y-auto px-4 lg:px-20 py-6 custom-scroll space-y-6 scroll-smooth"
-          >
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 lg:px-20 py-6 custom-scroll space-y-6 scroll-smooth">
              {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center min-h-[400px]">
                    <div className="w-16 h-16 bg-white border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/50 flex items-center justify-center mb-6">
@@ -339,17 +334,11 @@ export default function DocumentsPage() {
                    </div>
                    <h2 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">Protocol Compliance</h2>
                    <p className="text-sm text-slate-500 max-w-sm text-center mb-8">
-                      Authorized documentation loaded for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>. Ask specific regulatory questions.
+                      Authorized documentation loaded for <span className="font-semibold text-slate-700">{COUNTY_LABELS[activeCounty]}</span>. Ask specific regulatory questions or upload an inspection photo.
                    </p>
-                   
-                   {/* Centered Suggestions */}
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                       {suggestions.map((text, idx) => (
-                         <button
-                            key={idx}
-                            onClick={() => handleSuggestionClick(text)}
-                            className="text-left p-3.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group"
-                         >
+                         <button key={idx} onClick={() => handleSuggestionClick(text)} className="text-left p-3.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group">
                             <span className="block text-[10px] font-bold text-slate-400 group-hover:text-blue-500 mb-1">EXAMPLE QUERY</span>
                             <span className="text-xs text-slate-700 font-medium leading-relaxed">{text}</span>
                          </button>
@@ -360,27 +349,17 @@ export default function DocumentsPage() {
                 messages.map((msg, idx) => {
                   const isUser = msg.role === 'user'
                   const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1 && isSending
-                  
                   return (
-                    <div
-                      key={idx}
-                      className={classNames(
-                        'flex w-full animate-fadeIn',
-                        isUser ? 'justify-end' : 'justify-start'
-                      )}
-                    >
+                    <div key={idx} className={classNames('flex w-full animate-fadeIn', isUser ? 'justify-end' : 'justify-start')}>
                       <div className={classNames("flex flex-col max-w-[85%] lg:max-w-[70%]", isUser ? "items-end" : "items-start")}>
                           <span className="text-[10px] font-bold text-slate-400 mb-1.5 px-1 uppercase tracking-wider">
                              {isUser ? 'You' : 'ProtocolLM'}
                           </span>
-                          <div
-                            className={classNames(
-                              'px-5 py-3.5 text-sm leading-7 shadow-sm',
-                              isUser
-                                ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm'
-                                : 'bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-tl-sm'
+                          <div className={classNames('px-5 py-3.5 text-sm leading-7 shadow-sm', isUser ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm' : 'bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-tl-sm')}>
+                            {/* Display User Image if exists */}
+                            {msg.image && (
+                              <img src={msg.image} alt="User Upload" className="mb-3 rounded-lg border border-white/20 max-h-60 w-auto" />
                             )}
-                          >
                             {isLastAssistant && msg.content === '' ? (
                               <div className="flex gap-1.5 py-1.5 px-1">
                                 <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0s'}} />
@@ -401,11 +380,41 @@ export default function DocumentsPage() {
           {/* Fixed Input Bar */}
           <div className="flex-shrink-0 z-20 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-4 lg:px-20 py-4 pb-safe">
              <div className="max-w-4xl mx-auto relative">
+                
+                {/* Image Preview Area */}
+                {selectedImage && (
+                  <div className="absolute -top-24 left-4 p-2 bg-white rounded-xl shadow-lg border border-slate-200 animate-in fade-in slide-in-from-bottom-2">
+                    <img src={selectedImage} alt="Preview" className="h-20 w-auto rounded-lg" />
+                    <button 
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                )}
+
                 <form onSubmit={handleSend} className="relative group">
-                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                      </svg>
+                   {/* Left Icon (Camera / Upload) */}
+                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => fileInputRef.current.click()}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Upload Image for Analysis"
+                      >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
                    </div>
                    
                    <input
@@ -415,17 +424,18 @@ export default function DocumentsPage() {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={isSending}
-                      placeholder={`Ask about ${COUNTY_LABELS[activeCounty]} regulations...`}
-                      className="block w-full pl-11 pr-14 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
+                      placeholder={selectedImage ? "Describe what we're looking at..." : `Ask about ${COUNTY_LABELS[activeCounty]} regulations...`}
+                      className="block w-full pl-12 pr-14 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all shadow-sm"
                    />
                    
+                   {/* Right Icon (Send) */}
                    <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                       <button
                         type="submit"
-                        disabled={isSending || !input.trim()}
+                        disabled={isSending || (!input.trim() && !selectedImage)}
                         className={classNames(
                           'p-2 rounded-lg transition-all duration-200 flex items-center justify-center',
-                          input.trim()
+                          (input.trim() || selectedImage)
                             ? 'bg-blue-600 text-white shadow-md hover:bg-blue-700 active:scale-95'
                             : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                         )}
@@ -447,29 +457,16 @@ export default function DocumentsPage() {
 
       {/* Styles */}
       <style jsx global>{`
-        .pb-safe {
-           padding-bottom: env(safe-area-inset-bottom, 1rem);
-        }
-        .custom-scroll::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background: #CBD5E1;
-          border-radius: 999px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: #94A3B8;
-        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
+        .animate-fadeIn { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
       `}</style>
     </div>
   )
