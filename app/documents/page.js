@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 // --- CONFIGURATION ---
-const COUNTY_NAMES: Record<string, string> = {
+const COUNTY_NAMES = {
   washtenaw: 'Washtenaw County',
   wayne: 'Wayne County',
   oakland: 'Oakland County'
@@ -58,46 +58,28 @@ const Icons = {
     </svg>
   ),
   Globe: () => (
-    <svg
-      className="w-5 h-5 text-[#0077B6]"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
+    <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="globeGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#00B4D8" />
+          <stop offset="100%" stopColor="#0077B6" />
+        </linearGradient>
+      </defs>
+      <circle cx="12" cy="12" r="9" fill="url(#globeGradient)" opacity="0.9" />
       <path
+        d="M3 12h18M12 3a9 9 0 010 18M12 3a9 9 0 010 18M9 3.5c-.9 2-1.4 4.4-1.4 6.5 0 2.1.5 4.5 1.4 6.5M15 3.5c.9 2 1.4 4.4 1.4 6.5 0 2.1-.5 4.5-1.4 6.5"
+        stroke="white"
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        opacity="0.9"
       />
     </svg>
   )
 }
 
-// --- THINKING INDICATOR (SUBTLE / PROFESSIONAL) ---
-const ThinkingIndicator = () => (
-  <div className="flex items-center gap-3">
-    <div className="flex gap-1">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#0077B6] animate-bounce [animation-delay:-0.2s]" />
-      <span className="w-1.5 h-1.5 rounded-full bg-[#0077B6]/80 animate-bounce" />
-      <span className="w-1.5 h-1.5 rounded-full bg-[#0077B6]/60 animate-bounce [animation-delay:0.2s]" />
-    </div>
-    <span className="text-xs md:text-sm text-slate-500">
-      Reviewing local regulations&hellip;
-    </span>
-  </div>
-)
-
-// --- MODE SELECTOR COMPONENT ---
-const ModeSelector = ({
-  currentMode,
-  onSelect,
-  onClose
-}: {
-  currentMode: string
-  onSelect: (mode: string) => void
-  onClose: () => void
-}) => {
+// --- MODE SELECTOR ---
+const ModeSelector = ({ currentMode, onSelect, onClose }) => {
   const modes = [
     { id: 'chat', label: 'Standard Query', icon: <Icons.Chat /> },
     { id: 'image', label: 'Image Analysis', icon: <Icons.Image /> },
@@ -135,7 +117,9 @@ const ModeSelector = ({
               </div>
               {mode.label}
             </div>
-            {currentMode === mode.id && <div className="w-2 h-2 rounded-full bg-[#0077B6]" />}
+            {currentMode === mode.id && (
+              <div className="w-2 h-2 rounded-full bg-[#0077B6]"></div>
+            )}
           </button>
         ))}
       </div>
@@ -144,41 +128,42 @@ const ModeSelector = ({
 }
 
 export default function DocumentsPage() {
-  const [session, setSession] = useState<any>(null)
-  const [subscriptionInfo, setSubscriptionInfo] = useState<{ requestsUsed: number } | null>(null)
-  const [userCounty, setUserCounty] = useState<string>('washtenaw')
+  const [session, setSession] = useState(null)
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null)
+  const [userCounty, setUserCounty] = useState('washtenaw')
   const [isChecking, setIsChecking] = useState(true)
   const [showCountySelector, setShowCountySelector] = useState(false)
   const [isUpdatingCounty, setIsUpdatingCounty] = useState(false)
   const [loadingPortal, setLoadingPortal] = useState(false)
 
-  const [messages, setMessages] = useState<any[]>([])
-  const [chatHistory, setChatHistory] = useState<any[]>([])
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [messages, setMessages] = useState([])
+  const [chatHistory, setChatHistory] = useState([])
+  const [currentChatId, setCurrentChatId] = useState(null)
   const [input, setInput] = useState('')
-  const [image, setImage] = useState<string | null>(null)
+  const [image, setImage] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [canSend, setCanSend] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [viewingPdf, setViewingPdf] = useState<any>(null)
+  const [viewingPdf, setViewingPdf] = useState(null)
   const [loadingChats, setLoadingChats] = useState(true)
   const [savingChat, setSavingChat] = useState(false)
-  const [activeMode, setActiveMode] = useState<'chat' | 'image' | 'audit'>('chat')
+  const [activeMode, setActiveMode] = useState('chat')
   const [showModeMenu, setShowModeMenu] = useState(false)
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const saveTimeoutRef = useRef<any>(null)
+  const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const saveTimeoutRef = useRef(null)
   const supabase = createClient()
   const router = useRouter()
 
-  // --- AUTH / ACCESS ---
+  // --- AUTH / PROFILE ---
   useEffect(() => {
     const checkAccess = async () => {
       const {
-        data: { session }
+        data: { session: currentSession }
       } = await supabase.auth.getSession()
-      if (!session) {
+
+      if (!currentSession) {
         router.push('/')
         return
       }
@@ -186,7 +171,7 @@ export default function DocumentsPage() {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('is_subscribed, requests_used, images_used, county')
-        .eq('id', session.user.id)
+        .eq('id', currentSession.user.id)
         .single()
 
       if (!profile?.is_subscribed) {
@@ -197,15 +182,18 @@ export default function DocumentsPage() {
       const countyKey = profile.county ? profile.county.toLowerCase() : 'washtenaw'
 
       setUserCounty(countyKey)
-      setSession(session)
+      setSession(currentSession)
       setSubscriptionInfo({ requestsUsed: profile?.requests_used || 0 })
       setIsChecking(false)
     }
+
     checkAccess()
   }, [supabase, router])
 
+  // --- HISTORY LOAD ---
   useEffect(() => {
     if (session) loadChatHistory()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
   const loadChatHistory = async () => {
@@ -234,42 +222,55 @@ export default function DocumentsPage() {
         }
       ])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userCounty])
 
   // --- SCROLL TO BOTTOM ---
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading])
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages])
 
-  // --- AUTO-SAVE CHAT ---
+  // --- AUTO SAVE CHAT ---
   useEffect(() => {
     if (messages.length > 1) saveCurrentChat()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
   const saveCurrentChat = async () => {
     if (!session || messages.length <= 1 || savingChat) return
     clearTimeout(saveTimeoutRef.current)
+
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSavingChat(true)
         const chatTitle =
-          messages.find((m) => m.role === 'user')?.content.substring(0, 40) || 'New Chat'
+          messages.find((m) => m.role === 'user')?.content.substring(0, 40) ||
+          'New Chat'
+
         const response = await fetch('/api/chat-history', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ chatId: currentChatId, title: chatTitle, messages, county: userCounty })
+          body: JSON.stringify({
+            chatId: currentChatId,
+            title: chatTitle,
+            messages,
+            county: userCounty
+          })
         })
+
         if (response.ok) {
           const data = await response.json()
           if (data.chat) {
             setCurrentChatId(data.chat.id)
             setChatHistory((prev) => {
-              const idx = prev.findIndex((c: any) => c.id === data.chat.id)
+              const idx = prev.findIndex((c) => c.id === data.chat.id)
               if (idx >= 0) {
-                const up = [...prev]
-                up[idx] = data.chat
-                return up
+                const updated = [...prev]
+                updated[idx] = data.chat
+                return updated
               }
               return [data.chat, ...prev].slice(0, 50)
             })
@@ -284,7 +285,7 @@ export default function DocumentsPage() {
   }
 
   // --- CHAT MANAGEMENT ---
-  const loadChat = (chat: any) => {
+  const loadChat = (chat) => {
     setMessages(chat.messages)
     setUserCounty(chat.county)
     setCurrentChatId(chat.id)
@@ -304,23 +305,31 @@ export default function DocumentsPage() {
     setIsSidebarOpen(false)
   }
 
-  const deleteChat = async (chatId: string, e: React.MouseEvent) => {
+  const deleteChat = async (chatId, e) => {
     e.stopPropagation()
     if (!confirm('Delete this record?')) return
-    setChatHistory((prev) => prev.filter((c: any) => c.id !== chatId))
+
+    setChatHistory((prev) => prev.filter((c) => c.id !== chatId))
     if (currentChatId === chatId) startNewChat()
+
     try {
-      await fetch(`/api/chat-history?chatId=${chatId}`, { method: 'DELETE', credentials: 'include' })
+      await fetch(`/api/chat-history?chatId=${chatId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
     } catch (error) {
+      console.error(error)
       loadChatHistory()
     }
   }
 
-  // --- AUTH CONTROLS ---
+  // --- ACCOUNT / BILLING ---
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    localStorage.clear()
-    window.location.href = '/'
+    if (typeof window !== 'undefined') {
+      localStorage.clear()
+      window.location.href = '/'
+    }
   }
 
   const handleManageSubscription = async () => {
@@ -335,21 +344,22 @@ export default function DocumentsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed')
       window.location.href = data.url
-    } catch (error: any) {
+    } catch (error) {
       alert(error.message)
     } finally {
       setLoadingPortal(false)
     }
   }
 
-  // --- COUNTY CHANGE ---
-  const handleCountyChange = async (newCounty: string) => {
+  // --- COUNTY ---
+  const handleCountyChange = async (newCounty) => {
     setIsUpdatingCounty(true)
     try {
       const { error } = await supabase
         .from('user_profiles')
         .update({ county: newCounty })
         .eq('id', session.user.id)
+
       if (error) throw error
       setUserCounty(newCounty)
       setShowCountySelector(false)
@@ -368,8 +378,8 @@ export default function DocumentsPage() {
     }
   }
 
-  // --- CITATIONS / PDF VIEWER ---
-  const handleCitationClick = (citation: any) => {
+  // --- CITATIONS / PDF ---
+  const handleCitationClick = (citation) => {
     if (!citation?.document) return
     const pageMatch = citation.pages?.toString().match(/\d+/)
     setViewingPdf({
@@ -380,12 +390,13 @@ export default function DocumentsPage() {
     })
   }
 
-  const renderMessageContent = (msg: any) => {
+  const renderMessageContent = (msg) => {
     const content = msg.content || ''
-    const parts: { type: 'text' | 'citation'; content?: string; document?: string; pages?: string }[] = []
+    const parts = []
     let lastIndex = 0
     const citationRegex = /\[(.*?),\s*Page[s]?\s*([\d\-, ]+)\]/g
     let match
+
     while ((match = citationRegex.exec(content)) !== null) {
       if (match.index > lastIndex) {
         parts.push({ type: 'text', content: content.slice(lastIndex, match.index) })
@@ -393,6 +404,7 @@ export default function DocumentsPage() {
       parts.push({ type: 'citation', document: match[1], pages: match[2] })
       lastIndex = match.index + match[0].length
     }
+
     if (lastIndex < content.length) {
       parts.push({ type: 'text', content: content.slice(lastIndex) })
     }
@@ -408,7 +420,8 @@ export default function DocumentsPage() {
               onClick={() => handleCitationClick(part)}
               className="inline-flex items-center gap-1 bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 px-2 py-0.5 rounded-md text-[11px] font-bold transition-all mx-1 -translate-y-0.5 cursor-pointer uppercase tracking-wide"
             >
-              {part.document} <span className="opacity-60">P.{part.pages}</span>
+              {part.document}
+              <span className="opacity-60">P.{part.pages}</span>
             </button>
           )
         )}
@@ -416,10 +429,10 @@ export default function DocumentsPage() {
     )
   }
 
-  // --- SEND MESSAGE ---
-  const handleSendMessage = async (e?: React.FormEvent, overrideInput: string | null = null) => {
+  // --- SEND / MODES / IMAGE ---
+  const handleSendMessage = async (e, overrideInput = null) => {
     if (e) e.preventDefault()
-    const textToSend = overrideInput ?? input
+    const textToSend = overrideInput || input
     if (!textToSend.trim() && !image) return
     if (!canSend || isLoading) return
     if (textToSend.length > 5000) {
@@ -447,16 +460,23 @@ export default function DocumentsPage() {
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'System error')
+
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.message, citations: data.citations }
+        {
+          role: 'assistant',
+          content: data.message,
+          citations: data.citations
+        }
       ])
+
       if (subscriptionInfo) {
-        setSubscriptionInfo((prev) =>
-          prev ? { ...prev, requestsUsed: prev.requestsUsed + 1 } : prev
-        )
+        setSubscriptionInfo((prev) => ({
+          ...prev,
+          requestsUsed: prev.requestsUsed + 1
+        }))
       }
-    } catch (err: any) {
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: `Error: ${err.message}` }
@@ -467,49 +487,50 @@ export default function DocumentsPage() {
     }
   }
 
-  // --- MOCK AUDIT SHORTCUT ---
   const runMockAudit = () => {
     startNewChat()
     setTimeout(() => {
       handleSendMessage(
-        undefined,
+        null,
         'Conduct a formal Mock Health Inspection based on the FDA Food Code. \n\nOutput the results as a structured Markdown Table with these columns: \n| Area | Observation/Question | Priority (P/Pf/C) | Corrective Action |\n\nCheck these 5 critical areas:\n1. Handwashing & Personal Hygiene\n2. Time/Temperature Control (Cold Holding)\n3. Cross-Contamination & Storage\n4. Chemical Storage & Labeling\n5. Dishwashing & Sanitization\n\nAt the end, calculate a projected score out of 100 based on standard deductions.'
       )
     }, 500)
   }
 
-  // --- MODE MENU HANDLERS ---
-  const handleMenuSelection = (mode: 'chat' | 'image' | 'audit') => {
+  const handleMenuSelection = (mode) => {
     setActiveMode(mode)
     if (mode === 'audit') runMockAudit()
     else if (mode === 'image') fileInputRef.current?.click()
   }
 
-  // --- IMAGE HANDLER ---
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
     if (!file) return
     if (file.size > MAX_IMAGE_SIZE) {
       alert('Image too large (Max 5MB)')
       return
     }
     const reader = new FileReader()
-    reader.onloadend = () => setImage(reader.result as string)
+    reader.onloadend = () => setImage(reader.result)
     reader.readAsDataURL(file)
   }
 
-  // --- LOADING GATE ---
+  // --- EARLY LOADER (WHOLE PAGE) ---
   if (isChecking || !session) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center font-sans text-sm text-slate-400 flex-col gap-4">
-        <div className="w-8 h-8 border-2 border-slate-100 border-t-[#0077B6] rounded-full animate-spin" />
+        <div className="relative">
+          <div className="w-10 h-10 rounded-full border-2 border-slate-100" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#0077B6] border-transparent animate-spin" />
+        </div>
+        <p className="tracking-[0.24em] text-[10px] uppercase">Loading workspace</p>
       </div>
     )
   }
 
   return (
     <div className="fixed inset-0 flex bg-white text-slate-900 overflow-hidden font-sans selection:bg-blue-100">
-      {/* --- PRINT / SCROLLBAR STYLES --- */}
+      {/* --- PRINT & SCROLLBAR STYLES --- */}
       <style jsx global>{`
         @media print {
           body * {
@@ -547,9 +568,17 @@ export default function DocumentsPage() {
         ::-webkit-scrollbar-thumb:hover {
           background: #cbd5e1;
         }
+        @keyframes barLoader {
+          0% {
+            transform: translateX(-60%);
+          }
+          100% {
+            transform: translateX(140%);
+          }
+        }
       `}</style>
 
-      {/* --- COUNTY SELECTOR MODAL --- */}
+      {/* --- COUNTY SELECT MODAL --- */}
       {showCountySelector && (
         <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 no-print">
           <div className="bg-white shadow-2xl max-w-sm w-full p-6 border border-slate-100 rounded-3xl ring-1 ring-slate-900/5">
@@ -574,7 +603,7 @@ export default function DocumentsPage() {
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  {name}{' '}
+                  {name}
                   {userCounty === key && (
                     <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
                       ACTIVE
@@ -587,7 +616,7 @@ export default function DocumentsPage() {
         </div>
       )}
 
-      {/* --- PDF VIEWER MODAL --- */}
+      {/* --- PDF VIEWER --- */}
       {viewingPdf && (
         <div className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 no-print">
           <div className="bg-white w-full h-full max-w-5xl shadow-2xl flex flex-col rounded-2xl ring-1 ring-slate-900/5">
@@ -663,17 +692,18 @@ export default function DocumentsPage() {
           </div>
         </div>
 
+        {/* History */}
         <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2 mt-2">
             History
           </div>
           {loadingChats ? (
             <div className="space-y-3 px-2 opacity-50">
-              <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse" />
+              <div className="h-4 bg-slate-200 rounded w-3/4 animate-pulse"></div>
+              <div className="h-4 bg-slate-200 rounded w-1/2 animate-pulse"></div>
             </div>
           ) : (
-            chatHistory.map((chat: any) => (
+            chatHistory.map((chat) => (
               <div
                 key={chat.id}
                 onClick={() => loadChat(chat)}
@@ -695,17 +725,17 @@ export default function DocumentsPage() {
           )}
         </div>
 
+        {/* Account */}
         <div className="p-4 border-t border-slate-200 bg-slate-50">
-          <div className="mb-4 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-              Signed in
-            </p>
-            <p className="text-xs font-bold text-slate-900 break-all">
-              {session?.user?.email}
-            </p>
-            <p className="text-[10px] text-slate-400 mt-1">
-              {subscriptionInfo?.requestsUsed ?? 0} queries used
-            </p>
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-900 truncate">
+                {session?.user?.email}
+              </p>
+              <p className="text-[10px] text-slate-500">
+                {subscriptionInfo?.requestsUsed} queries used
+              </p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -727,7 +757,7 @@ export default function DocumentsPage() {
       {/* --- MAIN CHAT AREA --- */}
       <div className="flex-1 flex flex-col relative bg-white chat-container">
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md z-30 no-print sticky top-0">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md z-30 no-print sticky top-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -740,7 +770,7 @@ export default function DocumentsPage() {
                 {COUNTY_NAMES[userCounty]}
               </span>
               <span className="text-[10px] font-medium text-green-600 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                 Database Active
               </span>
             </div>
@@ -748,53 +778,58 @@ export default function DocumentsPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-3 md:px-4 pb-48 pt-4 md:pt-6">
+        <div className="flex-1 overflow-y-auto px-4 pb-48 pt-6">
           <div className="max-w-3xl mx-auto space-y-6">
-            {messages.map((msg, i) =>
-              msg.role === 'user' ? (
-                <div key={i} className="flex justify-end">
-                  <div className="max-w-[100%] sm:max-w-[85%] bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md">
-                    {msg.image && (
-                      <img
-                        src={msg.image}
-                        alt="Uploaded content"
-                        className="mb-4 rounded-xl border border-white/20 max-w-sm"
-                      />
-                    )}
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="flex justify-start">
-                  <div className="flex items-start gap-3 max-w-[100%] sm:max-w-[85%]">
-                    <div className="mt-1 flex-shrink-0">
-                      <Icons.Globe />
-                    </div>
-                    <div className="bg-white text-slate-800 px-5 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100">
+            {messages.map((msg, i) => {
+              if (msg.role === 'user') {
+                return (
+                  <div key={i} className="flex justify-end">
+                    <div className="max-w-[100%] sm:max-w-[75%] bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md">
                       {msg.image && (
                         <img
                           src={msg.image}
                           alt="Uploaded content"
-                          className="mb-4 rounded-xl border border-slate-100 max-w-sm"
+                          className="mb-4 rounded-xl border border-white/20 max-w-sm"
                         />
                       )}
+                      <p className="text-[15px] leading-relaxed">{msg.content}</p>
+                    </div>
+                  </div>
+                )
+              }
+
+              // assistant
+              return (
+                <div key={i} className="flex justify-start">
+                  <div className="flex items-start gap-3 max-w-[100%] sm:max-w-[85%]">
+                    <div className="pt-1 flex-shrink-0">
+                      <Icons.Globe />
+                    </div>
+                    <div className="bg-white text-slate-800 px-5 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100">
                       {renderMessageContent(msg)}
                     </div>
                   </div>
                 </div>
               )
-            )}
+            })}
 
+            {/* Thinking / loader */}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="flex items-start gap-3 max-w-[100%] sm:max-w-[85%]">
-                  <div className="mt-1 flex-shrink-0">
+                <div className="flex items-start gap-3 max-w-[70%]">
+                  <div className="pt-1 flex-shrink-0">
                     <Icons.Globe />
                   </div>
-                  <div className="bg-white/80 border border-slate-100 px-5 py-3 rounded-2xl rounded-tl-sm shadow-sm">
-                    <ThinkingIndicator />
+                  <div className="bg-white/90 border border-slate-100 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3">
+                    <div className="w-20 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className="h-full w-1/2 bg-[#0077B6]"
+                        style={{ animation: 'barLoader 1.15s ease-in-out infinite' }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-500 hidden sm:inline">
+                      Reviewing county code & FDA guidance…
+                    </span>
                   </div>
                 </div>
               </div>
@@ -805,25 +840,28 @@ export default function DocumentsPage() {
         </div>
 
         {/* Input Area */}
-        <div className="absolute bottom-4 left-0 right-0 px-3 md:px-4 flex justify-center z-20 input-bar">
+        <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center z-20 input-bar">
           <div className="w-full max-w-3xl flex flex-col items-center">
+            {/* Suggested prompts */}
             {messages.length < 2 && !image && (
               <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <button
                   onClick={() => setInput('Can I cool chili from 135F to 70F in 3 hours?')}
-                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
+                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-2xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
                 >
                   Cooling Requirements
                 </button>
                 <button
-                  onClick={() => setInput('Employee has a sore throat and fever. Exclusion?')}
-                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
+                  onClick={() =>
+                    setInput('Employee has a sore throat and fever. Exclusion?')
+                  }
+                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-2xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
                 >
                   Employee Health
                 </button>
                 <button
                   onClick={() => setInput('Found mouse droppings in dry storage.')}
-                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
+                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-2xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
                 >
                   Pest Control Action
                 </button>
@@ -831,16 +869,21 @@ export default function DocumentsPage() {
                   onClick={() =>
                     setInput('What foods require date marking? 7 day rule?')
                   }
-                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
+                  className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-2xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2"
                 >
                   Date Marking Rules
                 </button>
               </div>
             )}
 
+            {/* Image chip */}
             {image && (
               <div className="bg-white p-2 rounded-xl shadow-lg border border-slate-100 mb-2 flex items-center gap-3">
-                <img src={image} className="h-10 w-10 rounded-lg object-cover" />
+                <img
+                  src={image}
+                  className="h-10 w-10 rounded-lg object-cover"
+                  alt="Preview"
+                />
                 <span className="text-xs text-slate-500">Image attached</span>
                 <button
                   onClick={() => setImage(null)}
@@ -851,9 +894,10 @@ export default function DocumentsPage() {
               </div>
             )}
 
+            {/* Input form */}
             <form
               onSubmit={handleSendMessage}
-              className="w-full relative shadow-2xl rounded-3xl bg-white border border-slate-200 hover:border-blue-300 transition-colors group"
+              className="w-full relative rounded-full bg-white/95 border border-slate-200 hover:border-blue-300 transition-colors shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
             >
               <input
                 type="file"
@@ -863,7 +907,7 @@ export default function DocumentsPage() {
                 onChange={handleImageSelect}
               />
 
-              <div className="flex items-center px-3 py-2 w-full gap-1 md:gap-2">
+              <div className="flex items-center px-2 py-1 w-full">
                 {/* Mode button */}
                 <div className="relative shrink-0">
                   <button
@@ -891,15 +935,15 @@ export default function DocumentsPage() {
                       ? 'Upload an image...'
                       : `Ask anything about ${COUNTY_NAMES[userCounty]} regulations...`
                   }
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 text-[15px] h-12 min-w-0 px-1"
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 text-[15px] h-11 min-w-0 px-1"
                   disabled={isLoading}
                 />
 
-                {/* Send */}
+                {/* Send button */}
                 <button
                   type="submit"
                   disabled={!input.trim() && !image}
-                  className={`p-2.5 shrink-0 rounded-full transition-all duration-200 ml-1 md:ml-2 ${
+                  className={`p-2.5 shrink-0 rounded-full transition-all duration-200 ml-1 ${
                     input.trim() || image
                       ? 'bg-[#0077B6] text-white shadow-md hover:scale-105 active:scale-95'
                       : 'bg-slate-100 text-slate-300 cursor-not-allowed'
@@ -909,8 +953,7 @@ export default function DocumentsPage() {
                 </button>
               </div>
             </form>
-
-            <p className="text-[10px] text-slate-400 mt-3 font-medium text-center">
+            <p className="text-[10px] text-slate-400 mt-3 font-medium">
               AI generated content. Verify with official {COUNTY_NAMES[userCounty]} documents.
             </p>
           </div>
