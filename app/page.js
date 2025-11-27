@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
@@ -105,9 +106,7 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0 perspective-1000 [transform-style:preserve-3d] hover:[transform:rotateX(2deg)_rotateY(2deg)] transition-transform duration-500">
-      {/* Isometric top bevel */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#0077B6]/20 to-transparent [transform:skewY(-3deg)_translateZ(10px)]"></div>
+    <div className="flex flex-col h-[500px] w-full max-w-[600px] bg-white font-sans border border-[#0077B6]/20 rounded-2xl shadow-2xl shadow-[#0077B6]/10 overflow-hidden relative z-0 transform-gpu shrink-0">
       <div className="h-14 bg-white border-b border-slate-100 flex items-center px-6 justify-between shrink-0 relative z-20">
         <span className="font-bold text-[#023E8A] text-sm tracking-tighter">protocol<span className="text-[#0077B6]">LM</span></span>
         <div className="flex items-center gap-2 bg-[#F0F9FF] px-3 py-1 rounded-full border border-[#90E0EF]">
@@ -119,8 +118,8 @@ const DemoChatContent = () => {
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F0F9FF] min-h-0 relative z-10">
         {messages.length === 0 && !isTyping && (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-3">
-             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm [transform:rotateX(10deg)_rotateY(-10deg)] hover:[transform:rotateX(0deg)_rotateY(0deg)] transition-transform duration-300">
-                <div className="w-6 h-6 border-2 border-slate-100 rounded-full [transform:translateZ(5px)]"></div>
+             <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-6 h-6 border-2 border-slate-100 rounded-full"></div>
              </div>
              <span className="text-xs font-bold uppercase tracking-widest text-[#0077B6]/40">System Ready</span>
           </div>
@@ -128,7 +127,7 @@ const DemoChatContent = () => {
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 [transform:translateZ(5px)] hover:[transform:translateZ(10px)] transition-transform duration-300 ${
+            <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium shadow-sm relative z-20 ${
               msg.role === 'user' 
                 ? 'bg-[#0077B6] text-white rounded-tr-sm' 
                 : 'bg-white text-slate-700 rounded-tl-sm border border-[#90E0EF]'
@@ -142,23 +141,23 @@ const DemoChatContent = () => {
 
         {isThinking && (
            <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
-              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm [transform:translateZ(5px)]">
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [transform:translateZ(2px)]"></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [animation-delay:100ms] [transform:translateZ(2px)]"></div>
-                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce [animation-delay:200ms] [transform:translateZ(2px)]"></div>
+              <div className="bg-white px-4 py-3 rounded-xl rounded-tl-sm border border-[#90E0EF] flex gap-1.5 items-center shadow-sm">
+                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce"></div>
+                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '100ms'}}></div>
+                 <div className="w-1.5 h-1.5 bg-[#0077B6] rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
               </div>
            </div>
         )}
       </div>
 
       <div className="p-4 bg-white border-t border-slate-100 shrink-0 relative z-20">
-        <div className="w-full bg-[#F0F9FF] border border-[#90E0EF] rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px] [transform:translateZ(3px)]">
+        <div className="w-full bg-[#F0F9FF] border border-[#90E0EF] rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px]">
            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center">
               {inputValue}
               {isTyping && <span className="inline-block w-0.5 h-4 bg-[#0077B6] ml-1 animate-pulse"></span>}
               {!inputValue && !isTyping && <span className="text-slate-400">Ask a question...</span>}
            </div>
-           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'} [transform:rotateY(180deg)_translateZ(5px)]`}>
+           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${inputValue ? 'bg-[#0077B6]' : 'bg-slate-200'}`}>
               <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                  <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
@@ -244,16 +243,16 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#023E8A]/20 backdrop-blur-sm animate-in fade-in duration-200 perspective-1000">
-      <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-3xl relative [transform:rotateX(5deg)_rotateY(-5deg)_translateZ(20px)] hover:[transform:rotateX(0deg)_rotateY(0deg)_translateZ(30px)] transition-transform duration-500">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#023E8A]/20 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-sm bg-white border border-white/50 shadow-2xl p-8 rounded-3xl relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-[#023E8A]">✕</button>
         <h2 className="text-xl font-bold text-[#023E8A] mb-6 tracking-tight">{view === 'signup' ? 'Create Account' : 'Sign In'}</h2>
         <div className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg [transform:translateZ(2px)]" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg [transform:translateZ(2px)]" placeholder="Password" />
-          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95 [transform:translateZ(5px)] hover:[transform:translateZ(8px)]">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password" />
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95">{loading ? 'Processing...' : (view === 'signup' ? 'Create Account' : 'Sign In')}</button>
         </div>
-        {message && <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'} [transform:translateZ(2px)]`}>{message.text}</div>}
+        {message && <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>{message.text}</div>}
         <div className="mt-6 pt-6 border-t border-slate-100 text-center"><button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-400 hover:text-[#0077B6] font-sans">{view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}</button></div>
       </div>
     </div>
@@ -277,9 +276,9 @@ function MainContent() {
   const openAuth = (view) => { setAuthView(view); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden perspective-2000 [transform-style:preserve-3d]">
+    <div className="min-h-screen w-full bg-[#F0F9FF] font-sans text-slate-900 selection:bg-[#0077B6] selection:text-white flex flex-col relative overflow-hidden">
       
-      {/* BACKGROUND (Opacity 34%) with isometric overlays */}
+      {/* BACKGROUND (Opacity 34%) */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
          <div className="relative w-full h-full animate-drift">
            <Image 
@@ -290,21 +289,17 @@ function MainContent() {
              priority
            />
          </div>
-         {/* Isometric shape overlays for depth */}
-         <div className="absolute top-10 left-10 w-32 h-32 bg-[#0077B6]/5 border border-[#0077B6]/10 [clip-path:polygon(25%_0%,75%_50%,25%_100%)] [transform:rotateX(30deg)_rotateY(45deg)_scale(0.8)_translateZ(50px)] animate-float-slow"></div>
-         <div className="absolute bottom-20 right-20 w-24 h-24 bg-[#023E8A]/5 border border-[#023E8A]/10 rounded-full [transform:rotateX(-20deg)_rotateY(-30deg)_scale(0.6)_translateZ(30px)] animate-float-medium"></div>
-         <div className="absolute top-1/2 left-1/4 w-40 h-20 bg-[#90E0EF]/10 [clip-path:polygon(0%_0%,100%_30%,100%_70%,0%_100%)] [transform:rotateX(15deg)_rotateY(60deg)_translateZ(80px)] animate-drift-reverse"></div>
          <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95"></div>
       </div>
 
-      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all [transform:translateZ(10px)]">
+      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-[#F0F9FF]/80 backdrop-blur-md transition-all">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <h1 className="text-3xl font-bold tracking-tighter text-[#023E8A]">protocol<span style={{ color: '#0077B6' }}>LM</span></h1>
         </div>
         <div className={`flex gap-6 text-sm font-bold uppercase tracking-widest transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors [transform:translateZ(5px)] hover:[transform:translateZ(8px)]">Pricing</button>
-          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors [transform:translateZ(5px)] hover:[transform:translateZ(8px)]">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm [transform:translateZ(5px)] hover:[transform:translateZ(8px)]">
+          <button onClick={() => router.push('/pricing')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
+          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
              <span className="hidden md:inline">Create Account</span>
              <span className="md:hidden">Join</span>
           </button>
@@ -312,49 +307,42 @@ function MainContent() {
       </nav>
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-20 pb-12 gap-16 relative z-10">
-        <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} [transform:rotateX(5deg)_translateZ(20px)]`}>
+        <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           
           {/* HEADER: Two balanced lines */}
-          <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8 [transform:translateZ(10px)]">
+          <h2 className="text-4xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-8">
             Train Your Team Before<br className="hidden md:block"/>
             The Health Department Does.
           </h2>
           
-          <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10 [transform:translateZ(5px)]">
+          <p className="text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-10">
             Avoid violations and prepare for health inspections with intelligence trained on <strong>Washtenaw, Wayne, and Oakland County</strong> enforcement data.
           </p>
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95 [transform:rotateY(10deg)_translateZ(15px)] hover:[transform:rotateY(0deg)_translateZ(20px)]">
+          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0077B6] text-white px-8 py-4 rounded-lg font-bold uppercase tracking-widest hover:bg-[#023E8A] transition-all shadow-lg shadow-[#0077B6]/20 hover:shadow-xl hover:-translate-y-1 active:scale-95">
             <span className="relative z-10">Start 30-Day Free Trial</span>
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]"></div>
           </button>
           
-          {/* STATS CARDS - Isometric 3D blocks */}
+          {/* STATS CARDS - BIGGER & DARKER */}
           <div className="mt-12 grid grid-cols-3 gap-4">
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group [transform:perspective(800px)_rotateX(10deg)_rotateY(-15deg)_translateZ(20px)] hover:[transform:perspective(800px)_rotateX(5deg)_rotateY(-5deg)_translateZ(30px)] relative overflow-hidden">
-               {/* Isometric bevel edges */}
-               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0077B6]/30 to-transparent [transform:skewY(-5deg)]"></div>
-               <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-[#0077B6]/30 to-transparent [transform:skewX(5deg)]"></div>
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500 [transform:translateZ(10px)]">
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={12} suffix="%" duration={2500} />
                </div>
                <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Revenue Drop</div>
                <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Immediate loss in annual sales after one bad grade.</p>
              </div>
              
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group [transform:perspective(800px)_rotateX(10deg)_rotateY(0deg)_translateZ(20px)] hover:[transform:perspective(800px)_rotateX(5deg)_rotateY(0deg)_translateZ(30px)] relative overflow-hidden">
-               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0077B6]/30 to-transparent [transform:skewY(-5deg)]"></div>
-               <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-[#0077B6]/30 to-transparent [transform:skewX(5deg)]"></div>
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500 [transform:translateZ(10px)]">
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={75} prefix="$" suffix="k" duration={2500} />
                </div>
                <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Avg. Incident</div>
                <p className="text-xs text-slate-600 mt-2 font-semibold leading-tight">Legal fees, fines, and lost business revenue.</p>
              </div>
              
-             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group [transform:perspective(800px)_rotateX(10deg)_rotateY(15deg)_translateZ(20px)] hover:[transform:perspective(800px)_rotateX(5deg)_rotateY(5deg)_translateZ(30px)] relative overflow-hidden">
-               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0077B6]/30 to-transparent [transform:skewY(-5deg)]"></div>
-               <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-[#0077B6]/30 to-transparent [transform:skewX(5deg)]"></div>
-               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500 [transform:translateZ(10px)]">
+             <div className="bg-white/60 border border-white/80 p-5 rounded-xl backdrop-blur-md shadow-sm hover:bg-white/90 hover:-translate-y-1 transition-all duration-300 cursor-default border-b-4 border-b-[#0077B6]/20 group">
+               <div className="text-5xl font-bold text-[#023E8A] tracking-tighter group-hover:scale-105 transition-transform duration-500">
                  <CountUp end={2.5} suffix="x" decimals={1} duration={2500} />
                </div>
                <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Fine Hike</div>
@@ -369,7 +357,7 @@ function MainContent() {
         </div>
       </div>
 
-      <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto [transform:translateZ(5px)]">
+      <div className="w-full py-8 text-center border-t border-[#90E0EF] relative z-10 mt-auto">
         <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
            <a href="/terms" className="hover:text-[#0077B6]">Terms</a>
            <span>© 2025 protocolLM</span>
@@ -382,15 +370,7 @@ function MainContent() {
       <style jsx global>{`
         @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
         @keyframes drift { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        @keyframes drift-reverse { 0% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes float-slow { 0%, 100% { transform: translateY(0px) rotateX(30deg) rotateY(45deg) scale(0.8) translateZ(50px); } 50% { transform: translateY(-10px) rotateX(30deg) rotateY(45deg) scale(0.8) translateZ(50px); } }
-        @keyframes float-medium { 0%, 100% { transform: translateY(0px) rotateX(-20deg) rotateY(-30deg) scale(0.6) translateZ(30px); } 50% { transform: translateY(-15px) rotateX(-20deg) rotateY(-30deg) scale(0.6) translateZ(30px); } }
         .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
-        .animate-drift-reverse { animation: drift-reverse 25s ease-in-out infinite alternate-reverse; }
-        .animate-float-slow { animation: float-slow 6s ease-in-out infinite; }
-        .animate-float-medium { animation: float-medium 8s ease-in-out infinite; }
-        .perspective-1000 { perspective: 1000px; }
-        .perspective-2000 { perspective: 2000px; }
       `}</style>
     </div>
   )
