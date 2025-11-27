@@ -493,7 +493,7 @@ export default function DocumentsPage() {
                   {COUNTY_LABELS[activeCounty]}
                   <span className="hidden lg:inline-flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                 </h1>
-                <p className="text-xs text-slate-500 font-medium">Verified Regulatory Intelligence Platform</p>
+                <p className="text-xs text-slate-500 font-medium">Regulatory Intelligence Platform</p>
              </div>
           </div>
           <div className="lg:hidden flex bg-slate-100 p-1 rounded-lg">
@@ -516,7 +516,7 @@ export default function DocumentsPage() {
                 : 'text-slate-500 hover:text-slate-700'
             )}
           >
-            AI Assistant
+            Assistant
           </button>
           <button
             onClick={() => setActiveTab('audit')}
