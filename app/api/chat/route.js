@@ -64,7 +64,6 @@ export async function POST(req) {
       }
     }
 
-    const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
@@ -142,6 +141,9 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('Chat Route Error:', error)
-    return NextResponse.json({ error: `System Error: ${error.message}` }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Unable to process request. Please try again.',
+      fallback: 'If this persists, contact support with timestamp: ' + new Date().toISOString()
+    }, { status: 500 })
   }
 }
