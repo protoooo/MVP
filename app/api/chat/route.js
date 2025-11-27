@@ -7,28 +7,34 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 60
 
-const SYSTEM_PROMPT = `You are ProtocolLM, a specialized regulatory intelligence engine.
+const SYSTEM_PROMPT = `You are ProtocolLM, a food safety compliance assistant for Michigan restaurants.
 
-**CORE INSTRUCTIONS:**
-1. **Visual & Textual Analysis:** When analyzing images, comparing the visual evidence strictly against the provided **Regulatory Context** (Local County Codes) and the FDA Food Code.
-2. **Prioritize Local Data:** ALWAYS cite the Local/County document found in the context FIRST. 
-3. **Resourcefulness:** If the image shows a specific equipment setup (e.g., a 3-comp sink), use the context to find the specific air-gap or plumbing rules for that county and verify if the image matches the rule.
-4. **Citations:** Format citations as **[Source Name, Page X]**.
+**CRITICAL RULES:**
+1. **HIERARCHY**: Always follow this priority:
+   - LOCAL COUNTY CODE (Washtenaw/Wayne/Oakland) = LAW
+   - Michigan Modified Food Code = STATE LAW
+   - FDA Food Code 2022 = FEDERAL GUIDANCE (use only if no local/state rule exists)
+
+2. **SOURCE VERIFICATION**: You must cite the EXACT document name and page for every answer. Format: [Source Name, Page X]
+
+3. **ACCURACY OVER SPEED**: If context doesn't have the answer, say "I don't see this specific rule in the county documents. Verify with your local health department."
+
+4. **NEVER GUESS**: Don't extrapolate beyond what the documents explicitly state.
 
 FORMATTING:
-- Use Markdown.
-- Be direct, professional, and authoritative.`
+- Use Markdown
+- Start with the direct answer
+- Cite sources inline like this: [Washtenaw Enforcement, Page 3]
+- If multiple sources conflict, explain the hierarchy`
 
 export async function POST(req) {
   try {
-    // 1. Initialize Google AI
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
     
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
-    // 2. Initialize Supabase
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -44,13 +50,11 @@ export async function POST(req) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // 3. Rate Limit
     const limitCheck = await checkRateLimit(session.user.id)
     if (!limitCheck.success) {
       return NextResponse.json({ error: limitCheck.message || 'Limit reached' }, { status: 429 })
     }
     
-    // Image Limit Check
     const body = await req.json()
     const { messages, image, county } = body
     
@@ -64,7 +68,6 @@ export async function POST(req) {
     let context = ''
     let citations = []
 
-    // 4. SEARCH (Updated: Runs even if image exists, as long as there is text)
     if (lastMessage.content) {
       try {
         console.log(`🔍 Searching for context in: ${county}`)
@@ -72,14 +75,42 @@ export async function POST(req) {
         
         if (searchResults && searchResults.length > 0) {
            console.log(`✅ Found ${searchResults.length} documents`)
-           context = searchResults.map(doc => 
-            `[Source: ${doc.metadata.filename || doc.source}, Page ${doc.metadata.page || doc.page}]\nContent: ${doc.text || doc.content}`
-          ).join('\n\n')
+           
+           // Group by source to show hierarchy
+           const countyDocs = searchResults.filter(d => d.docType === 'county')
+           const stateDocs = searchResults.filter(d => d.docType === 'state')
+           const federalDocs = searchResults.filter(d => d.docType === 'federal')
+           
+           let contextParts = []
+           
+           if (countyDocs.length > 0) {
+             contextParts.push('=== LOCAL COUNTY REGULATIONS (PRIMARY AUTHORITY) ===')
+             countyDocs.forEach(doc => {
+               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+             })
+           }
+           
+           if (stateDocs.length > 0) {
+             contextParts.push('\n=== MICHIGAN STATE CODE (SECONDARY AUTHORITY) ===')
+             stateDocs.forEach(doc => {
+               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+             })
+           }
+           
+           if (federalDocs.length > 0) {
+             contextParts.push('\n=== FDA GUIDANCE (USE IF NO LOCAL/STATE RULE) ===')
+             federalDocs.forEach(doc => {
+               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+             })
+           }
+           
+           context = contextParts.join('\n\n')
           
-          citations = searchResults.map(doc => ({
-            document: (doc.metadata.filename || doc.source).replace('.pdf', ''),
-            pages: [doc.metadata.page || doc.page]
-          }))
+           citations = searchResults.map(doc => ({
+             document: doc.source.replace('.pdf', ''),
+             pages: [doc.page],
+             authority: doc.docType // 'county', 'state', or 'federal'
+           }))
         } else {
           console.log('⚠️ No local documents matched.')
         }
@@ -88,25 +119,23 @@ export async function POST(req) {
       }
     }
 
-    // 5. Generate
     const prompt = [
       { text: SYSTEM_PROMPT },
-      { text: `USER CURRENT JURISDICTION: ${county || 'washtenaw'}` },
-      { text: `OFFICIAL REGULATORY CONTEXT:\n${context || 'No specific local documents found. Rely on FDA Food Code.'}` },
+      { text: `USER JURISDICTION: ${county || 'washtenaw'}` },
+      { text: `REGULATORY CONTEXT:\n${context || 'No specific documents found. Inform user to verify with health department.'}` },
       { text: `USER QUERY: ${lastMessage.content}` }
     ]
 
     if (image) {
       const base64Data = image.split(',')[1]
       prompt.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
-      prompt.push({ text: "Analyze the image above specifically against the Regulatory Context provided." })
+      prompt.push({ text: "Analyze the image STRICTLY against the Regulatory Context. Cite sources." })
     }
 
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
-    // 6. Update Usage
     supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
 
     return NextResponse.json({ message: text, citations: citations })
