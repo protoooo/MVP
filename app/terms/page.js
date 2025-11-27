@@ -1,6 +1,5 @@
 export default function TermsOfService() {
   return (
-    // Changed: bg-[#F0F9FF] and font-sans
     <div className="min-h-screen bg-[#F0F9FF] font-sans selection:bg-[#0077B6] selection:text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-10 text-center md:text-left">
@@ -26,11 +25,11 @@ export default function TermsOfService() {
               <li>Access to food safety regulations and official county documentation</li>
               <li>AI-assisted interpretation of compliance requirements via Chat</li>
               <li>Image analysis for equipment and facility compliance</li>
-              <li>Mock Audit workflows and Staff Memo generation (Enterprise Plan only)</li>
+              <li>Mock Audit workflows (Pro & Enterprise Plans)</li>
+              <li>Staff Memo generation (Enterprise Plan only)</li>
               <li>County-specific guidance (Washtenaw, Wayne, Oakland)</li>
             </ul>
             
-            {/* UPDATED WARNING BOX STYLE */}
             <div className="bg-orange-50 border-l-4 border-orange-400 p-4 my-4 rounded-r-lg">
               <p className="text-orange-800 font-bold mb-1 text-sm uppercase tracking-wide">⚠️ Important Disclaimer</p>
               <p className="text-orange-900/80 text-sm leading-relaxed">
@@ -65,23 +64,25 @@ export default function TermsOfService() {
             <h3 className="text-xl font-bold mb-3 mt-6">4.2 Subscription Plans</h3>
             <div className="grid gap-4 mt-4">
               <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <p className="text-[#023E8A] font-bold mb-2">Starter Plan - $29/month</p>
+                <p className="text-[#023E8A] font-bold mb-2">Starter Plan - $49/month</p>
                 <ul className="list-disc pl-6 text-slate-700 space-y-1 text-sm">
-                  <li>100 Regulatory Text Queries per month</li>
+                  <li>500 Regulatory Text Queries per month</li>
                   <li>No Image Analysis capabilities</li>
+                  <li>No Mock Audit access</li>
                 </ul>
               </div>
 
               <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <p className="text-[#023E8A] font-bold mb-2">Pro Plan - $49/month</p>
+                <p className="text-[#023E8A] font-bold mb-2">Pro Plan - $99/month</p>
                 <ul className="list-disc pl-6 text-slate-700 space-y-1 text-sm">
                   <li>Unlimited Regulatory Text Queries</li>
-                  <li>50 Image Analyses per month</li>
+                  <li>100 Image Analyses per month</li>
+                  <li>Mock Audit Workflow included</li>
                 </ul>
               </div>
 
               <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <p className="text-[#023E8A] font-bold mb-2">Enterprise Plan - $99/month</p>
+                <p className="text-[#023E8A] font-bold mb-2">Enterprise Plan - $199/month</p>
                 <ul className="list-disc pl-6 text-slate-700 space-y-1 text-sm">
                   <li>Unlimited Queries & 500 Image Analyses</li>
                   <li>Mock Audit Workflow & Staff Memo Generator</li>
