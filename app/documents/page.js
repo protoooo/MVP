@@ -105,7 +105,6 @@ export default function DocumentsPage() {
         return 
       }
 
-      // CODE TO HANDLE CASE SENSITIVITY AUTOMATICALLY
       const countyKey = profile.county ? profile.county.toLowerCase() : 'washtenaw'
       
       setUserCounty(countyKey)
@@ -295,8 +294,6 @@ export default function DocumentsPage() {
     else if (mode === 'image') fileInputRef.current?.click()
   }
 
-  const generateMemo = () => handleSendMessage(null, "Generate a formal Staff Memo based on our conversation. Format it with: DATE, TO: All Staff, FROM: Management, SUBJECT: Corrective Actions Required. List each violation discussed, the specific code section it violates, why it matters, and the required corrective action.")
-  const handlePrint = () => window.print()
   const handleImageSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -370,8 +367,8 @@ export default function DocumentsPage() {
       <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative w-72 h-full bg-slate-50 border-r border-slate-200 z-40 transition-transform duration-300 ease-in-out flex flex-col no-print`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#0077B6] rounded-lg flex items-center justify-center text-white font-bold text-lg">P</div>
+            {/* LOGO UPDATE: Removed "P" Icon and shifted text left */}
+            <div className="flex items-center">
               <span className="font-bold text-lg text-slate-800 tracking-tight">protocol<span className="text-[#0077B6]">LM</span></span>
             </div>
             <button className="md:hidden text-slate-400" onClick={() => setIsSidebarOpen(false)}>✕</button>
@@ -425,7 +422,7 @@ export default function DocumentsPage() {
       {/* --- MAIN CHAT AREA --- */}
       <div className="flex-1 flex flex-col relative bg-white chat-container">
         
-        {/* Header */}
+        {/* Header - BUTTONS REMOVED */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md z-30 no-print sticky top-0">
           <div className="flex items-center gap-3">
              <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500 hover:text-slate-900"><Icons.Menu /></button>
@@ -434,10 +431,7 @@ export default function DocumentsPage() {
                 <span className="text-[10px] font-medium text-green-600 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Database Active</span>
              </div>
           </div>
-          <div className="flex items-center gap-2">
-             <button onClick={generateMemo} className="text-xs font-medium text-slate-500 hover:text-[#0077B6] px-3 py-1.5 rounded-full hover:bg-blue-50 transition-colors">Generate Memo</button>
-             <button onClick={handlePrint} className="text-xs font-medium text-slate-500 hover:text-[#0077B6] px-3 py-1.5 rounded-full hover:bg-blue-50 transition-colors">Download PDF</button>
-          </div>
+          {/* REMOVED: Generate Memo / Download PDF buttons were here */}
         </div>
 
         {/* Messages */}
@@ -450,7 +444,7 @@ export default function DocumentsPage() {
                     <Icons.Globe />
                   </div>
                 )}
-                <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md' : 'text-slate-800 mt-1'}`}>
+                <div className={`max-w-[100%] sm:max-w-[85%] ${msg.role === 'user' ? 'bg-[#0077B6] text-white px-5 py-3 rounded-2xl rounded-tr-sm shadow-md' : 'text-slate-800 mt-1'}`}>
                    {msg.image && <img src={msg.image} alt="Uploaded content" className="mb-4 rounded-xl border border-white/20 max-w-sm" />}
                    {msg.role === 'user' ? <p className="text-[15px] leading-relaxed">{msg.content}</p> : renderMessageContent(msg)}
                 </div>
@@ -467,11 +461,10 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Input Area */}
+        {/* Input Area - FIX: Flex Layout to prevent overlap */}
         <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center z-20 input-bar">
           <div className="w-full max-w-3xl flex flex-col items-center">
             
-            {/* UPDATED: Suggestions Chips Grid (Fixed Width) */}
             {messages.length < 2 && !image && (
                <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <button onClick={() => setInput("Can I cool chili from 135F to 70F in 3 hours?")} className="bg-white hover:bg-blue-50 hover:border-blue-200 text-slate-600 text-xs px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all text-left flex items-center gap-2">❄️ Cooling Requirements</button>
@@ -486,23 +479,27 @@ export default function DocumentsPage() {
             <form onSubmit={handleSendMessage} className="w-full relative shadow-2xl rounded-3xl bg-white border border-slate-200 hover:border-blue-300 transition-colors group">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSelect} />
               
-              <div className="flex items-center p-2">
-                <div className="relative">
+              <div className="flex items-center p-2 w-full">
+                
+                {/* 1. Mode Button (Fixed Width) */}
+                <div className="relative shrink-0">
                   <button type="button" onClick={() => setShowModeMenu(!showModeMenu)} className="p-3 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#0077B6] transition-all">
                      <Icons.Plus />
                   </button>
                   {showModeMenu && <ModeSelector currentMode={activeMode} onSelect={handleMenuSelection} onClose={() => setShowModeMenu(false)} />}
                 </div>
 
+                {/* 2. Input Field (Flexible Width) */}
                 <input 
                   value={input} 
                   onChange={e => setInput(e.target.value)} 
                   placeholder={activeMode === 'image' ? "Upload an image..." : `Ask anything about ${COUNTY_NAMES[userCounty]} regulations...`}
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 text-[15px] h-12"
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder:text-slate-400 text-[15px] h-12 min-w-0"
                   disabled={isLoading}
                 />
                 
-                <button type="submit" disabled={!input.trim() && !image} className={`p-2 rounded-full transition-all duration-200 ${input.trim() || image ? 'bg-[#0077B6] text-white shadow-md hover:scale-105 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}>
+                {/* 3. Send Button (Fixed Width) */}
+                <button type="submit" disabled={!input.trim() && !image} className={`p-2 shrink-0 rounded-full transition-all duration-200 ml-2 ${input.trim() || image ? 'bg-[#0077B6] text-white shadow-md hover:scale-105 active:scale-95' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}>
                   <Icons.Send />
                 </button>
               </div>
