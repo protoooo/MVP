@@ -769,7 +769,7 @@ export default function DocumentsPage() {
                     key={i}
                     className={`flex ${
                       isUser ? 'justify-end' : 'justify-start'
-                    } items-end gap-3`}
+                    } items-start gap-3`}
                   >
                     {!isUser && (
                       <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm text-[#0077B6]">
@@ -874,7 +874,7 @@ export default function DocumentsPage() {
                   onChange={handleImageSelect}
                 />
 
-                <div className="flex items-center p-2 w-full">
+                <div className="flex items-center p-3 w-full">
                   {/* Mode Button */}
                   <div className="relative shrink-0">
                     <button
