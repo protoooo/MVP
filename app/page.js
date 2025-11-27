@@ -191,7 +191,7 @@ const DemoChatContent = () => {
             )}
             {!inputValue && !isTyping && (
               <span className="text-slate-400 text-xs truncate">
-                “What actually happens if this store fails its next inspection?”
+                
               </span>
             )}
           </div>
