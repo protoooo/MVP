@@ -2,7 +2,44 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-// --- CHAT DEMO BOX (Liquid Glass) ---
+/**
+ * --- UTILS & ICONS ---
+ * Inline SVGs for zero-dependency implementation
+ */
+
+const Icons = {
+  Send: ({ className }) => (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  ),
+  Sparkle: ({ className }) => (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="2">
+      <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="currentColor" fillOpacity="0.2"/>
+    </svg>
+  ),
+  Check: ({ className }) => (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  Google: ({ className }) => (
+    <svg viewBox="0 0 24 24" className={className}>
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+    </svg>
+  ),
+  X: ({ className }) => (
+    <svg viewBox="0 0 24 24" fill="none" className={className} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  )
+}
+
+// --- CHAT DEMO BOX (The "Apple Glass" Effect) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -33,32 +70,28 @@ const DemoChatContent = () => {
       response:
         'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     },
-    {
-      text: 'The floor drain is backing up in the dish room. Can we just mop it and keep serving?',
-      response:
-        'IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized.'
-    },
-    {
-      text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
-      response:
-        'CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage.'
-    }
   ]
 
+  // Typing simulation loop
   useEffect(() => {
     let isMounted = true
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      await wait(Math.random() * 30 + 20)
+      await wait(Math.random() * 20 + 15) // Slightly faster typing for "pro" feel
     }
 
     const runSimulation = async () => {
       setHasStarted(true)
+      // Initial delay before starting the show
+      await wait(1000)
+
       while (isMounted) {
         for (const step of SEQUENCE) {
           if (!isMounted) return
+          
+          // typing state
           setIsTyping(true)
           setInputValue('')
           await wait(500)
@@ -69,14 +102,18 @@ const DemoChatContent = () => {
           }
 
           await wait(400)
+          
+          // Send user message
           setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
 
+          // Thinking state
           setIsThinking(true)
-          await wait(1200)
+          await wait(1500) // Thinking time
           setIsThinking(false)
 
+          // Stream response
           let currentResponse = ''
           const words = step.response.split(' ')
           setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
@@ -89,38 +126,38 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(25)
+            await wait(20) // Fast streaming
           }
 
-          await wait(3500)
+          await wait(4000) // Read time
         }
-
-        await wait(1200)
-        setMessages((prev) => prev.slice(-6))
+        
+        // Reset loop
+        await wait(1000)
+        setMessages([])
       }
     }
 
     runSimulation()
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [])
 
+  // Keyword highlighter for the "Protocol" look
   const formatContent = (text) => {
     const keywords = [
-      'CRITICAL ACTION',
-      'VIOLATION',
-      'IMMINENT HEALTH HAZARD',
-      'CORE VIOLATION',
-      'ACTION REQUIRED'
+      'CRITICAL ACTION', 'VIOLATION', 'IMMINENT HEALTH HAZARD', 'CORE VIOLATION', 'ACTION REQUIRED', 'NO'
     ]
+    
+    // Simple check for keywords at start of string or standalone
     for (const key of keywords) {
-      if (text.includes(key)) {
-        const parts = text.split(key)
+      if (text.startsWith(key)) {
+        const remaining = text.substring(key.length);
         return (
           <span>
-            <span className="font-bold text-[#0A2463]">{key}</span>
-            {parts[1]}
+            <span className="font-bold text-rose-600 bg-rose-50/50 px-1.5 py-0.5 rounded text-[11px] tracking-wide border border-rose-100/50 inline-block mr-1">
+              {key}
+            </span>
+            {remaining}
           </span>
         )
       }
@@ -129,122 +166,95 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="liquid-card flex flex-col h-[340px] md:h-[420px] w-full max-w-[600px] mx-auto relative z-0 shrink-0">
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Top chrome */}
-        <div className="h-14 md:h-16 border-b border-white/25 flex items-center px-5 md:px-6 justify-between shrink-0 bg-white/14">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#0A2463] text-xs md:text-sm tracking-tight">
-              protocol<span className="text-[#1E96FC]">LM</span>
-            </span>
-            <span className="hidden md:inline text-[10px] font-semibold text-slate-500/80">
-              Live demo
-            </span>
+    <div className="relative w-full max-w-[500px] mx-auto group perspective-1000">
+      {/* Decorative Glow Behind */}
+      <div className="absolute -inset-1 bg-gradient-to-b from-blue-400/30 to-purple-400/30 rounded-[2.6rem] blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
+      
+      {/* MAIN CARD CONTAINER */}
+      <div className="relative flex flex-col h-[500px] w-full bg-white/60 backdrop-blur-3xl backdrop-saturate-150 border border-white/40 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem] overflow-hidden ring-1 ring-white/50 transition-all duration-500">
+        
+        {/* Shine Effect */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-tr from-white/40 via-transparent to-transparent opacity-50 pointer-events-none" />
+
+        {/* Header */}
+        <div className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-white/20 bg-white/10 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+             <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-[#FF5F57] shadow-sm border border-[#E0443E]/10" />
+                <div className="w-3 h-3 rounded-full bg-[#FEBC2E] shadow-sm border border-[#D89E24]/10" />
+                <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-sm border border-[#1AAB29]/10" />
+             </div>
+             <div className="h-4 w-[1px] bg-black/10 mx-1" />
+             <span className="text-xs font-semibold text-slate-600 tracking-tight flex items-center gap-1.5">
+                <Icons.Sparkle className="w-3 h-3 text-blue-500" />
+                Protocol Assistant
+             </span>
           </div>
-          <div className="flex items-center gap-2 bg-white/32 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-            <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide opacity-80">
-              Online
-            </span>
+          <div className="px-2 py-1 rounded-full bg-emerald-100/50 border border-emerald-200/50 flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Live</span>
           </div>
         </div>
 
-        {/* Chat area */}
-        <div
+        {/* Chat Area */}
+        <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-5 md:p-6 space-y-5 min-h-0 relative z-10 custom-scroll"
+          className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10 scroll-smooth no-scrollbar"
         >
-          {!hasStarted && !isTyping && messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-              <div className="w-14 h-14 md:w-16 md:h-16 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5">
-                <div className="w-7 h-7 md:w-8 md:h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
-              </div>
-              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70">
-                SYSTEM READY
-              </span>
+          {messages.length === 0 && !hasStarted && (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60">
+              <div className="w-12 h-12 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin mb-4" />
+              <p className="text-xs font-medium tracking-widest uppercase">Initializing Core...</p>
             </div>
           )}
 
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`flex ${
-                msg.role === 'user' ? 'justify-end' : 'justify-start'
-              } fade-in-up`}
+              className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
-                className={`max-w-[85%] px-4 md:px-5 py-3 md:py-3.5 rounded-2xl text-[12px] md:text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
-                  msg.role === 'user'
-                    ? 'bg-white/40 text-[#0A2463] rounded-tr-sm border border-white/65 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.45)]'
-                    : 'bg-white/42 text-slate-800 rounded-tl-sm border border-white/60 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.35)]'
+                className={`max-w-[85%] p-4 text-[13px] leading-relaxed shadow-sm relative overflow-hidden group/bubble
+                ${msg.role === 'user' 
+                  ? 'bg-gradient-to-br from-[#007AFF] to-[#0062CC] text-white rounded-[20px] rounded-br-sm' 
+                  : 'bg-white/40 backdrop-blur-md border border-white/60 text-slate-800 rounded-[20px] rounded-bl-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)]'
                 }`}
               >
-                <div className="whitespace-pre-wrap font-sans relative z-30">
-                  {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
-                </div>
+                {/* Subtle sheen on user bubbles */}
+                {msg.role === 'user' && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-white/10 to-white/0 opacity-0 group-hover/bubble:opacity-100 transition-opacity" />
+                )}
+                {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
               </div>
             </div>
           ))}
 
           {isThinking && (
-            <div className="flex justify-start fade-in-up">
-              <div className="bg-white/45 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/65 flex gap-2 items-center shadow-lg shadow-blue-900/5">
-                <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
-                <div
-                  className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
-                  style={{ animationDelay: '100ms' }}
-                />
-                <div
-                  className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
-                  style={{ animationDelay: '200ms' }}
-                />
-                <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline tracking-tight">
-                  Cross-checking local code...
-                </span>
-              </div>
-            </div>
+             <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
+                <div className="bg-white/30 backdrop-blur-md border border-white/40 px-4 py-3 rounded-[20px] rounded-bl-sm flex items-center gap-1.5 shadow-sm">
+                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                   <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+             </div>
           )}
         </div>
 
-        {/* Faux input + new button */}
-        <div className="p-3.5 md:p-4 border-t border-white/25 shrink-0 bg-white/12">
-          <div className="w-full bg-white/28 backdrop-blur-xl border border-white/55 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[50px] md:min-h-[54px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
-            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
-              {inputValue}
-              {isTyping && (
-                <span className="inline-block w-0.5 h-4 bg-[#1E96FC] ml-0.5 animate-pulse rounded-full" />
-              )}
+        {/* Input Area */}
+        <div className="p-4 relative z-20">
+            <div className="bg-white/50 backdrop-blur-xl border border-white/60 rounded-[20px] p-1.5 pl-4 flex items-center shadow-lg shadow-black/5 ring-1 ring-white/60 transition-shadow duration-300 hover:shadow-xl hover:shadow-black/5">
+                <div className="flex-1 text-sm text-slate-600 font-medium truncate h-6 flex items-center">
+                    {inputValue}
+                    {isTyping && <span className="ml-0.5 w-0.5 h-4 bg-blue-500 animate-pulse rounded-full" />}
+                    {!inputValue && !isTyping && <span className="text-slate-400 font-normal">Ask a question...</span>}
+                </div>
+                <button className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-[#007AFF] text-white shadow-md scale-100' : 'bg-slate-200/50 text-slate-400 scale-95'}`}>
+                    <Icons.Send className="w-4 h-4 ml-0.5" />
+                </button>
             </div>
-            <button
-              type="button"
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 shadow-[0_8px_18px_rgba(15,23,42,0.4)] ${
-                inputValue
-                  ? 'bg-gradient-to-b from-[#1E96FC] to-[#0A2463] hover:brightness-110'
-                  : 'bg-slate-200/70'
-              }`}
-            >
-              <svg
-                className="w-4 h-4 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.3"
-              >
-                <path
-                  d="M5 12h14M13 6l6 6-6 6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Glass layers based on your example */}
-      <div className="liquid-layer-effect" />
-      <div className="liquid-layer-tint" />
-      <div className="liquid-layer-shine" />
+      </div>
     </div>
   )
 }
@@ -266,7 +276,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   }, [end, duration])
 
   return (
-    <span>
+    <span className="tabular-nums">
       {prefix}
       {count.toFixed(decimals)}
       {suffix}
@@ -274,7 +284,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- AUTH MODAL ---
+// --- AUTH MODAL (GLASS) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -287,454 +297,257 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     setMessage(null)
   }, [isOpen, defaultView])
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true)
-    setMessage(null)
-    setTimeout(() => {
-      setMessage({ type: 'success', text: 'Google sign-in would redirect here!' })
-      setLoading(false)
-    }, 1000)
-  }
-
-  const handleAuth = (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage(null)
-    setTimeout(() => {
-      if (view === 'signup') {
-        setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
-      } else {
-        setMessage({ type: 'success', text: 'Sign in successful!' })
-      }
-      setLoading(false)
-    }, 1000)
+  const handleAction = async () => {
+    setLoading(true); setMessage(null)
+    await new Promise(r => setTimeout(r, 1500))
+    setLoading(false)
+    setMessage({ type: 'success', text: view === 'signup' ? 'Welcome aboard!' : 'Welcome back!' })
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="w-full max-w-sm bg-white/70 backdrop-blur-3xl backdrop-saturate-200 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] p-8 rounded-[2rem] relative ring-1 ring-white/60">
-        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-50" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Darkened backdrop */}
+        <div 
+            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={onClose}
+        />
+        
+        {/* Modal Card */}
+        <div className="relative w-full max-w-[400px] bg-white/80 backdrop-blur-2xl backdrop-saturate-200 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.15)] rounded-[2.5rem] p-8 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ring-1 ring-white/60">
+            <button 
+                onClick={onClose}
+                className="absolute top-5 right-5 p-2 bg-slate-100/50 hover:bg-slate-200/50 rounded-full transition-colors text-slate-500"
+            >
+                <Icons.X className="w-4 h-4" />
+            </button>
 
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-[#0A2463] transition-colors hover:bg-white/30 rounded-full"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+            <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 text-white">
+                   <Icons.Sparkle className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    {view === 'signup' ? 'Create Account' : 'Welcome Back'}
+                </h2>
+                <p className="text-sm text-slate-500 mt-2 font-medium">
+                    {view === 'signup' ? 'Start your intelligent compliance journey.' : 'Access your dashboard.'}
+                </p>
+            </div>
 
-        <h2 className="text-2xl font-bold text-[#0A2463] mb-6 tracking-tight text-center">
-          {view === 'signup' ? 'Create Account' : 'Welcome Back'}
-        </h2>
+            <div className="space-y-4">
+                <button 
+                    onClick={handleAction}
+                    className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm group"
+                >
+                    <Icons.Google className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-semibold text-slate-700">Continue with Google</span>
+                </button>
 
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-3 p-3.5 bg-white/50 hover:bg:white/80 backdrop-blur-md border border-white/60 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6 group"
-        >
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            />
-          </svg>
-          <span className="text-sm font-semibold text-slate-700">Continue with Google</span>
-        </button>
+                <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
+                    <div className="relative flex justify-center"><span className="bg-[#fcfcfc] px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Or</span></div>
+                </div>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-300/40" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-transparent text-slate-400 font-medium">Or continue with email</span>
-          </div>
+                <div className="space-y-3">
+                    <input 
+                        type="email" placeholder="Work Email" 
+                        value={email} onChange={e => setEmail(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-white/50 border border-slate-200/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none text-sm font-medium text-slate-900 placeholder-slate-400"
+                    />
+                    <input 
+                        type="password" placeholder="Password" 
+                        value={password} onChange={e => setPassword(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-white/50 border border-slate-200/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all outline-none text-sm font-medium text-slate-900 placeholder-slate-400"
+                    />
+                </div>
+
+                <button
+                    onClick={handleAction}
+                    disabled={loading}
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {loading ? 'Processing...' : view === 'signup' ? 'Get Started' : 'Sign In'}
+                </button>
+            </div>
+
+            {message && (
+                <div className="mt-4 p-3 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-semibold text-center border border-emerald-100 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2">
+                    <Icons.Check className="w-4 h-4" />
+                    {message.text}
+                </div>
+            )}
+
+            <div className="mt-6 text-center">
+                <button 
+                    onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
+                    className="text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                >
+                    {view === 'signup' ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+                </button>
+            </div>
         </div>
-
-        <div className="space-y-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm placeholder-slate-400 rounded-xl transition-all shadow-inner"
-            placeholder="Email"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm placeholder-slate-400 rounded-xl transition-all shadow-inner"
-            placeholder="Password (min 6 characters)"
-          />
-          <button
-            onClick={handleAuth}
-            disabled={loading}
-            className="w-full mt-2 bg-gradient-to-b from-[#1E96FC] to-[#0A2463] hover:brightness-110 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_30px_-10px_rgba(30,150,252,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(30,150,252,0.4)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
-          </button>
-        </div>
-
-        {message && (
-          <div
-            className={`mt-4 p-3 text-xs border rounded-xl backdrop-blur-md animate-in fade-in slide-in-from-top-1 ${
-              message.type === 'error'
-                ? 'bg-red-50/50 text-red-600 border-red-200/50'
-                : 'bg-emerald-50/50 text-emerald-600 border-emerald-200/50'
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
-
-        <div className="mt-8 pt-6 border-t border-slate-200/40 text-center">
-          <button
-            onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
-            className="text-xs text-slate-500 hover:text-[#1E96FC] font-semibold transition-colors"
-          >
-            {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
 
-// --- MAIN ---
+// --- MAIN HOME PAGE ---
 export default function Home() {
-  const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
+  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => { setMounted(true) }, [])
 
-  const openAuth = (view) => {
-    setAuthView(view)
-    setShowAuth(true)
-  }
+  const openAuth = (v) => { setAuthView(v); setShowAuth(true) }
 
   return (
-    <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 selection:bg-[#1E96FC]/30 selection:text-[#0A2463] flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      {/* BACKGROUND – fixed, lighter opacity & blur */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-40%] right-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.22)_0%,transparent_70%)] blur-[80px]" />
-        <div className="absolute bottom-[-20%] left-[-20%] w-[65vw] h-[65vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] blur-[75px]" />
-        <img
-          src="/background.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{
-            opacity: 0.28, // more transparent
-            filter: 'blur(1px)'
-          }}
-        />
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+      
+      {/* 1. BACKGROUND GRADIENTS (The Apple "Blob" effect) */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+         <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] rounded-full bg-blue-400/20 blur-[120px] mix-blend-multiply animate-blob" />
+         <div className="absolute bottom-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-400/20 blur-[120px] mix-blend-multiply animate-blob animation-delay-2000" />
+         <div className="absolute top-[20%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-purple-400/20 blur-[100px] mix-blend-multiply animate-blob animation-delay-4000" />
+         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150" />
       </div>
 
-      {/* NAV */}
-      <nav className="fixed inset-x-0 top-0 z-40 bg-white/60 backdrop-blur-xl backdrop-saturate-200 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)]">
-        <div className="w-full max-w-7xl mx-auto px-6 py-4 md:py-5 flex justify-between items-center">
-          <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463]">
-              protocol<span className="text-[#1E96FC]">LM</span>
-            </h1>
-          </div>
-          <div
-            className={`flex gap-2 md:gap-4 text-[11px] md:text-xs font-bold uppercase tracking-widest items-center transition-all duration-1000 ${
-              mounted ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <button
-              onClick={() => alert('Pricing page')}
-              className="px-4 py-2 text-slate-500 hover:text-[#0A2463] transition-colors font-semibold"
-            >
-              Pricing
-            </button>
-            <button
-              onClick={() => openAuth('login')}
-              className="px-4 py-2 text-slate-500 hover:text-[#0A2463] transition-colors font-semibold"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => openAuth('signup')}
-              className="px-5 py-2.5 text-white bg-[#0A2463] hover:bg-[#1E96FC] rounded-full shadow-[0_4px_14px_0_rgba(10,36,99,0.25)] hover:shadow-[0_6px_20px_rgba(30,150,252,0.3)] transition-all active:scale-95 duration-300"
-            >
-              <span className="hidden md:inline">Get protocolLM</span>
-              <span className="md:hidden">Join</span>
-            </button>
-          </div>
+      {/* 2. NAVIGATION (Frosted Header) */}
+      <nav className="fixed top-0 inset-x-0 z-40 bg-white/70 backdrop-blur-xl border-b border-white/40 shadow-sm transition-all duration-500">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+           <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <Icons.Sparkle className="w-5 h-5" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900">
+                protocol<span className="text-blue-600">LM</span>
+              </span>
+           </div>
+
+           <div className="hidden md:flex items-center gap-8">
+              <a href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Features</a>
+              <a href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Pricing</a>
+              <a href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Enterprise</a>
+           </div>
+
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={() => openAuth('login')}
+                className="hidden md:block px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Log in
+              </button>
+              <button 
+                onClick={() => openAuth('signup')}
+                className="px-5 py-2 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] active:scale-95"
+              >
+                Get Started
+              </button>
+           </div>
         </div>
       </nav>
 
-      {/* HERO */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-28 md:pt-28 lg:pt-32 pb-24 md:pb-24 gap-9 lg:gap-16 relative z-10">
-        {/* Left */}
-        <div
-          className={`flex-1 text-left transition-all duration-1000 delay-100 ${
-            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tight leading-[1.04] mb-5 max-w-[22ch]">
-            <span className="block">Train Your Team</span>
-            <span className="block">Before The Health</span>
-            <span className="block">Department Does.</span>
-          </h2>
-
-          <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-xl mb-7">
-            protocol<span className="text-[#1E96FC] font-bold">LM</span> gives your team instant answers from{' '}
-            <strong>Washtenaw, Wayne, and Oakland County</strong> rules, preventing violations before they happen.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-9">
-            <button
-              onClick={() => openAuth('signup')}
-              className="group relative overflow-hidden bg-[#0A2463] text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide shadow-[0_20px_50px_-12px_rgba(10,36,99,0.5)] hover:shadow-[0_20px_50px_-12px_rgba(30,150,252,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span className="relative z-10">Start 30-Day Free Trial</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-            </button>
-            <button className="px-8 py-4 rounded-full bg-white/18 border border-white/35 text-[#0A2463] font-bold text-sm hover:bg-white/35 transition-all shadow-sm hover:shadow-md backdrop-blur-md">
-              View Pricing
-            </button>
-          </div>
-
-          {/* Stat cards with climb-up animation */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {[
-              {
-                val: 12,
-                suffix: '%',
-                label: 'REVENUE DROP / UNIT',
-                desc: 'Typical year-one sales hit after a public bad grade.'
-              },
-              {
-                val: 75,
-                prefix: '$',
-                suffix: 'k',
-                label: 'AVG. INCIDENT COST',
-                desc: 'Legal, remediation, labor, and lost traffic.'
-              },
-              {
-                val: 2.5,
-                suffix: 'x',
-                label: 'REPEAT FINE MULTIPLIER',
-                desc: 'Fines climb when the same issue shows up twice.',
-                decimals: 1
-              }
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="stat-card bg-white/18 backdrop-blur-xl backdrop-saturate-150 border border-white/40 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/32 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tighter drop-shadow-sm">
-                  <CountUp
-                    end={item.val}
-                    prefix={item.prefix}
-                    suffix={item.suffix}
-                    decimals={item.decimals}
-                    duration={2500}
-                  />
+      {/* 3. HERO SECTION */}
+      <main className="relative z-10 pt-32 pb-20 md:pt-40 md:pb-32 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+            
+            {/* Left Content */}
+            <div className={`flex-1 text-center lg:text-left space-y-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                    New: Oakland County Support
                 </div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3 mb-1">
-                  {item.label}
+                
+                <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.05]">
+                    Compliance, <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                        Clarified.
+                    </span>
+                </h1>
+
+                <p className="text-xl text-slate-500 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                    Stop fearing the health inspector. Equip your franchisees with an intelligent assistant trained on <strong>local enforcement codes</strong>.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                    <button 
+                        onClick={() => openAuth('signup')}
+                        className="h-12 px-8 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/25 flex items-center gap-2 group"
+                    >
+                        Start Free Trial
+                        <Icons.Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <button className="h-12 px-8 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all hover:border-slate-300">
+                        View Demo
+                    </button>
                 </div>
-                <p className="text-[11px] text-slate-600 font-medium leading-tight opacity-80">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Right */}
-        <div
-          className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${
-            mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-          }`}
-        >
-          <DemoChatContent />
-        </div>
-      </div>
+                {/* Stats Row */}
+                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-200/60 mt-8">
+                    {[
+                        { val: 75, suffix: 'k', label: 'Avg Saved' },
+                        { val: 12, suffix: '%', label: 'Revenue Lift' },
+                        { val: 100, suffix: '%', label: 'Compliant' },
+                    ].map((stat, i) => (
+                        <div key={i} className="space-y-1">
+                            <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                                <CountUp end={stat.val} suffix={stat.suffix} prefix={stat.prefix || '$'} />
+                            </div>
+                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-      {/* FOOTER – fixed like the nav */}
-      <footer className="fixed inset-x-0 bottom-0 z-30 w-full py-5 md:py-6 text-center border-t border-slate-200/50 bg-white/40 backdrop-blur-xl relative pb-safe">
-        <div className="flex justify-center gap-6 md:gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          <a href="/terms" className="hover:text-[#0A2463] transition-colors">
-            Terms
-          </a>
-          <span>© 2025 protocolLM</span>
-          <a href="/privacy" className="hover:text-[#0A2463] transition-colors">
-            Privacy
-          </a>
+            {/* Right Content (The Liquid Glass Demo) */}
+            <div className={`flex-1 w-full max-w-[600px] lg:max-w-none transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+                <DemoChatContent />
+            </div>
+
+        </div>
+      </main>
+
+      {/* 4. FOOTER */}
+      <footer className="bg-white border-t border-slate-200 py-12 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="text-sm text-slate-400 font-medium">
+                © 2025 ProtocolLM Inc. All rights reserved.
+            </div>
+            <div className="flex gap-6 text-sm text-slate-500 font-medium">
+                <a href="#" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+                <a href="#" className="hover:text-blue-600 transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
+            </div>
         </div>
       </footer>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
+      {/* Global Styles for Animations */}
       <style jsx global>{`
-        body {
-          overscroll-behavior-y: none;
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
         }
-
-        .pb-safe {
-          padding-bottom: env(safe-area-inset-bottom, 20px);
+        .animate-blob {
+          animation: blob 7s infinite;
         }
-
-        .custom-scroll::-webkit-scrollbar {
-          width: 5px;
+        .animation-delay-2000 {
+          animation-delay: 2s;
         }
-        .custom-scroll::-webkit-scrollbar-track {
-          background: transparent;
+        .animation-delay-4000 {
+          animation-delay: 4s;
         }
-        .custom-scroll::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.3);
-          border-radius: 20px;
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.5);
-        }
-
-        /* Stat card climb-up animation */
-        .stat-card {
-          opacity: 0;
-          transform: translateY(22px);
-          animation: statFloatUp 700ms cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-        }
-        .stat-card:nth-child(2) {
-          animation-delay: 120ms;
-        }
-        .stat-card:nth-child(3) {
-          animation-delay: 240ms;
-        }
-        @keyframes statFloatUp {
-          0% {
-            opacity: 0;
-            transform: translateY(22px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .fade-in-up {
-          animation: fadeInUp 400ms ease-out forwards;
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Liquid glass card */
-        .liquid-card {
-          border-radius: 2.5rem;
-          box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          isolation: isolate;
-          background: transparent;
-        }
-        .liquid-layer-effect {
-          position: absolute;
-          inset: 0;
-          z-index: 0;
-          backdrop-filter: blur(26px);
-          filter: url('#glass-distortion');
-        }
-        .liquid-layer-tint {
-          position: absolute;
-          inset: 0;
-          background: rgba(255, 255, 255, 0.1); /* more see-through */
-          z-index: 1;
-        }
-        .liquid-layer-shine {
-          position: absolute;
-          inset: 0;
-          z-index: 2;
-          box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.55),
-            inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5);
-          pointer-events: none;
-        }
-
-        svg#glass-filter-defs {
-          position: absolute;
-          width: 0;
-          height: 0;
-          pointer-events: none;
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
-
-      {/* Hidden SVG defs for glass distortion */}
-      <svg id="glass-filter-defs" style={{ display: 'none' }}>
-        <filter
-          id="glass-distortion"
-          x="0%"
-          y="0%"
-          width="100%"
-          height="100%"
-          filterUnits="objectBoundingBox"
-        >
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.01 0.01"
-            numOctaves="1"
-            seed="5"
-            result="turbulence"
-          />
-          <feComponentTransfer in="turbulence" result="mapped">
-            <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
-            <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
-            <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
-          </feComponentTransfer>
-          <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
-          <feSpecularLighting
-            in="softMap"
-            surfaceScale="5"
-            specularConstant="1"
-            specularExponent="100"
-            lightingColor="white"
-            result="specLight"
-          >
-            <fePointLight x="-200" y="-200" z="300" />
-          </feSpecularLighting>
-          <feComposite
-            in="specLight"
-            operator="arithmetic"
-            k1="0"
-            k2="1"
-            k3="1"
-            k4="0"
-            result="litImage"
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="softMap"
-            scale="150"
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-      </svg>
     </div>
   )
 }
