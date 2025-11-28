@@ -78,12 +78,12 @@ const IsoBlocks = () => (
 
 // --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
   const [hasStarted, setHasStarted] = useState(false)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -121,9 +121,9 @@ const DemoChatContent = () => {
 
   useEffect(() => {
     let isMounted = true
-    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-    const typeChar = async (char: string) => {
+    const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
       await wait(Math.random() * 30 + 20)
     }
@@ -172,7 +172,7 @@ const DemoChatContent = () => {
     }
   }, [])
 
-  const formatContent = (text: string) => {
+  const formatContent = (text) => {
     const keywords = [
       'CRITICAL ACTION',
       'VIOLATION',
@@ -317,8 +317,8 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    let startTimestamp: number | null = null
-    const step = (timestamp: number) => {
+    let startTimestamp = null
+    const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
       setCount(progress * end)
@@ -376,9 +376,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(
-    null
-  )
+  const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
 
@@ -399,9 +397,9 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         }
       })
       if (error) throw error
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google sign-in error:', error)
-      setMessage({ type: 'error', text: error.message })
+      setMessage({ type: 'error', text: error?.message || 'Google sign-in failed.' })
       setLoading(false)
     }
   }
@@ -422,7 +420,10 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         })
         if (error) throw error
         if (data?.user && !data?.session) {
-          setMessage({ type: 'success', text: 'Check your email to confirm your account.' })
+          setMessage({
+            type: 'success',
+            text: 'Check your email to confirm your account.'
+          })
         } else if (data?.session) {
           window.location.href = '/accept-terms'
         }
@@ -443,8 +444,11 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           window.location.href = '/pricing'
         }
       }
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message })
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error?.message || 'Something went wrong. Please try again.'
+      })
     } finally {
       setLoading(false)
     }
@@ -573,7 +577,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login')
+  const [authView, setAuthView] = useState('login')
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -587,7 +591,7 @@ function MainContent() {
     }
   }, [searchParams])
 
-  const openAuth = (view: 'login' | 'signup') => {
+  const openAuth = (view) => {
     setAuthView(view)
     setShowAuth(true)
   }
