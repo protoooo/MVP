@@ -121,20 +121,19 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="liquid-card flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] mx-auto relative z-0 shrink-0">
-      {/* Inner content lives on top of glass layers */}
+    <div className="liquid-card flex flex-col h-[360px] md:h-[440px] w-full max-w-[600px] mx-auto relative z-0 shrink-0">
       <div className="relative z-10 flex flex-col h-full">
         {/* Top chrome */}
-        <div className="h-16 border-b border-white/25 flex items-center px-6 justify-between shrink-0 bg-white/15">
+        <div className="h-14 md:h-16 border-b border-white/25 flex items-center px-5 md:px-6 justify-between shrink-0 bg-white/12">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#0A2463] text-sm tracking-tight">
+            <span className="font-bold text-[#0A2463] text-xs md:text-sm tracking-tight">
               protocol<span className="text-[#1E96FC]">LM</span>
             </span>
             <span className="hidden md:inline text-[10px] font-semibold text-slate-500/80">
               Live demo
             </span>
           </div>
-          <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-2 bg-white/35 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
             <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide opacity-80">
               Online
@@ -145,14 +144,14 @@ const DemoChatContent = () => {
         {/* Chat area */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 relative z-10 custom-scroll"
+          className="flex-1 overflow-y-auto p-5 md:p-6 space-y-5 min-h-0 relative z-10 custom-scroll"
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-              <div className="w-16 h-16 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5">
-                <div className="w-8 h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5">
+                <div className="w-7 h-7 md:w-8 md:h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70">
+              <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70">
                 SYSTEM READY
               </span>
             </div>
@@ -166,10 +165,10 @@ const DemoChatContent = () => {
               } fade-in-up`}
             >
               <div
-                className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
+                className={`max-w-[85%] px-4 md:px-5 py-3 md:py-3.5 rounded-2xl text-[12px] md:text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
                   msg.role === 'user'
-                    ? 'bg-white/65 text-[#0A2463] rounded-tr-sm border border-white/80 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.45)]'
-                    : 'bg-white/70 text-slate-800 rounded-tl-sm border border-white/70 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.35)]'
+                    ? 'bg-white/52 text-[#0A2463] rounded-tr-sm border border-white/75 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.45)]'
+                    : 'bg-white/54 text-slate-800 rounded-tl-sm border border-white/70 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.35)]'
                 }`}
               >
                 <div className="whitespace-pre-wrap font-sans relative z-30">
@@ -181,7 +180,7 @@ const DemoChatContent = () => {
 
           {isThinking && (
             <div className="flex justify-start fade-in-up">
-              <div className="bg-white/60 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/60 flex gap-2 items-center shadow-lg shadow-blue-900/5">
+              <div className="bg-white/55 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/65 flex gap-2 items-center shadow-lg shadow-blue-900/5">
                 <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
                 <div
                   className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
@@ -200,8 +199,8 @@ const DemoChatContent = () => {
         </div>
 
         {/* Faux input */}
-        <div className="p-4 border-t border-white/25 shrink-0 bg-white/10">
-          <div className="w-full bg-white/45 backdrop-blur-xl border border-white/60 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
+        <div className="p-3.5 md:p-4 border-t border-white/25 shrink-0 bg-white/10">
+          <div className="w-full bg-white/38 backdrop-blur-xl border border-white/55 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[52px] md:min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
             <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
@@ -321,7 +320,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 p-3.5 bg-white/50 hover:bg-white/80 backdrop-blur-md border border-white/60 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6 group"
+          className="w-full flex items-center justify-center gap-3 p-3.5 bg-white/50 hover:bg:white/80 backdrop-blur-md border border-white/60 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6 group"
         >
           <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
             <path
@@ -419,25 +418,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 selection:bg-[#1E96FC]/30 selection:text-[#0A2463] flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      {/* BACKGROUND – fixed, lower opacity, blurred */}
+      {/* BACKGROUND – fixed, lighter opacity & blur */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-50%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.25)_0%,transparent_70%)] blur-[120px]" />
-        <div className="absolute bottom-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_70%)] blur-[110px]" />
+        <div className="absolute top-[-40%] right-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.22)_0%,transparent_70%)] blur-[80px]" />
+        <div className="absolute bottom-[-20%] left-[-20%] w-[65vw] h-[65vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.2)_0%,transparent_70%)] blur-[75px]" />
         <img
           src="/background.png"
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{
-            opacity: 0.36,
-            filter: 'blur(3px)',
-            transform: 'translateZ(0)'
+            opacity: 0.28, // dialed down
+            filter: 'blur(1px)', // lighter blur to reduce jitter
           }}
         />
       </div>
 
       {/* NAV */}
       <nav className="fixed inset-x-0 top-0 z-40 bg-white/60 backdrop-blur-xl backdrop-saturate-200 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)]">
-        <div className="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+        <div className="w-full max-w-7xl mx-auto px-6 py-4 md:py-5 flex justify-between items-center">
           <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463]">
               protocol<span className="text-[#1E96FC]">LM</span>
@@ -472,16 +470,16 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-32 pb-12 gap-12 lg:gap-20 relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-28 md:pt-28 lg:pt-32 pb-8 md:pb-10 gap-10 lg:gap-16 relative z-10">
         {/* Left */}
         <div
           className={`flex-1 text-left transition-all duration-1000 delay-100 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          <h2 className="text-4xl md:text-6xl font-bold text-[#0A2463] tracking-tight leading-[1.05] mb-6">
-            <span className="block">Train Your Team Before The</span>
-            <span className="block">Health Department Does.</span>
+          <h2 className="text-4xl md:text-6xl font-bold text-[#0A2463] tracking-tight leading-[1.05] mb-6 max-w-[24ch]">
+            <span className="block">Train Your Team Before</span>
+            <span className="block">The Health Department Does.</span>
           </h2>
 
           <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-xl mb-8">
@@ -489,7 +487,7 @@ export default function Home() {
             <strong>Washtenaw, Wayne, and Oakland County</strong> rules, preventing violations before they happen.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 mb-10">
             <button
               onClick={() => openAuth('signup')}
               className="group relative overflow-hidden bg-[#0A2463] text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide shadow-[0_20px_50px_-12px_rgba(10,36,99,0.5)] hover:shadow-[0_20px_50px_-12px_rgba(30,150,252,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -497,7 +495,7 @@ export default function Home() {
               <span className="relative z-10">Start 30-Day Free Trial</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
             </button>
-            <button className="px-8 py-4 rounded-full bg-white/40 border border-white/60 text-[#0A2463] font-bold text-sm hover:bg-white/60 transition-all shadow-sm hover:shadow-md backdrop-blur-md">
+            <button className="px-8 py-4 rounded-full bg-white/25 border border-white/40 text-[#0A2463] font-bold text-sm hover:bg-white/40 transition-all shadow-sm hover:shadow-md backdrop-blur-md">
               View Pricing
             </button>
           </div>
@@ -528,9 +526,9 @@ export default function Home() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="stat-card bg-white/40 backdrop-blur-xl backdrop-saturate-150 border border-white/50 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default relative overflow-hidden"
+                className="stat-card bg-white/28 backdrop-blur-xl backdrop-saturate-150 border border-white/40 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/45 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tighter drop-shadow-sm">
                   <CountUp
                     end={item.val}
@@ -560,8 +558,8 @@ export default function Home() {
       </div>
 
       {/* FOOTER */}
-      <div className="w-full py-8 text-center border-t border-slate-200/50 bg-white/30 backdrop-blur-xl relative z-10 mt-auto pb-safe">
-        <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+      <div className="w-full py-6 md:py-8 text-center border-t border-slate-200/50 bg-white/30 backdrop-blur-xl relative z-10 mt-auto pb-safe">
+        <div className="flex justify-center gap-6 md:gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           <a href="/terms" className="hover:text-[#0A2463] transition-colors">
             Terms
           </a>
@@ -597,7 +595,7 @@ export default function Home() {
           background: rgba(148, 163, 184, 0.5);
         }
 
-        /* Stat card climb-up animation (for the 12% / $75k / 2.5x cards) */
+        /* Stat card climb-up animation */
         .stat-card {
           opacity: 0;
           transform: translateY(22px);
@@ -620,7 +618,6 @@ export default function Home() {
           }
         }
 
-        /* Chat message subtle fade-in */
         .fade-in-up {
           animation: fadeInUp 400ms ease-out forwards;
         }
@@ -635,7 +632,7 @@ export default function Home() {
           }
         }
 
-        /* Liquid glass card based on your snippet */
+        /* Liquid glass card */
         .liquid-card {
           border-radius: 2.5rem;
           box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
@@ -652,7 +649,7 @@ export default function Home() {
         .liquid-layer-tint {
           position: absolute;
           inset: 0;
-          background: rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.16);
           z-index: 1;
         }
         .liquid-layer-shine {
@@ -664,7 +661,6 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* SVG filter from your example (kept hidden) */
         svg#glass-filter-defs {
           position: absolute;
           width: 0;
