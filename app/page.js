@@ -108,12 +108,12 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2rem] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto shadow-[0_40px_100px_-20px_rgba(10,36,99,0.15)] ring-1 ring-white/50 bg-gradient-to-b from-white/70 to-white/40 backdrop-blur-3xl backdrop-saturate-150">
+    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2.5rem] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto shadow-[0_40px_100px_-20px_rgba(10,36,99,0.15)] ring-1 ring-white/60 bg-white/60 backdrop-blur-3xl backdrop-saturate-150">
       
-      {/* Glossy sheen overlay */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none z-0" />
+      {/* Specular Highlight (The "Apple" Shine) */}
+      <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-0" />
       
-      {/* Top chrome - Premium Glass */}
+      {/* Top chrome */}
       <div className="h-14 border-b border-white/30 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/10 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <span className="font-bold text-[#0A2463] text-sm tracking-tight drop-shadow-sm">
@@ -182,7 +182,7 @@ const DemoChatContent = () => {
         )}
       </div>
 
-      {/* Faux input - Premium Glass */}
+      {/* Faux input */}
       <div className="p-4 border-t border-white/30 shrink-0 relative z-20 bg-gradient-to-b from-transparent to-white/10">
         <div className="w-full bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] ring-1 ring-white/40 transition-all focus-within:ring-[#1E96FC]/30 focus-within:bg-white/60">
           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
