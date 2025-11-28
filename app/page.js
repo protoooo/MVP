@@ -5,46 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. TECHNICAL WIREFRAME ICONS (Refined & Crisp) ---
-
-const IconRevenue = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* Chart Line - Jagged Fall */}
-    <path d="M4 12 L16 26 L28 18 L44 38" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
-    {/* Arrow Head */}
-    <path d="M44 38 H32 M44 38 V26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
-    {/* Reference Grid (Dotted) */}
-    <path d="M4 38 H28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
-    <path d="M4 26 H16" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
-    {/* Frame Corners */}
-    <path d="M2 10 V2 H10 M38 2 H46 V10 M46 38 V46 H38 M10 46 H2 V38" fill="none" stroke="currentColor" strokeWidth="1.5" />
-  </svg>
-)
-
-const IconLiability = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* Shield Outline - Geometric */}
-    <path d="M24 4 L42 12 V22 C42 34 34 42 24 46 C14 42 6 34 6 22 V12 L24 4 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-    {/* Inner Keyhole */}
-    <circle cx="24" cy="20" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
-    <path d="M24 24 V32" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-)
-
-const IconRisk = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* Base Blocks */}
-    <rect x="14" y="32" width="20" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
-    <rect x="18" y="20" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
-    {/* Top Floating Block (Risk) */}
-    <rect x="20" y="4" width="8" height="12" stroke="currentColor" strokeWidth="2" fill="none" className="group-hover:-translate-y-1 transition-transform duration-500" />
-    {/* Warning Mark */}
-    <path d="M36 4 V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="36" cy="20" r="1.5" fill="currentColor" />
-  </svg>
-)
-
-// --- 2. CHAT DEMO (Minimalist Document Style) ---
+// --- 1. CHAT DEMO (Minimalist & Clean) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -154,16 +115,16 @@ const DemoChatContent = () => {
       {/* Container: Stark White, Hard Border */}
       <div className="flex flex-col h-[480px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
         
-        {/* Header: Minimalist */}
+        {/* Header: Clean Protocol Branding */}
         <div className="h-12 border-b border-neutral-100 flex items-center px-5 justify-between bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-black rounded-full" />
-            <span className="font-sans text-[10px] font-bold text-neutral-900 uppercase tracking-[0.2em]">
-              Compliance_Log
+            <span className="font-sans text-[11px] font-bold text-neutral-900 uppercase tracking-[0.2em]">
+              protocolLM
             </span>
           </div>
           <div className="flex items-center gap-2">
-             <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">v1.0.4 • Connected</span>
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+             <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">Online</span>
           </div>
         </div>
 
@@ -177,7 +138,7 @@ const DemoChatContent = () => {
               <div className="w-10 h-10 border border-neutral-300 rounded flex items-center justify-center">
                  <div className="w-4 h-4 bg-neutral-300 rounded-sm animate-spin"/>
               </div>
-              <p className="text-[10px] font-bold text-neutral-400 tracking-widest uppercase">Initializing</p>
+              <p className="text-[10px] font-bold text-neutral-400 tracking-widest uppercase">System Ready</p>
             </div>
           )}
 
@@ -252,22 +213,19 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 4. EXECUTIVE CARDS (Blueprint Style - Fixed Icons) ---
-const StatCard = ({ title, value, sub, icon, delay }) => {
+// --- 4. EXECUTIVE CARDS (Text-Heavy / No Icons) ---
+const StatCard = ({ title, value, sub, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
-      className="group bg-white/80 backdrop-blur-sm border border-neutral-200 p-6 rounded-lg flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-md"
+      className="group bg-white border border-neutral-200 p-6 rounded-lg flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-md"
     >
-      {/* Icon Top Right - Perfectly Pinned */}
-      <div className="absolute top-5 right-5 w-10 h-10 opacity-30 group-hover:opacity-100 transition-opacity duration-300 text-neutral-800">
-        {icon}
-      </div>
-
-      <div className="relative z-10 mt-auto">
-        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</div>
-        <div className="text-4xl font-bold text-black tracking-tighter mb-3">{value}</div>
-        <div className="text-[10px] font-medium text-neutral-500 border-t border-neutral-200 pt-3 w-full inline-block">
+      <div className="relative z-10 h-full flex flex-col justify-between">
+        <div>
+          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</div>
+          <div className="text-4xl font-bold text-black tracking-tighter mb-1">{value}</div>
+        </div>
+        <div className="text-[11px] font-medium text-neutral-600 border-t border-neutral-100 pt-3 mt-2 leading-relaxed">
           {sub}
         </div>
       </div>
@@ -422,9 +380,8 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-black selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (High Contrast Architecture Watermark) */}
+      {/* BACKGROUND (Architectural Watermark) */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-white">
-        {/* The Restaurant Image as a "Blueprint" */}
         <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.28] grayscale contrast-125">
            <Image 
              src="/background.png" 
@@ -434,7 +391,6 @@ function MainContent() {
              priority 
            />
         </div>
-        {/* White fade at bottom */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-white/90"></div>
       </div>
 
@@ -442,8 +398,7 @@ function MainContent() {
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-4">
         <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-4 h-4 bg-black" />
-            <span className="text-sm font-bold tracking-tight text-black">
+            <span className="text-lg font-bold tracking-tight text-black">
               protocol<span className="text-neutral-400">LM</span>
             </span>
           </div>
@@ -458,8 +413,8 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Split & Tight) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION (Higher Up / No Scroll) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-16 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
         {/* LEFT COLUMN */}
         <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
@@ -470,15 +425,15 @@ function MainContent() {
             Compliance Intelligence
           </div>
 
-          {/* Headline (Restored Copy) */}
+          {/* Headline (All Black) */}
           <h1 className={`text-4xl md:text-6xl font-bold text-black tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
-            <span className="text-neutral-400">before</span> the inspector arrives.
+            before the inspector arrives.
           </h1>
 
-          {/* Subheader (Restored Copy) */}
+          {/* Subheader (Restored & Enhanced) */}
           <p className={`text-sm md:text-base text-neutral-500 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant, AI-verified answers from <strong className="text-black">Washtenaw, Wayne, and Oakland County</strong> health codes. Standardize food safety and protect brand equity.
+            Instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
           {/* CTA */}
@@ -488,33 +443,30 @@ function MainContent() {
             </button>
           </div>
 
-          {/* CARDS GRID (Improved Icons) */}
+          {/* CARDS GRID (Text Only / Employer Focus) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 lg:mb-0">
             <StatCard 
-              icon={<IconRevenue />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
-              sub="Post-incident loss"
+              sub="Average sales loss following a public bad grade due to staff errors."
               delay={500}
             />
             <StatCard 
-              icon={<IconLiability />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
               title="Incident Cost"
-              sub="Liabilty & labor"
+              sub="Legal fees, remediation, and lost traffic from one serious outbreak."
               delay={650}
             />
             <StatCard 
-              icon={<IconRisk />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
               title="Fine Multiplier"
-              sub="Repeat violations"
+              sub="Penalties escalate rapidly for repeat violations."
               delay={800}
             />
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo) */}
+        {/* RIGHT COLUMN (Demo - Updated Branding) */}
         <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
