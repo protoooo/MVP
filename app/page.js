@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-// --- CHAT DEMO BOX (Liquid Glass Style) ---
+// --- CHAT DEMO BOX (Premium Optical Glass) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -108,20 +108,24 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] bg-white/40 backdrop-blur-2xl font-sans border border-white/60 rounded-3xl shadow-[0_8px_32px_0_rgba(10,36,99,0.12)] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto">
-      {/* Top chrome - Glass */}
-      <div className="h-14 bg-white/60 backdrop-blur-xl border-b border-white/40 flex items-center px-6 justify-between shrink-0 relative z-20">
+    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2rem] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto shadow-[0_40px_100px_-20px_rgba(10,36,99,0.15)] ring-1 ring-white/50 bg-gradient-to-b from-white/70 to-white/40 backdrop-blur-3xl backdrop-saturate-150">
+      
+      {/* Glossy sheen overlay */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none z-0" />
+      
+      {/* Top chrome - Premium Glass */}
+      <div className="h-14 border-b border-white/30 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/10 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-[#0A2463] text-sm tracking-tighter">
+          <span className="font-bold text-[#0A2463] text-sm tracking-tight drop-shadow-sm">
             protocol<span className="text-[#1E96FC]">LM</span>
           </span>
-          <span className="hidden md:inline text-[10px] font-semibold text-slate-500">
+          <span className="hidden md:inline text-[10px] font-semibold text-slate-500/80">
             Live demo
           </span>
         </div>
-        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1 rounded-full border border-white shadow-sm">
-          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-400" />
-          <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide">
+        <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/50 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+          <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide opacity-80">
             Online
           </span>
         </div>
@@ -130,14 +134,14 @@ const DemoChatContent = () => {
       {/* Chat area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-br from-slate-50/50 to-blue-50/30 min-h-0 relative z-10 custom-scroll"
+        className="flex-1 overflow-y-auto p-6 space-y-5 min-h-0 relative z-10 custom-scroll"
       >
         {!hasStarted && !isTyping && messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/60 flex items-center justify-center shadow-lg shadow-slate-200/50">
-              <div className="w-7 h-7 border-2 border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
+          <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+            <div className="w-16 h-16 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5 ring-1 ring-white">
+              <div className="w-8 h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/60">
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70 text-shadow-sm">
               SYSTEM READY
             </span>
           </div>
@@ -148,16 +152,16 @@ const DemoChatContent = () => {
             key={i}
             className={`flex ${
               msg.role === 'user' ? 'justify-end' : 'justify-start'
-            } animate-in fade-in slide-in-from-bottom-2 duration-300`}
+            } animate-in fade-in slide-in-from-bottom-3 duration-500 ease-out`}
           >
             <div
-              className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm leading-relaxed font-medium relative z-20 ${
+              className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-[#1E96FC] to-[#0A2463] text-white rounded-tr-sm shadow-lg shadow-blue-500/20'
-                  : 'bg-white/80 backdrop-blur-xl text-slate-700 rounded-tl-sm border border-white/60 shadow-lg shadow-slate-200/50'
+                  ? 'bg-gradient-to-b from-[#1E96FC] to-[#0A2463] text-white rounded-tr-sm shadow-[0_8px_20px_-6px_rgba(30,150,252,0.35)] border border-white/10'
+                  : 'bg-white/60 text-slate-800 rounded-tl-sm border border-white/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] ring-1 ring-white/40'
               }`}
             >
-              <div className="whitespace-pre-wrap font-sans text-xs relative z-30">
+              <div className="whitespace-pre-wrap font-sans relative z-30">
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
               </div>
             </div>
@@ -165,12 +169,12 @@ const DemoChatContent = () => {
         ))}
 
         {isThinking && (
-          <div className="flex justify-start animate-in fade-in zoom-in duration-200 relative z-20">
-            <div className="bg-white/80 backdrop-blur-xl px-4 py-3 rounded-xl rounded-tl-sm border border-white/60 flex gap-1.5 items-center shadow-lg shadow-slate-200/50">
+          <div className="flex justify-start animate-in fade-in zoom-in duration-300 relative z-20">
+            <div className="bg-white/60 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/50 flex gap-2 items-center shadow-lg shadow-blue-900/5 ring-1 ring-white/40">
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" style={{ animationDelay: '100ms' }} />
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
-              <span className="ml-2 text-[10px] font-semibold text-slate-600 hidden md:inline">
+              <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline tracking-tight">
                 Cross-checking local code & FDA Food Code…
               </span>
             </div>
@@ -178,18 +182,18 @@ const DemoChatContent = () => {
         )}
       </div>
 
-      {/* Faux input - Glass */}
-      <div className="p-4 bg-white/60 backdrop-blur-xl border-t border-white/40 shrink-0 relative z-20">
-        <div className="w-full bg-white/60 backdrop-blur-md border border-white/60 rounded-xl px-4 py-3 flex items-center gap-3 min-h-[52px] shadow-sm">
+      {/* Faux input - Premium Glass */}
+      <div className="p-4 border-t border-white/30 shrink-0 relative z-20 bg-gradient-to-b from-transparent to-white/10">
+        <div className="w-full bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] ring-1 ring-white/40 transition-all focus-within:ring-[#1E96FC]/30 focus-within:bg-white/60">
           <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
             {inputValue}
             {isTyping && (
-              <span className="inline-block w-0.5 h-4 bg-[#1E96FC] ml-1 animate-pulse" />
+              <span className="inline-block w-0.5 h-4 bg-[#1E96FC] ml-0.5 animate-pulse rounded-full" />
             )}
           </div>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 ${inputValue ? 'bg-gradient-to-br from-[#1E96FC] to-[#0A2463] shadow-lg shadow-blue-500/30' : 'bg-slate-200'}`}>
-            <svg className="w-4 h-4 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${inputValue ? 'bg-gradient-to-b from-[#1E96FC] to-[#0A2463] shadow-lg shadow-blue-500/25 scale-100' : 'bg-slate-200/50 scale-90'}`}>
+            <svg className="w-3.5 h-3.5 text-white transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </div>
         </div>
@@ -207,7 +211,8 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      setCount(progress * end)
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4) // Smoother easing
+      setCount(easeOutQuart * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
     window.requestAnimationFrame(step)
@@ -222,7 +227,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- AUTH MODAL (Liquid Glass) ---
+// --- AUTH MODAL (VisionOS Style) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -261,16 +266,22 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white/80 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_0_rgba(10,36,99,0.2)] p-8 rounded-3xl relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-[#0A2463] transition-colors">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="w-full max-w-sm bg-white/70 backdrop-blur-3xl backdrop-saturate-150 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] p-8 rounded-[2rem] relative ring-1 ring-white/60">
+        
+        {/* Shine effect */}
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-50" />
+        
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-[#0A2463] transition-colors hover:bg-white/30 rounded-full">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
 
-        <h2 className="text-xl font-bold text-[#0A2463] mb-6 tracking-tight">
-          {view === 'signup' ? 'Create Account' : 'Sign In'}
+        <h2 className="text-2xl font-bold text-[#0A2463] mb-6 tracking-tight text-center">
+          {view === 'signup' ? 'Create Account' : 'Welcome Back'}
         </h2>
 
-        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white/80 backdrop-blur-md border border-white/60 hover:border-[#1E96FC]/40 hover:shadow-lg hover:shadow-blue-500/10 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-6">
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
+        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white/50 hover:bg-white/80 backdrop-blur-md border border-white/60 hover:scale-[1.02] active:scale-[0.98] shadow-sm hover:shadow-md rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-6 group">
+          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -280,26 +291,26 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </button>
 
         <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-2 bg-white/80 text-slate-500">Or continue with email</span></div>
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-300/40" /></div>
+          <div className="relative flex justify-center text-xs"><span className="px-2 bg-transparent text-slate-400 font-medium">Or continue with email</span></div>
         </div>
 
-        <div className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3.5 bg-white/60 backdrop-blur-md border border-white/60 focus:bg-white/80 focus:border-[#1E96FC]/50 focus:shadow-lg focus:shadow-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3.5 bg-white/60 backdrop-blur-md border border-white/60 focus:bg-white/80 focus:border-[#1E96FC]/50 focus:shadow-lg focus:shadow-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Password (min 6 characters)" />
-          <button onClick={handleAuth} disabled={loading} className="w-full bg-gradient-to-br from-[#1E96FC] to-[#0A2463] hover:shadow-xl hover:shadow-blue-500/30 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all font-mono shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+        <div className="space-y-3">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all shadow-inner" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all shadow-inner" placeholder="Password (min 6 characters)" />
+          <button onClick={handleAuth} disabled={loading} className="w-full mt-2 bg-gradient-to-b from-[#1E96FC] to-[#0A2463] hover:brightness-110 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest transition-all shadow-[0_10px_30px_-10px_rgba(30,150,252,0.5)] hover:shadow-[0_20px_40px_-10px_rgba(30,150,252,0.4)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </div>
 
         {message && (
-          <div className={`mt-4 p-3 text-xs font-sans border rounded-xl backdrop-blur-md ${message.type === 'error' ? 'bg-red-50/80 text-red-600 border-red-200/50' : 'bg-green-50/80 text-green-600 border-green-200/50'}`}>
+          <div className={`mt-4 p-3 text-xs font-sans border rounded-xl backdrop-blur-md animate-in fade-in slide-in-from-top-1 ${message.type === 'error' ? 'bg-red-50/50 text-red-600 border-red-200/50' : 'bg-emerald-50/50 text-emerald-600 border-emerald-200/50'}`}>
             {message.text}
           </div>
         )}
 
-        <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-[#1E96FC] font-sans transition-colors">
+        <div className="mt-8 pt-6 border-t border-slate-200/40 text-center">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-[#1E96FC] font-semibold transition-colors">
             {view === 'signup' ? 'Already have an account? Sign In' : 'Need access? Create Account'}
           </button>
         </div>
@@ -324,29 +335,29 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 font-sans text-slate-900 selection:bg-[#1E96FC] selection:text-white flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      {/* BACKGROUND */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="relative w-full h-full">
-          <img src="/background.png" alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-[0.08]" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-white/40" />
-        {/* Subtle mesh gradient overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-slate-100/30 via-transparent to-transparent" />
+    <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 selection:bg-[#1E96FC]/30 selection:text-[#0A2463] flex flex-col relative overflow-x-hidden max-w-[100vw]">
+      {/* NOISE & GRADIENT BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+         {/* Apple-style subtle noise grain */}
+        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+        
+        {/* Soft, deep gradients */}
+        <div className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] rounded-full bg-blue-200/30 blur-[120px]" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-200/30 blur-[100px]" />
+        <div className="absolute top-[40%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-sky-100/40 blur-[80px]" />
       </div>
 
-      {/* NAV - Liquid Glass */}
-      <nav className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6 flex justify-between items-center fixed top-0 left-0 right-0 z-30 bg-white/60 backdrop-blur-xl border-b border-white/40 transition-all shadow-sm">
-        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463]">
-            protocol<span style={{ color: '#1E96FC' }}>LM</span>
+      {/* NAV - Premium Frosted Glass */}
+      <nav className="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center fixed top-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)] transition-all">
+        <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463] drop-shadow-sm">
+            protocol<span className="text-[#1E96FC]">LM</span>
           </h1>
         </div>
-        <div className={`flex gap-2 md:gap-6 text-[10px] md:text-sm font-bold uppercase tracking-widest items-center transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => alert('Pricing page')} className="px-2 md:px-4 py-2 text-slate-600 hover:text-[#1E96FC] transition-colors">Pricing</button>
-          <button onClick={() => openAuth('login')} className="px-2 md:px-4 py-2 text-slate-600 hover:text-[#1E96FC] transition-colors">Sign In</button>
-          <button onClick={() => openAuth('signup')} className="px-3 md:px-5 py-2 md:py-2.5 text-white bg-gradient-to-br from-[#1E96FC] to-[#0A2463] rounded-xl hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-95 shadow-lg">
+        <div className={`flex gap-2 md:gap-4 text-[11px] md:text-xs font-bold uppercase tracking-widest items-center transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+          <button onClick={() => alert('Pricing page')} className="px-4 py-2 text-slate-500 hover:text-[#0A2463] transition-colors font-semibold">Pricing</button>
+          <button onClick={() => openAuth('login')} className="px-4 py-2 text-slate-500 hover:text-[#0A2463] transition-colors font-semibold">Sign In</button>
+          <button onClick={() => openAuth('signup')} className="px-5 py-2.5 text-white bg-[#0A2463] hover:bg-[#1E96FC] rounded-full shadow-[0_4px_14px_0_rgba(10,36,99,0.25)] hover:shadow-[0_6px_20px_rgba(30,150,252,0.3)] transition-all active:scale-95 duration-300">
             <span className="hidden md:inline">Get protocolLM</span>
             <span className="md:hidden">Join</span>
           </button>
@@ -354,65 +365,63 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-28 pb-8 md:pt-24 md:pb-12 gap-10 md:gap-16 relative z-10">
-        {/* Left */}
-        <div className={`flex-1 text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h2 className="text-3xl md:text-5xl font-bold text-[#0A2463] tracking-tight leading-tight mb-4 md:mb-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-32 pb-12 gap-12 lg:gap-20 relative z-10">
+        
+        {/* Left Content */}
+        <div className={`flex-1 text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/50 border border-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-6 backdrop-blur-sm">
+             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+             New: Oakland County Live
+          </div>
+          
+          <h2 className="text-4xl md:text-6xl font-bold text-[#0A2463] tracking-tight leading-[1.1] mb-6 drop-shadow-sm">
             Train Your Team Before<br className="hidden md:block" /> The Health Department Arrives.
           </h2>
 
-          <p className="text-base md:text-lg text-slate-600 font-medium leading-relaxed max-w-xl mb-4 md:mb-5">
-            protocol<span className="text-[#1E96FC] font-bold">LM</span> gives your team instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> rules, so they handle violations correctly before an inspector or customer ever sees them.
+          <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-xl mb-8 opacity-90">
+            protocol<span className="text-[#1E96FC] font-bold">LM</span> gives your team instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> rules, preventing violations before they happen.
           </p>
 
-          <p className="text-[11px] md:text-xs text-slate-500 font-semibold uppercase tracking-[0.25em] mb-5">
-            One avoided closure can pay for protocolLM for years.
-          </p>
+          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+            <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-[#0A2463] text-white px-8 py-4 rounded-full font-bold text-sm tracking-wide shadow-[0_20px_50px_-12px_rgba(10,36,99,0.5)] hover:shadow-[0_20px_50px_-12px_rgba(30,150,252,0.6)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <span className="relative z-10">Start 30-Day Free Trial</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+            </button>
+            <button className="px-8 py-4 rounded-full bg-white/50 border border-white/60 text-[#0A2463] font-bold text-sm hover:bg-white transition-all shadow-sm hover:shadow-md backdrop-blur-md">
+                View Pricing
+            </button>
+          </div>
 
-          <button onClick={() => openAuth('signup')} className="group relative overflow-hidden bg-gradient-to-br from-[#1E96FC] to-[#0A2463] text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl font-bold uppercase tracking-widest hover:shadow-2xl hover:shadow-blue-500/40 transition-all shadow-xl hover:-translate-y-1 active:scale-95 text-xs md:text-sm">
-            <span className="relative z-10">Start 30-Day Free Trial</span>
-            <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[25deg] group-hover:animate-[shine_1s_ease-in-out]" />
-          </button>
-
-          <div className="mt-8 md:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-5 rounded-2xl shadow-lg shadow-slate-200/50 hover:bg-white/80 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 cursor-default group">
-              <div className="text-5xl font-bold text-[#0A2463] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                <CountUp end={12} suffix="%" duration={2500} />
-              </div>
-              <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Revenue Drop / Unit</div>
-              <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Typical year-one sales hit after a public bad grade.</p>
-            </div>
-
-            <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-5 rounded-2xl shadow-lg shadow-slate-200/50 hover:bg-white/80 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 cursor-default group">
-              <div className="text-5xl font-bold text-[#0A2463] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                <CountUp end={75} prefix="$" suffix="k" duration={2500} />
-              </div>
-              <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Avg. Incident Cost</div>
-              <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Legal, remediation, labor, and lost traffic for one major event.</p>
-            </div>
-
-            <div className="bg-white/60 backdrop-blur-xl border border-white/60 p-5 rounded-2xl shadow-lg shadow-slate-200/50 hover:bg-white/80 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 cursor-default group">
-              <div className="text-5xl font-bold text-[#0A2463] tracking-tighter group-hover:scale-105 transition-transform duration-500">
-                <CountUp end={2.5} suffix="x" decimals={1} duration={2500} />
-              </div>
-              <div className="text-xs font-bold text-slate-700 uppercase tracking-widest mt-2">Repeat Fine Multiplier</div>
-              <p className="text-xs text-slate-600 mt-2 font-medium leading-tight">Fines and scrutiny climb when the same issue shows up twice.</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {[
+                { val: 12, suffix: '%', label: 'Revenue Drop / Unit', desc: 'Typical year-one sales hit after a public bad grade.' },
+                { val: 75, prefix: '$', suffix: 'k', label: 'Avg. Incident Cost', desc: 'Legal, remediation, labor, and lost traffic.' },
+                { val: 2.5, suffix: 'x', label: 'Repeat Fine Multiplier', desc: 'Fines climb when the same issue shows up twice.', decimals: 1 }
+            ].map((item, i) => (
+                <div key={i} className="bg-white/40 backdrop-blur-xl backdrop-saturate-150 border border-white/50 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default group relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tighter group-hover:scale-105 transition-transform duration-500 drop-shadow-sm">
+                    <CountUp end={item.val} prefix={item.prefix} suffix={item.suffix} decimals={item.decimals} duration={2500} />
+                  </div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3 mb-1">{item.label}</div>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight opacity-80">{item.desc}</p>
+                </div>
+            ))}
           </div>
         </div>
 
-        {/* Right: demo chat */}
-        <div className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+        {/* Right: Premium Glass Demo Chat */}
+        <div className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'}`}>
           <DemoChatContent />
         </div>
       </div>
 
       {/* FOOTER */}
-      <div className="w-full py-8 text-center border-t border-white/40 bg-white/40 backdrop-blur-xl relative z-10 mt-auto pb-safe">
-        <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-          <a href="/terms" className="hover:text-[#1E96FC] transition-colors">Terms</a>
+      <div className="w-full py-8 text-center border-t border-slate-200/50 bg-white/30 backdrop-blur-xl relative z-10 mt-auto pb-safe">
+        <div className="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <a href="/terms" className="hover:text-[#0A2463] transition-colors">Terms</a>
           <span>© 2025 protocolLM</span>
-          <a href="/privacy" className="hover:text-[#1E96FC] transition-colors">Privacy</a>
+          <a href="/privacy" className="hover:text-[#0A2463] transition-colors">Privacy</a>
         </div>
       </div>
 
@@ -423,9 +432,9 @@ export default function Home() {
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 20px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.7); }
-        @keyframes shine { 0% { left: -100%; } 100% { left: 200%; } }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 20px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+        .text-shadow-sm { text-shadow: 0 1px 2px rgba(0,0,0,0.05); }
       `}</style>
     </div>
   )
