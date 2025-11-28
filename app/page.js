@@ -5,40 +5,11 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. ANIMATED MICHIGAN MAP (The "Tracing" Background) ---
-const AnimatedMichiganMap = () => {
-  return (
-    <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.07]">
-      <svg viewBox="0 0 600 600" className="w-[140%] h-[140%] md:w-[100%] md:h-[100%] stroke-[#00274C] fill-none" style={{ strokeWidth: '1.5', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
-        {/* Upper Peninsula */}
-        <path
-          d="M50,180 C80,170 120,160 160,150 C180,145 200,130 220,140 C240,150 260,160 280,155 C300,150 320,170 340,175 C360,180 350,190 330,195 C300,200 250,210 200,205 C150,200 100,195 50,180 Z"
-          className="animate-draw-map"
-        />
-        {/* Lower Peninsula (The Mitten) */}
-        <path 
-          d="M230,260 C250,260 270,250 290,240 C310,230 330,240 350,260 C370,280 380,320 380,350 C380,380 400,380 410,390 C420,400 380,420 360,430 C340,440 320,450 300,450 C250,450 220,440 200,420 C180,400 180,350 180,320 C180,290 210,260 230,260 Z"
-          className="animate-draw-map"
-          style={{ animationDelay: '0.5s' }}
-        />
-        {/* Thumb */}
-        <path
-          d="M380,350 C400,340 410,330 420,340 C430,350 420,370 410,390"
-          className="animate-draw-map"
-          style={{ animationDelay: '1s' }}
-        />
-      </svg>
-    </div>
-  )
-}
-
-// --- 2. PROFESSIONAL 3D ICONS (Matte Finish) ---
+// --- 1. PROFESSIONAL ISOMETRIC ICONS (Matte Finish) ---
 
 const IsoChart = () => (
   <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
-    {/* Base Grid */}
     <path d="M10 50 L40 65 L70 50 L40 35 Z" fill="#E2E8F0" opacity="0.6" />
-    {/* The Crash Ribbon (Red) */}
     <path d="M10 20 L25 30 V38 L10 28 Z" fill="#FDA4AF" />
     <path d="M25 30 L45 25 L45 33 L25 38 Z" fill="#F43F5E" />
     <path d="M45 25 L70 55 L70 63 L45 33 Z" fill="#BE123C" />
@@ -48,21 +19,17 @@ const IsoChart = () => (
 
 const IsoShield = () => (
   <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
-    {/* Shield Body */}
     <path d="M40 10 L65 20 V40 C65 55 55 68 40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#D97706" transform="translate(0,4)" />
     <path d="M40 10 L65 20 V40 C65 55 55 68 40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#F59E0B" />
-    {/* Reflection */}
     <path d="M40 10 L40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#FBBF24" opacity="0.3" />
   </svg>
 )
 
 const IsoBlocks = () => (
   <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
-    {/* Bottom Block */}
     <path d="M20 45 L40 55 L60 45 L40 35 Z" fill="#93C5FD" />
     <path d="M20 45 L40 55 V65 L20 55 Z" fill="#3B82F6" />
     <path d="M60 45 L40 55 V65 L60 55 Z" fill="#1D4ED8" />
-    {/* Floating Top Block */}
     <g className="animate-hover-float">
       <path d="M20 20 L40 30 L60 20 L40 10 Z" fill="#BFDBFE" />
       <path d="M20 20 L40 30 V40 L20 30 Z" fill="#60A5FA" />
@@ -71,7 +38,7 @@ const IsoBlocks = () => (
   </svg>
 )
 
-// --- 3. CHAT DEMO (Michigan Navy Header) ---
+// --- 2. CHAT DEMO ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -178,18 +145,15 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full max-w-[500px] group mx-auto perspective-1000">
-      {/* 1. Behind Glow */}
       <div className="absolute -inset-1 bg-gradient-to-br from-[#00274C]/20 to-blue-200/20 rounded-[20px] blur-xl opacity-0 group-hover:opacity-40 transition duration-1000"></div>
       
-      {/* 2. Main Glass Container */}
-      <div className="flex flex-col h-[480px] w-full bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(0,39,76,0.15)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
+      <div className="flex flex-col h-[400px] md:h-[480px] w-full bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(0,39,76,0.15)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
         
-        {/* Header - Michigan Navy */}
         <div className="h-12 border-b border-slate-100 flex items-center px-5 justify-between bg-white/60">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5 opacity-80">
               <div className="w-2.5 h-2.5 rounded-full bg-[#00274C]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#FFCB05]" /> {/* Maize */}
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FFCB05]" />
             </div>
             <div className="h-4 w-[1px] bg-slate-300 mx-1"></div>
             <span className="font-bold text-[#00274C] text-[11px] tracking-tight flex items-center gap-2">
@@ -203,7 +167,6 @@ const DemoChatContent = () => {
           </div>
         </div>
 
-        {/* Chat Feed */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-5 space-y-5 custom-scroll bg-gradient-to-b from-white to-slate-50/50"
@@ -227,7 +190,7 @@ const DemoChatContent = () => {
               <div
                 className={`max-w-[90%] px-4 py-3 rounded-xl text-[13px] leading-relaxed shadow-sm backdrop-blur-md border ${
                   msg.role === 'user'
-                    ? 'bg-[#00274C] text-white rounded-tr-sm border-[#00274C]' // Michigan Navy User Bubble
+                    ? 'bg-[#00274C] text-white rounded-tr-sm border-[#00274C]'
                     : 'bg-white text-slate-700 border-slate-200 rounded-tl-sm'
                 }`}
               >
@@ -245,7 +208,6 @@ const DemoChatContent = () => {
           )}
         </div>
 
-        {/* Input Field */}
         <div className="p-4 bg-white/80 backdrop-blur-lg border-t border-white/60">
           <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center gap-3 transition-all focus-within:bg-white focus-within:shadow-md focus-within:border-[#00274C] focus-within:ring-1 focus-within:ring-[#00274C]/20">
             <div className="flex-1 text-[13px] text-slate-800 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
@@ -261,7 +223,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 4. UTILS ---
+// --- 3. UTILS ---
 const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
   const [count, setCount] = useState(0)
 
@@ -285,15 +247,13 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 5. STAT CARDS (High-End White & Navy) ---
+// --- 4. STAT CARDS ---
 const StatCard = ({ title, value, sub, type, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
       className="group relative bg-white/80 backdrop-blur-xl border border-white/60 p-5 rounded-xl overflow-hidden hover:bg-white transition-all duration-500 ease-out-spring shadow-[0_2px_10px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,39,76,0.1)] hover:-translate-y-1 cursor-default flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card"
     >
-      
-      {/* 3D Icon - Pinned Top Left */}
       <div className="relative z-10 w-14 h-14 -ml-2 -mt-2 self-start transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-1">
         {icon}
       </div>
@@ -307,7 +267,7 @@ const StatCard = ({ title, value, sub, type, icon, delay }) => {
   )
 }
 
-// --- 6. AUTH MODAL ---
+// --- 5. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -428,7 +388,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 7. MAIN CONTENT ---
+// --- 6. LAYOUT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -452,16 +412,28 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-[#00274C] selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-[#00274C] selection:text-white flex flex-col relative overflow-x-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (Animated Tracing Map) */}
-      <AnimatedMichiganMap />
+      {/* BACKGROUND ASSET */}
+      <div className="fixed inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden">
+        {/* NOTE TO USER: Upload 'michigan.png' (transparent) to your public/ folder */}
+        {/* If image is missing, the layout remains stable */}
+        <div className="relative w-[140%] md:w-[80%] h-[80%] opacity-[0.05]">
+           <Image 
+             src="/michigan.png" 
+             alt="Michigan Background" 
+             fill 
+             className="object-contain"
+             priority
+           />
+        </div>
+      </div>
 
-      {/* NAVBAR (High & Tight) */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-3">
-        <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 md:px-6 pt-2 md:pt-3">
+        <div className={`w-full max-w-6xl flex justify-between items-center bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm rounded-full px-5 py-3 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-5 h-5 bg-[#00274C] rounded flex items-center justify-center">
+            <div className="w-6 h-6 bg-[#00274C] rounded-full flex items-center justify-center">
                <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
             <span className="text-sm font-bold tracking-tight text-[#00274C]">
@@ -472,18 +444,24 @@ function MainContent() {
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-slate-500 hover:text-[#00274C] transition-colors uppercase tracking-wide">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-bold text-slate-500 hover:text-[#00274C] transition-colors uppercase tracking-wide">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-[#00274C] hover:bg-[#003865] text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 uppercase tracking-wide">
+            <button onClick={() => openAuth('signup')} className="bg-[#00274C] hover:bg-[#003865] text-white px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md active:scale-95 uppercase tracking-wide">
               Get Started
             </button>
           </div>
+          
+          {/* Mobile Menu Trigger */}
+          <button className="md:hidden text-[#00274C]" onClick={() => openAuth('signup')}>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+          </button>
         </div>
       </nav>
 
-      {/* HERO SECTION (Shifted Up) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 pb-0 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-24 relative z-10 h-screen max-h-[850px] min-h-[600px]">
+      {/* HERO SECTION */}
+      {/* Changed: min-h-screen instead of fixed height. Padding adjusts for mobile (pt-28) vs desktop (pt-24) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-28 pb-12 md:pt-24 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-10 lg:pt-0">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left">
           
           {/* Badge */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-600 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
@@ -492,7 +470,7 @@ function MainContent() {
           </div>
 
           {/* Headline */}
-          <h1 className={`text-4xl md:text-6xl font-bold text-[#00274C] tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+          <h1 className={`text-4xl md:text-6xl font-bold text-[#00274C] tracking-tighter leading-[1.1] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             <span className="text-slate-400">before</span> the inspector arrives.
           </h1>
@@ -509,7 +487,7 @@ function MainContent() {
             </button>
           </div>
 
-          {/* CARDS GRID (Top Left Icons) */}
+          {/* CARDS GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard 
               type="danger" 
@@ -570,13 +548,6 @@ function MainContent() {
           50% { transform: translateY(-3px); }
         }
         .group:hover .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
-
-        /* MAP DRAWING ANIMATION */
-        @keyframes drawMap {
-          0% { stroke-dasharray: 2000; stroke-dashoffset: 2000; opacity: 0; }
-          100% { stroke-dasharray: 2000; stroke-dashoffset: 0; opacity: 1; }
-        }
-        .animate-draw-map { animation: drawMap 4s ease-out forwards; }
       `}</style>
     </div>
   )
