@@ -5,7 +5,52 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (Optimized Height for 'Above Fold') ---
+// --- CUSTOM ISOMETRIC ICONS (SVG) ---
+// These replace the "vibe coded" generic icons with structural 3D illustrations
+
+const IsometricRevenue = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+    <path d="M50 20 L90 40 L50 60 L10 40 Z" fill="#E2E8F0" />
+    <path d="M10 40 L50 60 V90 L10 70 Z" fill="#CBD5E1" />
+    <path d="M90 40 L50 60 V90 L90 70 Z" fill="#94A3B8" />
+    {/* Red Indicator Slice */}
+    <path d="M50 20 L90 40 L90 45 L50 25 Z" fill="#F43F5E" className="opacity-80" />
+    <path d="M50 20 L10 40 L10 45 L50 25 Z" fill="#BE123C" className="opacity-80" />
+  </svg>
+)
+
+const IsometricCost = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+    {/* Bottom Coin */}
+    <ellipse cx="50" cy="75" rx="35" ry="15" fill="#94A3B8" />
+    <path d="M15 75 A35 15 0 0 0 85 75 V65 A35 15 0 0 1 15 65 Z" fill="#64748B" />
+    <ellipse cx="50" cy="65" rx="35" ry="15" fill="#CBD5E1" />
+    
+    {/* Middle Coin */}
+    <path d="M15 55 A35 15 0 0 0 85 55 V45 A35 15 0 0 1 15 45 Z" fill="#64748B" />
+    <ellipse cx="50" cy="45" rx="35" ry="15" fill="#E2E8F0" />
+    
+    {/* Top Coin (Accent) */}
+    <path d="M15 35 A35 15 0 0 0 85 35 V25 A35 15 0 0 1 15 25 Z" fill="#D97706" />
+    <ellipse cx="50" cy="25" rx="35" ry="15" fill="#F59E0B" />
+  </svg>
+)
+
+const IsometricMultiplier = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
+    {/* Base Block */}
+    <path d="M20 40 L50 55 L80 40 L50 25 Z" fill="#E2E8F0" />
+    <path d="M20 40 L50 55 V85 L20 70 Z" fill="#94A3B8" />
+    <path d="M80 40 L50 55 V85 L80 70 Z" fill="#CBD5E1" />
+    
+    {/* Floating Top Block */}
+    <path d="M20 20 L50 35 L80 20 L50 5 Z" fill="#3B82F6" className="animate-hover-float" />
+    <path d="M20 20 L50 35 V45 L20 30 Z" fill="#2563EB" className="animate-hover-float" />
+    <path d="M80 20 L50 35 V45 L80 30 Z" fill="#1D4ED8" className="animate-hover-float" />
+  </svg>
+)
+
+// --- CHAT DEMO BOX (Technical/Structural Look) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -101,7 +146,7 @@ const DemoChatContent = () => {
         const parts = text.split(key)
         return (
           <span>
-            <span className="font-bold text-rose-500">{key}</span>
+            <span className="font-bold text-slate-900 bg-slate-100 px-1 rounded">{key}</span>
             {parts[1]}
           </span>
         )
@@ -111,46 +156,37 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[500px] group mx-auto perspective-1000">
-      {/* Decorative Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 rounded-3xl blur-lg opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+    <div className="relative w-full max-w-[500px] group mx-auto">
+      {/* Structural Shadow instead of Glow */}
+      <div className="absolute top-4 left-4 w-full h-full bg-slate-200 rounded-xl -z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:translate-y-1"></div>
       
-      <div className="flex flex-col h-[420px] w-full bg-white/60 backdrop-blur-2xl border border-white/40 rounded-2xl shadow-2xl relative z-10 overflow-hidden ring-1 ring-black/5 transform-gpu transition-transform duration-500 group-hover:scale-[1.005]">
+      <div className="flex flex-col h-[420px] w-full bg-white border-2 border-slate-900 rounded-xl relative z-10 overflow-hidden">
         
-        {/* Header */}
-        <div className="h-12 border-b border-black/5 flex items-center px-4 justify-between bg-white/40">
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5 opacity-80">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-            </div>
-            <div className="h-4 w-[1px] bg-black/5 mx-1"></div>
-            <span className="font-semibold text-slate-700 text-xs tracking-tight flex items-center gap-1">
-              protocol<span className="text-blue-600">LM</span>
-              <span className="px-1.5 py-0.5 rounded-[4px] bg-blue-50/80 text-[8px] font-bold text-blue-600 uppercase tracking-wider ml-1 border border-blue-100">Beta</span>
-            </span>
+        {/* Technical Header */}
+        <div className="h-10 border-b-2 border-slate-100 flex items-center px-4 justify-between bg-slate-50">
+          <div className="flex items-center gap-2">
+             <div className="w-3 h-3 bg-slate-900 rounded-sm"></div>
+             <span className="font-mono text-[10px] font-bold text-slate-900 uppercase tracking-widest">
+               Protocol_LM<span className="text-blue-600">_Beta_v1.0</span>
+             </span>
           </div>
           <div className="flex items-center gap-2">
-             <div className="relative">
-                <span className="absolute w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75"></span>
-                <span className="relative w-1.5 h-1.5 bg-emerald-500 rounded-full block shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-             </div>
-             <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Live</span>
+             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+             <span className="font-mono text-[9px] font-bold text-slate-400 uppercase">Sys_Online</span>
           </div>
         </div>
 
         {/* Chat Area */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-4 space-y-5 custom-scroll bg-gradient-to-b from-transparent to-white/20"
+          className="flex-1 overflow-y-auto p-4 space-y-5 custom-scroll bg-[#F8FAFC]"
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center space-y-3 opacity-60">
-              <div className="w-14 h-14 rounded-2xl bg-white/80 border border-blue-100/50 flex items-center justify-center shadow-sm">
-                 <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin"/>
+            <div className="h-full flex flex-col items-center justify-center space-y-3 opacity-40">
+              <div className="w-12 h-12 border-2 border-slate-300 rounded-lg flex items-center justify-center border-dashed">
+                 <div className="w-4 h-4 bg-slate-300 rounded-sm animate-spin"/>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">System Ready</p>
+              <p className="font-mono text-[10px] text-slate-500 uppercase tracking-widest">Awaiting Input...</p>
             </div>
           )}
 
@@ -159,13 +195,13 @@ const DemoChatContent = () => {
               key={i}
               className={`flex ${
                 msg.role === 'user' ? 'justify-end' : 'justify-start'
-              } animate-in fade-in slide-in-from-bottom-2 duration-300`}
+              } animate-message-slide`}
             >
               <div
-                className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed shadow-sm backdrop-blur-sm ${
+                className={`max-w-[88%] px-4 py-3 text-[12px] leading-relaxed font-medium ${
                   msg.role === 'user'
-                    ? 'bg-[#0077B6] text-white rounded-tr-sm shadow-blue-500/10'
-                    : 'bg-white/90 text-slate-600 border border-slate-100 rounded-tl-sm'
+                    ? 'bg-slate-900 text-white rounded-l-xl rounded-tr-xl'
+                    : 'bg-white text-slate-600 border border-slate-200 rounded-r-xl rounded-tl-xl shadow-sm'
                 }`}
               >
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
@@ -174,32 +210,28 @@ const DemoChatContent = () => {
           ))}
 
           {isThinking && (
-            <div className="flex justify-start animate-in fade-in duration-300">
-              <div className="bg-white/80 px-3 py-2 rounded-xl rounded-tl-sm border border-slate-100/50 flex gap-2 items-center shadow-sm backdrop-blur-sm">
+            <div className="flex justify-start animate-fade-in">
+              <div className="bg-white px-3 py-2 rounded-r-xl rounded-tl-xl border border-slate-200 flex gap-2 items-center shadow-sm">
+                <span className="font-mono text-[9px] font-bold text-slate-400 uppercase">Processing</span>
                 <div className="flex gap-1">
-                    <div className="w-1 h-1 bg-blue-400 rounded-full animate-[bounce_1s_infinite]" />
-                    <div className="w-1 h-1 bg-blue-400 rounded-full animate-[bounce_1s_infinite_0.1s]" />
-                    <div className="w-1 h-1 bg-blue-400 rounded-full animate-[bounce_1s_infinite_0.2s]" />
+                    <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" />
+                    <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce delay-75" />
+                    <div className="w-1 h-1 bg-slate-400 rounded-full animate-bounce delay-150" />
                 </div>
-                <span className="text-[9px] font-medium text-slate-400 tracking-wide">FDA Code Verification...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Input Area */}
-        <div className="p-3 bg-white/60 backdrop-blur-md border-t border-slate-100/50">
-          <div className="w-full bg-slate-50/50 border border-slate-200/50 rounded-xl px-3 py-2.5 flex items-center gap-3 transition-all focus-within:bg-white focus-within:shadow-sm focus-within:border-blue-200">
-            <div className="flex-1 text-[13px] text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+        <div className="p-3 bg-white border-t border-slate-100">
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 flex items-center gap-3">
+            <div className="flex-1 text-[13px] text-slate-700 font-medium font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+              <span className="text-slate-400 mr-2">{'>'}</span>
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse" />
+                <span className="inline-block w-2 h-4 bg-slate-900 ml-1 animate-pulse" />
               )}
-            </div>
-            <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-blue-600 scale-100 shadow-lg shadow-blue-500/30' : 'bg-slate-200 scale-90'}`}>
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
             </div>
           </div>
         </div>
@@ -232,7 +264,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- AUTH MODAL ---
+// --- AUTH MODAL (Monochromatic) ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -313,49 +345,35 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300" />
-      <div className="w-full max-w-[380px] bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] p-8 rounded-[2rem] relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ring-1 ring-black/5">
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-800 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      <div onClick={onClose} className="absolute inset-0 bg-white/80 backdrop-blur-sm animate-in fade-in duration-300" />
+      <div className="w-full max-w-[380px] bg-white border-2 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] p-8 relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
-        <div className="text-center mb-8">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            {view === 'signup' ? 'Create Account' : 'Welcome Back'}
-          </h2>
-        </div>
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-8 font-mono uppercase">
+          {view === 'signup' ? 'Create_Account' : 'System_Login'}
+        </h2>
 
-        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3 bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md rounded-xl transition-all disabled:opacity-50 mb-6 group">
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          <span className="text-sm font-semibold text-slate-600 group-hover:text-slate-800">Continue with Google</span>
+        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3 bg-white border-2 border-slate-200 hover:border-slate-900 transition-all disabled:opacity-50 mb-6 group">
+           <span className="font-bold text-sm text-slate-700 group-hover:text-slate-900">Continue with Google</span>
         </button>
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white/50 backdrop-blur-xl text-slate-400 font-medium">Or continue with email</span></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-slate-400 font-mono">OR</span></div>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-white/50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Email address" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-white/50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] disabled:opacity-50 mt-2">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3 bg-slate-50 border-2 border-slate-200 focus:border-slate-900 focus:bg-white outline-none text-slate-900 text-sm font-medium placeholder-slate-400 transition-colors" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3 bg-slate-50 border-2 border-slate-200 focus:border-slate-900 focus:bg-white outline-none text-slate-900 text-sm font-medium placeholder-slate-400 transition-colors" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-3 text-sm transition-colors active:translate-y-0.5 uppercase tracking-wide">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
-        {message && (
-          <div className={`mt-4 p-3 text-xs font-medium rounded-xl flex items-center gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-            {message.text}
-          </div>
-        )}
-
         <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-slate-900 font-bold uppercase tracking-wide transition-colors">
             {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
           </button>
         </div>
@@ -364,44 +382,23 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- COOL WIDGET CARDS (Refined) ---
-const StatCard = ({ title, value, sub, type }) => {
+// --- ISOMETRIC STAT CARD ---
+const StatCard = ({ title, value, sub, icon, delay }) => {
   return (
-    <div className="group relative bg-white/50 backdrop-blur-md border border-white/60 p-5 rounded-2xl overflow-hidden hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-2xl hover:shadow-blue-500/10 ring-1 ring-black/5 cursor-default flex flex-col justify-between min-h-[140px]">
-      
-      {/* Noise Texture (Simulated via filtered gradient) */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiLz4KPC9zdmc+')]"></div>
-
-      {/* Internal Gradients */}
-      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[50px] opacity-20 transition-opacity group-hover:opacity-30 z-0
-        ${type === 'danger' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-purple-500'}`} 
-      />
-      
-      {/* Floating Icon */}
-      <div className={`relative z-10 w-9 h-9 rounded-xl flex items-center justify-center mb-3 shadow-inner border border-white/60
-        ${type === 'danger' ? 'bg-rose-50 text-rose-500' : type === 'warning' ? 'bg-amber-50 text-amber-500' : 'bg-purple-50 text-purple-500'}`}>
-        {type === 'danger' && (
-           // Trend Down Arrow
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>
-        )}
-        {type === 'warning' && (
-           // Alert Triangle
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-        )}
-        {type === 'info' && (
-           // Multiplier X
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        )}
+    <div 
+      style={{ animationDelay: `${delay}ms` }}
+      className="group relative bg-white border border-slate-200 p-5 rounded-xl overflow-hidden hover:border-slate-900 transition-all duration-300 cursor-default flex flex-col justify-between min-h-[140px] opacity-0 animate-reveal-card"
+    >
+      {/* 3D Illustration Container */}
+      <div className="absolute top-2 right-2 w-20 h-20 opacity-90 transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-1">
+        {icon}
       </div>
 
-      <div className="relative z-10">
-        <div className="text-3xl font-bold text-slate-800 tracking-tighter mb-1.5">{value}</div>
+      <div className="relative z-10 mt-auto">
+        <div className="text-3xl font-bold text-slate-900 tracking-tighter mb-1 font-mono">{value}</div>
         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{title}</div>
         <div className="text-[10px] font-medium text-slate-400 leading-snug">{sub}</div>
       </div>
-
-      {/* Decorative Bottom Stroke */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-slate-200/50 to-transparent opacity-50"></div>
     </div>
   )
 }
@@ -430,125 +427,126 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-blue-500 selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-slate-900 selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="relative w-full h-full animate-drift">
-          <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.24]" priority />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/30 to-[#F0F9FF]/95" />
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
+      {/* Grid Background (Technical) */}
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{
+        backgroundImage: `linear-gradient(#E2E8F0 1px, transparent 1px), linear-gradient(90deg, #E2E8F0 1px, transparent 1px)`,
+        backgroundSize: '40px 40px',
+        opacity: 0.5
+      }}>
+        {/* Vignette to soften edges */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F8FAFC] via-transparent to-[#F8FAFC]"></div>
       </div>
 
-      {/* Navbar (Tighter Spacing) */}
-      <nav className="fixed top-4 left-0 right-0 z-40 flex justify-center px-4">
-        <div className={`w-full max-w-4xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_2px_12px_rgba(0,0,0,0.03)] rounded-full px-5 py-2.5 flex justify-between items-center transition-all duration-700 ring-1 ring-black/5 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      {/* Navbar (Minimalist/Mono) */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 py-6 bg-gradient-to-b from-[#F8FAFC] to-transparent">
+        <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <span className="text-base font-bold tracking-tight text-slate-800">
-              protocol<span className="text-blue-600">LM</span>
+            <div className="w-4 h-4 bg-slate-900" />
+            <span className="text-base font-bold tracking-tight text-slate-900 font-mono">
+              protocol<span className="text-slate-400">LM</span>
             </span>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => router.push('/pricing')} className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-wide">Pricing</button>
-            <div className="h-3 w-[1px] bg-slate-200"></div>
-            <button onClick={() => openAuth('login')} className="text-xs font-bold text-slate-700 hover:text-blue-600 transition-colors uppercase tracking-wide">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-slate-900 hover:bg-black text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-lg shadow-slate-900/10 hover:shadow-slate-900/30 active:scale-95 uppercase tracking-wide">
+            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">Pricing</button>
+            <button onClick={() => openAuth('login')} className="text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">Sign In</button>
+            <button onClick={() => openAuth('signup')} className="bg-slate-900 hover:bg-blue-600 text-white px-5 py-2 text-xs font-bold transition-all uppercase tracking-widest">
               Get Started
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section (Lifted Layout) */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-24 pb-8 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 relative z-10 h-screen max-h-[900px] min-h-[600px]">
+      {/* Hero Section */}
+      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-32 pb-8 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 h-screen max-h-[900px] min-h-[600px]">
         
         {/* Left Copy */}
-        <div className={`flex-1 w-full lg:max-w-lg text-center lg:text-left transition-all duration-1000 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left">
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 shadow-sm backdrop-blur-sm">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
-            </span>
-            Available Now
+          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            Operational Status: Online
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tighter leading-[1.05] mb-5">
+          <h1 className={`text-4xl md:text-6xl font-bold text-slate-900 tracking-tighter leading-[1.05] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             Train your team <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">before</span> the inspector arrives.
+            <span className="text-slate-400">before</span> inspection.
           </h1>
 
-          <p className="text-base text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-8 font-medium">
-            Instant, AI-verified answers from <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong> health codes.
+          <p className={`text-base text-slate-500 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            AI-verified compliance for Washtenaw, Wayne, and Oakland County.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start mb-10">
-            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 hover:-translate-y-0.5 tracking-wide">
+          <div className={`flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-12 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-3.5 bg-slate-900 hover:bg-blue-600 text-white font-bold text-sm transition-all hover:-translate-y-1 uppercase tracking-wide">
               Start Free Trial
             </button>
-            <button className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-4 py-3">View Demo</button>
+            <button className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors px-4 uppercase tracking-widest border-b border-transparent hover:border-slate-900 pb-0.5">View Demo</button>
           </div>
 
-          {/* COOL CARDS GRID (Compact & Swapped) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Isometric Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard 
-              type="danger"
+              icon={<IsometricRevenue />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
-              sub="First-year loss after bad grade."
+              sub="Post-bad grade."
+              delay={400}
             />
-            {/* SWAPPED: Incident Cost is now Warning (Amber) */}
             <StatCard 
-              type="warning"
+              icon={<IsometricCost />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
               title="Incident Cost"
-              sub="Legal & labor costs per event."
+              sub="Per major event."
+              delay={550}
             />
-            {/* SWAPPED: Fine Multiplier is now Info (Purple) */}
             <StatCard 
-              type="info"
+              icon={<IsometricMultiplier />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
               title="Fine Multiplier"
-              sub="Escalation for repeat issues."
+              sub="Repeat violations."
+              delay={700}
             />
           </div>
         </div>
 
-        {/* Right: Demo Chat (Slightly shorter to fit above fold) */}
-        <div className={`flex-1 w-full max-w-[500px] flex justify-center perspective-1000 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* Right: Demo Chat (Slide In) */}
+        <div className={`flex-1 w-full max-w-[500px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
           <DemoChatContent />
         </div>
       </div>
 
-      {/* Footer (Minimalist) */}
-      <footer className="w-full py-4 bg-transparent absolute bottom-0 z-20">
-        <div className="flex justify-center items-center gap-6 text-[9px] font-bold text-slate-400 uppercase tracking-widest opacity-60">
-            <a href="/terms" className="hover:text-blue-600 transition-colors">Terms</a>
-            <span>© 2025 protocolLM</span>
-            <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</a>
+      <footer className="w-full py-6 absolute bottom-0 z-20">
+        <div className="flex justify-center items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+            <a href="/terms" className="hover:text-slate-500 transition-colors">Terms</a>
+            <span>Protocol_LM © 2025</span>
+            <a href="/privacy" className="hover:text-slate-500 transition-colors">Privacy</a>
         </div>
       </footer>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        /* Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        .perspective-1000 { perspective: 1000px; }
-        @keyframes drift { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
-      `}</style>
-    </div>
-  )
-}
+        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; }
+        
+        /* Message Slide In */
+        @keyframes messageSlide {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-message-slide { animation: messageSlide 0.3s ease-out forwards; }
 
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
-      <MainContent />
-    </Suspense>
-  )
-}
+        /* Card Reveal */
+        @keyframes revealCard {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-reveal-card { animation: revealCard 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        /* Hover Float for the Blue Cube */
+        @keyframes hoverFloat {
