@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-// --- CHAT DEMO BOX (Premium Optical Glass) ---
+// --- CHAT DEMO BOX (Liquid Glass) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -108,13 +108,13 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2.5rem] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto shadow-[0_40px_100px_-20px_rgba(10,36,99,0.15)] ring-1 ring-white/60 bg-white/60 backdrop-blur-3xl backdrop-saturate-150">
+    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2.5rem] overflow-hidden relative z-0 transform-gpu shrink-0 mx-auto shadow-[0_50px_100px_-20px_rgba(50,50,93,0.15)] ring-1 ring-white/60 bg-white/40 backdrop-blur-3xl backdrop-saturate-200 border-t border-white/50">
       
       {/* Specular Highlight (The "Apple" Shine) */}
-      <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/40 to-transparent pointer-events-none z-0" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/60 to-transparent pointer-events-none z-0" />
       
       {/* Top chrome */}
-      <div className="h-14 border-b border-white/30 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/10 backdrop-blur-md">
+      <div className="h-16 border-b border-white/20 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/20">
         <div className="flex items-center gap-2">
           <span className="font-bold text-[#0A2463] text-sm tracking-tight drop-shadow-sm">
             protocol<span className="text-[#1E96FC]">LM</span>
@@ -134,11 +134,11 @@ const DemoChatContent = () => {
       {/* Chat area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-5 min-h-0 relative z-10 custom-scroll"
+        className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 relative z-10 custom-scroll"
       >
         {!hasStarted && !isTyping && messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-            <div className="w-16 h-16 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5 ring-1 ring-white">
+            <div className="w-16 h-16 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5 ring-1 ring-white">
               <div className="w-8 h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70 text-shadow-sm">
@@ -170,12 +170,12 @@ const DemoChatContent = () => {
 
         {isThinking && (
           <div className="flex justify-start animate-in fade-in zoom-in duration-300 relative z-20">
-            <div className="bg-white/60 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/50 flex gap-2 items-center shadow-lg shadow-blue-900/5 ring-1 ring-white/40">
+            <div className="bg-white/50 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/50 flex gap-2 items-center shadow-lg shadow-blue-900/5 ring-1 ring-white/40">
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" style={{ animationDelay: '100ms' }} />
               <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" style={{ animationDelay: '200ms' }} />
               <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline tracking-tight">
-                Cross-checking local code & FDA Food Code…
+                Cross-checking local code...
               </span>
             </div>
           </div>
@@ -211,7 +211,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp
       const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4) // Smoother easing
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4)
       setCount(easeOutQuart * end)
       if (progress < 1) window.requestAnimationFrame(step)
     }
@@ -267,7 +267,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="w-full max-w-sm bg-white/70 backdrop-blur-3xl backdrop-saturate-150 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] p-8 rounded-[2rem] relative ring-1 ring-white/60">
+      <div className="w-full max-w-sm bg-white/70 backdrop-blur-3xl backdrop-saturate-200 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] p-8 rounded-[2rem] relative ring-1 ring-white/60">
         
         {/* Shine effect */}
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-50" />
@@ -336,19 +336,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 selection:bg-[#1E96FC]/30 selection:text-[#0A2463] flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      {/* NOISE & GRADIENT BACKGROUND */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-         {/* Apple-style subtle noise grain */}
-        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+      
+      {/* --- BACKGROUND STACK (Premium Apple Look) --- */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         
-        {/* Soft, deep gradients */}
-        <div className="absolute top-[-20%] right-[-10%] w-[80vw] h-[80vw] rounded-full bg-blue-200/30 blur-[120px]" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-200/30 blur-[100px]" />
-        <div className="absolute top-[40%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-sky-100/40 blur-[80px]" />
+        {/* 1. Base Mesh Gradients (Aurora Effect) */}
+        {/* Stronger opacity to cut through the light gray bg */}
+        <div className="absolute top-[-50%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.3)_0%,transparent_70%)] blur-[120px]" />
+        <div className="absolute bottom-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] blur-[100px]" />
+        
+        {/* 2. Restored Background Image (Blended Texture) */}
+        {/* If your image fails to load, the gradients above still look great. */}
+        <img 
+          src="/background.png" 
+          alt="" 
+          className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay"
+          onError={(e) => e.target.style.display = 'none'} 
+        />
+
+        {/* 3. Noise Texture (Film Grain) */}
+        <div className="absolute inset-0 opacity-[0.4]" style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          mixBlendMode: 'overlay'
+        }}></div>
       </div>
 
       {/* NAV - Premium Frosted Glass */}
-      <nav className="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center fixed top-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)] transition-all">
+      <nav className="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center fixed top-0 left-0 right-0 z-40 bg-white/60 backdrop-blur-xl backdrop-saturate-200 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)] transition-all">
         <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463] drop-shadow-sm">
             protocol<span className="text-[#1E96FC]">LM</span>
@@ -369,7 +383,7 @@ export default function Home() {
         
         {/* Left Content */}
         <div className={`flex-1 text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/50 border border-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-6 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/40 border border-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mb-6 backdrop-blur-md shadow-sm">
              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
              New: Oakland County Live
           </div>
@@ -387,7 +401,7 @@ export default function Home() {
               <span className="relative z-10">Start 30-Day Free Trial</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
             </button>
-            <button className="px-8 py-4 rounded-full bg-white/50 border border-white/60 text-[#0A2463] font-bold text-sm hover:bg-white transition-all shadow-sm hover:shadow-md backdrop-blur-md">
+            <button className="px-8 py-4 rounded-full bg-white/40 border border-white/60 text-[#0A2463] font-bold text-sm hover:bg-white/60 transition-all shadow-sm hover:shadow-md backdrop-blur-md">
                 View Pricing
             </button>
           </div>
