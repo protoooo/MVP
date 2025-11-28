@@ -238,24 +238,70 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     setMessage(null)
-    setTimeout(() => {
-      setMessage({ type: 'success', text: 'Google sign-in would redirect here!' })
+    try {
+      // This would use Supabase in your real app:
+      // const supabase = createClient()
+      // const { error } = await supabase.auth.signInWithOAuth({
+      //   provider: 'google',
+      //   options: {
+      //     redirectTo: `${window.location.origin}/auth/callback`,
+      //     queryParams: { access_type: 'offline', prompt: 'consent' }
+      //   }
+      // })
+      // if (error) throw error
+      
+      // Demo mode - remove this in production
+      setTimeout(() => {
+        window.location.href = '/auth/callback'
+      }, 500)
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      setMessage({ type: 'error', text: error.message })
       setLoading(false)
-    }, 1000)
+    }
   }
 
-  const handleAuth = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
-    setTimeout(() => {
+
+    try {
       if (view === 'signup') {
+        // This would use Supabase in your real app:
+        // const supabase = createClient()
+        // const { data, error } = await supabase.auth.signUp({
+        //   email,
+        //   password,
+        //   options: {
+        //     emailRedirectTo: `${window.location.origin}/auth/callback`,
+        //     data: { county: 'washtenaw' }
+        //   }
+        // })
+        // if (error) throw error
+        // if (data?.user && !data?.session) {
+        //   setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
+        // } else if (data?.session) {
+        //   window.location.href = '/accept-terms'
+        // }
+        
+        // Demo mode
         setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
       } else {
-        setMessage({ type: 'success', text: 'Sign in successful!' })
+        // This would use Supabase in your real app:
+        // const supabase = createClient()
+        // const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        // if (error) throw error
+        // window.location.href = '/documents'
+        
+        // Demo mode
+        window.location.href = '/documents'
       }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message })
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   if (!isOpen) return null
