@@ -5,39 +5,68 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CUSTOM ISOMETRIC ICONS (Professional, Matte 3D) ---
+// --- 1. CUSTOM ISOMETRIC ICONS (Fixed, Animated, Top-Left) ---
+
+// A clean 3D Ribbon Chart falling downwards
 const IsoChartDown = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
-    <path d="M4 24 L20 36 L36 20 L56 44" fill="none" stroke="#E11D48" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M56 44 L46 44 M56 44 L56 34" fill="none" stroke="#E11D48" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-    {/* 3D Depth Walls */}
-    <path d="M4 24 L20 36 L20 44 L4 32 Z" fill="#FDA4AF" opacity="0.4" />
-    <path d="M20 36 L36 20 L36 28 L20 44 Z" fill="#BE123C" opacity="0.3" />
-    <path d="M36 20 L56 44 L56 52 L36 28 Z" fill="#FDA4AF" opacity="0.4" />
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm overflow-visible">
+    <defs>
+      <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#FB7185" />
+        <stop offset="100%" stopColor="#E11D48" />
+      </linearGradient>
+    </defs>
+    
+    {/* 3D Depth (Side Walls) */}
+    <path d="M4 12 L24 32 L24 40 L4 20 Z" fill="#9F1239" opacity="0.6" />
+    <path d="M24 32 L36 20 L36 28 L24 40 Z" fill="#881337" opacity="0.5" />
+    <path d="M36 20 L60 52 L60 60 L36 28 Z" fill="#9F1239" opacity="0.6" />
+
+    {/* Top Face (The Ribbon) - Animated Draw */}
+    <path 
+      d="M4 12 L24 32 L36 20 L60 52" 
+      fill="none" 
+      stroke="url(#chartGrad)" 
+      strokeWidth="6" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      className="animate-draw-chart"
+      strokeDasharray="100"
+      strokeDashoffset="100"
+    />
   </svg>
 )
 
+// A strong 3D Shield
 const IsoShield = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
-    {/* Inner Face */}
-    <path d="M32 8 L52 16 V32 C52 44 44 54 32 60 C20 54 12 44 12 32 V16 L32 8 Z" fill="#F59E0B" />
-    {/* Side Depth */}
-    <path d="M52 16 L56 18 V34 C56 47 47 58 32 64 V60 C44 54 52 44 52 32 V16 Z" fill="#B45309" />
-    {/* Highlight */}
-    <path d="M32 8 L32 60 C20 54 12 44 12 32 V16 L32 8 Z" fill="#FBBF24" />
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm overflow-visible group-hover:animate-wiggle">
+    {/* Depth Layer */}
+    <path d="M32 6 L56 16 V34 C56 48 46 60 32 64 V60 C44 56 52 46 52 34 V18 L32 10 Z" fill="#B45309" />
+    {/* Main Face */}
+    <path d="M32 6 L52 14 V32 C52 44 44 54 32 60 C20 54 12 44 12 32 V14 L32 6 Z" fill="#F59E0B" />
+    {/* Highlight sheen */}
+    <path d="M32 6 L32 60 C20 54 12 44 12 32 V14 L32 6 Z" fill="#FBBF24" opacity="0.8" />
+    {/* Animated Glint */}
+    <rect x="0" y="0" width="10" height="60" fill="white" opacity="0.2" transform="rotate(45) translate(20, -20)" className="animate-shine" />
   </svg>
 )
 
+// Stacking Risk Blocks
 const IsoBlocks = () => (
-  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm overflow-visible">
     {/* Bottom Block */}
-    <path d="M16 36 L32 44 L48 36 L32 28 Z" fill="#93C5FD" />
-    <path d="M16 36 L32 44 V54 L16 46 Z" fill="#3B82F6" />
-    <path d="M48 36 L32 44 V54 L48 46 Z" fill="#1D4ED8" />
-    {/* Top Block (Floating) */}
-    <path d="M16 16 L32 24 L48 16 L32 8 Z" fill="#93C5FD" className="animate-hover-float" />
-    <path d="M16 16 L32 24 V34 L16 26 Z" fill="#3B82F6" className="animate-hover-float" />
-    <path d="M48 16 L32 24 V34 L48 26 Z" fill="#1D4ED8" className="animate-hover-float" />
+    <g transform="translate(0, 10)">
+      <path d="M16 26 L32 34 L48 26 L32 18 Z" fill="#60A5FA" />
+      <path d="M16 26 L32 34 V44 L16 36 Z" fill="#2563EB" />
+      <path d="M48 26 L32 34 V44 L48 36 Z" fill="#1D4ED8" />
+    </g>
+    
+    {/* Top Block (Floating Animation) */}
+    <g className="animate-hover-float">
+      <path d="M16 10 L32 18 L48 10 L32 2 Z" fill="#93C5FD" />
+      <path d="M16 10 L32 18 V28 L16 20 Z" fill="#3B82F6" />
+      <path d="M48 10 L32 18 V28 L48 20 Z" fill="#1E40AF" />
+    </g>
   </svg>
 )
 
@@ -152,7 +181,7 @@ const DemoChatContent = () => {
       <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-indigo-400 to-cyan-400 rounded-[24px] blur opacity-20 group-hover:opacity-40 transition duration-1000 animate-pulse-slow"></div>
       
       {/* 2. Main Glass Container */}
-      <div className="flex flex-col h-[450px] w-full bg-white/70 backdrop-blur-2xl border-t border-white/60 border-l border-white/30 border-r border-black/5 border-b border-black/5 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
+      <div className="flex flex-col h-[480px] w-full bg-white/70 backdrop-blur-2xl border-t border-white/60 border-l border-white/30 border-r border-black/5 border-b border-black/5 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
         
         {/* Header */}
         <div className="h-12 border-b border-black/5 flex items-center px-5 justify-between bg-white/40 backdrop-blur-sm">
@@ -269,31 +298,32 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 3. COOL STAT CARDS (Isometric SVG Edition) ---
+// --- 3. COOL STAT CARDS (Re-Engineered) ---
 const StatCard = ({ title, value, sub, type, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
-      className="group relative bg-white/60 backdrop-blur-xl border-t border-white/80 border-l border-white/40 border-r border-black/5 border-b border-black/5 p-5 rounded-2xl overflow-hidden hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500 ease-out-spring shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] cursor-default flex flex-col justify-between min-h-[140px] opacity-0 animate-reveal-card"
+      className="group relative bg-white/60 backdrop-blur-xl border-t border-white/80 border-l border-white/40 border-r border-black/5 border-b border-black/5 p-6 rounded-2xl overflow-hidden hover:scale-[1.02] hover:-translate-y-1 transition-all duration-500 ease-out-spring shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] cursor-default flex flex-col h-[150px] opacity-0 animate-reveal-card"
     >
       
-      {/* Dynamic Background Glow */}
+      {/* Background Glow */}
       <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[60px] opacity-10 transition-opacity duration-500 group-hover:opacity-25 z-0
         ${type === 'danger' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'}`} 
       />
       
-      {/* Floating 3D Icon */}
-      <div className="relative z-10 w-12 h-12 mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:-translate-y-1">
+      {/* Floating 3D Icon - PUSHED TO TOP LEFT */}
+      <div className="relative z-10 w-10 h-10 mb-4 self-start transition-transform duration-500 group-hover:scale-105">
         {icon}
       </div>
 
-      <div className="relative z-10">
+      {/* Content - Bottom Aligned */}
+      <div className="relative z-10 mt-auto">
         <div className="text-3xl font-bold text-slate-800 tracking-tighter mb-1.5 drop-shadow-sm">{value}</div>
         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{title}</div>
         <div className="text-[10px] font-medium text-slate-400 leading-snug">{sub}</div>
       </div>
 
-      {/* Glass Shine Effect */}
+      {/* Glass Shine */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-50 pointer-events-none"></div>
     </div>
   )
@@ -453,13 +483,13 @@ function MainContent() {
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
         
-        {/* Breathing Orbs (Subtle Movement) */}
+        {/* Breathing Orbs */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-[100px] animate-orb-breath-1" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-400/10 blur-[100px] animate-orb-breath-2" />
       </div>
 
-      {/* NAVBAR (Moved higher up: top-2) */}
-      <nav className="fixed top-2 left-0 right-0 z-40 flex justify-center px-4">
+      {/* NAVBAR (Pinned Top) */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 pt-4">
         <div className={`w-full max-w-4xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] rounded-full px-5 py-2.5 flex justify-between items-center transition-all duration-1000 ease-out-spring ring-1 ring-black/5 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-base font-bold tracking-tight text-slate-800">
@@ -478,11 +508,11 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Compact / Reduced Padding) */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-16 pb-6 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 relative z-10 h-screen max-h-[850px] min-h-[600px]">
+      {/* HERO SECTION (Shifted Up for Visibility) */}
+      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-10 pb-6 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 relative z-10 h-screen max-h-[850px] min-h-[600px]">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-16 lg:pt-0">
           
           {/* Animated Badge */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-5 shadow-sm backdrop-blur-sm transition-all duration-700 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
@@ -504,15 +534,14 @@ function MainContent() {
             Standardize food safety across your portfolio. Reduce liability and protect your brand equity in <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong>.
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Button (Single Focus) */}
           <div className={`flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start mb-8 transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 hover:-translate-y-1 active:scale-95 tracking-wide">
+            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 hover:-translate-y-1 active:scale-95 tracking-wide">
               Start Free Trial
             </button>
-            <button className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-4 py-3 hover:translate-x-1 duration-300">View Demo →</button>
           </div>
 
-          {/* CARDS GRID (3D Isometric Icons) */}
+          {/* CARDS GRID (Top Left Icons) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard 
               type="danger" 
@@ -541,7 +570,7 @@ function MainContent() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - Bigger) */}
+        {/* RIGHT COLUMN (Demo - Taller) */}
         <div className={`flex-1 w-full max-w-[500px] flex justify-center perspective-1000 transition-all duration-1000 ease-out-spring delay-300 ${mounted ? 'opacity-100 translate-y-0 rotate-x-0' : 'opacity-0 translate-y-12 rotate-x-6'}`}>
           <DemoChatContent />
         </div>
@@ -565,31 +594,24 @@ function MainContent() {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         
-        /* 3D Perspective */
         .perspective-1000 { perspective: 1000px; }
-        
-        /* Spring Physics Easing */
         .ease-out-spring { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
         
-        /* Background Drift */
         @keyframes drift { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
         .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
         
-        /* Message Slide In */
         @keyframes messageSlide {
           0% { opacity: 0; transform: translateY(10px) scale(0.95); }
           100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .animate-message-slide { animation: messageSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
-        /* Card Reveal */
         @keyframes revealCard {
           0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
           100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
         .animate-reveal-card { animation: revealCard 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-        /* Orb Breathing */
         @keyframes orbBreath1 {
           0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.1; }
           50% { transform: translate(20px, 30px) scale(1.1); opacity: 0.2; }
@@ -601,12 +623,24 @@ function MainContent() {
         .animate-orb-breath-1 { animation: orbBreath1 10s ease-in-out infinite; }
         .animate-orb-breath-2 { animation: orbBreath2 12s ease-in-out infinite reverse; }
         
-        /* Hover Float for Icon */
         @keyframes hoverFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-3px); }
         }
-        .group:hover .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
+        .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
+
+        @keyframes drawChart {
+           0% { stroke-dashoffset: 100; }
+           100% { stroke-dashoffset: 0; }
+        }
+        .group:hover .animate-draw-chart { animation: drawChart 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        @keyframes shine {
+          0% { transform: rotate(45deg) translate(20px, -20px); opacity: 0; }
+          50% { opacity: 0.5; }
+          100% { transform: rotate(45deg) translate(-20px, 20px); opacity: 0; }
+        }
+        .group:hover .animate-shine { animation: shine 0.8s ease-out forwards; }
       `}</style>
     </div>
   )
