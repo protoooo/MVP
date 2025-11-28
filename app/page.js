@@ -1,9 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { createClient } from '@/lib/supabase-browser'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
+import { useState, useEffect, useRef } from 'react'
 
 // --- CHAT DEMO BOX (Fixed Dimensions & Mobile Optimized) ---
 const DemoChatContent = () => {
@@ -237,8 +234,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
-  const supabase = createClient()
-  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -248,65 +243,26 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     setMessage(null)
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { access_type: 'offline', prompt: 'consent' }
-        }
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Google sign-in error:', error)
-      setMessage({ type: 'error', text: error.message })
+    // Simulated for demo
+    setTimeout(() => {
+      setMessage({ type: 'success', text: 'Google sign-in would redirect here!' })
       setLoading(false)
-    }
+    }, 1000)
   }
 
-  const handleAuth = async (e) => {
+  const handleAuth = (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
-
-    try {
+    // Simulated for demo
+    setTimeout(() => {
       if (view === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { county: 'washtenaw' }
-          }
-        })
-        if (error) throw error
-        if (data?.user && !data?.session) {
-          setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
-        } else if (data?.session) {
-          window.location.href = '/accept-terms'
-        }
+        setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', data.session.user.id)
-          .single()
-
-        if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-          window.location.href = '/accept-terms'
-        } else if (profile?.is_subscribed) {
-          window.location.href = '/documents'
-        } else {
-          window.location.href = '/pricing'
-        }
+        setMessage({ type: 'success', text: 'Sign in successful!' })
       }
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message })
-    } finally {
       setLoading(false)
-    }
+    }, 1000)
   }
 
   if (!isOpen) return null
@@ -335,13 +291,13 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           <div className="relative flex justify-center text-xs"><span className="px-2 bg-white text-slate-500">Or continue with email</span></div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password (min 6 characters)" />
-          <button type="submit" disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+        <div className="space-y-4">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3.5 bg-[#F0F9FF] border border-[#90E0EF] focus:bg-white focus:border-[#0077B6] outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-lg" placeholder="Password (min 6 characters)" />
+          <button onClick={handleAuth} disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-lg text-xs uppercase tracking-widest transition-all font-mono shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
-        </form>
+        </div>
 
         {message && (
           <div className={`mt-4 p-3 text-xs font-sans border rounded-lg ${message.type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
@@ -360,22 +316,14 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 }
 
 // --- MAIN CONTENT ---
-function MainContent() {
+export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authView, setAuthView] = useState('login')
-  const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     setMounted(true)
-    const authParam = searchParams.get('auth')
-    if (authParam) {
-      setAuthView(authParam)
-      setShowAuth(true)
-      window.history.replaceState({}, '', '/')
-    }
-  }, [searchParams])
+  }, [])
 
   const openAuth = (view) => {
     setAuthView(view)
@@ -387,7 +335,7 @@ function MainContent() {
       {/* BACKGROUND */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="relative w-full h-full animate-drift">
-          <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.24]" priority />
+          <div className="absolute inset-0 bg-gradient-radial from-[#90E0EF]/10 via-transparent to-transparent" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
       </div>
@@ -400,7 +348,7 @@ function MainContent() {
           </h1>
         </div>
         <div className={`flex gap-2 md:gap-6 text-[10px] md:text-sm font-bold uppercase tracking-widest items-center transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <button onClick={() => router.push('/pricing')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
+          <button onClick={() => alert('Pricing page')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Pricing</button>
           <button onClick={() => openAuth('login')} className="px-2 md:px-4 py-2 text-slate-500 hover:text-[#0077B6] transition-colors">Sign In</button>
           <button onClick={() => openAuth('signup')} className="px-3 md:px-5 py-2 md:py-2.5 text-[#0077B6] border border-[#0077B6]/30 bg-white rounded-lg hover:bg-[#0077B6] hover:text-white transition-all active:scale-95 shadow-sm">
             <span className="hidden md:inline">Get protocolLM</span>
@@ -411,13 +359,13 @@ function MainContent() {
 
       {/* HERO */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-center pt-24 pb-8 md:pt-16 md:pb-12 gap-10 md:gap-16 relative z-10">
-        {/* Left */}
-        <div className={`flex-1 text-center md:text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        {/* Left - NOW LEFT-ALIGNED ON MOBILE */}
+        <div className={`flex-1 text-left transition-all duration-1000 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h2 className="text-3xl md:text-5xl font-bold text-[#023E8A] tracking-tight leading-tight mb-4 md:mb-6">
             Train Your Team Before<br className="hidden md:block" /> The Health Department Arrives.
           </h2>
 
-          <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mx-auto md:mx-0 mb-4 md:mb-5">
+          <p className="text-base md:text-lg text-slate-600 font-semibold leading-relaxed max-w-xl mb-4 md:mb-5">
             protocol<span className="text-[#0077B6] font-bold">LM</span> gives your team instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> rules, so they handle violations correctly before an inspector or customer ever sees them.
           </p>
 
@@ -457,7 +405,7 @@ function MainContent() {
           </div>
         </div>
 
-        {/* Right: demo chat */}
+        {/* Right: demo chat - STAYS CENTERED */}
         <div className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <DemoChatContent />
         </div>
@@ -485,13 +433,5 @@ function MainContent() {
         .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
       `}</style>
     </div>
-  )
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div></div>}>
-      <MainContent />
-    </Suspense>
   )
 }
