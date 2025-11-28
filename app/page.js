@@ -5,42 +5,73 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. PRECISION TECHNICAL ICONS (Not Vibe-Coded) ---
-// High-contrast, flat, regulatory aesthetic.
+// --- 1. ANIMATED MICHIGAN MAP (The "Tracing" Background) ---
+const AnimatedMichiganMap = () => {
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-[0.07]">
+      <svg viewBox="0 0 600 600" className="w-[140%] h-[140%] md:w-[100%] md:h-[100%] stroke-[#00274C] fill-none" style={{ strokeWidth: '1.5', strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+        {/* Upper Peninsula */}
+        <path
+          d="M50,180 C80,170 120,160 160,150 C180,145 200,130 220,140 C240,150 260,160 280,155 C300,150 320,170 340,175 C360,180 350,190 330,195 C300,200 250,210 200,205 C150,200 100,195 50,180 Z"
+          className="animate-draw-map"
+        />
+        {/* Lower Peninsula (The Mitten) */}
+        <path 
+          d="M230,260 C250,260 270,250 290,240 C310,230 330,240 350,260 C370,280 380,320 380,350 C380,380 400,380 410,390 C420,400 380,420 360,430 C340,440 320,450 300,450 C250,450 220,440 200,420 C180,400 180,350 180,320 C180,290 210,260 230,260 Z"
+          className="animate-draw-map"
+          style={{ animationDelay: '0.5s' }}
+        />
+        {/* Thumb */}
+        <path
+          d="M380,350 C400,340 410,330 420,340 C430,350 420,370 410,390"
+          className="animate-draw-map"
+          style={{ animationDelay: '1s' }}
+        />
+      </svg>
+    </div>
+  )
+}
 
-const IconRevenue = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-rose-600">
-    {/* Frame */}
-    <rect x="2" y="2" width="44" height="44" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
-    {/* Chart Line */}
-    <path d="M10 16 L20 16 L28 26 L38 34" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" />
-    {/* Arrow Head */}
-    <path d="M38 34 L38 24 M38 34 L28 34" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" />
-    {/* Grid Lines (Subtle) */}
-    <path d="M10 24 H20 M28 24 H38" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" opacity="0.4" />
+// --- 2. PROFESSIONAL 3D ICONS (Matte Finish) ---
+
+const IsoChart = () => (
+  <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
+    {/* Base Grid */}
+    <path d="M10 50 L40 65 L70 50 L40 35 Z" fill="#E2E8F0" opacity="0.6" />
+    {/* The Crash Ribbon (Red) */}
+    <path d="M10 20 L25 30 V38 L10 28 Z" fill="#FDA4AF" />
+    <path d="M25 30 L45 25 L45 33 L25 38 Z" fill="#F43F5E" />
+    <path d="M45 25 L70 55 L70 63 L45 33 Z" fill="#BE123C" />
+    <path d="M10 20 L25 30 L45 25 L70 55" fill="none" stroke="#9F1239" strokeWidth="1.5" />
   </svg>
 )
 
-const IconIncident = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-amber-500">
-    {/* Warning Triangle Shape */}
-    <path d="M24 4 L44 42 H4 Z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-    {/* Dollar Sign (The Risk) */}
-    <path d="M24 14 V34 M20 18 H24 C27 18 28 20 28 22 C28 24 27 26 24 26 H20 C17 26 16 28 16 30 C16 32 17 34 24 34 H28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+const IsoShield = () => (
+  <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
+    {/* Shield Body */}
+    <path d="M40 10 L65 20 V40 C65 55 55 68 40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#D97706" transform="translate(0,4)" />
+    <path d="M40 10 L65 20 V40 C65 55 55 68 40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#F59E0B" />
+    {/* Reflection */}
+    <path d="M40 10 L40 75 C25 68 15 55 15 40 V20 L40 10 Z" fill="#FBBF24" opacity="0.3" />
   </svg>
 )
 
-const IconMultiplier = () => (
-  <svg viewBox="0 0 48 48" className="w-full h-full text-indigo-500">
-    {/* Technical Crosshair/Multiplier */}
-    <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="2.5" />
-    <path d="M14 14 L34 34 M34 14 L14 34" stroke="currentColor" strokeWidth="3" strokeLinecap="square" />
-    {/* Ticks */}
-    <path d="M24 2 V6 M24 42 V46 M2 24 H6 M42 24 H46" stroke="currentColor" strokeWidth="2" />
+const IsoBlocks = () => (
+  <svg viewBox="0 0 80 80" className="w-full h-full drop-shadow-sm overflow-visible">
+    {/* Bottom Block */}
+    <path d="M20 45 L40 55 L60 45 L40 35 Z" fill="#93C5FD" />
+    <path d="M20 45 L40 55 V65 L20 55 Z" fill="#3B82F6" />
+    <path d="M60 45 L40 55 V65 L60 55 Z" fill="#1D4ED8" />
+    {/* Floating Top Block */}
+    <g className="animate-hover-float">
+      <path d="M20 20 L40 30 L60 20 L40 10 Z" fill="#BFDBFE" />
+      <path d="M20 20 L40 30 V40 L20 30 Z" fill="#60A5FA" />
+      <path d="M60 20 L40 30 V40 L60 30 Z" fill="#2563EB" />
+    </g>
   </svg>
 )
 
-// --- 2. CHAT DEMO (Industrial Terminal Look) ---
+// --- 3. CHAT DEMO (Michigan Navy Header) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -136,7 +167,7 @@ const DemoChatContent = () => {
         const parts = text.split(key)
         return (
           <span>
-            <span className="font-bold text-rose-400 border-b border-rose-400/30">{key}</span>
+            <span className="font-bold text-rose-600">{key}</span>
             {parts[1]}
           </span>
         )
@@ -146,39 +177,43 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[550px] group mx-auto">
-      {/* Heavy Steel Shadow */}
-      <div className="absolute top-2 left-2 w-full h-full bg-black/40 rounded-sm -z-10"></div>
+    <div className="relative w-full max-w-[500px] group mx-auto perspective-1000">
+      {/* 1. Behind Glow */}
+      <div className="absolute -inset-1 bg-gradient-to-br from-[#00274C]/20 to-blue-200/20 rounded-[20px] blur-xl opacity-0 group-hover:opacity-40 transition duration-1000"></div>
       
-      {/* Main Container - Dark Terminal Style */}
-      <div className="flex flex-col h-[480px] w-full bg-[#1e293b] border-2 border-slate-600 rounded-sm relative z-10 overflow-hidden shadow-2xl">
+      {/* 2. Main Glass Container */}
+      <div className="flex flex-col h-[480px] w-full bg-white/70 backdrop-blur-2xl border border-white/60 rounded-[18px] shadow-[0_25px_50px_-12px_rgba(0,39,76,0.15)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
         
-        {/* Header - Industrial Label */}
-        <div className="h-10 border-b-2 border-slate-700 flex items-center px-4 justify-between bg-[#0f172a]">
+        {/* Header - Michigan Navy */}
+        <div className="h-12 border-b border-slate-100 flex items-center px-5 justify-between bg-white/60">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]" />
-            <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-              LIVE_FEED // MI_CODE_DB
+            <div className="flex gap-1.5 opacity-80">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#00274C]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FFCB05]" /> {/* Maize */}
+            </div>
+            <div className="h-4 w-[1px] bg-slate-300 mx-1"></div>
+            <span className="font-bold text-[#00274C] text-[11px] tracking-tight flex items-center gap-2">
+              protocol<span className="text-[#00274C] font-extrabold">LM</span>
+              <span className="px-1.5 py-px rounded bg-[#00274C]/5 text-[9px] font-bold text-[#00274C] uppercase tracking-wider border border-[#00274C]/10">MI-Code v25</span>
             </span>
           </div>
-          <div className="flex items-center gap-1 opacity-50">
-             <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
-             <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
-             <div className="w-1 h-1 bg-slate-500 rounded-full"></div>
+          <div className="flex items-center gap-2">
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-sm"></div>
+             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Online</span>
           </div>
         </div>
 
         {/* Chat Feed */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-5 space-y-5 custom-scroll bg-[#1e293b]"
+          className="flex-1 overflow-y-auto p-5 space-y-5 custom-scroll bg-gradient-to-b from-white to-slate-50/50"
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-30">
-              <div className="w-12 h-12 border-2 border-dashed border-slate-500 rounded flex items-center justify-center">
-                 <div className="w-4 h-4 bg-slate-500 rounded-sm animate-spin"/>
+            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-50 animate-fade-in-up">
+              <div className="w-14 h-14 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center">
+                 <div className="w-6 h-6 border-2 border-slate-200 border-t-[#00274C] rounded-full animate-spin"/>
               </div>
-              <p className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">System Online</p>
+              <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase">System Ready</p>
             </div>
           )}
 
@@ -190,10 +225,10 @@ const DemoChatContent = () => {
               } animate-message-slide`}
             >
               <div
-                className={`max-w-[90%] px-4 py-3 text-xs font-mono leading-relaxed shadow-sm border-l-2 ${
+                className={`max-w-[90%] px-4 py-3 rounded-xl text-[13px] leading-relaxed shadow-sm backdrop-blur-md border ${
                   msg.role === 'user'
-                    ? 'bg-[#334155] text-white border-blue-500 rounded-r-sm'
-                    : 'bg-[#0f172a] text-slate-300 border-emerald-500 rounded-r-sm'
+                    ? 'bg-[#00274C] text-white rounded-tr-sm border-[#00274C]' // Michigan Navy User Bubble
+                    : 'bg-white text-slate-700 border-slate-200 rounded-tl-sm'
                 }`}
               >
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
@@ -203,21 +238,20 @@ const DemoChatContent = () => {
 
           {isThinking && (
             <div className="flex justify-start animate-fade-in">
-              <div className="bg-[#0f172a] px-3 py-2 border-l-2 border-emerald-500/50 flex gap-2 items-center">
-                <span className="text-[10px] font-mono text-emerald-500 animate-pulse">PROCESSING_QUERY_</span>
+              <div className="bg-white/80 px-4 py-2.5 rounded-xl rounded-tl-sm border border-slate-100 flex gap-2 items-center shadow-sm">
+                <span className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">Processing...</span>
               </div>
             </div>
           )}
         </div>
 
         {/* Input Field */}
-        <div className="p-3 bg-[#0f172a] border-t-2 border-slate-700">
-          <div className="w-full bg-black/20 border border-slate-600 rounded-sm px-3 py-2.5 flex items-center gap-3">
-            <span className="text-emerald-500 font-mono text-xs">{'>'}</span>
-            <div className="flex-1 text-xs text-slate-300 font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+        <div className="p-4 bg-white/80 backdrop-blur-lg border-t border-white/60">
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center gap-3 transition-all focus-within:bg-white focus-within:shadow-md focus-within:border-[#00274C] focus-within:ring-1 focus-within:ring-[#00274C]/20">
+            <div className="flex-1 text-[13px] text-slate-800 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-2 h-4 bg-emerald-500 ml-1 animate-pulse" />
+                <span className="inline-block w-0.5 h-4 bg-[#00274C] ml-0.5 animate-pulse" />
               )}
             </div>
           </div>
@@ -227,7 +261,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 3. UTILS ---
+// --- 4. UTILS ---
 const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 }) => {
   const [count, setCount] = useState(0)
 
@@ -251,39 +285,29 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 4. EXECUTIVE STAT CARDS (The "Paperwork" Look) ---
-// These look like official documents or high-contrast labels.
+// --- 5. STAT CARDS (High-End White & Navy) ---
 const StatCard = ({ title, value, sub, type, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
-      className="relative bg-white h-[140px] flex flex-col p-0 overflow-hidden opacity-0 animate-reveal-card shadow-lg group hover:-translate-y-1 transition-transform duration-300"
+      className="group relative bg-white/80 backdrop-blur-xl border border-white/60 p-5 rounded-xl overflow-hidden hover:bg-white transition-all duration-500 ease-out-spring shadow-[0_2px_10px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-12px_rgba(0,39,76,0.1)] hover:-translate-y-1 cursor-default flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card"
     >
-      {/* Top Warning Strip */}
-      <div className={`h-1.5 w-full ${type === 'danger' ? 'bg-rose-600' : type === 'warning' ? 'bg-amber-500' : 'bg-indigo-600'}`} />
       
-      <div className="p-5 flex-1 flex flex-col justify-between relative">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</div>
-            <div className="text-3xl font-bold text-slate-900 tracking-tighter">{value}</div>
-          </div>
-          {/* Icon stamped in top right */}
-          <div className="w-10 h-10 opacity-90 grayscale group-hover:grayscale-0 transition-all duration-300">
-            {icon}
-          </div>
-        </div>
-        
-        <div className="text-[10px] font-bold text-slate-500 border-t border-slate-100 pt-3 mt-1 flex items-center gap-1">
-          <span className={`w-1.5 h-1.5 rounded-full ${type === 'danger' ? 'bg-rose-600' : type === 'warning' ? 'bg-amber-500' : 'bg-indigo-600'}`}></span>
-          {sub}
-        </div>
+      {/* 3D Icon - Pinned Top Left */}
+      <div className="relative z-10 w-14 h-14 -ml-2 -mt-2 self-start transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-1">
+        {icon}
+      </div>
+
+      <div className="relative z-10 mt-auto pl-1">
+        <div className="text-3xl font-bold text-[#00274C] tracking-tighter mb-1">{value}</div>
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">{title}</div>
+        <div className="text-[10px] font-medium text-slate-400 leading-snug">{sub}</div>
       </div>
     </div>
   )
 }
 
-// --- 5. AUTH MODAL ---
+// --- 6. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -364,39 +388,39 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-300" />
-      {/* Modal - Square edges, heavy contrast */}
-      <div className="w-full max-w-[400px] bg-white shadow-2xl p-8 relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <div className="absolute top-0 left-0 w-full h-1 bg-slate-900"></div>
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors">
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+      <div onClick={onClose} className="absolute inset-0 bg-[#00274C]/30 backdrop-blur-md animate-in fade-in duration-300" />
+      <div className="w-full max-w-[400px] bg-white backdrop-blur-xl shadow-2xl p-8 rounded-[16px] relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 border border-slate-100">
+        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-[#00274C] transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-8 uppercase font-mono border-b border-slate-100 pb-4">
-          {view === 'signup' ? 'Access Request' : 'Authorized Login'}
-        </h2>
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold text-[#00274C] tracking-tight">
+            {view === 'signup' ? 'Create Account' : 'Welcome Back'}
+          </h2>
+        </div>
 
-        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-slate-50 border border-slate-300 hover:bg-slate-100 hover:border-slate-400 transition-all disabled:opacity-50 mb-6">
+        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border border-slate-200 hover:border-[#00274C] hover:shadow-md rounded-lg transition-all disabled:opacity-50 mb-6 group">
           <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          <span className="text-sm font-bold text-slate-700">Continue with Google</span>
+          <span className="text-sm font-semibold text-slate-700">Continue with Google</span>
         </button>
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-slate-400 font-mono uppercase tracking-widest">Or</span></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-slate-400 font-medium">Or continue with email</span></div>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 transition-all" placeholder="EMAIL_ADDRESS" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 outline-none text-slate-900 text-sm font-mono placeholder-slate-400 transition-all" placeholder="PASSWORD" />
-          <button type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 text-xs uppercase tracking-widest transition-all shadow-lg active:translate-y-0.5 disabled:opacity-50 mt-4">
-            {loading ? 'Processing...' : view === 'signup' ? 'Initialize Account' : 'Secure Login'}
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-slate-50 border border-slate-200 focus:border-[#00274C] focus:bg-white outline-none text-slate-900 text-sm font-medium placeholder-slate-400 rounded-lg transition-all" placeholder="Email address" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-slate-50 border border-slate-200 focus:border-[#00274C] focus:bg-white outline-none text-slate-900 text-sm font-medium placeholder-slate-400 rounded-lg transition-all" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-[#00274C] hover:bg-[#003865] text-white font-bold py-3.5 rounded-lg text-sm transition-all shadow-lg shadow-[#00274C]/20 active:scale-[0.98] disabled:opacity-50 mt-2">
+            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs font-bold text-slate-500 hover:text-slate-900 uppercase tracking-wide transition-colors">
-            {view === 'signup' ? 'Have an account? Login' : 'Need Access? Request Account'}
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-[#00274C] font-medium transition-colors">
+            {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
           </button>
         </div>
       </div>
@@ -404,7 +428,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 6. LAYOUT ---
+// --- 7. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -428,79 +452,68 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0B1120] font-sans text-slate-100 selection:bg-rose-600 selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-[#00274C] selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (Dark Industrial) */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        {/* The Base Texture */}
-        <div className="absolute inset-0 bg-[#0B1120]"></div>
-        {/* Your Image, blended darkly */}
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay">
-           <Image src="/background.png" alt="Background" fill className="object-cover" priority />
-        </div>
-        {/* Technical Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        {/* Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-transparent to-[#0B1120]/80"></div>
-      </div>
+      {/* BACKGROUND (Animated Tracing Map) */}
+      <AnimatedMichiganMap />
 
       {/* NAVBAR (High & Tight) */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 bg-[#0B1120]/80 border-b border-white/5 backdrop-blur-sm">
-        <div className={`w-full max-w-7xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-6 h-6 border-2 border-white flex items-center justify-center">
-               <div className="w-2 h-2 bg-white"></div>
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-3">
+        <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
+            <div className="w-5 h-5 bg-[#00274C] rounded flex items-center justify-center">
+               <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
-            <span className="text-sm font-bold tracking-tight text-white font-mono">
-              PROTOCOL_LM
+            <span className="text-sm font-bold tracking-tight text-[#00274C]">
+              protocol<span className="text-[#00274C] opacity-70">LM</span>
             </span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest">Pricing</button>
-            <button onClick={() => openAuth('login')} className="text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-white hover:bg-slate-200 text-black px-5 py-2 text-xs font-bold transition-all uppercase tracking-widest">
+          <div className="hidden md:flex items-center gap-6">
+            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-slate-500 hover:text-[#00274C] transition-colors uppercase tracking-wide">Pricing</button>
+            <button onClick={() => openAuth('login')} className="text-xs font-bold text-slate-500 hover:text-[#00274C] transition-colors uppercase tracking-wide">Log in</button>
+            <button onClick={() => openAuth('signup')} className="bg-[#00274C] hover:bg-[#003865] text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 uppercase tracking-wide">
               Get Started
             </button>
           </div>
         </div>
       </nav>
 
-      {/* HERO SECTION (Shifted Up drastically) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 h-[calc(100vh-64px)] min-h-[600px]">
+      {/* HERO SECTION (Shifted Up) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 pb-0 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-24 relative z-10 h-screen max-h-[850px] min-h-[600px]">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-0">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-10 lg:pt-0">
           
-          {/* Compliance Status Badge */}
-          <div className={`inline-flex items-center gap-3 px-0 py-1 text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-widest mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            Compliance Engine: Active
+          {/* Badge */}
+          <div className={`inline-flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-full text-slate-600 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
+            <span className="w-1.5 h-1.5 bg-[#00274C] rounded-full animate-pulse"></span>
+            Local Compliance Engine
           </div>
 
-          {/* Headline (Strong, White) */}
-          <h1 className={`text-4xl md:text-6xl font-bold text-white tracking-tighter leading-[1.05] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+          {/* Headline */}
+          <h1 className={`text-4xl md:text-6xl font-bold text-[#00274C] tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             <span className="text-slate-400">before</span> the inspector arrives.
           </h1>
 
-          {/* Subheader (Clean, Legible) */}
-          <p className={`text-sm md:text-base text-slate-400 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant, AI-verified answers from <strong className="text-white">Washtenaw, Wayne, and Oakland County</strong> health codes. Standardize food safety and protect brand equity.
+          {/* Subheader */}
+          <p className={`text-base text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-8 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            Instant, AI-verified answers from <strong className="text-[#00274C]">Washtenaw, Wayne, and Oakland County</strong> health codes. Standardize food safety and protect brand equity.
           </p>
 
           {/* CTA */}
-          <div className={`flex flex-col sm:flex-row items-center gap-6 justify-center lg:justify-start mb-12 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-[0.15em] transition-all shadow-[0_0_20px_-5px_rgba(225,29,72,0.5)] hover:shadow-[0_0_30px_-5px_rgba(225,29,72,0.6)]">
+          <div className={`flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-3.5 bg-[#00274C] hover:bg-[#003865] text-white rounded-lg font-bold text-sm transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 tracking-wide">
               Start Free Trial
             </button>
           </div>
 
-          {/* STAT CARDS (The "Briefing" Look) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* CARDS GRID (Top Left Icons) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard 
               type="danger" 
-              icon={<IconRevenue />}
+              icon={<IsoChart />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
               sub="First-year loss."
@@ -508,7 +521,7 @@ function MainContent() {
             />
             <StatCard 
               type="warning" 
-              icon={<IconIncident />}
+              icon={<IsoShield />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
               title="Incident Cost"
               sub="Legal & labor."
@@ -516,7 +529,7 @@ function MainContent() {
             />
             <StatCard 
               type="info" 
-              icon={<IconMultiplier />}
+              icon={<IsoBlocks />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
               title="Fine Multiplier"
               sub="Repeat issues."
@@ -525,8 +538,8 @@ function MainContent() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - The "Black Box") */}
-        <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
+        {/* RIGHT COLUMN (Demo) */}
+        <div className={`flex-1 w-full max-w-[550px] flex justify-center perspective-1000 transition-all duration-1000 ease-out-spring delay-300 ${mounted ? 'opacity-100 translate-y-0 rotate-x-0' : 'opacity-0 translate-y-12 rotate-x-6'}`}>
           <DemoChatContent />
         </div>
       </div>
@@ -534,21 +547,36 @@ function MainContent() {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; }
+        .custom-scroll::-webkit-scrollbar { width: 3px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .perspective-1000 { perspective: 1000px; }
+        .ease-out-spring { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
         
         @keyframes messageSlide {
-          0% { opacity: 0; transform: translateX(-10px); }
-          100% { opacity: 1; transform: translateX(0); }
+          0% { opacity: 0; transform: translateY(10px) scale(0.95); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        .animate-message-slide { animation: messageSlide 0.3s ease-out forwards; }
+        .animate-message-slide { animation: messageSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
         @keyframes revealCard {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
+          0% { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
-        .animate-reveal-card { animation: revealCard 0.6s ease-out forwards; }
+        .animate-reveal-card { animation: revealCard 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        @keyframes hoverFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .group:hover .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
+
+        /* MAP DRAWING ANIMATION */
+        @keyframes drawMap {
+          0% { stroke-dasharray: 2000; stroke-dashoffset: 2000; opacity: 0; }
+          100% { stroke-dasharray: 2000; stroke-dashoffset: 0; opacity: 1; }
+        }
+        .animate-draw-map { animation: drawMap 4s ease-out forwards; }
       `}</style>
     </div>
   )
@@ -556,7 +584,7 @@ function MainContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0B1120]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
       <MainContent />
     </Suspense>
   )
