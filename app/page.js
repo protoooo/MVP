@@ -121,113 +121,118 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] rounded-[2.5rem] overflow-hidden relative z-0 shrink-0 mx-auto shadow-[0_40px_80px_-20px_rgba(15,23,42,0.4)] ring-1 ring-white/60 bg-white/35 backdrop-blur-3xl backdrop-saturate-200 border border-white/50">
-      {/* Specular Highlight (The "Apple" Shine) */}
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/60 to-transparent pointer-events-none z-0" />
-
-      {/* Top chrome */}
-      <div className="h-16 border-b border-white/20 flex items-center px-6 justify-between shrink-0 relative z-20 bg-white/25">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-[#0A2463] text-sm tracking-tight drop-shadow-sm">
-            protocol<span className="text-[#1E96FC]">LM</span>
-          </span>
-          <span className="hidden md:inline text-[10px] font-semibold text-slate-500/80">
-            Live demo
-          </span>
-        </div>
-        <div className="flex items-center gap-2 bg-white/50 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
-          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-          <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide opacity-80">
-            Online
-          </span>
-        </div>
-      </div>
-
-      {/* Chat area */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 relative z-10 custom-scroll"
-      >
-        {!hasStarted && !isTyping && messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
-            <div className="w-16 h-16 rounded-3xl bg-white/60 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5 ring-1 ring-white">
-              <div className="w-8 h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70 text-shadow-sm">
-              SYSTEM READY
+    <div className="liquid-card flex flex-col h-[400px] md:h-[500px] w-full max-w-[600px] mx-auto relative z-0 shrink-0">
+      {/* Inner content lives on top of glass layers */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Top chrome */}
+        <div className="h-16 border-b border-white/25 flex items-center px-6 justify-between shrink-0 bg-white/15">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#0A2463] text-sm tracking-tight">
+              protocol<span className="text-[#1E96FC]">LM</span>
+            </span>
+            <span className="hidden md:inline text-[10px] font-semibold text-slate-500/80">
+              Live demo
             </span>
           </div>
-        )}
-
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${
-              msg.role === 'user' ? 'justify-end' : 'justify-start'
-            } animate-in fade-in slide-in-from-bottom-3 duration-500 ease-out`}
-          >
-            <div
-              className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
-                msg.role === 'user'
-                  ? 'bg-white/55 text-[#0A2463] rounded-tr-sm shadow-[0_10px_30px_-10px_rgba(15,23,42,0.45)] border border-white/80 ring-1 ring-[#1E96FC]/15'
-                  : 'bg-white/70 text-slate-800 rounded-tl-sm border border-white/70 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.35)] ring-1 ring-white/60'
-              }`}
-            >
-              <div className="whitespace-pre-wrap font-sans relative z-30">
-                {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
-              </div>
-            </div>
+          <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-[0_2px_8px_0_rgba(0,0,0,0.02)]">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <span className="text-[9px] font-bold text-[#0A2463] uppercase tracking-wide opacity-80">
+              Online
+            </span>
           </div>
-        ))}
+        </div>
 
-        {isThinking && (
-          <div className="flex justify-start animate-in fade-in zoom-in duration-300 relative z-20">
-            <div className="bg-white/60 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/60 flex gap-2 items-center shadow-lg shadow-blue-900/5 ring-1 ring-white/50">
-              <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
-              <div
-                className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
-                style={{ animationDelay: '100ms' }}
-              />
-              <div
-                className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
-                style={{ animationDelay: '200ms' }}
-              />
-              <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline tracking-tight">
-                Cross-checking local code...
+        {/* Chat area */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 relative z-10 custom-scroll"
+        >
+          {!hasStarted && !isTyping && messages.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-4">
+              <div className="w-16 h-16 rounded-3xl bg-white/50 backdrop-blur-xl border border-white/80 flex items-center justify-center shadow-xl shadow-blue-900/5">
+                <div className="w-8 h-8 border-[3px] border-slate-200 rounded-full border-t-[#1E96FC] animate-spin" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#1E96FC]/70">
+                SYSTEM READY
               </span>
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Faux input */}
-      <div className="p-4 border-t border-white/30 shrink-0 relative z-20 bg-gradient-to-b from-transparent to-white/20">
-        <div className="w-full bg-white/45 backdrop-blur-xl border border-white/60 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] ring-1 ring-white/50 transition-all focus-within:ring-[#1E96FC]/30 focus-within:bg-white/65">
-          <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
-            {inputValue}
-            {isTyping && (
-              <span className="inline-block w-0.5 h-4 bg-[#1E96FC] ml-0.5 animate-pulse rounded-full" />
-            )}
-          </div>
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-              inputValue
-                ? 'bg-gradient-to-b from-[#1E96FC] to-[#0A2463] shadow-lg shadow-blue-500/25 scale-100'
-                : 'bg-slate-200/50 scale-90'
-            }`}
-          >
-            <svg
-              className="w-3.5 h-3.5 text-white transform rotate-90"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`flex ${
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              } fade-in-up`}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
+              <div
+                className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-[13px] leading-relaxed font-medium relative z-20 backdrop-blur-md ${
+                  msg.role === 'user'
+                    ? 'bg-white/65 text-[#0A2463] rounded-tr-sm border border-white/80 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.45)]'
+                    : 'bg-white/70 text-slate-800 rounded-tl-sm border border-white/70 shadow-[0_6px_24px_-8px_rgba(15,23,42,0.35)]'
+                }`}
+              >
+                <div className="whitespace-pre-wrap font-sans relative z-30">
+                  {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {isThinking && (
+            <div className="flex justify-start fade-in-up">
+              <div className="bg-white/60 backdrop-blur-xl px-4 py-3 rounded-2xl rounded-tl-sm border border-white/60 flex gap-2 items-center shadow-lg shadow-blue-900/5">
+                <div className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce" />
+                <div
+                  className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
+                  style={{ animationDelay: '100ms' }}
+                />
+                <div
+                  className="w-1.5 h-1.5 bg-[#1E96FC] rounded-full animate-bounce"
+                  style={{ animationDelay: '200ms' }}
+                />
+                <span className="ml-2 text-[10px] font-semibold text-slate-500 hidden md:inline tracking-tight">
+                  Cross-checking local code...
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Faux input */}
+        <div className="p-4 border-t border-white/25 shrink-0 bg-white/10">
+          <div className="w-full bg-white/45 backdrop-blur-xl border border-white/60 rounded-2xl px-4 py-3.5 flex items-center gap-3 min-h-[56px] shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
+            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+              {inputValue}
+              {isTyping && (
+                <span className="inline-block w-0.5 h-4 bg-[#1E96FC] ml-0.5 animate-pulse rounded-full" />
+              )}
+            </div>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
+                inputValue
+                  ? 'bg-gradient-to-b from-[#1E96FC] to-[#0A2463] shadow-lg shadow-blue-500/25 scale-100'
+                  : 'bg-slate-200/50 scale-90'
+              }`}
+            >
+              <svg
+                className="w-3.5 h-3.5 text-white transform rotate-90"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Glass layers based on your example */}
+      <div className="liquid-layer-effect" />
+      <div className="liquid-layer-tint" />
+      <div className="liquid-layer-shine" />
     </div>
   )
 }
@@ -257,7 +262,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- AUTH MODAL (VisionOS Style) ---
+// --- AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -298,7 +303,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300">
       <div className="w-full max-w-sm bg-white/70 backdrop-blur-3xl backdrop-saturate-200 border border-white/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.2)] p-8 rounded-[2rem] relative ring-1 ring-white/60">
-        {/* Shine effect */}
         <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-50" />
 
         <button
@@ -354,14 +358,14 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all shadow-inner"
+            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm placeholder-slate-400 rounded-xl transition-all shadow-inner"
             placeholder="Email"
           />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all shadow-inner"
+            className="w-full p-4 bg-white/40 backdrop-blur-md border border-white/50 focus:bg-white/70 focus:border-[#1E96FC]/50 focus:ring-4 focus:ring-[#1E96FC]/10 outline-none text-slate-900 text-sm placeholder-slate-400 rounded-xl transition-all shadow-inner"
             placeholder="Password (min 6 characters)"
           />
           <button
@@ -375,7 +379,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
         {message && (
           <div
-            className={`mt-4 p-3 text-xs font-sans border rounded-xl backdrop-blur-md animate-in fade-in slide-in-from-top-1 ${
+            className={`mt-4 p-3 text-xs border rounded-xl backdrop-blur-md animate-in fade-in slide-in-from-top-1 ${
               message.type === 'error'
                 ? 'bg-red-50/50 text-red-600 border-red-200/50'
                 : 'bg-emerald-50/50 text-emerald-600 border-emerald-200/50'
@@ -398,7 +402,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- MAIN CONTENT ---
+// --- MAIN ---
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -415,26 +419,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 selection:bg-[#1E96FC]/30 selection:text-[#0A2463] flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      {/* --- BACKGROUND STACK (Premium Apple Look) --- */}
+      {/* BACKGROUND – fixed, lower opacity, blurred */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Base gradients */}
-        <div className="absolute top-[-50%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.3)_0%,transparent_70%)] blur-[120px]" />
-        <div className="absolute bottom-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] blur-[100px]" />
-
-        {/* Isometric background image, slightly dialed down */}
+        <div className="absolute top-[-50%] right-[-20%] w-[80vw] h-[80vw] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.25)_0%,transparent_70%)] blur-[120px]" />
+        <div className="absolute bottom-[-20%] left-[-20%] w-[70vw] h-[70vw] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.22)_0%,transparent_70%)] blur-[110px]" />
         <img
           src="/background.png"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
-          style={{ opacity: 0.36 }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            opacity: 0.36,
+            filter: 'blur(3px)',
+            transform: 'translateZ(0)'
+          }}
         />
       </div>
 
-      {/* NAV - full-width frosted glass */}
-      <nav className="fixed inset-x-0 top-0 z-40 bg-white/60 backdrop-blur-xl backdrop-saturate-200 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)] transition-all">
+      {/* NAV */}
+      <nav className="fixed inset-x-0 top-0 z-40 bg-white/60 backdrop-blur-xl backdrop-saturate-200 border-b border-white/40 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)]">
         <div className="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
           <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463] drop-shadow-sm">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-[#0A2463]">
               protocol<span className="text-[#1E96FC]">LM</span>
             </h1>
           </div>
@@ -468,20 +473,18 @@ export default function Home() {
 
       {/* HERO */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-center pt-32 pb-12 gap-12 lg:gap-20 relative z-10">
-        {/* Left Content */}
+        {/* Left */}
         <div
           className={`flex-1 text-left transition-all duration-1000 delay-100 ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          {/* Removed the "New: Oakland County Live" pill */}
-
-          <h2 className="text-4xl md:text-6xl font-bold text-[#0A2463] tracking-tight leading-[1.05] mb-6 drop-shadow-sm">
+          <h2 className="text-4xl md:text-6xl font-bold text-[#0A2463] tracking-tight leading-[1.05] mb-6">
             <span className="block">Train Your Team Before The</span>
             <span className="block">Health Department Does.</span>
           </h2>
 
-          <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-xl mb-8 opacity-90">
+          <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-xl mb-8">
             protocol<span className="text-[#1E96FC] font-bold">LM</span> gives your team instant answers from{' '}
             <strong>Washtenaw, Wayne, and Oakland County</strong> rules, preventing violations before they happen.
           </p>
@@ -499,6 +502,7 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Stat cards with climb-up animation */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[
               {
@@ -524,10 +528,10 @@ export default function Home() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="bg-white/40 backdrop-blur-xl backdrop-saturate-150 border border-white/50 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default group relative overflow-hidden"
+                className="stat-card bg-white/40 backdrop-blur-xl backdrop-saturate-150 border border-white/50 p-6 rounded-3xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.02)] hover:bg-white/60 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] transition-all duration-300 cursor-default relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tighter group-hover:scale-105 transition-transform duration-500 drop-shadow-sm">
+                <div className="text-4xl md:text-5xl font-bold text-[#0A2463] tracking-tighter drop-shadow-sm">
                   <CountUp
                     end={item.val}
                     prefix={item.prefix}
@@ -545,7 +549,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: Premium Glass Demo Chat */}
+        {/* Right */}
         <div
           className={`flex-1 w-full flex flex-col items-center justify-center transition-all duration-1000 delay-300 ${
             mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
@@ -574,9 +578,11 @@ export default function Home() {
         body {
           overscroll-behavior-y: none;
         }
+
         .pb-safe {
           padding-bottom: env(safe-area-inset-bottom, 20px);
         }
+
         .custom-scroll::-webkit-scrollbar {
           width: 5px;
         }
@@ -590,10 +596,134 @@ export default function Home() {
         .custom-scroll::-webkit-scrollbar-thumb:hover {
           background: rgba(148, 163, 184, 0.5);
         }
-        .text-shadow-sm {
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+        /* Stat card climb-up animation (for the 12% / $75k / 2.5x cards) */
+        .stat-card {
+          opacity: 0;
+          transform: translateY(22px);
+          animation: statFloatUp 700ms cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        .stat-card:nth-child(2) {
+          animation-delay: 120ms;
+        }
+        .stat-card:nth-child(3) {
+          animation-delay: 240ms;
+        }
+        @keyframes statFloatUp {
+          0% {
+            opacity: 0;
+            transform: translateY(22px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Chat message subtle fade-in */
+        .fade-in-up {
+          animation: fadeInUp 400ms ease-out forwards;
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Liquid glass card based on your snippet */
+        .liquid-card {
+          border-radius: 2.5rem;
+          box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          isolation: isolate;
+        }
+        .liquid-layer-effect {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          backdrop-filter: blur(26px);
+          filter: url('#glass-distortion');
+        }
+        .liquid-layer-tint {
+          position: absolute;
+          inset: 0;
+          background: rgba(255, 255, 255, 0.22);
+          z-index: 1;
+        }
+        .liquid-layer-shine {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          box-shadow: inset 2px 2px 1px 0 rgba(255, 255, 255, 0.55),
+            inset -1px -1px 1px 1px rgba(255, 255, 255, 0.5);
+          pointer-events: none;
+        }
+
+        /* SVG filter from your example (kept hidden) */
+        svg#glass-filter-defs {
+          position: absolute;
+          width: 0;
+          height: 0;
+          pointer-events: none;
         }
       `}</style>
+
+      {/* Hidden SVG defs for glass distortion */}
+      <svg id="glass-filter-defs" style={{ display: 'none' }}>
+        <filter
+          id="glass-distortion"
+          x="0%"
+          y="0%"
+          width="100%"
+          height="100%"
+          filterUnits="objectBoundingBox"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.01 0.01"
+            numOctaves="1"
+            seed="5"
+            result="turbulence"
+          />
+          <feComponentTransfer in="turbulence" result="mapped">
+            <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+            <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+            <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+          </feComponentTransfer>
+          <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+          <feSpecularLighting
+            in="softMap"
+            surfaceScale="5"
+            specularConstant="1"
+            specularExponent="100"
+            lightingColor="white"
+            result="specLight"
+          >
+            <fePointLight x="-200" y="-200" z="300" />
+          </feSpecularLighting>
+          <feComposite
+            in="specLight"
+            operator="arithmetic"
+            k1="0"
+            k2="1"
+            k3="1"
+            k4="0"
+            result="litImage"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="softMap"
+            scale="150"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </svg>
     </div>
   )
 }
