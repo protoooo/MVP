@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- CHAT DEMO BOX (High Fidelity Redesign) ---
+// --- CHAT DEMO BOX (Fixed Dimensions & Mobile Optimized) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -20,42 +20,45 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // DATA PRESERVED EXACTLY
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
-      response: "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
+      response:
+        "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan.",
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties."
+      response:
+        "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties.",
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response:
+        'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.',
     },
     {
       text: 'The floor drain is backing up in the dish room. Can we just mop it and keep serving?',
-      response: 'IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized.'
+      response:
+        'IMMINENT HEALTH HAZARD. Washtenaw Enforcement Procedure Sec 5.0 defines sewage backup as grounds for Immediate Closure. You must cease operations until the backup is fixed and the area sanitized.',
     },
     {
       text: "Inspector cited us for 'Wet Nesting' pans. Is that actually a priority violation?",
-      response: 'CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage.'
-    }
+      response:
+        'CORE VIOLATION. Stacking wet pans prevents air drying (FDA Code 4-901.11). While usually a Core item, repeated failure to correct it can lead to Priority Foundation citations for unsanitary equipment storage.',
+    },
   ]
 
-  // LOGIC PRESERVED EXACTLY
   useEffect(() => {
     let isMounted = true
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-    
+
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
       await wait(Math.random() * 30 + 20)
     }
 
     const runSimulation = async () => {
-      setHasStarted(true) 
+      setHasStarted(true)
       while (isMounted) {
         for (const step of SEQUENCE) {
           if (!isMounted) return
@@ -92,8 +95,11 @@ const DemoChatContent = () => {
         setMessages((prev) => prev.slice(-6))
       }
     }
+
     runSimulation()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const formatContent = (text) => {
@@ -103,7 +109,7 @@ const DemoChatContent = () => {
         const parts = text.split(key)
         return (
           <span>
-            <span className="font-bold text-rose-500">{key}</span>
+            <span className="font-semibold text-[#0F172A]">{key}</span>
             {parts[1]}
           </span>
         )
@@ -113,92 +119,120 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[550px] group mx-auto">
-      {/* Decorative Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
-      
-      <div className="flex flex-col h-[450px] w-full bg-white/80 backdrop-blur-xl border border-white/40 rounded-2xl shadow-2xl relative z-10 overflow-hidden ring-1 ring-black/5">
-        
-        {/* Header */}
-        <div className="h-14 border-b border-black/5 flex items-center px-5 justify-between bg-white/50">
-          <div className="flex items-center gap-3">
+    <div className="w-full max-w-[640px] mx-auto">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] overflow-hidden">
+        {/* Header bar */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50/60">
+          <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500/90" />
+              <span className="w-2 h-2 rounded-full bg-amber-400/80" />
+              <span className="w-2 h-2 rounded-full bg-slate-300" />
             </div>
-            <div className="h-4 w-[1px] bg-black/10 mx-1"></div>
-            <span className="font-semibold text-slate-700 text-xs tracking-tight flex items-center gap-1">
-              protocol<span className="text-blue-600">LM</span>
-              <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[9px] font-bold text-blue-600 uppercase tracking-wider ml-1">Beta</span>
+            <div className="h-4 w-px bg-slate-200 mx-1" />
+            <div className="flex flex-col">
+              <span className="text-[11px] font-semibold tracking-tight text-slate-900">
+                protocol<span className="text-[#0077B6]">LM</span> · Inspector view
+              </span>
+              <span className="text-[10px] text-slate-400">Live simulation · SE Michigan</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1">
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-medium text-slate-600 uppercase tracking-[0.18em]">
+              Online
             </span>
           </div>
-          <div className="flex items-center gap-2">
-             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-             <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Connected</span>
-          </div>
         </div>
 
-        {/* Chat Area */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll"
-        >
-          {!hasStarted && !isTyping && messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-50">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 flex items-center justify-center shadow-inner">
-                 <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin"/>
+        {/* Chat area */}
+        <div className="flex flex-col h-[400px] md:h-[480px]">
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-4 md:px-5 py-4 md:py-5 space-y-3 bg-slate-50 custom-scroll"
+          >
+            {!hasStarted && !isTyping && messages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center space-y-3 text-slate-400">
+                <div className="w-10 h-10 rounded-full border border-dashed border-slate-300 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-slate-300 rounded-full border-t-[#0077B6] animate-spin" />
+                </div>
+                <span className="text-[10px] font-medium tracking-[0.2em] uppercase">
+                  Initializing demo
+                </span>
               </div>
-              <p className="text-xs font-medium text-slate-400 tracking-wider">SYSTEM READY</p>
-            </div>
-          )}
+            )}
 
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`flex ${
-                msg.role === 'user' ? 'justify-end' : 'justify-start'
-              } animate-in fade-in slide-in-from-bottom-3 duration-500`}
-            >
+            {messages.map((msg, i) => (
               <div
-                className={`max-w-[85%] px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
-                  msg.role === 'user'
-                    ? 'bg-[#0077B6] text-white rounded-tr-sm shadow-blue-500/20'
-                    : 'bg-white text-slate-600 border border-slate-100 rounded-tl-sm'
+                key={i}
+                className={`flex ${
+                  msg.role === 'user' ? 'justify-end' : 'justify-start'
+                } animate-in fade-in slide-in-from-bottom-2 duration-200`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed font-medium ${
+                    msg.role === 'user'
+                      ? 'bg-slate-900 text-slate-50 rounded-tr-sm'
+                      : 'bg-white text-slate-800 border border-slate-200 rounded-tl-sm'
+                  }`}
+                >
+                  <div className="whitespace-pre-wrap">
+                    {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {isThinking && (
+              <div className="flex justify-start animate-in fade-in zoom-in duration-150">
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2 text-[11px] text-slate-500">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: '120ms' }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
+                      style={{ animationDelay: '240ms' }}
+                    />
+                  </div>
+                  <span>Cross-checking local code & FDA Food Code…</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Faux input */}
+          <div className="border-t border-slate-200 bg-white px-4 md:px-5 py-3">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+              <div className="flex-1 text-[13px] text-slate-700 font-medium truncate min-h-[18px] flex items-center">
+                {inputValue}
+                {isTyping && (
+                  <span className="ml-1 h-4 w-0.5 bg-slate-900 animate-pulse inline-block" />
+                )}
+                {!inputValue && !isTyping && (
+                  <span className="text-slate-400">
+                    “What happens if we get a second priority violation?”
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                  inputValue ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-500'
                 }`}
               >
-                {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
-              </div>
-            </div>
-          ))}
-
-          {isThinking && (
-            <div className="flex justify-start animate-in fade-in duration-300">
-              <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-slate-100 flex gap-2 items-center shadow-sm">
-                <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-[bounce_1s_infinite]" />
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-[bounce_1s_infinite_0.1s]" />
-                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-[bounce_1s_infinite_0.2s]" />
-                </div>
-                <span className="text-[10px] font-medium text-slate-400">Checking FDA Code 2022...</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 bg-white/80 backdrop-blur-md border-t border-slate-100">
-          <div className="w-full bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3 flex items-center gap-3 transition-all">
-            <div className="flex-1 text-sm text-slate-700 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
-              {inputValue}
-              {isTyping && (
-                <span className="inline-block w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse" />
-              )}
-            </div>
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-blue-600 scale-100' : 'bg-slate-200 scale-90'}`}>
-              <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
+                <svg
+                  className="w-4 h-4 -rotate-90"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -223,7 +257,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   }, [end, duration])
 
   return (
-    <span className="tabular-nums">
+    <span>
       {prefix}
       {count.toFixed(decimals)}
       {suffix}
@@ -239,6 +273,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [message, setMessage] = useState(null)
   const [view, setView] = useState(defaultView)
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     setView(defaultView)
@@ -253,8 +288,8 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { access_type: 'offline', prompt: 'consent' }
-        }
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+        },
       })
       if (error) throw error
     } catch (error) {
@@ -268,6 +303,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
+
     try {
       if (view === 'signup') {
         const { data, error } = await supabase.auth.signUp({
@@ -275,12 +311,12 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { county: 'washtenaw' }
-          }
+            data: { county: 'washtenaw' },
+          },
         })
         if (error) throw error
         if (data?.user && !data?.session) {
-          setMessage({ type: 'success', text: 'Check your email to confirm!' })
+          setMessage({ type: 'success', text: 'Check your email to confirm your account!' })
         } else if (data?.session) {
           window.location.href = '/accept-terms'
         }
@@ -311,54 +347,103 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div onClick={onClose} className="absolute inset-0 bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300" />
-      
-      {/* Modal Card */}
-      <div className="w-full max-w-[400px] bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] p-8 rounded-3xl relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ring-1 ring-black/5">
-        <button onClick={onClose} className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-sm rounded-3xl border border-slate-200 bg-white shadow-[0_20px_70px_rgba(15,23,42,0.4)] p-7">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          ✕
         </button>
 
-        <div className="text-center mb-8">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
-            {view === 'signup' ? 'Create Account' : 'Welcome Back'}
-          </h2>
-        </div>
+        <h2 className="text-xl font-semibold text-slate-900 mb-5 tracking-tight">
+          {view === 'signup' ? 'Create account' : 'Sign in'}
+        </h2>
 
-        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3 bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md rounded-xl transition-all disabled:opacity-50 mb-6 group">
-          <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full mb-5 flex items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-3.5 py-3 text-sm font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all disabled:opacity-50"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
           </svg>
-          <span className="text-sm font-semibold text-slate-600 group-hover:text-slate-800">Continue with Google</span>
+          Continue with Google
         </button>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
-          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white/50 backdrop-blur-xl text-slate-400 font-medium">Or continue with email</span></div>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-2 text-[11px] text-slate-400">Or continue with email</span>
+          </div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-white/50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Email address" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-white/50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-slate-900 text-sm font-sans placeholder-slate-400 rounded-xl transition-all" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#0077B6] hover:bg-[#023E8A] text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98] disabled:opacity-50 mt-2">
-            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
+        <form onSubmit={handleAuth} className="space-y-3.5">
+          <div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:bg-white focus:outline-none"
+              placeholder="Email"
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:bg-white focus:outline-none"
+              placeholder="Password (min 6 characters)"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-lg bg-slate-900 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.25em] text-white hover:bg-black transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Processing…' : view === 'signup' ? 'Create account' : 'Sign in'}
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 p-3 text-xs font-medium rounded-xl flex items-center gap-2 ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+          <div
+            className={`mt-4 rounded-lg border px-3 py-2 text-xs ${
+              message.type === 'error'
+                ? 'border-red-100 bg-red-50 text-red-600'
+                : 'border-emerald-100 bg-emerald-50 text-emerald-600'
+            }`}
+          >
             {message.text}
           </div>
         )}
 
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">
-            {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
+        <div className="mt-6 border-t border-slate-100 pt-4 text-center">
+          <button
+            onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
+            className="text-[11px] text-slate-500 hover:text-slate-900"
+          >
+            {view === 'signup' ? 'Already have an account? Sign in' : 'Need access? Create account'}
           </button>
         </div>
       </div>
@@ -390,118 +475,182 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-blue-500 selection:text-white flex flex-col relative overflow-x-hidden max-w-[100vw]">
-      
-      {/* RESTORED BACKGROUND SECTION */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* The Original Drift Image */}
-        <div className="relative w-full h-full animate-drift">
-          <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.24]" priority />
-        </div>
-        
-        {/* Gradient Overlay to ensure text readability & glass effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
-        
-        {/* Optional Orbs to blend the image with the new design (Subtle) */}
-        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-[100px] animate-pulse" style={{ animationDuration: '4s' }} />
-      </div>
+    <div className="min-h-screen w-full bg-[#F5F5F7] font-sans text-slate-900 flex flex-col relative overflow-x-hidden max-w-[100vw]">
+      {/* subtle bg accent on right */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-bl from-sky-100/60 via-transparent to-transparent" />
 
-      {/* Floating Navbar */}
-      <nav className="fixed top-6 left-0 right-0 z-40 flex justify-center px-4">
-        <div className={`w-full max-w-5xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm rounded-full px-6 py-3 flex justify-between items-center transition-all duration-700 ring-1 ring-black/5 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <span className="text-lg font-bold tracking-tight text-slate-800">
-              protocol<span className="text-blue-600">LM</span>
+      {/* NAV */}
+      <header className="sticky top-0 z-20 border-b border-slate-200/60 bg-[#F5F5F7]/80 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 md:px-6 py-3 md:py-4">
+          <div
+            className={`flex items-center gap-2 transition-all duration-500 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
+            }`}
+          >
+            <div className="h-7 w-7 rounded-xl bg-slate-900 flex items-center justify-center text-[11px] font-bold text-white">
+              pl
+            </div>
+            <span className="text-sm md:text-base font-semibold tracking-tight text-slate-900">
+              protocol<span className="text-[#0077B6]">LM</span>
             </span>
           </div>
-          
-          <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => router.push('/pricing')} className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">Pricing</button>
-            <div className="h-4 w-[1px] bg-slate-200"></div>
-            <button onClick={() => openAuth('login')} className="text-sm font-semibold text-slate-700 hover:text-blue-600 transition-colors">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-slate-900 hover:bg-black text-white px-5 py-2 rounded-full text-sm font-medium transition-all shadow-lg shadow-slate-900/20 hover:shadow-slate-900/40 active:scale-95">
-              Get Started
+
+          <nav
+            className={`flex items-center gap-2 md:gap-4 text-[11px] md:text-xs font-medium uppercase tracking-[0.24em] text-slate-500 transition-all duration-500 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
+            }`}
+          >
+            <button
+              onClick={() => router.push('/pricing')}
+              className="px-2 py-1.5 hover:text-slate-900 transition-colors"
+            >
+              Pricing
             </button>
-          </div>
-          
-          <button className="md:hidden text-slate-700" onClick={() => openAuth('signup')}>
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-          </button>
+            <button
+              onClick={() => openAuth('login')}
+              className="px-2 py-1.5 hover:text-slate-900 transition-colors"
+            >
+              Sign in
+            </button>
+            <button
+              onClick={() => openAuth('signup')}
+              className="hidden sm:inline-flex items-center rounded-full border border-slate-900/10 bg-slate-900 text-[10px] text-white px-3.5 py-1.5 hover:bg-black transition-colors"
+            >
+              Get protocolLM
+            </button>
+          </nav>
         </div>
-      </nav>
+      </header>
 
-      {/* Hero Section */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-40 pb-20 md:pt-48 md:pb-32 flex flex-col md:flex-row items-center gap-16 relative z-10">
-        
-        {/* Left Copy */}
-        <div className={`flex-1 text-center md:text-left transition-all duration-1000 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Online Now
-          </div>
+      {/* MAIN HERO */}
+      <main className="flex-1">
+        <div className="mx-auto flex w-full max-w-6xl flex-col lg:flex-row gap-10 lg:gap-16 px-4 md:px-6 py-10 md:py-14 lg:py-16 items-center">
+          {/* LEFT: copy + stats */}
+          <section
+            className={`flex-1 max-w-xl transition-all duration-500 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            }`}
+          >
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-slate-500 mb-4">
+              Health inspection prep · Southeast Michigan
+            </p>
 
-          <h1 className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tighter leading-[1.1] mb-6">
-            Train your team <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">before</span> the inspector arrives.
-          </h1>
+            <h1 className="text-3xl md:text-4xl lg:text-[40px] font-semibold tracking-tight text-slate-900 leading-tight mb-4">
+              Give your team{' '}
+              <span className="underline decoration-sky-300 decoration-2 underline-offset-4">
+                county-specific answers
+              </span>{' '}
+              before an inspector or customer sees the problem.
+            </h1>
 
-          <p className="text-lg text-slate-600 leading-relaxed max-w-xl mx-auto md:mx-0 mb-10 font-medium">
-            Instant, AI-verified answers from <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong> health codes. Stop guessing and start complying.
-          </p>
+            <p className="text-sm md:text-base text-slate-600 font-medium leading-relaxed mb-5">
+              protocol<span className="text-[#0077B6] font-semibold">LM</span> is a private
+              assistant trained only on{' '}
+              <span className="font-semibold text-slate-800">
+                Washtenaw, Wayne, and Oakland County food codes
+              </span>
+              . Your staff asks it what to do. It answers using the same documents inspectors use.
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start mb-16">
-            <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 hover:-translate-y-1">
-              Start 30-Day Free Trial
-            </button>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { val: 12, suffix: '%', label: 'Revenue Drop', sub: 'Post-bad grade' },
-              { val: 75, prefix: '$', suffix: 'k', label: 'Incident Cost', sub: 'Avg. per outbreak' },
-              { val: 2.5, suffix: 'x', label: 'Fine Multiplier', sub: 'Repeat violations' }
-            ].map((stat, i) => (
-              <div key={i} className="group relative bg-white/40 backdrop-blur-md border border-white/60 p-5 rounded-2xl hover:bg-white/80 transition-all duration-300 hover:scale-105 hover:shadow-xl ring-1 ring-black/5 cursor-default">
-                <div className="text-4xl font-bold text-slate-800 tracking-tighter mb-1 group-hover:text-blue-600 transition-colors">
-                  <CountUp end={stat.val} prefix={stat.prefix} suffix={stat.suffix} decimals={stat.val % 1 !== 0 ? 1 : 0} />
-                </div>
-                <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1 opacity-80">{stat.label}</div>
-                <div className="text-[10px] font-medium text-slate-500 leading-tight">{stat.sub}</div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
+              <button
+                onClick={() => openAuth('signup')}
+                className="inline-flex items-center rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-white hover:bg-black transition-colors"
+              >
+                Start 30-day trial
+              </button>
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span>Live with real county documents · not generic AI</span>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Right: Demo Chat */}
-        <div className={`flex-1 w-full flex justify-center perspective-1000 transition-all duration-1000 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-          <DemoChatContent />
-        </div>
-      </div>
+            {/* Stats row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-3xl md:text-4xl font-semibold text-slate-900">
+                  <CountUp end={12} suffix="%" duration={2400} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Revenue drop / unit
+                </p>
+                <p className="mt-2 text-[12px] text-slate-500 leading-snug">
+                  Typical year-one sales hit after a public bad grade or closure notice.
+                </p>
+              </div>
 
-      {/* Footer */}
-      <footer className="w-full py-8 border-t border-slate-200/60 bg-white/40 backdrop-blur-sm relative z-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-center md:justify-center items-center gap-4 text-xs font-medium text-slate-500 uppercase tracking-widest">
-          <div className="flex gap-6">
-            <a href="/terms" className="hover:text-blue-600 transition-colors">Terms</a>
-            <span className="opacity-60">© 2025 protocolLM</span>
-            <a href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</a>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-3xl md:text-4xl font-semibold text-slate-900">
+                  <CountUp end={75} prefix="$" suffix="k" duration={2400} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Avg. incident cost
+                </p>
+                <p className="mt-2 text-[12px] text-slate-500 leading-snug">
+                  Legal, remediation, labor, and lost traffic from a single major event.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                <div className="text-3xl md:text-4xl font-semibold text-slate-900">
+                  <CountUp end={2.5} suffix="x" decimals={1} duration={2400} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Repeat fine multiplier
+                </p>
+                <p className="mt-2 text-[12px] text-slate-500 leading-snug">
+                  Scrutiny and fines climb when the same violation shows up twice.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* RIGHT: chat demo */}
+          <aside
+            className={`flex-1 w-full max-w-xl transition-all duration-500 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            }`}
+          >
+            <DemoChatContent />
+            <p className="mt-3 text-[11px] text-slate-500 text-center">
+              Demo questions are built from actual Washtenaw, Oakland, and Michigan code citations.
+            </p>
+          </aside>
+        </div>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="border-t border-slate-200/70 bg-white/60 backdrop-blur-sm">
+        <div className="mx-auto flex w-full max-w-6xl flex-col sm:flex-row items-center justify-between gap-3 px-4 md:px-6 py-4 text-[11px] text-slate-500">
+          <div className="flex items-center gap-4">
+            <a href="/terms" className="hover:text-slate-900">
+              Terms
+            </a>
+            <a href="/privacy" className="hover:text-slate-900">
+              Privacy
+            </a>
           </div>
+          <div>© 2025 protocolLM · Built for Southeast Michigan operators</div>
         </div>
       </footer>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        .perspective-1000 { perspective: 1000px; }
-        @keyframes drift { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .animate-drift { animation: drift 20s ease-in-out infinite alternate; }
+        body {
+          overscroll-behavior-y: none;
+          background: #f5f5f7;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 999px;
+        }
       `}</style>
     </div>
   )
@@ -509,7 +658,7 @@ function MainContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+    <Suspense fallback={<div></div>}>
       <MainContent />
     </Suspense>
   )
