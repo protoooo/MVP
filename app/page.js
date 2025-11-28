@@ -6,8 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
 // --- CUSTOM ISOMETRIC ICONS (SVG) ---
-// These replace the "vibe coded" generic icons with structural 3D illustrations
-
 const IsometricRevenue = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-sm">
     <path d="M50 20 L90 40 L50 60 L10 40 Z" fill="#E2E8F0" />
@@ -50,7 +48,7 @@ const IsometricMultiplier = () => (
   </svg>
 )
 
-// --- CHAT DEMO BOX (Technical/Structural Look) ---
+// --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -264,7 +262,7 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- AUTH MODAL (Monochromatic) ---
+// --- AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -429,17 +427,16 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#F8FAFC] font-sans text-slate-900 selection:bg-slate-900 selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* Grid Background (Technical) */}
+      {/* Grid Background */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
         backgroundImage: `linear-gradient(#E2E8F0 1px, transparent 1px), linear-gradient(90deg, #E2E8F0 1px, transparent 1px)`,
         backgroundSize: '40px 40px',
         opacity: 0.5
       }}>
-        {/* Vignette to soften edges */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#F8FAFC] via-transparent to-[#F8FAFC]"></div>
       </div>
 
-      {/* Navbar (Minimalist/Mono) */}
+      {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 py-6 bg-gradient-to-b from-[#F8FAFC] to-transparent">
         <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
@@ -512,7 +509,7 @@ function MainContent() {
           </div>
         </div>
 
-        {/* Right: Demo Chat (Slide In) */}
+        {/* Right: Demo Chat */}
         <div className={`flex-1 w-full max-w-[500px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
           <DemoChatContent />
         </div>
@@ -529,24 +526,36 @@ function MainContent() {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
-        /* Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; }
         
-        /* Message Slide In */
         @keyframes messageSlide {
           0% { opacity: 0; transform: translateY(10px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         .animate-message-slide { animation: messageSlide 0.3s ease-out forwards; }
 
-        /* Card Reveal */
         @keyframes revealCard {
           0% { opacity: 0; transform: translateY(20px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         .animate-reveal-card { animation: revealCard 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-        /* Hover Float for the Blue Cube */
         @keyframes hoverFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .group:hover .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
+      `}</style>
+    </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <MainContent />
+    </Suspense>
+  )
+}
