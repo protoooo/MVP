@@ -5,17 +5,17 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. TECHNICAL WIREFRAME ICONS (Blueprint Style) ---
-// Thin strokes, precision geometry. No fills.
+// --- 1. TECHNICAL WIREFRAME ICONS (Refined & Crisp) ---
 
 const IconRevenue = () => (
   <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* The Chart Line - Jagged Fall */}
-    <path d="M4 12 L16 24 L28 16 L44 36" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
-    {/* The Arrow Head */}
-    <path d="M44 36 H34 M44 36 V26" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" />
+    {/* Chart Line - Jagged Fall */}
+    <path d="M4 12 L16 26 L28 18 L44 38" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
+    {/* Arrow Head */}
+    <path d="M44 38 H32 M44 38 V26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
     {/* Reference Grid (Dotted) */}
-    <path d="M4 24 H44 M4 36 H28" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" opacity="0.2" />
+    <path d="M4 38 H28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
+    <path d="M4 26 H16" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
     {/* Frame Corners */}
     <path d="M2 10 V2 H10 M38 2 H46 V10 M46 38 V46 H38 M10 46 H2 V38" fill="none" stroke="currentColor" strokeWidth="1.5" />
   </svg>
@@ -23,24 +23,24 @@ const IconRevenue = () => (
 
 const IconLiability = () => (
   <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* Shield Outline */}
-    <path d="M24 4 L42 12 V24 C42 36 34 42 24 46 C14 42 6 36 6 24 V12 L24 4 Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    {/* Inner Lock Mechanism */}
-    <rect x="19" y="20" width="10" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
-    <path d="M24 20 V16 M24 28 V32" stroke="currentColor" strokeWidth="1.5" />
+    {/* Shield Outline - Geometric */}
+    <path d="M24 4 L42 12 V22 C42 34 34 42 24 46 C14 42 6 34 6 22 V12 L24 4 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    {/* Inner Keyhole */}
+    <circle cx="24" cy="20" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+    <path d="M24 24 V32" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 )
 
 const IconRisk = () => (
   <svg viewBox="0 0 48 48" className="w-full h-full text-black">
-    {/* Base Block */}
-    <rect x="14" y="32" width="20" height="12" stroke="currentColor" strokeWidth="1.5" fill="none" />
-    {/* Middle Block */}
-    <rect x="18" y="20" width="12" height="12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    {/* Base Blocks */}
+    <rect x="14" y="32" width="20" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
+    <rect x="18" y="20" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
     {/* Top Floating Block (Risk) */}
-    <rect x="20" y="4" width="8" height="12" stroke="currentColor" strokeWidth="1.5" fill="none" className="group-hover:-translate-y-1 transition-transform duration-500" />
-    {/* Exclamation */}
-    <path d="M24 8 V12" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="20" y="4" width="8" height="12" stroke="currentColor" strokeWidth="2" fill="none" className="group-hover:-translate-y-1 transition-transform duration-500" />
+    {/* Warning Mark */}
+    <path d="M36 4 V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="36" cy="20" r="1.5" fill="currentColor" />
   </svg>
 )
 
@@ -252,22 +252,22 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 4. EXECUTIVE CARDS (Blueprint Style) ---
+// --- 4. EXECUTIVE CARDS (Blueprint Style - Fixed Icons) ---
 const StatCard = ({ title, value, sub, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
-      className="group bg-white border border-neutral-200 p-5 rounded-lg flex flex-col justify-between min-h-[140px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden"
+      className="group bg-white/80 backdrop-blur-sm border border-neutral-200 p-6 rounded-lg flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-md"
     >
-      {/* Icon Top Right */}
-      <div className="absolute top-4 right-4 w-8 h-8 opacity-30 group-hover:opacity-100 transition-opacity duration-300">
+      {/* Icon Top Right - Perfectly Pinned */}
+      <div className="absolute top-5 right-5 w-10 h-10 opacity-30 group-hover:opacity-100 transition-opacity duration-300 text-neutral-800">
         {icon}
       </div>
 
       <div className="relative z-10 mt-auto">
-        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">{title}</div>
-        <div className="text-3xl font-bold text-black tracking-tighter mb-2">{value}</div>
-        <div className="text-[10px] font-medium text-neutral-500 border-t border-neutral-100 pt-2 w-full inline-block">
+        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</div>
+        <div className="text-4xl font-bold text-black tracking-tighter mb-3">{value}</div>
+        <div className="text-[10px] font-medium text-neutral-500 border-t border-neutral-200 pt-3 w-full inline-block">
           {sub}
         </div>
       </div>
@@ -422,10 +422,10 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-black selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (The "Textured Money" Look) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-neutral-50">
-        {/* Your restaurant image as texture */}
-        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.03] grayscale contrast-125">
+      {/* BACKGROUND (High Contrast Architecture Watermark) */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-white">
+        {/* The Restaurant Image as a "Blueprint" */}
+        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.28] grayscale contrast-125">
            <Image 
              src="/background.png" 
              alt="Background" 
@@ -434,8 +434,8 @@ function MainContent() {
              priority 
            />
         </div>
-        {/* Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-transparent to-white/90"></div>
+        {/* White fade at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-transparent to-white/90"></div>
       </div>
 
       {/* NAVBAR */}
@@ -459,10 +459,10 @@ function MainContent() {
       </nav>
 
       {/* HERO SECTION (Split & Tight) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-20 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-8 lg:pt-0">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
           
           {/* Badge */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-200 rounded-full text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
@@ -470,16 +470,15 @@ function MainContent() {
             Compliance Intelligence
           </div>
 
-          {/* Headline */}
+          {/* Headline (Restored Copy) */}
           <h1 className={`text-4xl md:text-6xl font-bold text-black tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Standardize<br/>
-            Compliance.<br/>
-            <span className="text-neutral-400">Protect Brand.</span>
+            Train your team <br />
+            <span className="text-neutral-400">before</span> the inspector arrives.
           </h1>
 
-          {/* Subheader */}
+          {/* Subheader (Restored Copy) */}
           <p className={`text-sm md:text-base text-neutral-500 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Enterprise-grade food safety intelligence for multi-unit operators. Reduce liability and unify standards across your portfolio.
+            Instant, AI-verified answers from <strong className="text-black">Washtenaw, Wayne, and Oakland County</strong> health codes. Standardize food safety and protect brand equity.
           </p>
 
           {/* CTA */}
@@ -489,27 +488,27 @@ function MainContent() {
             </button>
           </div>
 
-          {/* CARDS GRID (Wireframe Style) */}
+          {/* CARDS GRID (Improved Icons) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 lg:mb-0">
             <StatCard 
               icon={<IconRevenue />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
-              title="Revenue Risk"
+              title="Revenue Drop"
               sub="Post-incident loss"
               delay={500}
             />
             <StatCard 
               icon={<IconLiability />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
-              title="Liability"
-              sub="Avg. incident cost"
+              title="Incident Cost"
+              sub="Liabilty & labor"
               delay={650}
             />
             <StatCard 
               icon={<IconRisk />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
-              title="Compound Risk"
-              sub="Repeat violation"
+              title="Fine Multiplier"
+              sub="Repeat violations"
               delay={800}
             />
           </div>
