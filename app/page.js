@@ -335,7 +335,7 @@ export default function Home() {
       {/* BACKGROUND */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="relative w-full h-full animate-drift">
-          <div className="absolute inset-0 bg-gradient-radial from-[#90E0EF]/10 via-transparent to-transparent" />
+          <img src="/background.png" alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-[0.24]" />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
       </div>
