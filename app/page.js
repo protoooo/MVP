@@ -5,7 +5,43 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (The "Hero" Feature) ---
+// --- CUSTOM ISOMETRIC ICONS (Professional, Matte 3D) ---
+const IsoChartDown = () => (
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
+    <path d="M4 24 L20 36 L36 20 L56 44" fill="none" stroke="#E11D48" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M56 44 L46 44 M56 44 L56 34" fill="none" stroke="#E11D48" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    {/* 3D Depth Walls */}
+    <path d="M4 24 L20 36 L20 44 L4 32 Z" fill="#FDA4AF" opacity="0.4" />
+    <path d="M20 36 L36 20 L36 28 L20 44 Z" fill="#BE123C" opacity="0.3" />
+    <path d="M36 20 L56 44 L56 52 L36 28 Z" fill="#FDA4AF" opacity="0.4" />
+  </svg>
+)
+
+const IsoShield = () => (
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
+    {/* Inner Face */}
+    <path d="M32 8 L52 16 V32 C52 44 44 54 32 60 C20 54 12 44 12 32 V16 L32 8 Z" fill="#F59E0B" />
+    {/* Side Depth */}
+    <path d="M52 16 L56 18 V34 C56 47 47 58 32 64 V60 C44 54 52 44 52 32 V16 Z" fill="#B45309" />
+    {/* Highlight */}
+    <path d="M32 8 L32 60 C20 54 12 44 12 32 V16 L32 8 Z" fill="#FBBF24" />
+  </svg>
+)
+
+const IsoBlocks = () => (
+  <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-sm">
+    {/* Bottom Block */}
+    <path d="M16 36 L32 44 L48 36 L32 28 Z" fill="#93C5FD" />
+    <path d="M16 36 L32 44 V54 L16 46 Z" fill="#3B82F6" />
+    <path d="M48 36 L32 44 V54 L48 46 Z" fill="#1D4ED8" />
+    {/* Top Block (Floating) */}
+    <path d="M16 16 L32 24 L48 16 L32 8 Z" fill="#93C5FD" className="animate-hover-float" />
+    <path d="M16 16 L32 24 V34 L16 26 Z" fill="#3B82F6" className="animate-hover-float" />
+    <path d="M48 16 L32 24 V34 L48 26 Z" fill="#1D4ED8" className="animate-hover-float" />
+  </svg>
+)
+
+// --- CHAT DEMO BOX ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -20,7 +56,6 @@ const DemoChatContent = () => {
     }
   }, [messages, inputValue, isThinking])
 
-  // CONTENT LOGIC PRESERVED
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
@@ -112,12 +147,12 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[480px] group mx-auto perspective-1000">
+    <div className="relative w-full max-w-[500px] group mx-auto perspective-1000">
       {/* 1. Behind Glow */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-indigo-400 to-cyan-400 rounded-[24px] blur opacity-20 group-hover:opacity-40 transition duration-1000 animate-pulse-slow"></div>
       
       {/* 2. Main Glass Container */}
-      <div className="flex flex-col h-[400px] w-full bg-white/70 backdrop-blur-2xl border-t border-white/60 border-l border-white/30 border-r border-black/5 border-b border-black/5 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
+      <div className="flex flex-col h-[450px] w-full bg-white/70 backdrop-blur-2xl border-t border-white/60 border-l border-white/30 border-r border-black/5 border-b border-black/5 rounded-[22px] shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] relative z-10 overflow-hidden transform-gpu transition-all duration-500 ease-out-spring group-hover:scale-[1.005] group-hover:-translate-y-1">
         
         {/* Header */}
         <div className="h-12 border-b border-black/5 flex items-center px-5 justify-between bg-white/40 backdrop-blur-sm">
@@ -234,8 +269,8 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 3. COOL STAT CARDS (The $50k Look) ---
-const StatCard = ({ title, value, sub, type, delay }) => {
+// --- 3. COOL STAT CARDS (Isometric SVG Edition) ---
+const StatCard = ({ title, value, sub, type, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
@@ -244,27 +279,12 @@ const StatCard = ({ title, value, sub, type, delay }) => {
       
       {/* Dynamic Background Glow */}
       <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[60px] opacity-10 transition-opacity duration-500 group-hover:opacity-25 z-0
-        ${type === 'danger' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-indigo-500'}`} 
+        ${type === 'danger' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'}`} 
       />
       
-      {/* Floating Icon (Customized) */}
-      <div className={`relative z-10 w-9 h-9 rounded-xl flex items-center justify-center mb-3 shadow-sm border border-white/60 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3
-        ${type === 'danger' ? 'bg-rose-50 text-rose-500' : type === 'warning' ? 'bg-amber-50 text-amber-500' : 'bg-indigo-50 text-indigo-500'}`}>
-        
-        {/* REVENUE: DOWN ARROW */}
-        {type === 'danger' && (
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6 6" /></svg>
-        )}
-        
-        {/* INCIDENT: WARNING TRIANGLE */}
-        {type === 'warning' && (
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-        )}
-        
-        {/* MULTIPLIER: X ICON */}
-        {type === 'info' && (
-           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-        )}
+      {/* Floating 3D Icon */}
+      <div className="relative z-10 w-12 h-12 mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:-translate-y-1">
+        {icon}
       </div>
 
       <div className="relative z-10">
@@ -279,7 +299,7 @@ const StatCard = ({ title, value, sub, type, delay }) => {
   )
 }
 
-// --- 4. AUTH MODAL (Styled to match) ---
+// --- 4. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -400,7 +420,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 5. MAIN PAGE LAYOUT ---
+// --- 5. MAIN PAGE LAYOUT (Shifted Up) ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -431,15 +451,15 @@ function MainContent() {
         <div className="relative w-full h-full animate-drift">
           <Image src="/background.png" alt="Background" fill className="object-cover opacity-[0.24]" priority />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/90 via-[#F0F9FF]/30 to-[#F0F9FF]/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F0F9FF]/95 via-[#F0F9FF]/40 to-[#F0F9FF]/95" />
         
         {/* Breathing Orbs (Subtle Movement) */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-[100px] animate-orb-breath-1" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-400/10 blur-[100px] animate-orb-breath-2" />
       </div>
 
-      {/* NAVBAR */}
-      <nav className="fixed top-4 left-0 right-0 z-40 flex justify-center px-4">
+      {/* NAVBAR (Moved higher up: top-2) */}
+      <nav className="fixed top-2 left-0 right-0 z-40 flex justify-center px-4">
         <div className={`w-full max-w-4xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05)] rounded-full px-5 py-2.5 flex justify-between items-center transition-all duration-1000 ease-out-spring ring-1 ring-black/5 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-base font-bold tracking-tight text-slate-800">
@@ -458,44 +478,45 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Compact / Above Fold) */}
-      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-24 pb-8 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 relative z-10 h-screen max-h-[900px] min-h-[600px]">
+      {/* HERO SECTION (Compact / Reduced Padding) */}
+      <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-16 pb-6 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 relative z-10 h-screen max-h-[850px] min-h-[600px]">
         
         {/* LEFT COLUMN */}
         <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left">
           
           {/* Animated Badge */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-6 shadow-sm backdrop-blur-sm transition-all duration-700 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50/80 border border-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-widest mb-5 shadow-sm backdrop-blur-sm transition-all duration-700 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
             </span>
-            Available Now
+            Enterprise Verified
           </div>
 
           {/* Headline */}
-          <h1 className={`text-4xl md:text-6xl font-bold text-slate-900 tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-sm'}`} style={{ transitionDelay: '200ms' }}>
+          <h1 className={`text-4xl md:text-6xl font-bold text-slate-900 tracking-tighter leading-[1.05] mb-4 transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-8 blur-sm'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">before</span> the inspector arrives.
           </h1>
 
-          {/* Subheader */}
+          {/* Subheader (Revised for Multi-Operator) */}
           <p className={`text-base text-slate-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-8 font-medium transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant, AI-verified answers from <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong> health codes.
+            Standardize food safety across your portfolio. Reduce liability and protect your brand equity in <strong className="text-slate-900">Washtenaw, Wayne, and Oakland County</strong>.
           </p>
 
           {/* CTA Buttons */}
-          <div className={`flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start mb-10 transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+          <div className={`flex flex-col sm:flex-row items-center gap-3 justify-center lg:justify-start mb-8 transition-all duration-1000 ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 hover:-translate-y-1 active:scale-95 tracking-wide">
               Start Free Trial
             </button>
             <button className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-4 py-3 hover:translate-x-1 duration-300">View Demo →</button>
           </div>
 
-          {/* CARDS GRID (Updated Colors & Icons) */}
+          {/* CARDS GRID (3D Isometric Icons) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard 
               type="danger" 
+              icon={<IsoChartDown />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
               sub="First-year loss."
@@ -503,6 +524,7 @@ function MainContent() {
             />
             <StatCard 
               type="warning" 
+              icon={<IsoShield />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
               title="Incident Cost"
               sub="Legal & labor costs."
@@ -510,6 +532,7 @@ function MainContent() {
             />
             <StatCard 
               type="info" 
+              icon={<IsoBlocks />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
               title="Fine Multiplier"
               sub="Repeat issues."
@@ -518,8 +541,8 @@ function MainContent() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo) */}
-        <div className={`flex-1 w-full max-w-[480px] flex justify-center perspective-1000 transition-all duration-1000 ease-out-spring delay-300 ${mounted ? 'opacity-100 translate-y-0 rotate-x-0' : 'opacity-0 translate-y-12 rotate-x-6'}`}>
+        {/* RIGHT COLUMN (Demo - Bigger) */}
+        <div className={`flex-1 w-full max-w-[500px] flex justify-center perspective-1000 transition-all duration-1000 ease-out-spring delay-300 ${mounted ? 'opacity-100 translate-y-0 rotate-x-0' : 'opacity-0 translate-y-12 rotate-x-6'}`}>
           <DemoChatContent />
         </div>
       </div>
@@ -577,6 +600,13 @@ function MainContent() {
         }
         .animate-orb-breath-1 { animation: orbBreath1 10s ease-in-out infinite; }
         .animate-orb-breath-2 { animation: orbBreath2 12s ease-in-out infinite reverse; }
+        
+        /* Hover Float for Icon */
+        @keyframes hoverFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        .group:hover .animate-hover-float { animation: hoverFloat 2s ease-in-out infinite; }
       `}</style>
     </div>
   )
