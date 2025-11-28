@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (The "Black Box" Recorder) ---
+// --- 1. CHAT DEMO (Legibility Upgrade) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -101,7 +101,7 @@ const DemoChatContent = () => {
         const parts = text.split(key)
         return (
           <span>
-            <span className="font-bold border-b border-black/20 pb-0.5">{key}</span>
+            <span className="font-bold underline decoration-dotted underline-offset-4">{key}</span>
             {parts[1]}
           </span>
         )
@@ -112,36 +112,32 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full max-w-[550px] group mx-auto">
-      {/* 
-         Height: 520px on desktop (taller), 400px on mobile (compact)
-         Shadow: Deep, sharp shadow for "physicality"
-      */}
-      <div className="flex flex-col h-[400px] md:h-[520px] w-full bg-white border border-neutral-200 rounded-xl relative z-10 overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)]">
+      <div className="flex flex-col h-[400px] md:h-[560px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
         
-        {/* Header - Serious, Monospace Vibe */}
+        {/* Header */}
         <div className="h-12 border-b border-neutral-100 flex items-center px-5 justify-between bg-white shrink-0">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] font-bold text-neutral-900 uppercase tracking-widest">
+            <span className="font-sans text-xs font-bold text-neutral-900 uppercase tracking-[0.2em]">
               protocol_LM
             </span>
           </div>
           <div className="flex items-center gap-2">
-             <div className="w-1.5 h-1.5 bg-neutral-900 rounded-full animate-pulse"></div>
-             <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">System Active</span>
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+             <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">Online</span>
           </div>
         </div>
 
-        {/* Chat Feed */}
+        {/* Chat Feed - UPDATED FONT SIZES */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll bg-[#FAFAFA]"
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20">
-              <div className="w-12 h-12 border-2 border-dashed border-neutral-400 rounded flex items-center justify-center">
-                 <div className="w-4 h-4 bg-neutral-400 rounded-sm animate-spin"/>
+            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-30">
+              <div className="w-10 h-10 border border-neutral-300 rounded flex items-center justify-center">
+                 <div className="w-4 h-4 bg-neutral-300 rounded-sm animate-spin"/>
               </div>
-              <p className="text-[10px] font-bold text-neutral-500 tracking-[0.2em] uppercase">Awaiting Input</p>
+              <p className="text-xs font-bold text-neutral-400 tracking-widest uppercase">System Ready</p>
             </div>
           )}
 
@@ -153,10 +149,10 @@ const DemoChatContent = () => {
               } animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
-                className={`max-w-[90%] px-5 py-3.5 text-xs font-medium leading-relaxed rounded-lg ${
+                className={`max-w-[90%] px-5 py-3.5 text-[13.5px] font-medium leading-relaxed rounded-lg ${
                   msg.role === 'user'
-                    ? 'bg-neutral-900 text-white'
-                    : 'bg-white text-neutral-800 border border-neutral-200 shadow-sm'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-neutral-900 border border-neutral-200 shadow-sm'
                 }`}
               >
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
@@ -166,20 +162,20 @@ const DemoChatContent = () => {
 
           {isThinking && (
             <div className="flex justify-start animate-fade-in">
-              <div className="px-2 py-1 flex gap-1 items-center opacity-30">
-                <div className="w-1.5 h-1.5 bg-black rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 bg-black rounded-full animate-bounce delay-75" />
-                <div className="w-1.5 h-1.5 bg-black rounded-full animate-bounce delay-150" />
+              <div className="px-2 py-1 flex gap-1 items-center">
+                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-75" />
+                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-150" />
               </div>
             </div>
           )}
         </div>
 
-        {/* Input Field */}
+        {/* Input Field - UPDATED SIZE */}
         <div className="p-4 bg-white border-t border-neutral-100 shrink-0">
-          <div className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-4 py-3 flex items-center gap-3">
+          <div className="w-full bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3.5 flex items-center gap-3">
             <span className="text-neutral-400 text-xs font-mono">{'>'}</span>
-            <div className="flex-1 text-xs text-neutral-900 font-medium font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+            <div className="flex-1 text-[13px] text-neutral-900 font-medium font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
                 <span className="inline-block w-2 h-4 bg-black ml-1 animate-pulse" />
@@ -216,24 +212,27 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 3. EXECUTIVE CARDS (High Contrast, No Icons) ---
-const StatCard = ({ title, value, sub, delay, isDanger }) => {
+// --- 3. EXECUTIVE CARDS (Legibility Focus) ---
+const StatCard = ({ title, value, sub, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
-      className="group bg-white border border-neutral-200 p-6 rounded-xl flex flex-col justify-between min-h-[160px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-transform"
+      className="group bg-white border border-neutral-200 p-6 rounded-lg flex flex-col justify-between min-h-[160px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-transform"
     >
       <div className="relative z-10 h-full flex flex-col justify-between">
         <div>
-          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-            {isDanger && <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>}
+          {/* Title: Bumped up to text-xs (12px) */}
+          <div className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+            {title === "Revenue Drop" && <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>}
             {title}
           </div>
-          <div className={`text-5xl font-bold tracking-tighter mb-2 ${isDanger ? 'text-neutral-900' : 'text-neutral-900'}`}>
+          {/* Value: Massive text-6xl for impact */}
+          <div className="text-6xl font-bold text-neutral-900 tracking-tighter mb-2">
             {value}
           </div>
         </div>
-        <div className="text-[11px] font-medium text-neutral-500 border-t border-neutral-100 pt-3 mt-2 leading-relaxed">
+        {/* Description: Bumped to text-xs and darker gray */}
+        <div className="text-xs font-medium text-neutral-600 border-t border-neutral-100 pt-3 mt-2 leading-relaxed">
           {sub}
         </div>
       </div>
@@ -345,8 +344,8 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-xs font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="EMAIL ADDRESS" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-xs font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="PASSWORD" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="EMAIL ADDRESS" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="PASSWORD" />
           <button type="submit" disabled={loading} className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-4 rounded-lg text-xs uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 mt-2 shadow-lg">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
@@ -403,7 +402,7 @@ function MainContent() {
       </div>
 
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-4">
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-2">
         <div className={`w-full max-w-7xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-xl font-bold tracking-tight text-black">
@@ -421,11 +420,11 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Shifted Up) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION (Shifted Up Further) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-6 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-16 lg:pt-0">
           
           {/* Headline */}
           <h1 className={`text-4xl md:text-6xl font-bold text-black tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
@@ -433,18 +432,17 @@ function MainContent() {
             before the inspector arrives.
           </h1>
 
-          {/* Subheader (Detailed) */}
-          <p className={`text-sm md:text-base text-neutral-500 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          {/* Subheader */}
+          <p className={`text-[15px] text-neutral-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* Cards moved UP here, replacing buttons */}
+          {/* Cards moved UP here */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 lg:mb-0 transition-all duration-1000 delay-500 ease-out-spring">
             <StatCard 
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
               sub="Average first-year sales loss after a public bad grade."
-              isDanger={true}
               delay={500}
             />
             <StatCard 
