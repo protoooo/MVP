@@ -5,7 +5,37 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Minimalist & Clean) ---
+// --- 1. TECHNICAL WIREFRAME ICONS (Crisp & Professional) ---
+
+const IconRevenue = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
+    <path d="M4 12 L16 26 L28 18 L44 38" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
+    <path d="M44 38 H32 M44 38 V26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="round" />
+    <path d="M4 38 H28" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
+    <path d="M4 26 H16" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.3" />
+    <path d="M2 10 V2 H10 M38 2 H46 V10 M46 38 V46 H38 M10 46 H2 V38" fill="none" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+)
+
+const IconLiability = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
+    <path d="M24 4 L42 12 V22 C42 34 34 42 24 46 C14 42 6 34 6 22 V12 L24 4 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <circle cx="24" cy="20" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+    <path d="M24 24 V32" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+)
+
+const IconRisk = () => (
+  <svg viewBox="0 0 48 48" className="w-full h-full text-black">
+    <rect x="14" y="32" width="20" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
+    <rect x="18" y="20" width="12" height="12" stroke="currentColor" strokeWidth="2" fill="none" />
+    <rect x="20" y="4" width="8" height="12" stroke="currentColor" strokeWidth="2" fill="none" className="group-hover:-translate-y-1 transition-transform duration-500" />
+    <path d="M36 4 V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="36" cy="20" r="1.5" fill="currentColor" />
+  </svg>
+)
+
+// --- 2. CHAT DEMO (Scaled Up) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -111,12 +141,16 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[500px] group mx-auto">
-      {/* Container: Stark White, Hard Border */}
-      <div className="flex flex-col h-[480px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
+    <div className="relative w-full max-w-[550px] group mx-auto">
+      {/* 
+         Height Adjustment:
+         - h-[400px] on Mobile (prevents taking up whole screen)
+         - h-[520px] on Desktop (Requested ~8% size increase)
+      */}
+      <div className="flex flex-col h-[400px] md:h-[520px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
         
-        {/* Header: Clean Protocol Branding */}
-        <div className="h-12 border-b border-neutral-100 flex items-center px-5 justify-between bg-white">
+        {/* Header */}
+        <div className="h-12 border-b border-neutral-100 flex items-center px-5 justify-between bg-white shrink-0">
           <div className="flex items-center gap-3">
             <span className="font-sans text-[11px] font-bold text-neutral-900 uppercase tracking-[0.2em]">
               protocolLM
@@ -173,7 +207,7 @@ const DemoChatContent = () => {
         </div>
 
         {/* Input Field */}
-        <div className="p-4 bg-white border-t border-neutral-100">
+        <div className="p-4 bg-white border-t border-neutral-100 shrink-0">
           <div className="w-full bg-neutral-50 border border-neutral-200 rounded-md px-4 py-3 flex items-center gap-3">
             <span className="text-neutral-400 text-xs">{'>'}</span>
             <div className="flex-1 text-xs text-neutral-900 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
@@ -213,18 +247,21 @@ const CountUp = ({ end, duration = 2000, prefix = '', suffix = '', decimals = 0 
   )
 }
 
-// --- 4. EXECUTIVE CARDS (Text-Heavy / No Icons) ---
-const StatCard = ({ title, value, sub, delay }) => {
+// --- 4. EXECUTIVE CARDS ---
+const StatCard = ({ title, value, sub, icon, delay }) => {
   return (
     <div 
       style={{ animationDelay: `${delay}ms` }}
       className="group bg-white border border-neutral-200 p-6 rounded-lg flex flex-col justify-between min-h-[150px] opacity-0 animate-reveal-card hover:border-black transition-colors duration-300 cursor-default relative overflow-hidden shadow-sm hover:shadow-md"
     >
-      <div className="relative z-10 h-full flex flex-col justify-between">
-        <div>
-          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</div>
-          <div className="text-4xl font-bold text-black tracking-tighter mb-1">{value}</div>
-        </div>
+      {/* Icon Top Right */}
+      <div className="absolute top-5 right-5 w-10 h-10 opacity-30 group-hover:opacity-100 transition-opacity duration-300 text-neutral-800">
+        {icon}
+      </div>
+
+      <div className="relative z-10 mt-auto">
+        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">{title}</div>
+        <div className="text-4xl font-bold text-black tracking-tighter mb-1">{value}</div>
         <div className="text-[11px] font-medium text-neutral-600 border-t border-neutral-100 pt-3 mt-2 leading-relaxed">
           {sub}
         </div>
@@ -380,9 +417,9 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-black selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (Architectural Watermark) */}
+      {/* BACKGROUND (Reduced Opacity to 0.15 for subtle feel) */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-white">
-        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.28] grayscale contrast-125">
+        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.15] grayscale contrast-125">
            <Image 
              src="/background.png" 
              alt="Background" 
@@ -398,7 +435,7 @@ function MainContent() {
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-4">
         <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <span className="text-lg font-bold tracking-tight text-black">
+            <span className="text-xl font-bold tracking-tight text-black">
               protocol<span className="text-neutral-400">LM</span>
             </span>
           </div>
@@ -413,11 +450,12 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Higher Up / No Scroll) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-16 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION (Shifted Up & Mobile Optimized) */}
+      {/* Desktop: pt-4, Mobile: pt-24 ensures it clears nav but sits high */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
         {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-8 lg:pt-0">
           
           {/* Badge */}
           <div className={`inline-flex items-center gap-2 px-3 py-1 bg-white border border-neutral-200 rounded-full text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '100ms' }}>
@@ -425,48 +463,51 @@ function MainContent() {
             Compliance Intelligence
           </div>
 
-          {/* Headline (All Black) */}
+          {/* Headline */}
           <h1 className={`text-4xl md:text-6xl font-bold text-black tracking-tighter leading-[1.05] mb-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             before the inspector arrives.
           </h1>
 
-          {/* Subheader (Restored & Enhanced) */}
+          {/* Subheader */}
           <p className={`text-sm md:text-base text-neutral-500 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
           {/* CTA */}
-          <div className={`flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-12 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+          <div className={`flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="w-full sm:w-auto px-8 py-3.5 bg-black hover:bg-neutral-800 text-white rounded font-bold text-xs uppercase tracking-[0.15em] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-95">
               Start Free Trial
             </button>
           </div>
 
-          {/* CARDS GRID (Text Only / Employer Focus) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 lg:mb-0">
+          {/* CARDS GRID (Shifted up with smaller bottom margin) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 lg:mb-0">
             <StatCard 
+              icon={<IconRevenue />}
               value={<CountUp end={12} suffix="%" duration={2500} />}
               title="Revenue Drop"
-              sub="Average sales loss following a public bad grade due to staff errors."
+              sub="Post-incident loss"
               delay={500}
             />
             <StatCard 
+              icon={<IconLiability />}
               value={<CountUp end={75} prefix="$" suffix="k" duration={2500} />}
               title="Incident Cost"
-              sub="Legal fees, remediation, and lost traffic from one serious outbreak."
+              sub="Liabilty & labor"
               delay={650}
             />
             <StatCard 
+              icon={<IconRisk />}
               value={<CountUp end={2.5} suffix="x" decimals={1} duration={2500} />}
               title="Fine Multiplier"
-              sub="Penalties escalate rapidly for repeat violations."
+              sub="Repeat violations"
               delay={800}
             />
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - Updated Branding) */}
+        {/* RIGHT COLUMN (Demo) */}
         <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
