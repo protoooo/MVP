@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Massive & Centered) ---
+// --- 1. CHAT DEMO (Central & Visible) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -104,10 +104,16 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full h-full group mx-auto">
-      <div className="flex flex-col h-full w-full bg-white border border-neutral-100 rounded-2xl relative z-10 overflow-hidden shadow-[0_20px_60px_-12px_rgba(0,0,0,0.1)]">
+      {/* 
+          Container Style Updates:
+          - border-2: Thicker border for visibility
+          - border-neutral-200: Distinct grey outline
+          - shadow-xl: Pops it off the page
+      */}
+      <div className="flex flex-col h-full w-full bg-white border-2 border-neutral-200 rounded-2xl relative z-10 overflow-hidden shadow-xl shadow-neutral-200/40">
         
         {/* Header */}
-        <div className="h-16 border-b border-neutral-100 flex items-center px-8 justify-between bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-20">
+        <div className="h-16 border-b-2 border-neutral-100 flex items-center px-8 justify-between bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <span className="font-sans text-sm font-bold text-neutral-900 tracking-wide">
               protocol_LM
@@ -126,7 +132,7 @@ const DemoChatContent = () => {
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
-              <div className="w-14 h-14 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center shadow-sm">
+              <div className="w-14 h-14 bg-white border-2 border-neutral-200 rounded-2xl flex items-center justify-center shadow-sm">
                  <div className="w-6 h-6 border-2 border-neutral-200 border-t-black rounded-full animate-spin"/>
               </div>
               <p className="text-sm font-semibold text-neutral-400 tracking-wide">System Ready</p>
@@ -144,7 +150,7 @@ const DemoChatContent = () => {
                 className={`max-w-[80%] px-6 py-4 text-[15px] leading-relaxed rounded-2xl ${
                   msg.role === 'user'
                     ? 'bg-neutral-900 text-white rounded-tr-sm'
-                    : 'bg-white text-neutral-800 border border-neutral-100 shadow-sm rounded-tl-sm'
+                    : 'bg-white text-neutral-800 border border-neutral-200 shadow-sm rounded-tl-sm'
                 }`}
               >
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
@@ -154,7 +160,7 @@ const DemoChatContent = () => {
 
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-1">
-              <div className="bg-white px-5 py-3 rounded-full border border-neutral-100 shadow-sm flex items-center">
+              <div className="bg-white px-5 py-3 rounded-full border border-neutral-200 shadow-sm flex items-center">
                 <div className="loader"></div>
               </div>
             </div>
@@ -162,7 +168,7 @@ const DemoChatContent = () => {
         </div>
 
         {/* Input Field */}
-        <div className="p-6 bg-white border-t border-neutral-100 shrink-0">
+        <div className="p-6 bg-white border-t-2 border-neutral-100 shrink-0">
           <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-5 py-4 flex items-center gap-4 transition-all focus-within:ring-2 focus-within:ring-neutral-100 focus-within:bg-white focus-within:border-neutral-300">
             <div className="flex-1 text-[15px] text-neutral-900 font-medium min-h-[24px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
@@ -304,7 +310,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 4. MAIN CONTENT (Centered & Big) ---
+// --- 3. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -363,33 +369,35 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Centered Single Column) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-8 flex flex-col items-center relative z-10">
+      {/* HERO SECTION */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
-        {/* CENTERED TEXT */}
-        <div className="w-full max-w-4xl text-center mb-16">
-          <h1 className={`text-5xl md:text-8xl font-bold text-neutral-900 tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        {/* LEFT COLUMN */}
+        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
+          
+          {/* Headline - Scaled Down */}
+          <h1 className={`text-4xl md:text-6xl font-bold text-neutral-900 tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Employee errors are <br />
             costing you money.
           </h1>
 
-          <p className={`text-[16px] md:text-[18px] text-neutral-600 leading-relaxed max-w-2xl mx-auto font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          {/* Subheader */}
+          <p className={`text-[15px] text-neutral-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* MOBILE CTA */}
-          <div className={`md:hidden flex justify-center mt-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="w-full max-w-xs bg-neutral-900 hover:bg-black text-white px-5 py-3.5 rounded-full text-sm font-bold shadow-lg">
+          {/* Mobile CTA */}
+          <div className={`md:hidden flex justify-center mb-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-neutral-900 hover:bg-black text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* MASSIVE DEMO BOX (Centered & Ultrawide) */}
-        <div className={`w-full max-w-6xl h-[550px] md:h-[650px] transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* RIGHT COLUMN (Demo) */}
+        <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
           <DemoChatContent />
         </div>
-
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
