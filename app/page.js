@@ -200,8 +200,21 @@ export default function Page() {
     }
     init()
     
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      
+      // Fetch profile when session changes
+      if (session) {
+        const { data: userProfile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed, accepted_terms, accepted_privacy')
+          .eq('id', session.user.id)
+          .single()
+        
+        setProfile(userProfile)
+      } else {
+        setProfile(null)
+      }
     })
     
     return () => listener.subscription.unsubscribe()
@@ -213,7 +226,6 @@ export default function Page() {
     }
   }, [messages])
 
-  // Auto-focus input after first message
   useEffect(() => {
     if (messages.length > 0 && inputRef.current) {
       inputRef.current.focus()
@@ -224,23 +236,44 @@ export default function Page() {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
-    // Check if user needs to authenticate or start trial
+    // Check if user needs to authenticate
     if (!session) {
       setAuthModalMessage('Start your free trial to continue')
       setShowAuthModal(true)
       return
     }
 
-    // Check if user accepted terms
-    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-      router.push('/accept-terms')
-      return
-    }
-
-    // Check if user has subscription or trial
-    if (!profile?.is_subscribed) {
-      router.push('/pricing')
-      return
+    // If we have a session but no profile loaded yet, fetch it
+    if (!profile) {
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed, accepted_terms, accepted_privacy')
+        .eq('id', session.user.id)
+        .single()
+      
+      setProfile(userProfile)
+      
+      // Check after fetching
+      if (!userProfile?.accepted_terms || !userProfile?.accepted_privacy) {
+        router.push('/accept-terms')
+        return
+      }
+      
+      if (!userProfile?.is_subscribed) {
+        router.push('/pricing')
+        return
+      }
+    } else {
+      // Profile already loaded
+      if (!profile.accepted_terms || !profile.accepted_privacy) {
+        router.push('/accept-terms')
+        return
+      }
+      
+      if (!profile.is_subscribed) {
+        router.push('/pricing')
+        return
+      }
     }
 
     const newMsg = { role: 'user', content: input, image: selectedImage }
@@ -329,12 +362,10 @@ export default function Page() {
 
       <div className="flex h-screen w-full bg-[#212121] text-[#ECECEC] overflow-hidden fixed inset-0">
         
-        {/* Sidebar Overlay (Mobile) */}
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
 
-        {/* Sidebar */}
         <aside className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-[#171717] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -386,7 +417,6 @@ export default function Page() {
           </div>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 flex flex-col relative min-w-0">
           <header className="h-14 border-b border-[#2F2F2F] flex items-center justify-between px-4 shrink-0 bg-[#212121]">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#C5C5C5] hover:text-white">
@@ -415,13 +445,10 @@ export default function Page() {
             </div>
           </header>
 
-          {/* Chat Area */}
           <div className="flex-1 overflow-y-auto" ref={scrollRef}>
             {!hasStartedChat ? (
-              // ChatGPT-style Empty State with centered input
               <div className="h-full flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-3xl">
-                  {/* Hero Section */}
                   <div className="text-center mb-12">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#10A37F] mb-6">
                       <Icons.Sparkles />
@@ -436,7 +463,6 @@ export default function Page() {
                     )}
                   </div>
 
-                  {/* Sample Prompts */}
                   <div className="grid sm:grid-cols-2 gap-3 mb-12">
                     {[
                       { title: 'Temperature Control', prompt: 'What are the temperature requirements for cold holding?' },
@@ -458,7 +484,6 @@ export default function Page() {
                     ))}
                   </div>
 
-                  {/* Input Bar (Tilted/Elongated) */}
                   <div className="relative">
                     {selectedImage && (
                       <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
@@ -508,7 +533,6 @@ export default function Page() {
                 </div>
               </div>
             ) : (
-              // Full Chat View
               <>
                 <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 pb-32">
                   {messages.map((msg, idx) => (
@@ -532,7 +556,6 @@ export default function Page() {
                   ))}
                 </div>
 
-                {/* Fixed Bottom Input */}
                 <div className="absolute bottom-0 left-0 right-0 bg-[#212121] border-t border-[#2F2F2F] p-4">
                   <div className="max-w-3xl mx-auto">
                     {selectedImage && (
