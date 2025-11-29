@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Script from 'next/script'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO ---
+// --- 1. CHAT DEMO (Unchanged) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -27,11 +28,11 @@ const DemoChatContent = () => {
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "NO. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
+      response: "COMPLIANT: No. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response: 'VIOLATION: Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     }
   ]
 
@@ -41,7 +42,7 @@ const DemoChatContent = () => {
     
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      await wait(Math.random() * 30 + 20)
+      await wait(Math.random() * 35 + 25)
     }
 
     const runSimulation = async () => {
@@ -51,17 +52,17 @@ const DemoChatContent = () => {
           if (!isMounted) return
           setIsTyping(true)
           setInputValue('')
-          await wait(800)
+          await wait(900)
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
-          await wait(400)
+          await wait(450)
           setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(1800)
+          await wait(2100)
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -74,9 +75,9 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(25)
+            await wait(30)
           }
-          await wait(3500)
+          await wait(4500)
         }
         await wait(1200)
         setMessages((prev) => prev.slice(-4))
@@ -87,31 +88,24 @@ const DemoChatContent = () => {
   }, [])
 
   const formatContent = (text) => {
-    const keywords = ['CRITICAL ACTION', 'VIOLATION', 'IMMINENT HEALTH HAZARD', 'CORE VIOLATION', 'ACTION REQUIRED']
-    for (const key of keywords) {
-      if (text.includes(key)) {
-        const parts = text.split(key)
-        return (
-          <span>
-            <span className="text-[#3ECF8E] font-medium">{key}</span>
-            {parts[1]}
-          </span>
-        )
-      }
+    if (text.includes('ACTION REQUIRED')) {
+       const parts = text.split('ACTION REQUIRED')
+       return (<span><span className="text-[#F87171] font-bold">ACTION REQUIRED</span>{parts[1]}</span>)
+    }
+    if (text.includes('VIOLATION')) {
+       const parts = text.split('VIOLATION')
+       return (<span><span className="text-[#F87171] font-bold">VIOLATION</span>{parts[1]}</span>)
+    }
+    if (text.includes('COMPLIANT')) {
+       const parts = text.split('COMPLIANT')
+       return (<span><span className="text-[#3ECF8E] font-bold">COMPLIANT</span>{parts[1]}</span>)
     }
     return text
   }
 
   return (
     <div className="relative w-full max-w-5xl group mx-auto">
-      {/* 
-          FIXED HEIGHT:
-          Mobile: h-[400px] 
-          Desktop: h-[550px]
-      */}
-      <div className="flex flex-col h-[400px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
-        
-        {/* Header */}
+      <div className="flex flex-col h-[360px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
@@ -128,7 +122,6 @@ const DemoChatContent = () => {
           </div>
         </div>
 
-        {/* Chat Feed */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll bg-[#1C1C1C]"
@@ -164,13 +157,17 @@ const DemoChatContent = () => {
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-0">
               <div className="px-0 py-2 flex items-center">
-                <div className="loader"></div>
+                <dotlottie-wc 
+                  src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" 
+                  autoplay 
+                  loop 
+                  style={{ width: '40px', height: '40px' }}
+                />
               </div>
             </div>
           )}
         </div>
 
-        {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
           <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
             <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
@@ -345,10 +342,7 @@ function MainContent() {
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
         <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-6 h-6 bg-[#3ECF8E] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(62,207,142,0.4)]">
-               <div className="w-3 h-3 bg-[#121212] rounded-sm opacity-50"></div>
-            </div>
-            <span className="text-sm font-semibold tracking-tight text-[#EDEDED]">
+            <span className="text-xl font-bold tracking-tight text-[#EDEDED]">
               protocol<span className="text-[#3ECF8E]">LM</span>
             </span>
           </div>
@@ -360,31 +354,36 @@ function MainContent() {
               Start Free Trial
             </button>
           </div>
-
-          {/* Mobile Login Only */}
-          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3ECF8E]">Log In</button>
         </div>
       </nav>
 
-      {/* HERO SECTION - Flexbox Centering Logic */}
-      {/* min-h-[calc(100vh-50px)] ensures it fills space nicely above the footer */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-12 flex flex-col justify-center items-center relative z-10 min-h-[calc(100vh-64px)]">
+      {/* HERO SECTION - OPTIMIZED SUBHEADER */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-4 pb-24 flex flex-col items-center relative z-10 min-h-[calc(100vh-64px)]">
         
-        {/* CENTERED TEXT */}
-        <div className="w-full max-w-5xl text-center mb-6">
-          {/* Desktop Headline */}
-          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 md:whitespace-nowrap ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        <div className="w-full max-w-5xl text-center mb-6 mt-12 md:mt-20">
+          {/* HEADLINE */}
+          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 md:whitespace-nowrap ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives
           </h1>
 
-          <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
-              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
-            </p>
+          {/* THE NEW SPEC-SHEET SUBHEADER */}
+          <div className={`flex flex-wrap justify-center gap-3 mb-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#3ECF8E]/30 rounded px-3 py-1.5 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#3ECF8E]"></span>
+              <span className="text-[11px] font-medium text-[#EDEDED] uppercase tracking-wide">Washtenaw County</span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#333] rounded px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#444]"></span>
+              <span className="text-[11px] font-medium text-[#888] uppercase tracking-wide">Michigan Food Law</span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#333] rounded px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#444]"></span>
+              <span className="text-[11px] font-medium text-[#888] uppercase tracking-wide">FDA Code 2022</span>
+            </div>
           </div>
 
           {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center mt-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+          <div className={`md:hidden flex justify-center mt-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
@@ -421,24 +420,6 @@ function MainContent() {
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-        
-        .loader {
-          height: 15px;
-          aspect-ratio: 2.5;
-          --_g: no-repeat radial-gradient(farthest-side,#3ECF8E 90%,#0000);
-          background:var(--_g), var(--_g), var(--_g), var(--_g);
-          background-size: 20% 50%;
-          animation: l43 1s infinite linear; 
-        }
-        @keyframes l43 {
-          0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-          16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-          33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-          50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
-          66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
-          83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
-          100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-        }
       `}</style>
     </div>
   )
