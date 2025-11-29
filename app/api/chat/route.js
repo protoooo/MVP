@@ -33,7 +33,16 @@ export async function POST(req) {
     if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
     
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+    // Using gemini-2.0-flash-exp for best performance
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp",
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      }
+    })
 
     const cookieStore = cookies()
     const supabase = createServerClient(
@@ -127,6 +136,7 @@ export async function POST(req) {
       }
     }
 
+    // Build prompt parts for Gemini 2.0
     const prompt = [
       { text: SYSTEM_PROMPT },
       { text: `USER JURISDICTION: ${county || 'washtenaw'}` },
@@ -136,21 +146,43 @@ export async function POST(req) {
 
     if (image) {
       const base64Data = image.split(',')[1]
-      prompt.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
+      prompt.push({ 
+        inlineData: { 
+          mimeType: 'image/jpeg', 
+          data: base64Data 
+        } 
+      })
       prompt.push({ text: "Analyze the image STRICTLY against the Regulatory Context. Cite sources." })
     }
 
+    // Generate content with Gemini 2.0 Flash
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
     // Increment usage counter
-    await supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
+    const { error: usageError } = await supabase.rpc('increment_usage', { 
+      user_id: session.user.id, 
+      is_image: !!image 
+    })
+
+    if (usageError) {
+      console.error('❌ Failed to increment usage:', usageError)
+    }
 
     return NextResponse.json({ message: text, citations: citations })
 
   } catch (error) {
     console.error('Chat Route Error:', error)
+    
+    // Handle specific Gemini API errors
+    if (error.message?.includes('RESOURCE_EXHAUSTED')) {
+      return NextResponse.json({ 
+        error: 'API rate limit reached. Please try again in a moment.',
+        fallback: 'Contact support if this persists.'
+      }, { status: 429 })
+    }
+    
     return NextResponse.json({ 
       error: 'Unable to process request. Please try again.',
       fallback: 'If this persists, contact support with timestamp: ' + new Date().toISOString()
