@@ -324,22 +324,18 @@ export default function Page() {
   }, [messages.length, isSending])
 
   const handleSignOut = async (e) => {
-    // Prevent default form/link behaviors
     if (e && e.preventDefault) e.preventDefault()
     
-    // 1. Optimistically clear local UI state immediately
     setSession(null)
     setProfile(null)
     setMessages([])
     setShowUserMenu(false)
 
     try {
-      // 2. Attempt Supabase sign out
       await supabase.auth.signOut()
     } catch (error) {
       console.error('Error signing out:', error)
     } finally {
-      // 3. Force hard refresh/redirect to clear any persistent server/cookie state
       router.refresh()
       window.location.href = '/'
     }
@@ -350,7 +346,8 @@ export default function Page() {
     if ((!input.trim() && !selectedImage) || isSending) return
 
     if (!session) {
-      setAuthModalMessage('Sign up to start chatting')
+      // CHANGED: Specific message about the trial
+      setAuthModalMessage('Start your 30-day free trial to chat')
       setShowAuthModal(true)
       return
     }
@@ -501,9 +498,24 @@ export default function Page() {
             /* ================================== */
             <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full">
               {/* Updated Header Font (Supabase Style) */}
-              <h1 className="text-3xl md:text-5xl text-white mb-8 text-center tracking-tight font-sans">
+              <h1 className="text-3xl md:text-5xl text-white mb-4 text-center tracking-tight font-sans">
                 Washtenaw Food Safety
               </h1>
+
+              {/* NEW: 30-Day Free Trial Badge/Pill */}
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="mb-8 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3E7BFA]/10 border border-[#3E7BFA]/30 hover:border-[#3E7BFA] hover:bg-[#3E7BFA]/20 transition-all cursor-pointer group"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                <span className="text-[#3E7BFA] text-sm font-medium group-hover:text-blue-300">
+                  Start your 30-day free trial
+                </span>
+              </button>
+
               <div className="w-full max-w-2xl">
                 <InputBox
                   input={input}
