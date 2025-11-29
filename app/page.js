@@ -1,5 +1,8 @@
 'use client'
 
+// This fixes the build error by preventing static generation
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -32,7 +35,7 @@ const DemoChatContent = () => {
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION: Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     }
   ]
 
@@ -96,21 +99,23 @@ const DemoChatContent = () => {
        const parts = text.split('VIOLATION')
        return (<span><span className="text-[#F87171] font-bold">VIOLATION</span>{parts[1]}</span>)
     }
-    if (text.includes('COMPLIANT')) {
-       const parts = text.split('COMPLIANT')
-       return (<span><span className="text-[#3ECF8E] font-bold">COMPLIANT</span>{parts[1]}</span>)
+    // Handle the specific "NO" answer as Compliant
+    if (text.startsWith("NO.")) {
+       return (<span><span className="text-[#3ECF8E] font-bold">COMPLIANT: NO.</span>{text.substring(3)}</span>)
     }
     return text
   }
 
   return (
     <div className="relative w-full max-w-5xl group mx-auto">
+      {/* Fixed Height Container */}
       <div className="flex flex-col h-[360px] md:h-[500px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
+        {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
-              protocolLM
+              protocol<span className="text-[#3B82F6]">LM</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -119,6 +124,7 @@ const DemoChatContent = () => {
           </div>
         </div>
 
+        {/* Chat Feed */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll bg-[#1C1C1C]"
@@ -154,17 +160,18 @@ const DemoChatContent = () => {
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-0">
               <div className="px-0 py-2 flex items-center">
-                <dotlottie-wc 
-                  src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" 
-                  autoplay 
-                  loop 
-                  style={{ width: '40px', height: '40px' }}
-                />
+                {/* 3 Dot Loader - Replaces Lottie just in case Lottie caused issues, simple & clean */}
+                <div className="flex gap-1">
+                    <div className="w-1.5 h-1.5 bg-[#3B82F6] rounded-full animate-bounce" />
+                    <div className="w-1.5 h-1.5 bg-[#3B82F6] rounded-full animate-bounce [animation-delay:0.2s]" />
+                    <div className="w-1.5 h-1.5 bg-[#3B82F6] rounded-full animate-bounce [animation-delay:0.4s]" />
+                </div>
               </div>
             </div>
           )}
         </div>
 
+        {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
           <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
             <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
@@ -286,15 +293,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#2C2C2C] text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3B82F6] transition-colors">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3ECF8E] transition-colors">
             {view === 'signup' ? 'Have an account? Sign in' : 'No account? Sign up'}
           </button>
         </div>
@@ -327,11 +334,8 @@ function MainContent() {
   }
 
   return (
-    // min-h-screen + pb for scrolling
-    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-x-hidden">
+    <div className="min-h-[100dvh] w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-x-hidden">
       
-      <Script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module" strategy="afterInteractive" />
-
       {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
@@ -343,34 +347,33 @@ function MainContent() {
         <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-xl font-bold tracking-tight text-[#EDEDED]">
-              protocol<span className="text-[#3B82F6]">LM</span>
+              protocol<span className="text-[#3ECF8E]">LM</span>
             </span>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]">
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(62,207,142,0.15)]">
               Start Free Trial
             </button>
           </div>
+
           {/* Mobile Login */}
-          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-bold text-[#3B82F6]">Log In</button>
+          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3ECF8E]">Log In</button>
         </div>
       </nav>
 
-      {/* HERO SECTION - MOVED UP SIGNIFICANTLY */}
-      {/* PT-6 for mobile, PT-16 desktop ensures high positioning */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-6 md:pt-16 pb-12 flex flex-col items-center relative z-10">
+      {/* HERO SECTION - Moved UP */}
+      {/* PT-12 (Mobile) & PT-16 (Desktop) + PB-12 (Padding Bottom) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-12 md:pt-16 pb-12 flex flex-col items-center relative z-10">
         
         {/* CENTERED TEXT */}
-        <div className="w-full max-w-5xl text-center mb-6 mt-16 md:mt-20">
-          {/* Headline */}
+        <div className="w-full max-w-5xl text-center mb-6 mt-6 md:mt-20">
           <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 md:whitespace-nowrap ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives
           </h1>
 
-          {/* Subheader */}
           <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-3xl mx-auto font-normal">
               Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
@@ -379,7 +382,7 @@ function MainContent() {
 
           {/* Mobile CTA */}
           <div className={`md:hidden flex justify-center mt-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
           </div>
@@ -392,8 +395,8 @@ function MainContent() {
 
       </div>
 
-      {/* FOOTER - PROPERLY SPACED */}
-      <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10">
+      {/* FOOTER */}
+      <footer className="w-full py-6 border-t border-[#2C2C2C] bg-[#121212] z-20 mt-auto shrink-0">
          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-xs text-[#666]">
              <div className="flex gap-6">
                <a href="/terms" className="hover:text-[#EDEDED] transition-colors">Terms</a>
