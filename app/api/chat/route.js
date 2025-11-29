@@ -5,35 +5,59 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-const SYSTEM_PROMPT = `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
+// --- 1. DEFINE MODES & PROMPTS ---
+const PROMPTS = {
+  // DEFAULT / CHAT MODE
+  chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
+  OBJECTIVE: Help operators understand codes and fix violations.
+  HIERARCHY: 1. Local County Code (Washtenaw/Wayne/Oakland). 2. Michigan Modified Food Code. 3. FDA Food Code.
+  STYLE: Concise, authoritative, helpful. No fluff.
+  STRUCTURE: Direct Answer -> The Fix -> Evidence [Source, Page].`,
 
-**CORE OBJECTIVE:**
-Help restaurant operators understand health codes and fix violations immediately. Be concise, authoritative, and helpful.
+  // MOCK AUDIT MODE
+  audit: `You are a strict Local Health Inspector performing a mock audit.
+  OBJECTIVE: Analyze the user's input (or image) specifically for violations.
+  STYLE: Formal, critical, observant.
+  STRUCTURE: 
+  1. Identify Potential Violations.
+  2. Cite the specific code violation.
+  3. Assign Priority (Priority, Priority Foundation, Core).
+  4. Required Corrective Action.`,
 
-**HIERARCHY OF AUTHORITY:**
-1. **LOCAL COUNTY CODE** (Washtenaw/Wayne/Oakland).
-2. **MICHIGAN MODIFIED FOOD CODE**.
-3. **FDA FOOD CODE 2022**.
+  // CRISIS / CRITICAL MODE
+  critical: `You are an Emergency Response Protocol System.
+  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee).
+  STYLE: Calm, imperative, step-by-step. Use bolding for critical actions.
+  STRUCTURE:
+  1. IMMEDIATE ACTION REQUIRED (What to do RIGHT NOW).
+  2. ASSESSMENT (How to decide if you must close).
+  3. REOPENING CRITERIA.
+  4. WHO TO CALL.`,
 
-**RESPONSE STRUCTURE:**
-1. **DIRECT ANSWER:** Start with the specific rule.
-2. **THE FIX:** Provide corrective actions for violations.
-3. **EVIDENCE:** Cite sources as [Source Name, Page X].
+  // TRAINING MODE
+  training: `You are an engaging Food Safety Trainer.
+  OBJECTIVE: Create a short training script and quiz for kitchen staff based on the user's topic.
+  STYLE: Engaging, simple language, encouraging. (Fluff is okay here).
+  OUTPUT:
+  1. "The 2-Minute Drill" (A short script for a manager to read).
+  2. "Pop Quiz" (3 questions with answers at the bottom).`,
 
-**RULES:**
-- No fluff.
-- If unsure, say "Please verify with your inspector."
-- Analyze images for Priority (Critical) violations first.`
+  // SOP / LOGS MODE
+  sop: `You are a Documentation Specialist.
+  OBJECTIVE: Generate a formal Standard Operating Procedure (SOP) or a Log Sheet.
+  STYLE: Bureaucratic, clean, formatted.
+  OUTPUT: strictly use Markdown Tables or Bulleted Lists that can be printed. Include fields for 'Date', 'Time', 'Manager Signature'.`
+}
 
 export async function POST(req) {
   try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Missing API Key' }, { status: 500 })
     
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.0-flash-exp",
-      generationConfig: { temperature: 0.3, topK: 40, topP: 0.95, maxOutputTokens: 1024 }
+      generationConfig: { temperature: 0.3, topK: 40, topP: 0.95, maxOutputTokens: 2048 }
     })
 
     const cookieStore = cookies()
@@ -55,21 +79,22 @@ export async function POST(req) {
     if (!limitCheck.success) return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
     
     const body = await req.json()
-    // CAPTURE CHAT ID
-    const { messages, image, county, chatId } = body
+    // --- 2. CAPTURE MODE FROM BODY ---
+    const { messages, image, county, chatId, mode = 'chat' } = body
     
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
       return NextResponse.json({ error: 'Image limit reached.', limitReached: true }, { status: 429 })
     }
 
-    // 1. SAVE USER MESSAGE TO DB (If chatId exists)
     const lastMessage = messages[messages.length - 1]
+
+    // Save User Message
     if (chatId) {
        await supabase.from('messages').insert({
          chat_id: chatId,
          role: 'user',
          content: lastMessage.content,
-         image: image || null // Store base64 or reference if you prefer
+         image: image || null
        })
     }
 
@@ -95,22 +120,25 @@ export async function POST(req) {
       } catch (err) { console.error('Search Error:', err) }
     }
 
+    // --- 3. SELECT SYSTEM PROMPT BASED ON MODE ---
+    const selectedSystemPrompt = PROMPTS[mode] || PROMPTS.chat
+
     const promptParts = [
-      { text: SYSTEM_PROMPT },
+      { text: selectedSystemPrompt },
       { text: `\nJURISDICTION: ${county || 'washtenaw'}\nCONTEXT:\n${context}` },
-      { text: `\nQUESTION: ${lastMessage.content}` }
+      { text: `\nUSER INPUT: ${lastMessage.content}` }
     ]
 
     if (image) {
       promptParts.push({ inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } })
-      promptParts.push({ text: "\nAnalyze this image for health code violations based on the context." })
+      promptParts.push({ text: "\nAnalyze this image based on the specific mode objectives above." })
     }
 
     const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
 
-    // 2. SAVE ASSISTANT MESSAGE TO DB
+    // Save Assistant Message
     if (chatId) {
       await supabase.from('messages').insert({
         chat_id: chatId,
