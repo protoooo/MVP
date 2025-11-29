@@ -103,13 +103,8 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-4xl group mx-auto">
-      {/* 
-          FIXED HEIGHT SETTING:
-          h-[500px] on Mobile
-          h-[650px] on Desktop
-          This prevents the box from growing with text.
-      */}
+    <div className="relative w-full max-w-5xl group mx-auto">
+      {/* Fixed Height Container */}
       <div className="flex flex-col h-[500px] md:h-[650px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
         {/* Header */}
@@ -125,7 +120,7 @@ const DemoChatContent = () => {
           </div>
           <div className="flex items-center gap-2">
              <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full animate-pulse shadow-[0_0_8px_rgba(62,207,142,0.4)]"></div>
-             <span className="text-[10px] font-medium text-[#3ECF8E] uppercase tracking-wide">Connected</span>
+             <span className="text-[10px] font-medium text-[#3ECF8E] uppercase tracking-wide">Live</span>
           </div>
         </div>
 
@@ -139,7 +134,7 @@ const DemoChatContent = () => {
               <div className="w-12 h-12 border border-[#3C3C3C] rounded-md flex items-center justify-center border-dashed">
                  <div className="w-4 h-4 bg-[#3C3C3C] rounded-sm animate-pulse"/>
               </div>
-              <p className="text-[11px] font-medium text-[#888888] tracking-widest uppercase">Database Initialized</p>
+              <p className="text-[11px] font-medium text-[#888888] tracking-widest uppercase">Washtenaw DB Initialized</p>
             </div>
           )}
 
@@ -180,7 +175,7 @@ const DemoChatContent = () => {
               {isTyping && (
                 <span className="inline-block w-1.5 h-4 bg-[#3ECF8E] ml-0.5 animate-pulse" />
               )}
-              {!inputValue && !isTyping && <span className="text-[#555] text-xs">Run query...</span>}
+              {!inputValue && !isTyping && <span className="text-[#555] text-xs">Run compliance query...</span>}
             </div>
           </div>
         </div>
@@ -310,7 +305,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 3. MAIN CONTENT (Centered Layout) ---
+// --- 3. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -336,7 +331,7 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND */}
+      {/* BACKGROUND: DOT GRID TEXTURE */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80"></div>
@@ -364,41 +359,51 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION - Centered Stack */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-32 pb-12 flex flex-col items-center relative z-10 min-h-screen">
+      {/* HERO SECTION */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-0 flex flex-col items-center relative z-10 min-h-screen">
         
         {/* CENTERED TEXT */}
-        <div className="w-full max-w-4xl text-center mb-16">
-          <h1 className={`text-4xl md:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        <div className="w-full max-w-5xl text-center mb-12">
+          {/* One-Line Powerful Header */}
+          <h1 className={`text-3xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives.
           </h1>
 
-          <p className={`text-[15px] text-[#888] leading-relaxed max-w-xl mx-auto mb-8 font-normal transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
-          </p>
+          <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            <p className="text-[15px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
+              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
+            </p>
+            
+            {/* Subtle "Coming Soon" Badge */}
+            <div className="flex items-center gap-2 mt-2 bg-[#232323] border border-[#333] rounded-full px-3 py-1">
+               <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80"></span>
+               <span className="text-[10px] text-[#666] font-mono uppercase tracking-wide">Wayne & Oakland Support: Coming Q1</span>
+            </div>
+          </div>
 
           {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-3 rounded-md text-sm font-semibold shadow-lg">
+          <div className={`md:hidden flex justify-center mt-8 mb-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* DEMO BOX - Centered & Fixed Height */}
-        <div className={`w-full max-w-4xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* RIGHT COLUMN (Demo - Fixed Height Centered) */}
+        <div className={`flex-1 w-full max-w-4xl flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
-
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
+        /* Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
+        /* Green Loader */
         .loader {
           height: 15px;
           aspect-ratio: 2.5;
