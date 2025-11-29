@@ -36,6 +36,10 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Hide Scrollbar for Mode Bar */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 )
 
@@ -58,10 +62,15 @@ const Icons = {
   ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
   Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
   
-  // NEW MODE ICONS
+  // --- MODE ICONS ---
   MessageSquare: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
   Camera: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  ClipboardCheck: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+  ClipboardCheck: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
+  
+  // NEW UTILITY ICONS
+  Shield: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.572c-2.88 0-5.382-.874-6.86-2.195a1 1 0 00-1.396 1.135 12.001 12.001 0 006.583 9.473 1.002 1.002 0 001.346 0 12.001 12.001 0 006.583-9.473 1 1 0 00-1.396-1.135C15.382 5.698 12.88 6.572 12 6.572z" /></svg>,
+  AcademicCap: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>,
+  Table: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
 }
 
 // ==========================================
@@ -69,7 +78,6 @@ const Icons = {
 // ==========================================
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode }) => {
   
-  // Handle Mode Switching logic
   const handleModeClick = (mode) => {
     setActiveMode(mode)
     if (mode === 'image') {
@@ -77,63 +85,63 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     }
   }
 
+  // Helper to determine active color
+  const getActiveColor = () => {
+    switch(activeMode) {
+      case 'chat': return '#3E7BFA'; // Blue
+      case 'image': return '#F5A623'; // Orange
+      case 'audit': return '#FDD901'; // Yellow
+      case 'critical': return '#EF4444'; // Red
+      case 'training': return '#A855F7'; // Purple
+      case 'sop': return '#3ECF8E'; // Green
+      default: return '#3E7BFA';
+    }
+  }
+
+  const activeColor = getActiveColor();
+
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-6">
+    <div className="w-full max-w-4xl mx-auto px-4 pb-6">
       
-      {/* 
-        ========================================
-        NEW SEAMLESS MODE SWITCHER (The "Paperclip Replacement")
-        ========================================
-      */}
-      <div className="flex items-center gap-1 mb-2 px-1">
+      {/* SCROLLABLE MODE BAR */}
+      <div className="flex items-center gap-1 mb-2 px-1 overflow-x-auto no-scrollbar pb-1">
         
-        {/* CHAT MODE (Blue) */}
-        <button
-          onClick={() => handleModeClick('chat')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-            activeMode === 'chat' 
-              ? 'text-[#3E7BFA] bg-[#3E7BFA]/10' 
-              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.MessageSquare />
-          <span>Chat</span>
-          {activeMode === 'chat' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]"></div>
-          )}
+        {/* Chat (Blue) */}
+        <button onClick={() => handleModeClick('chat')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'chat' ? 'text-[#3E7BFA] bg-[#3E7BFA]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.MessageSquare /> <span>Chat</span>
+          {activeMode === 'chat' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]"></div>}
         </button>
 
-        {/* IMAGE MODE (Orange) */}
-        <button
-          onClick={() => handleModeClick('image')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-            activeMode === 'image' || selectedImage
-              ? 'text-[#F5A623] bg-[#F5A623]/10' 
-              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.Camera />
-          <span>Image</span>
-          {(activeMode === 'image' || selectedImage) && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]"></div>
-          )}
+        {/* Image (Orange) */}
+        <button onClick={() => handleModeClick('image')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'image' || selectedImage ? 'text-[#F5A623] bg-[#F5A623]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.Camera /> <span>Image</span>
+          {(activeMode === 'image' || selectedImage) && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]"></div>}
         </button>
 
-        {/* MOCK AUDIT MODE (Yellow) */}
-        <button
-          onClick={() => handleModeClick('audit')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-            activeMode === 'audit' 
-              ? 'text-[#FDD901] bg-[#FDD901]/10' 
-              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.ClipboardCheck />
-          <span>Mock Audit</span>
-          {activeMode === 'audit' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]"></div>
-          )}
+        {/* Mock Audit (Yellow) */}
+        <button onClick={() => handleModeClick('audit')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'audit' ? 'text-[#FDD901] bg-[#FDD901]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.ClipboardCheck /> <span>Audit</span>
+          {activeMode === 'audit' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]"></div>}
         </button>
+
+        {/* Crisis (Red - Shield) */}
+        <button onClick={() => handleModeClick('critical')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'critical' ? 'text-[#EF4444] bg-[#EF4444]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.Shield /> <span>Crisis</span>
+          {activeMode === 'critical' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF4444] rounded-full shadow-[0_0_8px_#EF4444]"></div>}
+        </button>
+
+        {/* Training (Purple) */}
+        <button onClick={() => handleModeClick('training')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'training' ? 'text-[#A855F7] bg-[#A855F7]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.AcademicCap /> <span>Train</span>
+          {activeMode === 'training' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#A855F7] rounded-full shadow-[0_0_8px_#A855F7]"></div>}
+        </button>
+
+        {/* SOPs (Green) */}
+        <button onClick={() => handleModeClick('sop')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'sop' ? 'text-[#3ECF8E] bg-[#3ECF8E]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+          <Icons.Table /> <span>Logs</span>
+          {activeMode === 'sop' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3ECF8E] rounded-full shadow-[0_0_8px_#3ECF8E]"></div>}
+        </button>
+
       </div>
 
       {selectedImage && (
@@ -145,17 +153,21 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* 
-         Dynamic Border Color based on Mode
-      */}
+      {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
-        className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none
-          ${activeMode === 'chat' ? 'border-[#2E2E2E] focus-within:border-[#3E7BFA]' : ''}
-          ${activeMode === 'image' ? 'border-[#F5A623]/30 focus-within:border-[#F5A623]' : ''}
-          ${activeMode === 'audit' ? 'border-[#FDD901]/30 focus-within:border-[#FDD901]' : ''}
-        `}
+        className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
+        style={{ 
+          borderColor: activeMode === 'chat' ? '#2E2E2E' : `${activeColor}4D`, // 30% opacity for non-active border
+          '--active-color': activeColor 
+        }}
       >
+        <style jsx>{`
+          form:focus-within {
+            border-color: var(--active-color) !important;
+          }
+        `}</style>
+
         <input
           type="file"
           ref={fileInputRef}
@@ -177,7 +189,10 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           placeholder={
             activeMode === 'chat' ? "Ask anything..." :
             activeMode === 'image' ? "Upload an image to analyze..." :
-            "Describe the area for audit simulation..."
+            activeMode === 'audit' ? "Describe area for mock audit..." :
+            activeMode === 'critical' ? "Describe the emergency (e.g. power outage)..." :
+            activeMode === 'training' ? "Topic for staff training (e.g. handwashing)..." :
+            "What kind of log or SOP do you need?"
           }
           className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
@@ -187,16 +202,16 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         <button
           type="submit"
           disabled={(!input.trim() && !selectedImage) || isSending}
-          className={`p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center ${
-            (input.trim() || selectedImage) && !isSending
-              ? activeMode === 'chat' ? 'bg-[#3E7BFA] border-[#3E7BFA] text-white' :
-                activeMode === 'image' ? 'bg-[#F5A623] border-[#F5A623] text-black' :
-                'bg-[#FDD901] border-[#FDD901] text-black'
-              : 'bg-[#2E2E2E] border-[#2E2E2E] text-[#525252] cursor-not-allowed'
-          }`}
+          className="p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center"
+          style={{
+            backgroundColor: (!input.trim() && !selectedImage) ? '#2E2E2E' : activeColor,
+            borderColor: (!input.trim() && !selectedImage) ? '#2E2E2E' : activeColor,
+            color: (!input.trim() && !selectedImage) ? '#525252' : (activeMode === 'chat' || activeMode === 'critical' || activeMode === 'training') ? 'white' : 'black',
+            cursor: (!input.trim() && !selectedImage) ? 'not-allowed' : 'pointer'
+          }}
         >
           {isSending ? (
-            <div className="w-4 h-4 border-2 border-black/50 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : (
             <Icons.Send />
           )}
@@ -336,7 +351,7 @@ export default function Page() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   
   // NEW: ACTIVE MODE STATE
-  const [activeMode, setActiveMode] = useState('chat') // 'chat' | 'image' | 'audit'
+  const [activeMode, setActiveMode] = useState('chat') // 'chat', 'image', 'audit', 'critical', 'training', 'sop'
   
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -494,8 +509,15 @@ export default function Page() {
 
     // --- MODIFY PROMPT BASED ON MODE ---
     let finalInput = input
+    
     if (activeMode === 'audit') {
       finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
+    } else if (activeMode === 'critical') {
+      finalInput = `[CRITICAL EMERGENCY MODE] The user is reporting a food safety emergency. Provide immediate, step-by-step corrective actions based on Imminent Health Hazard protocols. Be concise and authoritative. Input: ${input}`
+    } else if (activeMode === 'training') {
+      finalInput = `[TRAINING GENERATOR MODE] Create a short, engaging staff training script and a 3-question quiz for kitchen staff regarding: ${input}`
+    } else if (activeMode === 'sop') {
+      finalInput = `[SOP/LOG GENERATOR MODE] Generate a clean Markdown table/form for a Standard Operating Procedure or Log Sheet regarding: ${input}`
     }
 
     const newMsg = { role: 'user', content: input, image: selectedImage } // Store original input for UI
