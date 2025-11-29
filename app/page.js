@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Multi-Color Intelligence) ---
+// --- 1. CHAT DEMO (Cleaned Up & Slower) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -23,15 +23,15 @@ const DemoChatContent = () => {
   const SEQUENCE = [
     {
       text: "We received a notice for a 'Chronic Violation' in Washtenaw County. What does that mean?",
-      response: "CRITICAL ACTION: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
+      response: "ACTION REQUIRED: Per 'Washtenaw Enforcement Procedure Sec 1.4', a Chronic Violation is a priority violation documented on 3 of the last 5 routine inspections. You are now subject to an Administrative Conference (Sec 6.2) and must submit a Risk Control Plan."
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "COMPLIANT: No. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
+      response: "NO. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION: Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     }
   ]
 
@@ -41,7 +41,8 @@ const DemoChatContent = () => {
     
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      await wait(Math.random() * 20 + 10) // Fast mechanical typing
+      // Slowed down by ~12% (was 30+20)
+      await wait(Math.random() * 35 + 25) 
     }
 
     const runSimulation = async () => {
@@ -51,17 +52,17 @@ const DemoChatContent = () => {
           if (!isMounted) return
           setIsTyping(true)
           setInputValue('')
-          await wait(500)
+          await wait(900) // Slower start
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
-          await wait(300)
+          await wait(450) // Slower pause before send
           setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(1500)
+          await wait(2100) // 12% slower thinking
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -74,11 +75,11 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(25)
+            await wait(30) // Slower reading speed
           }
-          await wait(4000)
+          await wait(4500) // Longer pause between questions
         }
-        await wait(1000)
+        await wait(1200)
         setMessages((prev) => prev.slice(-4))
       }
     }
@@ -86,41 +87,32 @@ const DemoChatContent = () => {
     return () => { isMounted = false }
   }, [])
 
-  // Color Logic for Keywords
   const formatContent = (text) => {
-    if (text.includes('CRITICAL ACTION')) {
-      const parts = text.split('CRITICAL ACTION')
-      return (<span><span className="text-[#EF4444] font-semibold">CRITICAL ACTION</span>{parts[1]}</span>)
-    }
-    if (text.includes('VIOLATION')) {
-      const parts = text.split('VIOLATION')
-      return (<span><span className="text-[#EF4444] font-semibold">VIOLATION</span>{parts[1]}</span>)
-    }
-    if (text.includes('COMPLIANT')) {
-      const parts = text.split('COMPLIANT')
-      return (<span><span className="text-[#3ECF8E] font-semibold">COMPLIANT</span>{parts[1]}</span>)
+    const keywords = ['CRITICAL ACTION', 'VIOLATION', 'IMMINENT HEALTH HAZARD', 'CORE VIOLATION', 'ACTION REQUIRED']
+    for (const key of keywords) {
+      if (text.includes(key)) {
+        const parts = text.split(key)
+        return (
+          <span>
+            <span className="text-[#3ECF8E] font-medium">{key}</span>
+            {parts[1]}
+          </span>
+        )
+      }
     }
     return text
   }
 
   return (
-    <div className="relative w-full max-w-4xl group mx-auto">
-      {/* 
-          FIXED HEIGHTS:
-          Mobile: h-[400px] - Small enough to fit under the header on phone
-          Desktop: h-[500px] - Leaves room for footer
-      */}
-      <div className="flex flex-col h-[400px] md:h-[500px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+    <div className="relative w-full max-w-5xl group mx-auto">
+      {/* FIXED HEIGHT */}
+      <div className="flex flex-col h-[500px] md:h-[600px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
-        {/* Header */}
+        {/* Header: Simplified & Clean */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <div className="flex gap-1.5">
-               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
-               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
-            </div>
-            <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
-              protocol_LM / query_console
+            <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide">
+              protocol<span className="text-[#3B82F6]">LM</span>
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -148,7 +140,7 @@ const DemoChatContent = () => {
               key={i}
               className={`flex ${
                 msg.role === 'user' ? 'justify-end' : 'justify-start'
-              } animate-in fade-in slide-in-from-bottom-2 duration-200`}
+              } animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
                 className={`max-w-[85%] px-4 py-3 text-[13px] leading-relaxed rounded-md border ${
@@ -172,7 +164,7 @@ const DemoChatContent = () => {
         </div>
 
         {/* Input Field */}
-        <div className="p-3 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
+        <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
           <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3B82F6] focus-within:ring-1 focus-within:ring-[#3B82F6]/20">
             <span className="text-[#3B82F6] text-xs font-mono">{'>'}</span>
             <div className="flex-1 text-[13px] text-[#EDEDED] font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
@@ -295,7 +287,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         <form onSubmit={handleAuth} className="space-y-4">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
@@ -310,7 +302,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 3. MAIN CONTENT (100% Viewport Optimization) ---
+// --- 3. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -334,8 +326,7 @@ function MainContent() {
   }
 
   return (
-    // h-screen ensures it tries to fit exactly one screen
-    <div className="h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
       
       {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
@@ -343,9 +334,9 @@ function MainContent() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80"></div>
       </div>
 
-      {/* NAVBAR - Compact padding (pt-3) */}
-      <nav className="w-full flex justify-center px-6 pt-3 pb-2 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md z-50 shrink-0">
-        <div className={`w-full max-w-6xl flex justify-between items-center h-12 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
+        <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
             <div className="w-6 h-6 bg-[#3B82F6] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(59,130,246,0.4)]">
                <div className="w-3 h-3 bg-[#121212] rounded-sm opacity-50"></div>
@@ -358,53 +349,62 @@ function MainContent() {
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]">
+            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]">
               Start Free Trial
             </button>
           </div>
         </div>
       </nav>
 
-      {/* HERO CONTENT - Flex 1 ensures it fills available space */}
-      <div className="flex-1 flex flex-col items-center justify-start relative z-10 w-full max-w-7xl mx-auto px-4 pt-4 pb-2">
+      {/* HERO SECTION - COMPACT & ALIGNED */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-8 pb-24 flex flex-col items-center relative z-10 min-h-screen">
         
-        {/* HEADLINES - Tight spacing */}
-        <div className="w-full max-w-4xl text-center mb-4 mt-2">
-          <h1 className={`text-3xl md:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
-            Train your team before the inspector arrives.
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-4xl text-center mb-8 mt-12 md:mt-16">
+          {/* 
+              Headline: Smaller Size, Tighter Tracking, No Period.
+              Max width ensures line break happens if screen is tiny, but ideally 1 line.
+          */}
+          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            Train your team before the inspector arrives
           </h1>
 
-          <p className={`text-[13px] md:text-[15px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, plus <strong className="text-white">Michigan Modified Food Code</strong> & <strong className="text-white">FDA Code</strong>.
-          </p>
+          {/* Subheader: Single Line Attempt on Desktop via whitespace-nowrap where possible */}
+          <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-5xl mx-auto font-normal md:whitespace-nowrap">
+              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>
+            </p>
+          </div>
 
-          {/* Mobile CTA - Visible only on small screens */}
-          <div className={`md:hidden flex justify-center mt-4 mb-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '300ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-[#151515] px-5 py-2 rounded-md text-xs font-semibold shadow-lg">
+          {/* Mobile CTA */}
+          <div className={`md:hidden flex justify-center mt-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* DEMO BOX - Takes remaining space up to max height */}
-        <div className={`w-full max-w-4xl flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* DEMO BOX - FIXED WIDTH & HEIGHT */}
+        <div className={`w-full max-w-5xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
 
       </div>
 
-      {/* FOOTER - "Sticky" at bottom */}
-      <footer className="w-full py-4 border-t border-[#2C2C2C] bg-[#121212] shrink-0 z-20">
-         <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-[10px] text-[#666] font-mono uppercase tracking-wider">
+      {/* FOOTER - With Coming Soon & Links */}
+      <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10 mt-auto">
+         <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-xs text-[#666]">
              <div className="flex gap-6">
                <a href="/terms" className="hover:text-[#EDEDED] transition-colors">Terms</a>
                <a href="/privacy" className="hover:text-[#EDEDED] transition-colors">Privacy</a>
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
-             <span className="flex items-center gap-2">
-               <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80"></span>
-               Wayne & Oakland Support: Q1
-             </span>
+             <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2C2C2C] rounded-full px-3 py-1">
+               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span> {/* Amber dot for Coming Soon */}
+               <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">Wayne & Oakland: Coming Q1</span>
+             </div>
+             <span className="hidden md:inline text-[#333]">|</span>
+             <span className="text-[#444]">© 2025 protocolLM</span>
          </div>
       </footer>
 
@@ -415,6 +415,7 @@ function MainContent() {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
+        /* Supabase Blue Loader */
         .loader {
           height: 14px;
           aspect-ratio: 2.5;
