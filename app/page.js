@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Script from 'next/script'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Centered & Fixed) ---
+// --- 1. CHAT DEMO (Unchanged) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -14,7 +15,6 @@ const DemoChatContent = () => {
   const [hasStarted, setHasStarted] = useState(false)
   const scrollRef = useRef(null)
 
-  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -28,11 +28,11 @@ const DemoChatContent = () => {
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "COMPLIANT: No. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
+      response: "NO. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION: Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     }
   ]
 
@@ -88,35 +88,35 @@ const DemoChatContent = () => {
   }, [])
 
   const formatContent = (text) => {
-    if (text.includes('ACTION REQUIRED')) {
-       const parts = text.split('ACTION REQUIRED')
-       return (<span><span className="text-[#EF4444] font-bold">ACTION REQUIRED</span>{parts[1]}</span>)
-    }
-    if (text.includes('VIOLATION')) {
-       const parts = text.split('VIOLATION')
-       return (<span><span className="text-[#EF4444] font-bold">VIOLATION</span>{parts[1]}</span>)
-    }
-    if (text.includes('COMPLIANT')) {
-       const parts = text.split('COMPLIANT')
-       return (<span><span className="text-[#3ECF8E] font-bold">COMPLIANT</span>{parts[1]}</span>)
+    const keywords = ['CRITICAL ACTION', 'VIOLATION', 'IMMINENT HEALTH HAZARD', 'CORE VIOLATION', 'ACTION REQUIRED']
+    for (const key of keywords) {
+      if (text.includes(key)) {
+        const parts = text.split(key)
+        return (
+          <span>
+            <span className="text-[#3ECF8E] font-medium">{key}</span>
+            {parts[1]}
+          </span>
+        )
+      }
     }
     return text
   }
 
   return (
     <div className="relative w-full max-w-5xl group mx-auto">
-      {/* 
-          FIXED HEIGHTS:
-          Mobile: h-[360px] 
-          Desktop: h-[550px]
-      */}
-      <div className="flex flex-col h-[360px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+      {/* FIXED HEIGHT CONTAINER */}
+      <div className="flex flex-col h-[400px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
         {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
+               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
+            </div>
             <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
-              protocol<span className="text-[#3B82F6]">LM</span>
+              protocol_LM
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -159,12 +159,15 @@ const DemoChatContent = () => {
           ))}
 
           {isThinking && (
-            <div className="flex justify-start animate-fade-in pl-1">
-              <div className="py-2 flex items-center gap-1.5">
-                {/* 3 DOTS (BLUE) */}
-                <div className="w-2 h-2 bg-[#3B82F6] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-[#3B82F6] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-[#3B82F6] rounded-full animate-bounce"></div>
+            <div className="flex justify-start animate-fade-in pl-0">
+              <div className="px-0 py-2 flex items-center">
+                {/* LOTTIE LOADER */}
+                <dotlottie-wc 
+                  src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" 
+                  autoplay 
+                  loop 
+                  style={{ width: '40px', height: '40px' }}
+                />
               </div>
             </div>
           )}
@@ -172,12 +175,12 @@ const DemoChatContent = () => {
 
         {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
-          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3B82F6] focus-within:ring-1 focus-within:ring-[#3B82F6]/20">
-            <span className="text-[#3B82F6] text-xs font-mono">{'>'}</span>
+          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
+            <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
             <div className="flex-1 text-[13px] text-[#EDEDED] font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-1.5 h-4 bg-[#3B82F6] ml-0.5 animate-pulse" />
+                <span className="inline-block w-1.5 h-4 bg-[#3ECF8E] ml-0.5 animate-pulse" />
               )}
               {!inputValue && !isTyping && <span className="text-[#555] text-xs">Run compliance query...</span>}
             </div>
@@ -292,15 +295,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#2C2C2C] text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3B82F6] transition-colors">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3ECF8E] transition-colors">
             {view === 'signup' ? 'Have an account? Sign in' : 'No account? Sign up'}
           </button>
         </div>
@@ -333,8 +336,10 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
-      
+    // min-h-screen + overflow-hidden helps lock the viewport
+    <div className="min-h-[100dvh] w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
+      <Script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module" strategy="afterInteractive" />
+
       {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
@@ -357,34 +362,32 @@ function MainContent() {
               Start Free Trial
             </button>
           </div>
-
-          {/* Mobile Login Only */}
-          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3B82F6]">Log In</button>
+          
+          {/* Mobile Login Link */}
+          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-bold text-[#3B82F6]">Log In</button>
         </div>
       </nav>
 
       {/* HERO SECTION */}
-      {/* 
-         VERTICAL ALIGNMENT FIX: 
-         - justify-center: Puts content in the mathematical center of the container.
-         - min-h-[calc(100vh-80px)]: Takes up full height minus footer height, ensuring layout doesn't cramp.
-      */}
-      <div className="flex-1 flex flex-col justify-center items-center relative z-10 w-full max-w-7xl mx-auto px-4 md:px-6 pt-12 pb-6 min-h-[calc(100vh-80px)]">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-4 pb-24 flex flex-col items-center relative z-10 min-h-[calc(100vh-64px)]">
         
-        {/* HEADLINES */}
-        <div className="w-full max-w-5xl text-center mb-6">
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-5xl text-center mb-6 mt-12 md:mt-20">
+          
+          {/* HEADLINE: Optimized for Impact & Local Distinction */}
           <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 md:whitespace-nowrap ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Train your team before the inspector arrives
+            <span className="text-[#3B82F6]">Washtenaw</span> compliance intelligence. Not generic advice.
           </h1>
 
+          {/* SUBHEADER: Direct comparison */}
           <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
-              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
+            <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-3xl mx-auto font-normal">
+              General LLMs guess. ProtocolLM cites the specific <strong>Washtenaw Enforcement Procedure</strong> and <strong>Michigan Food Law</strong> to protect your license.
             </p>
           </div>
 
           {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center mt-5 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+          <div className={`md:hidden flex justify-center mt-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
@@ -398,8 +401,8 @@ function MainContent() {
 
       </div>
 
-      {/* FOOTER - At very bottom */}
-      <footer className="w-full py-6 border-t border-[#2C2C2C] bg-[#121212] shrink-0 z-20">
+      {/* FOOTER */}
+      <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10 mt-auto">
          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-xs text-[#666]">
              <div className="flex gap-6">
                <a href="/terms" className="hover:text-[#EDEDED] transition-colors">Terms</a>
@@ -408,7 +411,7 @@ function MainContent() {
              <span className="hidden md:inline text-[#333]">|</span>
              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2C2C2C] rounded-full px-3 py-1">
                <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80"></span>
-               <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">Wayne & Oakland: Coming Q1</span>
+               <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">Other Counties Coming Soon</span>
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
              <span className="text-[#444]">© 2025 protocolLM</span>
