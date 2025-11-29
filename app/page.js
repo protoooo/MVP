@@ -30,6 +30,12 @@ const GlobalStyles = () => (
       83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
       100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
     }
+    
+    /* Custom Scrollbar for Chat */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
   `}</style>
 )
 
@@ -50,34 +56,106 @@ const Icons = {
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
   Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
-  Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+  Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
+  
+  // NEW MODE ICONS
+  MessageSquare: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+  Camera: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  ClipboardCheck: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
 }
 
 // ==========================================
 // INPUT COMPONENT
 // ==========================================
-const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef }) => {
+const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode }) => {
+  
+  // Handle Mode Switching logic
+  const handleModeClick = (mode) => {
+    setActiveMode(mode)
+    if (mode === 'image') {
+      fileInputRef.current?.click()
+    }
+  }
+
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-6">
+      
+      {/* 
+        ========================================
+        NEW SEAMLESS MODE SWITCHER (The "Paperclip Replacement")
+        ========================================
+      */}
+      <div className="flex items-center gap-1 mb-2 px-1">
+        
+        {/* CHAT MODE (Blue) */}
+        <button
+          onClick={() => handleModeClick('chat')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+            activeMode === 'chat' 
+              ? 'text-[#3E7BFA] bg-[#3E7BFA]/10' 
+              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
+          }`}
+        >
+          <Icons.MessageSquare />
+          <span>Chat</span>
+          {activeMode === 'chat' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]"></div>
+          )}
+        </button>
+
+        {/* IMAGE MODE (Orange) */}
+        <button
+          onClick={() => handleModeClick('image')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+            activeMode === 'image' || selectedImage
+              ? 'text-[#F5A623] bg-[#F5A623]/10' 
+              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
+          }`}
+        >
+          <Icons.Camera />
+          <span>Image</span>
+          {(activeMode === 'image' || selectedImage) && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]"></div>
+          )}
+        </button>
+
+        {/* MOCK AUDIT MODE (Yellow) */}
+        <button
+          onClick={() => handleModeClick('audit')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+            activeMode === 'audit' 
+              ? 'text-[#FDD901] bg-[#FDD901]/10' 
+              : 'text-[#525252] hover:text-[#A1A1AA] hover:bg-[#1C1C1C]'
+          }`}
+        >
+          <Icons.ClipboardCheck />
+          <span>Mock Audit</span>
+          {activeMode === 'audit' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]"></div>
+          )}
+        </button>
+      </div>
+
       {selectedImage && (
-        <div className="mb-2 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#2E2E2E]">
-          <span className="text-xs text-[#A1A1AA]">Image attached</span>
-          <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400"><Icons.X /></button>
+        <div className="mb-2 mx-1 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#F5A623]/30">
+          <span className="text-xs text-[#F5A623] font-medium flex items-center gap-1">
+             <Icons.Camera /> Analyzing Image
+          </span>
+          <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-[#525252] hover:text-white"><Icons.X /></button>
         </div>
       )}
       
+      {/* 
+         Dynamic Border Color based on Mode
+      */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0 focus-within:outline-none"
+        className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none
+          ${activeMode === 'chat' ? 'border-[#2E2E2E] focus-within:border-[#3E7BFA]' : ''}
+          ${activeMode === 'image' ? 'border-[#F5A623]/30 focus-within:border-[#F5A623]' : ''}
+          ${activeMode === 'audit' ? 'border-[#FDD901]/30 focus-within:border-[#FDD901]' : ''}
+        `}
       >
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="p-3 m-1.5 text-[#A1A1AA] hover:text-white hover:bg-[#2E2E2E] rounded-md transition-all"
-          title="Attach file"
-        >
-          <Icons.Upload />
-        </button>
         <input
           type="file"
           ref={fileInputRef}
@@ -96,8 +174,12 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
               handleSend(e)
             }
           }}
-          placeholder="Ask anything..."
-          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-2 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
+          placeholder={
+            activeMode === 'chat' ? "Ask anything..." :
+            activeMode === 'image' ? "Upload an image to analyze..." :
+            "Describe the area for audit simulation..."
+          }
+          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -107,7 +189,9 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           disabled={(!input.trim() && !selectedImage) || isSending}
           className={`p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center ${
             (input.trim() || selectedImage) && !isSending
-              ? 'bg-[#3ECF8E] border-[#3ECF8E] text-[#050505] hover:bg-[#34b27b] hover:border-[#34b27b]'
+              ? activeMode === 'chat' ? 'bg-[#3E7BFA] border-[#3E7BFA] text-white' :
+                activeMode === 'image' ? 'bg-[#F5A623] border-[#F5A623] text-black' :
+                'bg-[#FDD901] border-[#FDD901] text-black'
               : 'bg-[#2E2E2E] border-[#2E2E2E] text-[#525252] cursor-not-allowed'
           }`}
         >
@@ -250,6 +334,10 @@ export default function Page() {
   const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  
+  // NEW: ACTIVE MODE STATE
+  const [activeMode, setActiveMode] = useState('chat') // 'chat' | 'image' | 'audit'
+  
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
@@ -404,7 +492,13 @@ export default function Page() {
       }
     }
 
-    const newMsg = { role: 'user', content: input, image: selectedImage }
+    // --- MODIFY PROMPT BASED ON MODE ---
+    let finalInput = input
+    if (activeMode === 'audit') {
+      finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
+    }
+
+    const newMsg = { role: 'user', content: input, image: selectedImage } // Store original input for UI
     setMessages(p => [...p, newMsg])
     setInput('')
     const img = selectedImage
@@ -437,7 +531,7 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          messages: [...messages, newMsg], 
+          messages: [...messages, { ...newMsg, content: finalInput }], // Send modified prompt
           image: img,
           chatId: activeChatId 
         })
@@ -476,6 +570,7 @@ export default function Page() {
       try {
         const compressed = await compressImage(e.target.files[0])
         setSelectedImage(compressed)
+        setActiveMode('image') // Auto-switch mode
       } catch (error) {
         console.error(error)
       }
@@ -488,6 +583,7 @@ export default function Page() {
     setSelectedImage(null)
     setCurrentChatId(null) 
     setSidebarOpen(false)
+    setActiveMode('chat') // Reset mode
   }
 
   if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div></div>
@@ -528,7 +624,6 @@ export default function Page() {
               ))}
             </div>
             
-            {/* NEW: Pricing Link in Sidebar for Logged Out users */}
             {!session && (
               <div className="mt-4 px-1">
                  <button onClick={() => router.push('/pricing')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#A1A1AA] hover:text-white hover:bg-[#1C1C1C] rounded-lg transition-colors">
@@ -584,7 +679,6 @@ export default function Page() {
           {!session ? (
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
-              {/* NEW: Top Right Pricing Link */}
               <div className="absolute top-4 right-4 z-20">
                 <button 
                   onClick={() => router.push('/pricing')}
@@ -622,6 +716,8 @@ export default function Page() {
                   selectedImage={selectedImage}
                   setSelectedImage={setSelectedImage}
                   inputRef={inputRef}
+                  activeMode={activeMode}
+                  setActiveMode={setActiveMode}
                 />
               </div>
             </div>
@@ -666,6 +762,8 @@ export default function Page() {
                   selectedImage={selectedImage}
                   setSelectedImage={setSelectedImage}
                   inputRef={inputRef}
+                  activeMode={activeMode}
+                  setActiveMode={setActiveMode}
                 />
               </div>
             </>
