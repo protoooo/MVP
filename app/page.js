@@ -65,10 +65,13 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* NO BLUE RING - Clean Supabase Style */}
+      {/* 
+        Container - Supabase Style 
+        Added focus-within:ring-0 and focus-within:outline-none to container just in case
+      */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0"
+        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0 focus-within:outline-none"
       >
         <button
           type="button"
@@ -86,6 +89,11 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           className="hidden"
         />
 
+        {/* 
+          TEXT AREA FIX:
+          Added `outline-none` and `focus:outline-none`
+          This explicitly tells the browser "Do not put your default blue line here"
+        */}
         <textarea
           ref={inputRef}
           value={input}
@@ -97,7 +105,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             }
           }}
           placeholder="Ask anything..."
-          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-2 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#525252] text-[15px] leading-6"
+          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-2 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -576,7 +584,7 @@ export default function Page() {
             /* ================================== */
             <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
-              {/* FLIPPED ORDER: Pill on top, Header below */}
+              {/* Pill moved ABOVE header, changed to Supabase Green style */}
               <button 
                 onClick={() => setShowAuthModal(true)}
                 className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/20 transition-all cursor-pointer group"
