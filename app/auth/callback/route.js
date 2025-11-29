@@ -7,7 +7,11 @@ export const dynamic = 'force-dynamic'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const baseUrl = requestUrl.origin
+  
+  // FIX: Force production URL, fallback to origin only for localhost
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
+    ? process.env.NEXT_PUBLIC_BASE_URL 
+    : requestUrl.origin
 
   if (code) {
     const cookieStore = cookies()
@@ -46,11 +50,11 @@ export async function GET(request) {
               id: session.user.id,
               email: session.user.email,
               county: 'washtenaw',
-              is_subscribed: false,
+              is_subscribed: false, // Default to false
               accepted_terms: false,
               updated_at: new Date().toISOString()
           })
-          // New user -> Send to terms first
+          // New user -> Send to terms
           return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
       
@@ -60,8 +64,6 @@ export async function GET(request) {
       }
 
       // 4. Route based on subscription status
-      // Subscribed users → Dashboard (root)
-      // Non-subscribed users → Pricing
       if (existingProfile.is_subscribed) {
         return NextResponse.redirect(baseUrl) // Dashboard at root
       } else {
@@ -70,6 +72,6 @@ export async function GET(request) {
     }
   }
 
-  // Fallback - go to homepage
+  // Fallback
   return NextResponse.redirect(baseUrl)
 }
