@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (The "Big Box" - Central Focus) ---
+// --- 1. CHAT DEMO (Central Focus) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -42,7 +42,7 @@ const DemoChatContent = () => {
     
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      await wait(Math.random() * 35 + 25) // Slightly slower typing for "Big Box" feel
+      await wait(Math.random() * 35 + 25)
     }
 
     const runSimulation = async () => {
@@ -80,7 +80,7 @@ const DemoChatContent = () => {
           await wait(4000)
         }
         await wait(1500)
-        setMessages((prev) => prev.slice(-4)) // Keep fewer messages for cleaner look
+        setMessages((prev) => prev.slice(-4)) 
       }
     }
     runSimulation()
@@ -105,16 +105,16 @@ const DemoChatContent = () => {
 
   return (
     <div className="w-full h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="h-16 border-b border-neutral-100 flex items-center px-8 justify-between bg-white shrink-0">
+      {/* Demo Header - Integrated into box */}
+      <div className="h-14 border-b border-neutral-100 flex items-center px-6 justify-between bg-white shrink-0">
         <div className="flex items-center gap-3">
-          <span className="font-sans text-xs font-bold text-neutral-900 uppercase tracking-[0.2em]">
+          <span className="font-sans text-[10px] font-bold text-neutral-900 uppercase tracking-[0.2em]">
             protocol_LM
           </span>
         </div>
         <div className="flex items-center gap-2">
            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Live System</span>
+           <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Live</span>
         </div>
       </div>
 
@@ -125,10 +125,10 @@ const DemoChatContent = () => {
       >
         {!hasStarted && !isTyping && messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center space-y-6 opacity-20">
-            <div className="w-16 h-16 border border-neutral-300 rounded-full flex items-center justify-center">
-               <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full"/>
+            <div className="w-12 h-12 border border-neutral-300 rounded-full flex items-center justify-center">
+               <div className="w-1 h-1 bg-black rounded-full"/>
             </div>
-            <p className="text-xs font-bold text-neutral-500 tracking-widest uppercase">System Ready</p>
+            <p className="text-[10px] font-bold text-neutral-500 tracking-widest uppercase">System Ready</p>
           </div>
         )}
 
@@ -153,19 +153,19 @@ const DemoChatContent = () => {
 
         {isThinking && (
           <div className="flex justify-start animate-fade-in pl-1">
-            <span className="text-xs font-mono text-neutral-400 uppercase tracking-widest">Searching Code...</span>
+            <span className="text-[10px] font-mono text-neutral-300 uppercase tracking-widest">Processing...</span>
           </div>
         )}
       </div>
 
       {/* Input Field */}
-      <div className="p-8 bg-white shrink-0">
-        <div className="w-full border-b border-neutral-200 py-4 flex items-center gap-4">
+      <div className="p-6 bg-white shrink-0">
+        <div className="w-full border-b border-neutral-200 py-3 flex items-center gap-4">
           <span className="text-neutral-300 text-lg font-mono">{'>'}</span>
-          <div className="flex-1 text-lg md:text-xl text-neutral-900 font-medium font-mono min-h-[30px] relative flex items-center overflow-hidden whitespace-nowrap">
+          <div className="flex-1 text-lg text-neutral-900 font-medium font-mono min-h-[30px] relative flex items-center overflow-hidden whitespace-nowrap">
             {inputValue}
             {isTyping && (
-              <span className="inline-block w-2.5 h-5 bg-black ml-1 animate-pulse" />
+              <span className="inline-block w-2 h-5 bg-black ml-1 animate-pulse" />
             )}
           </div>
         </div>
@@ -255,39 +255,38 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-white/90 backdrop-blur-md animate-in fade-in duration-300" />
-      <div className="w-full max-w-[380px] bg-white border border-neutral-200 shadow-2xl p-8 rounded-xl relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <button onClick={onClose} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors">
+      <div onClick={onClose} className="absolute inset-0 bg-white/95 backdrop-blur-sm animate-in fade-in duration-300" />
+      <div className="w-full max-w-[380px] bg-white border border-neutral-100 shadow-2xl p-10 rounded-none relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+        <button onClick={onClose} className="absolute top-6 right-6 text-neutral-300 hover:text-black transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
         <div className="text-center mb-10">
           <h2 className="text-lg font-bold text-black tracking-tight uppercase font-mono">
-            {view === 'signup' ? 'Initiate Access' : 'Authorized Login'}
+            {view === 'signup' ? 'Initiate' : 'Access'}
           </h2>
         </div>
 
-        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border border-neutral-300 hover:bg-neutral-50 transition-all disabled:opacity-50 mb-6 group rounded-lg">
+        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-4 bg-white border border-neutral-200 hover:border-black transition-all disabled:opacity-50 mb-6 group">
           <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" className="text-[#4285F4]"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" className="text-[#34A853]"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" className="text-[#FBBC05]"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" className="text-[#EA4335]"/></svg>
-          <span className="text-xs font-bold text-neutral-700">Continue with Google</span>
+          <span className="text-xs font-bold text-neutral-900">Google</span>
         </button>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-200" /></div>
-          <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="px-3 bg-white text-neutral-400">Or</span></div>
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-100" /></div>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="EMAIL ADDRESS" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-lg transition-all" placeholder="PASSWORD" />
-          <button type="submit" disabled={loading} className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-4 rounded-lg text-xs uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 mt-2 shadow-lg">
-            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
+        <form onSubmit={handleAuth} className="space-y-6">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3 bg-white border-b border-neutral-200 focus:border-black outline-none text-neutral-900 text-sm placeholder-neutral-300 transition-all" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3 bg-white border-b border-neutral-200 focus:border-black outline-none text-neutral-900 text-sm placeholder-neutral-300 transition-all" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-black text-white font-bold py-4 text-xs uppercase tracking-widest transition-all hover:bg-neutral-800 disabled:opacity-50 mt-6">
+            {loading ? '...' : view === 'signup' ? 'Start' : 'Enter'}
           </button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-neutral-100 text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs font-medium text-neutral-500 hover:text-black transition-colors">
-            {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
+        <div className="mt-8 text-center">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs font-medium text-neutral-400 hover:text-black transition-colors">
+            {view === 'signup' ? 'Existing user? Login' : 'New? Start here'}
           </button>
         </div>
       </div>
@@ -295,7 +294,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 3. MAIN CONTENT (Radical Focus) ---
+// --- 3. MAIN CONTENT (Headerless / Corner Anchor Style) ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -321,7 +320,7 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-black selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND (Architectural Watermark) */}
+      {/* BACKGROUND (Kept as requested) */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-white">
         <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.15] grayscale contrast-125">
            <Image 
@@ -335,50 +334,51 @@ function MainContent() {
         <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-transparent to-white/95"></div>
       </div>
 
-      {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-4">
-        <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <span className="text-xl font-bold tracking-tight text-black">
-              protocol<span className="text-neutral-400">LM</span>
-            </span>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Pricing</button>
-            <button onClick={() => openAuth('login')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-black hover:bg-neutral-800 text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest shadow-md active:scale-95">
-              Start Free Trial
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* CORNER ANCHORS (The "No Navbar" Look) */}
+      
+      {/* Top Left: Logo */}
+      <div className={`fixed top-6 left-6 z-40 transition-opacity duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <span className="text-lg font-bold tracking-tight text-black flex items-center gap-2">
+          <div className="w-3 h-3 bg-black"></div>
+          protocol<span className="text-neutral-400">LM</span>
+        </span>
+      </div>
+
+      {/* Top Right: Actions */}
+      <div className={`fixed top-6 right-6 z-40 flex items-center gap-6 transition-opacity duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <button onClick={() => openAuth('login')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest hidden md:block">
+          Log in
+        </button>
+        <button onClick={() => openAuth('signup')} className="bg-black text-white px-5 py-2.5 text-xs font-bold uppercase tracking-widest shadow-lg hover:bg-neutral-800 transition-all">
+          Start Free Trial
+        </button>
+      </div>
 
       {/* HERO SECTION (Centered & Stacked) */}
       <div className="flex-1 w-full max-w-6xl mx-auto px-6 pt-32 pb-12 flex flex-col items-center relative z-10 min-h-screen">
         
         {/* TEXT CENTERED */}
-        <div className="w-full max-w-3xl text-center mb-16">
+        <div className="w-full max-w-3xl text-center mb-12">
           <h1 className={`text-5xl md:text-7xl font-bold text-black tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             before the inspector arrives.
           </h1>
 
-          <p className={`text-[16px] text-neutral-600 leading-relaxed max-w-xl mx-auto mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          <p className={`text-[16px] text-neutral-600 leading-relaxed max-w-xl mx-auto mb-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
-
-          {/* MOBILE CTA */}
-          <div className={`md:hidden flex justify-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="w-full max-w-xs px-8 py-3.5 bg-black hover:bg-neutral-800 text-white rounded font-bold text-xs uppercase tracking-[0.15em] transition-all shadow-xl">
-              Start Free Trial
-            </button>
-          </div>
         </div>
 
         {/* MASSIVE DEMO BOX (Centered below text) */}
-        <div className={`w-full max-w-5xl h-[600px] bg-white border border-neutral-200 shadow-2xl rounded-2xl overflow-hidden transition-all duration-[1200ms] ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`} style={{ transitionDelay: '500ms' }}>
+        <div className={`w-full max-w-5xl h-[600px] bg-white border border-neutral-200 shadow-2xl rounded-lg overflow-hidden transition-all duration-[1200ms] ease-out-spring ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`} style={{ transitionDelay: '500ms' }}>
           <DemoChatContent />
+        </div>
+
+        {/* Mobile-Only Login Link (since top right might be tight) */}
+        <div className="md:hidden mt-8 text-center">
+           <button onClick={() => openAuth('login')} className="text-xs font-bold text-neutral-400 hover:text-black uppercase tracking-widest">
+             Already have an account? Log in
+           </button>
         </div>
 
       </div>
