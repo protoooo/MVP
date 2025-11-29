@@ -126,8 +126,8 @@ export default function Pricing() {
             </button>
           </div>
 
-          {/* PRO PLAN (Hero) */}
-          <div className="bg-[#1C1C1C] border-2 border-[#3B82F6] rounded-xl p-8 flex flex-col shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] relative transform md:-translate-y-4 z-10">
+          {/* PRO PLAN (Blue Hero) */}
+          <div className="bg-[#1C1C1C] border border-[#3B82F6] rounded-xl p-8 flex flex-col shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] relative transform md:-translate-y-4 z-10">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3B82F6] text-white px-3 py-1 rounded text-[9px] font-bold uppercase tracking-widest shadow-sm border border-[#60A5FA]">Most Popular</div>
             <div className="mb-8">
               <h3 className="text-xs font-bold text-[#3B82F6] uppercase tracking-widest mb-2">Pro</h3>
@@ -148,10 +148,13 @@ export default function Pricing() {
             </button>
           </div>
 
-          {/* ENTERPRISE PLAN */}
-          <div className="bg-[#1C1C1C] border border-white/20 rounded-xl p-8 flex flex-col shadow-md relative z-0 hover:border-white transition-colors">
+          {/* ENTERPRISE PLAN (Silver/Chrome Look) */}
+          <div className="bg-[#1C1C1C] border-2 border-transparent bg-clip-padding rounded-xl p-8 flex flex-col shadow-xl relative z-0" style={{ backgroundImage: 'linear-gradient(#1C1C1C, #1C1C1C), linear-gradient(135deg, #94a3b8, #ffffff, #94a3b8)', backgroundOrigin: 'border-box', backgroundClip: 'content-box, border-box' }}>
             <div className="mb-8">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">Enterprise</h3>
+              <h3 className="text-xs font-bold text-slate-200 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_10px_white]"></span>
+                Enterprise
+              </h3>
               <div className="flex items-baseline text-white">
                 <span className="text-4xl font-bold tracking-tight font-mono">$199</span>
                 <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
@@ -159,12 +162,13 @@ export default function Pricing() {
               <p className="text-sm text-[#888] mt-4 leading-relaxed">Automation for zero-tolerance operators.</p>
             </div>
             <ul className="space-y-4 mb-8 flex-1 border-t border-[#2C2C2C] pt-6">
-              <li className="flex items-start gap-3 text-sm font-medium text-[#CCC]"><CheckIcon color="text-white" />Unlimited Text Queries</li>
-              <li className="flex items-start gap-3 text-sm font-medium text-[#CCC]"><CheckIcon color="text-white" />500 Image Analyses / Mo</li>
-              <li className="flex items-start gap-3 text-sm font-medium text-[#CCC]"><CheckIcon color="text-white" />Mock Audit Workflow</li>
-              <li className="flex items-start gap-3 text-sm font-medium text-[#CCC]"><CheckIcon color="text-white" />Staff Memo Generator</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-[#EDEDED]"><CheckIcon color="text-white" />Unlimited Text Queries</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-[#EDEDED]"><CheckIcon color="text-white" />500 Image Analyses / Mo</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-[#EDEDED]"><CheckIcon color="text-white" />Mock Audit Workflow</li>
+              <li className="flex items-start gap-3 text-sm font-medium text-[#EDEDED]"><CheckIcon color="text-white" />Staff Memo Generator</li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')} disabled={loading !== null} className="w-full bg-white hover:bg-[#CCC] text-black font-bold py-3.5 rounded text-xs uppercase tracking-widest transition-all shadow-md active:scale-95 border border-transparent">
+            {/* Chrome Button */}
+            <button onClick={() => handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')} disabled={loading !== null} className="w-full bg-gradient-to-r from-slate-200 via-white to-slate-200 hover:from-white hover:to-white text-black font-bold py-3.5 rounded text-xs uppercase tracking-widest transition-all shadow-lg shadow-white/10 active:scale-95 border border-white/50">
               {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
             </button>
           </div>
@@ -177,9 +181,6 @@ export default function Pricing() {
           </p>
         </div>
       </div>
-      <style jsx global>{`
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-      `}</style>
     </div>
   )
 }
