@@ -188,14 +188,9 @@ const DashboardInterface = ({ user, onSignOut }) => {
       
       setIsSubscribed(profile?.is_subscribed || false)
       setIsLoading(false)
-      
-      // Redirect to pricing if not subscribed
-      if (!profile?.is_subscribed) {
-        router.push('/pricing')
-      }
     }
     checkSubscription()
-  }, [user.id, supabase, router])
+  }, [user.id, supabase])
 
   useEffect(() => { if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
 
@@ -644,6 +639,22 @@ export default function Page() {
   useEffect(() => {
      const init = async () => {
        const { data } = await supabase.auth.getSession()
+       
+       // If logged in, check subscription status before rendering
+       if (data.session) {
+         const { data: profile } = await supabase
+           .from('user_profiles')
+           .select('is_subscribed, accepted_terms')
+           .eq('id', data.session.user.id)
+           .single()
+         
+         // Redirect non-subscribers to pricing
+         if (!profile?.is_subscribed) {
+           router.push('/pricing')
+           return
+         }
+       }
+       
        setSession(data.session)
        setIsLoading(false)
      }
@@ -653,7 +664,7 @@ export default function Page() {
        if(session) setShowAuth(false)
      })
      return () => listener.subscription.unsubscribe()
-  }, [])
+  }, [supabase, router])
 
   const triggerAuth = (v = 'login') => { setAuthView(v); setShowAuth(true) }
   const handleOAuth = async () => {
