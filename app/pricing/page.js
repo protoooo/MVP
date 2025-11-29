@@ -34,6 +34,7 @@ export default function Pricing() {
     setLoading(planName)
     const { data: { session } } = await supabase.auth.getSession()
     
+    // Redirect to login with a query param if not authenticated
     if (!session) {
       router.push('/?auth=signup')
       return
@@ -49,8 +50,12 @@ export default function Pricing() {
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else alert('System busy. Please try again.')
-    } catch (error) { console.error(error); alert('Connection error.') } 
-    finally { setLoading(null) }
+    } catch (error) { 
+      console.error(error)
+      alert('Connection error.') 
+    } finally { 
+      setLoading(null) 
+    }
   }
 
   // --- ICONS ---
@@ -149,7 +154,6 @@ export default function Pricing() {
           </div>
 
           {/* ENTERPRISE PLAN (Liquid Silver / Chrome) */}
-          {/* Custom Gradient Border Style */}
           <div className="relative p-8 flex flex-col z-0 group rounded-lg bg-[#1C1C1C] overflow-hidden">
             {/* Chrome Border Element */}
             <div className="absolute inset-0 p-[1px] rounded-lg bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none"></div>
@@ -187,7 +191,7 @@ export default function Pricing() {
         <div className="mt-16 text-center max-w-md mx-auto opacity-60">
           <p className="text-[10px] text-[#3ECF8E] uppercase tracking-widest font-bold mb-3">Secure Stripe Checkout</p>
           <p className="text-sm text-[#666] font-serif italic">
-            "One failed inspection costs more than 5 years of the Enterprise plan."
+            &quot;One failed inspection costs more than 5 years of the Enterprise plan.&quot;
           </p>
         </div>
       </div>
