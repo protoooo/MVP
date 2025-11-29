@@ -13,7 +13,8 @@ const Icons = {
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
-  Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+  Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
+  Sparkles: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
 }
 
 // ==========================================
@@ -92,7 +93,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-white mb-2">{message || 'Continue with protocolLM'}</h2>
-            <p className="text-sm text-[#C5C5C5]">Unlock unlimited access</p>
+            <p className="text-sm text-[#C5C5C5]">Start your free trial</p>
           </div>
           <button onClick={onClose} className="text-[#8E8EA0] hover:text-white transition-colors">
             <Icons.X />
@@ -166,49 +167,79 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [guestMessageCount, setGuestMessageCount] = useState(0)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
+  const inputRef = useRef(null)
   const supabase = createClient()
   const router = useRouter()
-
-  const GUEST_MESSAGE_LIMIT = 3
 
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getSession()
       setSession(data.session)
+      
+      if (data.session) {
+        const { data: userProfile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed, accepted_terms, accepted_privacy')
+          .eq('id', data.session.user.id)
+          .single()
+        
+        setProfile(userProfile)
+      }
+      
       setIsLoading(false)
     }
     init()
+    
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session) {
-        setGuestMessageCount(0) // Reset count when logged in
-      }
     })
+    
     return () => listener.subscription.unsubscribe()
   }, [supabase])
 
   useEffect(() => { 
-    if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
+    if(scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
+    }
   }, [messages])
+
+  // Auto-focus input after first message
+  useEffect(() => {
+    if (messages.length > 0 && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [messages.length])
 
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
-    // Check guest limit
-    if (!session && guestMessageCount >= GUEST_MESSAGE_LIMIT) {
-      setAuthModalMessage(`You've used your ${GUEST_MESSAGE_LIMIT} free messages`)
+    // Check if user needs to authenticate or start trial
+    if (!session) {
+      setAuthModalMessage('Start your free trial to continue')
       setShowAuthModal(true)
+      return
+    }
+
+    // Check if user accepted terms
+    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+      router.push('/accept-terms')
+      return
+    }
+
+    // Check if user has subscription or trial
+    if (!profile?.is_subscribed) {
+      router.push('/pricing')
       return
     }
 
@@ -219,44 +250,37 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
-    if (!session) {
-      setGuestMessageCount(prev => prev + 1)
-    }
-
     setMessages(p => [...p, { role: 'assistant', content: 'Analyzing your compliance query...' }])
 
     try {
-      // For guest users, use a mock response or limited API
-      if (!session) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        setMessages(p => {
-          const u = [...p]
-          u[u.length - 1].content = `Based on Michigan Modified Food Code regulations:\n\n${getDemoResponse(newMsg.content)}\n\n_Sign in for full access to AI-powered compliance answers with citations._`
-          return u
-        })
-      } else {
-        // Full authenticated API call
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [...messages, newMsg], image: img })
-        })
-        
-        if (res.status === 401) {
-          setShowAuthModal(true)
-          setMessages(p => p.slice(0, -1)) // Remove loading message
-          return
-        }
-        
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [...messages, newMsg], image: img })
+      })
+      
+      if (res.status === 401) {
+        setShowAuthModal(true)
+        setMessages(p => p.slice(0, -1))
+        return
+      }
+      
+      if (res.status === 429) {
         const data = await res.json()
         setMessages(p => {
           const u = [...p]
-          u[u.length - 1].content = data.message || 'Error processing request.'
+          u[u.length - 1].content = `⚠️ ${data.error}\n\nPlease upgrade your plan or wait until your limit resets.`
           return u
         })
+        return
       }
+      
+      const data = await res.json()
+      setMessages(p => {
+        const u = [...p]
+        u[u.length - 1].content = data.message || 'Error processing request.'
+        return u
+      })
     } catch (err) {
       setMessages(p => {
         const u = [...p]
@@ -266,18 +290,6 @@ export default function Page() {
     } finally { 
       setIsSending(false) 
     }
-  }
-
-  // Simple demo responses for guest users
-  const getDemoResponse = (query) => {
-    const q = query.toLowerCase()
-    if (q.includes('temperature') || q.includes('temp') || q.includes('°f')) {
-      return '**Temperature Control Requirements:**\n\nCold holding: 41°F or below\nHot holding: 135°F or above\n\nFor specific situations, our AI provides detailed code citations and enforcement context.'
-    }
-    if (q.includes('handwash') || q.includes('hand wash')) {
-      return '**Handwashing Requirements:**\n\nSinks must be accessible, stocked with soap and towels, and water must be at least 100°F.\n\nSign in for complete regulatory guidance.'
-    }
-    return 'This appears to be a food safety compliance question. Sign in to get AI-powered answers with specific code citations and enforcement guidance tailored to your county.'
   }
 
   const handleImage = (e) => {
@@ -304,6 +316,8 @@ export default function Page() {
       <div className="w-6 h-6 border-2 border-[#10A37F] border-t-transparent rounded-full animate-spin"></div>
     </div>
   )
+
+  const hasStartedChat = messages.length > 0
 
   return (
     <>
@@ -337,7 +351,6 @@ export default function Page() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
-            {/* Chat history would go here */}
             <div className="text-xs text-[#8E8EA0] text-center py-8">
               {session ? 'Your chats appear here' : 'Sign in to save chats'}
             </div>
@@ -402,100 +415,174 @@ export default function Page() {
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto pb-32" ref={scrollRef}>
-            {messages.length === 0 ? (
-              // Empty State
-              <div className="h-full flex flex-col items-center justify-center px-4 text-center">
-                <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-4">
-                  What can I help with?
-                </h2>
-                
-                {!session && (
-                  <div className="bg-[#2F2F2F] border border-[#565869] rounded-xl p-4 text-sm text-[#C5C5C5] max-w-md">
-                    <p className="mb-3">
-                      <span className="text-white font-semibold">Free preview:</span> {GUEST_MESSAGE_LIMIT - guestMessageCount} of {GUEST_MESSAGE_LIMIT} messages remaining
-                    </p>
-                    <button 
-                      onClick={() => setShowAuthModal(true)}
-                      className="text-[#10A37F] hover:underline font-medium"
-                    >
-                      Sign up for unlimited access →
-                    </button>
+          {/* Chat Area */}
+          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+            {!hasStartedChat ? (
+              // ChatGPT-style Empty State with centered input
+              <div className="h-full flex flex-col items-center justify-center px-4">
+                <div className="w-full max-w-3xl">
+                  {/* Hero Section */}
+                  <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#10A37F] mb-6">
+                      <Icons.Sparkles />
+                    </div>
+                    <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4">
+                      What can I help with?
+                    </h2>
+                    {!session && (
+                      <p className="text-[#C5C5C5] text-sm">
+                        Start your free trial to unlock AI-powered compliance guidance
+                      </p>
+                    )}
                   </div>
-                )}
-            ) : (
-              // Messages
-              <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                    {msg.role !== 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center shrink-0">
-                        <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                        </svg>
+
+                  {/* Sample Prompts */}
+                  <div className="grid sm:grid-cols-2 gap-3 mb-12">
+                    {[
+                      { title: 'Temperature Control', prompt: 'What are the temperature requirements for cold holding?' },
+                      { title: 'Handwashing', prompt: 'Where should handwashing sinks be located?' },
+                      { title: 'Food Storage', prompt: 'How should I store raw meat in the refrigerator?' },
+                      { title: 'Inspection Prep', prompt: 'What should I prepare before a health inspection?' }
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setInput(item.prompt)
+                          if (inputRef.current) inputRef.current.focus()
+                        }}
+                        className="text-left p-4 rounded-2xl border border-[#2F2F2F] hover:border-[#565869] hover:bg-[#2F2F2F] transition-all group"
+                      >
+                        <h3 className="text-white font-medium text-sm mb-1 group-hover:text-[#10A37F]">{item.title}</h3>
+                        <p className="text-[#8E8EA0] text-xs">{item.prompt}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Input Bar (Tilted/Elongated) */}
+                  <div className="relative">
+                    {selectedImage && (
+                      <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
+                        <span className="text-xs text-[#C5C5C5]">Image attached</span>
+                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
+                          <Icons.X />
+                        </button>
                       </div>
                     )}
-                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#2F2F2F] rounded-3xl px-5 py-3' : ''}`}>
-                      {msg.image && (
-                        <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain" />
-                      )}
-                      <p className="text-[15px] text-white leading-relaxed whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
-                    </div>
+                    <form onSubmit={handleSend} className="relative">
+                      <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-full px-5 py-4 border border-[#565869] focus-within:border-[#8E8EA0] shadow-2xl hover:shadow-[#10A37F]/10 transition-shadow">
+                        <button 
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[#C5C5C5] hover:text-white transition-colors p-1 shrink-0"
+                          title="Upload image"
+                        >
+                          <Icons.Upload />
+                        </button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={handleImage} 
+                        />
+                        <input
+                          ref={inputRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder="Message protocolLM"
+                          className="flex-1 bg-transparent border-none text-base text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
+                        />
+                        <button 
+                          type="submit"
+                          disabled={(!input.trim() && !selectedImage) || isSending}
+                          className="text-white bg-[#10A37F] hover:bg-[#0E8F6F] disabled:bg-[#565869] disabled:cursor-not-allowed transition-colors p-2 rounded-full shrink-0"
+                        >
+                          <Icons.Send />
+                        </button>
+                      </div>
+                    </form>
+                    <p className="text-xs text-[#8E8EA0] text-center mt-4">
+                      protocolLM can make mistakes. Check important info with your health department.
+                    </p>
                   </div>
-                ))}
+                </div>
               </div>
-            )}
-          </div>
+            ) : (
+              // Full Chat View
+              <>
+                <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 pb-32">
+                  {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                      {msg.role !== 'user' && (
+                        <div className="w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center shrink-0">
+                          <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                          </svg>
+                        </div>
+                      )}
+                      <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#2F2F2F] rounded-3xl px-5 py-3' : ''}`}>
+                        {msg.image && (
+                          <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain" />
+                        )}
+                        <p className="text-[15px] text-white leading-relaxed whitespace-pre-wrap">
+                          {msg.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-          {/* Input Area */}
-          <div className="absolute bottom-0 left-0 right-0 bg-[#212121] border-t border-[#2F2F2F] p-4">
-            <div className="max-w-3xl mx-auto">
-              {selectedImage && (
-                <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
-                  <span className="text-xs text-[#C5C5C5]">Image attached</span>
-                  <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
-                    <Icons.X />
-                  </button>
+                {/* Fixed Bottom Input */}
+                <div className="absolute bottom-0 left-0 right-0 bg-[#212121] border-t border-[#2F2F2F] p-4">
+                  <div className="max-w-3xl mx-auto">
+                    {selectedImage && (
+                      <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
+                        <span className="text-xs text-[#C5C5C5]">Image attached</span>
+                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
+                          <Icons.X />
+                        </button>
+                      </div>
+                    )}
+                    <form onSubmit={handleSend} className="relative">
+                      <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
+                        <button 
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[#C5C5C5] hover:text-white transition-colors p-1"
+                          title="Upload image"
+                        >
+                          <Icons.Upload />
+                        </button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          accept="image/*" 
+                          onChange={handleImage} 
+                        />
+                        <input
+                          ref={inputRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          placeholder="Message protocolLM"
+                          className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
+                        />
+                        <button 
+                          type="submit"
+                          disabled={(!input.trim() && !selectedImage) || isSending}
+                          className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1 shrink-0"
+                        >
+                          <Icons.Send />
+                        </button>
+                      </div>
+                    </form>
+                    <p className="text-xs text-[#8E8EA0] text-center mt-3">
+                      protocolLM can make mistakes. Check important info with your health department.
+                    </p>
+                  </div>
                 </div>
-              )}
-              <form onSubmit={handleSend} className="relative">
-                <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
-                  <button 
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-[#C5C5C5] hover:text-white transition-colors p-1"
-                    title="Upload image"
-                  >
-                    <Icons.Upload />
-                  </button>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleImage} 
-                  />
-                  <input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Message protocolLM"
-                    className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
-                  />
-                  <button 
-                    type="submit"
-                    disabled={(!input.trim() && !selectedImage) || isSending}
-                    className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1 shrink-0"
-                  >
-                    <Icons.Send />
-                  </button>
-                </div>
-              </form>
-              <p className="text-xs text-[#8E8EA0] text-center mt-3">
-                protocolLM can make mistakes. Check important info with your health department.
-              </p>
-            </div>
+              </>
+            )}
           </div>
         </main>
       </div>
