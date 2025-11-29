@@ -34,9 +34,12 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setLoading(true)
     setStatusMessage('')
 
+    // Use window.location for client-side redirect URL
     const redirectUrl = typeof window !== 'undefined' 
-      ? `${window.location.protocol}//${window.location.host}/auth/callback`
-      : '/auth/callback'
+      ? `${window.location.origin}/auth/callback`
+      : `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+
+    console.log('📧 Email auth redirect URL:', redirectUrl)
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -46,6 +49,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     })
 
     if (error) {
+      console.error('❌ Email auth error:', error)
       setStatusMessage('Error: ' + error.message)
     } else {
       setStatusMessage('✓ Check your email for the login link.')
@@ -57,9 +61,12 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setGoogleLoading(true)
     setStatusMessage('')
 
+    // CRITICAL FIX: Use window.location.origin for production compatibility
     const redirectUrl = typeof window !== 'undefined' 
-      ? `${window.location.protocol}//${window.location.host}/auth/callback`
-      : '/auth/callback'
+      ? `${window.location.origin}/auth/callback`
+      : `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+
+    console.log('🔐 Google OAuth redirect URL:', redirectUrl)
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -73,9 +80,11 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     })
 
     if (error) {
+      console.error('❌ Google auth error:', error)
       setStatusMessage('Error: ' + error.message)
       setGoogleLoading(false)
     }
+    // If successful, user will be redirected - don't stop loading state
   }
 
   const GoogleIcon = () => (
@@ -185,29 +194,52 @@ export default function Page() {
   const supabase = createClient()
   const router = useRouter()
 
+  // Initialize auth state
   useEffect(() => {
     const init = async () => {
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
+      console.log('🔐 Initializing auth...')
       
-      if (data.session) {
-        const { data: userProfile } = await supabase
+      // Get current session
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError)
+      }
+      
+      if (currentSession) {
+        console.log('✅ Session found:', currentSession.user.email)
+        setSession(currentSession)
+        
+        // Fetch user profile
+        const { data: userProfile, error: profileError } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', data.session.user.id)
+          .eq('id', currentSession.user.id)
           .single()
         
-        setProfile(userProfile)
+        if (profileError) {
+          console.error('❌ Profile fetch error:', profileError)
+        } else {
+          console.log('👤 Profile loaded:', userProfile)
+          setProfile(userProfile)
+        }
+      } else {
+        console.log('ℹ️ No active session')
       }
       
       setIsLoading(false)
     }
+
     init()
     
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event)
+      
       setSession(session)
       
       if (session) {
+        // Refetch profile on auth change
         const { data: userProfile } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -220,9 +252,12 @@ export default function Page() {
       }
     })
     
-    return () => listener.subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
+  // Click outside user menu to close
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -233,29 +268,34 @@ export default function Page() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => { 
     if(scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
     }
   }, [messages])
 
+  // Focus input after sending message
   useEffect(() => {
-    if (messages.length > 0 && inputRef.current) {
+    if (messages.length > 0 && inputRef.current && !isSending) {
       inputRef.current.focus()
     }
-  }, [messages.length])
+  }, [messages.length, isSending])
 
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
+    // Check auth
     if (!session) {
       setAuthModalMessage('Sign in to start chatting')
       setShowAuthModal(true)
       return
     }
 
+    // Check profile and subscription
     if (!profile) {
+      console.log('⏳ Profile not loaded yet, fetching...')
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -324,6 +364,7 @@ export default function Page() {
         return u
       })
     } catch (err) {
+      console.error('❌ Chat error:', err)
       setMessages(p => {
         const u = [...p]
         u[u.length - 1].content = 'Network error. Please try again.'
@@ -379,7 +420,7 @@ export default function Page() {
         message={authModalMessage}
       />
 
-      {/* Main Container - Dark background for entire app */}
+      {/* Main Container */}
       <div className="flex h-screen w-screen bg-[#0A0A0A] text-white overflow-hidden fixed inset-0">
         
         {/* Overlay for mobile sidebar */}
@@ -511,7 +552,118 @@ export default function Page() {
               <div className="h-full flex flex-col items-center justify-center px-4 pb-32">
                 <div className="w-full max-w-3xl">
                   <div className="text-center mb-12">
-                    {/* Icon Removed Here */}
                     <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4">
                       What can I help with?
                     </h2>
+                    <p className="text-[#71717A] text-lg">
+                      Ask about food safety compliance for Michigan restaurants
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      { title: 'Temperature Requirements', desc: 'What are the cold holding requirements?' },
+                      { title: 'Handwashing Stations', desc: 'Where should handwashing sinks be located?' },
+                      { title: 'Food Storage', desc: 'How should I organize my walk-in cooler?' },
+                      { title: 'Inspection Prep', desc: 'What should I check before an inspection?' }
+                    ].map((item, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setInput(item.desc)
+                          if (inputRef.current) inputRef.current.focus()
+                        }}
+                        className="p-4 bg-[#1C1C1C] hover:bg-[#262626] border border-[#2E2E2E] hover:border-[#3E7BFA] rounded-xl text-left transition-all group"
+                      >
+                        <h3 className="text-sm font-semibold text-white mb-1 group-hover:text-[#3E7BFA] transition-colors">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-[#71717A]">{item.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center shrink-0 text-white font-bold text-sm">
+                        AI
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#3E7BFA] text-white' : 'bg-[#1C1C1C] text-[#EDEDED]'} rounded-2xl px-4 py-3`}>
+                      {msg.image && (
+                        <img src={msg.image} alt="Uploaded" className="rounded-lg mb-2 max-w-xs" />
+                      )}
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                    </div>
+                    {msg.role === 'user' && (
+                      <div className="w-8 h-8 rounded-full bg-[#262626] flex items-center justify-center shrink-0 text-white font-bold text-sm">
+                        {session?.user.email[0].toUpperCase() || 'U'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Input Area */}
+          <div className="border-t border-[#1F1F1F] bg-[#0A0A0A] p-4 shrink-0">
+            <div className="max-w-3xl mx-auto">
+              {selectedImage && (
+                <div className="mb-3 relative inline-block">
+                  <img src={selectedImage} alt="Preview" className="h-20 rounded-lg border border-[#2E2E2E]" />
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              <form onSubmit={handleSend} className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImage}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-3 bg-[#1C1C1C] hover:bg-[#262626] border border-[#2E2E2E] rounded-lg transition-colors text-[#A1A1AA] hover:text-white"
+                  disabled={isSending}
+                >
+                  <Icons.Upload />
+                </button>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask about compliance..."
+                  className="flex-1 bg-[#1C1C1C] border border-[#2E2E2E] rounded-lg px-4 py-3 text-sm text-white placeholder-[#71717A] focus:outline-none focus:border-[#3E7BFA] transition-all"
+                  disabled={isSending}
+                />
+                <button
+                  type="submit"
+                  disabled={(!input.trim() && !selectedImage) || isSending}
+                  className="px-6 py-3 bg-[#3E7BFA] hover:bg-[#3469d4] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSending ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <Icons.Send />
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
+  )
+}
