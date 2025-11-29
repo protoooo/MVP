@@ -9,30 +9,27 @@ import { useRouter } from 'next/navigation'
 // ==========================================
 const Icons = {
   Menu: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  Chat: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
-  Clipboard: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>,
-  Upload: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
-  Send: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>,
+  Send: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
-  Check: () => <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>,
-  Sparkles: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+  Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
+  Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
 }
 
 // ==========================================
-// AUTH MODAL COMPONENT
+// AUTH MODAL
 // ==========================================
-const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
   const handleEmailAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
+    setStatusMessage('')
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -42,18 +39,18 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     })
 
     if (error) {
-      setMessage('Error: ' + error.message)
+      setStatusMessage('Error: ' + error.message)
     } else {
-      setMessage('✓ Check your email for the secure login link.')
+      setStatusMessage('✓ Check your email for the login link.')
     }
     setLoading(false)
   }
 
   const handleGoogleAuth = async () => {
     setGoogleLoading(true)
-    setMessage('')
+    setStatusMessage('')
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
@@ -65,13 +62,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     })
 
     if (error) {
-      setMessage('Error: ' + error.message)
+      setStatusMessage('Error: ' + error.message)
       setGoogleLoading(false)
     }
-    // Note: If successful, user will be redirected to Google, so no need to set loading to false
   }
-
-  if (!isOpen) return null
 
   const GoogleIcon = () => (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -82,24 +76,25 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     </svg>
   )
 
+  if (!isOpen) return null
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-[#2F2F2F] rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Welcome back</h2>
-            <p className="text-sm text-[#888]">Sign in to access compliance tools</p>
+            <h2 className="text-2xl font-semibold text-white mb-2">{message || 'Continue with protocolLM'}</h2>
+            <p className="text-sm text-[#C5C5C5]">Unlock unlimited access</p>
           </div>
-          <button onClick={onClose} className="text-[#666] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#8E8EA0] hover:text-white transition-colors">
             <Icons.X />
           </button>
         </div>
 
-        {/* Google Sign In Button */}
         <button
           onClick={handleGoogleAuth}
           disabled={googleLoading || loading}
-          className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-4 border border-gray-300"
+          className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-3"
         >
           {googleLoading ? (
             <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
@@ -109,58 +104,49 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           {googleLoading ? 'Connecting...' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
-        <div className="relative my-6">
+        <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#2A2A2A]"></div>
+            <div className="w-full border-t border-[#565869]"></div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#1C1C1C] px-2 text-[#666]">Or continue with email</span>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-[#2F2F2F] px-2 text-[#8E8EA0]">OR</span>
           </div>
         </div>
 
-        {/* Email Form */}
-        <form onSubmit={handleEmailAuth} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-[#888] uppercase tracking-wider mb-2">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full bg-[#161616] border border-[#333] rounded-lg px-4 py-3 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E] transition-all"
-            />
-          </div>
-
+        <form onSubmit={handleEmailAuth} className="space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email address"
+            required
+            className="w-full bg-[#40414F] border border-[#565869] rounded-xl px-4 py-3 text-sm text-white placeholder-[#8E8EA0] focus:outline-none focus:border-[#10A37F] transition-all"
+          />
           <button 
             type="submit" 
             disabled={loading || googleLoading}
-            className="w-full bg-[#3ECF8E] hover:bg-[#34D399] text-black font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#10A37F] hover:bg-[#0E8F6F] text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending...' : 'Continue with Email'}
+            {loading ? 'Sending...' : 'Continue'}
           </button>
         </form>
 
-        {message && (
-          <div className={`mt-4 p-3 rounded-lg text-sm ${
-            message.includes('Error') 
+        {statusMessage && (
+          <div className={`mt-4 p-3 rounded-xl text-sm ${
+            statusMessage.includes('Error') 
               ? 'bg-red-500/10 border border-red-500/20 text-red-400' 
-              : 'bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 text-[#3ECF8E]'
+              : 'bg-[#10A37F]/10 border border-[#10A37F]/20 text-[#10A37F]'
           }`}>
-            {message}
+            {statusMessage}
           </div>
         )}
 
-        <div className="mt-6 pt-6 border-t border-[#2A2A2A] text-center">
-          <p className="text-xs text-[#666] mb-3">New to protocolLM?</p>
-          <button
-            onClick={() => window.location.href = '/pricing'}
-            className="text-sm text-[#3ECF8E] hover:text-[#34D399] font-medium transition-colors"
-          >
-            Start 30-day free trial →
-          </button>
-        </div>
+        <p className="text-xs text-[#8E8EA0] text-center mt-6">
+          By continuing, you agree to our{' '}
+          <a href="/terms" className="underline hover:text-white">Terms</a>
+          {' '}and{' '}
+          <a href="/privacy" className="underline hover:text-white">Privacy Policy</a>
+        </p>
       </div>
     </div>
   )
@@ -169,224 +155,23 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 // ==========================================
 // MAIN CHAT INTERFACE
 // ==========================================
-const ChatInterface = ({ session, onSignOut }) => {
-  const [activeTab, setActiveTab] = useState('chat')
+export default function Page() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [session, setSession] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [guestMessageCount, setGuestMessageCount] = useState(0)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
-
-  useEffect(() => { 
-    if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
-  }, [messages])
-
-  const handleSend = async (e) => {
-    if (e) e.preventDefault()
-    if ((!input.trim() && !selectedImage) || isSending) return
-
-    const newMsg = { role: 'user', content: input, image: selectedImage }
-    setMessages(p => [...p, newMsg])
-    setInput('')
-    const img = selectedImage
-    setSelectedImage(null)
-    setIsSending(true)
-
-    setMessages(p => [...p, { role: 'assistant', content: 'Processing compliance query...' }])
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, newMsg], image: img })
-      })
-      const data = await res.json()
-      setMessages(p => {
-        const u = [...p]
-        u[u.length - 1].content = data.message || 'Error processing request.'
-        return u
-      })
-    } catch (err) {
-      setMessages(p => {
-        const u = [...p]
-        u[u.length - 1].content = 'Network error. Please try again.'
-        return u
-      })
-    } finally { setIsSending(false) }
-  }
-
-  const handleImage = (e) => {
-    if (e.target.files?.[0]) {
-      const r = new FileReader()
-      r.onloadend = () => setSelectedImage(r.result)
-      r.readAsDataURL(e.target.files[0])
-    }
-  }
-
-  return (
-    <div className="flex h-screen w-full bg-[#1C1C1C] text-[#EDEDED] overflow-hidden fixed inset-0">
-      
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#161616] border-r border-[#2A2A2A] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        flex flex-col
-      `}>
-        <div className="h-14 flex items-center px-5 border-b border-[#2A2A2A]">
-          <div className="font-mono text-sm font-bold tracking-tight text-[#EDEDED]">
-            protocol<span className="text-[#3ECF8E]">LM</span>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden ml-auto text-[#888]">
-            <Icons.X />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          <button 
-            onClick={() => { setActiveTab('chat'); setSidebarOpen(false) }}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all group ${activeTab === 'chat' ? 'bg-[#232323] text-white' : 'text-[#888] hover:bg-[#1C1C1C] hover:text-[#EDEDED]'}`}
-          >
-            <span className={activeTab === 'chat' ? 'text-[#3ECF8E]' : 'text-[#666] group-hover:text-[#EDEDED]'}><Icons.Chat /></span>
-            Compliance Chat
-          </button>
-          <button 
-            onClick={() => { setActiveTab('audit'); setSidebarOpen(false) }}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all group ${activeTab === 'audit' ? 'bg-[#232323] text-white' : 'text-[#888] hover:bg-[#1C1C1C] hover:text-[#EDEDED]'}`}
-          >
-            <span className={activeTab === 'audit' ? 'text-[#3ECF8E]' : 'text-[#666] group-hover:text-[#EDEDED]'}><Icons.Clipboard /></span>
-            Mock Audit
-          </button>
-        </div>
-
-        <div className="p-4 border-t border-[#2A2A2A] bg-[#161616]">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full bg-[#3ECF8E] flex items-center justify-center text-black font-bold text-xs">
-              {session.user.email[0].toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-white truncate">{session.user.email}</p>
-              <p className="text-[10px] text-[#666] truncate">Pro Plan</p>
-            </div>
-          </div>
-          <button 
-            onClick={onSignOut}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-md border border-[#333] hover:border-[#555] bg-[#1C1C1C] hover:bg-[#232323] text-xs text-[#888] hover:text-white transition-all"
-          >
-            <Icons.SignOut />
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative min-w-0 bg-[#1C1C1C]">
-        <header className="h-14 border-b border-[#2A2A2A] flex items-center justify-between px-4 lg:px-6 bg-[#1C1C1C] shrink-0">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#888] hover:text-white">
-              <Icons.Menu />
-            </button>
-            <h1 className="text-sm font-medium text-[#EDEDED]">{activeTab === 'chat' ? 'AI Compliance Assistant' : 'Self-Inspection Audit'}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#3ECF8E] animate-pulse"></div>
-            <span className="text-[10px] font-mono text-[#666] uppercase">System Operational</span>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-hidden relative flex flex-col">
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-6" ref={scrollRef}>
-            {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center opacity-50 select-none">
-                <div className="w-12 h-12 mb-4 text-[#333]"><Icons.Chat /></div>
-                <p className="text-sm text-[#888]">Ask about food code violations, temperatures,<br/>or upload a photo for analysis.</p>
-              </div>
-            )}
-            
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex gap-4 max-w-3xl mx-auto ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                {msg.role !== 'user' && (
-                  <div className="w-8 h-8 rounded bg-[#232323] border border-[#333] flex items-center justify-center shrink-0 text-[#3ECF8E] text-xs font-mono">AI</div>
-                )}
-                <div className={`space-y-2 max-w-[85%] lg:max-w-[75%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                  {msg.image && (
-                    <img src={msg.image} alt="Upload" className="rounded-md border border-[#333] max-h-60 object-contain bg-black/50" />
-                  )}
-                  <div className={`text-sm leading-relaxed p-3 rounded-lg border ${
-                    msg.role === 'user' 
-                      ? 'bg-[#232323] border-[#333] text-[#EDEDED]' 
-                      : 'bg-transparent border-transparent text-[#CCC] pl-0 pt-1'
-                  }`}>
-                    {msg.content}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Input Area */}
-          <div className="p-4 border-t border-[#2A2A2A] bg-[#1C1C1C]">
-            <div className="max-w-3xl mx-auto relative">
-              {selectedImage && (
-                <div className="absolute bottom-full left-0 mb-2 p-2 bg-[#232323] border border-[#333] rounded-md flex items-center gap-2">
-                  <span className="text-xs text-[#888]">Image attached</span>
-                  <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400"><Icons.X /></button>
-                </div>
-              )}
-              <form onSubmit={handleSend} className="flex gap-2">
-                <button 
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3 rounded-md border border-[#333] hover:border-[#555] hover:bg-[#232323] text-[#888] hover:text-white transition-colors"
-                >
-                  <Icons.Upload />
-                </button>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
-                  onChange={handleImage} 
-                />
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask a question..."
-                  className="flex-1 bg-[#161616] border border-[#333] rounded-md px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E] transition-all"
-                />
-                <button 
-                  type="submit"
-                  disabled={!input && !selectedImage}
-                  className="px-4 rounded-md bg-[#3ECF8E] hover:bg-[#34D399] text-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
-                >
-                  <Icons.Send />
-                </button>
-              </form>
-              <p className="text-[10px] text-[#444] mt-2 text-center">AI can make mistakes. Verify critical code violations.</p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-}
-
-// ==========================================
-// ROOT COMPONENT
-// ==========================================
-export default function Page() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const supabase = createClient()
   const router = useRouter()
+
+  const GUEST_MESSAGE_LIMIT = 3
 
   useEffect(() => {
     const init = async () => {
@@ -397,125 +182,322 @@ export default function Page() {
     init()
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session) {
+        setGuestMessageCount(0) // Reset count when logged in
+      }
     })
     return () => listener.subscription.unsubscribe()
   }, [supabase])
 
+  useEffect(() => { 
+    if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
+  }, [messages])
+
+  const handleSend = async (e) => {
+    if (e) e.preventDefault()
+    if ((!input.trim() && !selectedImage) || isSending) return
+
+    // Check guest limit
+    if (!session && guestMessageCount >= GUEST_MESSAGE_LIMIT) {
+      setAuthModalMessage(`You've used your ${GUEST_MESSAGE_LIMIT} free messages`)
+      setShowAuthModal(true)
+      return
+    }
+
+    const newMsg = { role: 'user', content: input, image: selectedImage }
+    setMessages(p => [...p, newMsg])
+    setInput('')
+    const img = selectedImage
+    setSelectedImage(null)
+    setIsSending(true)
+
+    if (!session) {
+      setGuestMessageCount(prev => prev + 1)
+    }
+
+    setMessages(p => [...p, { role: 'assistant', content: 'Analyzing your compliance query...' }])
+
+    try {
+      // For guest users, use a mock response or limited API
+      if (!session) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        setMessages(p => {
+          const u = [...p]
+          u[u.length - 1].content = `Based on Michigan Modified Food Code regulations:\n\n${getDemoResponse(newMsg.content)}\n\n_Sign in for full access to AI-powered compliance answers with citations._`
+          return u
+        })
+      } else {
+        // Full authenticated API call
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [...messages, newMsg], image: img })
+        })
+        
+        if (res.status === 401) {
+          setShowAuthModal(true)
+          setMessages(p => p.slice(0, -1)) // Remove loading message
+          return
+        }
+        
+        const data = await res.json()
+        setMessages(p => {
+          const u = [...p]
+          u[u.length - 1].content = data.message || 'Error processing request.'
+          return u
+        })
+      }
+    } catch (err) {
+      setMessages(p => {
+        const u = [...p]
+        u[u.length - 1].content = 'Network error. Please try again.'
+        return u
+      })
+    } finally { 
+      setIsSending(false) 
+    }
+  }
+
+  // Simple demo responses for guest users
+  const getDemoResponse = (query) => {
+    const q = query.toLowerCase()
+    if (q.includes('temperature') || q.includes('temp') || q.includes('°f')) {
+      return '**Temperature Control Requirements:**\n\nCold holding: 41°F or below\nHot holding: 135°F or above\n\nFor specific situations, our AI provides detailed code citations and enforcement context.'
+    }
+    if (q.includes('handwash') || q.includes('hand wash')) {
+      return '**Handwashing Requirements:**\n\nSinks must be accessible, stocked with soap and towels, and water must be at least 100°F.\n\nSign in for complete regulatory guidance.'
+    }
+    return 'This appears to be a food safety compliance question. Sign in to get AI-powered answers with specific code citations and enforcement guidance tailored to your county.'
+  }
+
+  const handleImage = (e) => {
+    if (e.target.files?.[0]) {
+      if (!session) {
+        setAuthModalMessage('Image analysis requires an account')
+        setShowAuthModal(true)
+        return
+      }
+      const r = new FileReader()
+      r.onloadend = () => setSelectedImage(r.result)
+      r.readAsDataURL(e.target.files[0])
+    }
+  }
+
+  const handleNewChat = () => {
+    setMessages([])
+    setInput('')
+    setSelectedImage(null)
+  }
+
   if (isLoading) return (
-    <div className="h-screen w-full bg-[#1C1C1C] flex items-center justify-center fixed inset-0">
-      <div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div>
+    <div className="h-screen w-full bg-[#212121] flex items-center justify-center fixed inset-0">
+      <div className="w-6 h-6 border-2 border-[#10A37F] border-t-transparent rounded-full animate-spin"></div>
     </div>
   )
 
-  // If logged in, show full chat interface
-  if (session) {
-    return <ChatInterface session={session} onSignOut={() => supabase.auth.signOut()} />
-  }
-
-  // If logged out, show landing page with inline chat demo
   return (
     <>
       <AuthModal 
         isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-        onSuccess={() => setShowAuthModal(false)}
+        onClose={() => setShowAuthModal(false)}
+        message={authModalMessage}
       />
 
-      <div className="min-h-screen w-full bg-[#212121] text-[#ECECEC] flex flex-col font-sans selection:bg-[#3ECF8E] selection:text-black overflow-x-hidden">
-        {/* Minimal Header */}
-        <nav className="fixed top-0 w-full bg-[#212121] z-50 flex items-center justify-between px-4 sm:px-6 py-3">
-          <div className="font-semibold text-lg tracking-tight text-white">protocolLM</div>
-          <div className="flex gap-3 items-center">
-            <button onClick={() => setShowAuthModal(true)} className="text-sm text-[#C5C5C5] hover:text-white transition-colors">Log in</button>
-            <button onClick={() => router.push('/pricing')} className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign up</button>
+      <div className="flex h-screen w-full bg-[#212121] text-[#ECECEC] overflow-hidden fixed inset-0">
+        
+        {/* Sidebar Overlay (Mobile) */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Sidebar */}
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-[#171717] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          flex flex-col
+        `}>
+          <div className="p-3 border-b border-[#2F2F2F]">
+            <button 
+              onClick={handleNewChat}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-[#565869] hover:bg-[#2F2F2F] text-sm text-white transition-colors"
+            >
+              <Icons.Plus />
+              New chat
+            </button>
           </div>
-        </nav>
 
-        {/* Centered Content */}
-        <main className="flex-1 w-full flex flex-col items-center justify-center px-4 py-20">
-          <div className="w-full max-w-3xl mx-auto text-center space-y-8">
-            
-            {/* Main Heading */}
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-white leading-tight">
-                Get instant answers from food safety code
-              </h1>
-              <p className="text-lg sm:text-xl text-[#C5C5C5] max-w-2xl mx-auto">
-                Upload inspection photos, ask questions, run mock audits—powered by AI trained on Michigan regulations.
-              </p>
+          <div className="flex-1 overflow-y-auto p-3">
+            {/* Chat history would go here */}
+            <div className="text-xs text-[#8E8EA0] text-center py-8">
+              {session ? 'Your chats appear here' : 'Sign in to save chats'}
             </div>
+          </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-4">
-              <button 
-                onClick={() => router.push('/pricing')}
-                className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-6 py-3.5 rounded-lg text-base font-medium transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
+          <div className="p-3 border-t border-[#2F2F2F]">
+            {session ? (
+              <div>
+                <div className="flex items-center gap-3 px-3 py-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-[#10A37F] flex items-center justify-center text-white font-bold text-xs">
+                    {session.user.email[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-white truncate">{session.user.email}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => supabase.auth.signOut()}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#565869] hover:bg-[#2F2F2F] text-xs text-[#C5C5C5] hover:text-white transition-colors"
+                >
+                  <Icons.SignOut />
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="w-full bg-[#10A37F] hover:bg-[#0E8F6F] text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
-                Try protocolLM
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                Sign up or log in
               </button>
+            )}
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col relative min-w-0">
+          <header className="h-14 border-b border-[#2F2F2F] flex items-center justify-between px-4 shrink-0">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#C5C5C5] hover:text-white">
+              <Icons.Menu />
+            </button>
+            <div className="flex-1 text-center">
+              <h1 className="text-sm font-semibold text-white">protocolLM</h1>
+            </div>
+            {!session && (
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="border border-[#565869] hover:border-[#8E8EA0] text-white px-6 py-3.5 rounded-lg text-base font-medium transition-colors w-full sm:w-auto"
+                className="hidden lg:block text-sm text-[#C5C5C5] hover:text-white transition-colors"
               >
-                Log in
+                Sign up
               </button>
-            </div>
+            )}
+          </header>
 
-            {/* Chat Demo - Minimalist Style */}
-            <div className="w-full max-w-2xl mx-auto mt-16 space-y-4">
-              {/* User Message */}
-              <div className="flex justify-end">
-                <div className="bg-[#2F2F2F] rounded-3xl px-5 py-3 max-w-[80%]">
-                  <p className="text-[15px] text-white">Is 48°F acceptable for a walk-in cooler holding raw chicken?</p>
-                </div>
-              </div>
-              
-              {/* AI Response */}
-              <div className="flex justify-start">
-                <div className="space-y-3 max-w-[85%]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#10A37F] flex items-center justify-center">
-                      <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                      </svg>
+          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+            {messages.length === 0 ? (
+              // Empty State
+              <div className="h-full flex flex-col items-center justify-center px-4 text-center">
+                <div className="max-w-2xl w-full space-y-6">
+                  <h2 className="text-3xl sm:text-4xl font-semibold text-white">
+                    What can I help with?
+                  </h2>
+                  
+                  {!session && (
+                    <div className="bg-[#2F2F2F] border border-[#565869] rounded-xl p-4 text-sm text-[#C5C5C5]">
+                      <p className="mb-2">
+                        <span className="text-white font-semibold">Free preview:</span> {GUEST_MESSAGE_LIMIT - guestMessageCount} of {GUEST_MESSAGE_LIMIT} messages remaining
+                      </p>
+                      <button 
+                        onClick={() => setShowAuthModal(true)}
+                        className="text-[#10A37F] hover:underline font-medium"
+                      >
+                        Sign up for unlimited access →
+                      </button>
                     </div>
-                    <span className="text-xs font-semibold text-[#10A37F]">protocolLM</span>
-                  </div>
-                  <div className="bg-[#2F2F2F] rounded-3xl px-5 py-4 space-y-3">
-                    <p className="text-[15px] text-white leading-relaxed">
-                      <span className="inline-flex items-center gap-1.5 text-[#FF6B6B] font-semibold">
-                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                        </svg>
-                        VIOLATION
-                      </span>
-                      {' '}— No, 48°F is not acceptable.
-                    </p>
-                    <p className="text-[15px] text-[#C5C5C5] leading-relaxed">
-                      Per Michigan Modified Food Code (3-501.16), TCS foods like raw chicken must be held at <span className="text-white font-semibold">41°F or below</span>.
-                    </p>
-                    <p className="text-[15px] text-[#8E8EA0] leading-relaxed">
-                      <span className="text-white font-semibold">Action:</span> Discard if time/temp unknown, or rapid chill immediately and document.
-                    </p>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                    <button 
+                      onClick={() => setInput("What's the proper temperature for cold holding?")}
+                      className="p-4 bg-[#2F2F2F] hover:bg-[#3A3A4A] rounded-xl text-sm text-[#C5C5C5] transition-colors text-left"
+                    >
+                      Temperature requirements →
+                    </button>
+                    <button 
+                      onClick={() => setInput("Handwashing sink requirements")}
+                      className="p-4 bg-[#2F2F2F] hover:bg-[#3A3A4A] rounded-xl text-sm text-[#C5C5C5] transition-colors text-left"
+                    >
+                      Handwashing rules →
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Messages
+              <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                    {msg.role !== 'user' && (
+                      <div className="w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center shrink-0">
+                        <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                      </div>
+                    )}
+                    <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#2F2F2F] rounded-3xl px-5 py-3' : ''}`}>
+                      {msg.image && (
+                        <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain" />
+                      )}
+                      <p className="text-[15px] text-white leading-relaxed whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-            {/* Fine Print */}
-            <p className="text-sm text-[#8E8EA0] pt-8">
-              Free 30-day trial • No credit card required • Cancel anytime
-            </p>
+          {/* Input Area */}
+          <div className="border-t border-[#2F2F2F] p-4">
+            <div className="max-w-3xl mx-auto">
+              {selectedImage && (
+                <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center gap-2">
+                  <span className="text-xs text-[#C5C5C5]">Image attached</span>
+                  <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
+                    <Icons.X />
+                  </button>
+                </div>
+              )}
+              <form onSubmit={handleSend} className="relative">
+                <div className="flex items-end gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[#C5C5C5] hover:text-white transition-colors"
+                    title="Upload image"
+                  >
+                    <Icons.Upload />
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImage} 
+                  />
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Message protocolLM"
+                    className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={(!input.trim() && !selectedImage) || isSending}
+                    className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Icons.Send />
+                  </button>
+                </div>
+              </form>
+              <p className="text-xs text-[#8E8EA0] text-center mt-3">
+                protocolLM can make mistakes. Check important info with your health department.
+              </p>
+            </div>
           </div>
         </main>
-
-        {/* Footer */}
-        <footer className="py-6 text-center text-xs text-[#8E8EA0] border-t border-[#2F2F2F]">
-          <p>protocolLM • Trained on Michigan food safety regulations</p>
-        </footer>
       </div>
     </>
   )
