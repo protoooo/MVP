@@ -39,7 +39,8 @@ const GlobalStyles = () => (
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  Send: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" /></svg>,
+  // Changed Send to a sharp Arrow/Cursor style
+  Send: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
@@ -61,16 +62,16 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* Container */}
+      {/* Container - Supabase Style (Rectangle, darker, subtle border) */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#1C1C1C] border border-[#2E2E2E] rounded-[26px] shadow-lg transition-all focus-within:border-[#3E7BFA] focus-within:ring-1 focus-within:ring-[#3E7BFA]"
+        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#404040]"
       >
         {/* Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-4 text-[#A1A1AA] hover:text-white transition-colors"
+          className="p-3 m-1.5 text-[#A1A1AA] hover:text-white hover:bg-[#2E2E2E] rounded-md transition-all"
           title="Attach file"
         >
           <Icons.Upload />
@@ -95,22 +96,26 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             }
           }}
           placeholder="Ask anything..."
-          className="flex-1 max-h-[200px] min-h-[52px] py-[14px] px-2 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#71717A] text-[16px] leading-6"
+          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-2 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
 
-        {/* Send Button */}
+        {/* Send Button - Supabase Button Style */}
         <button
           type="submit"
           disabled={(!input.trim() && !selectedImage) || isSending}
-          className={`p-2 m-2 rounded-full transition-all ${
+          className={`p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center ${
             (input.trim() || selectedImage) && !isSending
-              ? 'bg-[#3E7BFA] text-white hover:bg-[#3469d4]'
-              : 'bg-[#2E2E2E] text-[#71717A] cursor-not-allowed'
+              ? 'bg-[#3E7BFA] border-[#3E7BFA] text-white hover:bg-[#3469d4] hover:border-[#3469d4]'
+              : 'bg-[#2E2E2E] border-[#2E2E2E] text-[#525252] cursor-not-allowed'
           }`}
         >
-          <Icons.Send />
+          {isSending ? (
+            <div className="w-4 h-4 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Icons.Send />
+          )}
         </button>
       </form>
       <p className="text-center text-[11px] text-[#525252] mt-3">
@@ -359,7 +364,6 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
-    // Add temporary assistant message for "thinking"
     setMessages(p => [...p, { role: 'assistant', content: '' }])
 
     try {
