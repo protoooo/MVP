@@ -39,8 +39,13 @@ const GlobalStyles = () => (
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  // Changed Send to a sharp Arrow/Cursor style
-  Send: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
+  // Rotated 45 degrees so it points straight right
+  Send: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(45deg)' }}>
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+  ),
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
@@ -62,7 +67,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* Container - Supabase Style (Rectangle, darker, subtle border) */}
+      {/* Container - Supabase Style */}
       <form
         onSubmit={handleSend}
         className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#404040]"
@@ -319,19 +324,23 @@ export default function Page() {
   }, [messages.length, isSending])
 
   const handleSignOut = async (e) => {
-    if (e) {
-        e.preventDefault()
-        e.stopPropagation()
-    }
+    // Prevent default form/link behaviors
+    if (e && e.preventDefault) e.preventDefault()
+    
+    // 1. Optimistically clear local UI state immediately
+    setSession(null)
+    setProfile(null)
+    setMessages([])
+    setShowUserMenu(false)
+
     try {
+      // 2. Attempt Supabase sign out
       await supabase.auth.signOut()
-      setSession(null)
-      setProfile(null)
-      setMessages([])
-      setShowUserMenu(false)
-      window.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
+    } finally {
+      // 3. Force hard refresh/redirect to clear any persistent server/cookie state
+      router.refresh()
       window.location.href = '/'
     }
   }
@@ -491,7 +500,8 @@ export default function Page() {
             /* LOGGED OUT VIEW (Centered) */
             /* ================================== */
             <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center tracking-tight">
+              {/* Updated Header Font (Supabase Style) */}
+              <h1 className="text-3xl md:text-5xl text-white mb-8 text-center tracking-tight font-sans">
                 Washtenaw Food Safety
               </h1>
               <div className="w-full max-w-2xl">
