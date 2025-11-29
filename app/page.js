@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO ---
+// --- 1. CHAT DEMO (Semantic Colors applied) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -14,7 +14,6 @@ const DemoChatContent = () => {
   const [hasStarted, setHasStarted] = useState(false)
   const scrollRef = useRef(null)
 
-  // Auto-scroll to bottom ensures visibility
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -28,11 +27,11 @@ const DemoChatContent = () => {
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "NO. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
+      response: "COMPLIANT: No. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
-      response: 'VIOLATION. Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
+      response: 'VIOLATION: Michigan Modified Food Code 3-801.11(C) strictly prohibits serving undercooked comminuted meat (ground beef) to a Highly Susceptible Population (children), regardless of parental permission.'
     }
   ]
 
@@ -42,7 +41,7 @@ const DemoChatContent = () => {
     
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      await wait(Math.random() * 35 + 25)
+      await wait(Math.random() * 30 + 20)
     }
 
     const runSimulation = async () => {
@@ -52,17 +51,17 @@ const DemoChatContent = () => {
           if (!isMounted) return
           setIsTyping(true)
           setInputValue('')
-          await wait(900)
+          await wait(800)
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
-          await wait(450)
+          await wait(400)
           setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(2100)
+          await wait(1800)
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -75,9 +74,9 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(30)
+            await wait(25)
           }
-          await wait(4500)
+          await wait(3500)
         }
         await wait(1200)
         setMessages((prev) => prev.slice(-4))
@@ -88,13 +87,30 @@ const DemoChatContent = () => {
   }, [])
 
   const formatContent = (text) => {
-    const keywords = ['CRITICAL ACTION', 'VIOLATION', 'IMMINENT HEALTH HAZARD', 'CORE VIOLATION', 'ACTION REQUIRED']
+    // Red for Danger/Action
+    if (text.startsWith("ACTION REQUIRED")) {
+       const content = text.replace("ACTION REQUIRED", "")
+       return (<span><span className="text-[#F87171] font-bold border-b border-[#F87171]/30 pb-0.5">ACTION REQUIRED</span>{content}</span>)
+    }
+    if (text.startsWith("VIOLATION")) {
+       const content = text.replace("VIOLATION", "")
+       return (<span><span className="text-[#F87171] font-bold border-b border-[#F87171]/30 pb-0.5">VIOLATION</span>{content}</span>)
+    }
+    
+    // Green for Safe/Compliant
+    if (text.startsWith("COMPLIANT")) {
+       const content = text.replace("COMPLIANT", "")
+       return (<span><span className="text-[#3ECF8E] font-bold border-b border-[#3ECF8E]/30 pb-0.5">COMPLIANT</span>{content}</span>)
+    }
+    
+    // Fallback highlight
+    const keywords = ['IMMINENT HEALTH HAZARD', 'CORE VIOLATION']
     for (const key of keywords) {
       if (text.includes(key)) {
         const parts = text.split(key)
         return (
           <span>
-            <span className="text-[#3ECF8E] font-medium">{key}</span>
+            <span className="text-amber-400 font-bold">{key}</span>
             {parts[1]}
           </span>
         )
@@ -105,12 +121,8 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full max-w-5xl group mx-auto">
-      {/* 
-          HEIGHT OPTIMIZATION:
-          h-[380px] Mobile: Ensures input is visible above the browser bottom bar.
-          h-[550px] Desktop: Spacious and authoritative.
-      */}
-      <div className="flex flex-col h-[380px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+      {/* Fixed Height Container */}
+      <div className="flex flex-col h-[500px] md:h-[650px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
         {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
@@ -120,7 +132,7 @@ const DemoChatContent = () => {
                <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
             </div>
             <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
-              protocol_LM
+              protocol_LM / query_console
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -343,7 +355,7 @@ function MainContent() {
       </div>
 
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 md:px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
         <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
             <div className="w-6 h-6 bg-[#3ECF8E] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(62,207,142,0.4)]">
@@ -361,28 +373,33 @@ function MainContent() {
               Start Free Trial
             </button>
           </div>
-
-          {/* Mobile Login */}
-          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3ECF8E]">Log In</button>
         </div>
       </nav>
 
       {/* HERO SECTION */}
-      {/* Removed bottom padding to let footer sit closer, used gap to control distance */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-8 flex flex-col items-center relative z-10">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-4 pb-24 flex flex-col items-center relative z-10 min-h-screen">
         
-        {/* HEADLINES - Tight vertical spacing */}
-        <div className="w-full max-w-4xl text-center mb-6 mt-6 md:mt-20">
-          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Train your team before the inspector arrives
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-5xl text-center mb-8 mt-12 md:mt-20">
+          <h1 className={`text-3xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            Train your team before the inspector arrives.
           </h1>
 
-          <p className={`text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal px-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
-          </p>
+          <div className={`flex flex-col items-center gap-3 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            <p className="text-[13px] md:text-[15px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
+              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
+            </p>
+          </div>
+
+          {/* Mobile CTA */}
+          <div className={`md:hidden flex justify-center mt-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
+              Start Free Trial
+            </button>
+          </div>
         </div>
 
-        {/* DEMO BOX */}
+        {/* DEMO BOX - Centered */}
         <div className={`w-full max-w-5xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
