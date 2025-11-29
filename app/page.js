@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Cleaned Up & Slower) ---
+// --- 1. CHAT DEMO ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -14,6 +14,7 @@ const DemoChatContent = () => {
   const [hasStarted, setHasStarted] = useState(false)
   const scrollRef = useRef(null)
 
+  // Auto-scroll to bottom ensures visibility
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -41,8 +42,7 @@ const DemoChatContent = () => {
     
     const typeChar = async (char) => {
       setInputValue((prev) => prev + char)
-      // Slowed down by ~12% (was 30+20)
-      await wait(Math.random() * 35 + 25) 
+      await wait(Math.random() * 35 + 25)
     }
 
     const runSimulation = async () => {
@@ -52,17 +52,17 @@ const DemoChatContent = () => {
           if (!isMounted) return
           setIsTyping(true)
           setInputValue('')
-          await wait(900) // Slower start
+          await wait(900)
           for (const char of step.text) {
             if (!isMounted) return
             await typeChar(char)
           }
-          await wait(450) // Slower pause before send
+          await wait(450)
           setMessages((prev) => [...prev, { role: 'user', content: step.text }])
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(2100) // 12% slower thinking
+          await wait(2100)
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -75,9 +75,9 @@ const DemoChatContent = () => {
               newMsgs[newMsgs.length - 1].content = currentResponse
               return newMsgs
             })
-            await wait(30) // Slower reading speed
+            await wait(30)
           }
-          await wait(4500) // Longer pause between questions
+          await wait(4500)
         }
         await wait(1200)
         setMessages((prev) => prev.slice(-4))
@@ -105,19 +105,27 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full max-w-5xl group mx-auto">
-      {/* FIXED HEIGHT */}
-      <div className="flex flex-col h-[500px] md:h-[600px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+      {/* 
+          HEIGHT OPTIMIZATION:
+          h-[380px] Mobile: Ensures input is visible above the browser bottom bar.
+          h-[550px] Desktop: Spacious and authoritative.
+      */}
+      <div className="flex flex-col h-[380px] md:h-[550px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
-        {/* Header: Simplified & Clean */}
+        {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide">
-              protocol<span className="text-[#3B82F6]">LM</span>
+            <div className="flex gap-1.5">
+               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
+               <div className="w-2.5 h-2.5 rounded-full bg-[#3C3C3C]"></div>
+            </div>
+            <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
+              protocol_LM
             </span>
           </div>
           <div className="flex items-center gap-2">
-             <div className="w-1.5 h-1.5 bg-[#3B82F6] rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-             <span className="text-[10px] font-medium text-[#3B82F6] uppercase tracking-wide">Live</span>
+             <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full animate-pulse shadow-[0_0_8px_rgba(62,207,142,0.4)]"></div>
+             <span className="text-[10px] font-medium text-[#3ECF8E] uppercase tracking-wide">Live</span>
           </div>
         </div>
 
@@ -165,12 +173,12 @@ const DemoChatContent = () => {
 
         {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
-          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3B82F6] focus-within:ring-1 focus-within:ring-[#3B82F6]/20">
-            <span className="text-[#3B82F6] text-xs font-mono">{'>'}</span>
+          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
+            <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
             <div className="flex-1 text-[13px] text-[#EDEDED] font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-1.5 h-4 bg-[#3B82F6] ml-0.5 animate-pulse" />
+                <span className="inline-block w-1.5 h-4 bg-[#3ECF8E] ml-0.5 animate-pulse" />
               )}
               {!inputValue && !isTyping && <span className="text-[#555] text-xs">Run compliance query...</span>}
             </div>
@@ -285,15 +293,15 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#2C2C2C] text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3B82F6] transition-colors">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3ECF8E] transition-colors">
             {view === 'signup' ? 'Have an account? Sign in' : 'No account? Sign up'}
           </button>
         </div>
@@ -326,7 +334,7 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
       
       {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
@@ -335,63 +343,53 @@ function MainContent() {
       </div>
 
       {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-4 md:px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
         <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-6 h-6 bg-[#3B82F6] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(59,130,246,0.4)]">
+            <div className="w-6 h-6 bg-[#3ECF8E] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(62,207,142,0.4)]">
                <div className="w-3 h-3 bg-[#121212] rounded-sm opacity-50"></div>
             </div>
             <span className="text-sm font-semibold tracking-tight text-[#EDEDED]">
-              protocol<span className="text-[#3B82F6]">LM</span>
+              protocol<span className="text-[#3ECF8E]">LM</span>
             </span>
           </div>
           
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]">
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(62,207,142,0.15)]">
               Start Free Trial
             </button>
           </div>
+
+          {/* Mobile Login */}
+          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3ECF8E]">Log In</button>
         </div>
       </nav>
 
-      {/* HERO SECTION - COMPACT & ALIGNED */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-8 pb-24 flex flex-col items-center relative z-10 min-h-screen">
+      {/* HERO SECTION */}
+      {/* Removed bottom padding to let footer sit closer, used gap to control distance */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-8 flex flex-col items-center relative z-10">
         
-        {/* CENTERED TEXT */}
-        <div className="w-full max-w-4xl text-center mb-8 mt-12 md:mt-16">
-          {/* 
-              Headline: Smaller Size, Tighter Tracking, No Period.
-              Max width ensures line break happens if screen is tiny, but ideally 1 line.
-          */}
-          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        {/* HEADLINES - Tight vertical spacing */}
+        <div className="w-full max-w-4xl text-center mb-6 mt-6 md:mt-20">
+          <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives
           </h1>
 
-          {/* Subheader: Single Line Attempt on Desktop via whitespace-nowrap where possible */}
-          <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-5xl mx-auto font-normal md:whitespace-nowrap">
-              Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>
-            </p>
-          </div>
-
-          {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center mt-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
-              Start Free Trial
-            </button>
-          </div>
+          <p className={`text-[13px] md:text-[14px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal px-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
+          </p>
         </div>
 
-        {/* DEMO BOX - FIXED WIDTH & HEIGHT */}
+        {/* DEMO BOX */}
         <div className={`w-full max-w-5xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
 
       </div>
 
-      {/* FOOTER - With Coming Soon & Links */}
+      {/* FOOTER */}
       <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10 mt-auto">
          <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-xs text-[#666]">
              <div className="flex gap-6">
@@ -400,7 +398,7 @@ function MainContent() {
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2C2C2C] rounded-full px-3 py-1">
-               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span> {/* Amber dot for Coming Soon */}
+               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
                <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">Wayne & Oakland: Coming Q1</span>
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
@@ -415,11 +413,10 @@ function MainContent() {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
-        /* Supabase Blue Loader */
         .loader {
           height: 14px;
           aspect-ratio: 2.5;
-          --_g: no-repeat radial-gradient(farthest-side,#3B82F6 90%,#0000);
+          --_g: no-repeat radial-gradient(farthest-side,#3ECF8E 90%,#0000);
           background:var(--_g), var(--_g), var(--_g), var(--_g);
           background-size: 20% 50%;
           animation: l43 1s infinite linear; 
