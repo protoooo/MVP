@@ -61,7 +61,7 @@ const DemoChatContent = () => {
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(1200)
+          await wait(1800) // Thinking time
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -153,12 +153,11 @@ const DemoChatContent = () => {
             </div>
           ))}
 
+          {/* THE NEW LOADER ANIMATION */}
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-1">
-              <div className="bg-white px-4 py-2 rounded-full border border-neutral-100 shadow-sm flex gap-1 items-center">
-                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-75" />
-                <div className="w-1.5 h-1.5 bg-neutral-400 rounded-full animate-bounce delay-150" />
+              <div className="bg-white px-5 py-3 rounded-full border border-neutral-100 shadow-sm flex items-center">
+                <div className="loader"></div>
               </div>
             </div>
           )}
@@ -454,6 +453,25 @@ function MainContent() {
           100% { opacity: 1; transform: translateY(0); }
         }
         .animate-reveal-card { animation: revealCard 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        /* --- THE LOADER CSS --- */
+        .loader {
+          height: 14px; /* Scaled down for text bubble */
+          aspect-ratio: 2.5;
+          --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
+          background:var(--_g), var(--_g), var(--_g), var(--_g);
+          background-size: 20% 50%;
+          animation: l43 1s infinite linear; 
+        }
+        @keyframes l43 {
+          0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+          16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+          33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+          50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
+          66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
+          83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
+          100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+        }
       `}</style>
     </div>
   )
