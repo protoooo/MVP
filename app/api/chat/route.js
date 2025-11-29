@@ -5,7 +5,7 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// --- DEFINING MODES & PROMPTS (Same as before) ---
+// --- DEFINING MODES & PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
   OBJECTIVE: Help operators understand codes and fix violations.
@@ -46,14 +46,26 @@ const PROMPTS = {
 
 export async function POST(req) {
   try {
-    // --- VERTEX AI SETUP ---
-    // Make sure you add GCLOUD_PROJECT_ID to your .env file
-    const projectId = process.env.GCLOUD_PROJECT_ID || 'food-safety-production' 
+    // --- VERTEX AI AUTHENTICATION FOR RAILWAY ---
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID || 'food-safety-production'
     const location = 'us-central1'
     
-    const vertex_ai = new VertexAI({ project: projectId, location: location });
+    // Config object
+    let vertexConfig = { project: projectId, location: location };
+
+    // If running in Railway, use the JSON variable
+    if (process.env.GOOGLE_CREDENTIALS_JSON) {
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+      vertexConfig.googleAuthOptions = {
+        credentials: {
+          client_email: credentials.client_email,
+          private_key: credentials.private_key,
+        }
+      };
+    }
     
-    // Vertex models use slightly different naming conventions than AI Studio
+    const vertex_ai = new VertexAI(vertexConfig);
+    
     const model = vertex_ai.preview.getGenerativeModel({
       model: 'gemini-1.5-flash-001', 
       generationConfig: {
@@ -100,7 +112,7 @@ export async function POST(req) {
        })
     }
 
-    // RAG Logic (Keep this using your existing search for now)
+    // RAG Logic
     let context = ''
     let citations = []
     if (lastMessage.content) {
@@ -140,7 +152,7 @@ export async function POST(req) {
     const parts = [textPrompt]
 
     if (image) {
-      // Vertex AI expects base64 without the data:image/jpeg;base64 header
+      // Vertex AI expects base64 without the header
       const base64Data = image.split(',')[1]
       parts.push({
         inlineData: {
@@ -151,7 +163,6 @@ export async function POST(req) {
       parts.push({ text: "Analyze this image based on the specific mode objectives above." })
     }
 
-    // Generate content stream
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: parts }]
     });
