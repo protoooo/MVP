@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Script from 'next/script'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Fixed Height / Clean Header / Lottie) ---
+// --- 1. CHAT DEMO (Fixed Height / Lottie / Color Logic) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -92,28 +92,15 @@ const DemoChatContent = () => {
   const formatContent = (text) => {
     if (text.includes('ACTION REQUIRED')) {
        const parts = text.split('ACTION REQUIRED')
-       return (<span><span className="text-[#F87171] font-bold">ACTION REQUIRED</span>{parts[1]}</span>)
+       return (<span><span className="text-[#EF4444] font-bold">ACTION REQUIRED</span>{parts[1]}</span>)
     }
     if (text.includes('VIOLATION')) {
        const parts = text.split('VIOLATION')
-       return (<span><span className="text-[#F87171] font-bold">VIOLATION</span>{parts[1]}</span>)
+       return (<span><span className="text-[#EF4444] font-bold">VIOLATION</span>{parts[1]}</span>)
     }
     if (text.includes('COMPLIANT')) {
        const parts = text.split('COMPLIANT')
        return (<span><span className="text-[#3ECF8E] font-bold">COMPLIANT</span>{parts[1]}</span>)
-    }
-    // Default fallback
-    const keywords = ['IMMINENT HEALTH HAZARD', 'CORE VIOLATION']
-    for (const key of keywords) {
-      if (text.includes(key)) {
-        const parts = text.split(key)
-        return (
-          <span>
-            <span className="text-[#FBBF24] font-bold">{key}</span>
-            {parts[1]}
-          </span>
-        )
-      }
     }
     return text
   }
@@ -122,15 +109,14 @@ const DemoChatContent = () => {
     <div className="relative w-full max-w-5xl group mx-auto">
       {/* 
           FIXED HEIGHT CONFIGURATION:
-          - h-[360px] Mobile: Ensures Header + Text + Box fit on iPhone screen (600-700px height).
-          - h-[500px] Desktop: Keeps it compact above fold.
+          - h-[360px] Mobile: Compact enough to fit alongside the header.
+          - h-[500px] Desktop: Large enough to be the hero element.
       */}
       <div className="flex flex-col h-[360px] md:h-[500px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
-        {/* Header: Cleaned up (No dots, No extra text) */}
+        {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            {/* NO DOTS HERE */}
             <span className="font-sans text-[11px] font-medium text-[#EDEDED] tracking-wide opacity-80">
               protocol<span className="text-[#3B82F6]">LM</span>
             </span>
@@ -177,7 +163,7 @@ const DemoChatContent = () => {
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-0">
               <div className="px-0 py-2 flex items-center">
-                {/* LOTTIE LOADER RESTORED */}
+                {/* LOTTIE LOADER */}
                 <dotlottie-wc 
                   src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" 
                   autoplay 
@@ -191,12 +177,12 @@ const DemoChatContent = () => {
 
         {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
-          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3B82F6] focus-within:ring-1 focus-within:ring-[#3B82F6]/20">
-            <span className="text-[#3B82F6] text-xs font-mono">{'>'}</span>
+          <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
+            <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
             <div className="flex-1 text-[13px] text-[#EDEDED] font-mono min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-1.5 h-4 bg-[#3B82F6] ml-0.5 animate-pulse" />
+                <span className="inline-block w-1.5 h-4 bg-[#3ECF8E] ml-0.5 animate-pulse" />
               )}
               {!inputValue && !isTyping && <span className="text-[#555] text-xs">Run compliance query...</span>}
             </div>
@@ -311,15 +297,16 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          <button type="submit" disabled={loading} className="w-full bg-[#3ECF8E] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
+          {/* BLUE BUTTON ON MODAL TOO */}
+          <button type="submit" disabled={loading} className="w-full bg-[#3B82F6] hover:bg-[#2563eb] text-white font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-[#2C2C2C] text-center">
-          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3ECF8E] transition-colors">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs text-[#888] hover:text-[#3B82F6] transition-colors">
             {view === 'signup' ? 'Have an account? Sign in' : 'No account? Sign up'}
           </button>
         </div>
@@ -352,11 +339,10 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
-      {/* Lottie Script (Essential) */}
+    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
       <Script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module" strategy="afterInteractive" />
 
-      {/* BACKGROUND: DOT GRID */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80"></div>
@@ -364,7 +350,7 @@ function MainContent() {
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
-        <div className={`w-full max-w-6xl flex justify-between items-center h-14 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-xl font-bold tracking-tight text-[#EDEDED]">
               protocol<span className="text-[#3B82F6]">LM</span>
@@ -374,22 +360,24 @@ function MainContent() {
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(62,207,142,0.15)]">
+            {/* BLUE BUTTON */}
+            <button onClick={() => openAuth('signup')} className="bg-[#3B82F6] hover:bg-[#2563eb] text-white px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)]">
               Start Free Trial
             </button>
           </div>
 
-          {/* Mobile Login */}
-          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3ECF8E]">Log In</button>
+          {/* Mobile Login Only */}
+          <button onClick={() => openAuth('login')} className="md:hidden text-xs font-medium text-[#3B82F6]">Log In</button>
         </div>
       </nav>
 
-      {/* HERO SECTION - 100% Viewport Optimization */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-4 flex flex-col items-center relative z-10 min-h-[calc(100vh-60px)]">
+      {/* HERO SECTION */}
+      {/* Changed pt-10/24 to pt-12 (Mobile) / pt-20 (Desktop) to shift down visibly */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-24 flex flex-col items-center relative z-10 min-h-[calc(100vh-64px)]">
         
         {/* CENTERED TEXT */}
-        <div className="w-full max-w-5xl text-center mb-6 mt-6 md:mt-16">
-          {/* ONE LINE HEADER ON DESKTOP */}
+        <div className="w-full max-w-5xl text-center mb-6 mt-4 md:mt-0">
+          {/* Desktop Headline */}
           <h1 className={`text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-3 transition-all duration-1000 md:whitespace-nowrap ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives
           </h1>
@@ -401,7 +389,7 @@ function MainContent() {
           </div>
         </div>
 
-        {/* DEMO BOX - Adjusted top margin to pull it up */}
+        {/* DEMO BOX */}
         <div className={`w-full max-w-5xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
@@ -417,7 +405,7 @@ function MainContent() {
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2C2C2C] rounded-full px-3 py-1">
-               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
+               <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80"></span>
                <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">Wayne & Oakland: Coming Q1</span>
              </div>
              <span className="hidden md:inline text-[#333]">|</span>
