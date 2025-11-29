@@ -50,20 +50,29 @@ export async function POST(req) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // Check rate limits
     const limitCheck = await checkRateLimit(session.user.id)
     if (!limitCheck.success) {
-      return NextResponse.json({ error: limitCheck.message || 'Limit reached' }, { status: 429 })
+      return NextResponse.json({ 
+        error: limitCheck.message || 'Usage limit reached',
+        limitReached: true 
+      }, { status: 429 })
     }
     
     const body = await req.json()
     const { messages, image, county } = body
     
+    // Check image limits
     if (image) {
       if (limitCheck.currentImages >= limitCheck.imageLimit) {
-        return NextResponse.json({ error: `Image limit reached for ${limitCheck.plan} plan.` }, { status: 429 })
+        return NextResponse.json({ 
+          error: `Image analysis limit reached for ${limitCheck.plan} plan.`,
+          limitReached: true 
+        }, { status: 429 })
       }
     }
 
+    const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
@@ -108,7 +117,7 @@ export async function POST(req) {
            citations = searchResults.map(doc => ({
              document: doc.source.replace('.pdf', ''),
              pages: [doc.page],
-             authority: doc.docType // 'county', 'state', or 'federal'
+             authority: doc.docType
            }))
         } else {
           console.log('⚠️ No local documents matched.')
@@ -135,7 +144,8 @@ export async function POST(req) {
     const response = await result.response
     const text = response.text()
 
-    supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
+    // Increment usage counter
+    await supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
 
     return NextResponse.json({ message: text, citations: citations })
 
