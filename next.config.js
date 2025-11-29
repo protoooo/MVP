@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -12,13 +15,10 @@ const nextConfig = {
         'ioredis': false,
       }
     }
-    
     return config
   },
-
   reactStrictMode: true,
   swcMinify: true,
-
   async headers() {
     return [
       {
