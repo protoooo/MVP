@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Functional & Clear) ---
+// --- 1. CHAT DEMO (Updated for Washtenaw Focus) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -27,7 +27,7 @@ const DemoChatContent = () => {
     },
     {
       text: 'Our certified manager quit yesterday. Do we have to close the kitchen?',
-      response: "NO. 'Oakland County Sanitary Code Article IV, Sec 4.4' allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Health Division immediately to avoid penalties."
+      response: "NO. Michigan Food Law (Sec 289.2129) allows a 3-month grace period to replace a Certified Food Service Manager. However, you must notify the Washtenaw County Health Department immediately to avoid penalties."
     },
     {
       text: "Can I serve a rare burger to a 10-year-old if the parents say it's okay?",
@@ -112,11 +112,7 @@ const DemoChatContent = () => {
 
   return (
     <div className="relative w-full max-w-[550px] group mx-auto">
-      {/* 
-         Height: 560px on desktop for readability
-         Shadow: Deep/Sharp
-      */}
-      <div className="flex flex-col h-[420px] md:h-[560px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
+      <div className="flex flex-col h-[400px] md:h-[560px] w-full bg-white border border-neutral-200 rounded-lg relative z-10 overflow-hidden shadow-2xl shadow-neutral-200/50">
         
         {/* Header */}
         <div className="h-12 border-b border-neutral-100 flex items-center px-5 justify-between bg-white shrink-0">
@@ -127,7 +123,7 @@ const DemoChatContent = () => {
           </div>
           <div className="flex items-center gap-2">
              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-             <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">Active</span>
+             <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-widest">Online</span>
           </div>
         </div>
 
@@ -192,7 +188,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 2. CAPABILITY CARDS (The "What", not the "Why") ---
+// --- 2. CAPABILITY CARDS ---
 const CapabilityCard = ({ label, title, description, delay }) => {
   return (
     <div 
@@ -399,7 +395,7 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Shifted Up & Compact) */}
+      {/* HERO SECTION (Washtenaw Specific) */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-8 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
         
         {/* LEFT COLUMN */}
@@ -411,17 +407,17 @@ function MainContent() {
             before the inspector arrives.
           </h1>
 
-          {/* Subheader */}
+          {/* Subheader - Specific Scope */}
           <p className={`text-[15px] text-neutral-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            Instant answers from <strong>Washtenaw, Wayne, and Oakland County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
+            Instant answers from <strong>Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* CAPABILITY CARDS (Replaced Stats with Utility) */}
+          {/* CAPABILITY CARDS (Infrastructure/Legal Focus) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 lg:mb-0 transition-all duration-1000 delay-500 ease-out-spring">
             <CapabilityCard 
               label="Jurisdiction"
-              title="Tri-County"
-              description="Washtenaw, Wayne, & Oakland specific enforcement procedures."
+              title="Washtenaw"
+              description="Specific enforcement procedures and local ordinances for Washtenaw County."
               delay={500}
             />
             <CapabilityCard 
