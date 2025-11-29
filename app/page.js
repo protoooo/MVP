@@ -622,7 +622,8 @@ export default function Page() {
         {/* Sidebar */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r-2 border-[#3E7BFA]/40 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
-            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3ECF8E] rounded-lg transition-all group">
+            {/* NEW CHAT BUTTON: Blue Style */}
+            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-white bg-[#3E7BFA] hover:bg-[#3469d4] rounded-lg transition-colors shadow-lg shadow-blue-900/20 group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
             </button>
           </div>
@@ -645,21 +646,14 @@ export default function Page() {
                 </button>
               ))}
             </div>
-            
-            {!session && (
-              <div className="mt-4 px-1">
-                 <button onClick={() => router.push('/pricing')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#A1A1AA] hover:text-white hover:bg-[#1C1C1C] rounded-lg transition-colors">
-                    <Icons.Tag />
-                    Pricing
-                 </button>
-              </div>
-            )}
+            {/* PRICING BUTTON REMOVED FROM SIDEBAR */}
           </div>
 
           {session ? (
             <div className="p-3 border-t border-[#1C1C1C]">
               <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
+                  {/* USER AVATAR: Blue Style */}
                   <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
                     {session.user.email[0].toUpperCase()}
                   </div>
@@ -683,7 +677,8 @@ export default function Page() {
             </div>
           ) : (
             <div className="p-3 border-t border-[#1C1C1C]">
-              <button onClick={() => setShowAuthModal(true)} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#050505] font-medium py-2 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/20">
+              {/* SIGN IN BUTTON: Blue Style */}
+              <button onClick={() => setShowAuthModal(true)} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2 rounded-lg text-sm transition-colors shadow-lg shadow-blue-900/20">
                 Sign in
               </button>
             </div>
