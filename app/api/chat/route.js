@@ -7,25 +7,30 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 60
 
-const SYSTEM_PROMPT = `You are ProtocolLM, a food safety compliance assistant for Michigan restaurants.
+// OPTIMIZED PROMPT FOR CLARITY AND ACTIONABILITY
+const SYSTEM_PROMPT = `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
 
-**CRITICAL RULES:**
-1. **HIERARCHY**: Always follow this priority:
-   - LOCAL COUNTY CODE (Washtenaw/Wayne/Oakland) = LAW
-   - Michigan Modified Food Code = STATE LAW
-   - FDA Food Code 2022 = FEDERAL GUIDANCE (use only if no local/state rule exists)
+**CORE OBJECTIVE:**
+Help restaurant operators understand health codes and fix violations immediately. Be concise, authoritative, and helpful.
 
-2. **SOURCE VERIFICATION**: You must cite the EXACT document name and page for every answer. Format: [Source Name, Page X]
+**HIERARCHY OF AUTHORITY (CRITICAL):**
+1. **LOCAL COUNTY CODE** (Washtenaw/Wayne/Oakland) is the supreme law.
+2. **MICHIGAN MODIFIED FOOD CODE** applies if the county is silent.
+3. **FDA FOOD CODE 2022** is guidance only if local/state rules don't exist.
+*If sources conflict, apply the STRICTER standard.*
 
-3. **ACCURACY OVER SPEED**: If context doesn't have the answer, say "I don't see this specific rule in the county documents. Verify with your local health department."
+**RESPONSE STRUCTURE:**
+1. **DIRECT ANSWER:** Start with the specific rule (Yes/No/The Number).
+2. **THE FIX (For Violations):** If the user asks about a violation or "fixing" something, provide the specific "Corrective Action" required by the code.
+3. **EVIDENCE:** Cite sources exactly as: [Source Name, Page X].
 
-4. **NEVER GUESS**: Don't extrapolate beyond what the documents explicitly state.
+**RULES:**
+- **NO FLUFF:** Do not lecture. Do not say "It is important to..." just state the rule.
+- **UNCERTAINTY:** If the provided context is missing the answer, say: "This specific detail isn't in your county's loaded documents. Please verify with your inspector."
+- **IMAGE ANALYSIS:** If an image is provided, identify potential "Priority" (Critical) violations first.
 
-FORMATTING:
-- Use Markdown
-- Start with the direct answer
-- Cite sources inline like this: [Washtenaw Enforcement, Page 3]
-- If multiple sources conflict, explain the hierarchy`
+**FORMATTING:**
+Use Markdown. Use bolding for temperatures and critical numbers.`
 
 export async function POST(req) {
   try {
@@ -33,14 +38,15 @@ export async function POST(req) {
     if (!apiKey) return NextResponse.json({ error: 'Server Error: Missing API Key' }, { status: 500 })
     
     const genAI = new GoogleGenerativeAI(apiKey)
-    // Using gemini-2.0-flash-exp for best performance
+    
+    // Using gemini-2.0-flash-exp for speed and multimodal capabilities
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.0-flash-exp",
       generationConfig: {
-        temperature: 0.7,
+        temperature: 0.3, // Lower temperature for more factual/compliant answers
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1024, // Keep answers concise
       }
     })
 
@@ -85,6 +91,7 @@ export async function POST(req) {
     let context = ''
     let citations = []
 
+    // RAG: Document Search Logic
     if (lastMessage.content) {
       try {
         console.log(`🔍 Searching for context in: ${county}`)
@@ -93,7 +100,7 @@ export async function POST(req) {
         if (searchResults && searchResults.length > 0) {
            console.log(`✅ Found ${searchResults.length} documents`)
            
-           // Group by source to show hierarchy
+           // Sort documents to ensure Local matches are top of context
            const countyDocs = searchResults.filter(d => d.docType === 'county')
            const stateDocs = searchResults.filter(d => d.docType === 'state')
            const federalDocs = searchResults.filter(d => d.docType === 'federal')
@@ -101,23 +108,23 @@ export async function POST(req) {
            let contextParts = []
            
            if (countyDocs.length > 0) {
-             contextParts.push('=== LOCAL COUNTY REGULATIONS (PRIMARY AUTHORITY) ===')
+             contextParts.push('=== 1. LOCAL COUNTY REGULATIONS (HIGHEST AUTHORITY) ===')
              countyDocs.forEach(doc => {
-               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+               contextParts.push(`SOURCE: ${doc.source} (Page ${doc.page}):\n"${doc.text}"`)
              })
            }
            
            if (stateDocs.length > 0) {
-             contextParts.push('\n=== MICHIGAN STATE CODE (SECONDARY AUTHORITY) ===')
+             contextParts.push('\n=== 2. MICHIGAN STATE CODE (SECONDARY AUTHORITY) ===')
              stateDocs.forEach(doc => {
-               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+               contextParts.push(`SOURCE: ${doc.source} (Page ${doc.page}):\n"${doc.text}"`)
              })
            }
            
            if (federalDocs.length > 0) {
-             contextParts.push('\n=== FDA GUIDANCE (USE IF NO LOCAL/STATE RULE) ===')
+             contextParts.push('\n=== 3. FDA GUIDANCE (FALLBACK AUTHORITY) ===')
              federalDocs.forEach(doc => {
-               contextParts.push(`[Source: ${doc.source}, Page ${doc.page}]\n${doc.text}`)
+               contextParts.push(`SOURCE: ${doc.source} (Page ${doc.page}):\n"${doc.text}"`)
              })
            }
            
@@ -136,31 +143,32 @@ export async function POST(req) {
       }
     }
 
-    // Build prompt parts for Gemini 2.0
-    const prompt = [
+    // Construct the Prompt
+    const promptParts = [
       { text: SYSTEM_PROMPT },
-      { text: `USER JURISDICTION: ${county || 'washtenaw'}` },
-      { text: `REGULATORY CONTEXT:\n${context || 'No specific documents found. Inform user to verify with health department.'}` },
-      { text: `USER QUERY: ${lastMessage.content}` }
+      { text: `\nUSER JURISDICTION: ${county || 'washtenaw'}` },
+      { text: `\nOFFICIAL REGULATORY CONTEXT FOUND:\n${context || 'No exact text match found in database. Rely on general Michigan Food Code knowledge but disclaimer it.'}` },
+      { text: `\nUSER QUESTION: ${lastMessage.content}` }
     ]
 
+    // Handle Image Input
     if (image) {
       const base64Data = image.split(',')[1]
-      prompt.push({ 
+      promptParts.push({ 
         inlineData: { 
           mimeType: 'image/jpeg', 
           data: base64Data 
         } 
       })
-      prompt.push({ text: "Analyze the image STRICTLY against the Regulatory Context. Cite sources." })
+      promptParts.push({ text: "\nTASK: Analyze this image for health code violations. If you see a violation, cite the specific code from the Context above that prohibits it." })
     }
 
-    // Generate content with Gemini 2.0 Flash
-    const result = await model.generateContent(prompt)
+    // Generate content
+    const result = await model.generateContent(promptParts)
     const response = await result.response
     const text = response.text()
 
-    // Increment usage counter
+    // Increment usage counter in Supabase
     const { error: usageError } = await supabase.rpc('increment_usage', { 
       user_id: session.user.id, 
       is_image: !!image 
@@ -178,14 +186,14 @@ export async function POST(req) {
     // Handle specific Gemini API errors
     if (error.message?.includes('RESOURCE_EXHAUSTED')) {
       return NextResponse.json({ 
-        error: 'API rate limit reached. Please try again in a moment.',
-        fallback: 'Contact support if this persists.'
+        error: 'High traffic. Please try again in 10 seconds.',
+        fallback: true
       }, { status: 429 })
     }
     
     return NextResponse.json({ 
-      error: 'Unable to process request. Please try again.',
-      fallback: 'If this persists, contact support with timestamp: ' + new Date().toISOString()
+      error: 'We encountered an issue processing your request. Please try again.',
+      fallback: true
     }, { status: 500 })
   }
 }
