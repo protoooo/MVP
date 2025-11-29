@@ -11,7 +11,7 @@ const GlobalStyles = () => (
   <style jsx global>{`
     body {
       background-color: #121212 !important;
-      overscroll-behavior-y: none; /* Prevents bounce on pricing page too */
+      overscroll-behavior-y: none;
     }
   `}</style>
 )
@@ -71,7 +71,8 @@ export default function Pricing() {
   }
 
   // --- ICONS ---
-  const CheckIcon = ({ color = "text-emerald-500" }) => (
+  // Default check is light gray for Starter/Enterprise
+  const CheckIcon = ({ color = "text-[#EDEDED]" }) => (
     <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
   )
   const XIcon = () => (
@@ -81,7 +82,7 @@ export default function Pricing() {
   return (
     <>
       <GlobalStyles />
-      <div className="min-h-screen bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-white flex flex-col overflow-x-hidden">
+      <div className="min-h-screen bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3E7BFA] selection:text-white flex flex-col overflow-x-hidden">
         
         {/* --- HEADER --- */}
         <header className="fixed top-0 w-full border-b border-[#2C2C2C] bg-[#121212]/90 backdrop-blur-md z-50 h-16 flex items-center">
@@ -93,7 +94,7 @@ export default function Pricing() {
                </button>
                
                <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-                  <span className="font-bold text-lg text-[#EDEDED] tracking-tight">protocol<span className="text-[#3ECF8E]">LM</span></span>
+                  <span className="font-bold text-lg text-[#EDEDED] tracking-tight">protocol<span className="text-[#3E7BFA]">LM</span></span>
                </div>
             </div>
 
@@ -101,12 +102,12 @@ export default function Pricing() {
               {!isAuthenticated ? (
                 <>
                   <button onClick={() => router.push('/?auth=login')} className="text-[#888] hover:text-white transition-colors hidden md:block">Sign In</button>
-                  <button onClick={() => router.push('/?auth=signup')} className="text-[#151515] bg-[#3ECF8E] hover:bg-[#34b27b] border border-transparent px-4 py-2 rounded-md text-xs font-bold transition-all active:scale-95 whitespace-nowrap shadow-sm">Create Account</button>
+                  <button onClick={() => router.push('/?auth=signup')} className="text-white bg-[#3E7BFA] hover:bg-[#3469d4] border border-transparent px-4 py-2 rounded-md text-xs font-bold transition-all active:scale-95 whitespace-nowrap shadow-sm">Create Account</button>
                 </>
               ) : (
                 !isSubscribed && (
-                  <div className="text-[#3ECF8E] flex items-center gap-2 text-xs md:text-sm">
-                    <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full animate-pulse"></div>
+                  <div className="text-[#3E7BFA] flex items-center gap-2 text-xs md:text-sm">
+                    <div className="w-1.5 h-1.5 bg-[#3E7BFA] rounded-full animate-pulse"></div>
                     Select Plan
                   </div>
                 )
@@ -145,24 +146,24 @@ export default function Pricing() {
               </button>
             </div>
 
-            {/* PRO PLAN (Supabase Green Hero) */}
-            <div className="bg-[#1C1C1C] border-2 border-[#3ECF8E] rounded-lg p-8 flex flex-col shadow-[0_0_40px_-10px_rgba(62,207,142,0.3)] relative transform md:-translate-y-4 z-10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3ECF8E] text-[#121212] px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm border border-[#6EE7B7]">Most Popular</div>
+            {/* PRO PLAN (Brand Blue Hero) */}
+            <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-lg p-8 flex flex-col shadow-[0_0_40px_-10px_rgba(62,123,250,0.3)] relative transform md:-translate-y-4 z-10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm border border-[#609afc]">Most Popular</div>
               <div className="mb-8">
-                <h3 className="text-xs font-bold text-[#3ECF8E] uppercase tracking-widest mb-2">Pro</h3>
+                <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2">Pro</h3>
                 <div className="flex items-baseline text-white">
                   <span className="text-5xl font-bold tracking-tight font-mono">$99</span>
                   <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
                 </div>
-                <p className="text-sm text-[#888] mt-4 leading-relaxed">Visual compliance for proactive managers.</p>
+                <p className="text-sm text-[#A1A1AA] mt-4 leading-relaxed">Visual compliance for proactive managers.</p>
               </div>
               <ul className="space-y-4 mb-8 flex-1 border-t border-[#2C2C2C] pt-6">
-                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3ECF8E]" />Unlimited Text Queries</li>
-                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3ECF8E]" />100 Image Analyses / Mo</li>
-                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3ECF8E]" />Full Database Access</li>
-                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3ECF8E]" />Mock Audit Workflow</li>
+                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3E7BFA]" />Unlimited Text Queries</li>
+                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3E7BFA]" />100 Image Analyses / Mo</li>
+                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3E7BFA]" />Full Database Access</li>
+                <li className="flex items-start gap-3 text-sm font-medium text-white"><CheckIcon color="text-[#3E7BFA]" />Mock Audit Workflow</li>
               </ul>
-              <button onClick={() => handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')} disabled={loading !== null} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-bold py-3.5 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95">
+              <button onClick={() => handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')} disabled={loading !== null} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3.5 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95">
                 {loading === 'pro' ? 'Processing...' : 'Select Pro'}
               </button>
             </div>
@@ -203,7 +204,7 @@ export default function Pricing() {
           </div>
 
           <div className="mt-16 text-center max-w-md mx-auto opacity-60">
-            <p className="text-[10px] text-[#3ECF8E] uppercase tracking-widest font-bold mb-3">Secure Stripe Checkout</p>
+            <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-3">Secure Stripe Checkout</p>
             <p className="text-sm text-[#666] font-serif italic">
               &quot;One failed inspection costs more than 5 years of the Enterprise plan.&quot;
             </p>
