@@ -120,6 +120,10 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#0f172a" />
+        <meta name="description" content="AI-powered food safety compliance assistant for Michigan restaurants" />
+        <meta property="og:title" content="protocolLM - AI Food Safety Compliance" />
+        <meta property="og:description" content="AI-powered compliance guidance for restaurant operators" />
+        <meta property="og:type" content="website" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
