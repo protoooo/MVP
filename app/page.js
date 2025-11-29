@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Supabase "Table Editor" Style) ---
+// --- 1. CHAT DEMO (Supabase "Table Editor" Style - Fixed Height) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -103,11 +103,14 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full h-full group mx-auto">
-      {/* Container: Supabase "Surface" Color + Thin Border */}
-      <div className="flex flex-col h-full w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+    <div className="relative w-full max-w-[600px] group mx-auto">
+      {/* 
+          FIXED HEIGHT CONTAINER 
+          h-[500px] mobile / h-[600px] desktop
+      */}
+      <div className="flex flex-col h-[500px] md:h-[600px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
-        {/* Header: "Table Editor" Style */}
+        {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
@@ -148,8 +151,8 @@ const DemoChatContent = () => {
               <div
                 className={`max-w-[85%] px-4 py-3 text-[13px] leading-relaxed rounded-md border ${
                   msg.role === 'user'
-                    ? 'bg-[#2C2C2C] text-[#EDEDED] border-[#3C3C3C]' // User Bubble
-                    : 'bg-[#1C1C1C] text-[#C2C2C2] border-transparent pl-0' // Bot Bubble (Text only feel)
+                    ? 'bg-[#2C2C2C] text-[#EDEDED] border-[#3C3C3C]' 
+                    : 'bg-[#1C1C1C] text-[#C2C2C2] border-transparent pl-0' 
                 }`}
               >
                 {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
@@ -166,7 +169,7 @@ const DemoChatContent = () => {
           )}
         </div>
 
-        {/* Input Field: "SQL Editor" Style */}
+        {/* Input Field */}
         <div className="p-4 bg-[#232323] border-t border-[#2C2C2C] shrink-0">
           <div className="w-full bg-[#161616] border border-[#333333] rounded-md px-3 py-2.5 flex items-center gap-3 transition-all focus-within:border-[#3ECF8E] focus-within:ring-1 focus-within:ring-[#3ECF8E]/20">
             <span className="text-[#3ECF8E] text-xs font-mono">{'>'}</span>
@@ -266,7 +269,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" />
-      {/* Modal: Dark, Thin Border, Supabase aesthetic */}
       <div className="w-full max-w-[380px] bg-[#1C1C1C] border border-[#2C2C2C] shadow-2xl p-8 rounded-md relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
         <button onClick={onClose} className="absolute top-4 right-4 text-[#666] hover:text-white transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -291,7 +293,6 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
         <form onSubmit={handleAuth} className="space-y-4">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Email" />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]" placeholder="Password" />
-          {/* SUPABASE GREEN BUTTON */}
           <button type="submit" disabled={loading} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]">
             {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
@@ -336,7 +337,6 @@ function MainContent() {
       {/* BACKGROUND: DOT GRID TEXTURE */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
-        {/* Vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80"></div>
       </div>
 
@@ -344,7 +344,6 @@ function MainContent() {
       <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
         <div className={`w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-            {/* Supabase-style Logo Square */}
             <div className="w-6 h-6 bg-[#3ECF8E] rounded-md flex items-center justify-center shadow-[0_0_12px_rgba(62,207,142,0.4)]">
                <div className="w-3 h-3 bg-[#121212] rounded-sm opacity-50"></div>
             </div>
@@ -356,7 +355,6 @@ function MainContent() {
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => router.push('/pricing')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Pricing</button>
             <button onClick={() => openAuth('login')} className="text-xs font-medium text-[#888] hover:text-white transition-colors">Log in</button>
-            {/* Supabase Green Button */}
             <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(62,207,142,0.15)]">
               Start Free Trial
             </button>
@@ -370,18 +368,15 @@ function MainContent() {
         {/* LEFT COLUMN */}
         <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
           
-          {/* Headline */}
           <h1 className={`text-4xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team <br />
             before the inspector arrives.
           </h1>
 
-          {/* Subheader */}
           <p className={`text-[15px] text-[#888] leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-normal transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* Mobile CTA */}
           <div className={`md:hidden flex justify-center mb-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
@@ -389,7 +384,7 @@ function MainContent() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - Supabase Table Style) */}
+        {/* RIGHT COLUMN (Demo - FIXED SIZE) */}
         <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
           <DemoChatContent />
         </div>
@@ -398,12 +393,10 @@ function MainContent() {
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
       <style jsx global>{`
-        /* Scrollbar to match Supabase Dark */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
-        /* Green Loader */
         .loader {
           height: 15px;
           aspect-ratio: 2.5;
