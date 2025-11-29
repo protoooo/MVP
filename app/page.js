@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Modern Interface + Your Custom Loader) ---
+// --- 1. CHAT DEMO (Massive & Centered) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -61,7 +61,7 @@ const DemoChatContent = () => {
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(1800) // Thinking time
+          await wait(1800)
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -103,34 +103,33 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[550px] group mx-auto">
-      {/* Container: Modern Shadow & Rounded Corners (No 90s border) */}
-      <div className="flex flex-col h-[420px] md:h-[540px] w-full bg-white border border-neutral-100 rounded-2xl relative z-10 overflow-hidden shadow-[0_20px_40px_-12px_rgba(0,0,0,0.08)]">
+    <div className="relative w-full h-full group mx-auto">
+      <div className="flex flex-col h-full w-full bg-white border border-neutral-100 rounded-2xl relative z-10 overflow-hidden shadow-[0_20px_60px_-12px_rgba(0,0,0,0.1)]">
         
-        {/* Header: Subtle Glass Effect */}
-        <div className="h-14 border-b border-neutral-100 flex items-center px-6 justify-between bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-20">
+        {/* Header */}
+        <div className="h-16 border-b border-neutral-100 flex items-center px-8 justify-between bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-20">
           <div className="flex items-center gap-3">
-            <span className="font-sans text-xs font-bold text-neutral-900 tracking-wide">
+            <span className="font-sans text-sm font-bold text-neutral-900 tracking-wide">
               protocol_LM
             </span>
           </div>
-          <div className="flex items-center gap-2 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-             <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wide">Live</span>
+             <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Live Database</span>
           </div>
         </div>
 
         {/* Chat Feed */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll bg-[#FAFAFA]"
+          className="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll bg-[#FAFAFA]"
         >
           {!hasStarted && !isTyping && messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
-              <div className="w-12 h-12 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center shadow-sm">
-                 <div className="w-5 h-5 border-2 border-neutral-200 border-t-black rounded-full animate-spin"/>
+              <div className="w-14 h-14 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center shadow-sm">
+                 <div className="w-6 h-6 border-2 border-neutral-200 border-t-black rounded-full animate-spin"/>
               </div>
-              <p className="text-xs font-semibold text-neutral-400 tracking-wide">Initializing Database</p>
+              <p className="text-sm font-semibold text-neutral-400 tracking-wide">System Ready</p>
             </div>
           )}
 
@@ -139,10 +138,10 @@ const DemoChatContent = () => {
               key={i}
               className={`flex ${
                 msg.role === 'user' ? 'justify-end' : 'justify-start'
-              } animate-in fade-in slide-in-from-bottom-3 duration-500`}
+              } animate-in fade-in slide-in-from-bottom-4 duration-500`}
             >
               <div
-                className={`max-w-[90%] px-5 py-3.5 text-[13.5px] leading-relaxed rounded-2xl ${
+                className={`max-w-[80%] px-6 py-4 text-[15px] leading-relaxed rounded-2xl ${
                   msg.role === 'user'
                     ? 'bg-neutral-900 text-white rounded-tr-sm'
                     : 'bg-white text-neutral-800 border border-neutral-100 shadow-sm rounded-tl-sm'
@@ -153,7 +152,6 @@ const DemoChatContent = () => {
             </div>
           ))}
 
-          {/* YOUR CUSTOM LOADER RESTORED HERE */}
           {isThinking && (
             <div className="flex justify-start animate-fade-in pl-1">
               <div className="bg-white px-5 py-3 rounded-full border border-neutral-100 shadow-sm flex items-center">
@@ -163,18 +161,18 @@ const DemoChatContent = () => {
           )}
         </div>
 
-        {/* Input Field: Floating Modern */}
-        <div className="p-5 bg-white border-t border-neutral-100 shrink-0">
-          <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all focus-within:ring-2 focus-within:ring-neutral-100 focus-within:bg-white focus-within:border-neutral-300">
-            <div className="flex-1 text-[13.5px] text-neutral-900 font-medium min-h-[20px] relative flex items-center overflow-hidden whitespace-nowrap">
+        {/* Input Field */}
+        <div className="p-6 bg-white border-t border-neutral-100 shrink-0">
+          <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-5 py-4 flex items-center gap-4 transition-all focus-within:ring-2 focus-within:ring-neutral-100 focus-within:bg-white focus-within:border-neutral-300">
+            <div className="flex-1 text-[15px] text-neutral-900 font-medium min-h-[24px] relative flex items-center overflow-hidden whitespace-nowrap">
               {inputValue}
               {isTyping && (
-                <span className="inline-block w-0.5 h-4 bg-black ml-0.5 animate-pulse" />
+                <span className="inline-block w-0.5 h-5 bg-black ml-0.5 animate-pulse" />
               )}
-              {!inputValue && !isTyping && <span className="text-neutral-400 text-xs">Ask protocol_LM...</span>}
+              {!inputValue && !isTyping && <span className="text-neutral-400 text-sm">Ask protocol_LM...</span>}
             </div>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-black' : 'bg-neutral-200'}`}>
-               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-black' : 'bg-neutral-200'}`}>
+               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                </svg>
             </div>
@@ -185,35 +183,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 2. CAPABILITY CARDS (Modern Clean Style) ---
-const CapabilityCard = ({ label, title, description, delay }) => {
-  return (
-    <div 
-      style={{ animationDelay: `${delay}ms` }}
-      className="group bg-white border border-neutral-100 p-6 rounded-2xl flex flex-col justify-between min-h-[160px] opacity-0 animate-reveal-card hover:border-neutral-300 hover:shadow-md transition-all duration-300 cursor-default relative overflow-hidden"
-    >
-      <div className="relative z-10 h-full flex flex-col justify-between">
-        <div>
-          {/* Label */}
-          <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span className="w-1 h-4 bg-neutral-200 rounded-full"></span>
-            {label}
-          </div>
-          {/* Title */}
-          <div className="text-2xl font-bold text-neutral-900 tracking-tight mb-2">
-            {title}
-          </div>
-        </div>
-        {/* Description */}
-        <div className="text-xs font-medium text-neutral-500 leading-relaxed">
-          {description}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// --- 3. AUTH MODAL ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -334,7 +304,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 4. MAIN CONTENT ---
+// --- 4. MAIN CONTENT (Centered & Big) ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -393,50 +363,33 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION (Higher & Tighter) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION (Centered Single Column) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-32 pb-8 flex flex-col items-center relative z-10">
         
-        {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
-          
-          {/* Headline */}
-          <h1 className={`text-5xl md:text-7xl font-bold text-neutral-900 tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Train your team <br />
-            before the inspector arrives.
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-4xl text-center mb-16">
+          <h1 className={`text-5xl md:text-8xl font-bold text-neutral-900 tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            Employee errors are <br />
+            costing you money.
           </h1>
 
-          {/* Subheader */}
-          <p className={`text-[15px] text-neutral-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          <p className={`text-[16px] md:text-[18px] text-neutral-600 leading-relaxed max-w-2xl mx-auto font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* CAPABILITY CARDS (Feature Blocks) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 lg:mb-0 transition-all duration-1000 delay-500 ease-out-spring">
-            <CapabilityCard 
-              label="Coverage"
-              title="Local"
-              description="Washtenaw specific enforcement procedures & local ordinances."
-              delay={500}
-            />
-            <CapabilityCard 
-              label="Source"
-              title="State"
-              description="Full Michigan Modified Food Code, FDA 2022, and USDA guidelines."
-              delay={650}
-            />
-            <CapabilityCard 
-              label="Utility"
-              title="24/7"
-              description="Instant, cited answers for staff during any shift, anywhere."
-              delay={800}
-            />
+          {/* MOBILE CTA */}
+          <div className={`md:hidden flex justify-center mt-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="w-full max-w-xs bg-neutral-900 hover:bg-black text-white px-5 py-3.5 rounded-full text-sm font-bold shadow-lg">
+              Start Free Trial
+            </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo) */}
-        <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* MASSIVE DEMO BOX (Centered & Ultrawide) */}
+        <div className={`w-full max-w-6xl h-[550px] md:h-[650px] transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
+
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
@@ -446,15 +399,6 @@ function MainContent() {
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 10px; }
         
-        .ease-out-spring { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-        @keyframes revealCard {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-reveal-card { animation: revealCard 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
-        /* --- YOUR CUSTOM LOADER CSS --- */
         .loader {
           height: 15px;
           aspect-ratio: 2.5;
