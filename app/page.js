@@ -34,8 +34,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setLoading(true)
     setStatusMessage('')
 
-    // FIX: Use environment variable for redirect URL to solve 0.0.0.0 binding issue
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+    // FAILSAFE: Hardcoded production URL to fix Railway 0.0.0.0 issue
+    const redirectUrl = 'https://protocollm.org/auth/callback'
 
     console.log('📧 Email auth redirect URL:', redirectUrl)
 
@@ -59,8 +59,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setGoogleLoading(true)
     setStatusMessage('')
 
-    // FIX: Use environment variable for redirect URL to solve 0.0.0.0 binding issue
-    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+    // FAILSAFE: Hardcoded production URL to fix Railway 0.0.0.0 issue
+    const redirectUrl = 'https://protocollm.org/auth/callback'
 
     console.log('🔐 Google OAuth redirect URL:', redirectUrl)
 
@@ -189,42 +189,56 @@ export default function Page() {
   const supabase = createClient()
   const router = useRouter()
 
-  // Initialize auth state
+  // Initialize auth state with failsafe
   useEffect(() => {
     const init = async () => {
       console.log('🔐 Initializing auth...')
       
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError)
-      }
-      
-      if (currentSession) {
-        console.log('✅ Session found:', currentSession.user.email)
-        setSession(currentSession)
+      try {
+        // Get current session
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession()
         
-        const { data: userProfile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('is_subscribed, accepted_terms, accepted_privacy')
-          .eq('id', currentSession.user.id)
-          .single()
-        
-        if (profileError) {
-          console.error('❌ Profile fetch error:', profileError)
-        } else {
-          console.log('👤 Profile loaded:', userProfile)
-          setProfile(userProfile)
+        if (sessionError) {
+          console.error('❌ Session error:', sessionError)
         }
-      } else {
-        console.log('ℹ️ No active session')
+        
+        if (currentSession) {
+          console.log('✅ Session found:', currentSession.user.email)
+          setSession(currentSession)
+          
+          // Fetch user profile
+          const { data: userProfile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('is_subscribed, accepted_terms, accepted_privacy')
+            .eq('id', currentSession.user.id)
+            .single()
+          
+          if (profileError) {
+            console.error('❌ Profile fetch error:', profileError)
+          } else {
+            console.log('👤 Profile loaded:', userProfile)
+            setProfile(userProfile)
+          }
+        } else {
+          console.log('ℹ️ No active session')
+        }
+      } catch (error) {
+        console.error('❌ Init failed:', error)
+      } finally {
+        // ALWAYS stop loading, even on error
+        setIsLoading(false)
       }
-      
-      setIsLoading(false)
     }
 
-    init()
+    // Timeout fallback - if init takes too long, show UI anyway
+    const timeout = setTimeout(() => {
+      console.warn('⚠️ Init timeout - forcing UI render')
+      setIsLoading(false)
+    }, 5000)
+
+    init().finally(() => clearTimeout(timeout))
     
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event)
       setSession(session)
@@ -247,6 +261,7 @@ export default function Page() {
     }
   }, [supabase])
 
+  // Click outside user menu to close
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -257,12 +272,14 @@ export default function Page() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Auto-scroll to bottom on new messages
   useEffect(() => { 
     if(scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
     }
   }, [messages])
 
+  // Focus input after sending message
   useEffect(() => {
     if (messages.length > 0 && inputRef.current && !isSending) {
       inputRef.current.focus()
@@ -273,13 +290,16 @@ export default function Page() {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
+    // Check auth
     if (!session) {
       setAuthModalMessage('Sign in to start chatting')
       setShowAuthModal(true)
       return
     }
 
+    // Check profile and subscription
     if (!profile) {
+      console.log('⏳ Profile not loaded yet, fetching...')
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -464,8 +484,8 @@ export default function Page() {
           </div>
         </aside>
 
-        {/* Main Content - FIXED: Added h-screen and removed overflow-hidden */}
-        <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A] h-screen">
+        {/* Main Content - FIXED: Removed h-screen to allow flex to work properly */}
+        <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A]">
           {/* Header */}
           <header className="h-14 border-b border-[#1F1F1F] flex items-center justify-between px-4 shrink-0 bg-[#0A0A0A]">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#A1A1AA] hover:text-white transition-colors">
@@ -530,8 +550,8 @@ export default function Page() {
             </div>
           </header>
 
-          {/* Chat Area - FIXED: Added min-h-0 */}
-          <div className="flex-1 overflow-y-auto min-h-0" ref={scrollRef}>
+          {/* Chat Area - FIXED: Removed min-h-0 */}
+          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
             {!hasStartedChat ? (
               <div className="h-full flex flex-col items-center justify-center px-4 pb-32">
                 <div className="w-full max-w-3xl">
