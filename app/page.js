@@ -16,8 +16,86 @@ const Icons = {
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
   User: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   Robot: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2zM4.5 19h15a.5.5 0 0 0 .5-.5v-9a5.5 5.5 0 0 0-11 0v9a.5.5 0 0 0 .5.5zM12 13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+}
+
+// ==========================================
+// INPUT COMPONENT (Fixed: Moved OUTSIDE)
+// ==========================================
+const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef }) => {
+  return (
+    <div className="w-full max-w-3xl mx-auto px-4 pb-6">
+      {selectedImage && (
+        <div className="mb-2 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#2E2E2E]">
+          <span className="text-xs text-[#A1A1AA]">Image attached</span>
+          <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400"><Icons.X/></button>
+        </div>
+      )}
+      
+      {/* Container - Fixed Borders/Spacing */}
+      <form 
+        onSubmit={handleSend} 
+        className="relative flex items-end w-full bg-[#1C1C1C] border border-[#2E2E2E] rounded-[26px] shadow-lg transition-all focus-within:border-[#3E7BFA] focus-within:ring-1 focus-within:ring-[#3E7BFA]"
+      >
+        {/* Upload Button */}
+        <button 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()}
+          className="p-4 text-[#A1A1AA] hover:text-white transition-colors"
+          title="Attach file"
+        >
+          <Icons.Upload />
+        </button>
+        
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImage} 
+          accept="image/*" 
+          className="hidden" 
+        />
+        
+        {/* Text Area - Added proper padding */}
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if(e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              handleSend(e)
+            }
+          }}
+          placeholder="Ask anything..."
+          className="flex-1 max-h-[200px] min-h-[52px] py-[14px] px-2 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#71717A] text-[16px] leading-6"
+          rows={1}
+          style={{ height: 'auto', overflowY: 'hidden' }}
+        />
+        
+        {/* Send Button */}
+        <button 
+          type="submit"
+          disabled={(!input.trim() && !selectedImage) || isSending}
+          className={`p-2 m-2 rounded-full transition-all ${
+            (input.trim() || selectedImage) && !isSending 
+            ? 'bg-[#3E7BFA] text-white hover:bg-[#3469d4]' 
+            : 'bg-[#2E2E2E] text-[#71717A] cursor-not-allowed'
+          }`}
+        >
+          {isSending ? (
+             <div className="w-5 h-5 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
+          ) : (
+             <Icons.Send />
+          )}
+        </button>
+      </form>
+      
+      <p className="text-center text-[11px] text-[#525252] mt-3">
+        protocolLM can make mistakes. Verify important info.
+      </p>
+    </div>
+  )
 }
 
 // ==========================================
@@ -30,7 +108,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // Google Auth Logic (Uses Env Variable)
   const getRedirectUrl = () => {
     return `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
   }
@@ -178,11 +255,8 @@ export default function Page() {
     }
     init()
 
-    // SAFETY TIMER: Force loading to stop after 2 seconds regardless of Supabase
-    // This fixes the "stuck spinner" issue on first load.
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 2000)
+    // Safety timer to prevent infinite load
+    const timer = setTimeout(() => setIsLoading(false), 2000)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
@@ -226,12 +300,18 @@ export default function Page() {
   }, [messages.length, isSending])
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    setSession(null)
-    setProfile(null)
-    setMessages([])
-    setShowUserMenu(false)
-    router.refresh()
+    try {
+        await supabase.auth.signOut()
+        setSession(null)
+        setProfile(null)
+        setMessages([])
+        setShowUserMenu(false)
+        router.refresh()
+        // Force hard reload if refresh doesn't clear state
+        window.location.href = '/'
+    } catch (error) {
+        console.error('Error signing out:', error)
+    }
   }
 
   const handleSend = async (e) => {
@@ -310,65 +390,12 @@ export default function Page() {
     }
   }
 
-  // Floating Pill Box Input (Gemini Style)
-  const InputBox = () => (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-4">
-        {selectedImage && (
-            <div className="mb-2 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#2E2E2E]">
-                <span className="text-xs text-[#A1A1AA]">Image attached</span>
-                <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400"><Icons.X/></button>
-            </div>
-        )}
-        <form onSubmit={handleSend} className="relative flex items-end w-full p-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-[24px] shadow-lg hover:border-[#3E7BFA] focus-within:border-[#3E7BFA] transition-all">
-            <button 
-                type="button" 
-                onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-[#A1A1AA] hover:text-white transition-colors"
-                title="Attach file"
-            >
-                <Icons.Upload />
-            </button>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImage} 
-                accept="image/*" 
-                className="hidden" 
-            />
-            
-            <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                    if(e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSend()
-                    }
-                }}
-                placeholder="Ask anything..."
-                className="flex-1 max-h-[150px] min-h-[44px] py-3 px-2 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#71717A] leading-5 text-[15px]"
-                rows={1}
-                style={{ height: 'auto', overflowY: 'hidden' }}
-            />
-            
-            <button 
-                type="submit"
-                disabled={(!input.trim() && !selectedImage) || isSending}
-                className={`p-2 my-1 mr-1 rounded-full transition-all ${
-                    (input.trim() || selectedImage) && !isSending 
-                    ? 'bg-[#3E7BFA] text-white hover:bg-[#3469d4]' 
-                    : 'bg-[#2E2E2E] text-[#71717A] cursor-not-allowed'
-                }`}
-            >
-                <Icons.Send />
-            </button>
-        </form>
-        <p className="text-center text-[11px] text-[#525252] mt-3">
-            protocolLM can make mistakes. Verify important info.
-        </p>
-    </div>
-  )
+  const handleNewChat = () => {
+    setMessages([])
+    setInput('')
+    setSelectedImage(null)
+    setSidebarOpen(false)
+  }
 
   if (isLoading) return <div className="h-[100dvh] w-screen bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin"></div></div>
 
@@ -376,16 +403,15 @@ export default function Page() {
     <>
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
 
-      {/* Screen Fit Fix: Use h-[100dvh] instead of h-screen */}
       <div className="flex h-[100dvh] w-full bg-[#0A0A0A] text-white overflow-hidden font-sans">
         
         {/* Mobile Overlay */}
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Sidebar (Supabase Style Dark) */}
+        {/* Sidebar */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#000000] border-r border-[#1C1C1C] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
-            <button onClick={() => { setMessages([]); setInput(''); setSelectedImage(null); }} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3E7BFA] rounded-lg transition-all group">
+            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3E7BFA] rounded-lg transition-all group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
             </button>
           </div>
@@ -433,7 +459,7 @@ export default function Page() {
             <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#0A0A0A] border-b border-[#1C1C1C] text-white">
                 <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
                 <span className="font-semibold text-sm">protocolLM</span>
-                <button onClick={() => setMessages([])} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
+                <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
             </div>
 
             {/* Chat Container */}
@@ -441,7 +467,7 @@ export default function Page() {
                 {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-4 text-center">
                         <div className="w-16 h-16 bg-[#1C1C1C] border border-[#2E2E2E] rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-900/5">
-                            <Icons.Plus /> 
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-xl">P</div>
                         </div>
                         <h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1>
                         <p className="text-[#525252] text-sm">Ask about Michigan food safety compliance</p>
@@ -470,12 +496,13 @@ export default function Page() {
                 )}
             </div>
 
-            {/* Input Area (Bottom) */}
+            {/* Input Area */}
             <div className="w-full bg-[#0A0A0A] pt-2 shrink-0">
-                <InputBox />
-            </div>
-        </main>
-      </div>
-    </>
-  )
-}
+                <InputBox 
+                  input={input} 
+                  setInput={setInput} 
+                  handleSend={handleSend} 
+                  handleImage={handleImage} 
+                  isSending={isSending} 
+                  fileInputRef={fileInputRef} 
+                  selectedImage={selectedImage}
