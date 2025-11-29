@@ -162,7 +162,8 @@ const DashboardInterface = ({ user, onSignOut }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [usageInfo, setUsageInfo] = useState(null)
   
   const supabase = createClient()
   const router = useRouter()
@@ -177,17 +178,20 @@ const DashboardInterface = ({ user, onSignOut }) => {
   const fileInputRef = useRef(null)
   const auditImageRef = useRef(null)
 
-  // Check subscription status
+  // Check subscription status (but don't block access)
   useEffect(() => {
     const checkSubscription = async () => {
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('is_subscribed')
+        .select('is_subscribed, requests_used, images_used')
         .eq('id', user.id)
         .single()
       
       setIsSubscribed(profile?.is_subscribed || false)
-      setIsLoading(false)
+      setUsageInfo({
+        requests: profile?.requests_used || 0,
+        images: profile?.images_used || 0
+      })
     }
     checkSubscription()
   }, [user.id, supabase])
@@ -203,7 +207,7 @@ const DashboardInterface = ({ user, onSignOut }) => {
      setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true)
      
      // Optimistic UI
-     setMessages(p => [...p, { role: 'assistant', content: '' }]) // Placeholder
+     setMessages(p => [...p, { role: 'assistant', content: '' }])
 
      try {
        const res = await fetch('/api/chat', {
@@ -211,12 +215,42 @@ const DashboardInterface = ({ user, onSignOut }) => {
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ messages: [...messages, newMsg], image: img, county: 'washtenaw' })
        })
+       
+       // Check for rate limit (429) or payment required (402)
+       if (res.status === 429 || res.status === 402) {
+         const data = await res.json()
+         setMessages(p => {
+            const u = [...p]
+            u[u.length-1].content = '⚠️ **Usage Limit Reached**\n\nYou\'ve hit your usage limit. Upgrade to Pro for unlimited queries and image analysis.'
+            return u
+         })
+         setShowPaywall(true)
+         setIsSending(false)
+         return
+       }
+       
        const data = await res.json()
        setMessages(p => {
-          const u = [...p]; u[u.length-1].content = data.message || 'Error from server.';
+          const u = [...p]
+          u[u.length-1].content = data.message || 'Error from server.'
           return u
        })
-     } catch (err) { console.error(err) }
+       
+       // Update usage counter
+       if (usageInfo) {
+         setUsageInfo({
+           requests: usageInfo.requests + 1,
+           images: img ? usageInfo.images + 1 : usageInfo.images
+         })
+       }
+     } catch (err) { 
+       console.error(err)
+       setMessages(p => {
+          const u = [...p]
+          u[u.length-1].content = 'Network error. Please try again.'
+          return u
+       })
+     }
      finally { setIsSending(false) }
   }
 
@@ -236,16 +270,64 @@ const DashboardInterface = ({ user, onSignOut }) => {
   const passed = Object.values(auditResults).filter(s => s === 'pass').length
   const total = AUDIT_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)
   
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen bg-[#121212] items-center justify-center">
-        <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '48px', height: '48px' }} />
-      </div>
-    )
-  }
-  
   return (
     <div className="flex h-screen w-screen bg-[#121212] text-[#EDEDED] overflow-hidden fixed inset-0">
+      {/* Paywall Modal */}
+      {showPaywall && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Usage Limit Reached</h2>
+              <p className="text-[13px] text-[#9CA3AF] leading-relaxed">
+                {isSubscribed ? 
+                  "You've reached your plan's monthly limit. Upgrade to get more queries and image analysis." :
+                  "You've used your free trial. Upgrade to Pro for unlimited compliance queries, image analysis, and mock audits."
+                }
+              </p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center gap-3 text-[13px] text-[#E5E7EB]">
+                <svg className="w-5 h-5 text-[#3ECF8E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Unlimited compliance queries
+              </div>
+              <div className="flex items-center gap-3 text-[13px] text-[#E5E7EB]">
+                <svg className="w-5 h-5 text-[#3ECF8E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Image analysis for inspections
+              </div>
+              <div className="flex items-center gap-3 text-[13px] text-[#E5E7EB]">
+                <svg className="w-5 h-5 text-[#3ECF8E] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Mock audit checklists
+              </div>
+            </div>
+            
+            <button
+              onClick={() => router.push('/pricing')}
+              className="w-full bg-[#3ECF8E] hover:bg-[#2ECC71] text-black font-semibold py-3 rounded-lg transition-all mb-3 shadow-lg shadow-[#3ECF8E]/20"
+            >
+              View Plans & Pricing
+            </button>
+            <button
+              onClick={() => setShowPaywall(false)}
+              className="w-full text-[#9CA3AF] hover:text-white text-[13px] font-medium py-2"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -287,13 +369,29 @@ const DashboardInterface = ({ user, onSignOut }) => {
             </div>
          </div>
          <div className="p-4 border-t border-[#1F1F1F] bg-[#0D0D0D]">
+            {/* Usage indicator for non-subscribed users */}
+            {!isSubscribed && usageInfo && (
+              <div className="mb-3 p-3 bg-[#1A1A1A] border border-[#2C2C2C] rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[10px] text-[#9CA3AF] uppercase tracking-wider font-bold">Free Trial</span>
+                  <span className="text-[11px] text-[#3ECF8E] font-semibold">{usageInfo.requests}/10 queries</span>
+                </div>
+                <div className="w-full bg-[#0D0D0D] rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-[#3ECF8E] to-[#2ECC71] h-full transition-all duration-300"
+                    style={{ width: `${Math.min((usageInfo.requests / 10) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors cursor-pointer">
                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3ECF8E] to-[#2ECC71] flex items-center justify-center text-[11px] font-bold text-black shadow-lg">
                  {user.email[0].toUpperCase()}
                </div>
                <div className="flex-1 min-w-0">
                  <div className="text-[12px] font-medium text-white truncate">{user.email.split('@')[0]}</div>
-                 <div className="text-[10px] text-[#6B7280]">Pro Plan</div>
+                 <div className="text-[10px] text-[#6B7280]">{isSubscribed ? 'Pro Plan' : 'Free Trial'}</div>
                </div>
             </div>
             <button onClick={onSignOut} className="w-full text-[11px] font-medium text-[#9CA3AF] hover:text-white py-2.5 px-3 rounded-lg border border-[#2C2C2C] hover:border-[#3C3C3C] hover:bg-[#1A1A1A] transition-all">
@@ -630,8 +728,6 @@ const DashboardInterface = ({ user, onSignOut }) => {
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
-  const [authView, setAuthView] = useState('login')
-  const [showAuth, setShowAuth] = useState(false)
   
   const supabase = createClient()
   const router = useRouter()
@@ -639,47 +735,30 @@ export default function Page() {
   useEffect(() => {
      const init = async () => {
        const { data } = await supabase.auth.getSession()
-       
-       // If logged in, check subscription status before rendering
-       if (data.session) {
-         const { data: profile } = await supabase
-           .from('user_profiles')
-           .select('is_subscribed, accepted_terms')
-           .eq('id', data.session.user.id)
-           .single()
-         
-         // Redirect non-subscribers to pricing
-         if (!profile?.is_subscribed) {
-           router.push('/pricing')
-           return
-         }
-       }
-       
        setSession(data.session)
        setIsLoading(false)
      }
      init()
+     
      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
        setSession(session)
-       if(session) setShowAuth(false)
      })
      return () => listener.subscription.unsubscribe()
-  }, [supabase, router])
+  }, [supabase])
 
-  const triggerAuth = (v = 'login') => { setAuthView(v); setShowAuth(true) }
-  const handleOAuth = async () => {
-     await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
-     })
+  const triggerAuth = (v = 'login') => { 
+    // Just redirect to auth page - keep it simple
+    router.push('/auth')
   }
   
-  if(isLoading) return <div className="min-h-screen bg-[#121212]"/>
+  if(isLoading) return <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+    <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '48px', height: '48px' }} />
+  </div>
 
-  // --- IF LOGGED IN ---
+  // --- IF LOGGED IN: Show Dashboard (regardless of subscription) ---
   if (session) return <DashboardInterface user={session.user} onSignOut={async () => await supabase.auth.signOut()} />
 
-  // --- IF LOGGED OUT (LANDING) ---
+  // --- IF LOGGED OUT: Show Landing Page Demo ---
   return (
     <div className="min-h-screen bg-[#121212] font-sans text-[#EDEDED] flex flex-col selection:bg-[#3ECF8E] selection:text-black overflow-x-hidden">
       <Script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module" strategy="afterInteractive" />
