@@ -27,8 +27,9 @@ export default function AcceptTermsPage() {
         .single()
 
       if (profile?.accepted_terms && profile?.accepted_privacy) {
+        // Terms already accepted - route to appropriate page
         if (profile.is_subscribed) {
-          router.push('/documents')
+          router.push('/') // Dashboard is now at root
         } else {
           router.push('/pricing')
         }
@@ -65,8 +66,9 @@ export default function AcceptTermsPage() {
           .eq('id', session.user.id)
           .single()
 
+        // Route based on subscription status
         if (profile?.is_subscribed) {
-          router.push('/documents')
+          router.push('/') // Dashboard is now at root
         } else {
           router.push('/pricing')
         }
