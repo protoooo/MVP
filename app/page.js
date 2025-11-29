@@ -31,10 +31,14 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setLoading(true)
     setStatusMessage('')
 
+    const redirectUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}/auth/callback`
+      : '/auth/callback'
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: redirectUrl,
       },
     })
 
@@ -50,10 +54,14 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setGoogleLoading(true)
     setStatusMessage('')
 
+    const redirectUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.host}/auth/callback`
+      : '/auth/callback'
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -367,62 +375,54 @@ export default function Page() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col relative min-w-0">
-          <header className="h-14 border-b border-[#2F2F2F] flex items-center justify-between px-4 shrink-0">
+          <header className="h-14 border-b border-[#2F2F2F] flex items-center justify-between px-4 shrink-0 bg-[#212121]">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#C5C5C5] hover:text-white">
               <Icons.Menu />
             </button>
-            <div className="flex-1 text-center">
-              <h1 className="text-sm font-semibold text-white">protocolLM</h1>
+            <div className="flex-1 text-center lg:text-left lg:pl-4">
+              <h1 className="text-base font-semibold text-white">protocolLM</h1>
             </div>
-            {!session && (
-              <button 
-                onClick={() => setShowAuthModal(true)}
-                className="hidden lg:block text-sm text-[#C5C5C5] hover:text-white transition-colors"
-              >
-                Sign up
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {!session && (
+                <>
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="text-sm text-[#C5C5C5] hover:text-white transition-colors hidden sm:block"
+                  >
+                    Log in
+                  </button>
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+          <div className="flex-1 overflow-y-auto pb-32" ref={scrollRef}>
             {messages.length === 0 ? (
               // Empty State
               <div className="h-full flex flex-col items-center justify-center px-4 text-center">
-                <div className="max-w-2xl w-full space-y-6">
-                  <h2 className="text-3xl sm:text-4xl font-semibold text-white">
-                    What can I help with?
-                  </h2>
-                  
-                  {!session && (
-                    <div className="bg-[#2F2F2F] border border-[#565869] rounded-xl p-4 text-sm text-[#C5C5C5]">
-                      <p className="mb-2">
-                        <span className="text-white font-semibold">Free preview:</span> {GUEST_MESSAGE_LIMIT - guestMessageCount} of {GUEST_MESSAGE_LIMIT} messages remaining
-                      </p>
-                      <button 
-                        onClick={() => setShowAuthModal(true)}
-                        className="text-[#10A37F] hover:underline font-medium"
-                      >
-                        Sign up for unlimited access →
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                <h2 className="text-3xl sm:text-4xl font-semibold text-white mb-4">
+                  What can I help with?
+                </h2>
+                
+                {!session && (
+                  <div className="bg-[#2F2F2F] border border-[#565869] rounded-xl p-4 text-sm text-[#C5C5C5] max-w-md">
+                    <p className="mb-3">
+                      <span className="text-white font-semibold">Free preview:</span> {GUEST_MESSAGE_LIMIT - guestMessageCount} of {GUEST_MESSAGE_LIMIT} messages remaining
+                    </p>
                     <button 
-                      onClick={() => setInput("What's the proper temperature for cold holding?")}
-                      className="p-4 bg-[#2F2F2F] hover:bg-[#3A3A4A] rounded-xl text-sm text-[#C5C5C5] transition-colors text-left"
+                      onClick={() => setShowAuthModal(true)}
+                      className="text-[#10A37F] hover:underline font-medium"
                     >
-                      Temperature requirements →
-                    </button>
-                    <button 
-                      onClick={() => setInput("Handwashing sink requirements")}
-                      className="p-4 bg-[#2F2F2F] hover:bg-[#3A3A4A] rounded-xl text-sm text-[#C5C5C5] transition-colors text-left"
-                    >
-                      Handwashing rules →
+                      Sign up for unlimited access →
                     </button>
                   </div>
-                </div>
-              </div>
+                )}
             ) : (
               // Messages
               <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -450,10 +450,10 @@ export default function Page() {
           </div>
 
           {/* Input Area */}
-          <div className="border-t border-[#2F2F2F] p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-[#212121] border-t border-[#2F2F2F] p-4">
             <div className="max-w-3xl mx-auto">
               {selectedImage && (
-                <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center gap-2">
+                <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
                   <span className="text-xs text-[#C5C5C5]">Image attached</span>
                   <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
                     <Icons.X />
@@ -461,11 +461,11 @@ export default function Page() {
                 </div>
               )}
               <form onSubmit={handleSend} className="relative">
-                <div className="flex items-end gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
+                <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-[#C5C5C5] hover:text-white transition-colors"
+                    className="text-[#C5C5C5] hover:text-white transition-colors p-1"
                     title="Upload image"
                   >
                     <Icons.Upload />
@@ -481,12 +481,12 @@ export default function Page() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Message protocolLM"
-                    className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none"
+                    className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
                   />
                   <button 
                     type="submit"
                     disabled={(!input.trim() && !selectedImage) || isSending}
-                    className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1 shrink-0"
                   >
                     <Icons.Send />
                   </button>
