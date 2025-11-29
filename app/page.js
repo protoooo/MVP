@@ -10,7 +10,6 @@ import { compressImage } from '@/lib/imageCompression'
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  Send: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" /></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
@@ -30,12 +29,9 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // Use the ENV variable, fallback to window only if necessary
+  // Use the ENV variable
   const getRedirectUrl = () => {
-    if (process.env.NEXT_PUBLIC_BASE_URL) {
-      return `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
-    }
-    return typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined
+    return `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
   }
 
   const handleEmailAuth = async (e) => {
@@ -44,7 +40,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setStatusMessage('')
 
     const redirectUrl = getRedirectUrl()
-    console.log('📧 Email redirect:', redirectUrl)
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -64,7 +59,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setStatusMessage('')
 
     const redirectUrl = getRedirectUrl()
-    console.log('🔐 Google redirect:', redirectUrl)
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -163,18 +157,23 @@ export default function Page() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
-      setSession(currentSession)
-      
-      if (currentSession) {
-        const { data: userProfile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', currentSession.user.id)
-          .single()
-        setProfile(userProfile)
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        setSession(currentSession)
+        
+        if (currentSession) {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', currentSession.user.id)
+            .single()
+          setProfile(userProfile)
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     init()
 
@@ -201,7 +200,7 @@ export default function Page() {
     setProfile(null)
     setMessages([])
     setShowUserMenu(false)
-    router.refresh() // Force server refresh
+    router.refresh()
   }
 
   const handleSend = async (e) => {
@@ -214,7 +213,6 @@ export default function Page() {
       return
     }
 
-    // Basic Subscription/Terms check
     if (profile) {
         if (!profile.accepted_terms || !profile.accepted_privacy) {
             router.push('/accept-terms')
@@ -233,7 +231,7 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
-    setMessages(p => [...p, { role: 'assistant', content: '' }]) // Placeholder
+    setMessages(p => [...p, { role: 'assistant', content: '' }])
 
     try {
       const res = await fetch('/api/chat', {
@@ -281,9 +279,9 @@ export default function Page() {
     }
   }
 
-  // Input Box Component to reuse logic for Center vs Bottom
-  const InputBox = ({ centered = false }) => (
-    <div className={`relative w-full ${centered ? 'max-w-2xl' : 'max-w-3xl mx-auto'}`}>
+  // Pill Box Input Component
+  const InputBox = () => (
+    <div className="w-full max-w-3xl mx-auto relative">
         {selectedImage && (
             <div className="mb-2 p-2 bg-[#212121] rounded-lg inline-flex items-center gap-2 border border-[#424242]">
                 <span className="text-xs text-white">Image attached</span>
@@ -320,7 +318,7 @@ export default function Page() {
                 placeholder="Message protocolLM..."
                 className="flex-1 max-h-[200px] min-h-[24px] py-2 px-3 bg-transparent border-none focus:ring-0 resize-none text-white placeholder-[#676767] leading-6"
                 rows={1}
-                style={{ height: 'auto', overflowY: 'hidden' }} // Simple auto-grow
+                style={{ height: 'auto', overflowY: 'hidden' }}
             />
             
             <button 
@@ -360,7 +358,6 @@ export default function Page() {
 
           <div className="flex-1 overflow-y-auto px-2">
             <div className="text-xs text-[#676767] font-medium px-2 py-4">Today</div>
-            {/* Recent chats would go here */}
           </div>
 
           {session ? (
@@ -374,7 +371,6 @@ export default function Page() {
                         <div className="text-sm font-medium text-white truncate">{session.user.email}</div>
                     </div>
                   </button>
-                  {/* User Dropdown */}
                   {showUserMenu && (
                     <div className="absolute bottom-full left-0 w-full mb-2 bg-[#212121] border border-[#424242] rounded-xl shadow-xl overflow-hidden z-50">
                         <button onClick={() => router.push('/pricing')} className="w-full px-4 py-3 text-left text-sm text-white hover:bg-[#2F2F2F] flex items-center gap-2">
@@ -400,31 +396,26 @@ export default function Page() {
           )}
         </aside>
 
-        {/* Main Content Area */}
+        {/* Main Content Area - Flex Column Logic Fix */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#212121] lg:bg-[#212121]">
-            {/* Header (Mobile Only) */}
+            {/* Mobile Header */}
             <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-2 bg-[#212121] border-b border-[#212121] text-gray-200">
                 <button onClick={() => setSidebarOpen(true)} className="p-2 hover:bg-[#2F2F2F] rounded-md"><Icons.Menu /></button>
                 <span className="font-semibold text-white">protocolLM</span>
                 <button onClick={() => setMessages([])} className="p-2 hover:bg-[#2F2F2F] rounded-md"><Icons.Plus /></button>
             </div>
 
-            {/* Chat Container */}
+            {/* Chat Area - Takes available space */}
             <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
-                    /* EMPTY STATE - CENTERED INPUT */
                     <div className="h-full flex flex-col items-center justify-center p-4">
                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-6">
                             <div className="w-8 h-8 bg-black rounded-full" />
                         </div>
                         <h1 className="text-2xl font-semibold text-white mb-8">What can I help with?</h1>
-                        <InputBox centered={true} />
-                        <div className="mt-8 flex flex-wrap justify-center gap-2">
-                            {/* Tags or suggestions if wanted, user requested removal of templates */}
-                        </div>
+                        {/* No sample questions here as requested */}
                     </div>
                 ) : (
-                    /* ACTIVE CHAT STATE */
                     <div className="flex flex-col w-full max-w-3xl mx-auto py-8 px-4">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`w-full mb-6 flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -440,18 +431,15 @@ export default function Page() {
                                 </div>
                             </div>
                         ))}
-                        <div className="h-32" /> {/* Spacer for fixed input */}
                     </div>
                 )}
             </div>
 
-            {/* FIXED BOTTOM INPUT (Only show when chat has messages) */}
-            {messages.length > 0 && (
-                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#212121] via-[#212121] to-transparent pt-10 pb-6 px-4">
-                    <InputBox centered={false} />
-                    <p className="text-center text-xs text-[#B4B4B4] mt-2">protocolLM can make mistakes. Verify important info.</p>
-                </div>
-            )}
+            {/* Input Area - Fixed at bottom via Flexbox flow (not absolute) */}
+            <div className="w-full bg-gradient-to-t from-[#212121] via-[#212121] to-transparent pt-2 pb-6 px-4 shrink-0">
+                <InputBox />
+                <p className="text-center text-xs text-[#B4B4B4] mt-2">protocolLM can make mistakes. Verify important info.</p>
+            </div>
         </main>
       </div>
     </>
