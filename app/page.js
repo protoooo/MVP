@@ -5,58 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. ISOMETRIC BACKGROUND (The "Tracing" Blueprint) ---
-const IsometricBackground = () => {
-  return (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-20">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="iso-grid" width="60" height="35" patternUnits="userSpaceOnUse">
-            <path d="M0 17.5 L30 0 L60 17.5 L30 35 Z" fill="none" stroke="black" strokeWidth="0.5" className="animate-trace-grid" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#iso-grid)" />
-      </svg>
-      
-      {/* Floating Wireframe Cubes */}
-      <div className="absolute top-[15%] left-[10%] w-32 h-32 animate-float-slow">
-        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-          <path d="M50 5 L90 25 V65 L50 85 L10 65 V25 Z" fill="none" stroke="black" strokeWidth="1" className="animate-trace-slow" />
-          <path d="M10 25 L50 45 L90 25" fill="none" stroke="black" strokeWidth="1" className="animate-trace-slow" />
-          <path d="M50 45 V85" fill="none" stroke="black" strokeWidth="1" className="animate-trace-slow" />
-        </svg>
-      </div>
-
-      <div className="absolute bottom-[20%] right-[5%] w-48 h-48 animate-float-reverse">
-        <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-          <path d="M50 0 L100 25 V75 L50 100 L0 75 V25 Z" fill="none" stroke="black" strokeWidth="0.5" className="animate-trace-slower" />
-          <path d="M0 25 L50 50 L100 25" fill="none" stroke="black" strokeWidth="0.5" className="animate-trace-slower" />
-          <path d="M50 50 V100" fill="none" stroke="black" strokeWidth="0.5" className="animate-trace-slower" />
-        </svg>
-      </div>
-    </div>
-  )
-}
-
-// --- 2. TRACING BORDER CONTAINER ---
-const TracingBorder = ({ children }) => {
-  return (
-    <div className="relative group p-1">
-      {/* Corner Brackets that Trace */}
-      <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-black animate-trace-corner-tl"></div>
-      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-black animate-trace-corner-tr"></div>
-      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-black animate-trace-corner-bl"></div>
-      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-black animate-trace-corner-br"></div>
-      
-      {/* Content */}
-      <div className="relative bg-white border border-neutral-200 z-10">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-// --- 3. CHAT DEMO (Geometric & Clean) ---
+// --- 1. CHAT DEMO (Modern & Centered) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -112,7 +61,7 @@ const DemoChatContent = () => {
           setInputValue('')
           setIsTyping(false)
           setIsThinking(true)
-          await wait(1800)
+          await wait(1800) // Thinking time
           setIsThinking(false)
           let currentResponse = ''
           const words = step.response.split(' ')
@@ -144,7 +93,7 @@ const DemoChatContent = () => {
         const parts = text.split(key)
         return (
           <span>
-            <span className="font-bold border-b-2 border-black pb-0.5">{key}</span>
+            <span className="font-semibold text-black">{key}</span>
             {parts[1]}
           </span>
         )
@@ -154,72 +103,80 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[420px] md:h-[560px] w-full bg-white relative z-10 overflow-hidden">
-      {/* Header - Geometric */}
-      <div className="h-16 border-b border-black/10 flex items-center px-8 justify-between bg-white shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-3 h-3 border border-black transform rotate-45"></div>
-          <span className="font-mono text-xs font-bold text-neutral-900 uppercase tracking-[0.2em]">
-            protocol_LM
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-           <div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></div>
-           <span className="text-[10px] font-mono font-medium text-neutral-500 uppercase tracking-widest">Connected</span>
-        </div>
-      </div>
-
-      {/* Chat Feed */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll bg-[#FAFAFA]"
-      >
-        {!hasStarted && !isTyping && messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
-            <div className="w-12 h-12 border border-black transform rotate-45 flex items-center justify-center">
-               <div className="w-2 h-2 bg-black transform -rotate-45"/>
-            </div>
-            <p className="text-[10px] font-mono font-bold text-neutral-500 tracking-widest uppercase">System Ready</p>
+    <div className="relative w-full h-full group mx-auto">
+      {/* Container: Soft modern borders */}
+      <div className="flex flex-col h-full w-full bg-white border border-neutral-200 rounded-2xl relative z-10 overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)]">
+        
+        {/* Header */}
+        <div className="h-16 border-b border-neutral-100 flex items-center px-8 justify-between bg-white/80 backdrop-blur-md shrink-0 sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <span className="font-sans text-sm font-bold text-neutral-900 tracking-wide">
+              protocol_LM
+            </span>
           </div>
-        )}
+          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+             <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Live Database</span>
+          </div>
+        </div>
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${
-              msg.role === 'user' ? 'justify-end' : 'justify-start'
-            } animate-in fade-in slide-in-from-bottom-2 duration-300`}
-          >
+        {/* Chat Feed */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto p-8 space-y-8 custom-scroll bg-[#FAFAFA]"
+        >
+          {!hasStarted && !isTyping && messages.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-40">
+              <div className="w-14 h-14 bg-white border border-neutral-200 rounded-2xl flex items-center justify-center shadow-sm">
+                 <div className="w-6 h-6 border-2 border-neutral-200 border-t-black rounded-full animate-spin"/>
+              </div>
+              <p className="text-sm font-semibold text-neutral-400 tracking-wide">Initializing Database</p>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
             <div
-              className={`max-w-[85%] px-6 py-4 text-[14px] leading-relaxed border ${
-                msg.role === 'user'
-                  ? 'bg-neutral-50 border-neutral-200 text-neutral-500 text-right'
-                  : 'bg-white border-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]'
-              }`}
+              key={i}
+              className={`flex ${
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              } animate-in fade-in slide-in-from-bottom-4 duration-500`}
             >
-              {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
+              <div
+                className={`max-w-[85%] px-6 py-4 text-[15px] leading-relaxed rounded-2xl ${
+                  msg.role === 'user'
+                    ? 'bg-neutral-900 text-white rounded-tr-sm'
+                    : 'bg-white text-neutral-800 border border-neutral-100 shadow-sm rounded-tl-sm'
+                }`}
+              >
+                {msg.role === 'assistant' ? formatContent(msg.content) : msg.content}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {isThinking && (
-          <div className="flex justify-start animate-fade-in pl-1">
-            <div className="bg-white border border-neutral-200 px-4 py-3 flex items-center shadow-sm">
-              <div className="loader"></div>
+          {isThinking && (
+            <div className="flex justify-start animate-fade-in pl-1">
+              <div className="bg-white px-5 py-3 rounded-full border border-neutral-100 shadow-sm flex items-center">
+                <div className="loader"></div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Input Field */}
-      <div className="p-6 bg-white border-t border-black/10 shrink-0">
-        <div className="w-full bg-neutral-50 border border-neutral-200 px-5 py-4 flex items-center gap-4">
-          <span className="text-neutral-300 text-lg font-mono">{'>'}</span>
-          <div className="flex-1 text-[15px] text-neutral-900 font-medium font-mono min-h-[24px] relative flex items-center overflow-hidden whitespace-nowrap">
-            {inputValue}
-            {isTyping && (
-              <span className="inline-block w-2 h-5 bg-black ml-1 animate-pulse" />
-            )}
+        {/* Input Field */}
+        <div className="p-6 bg-white border-t border-neutral-100 shrink-0">
+          <div className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-5 py-4 flex items-center gap-4 transition-all focus-within:ring-2 focus-within:ring-neutral-100 focus-within:bg-white focus-within:border-neutral-300">
+            <div className="flex-1 text-[15px] text-neutral-900 font-medium min-h-[24px] relative flex items-center overflow-hidden whitespace-nowrap">
+              {inputValue}
+              {isTyping && (
+                <span className="inline-block w-0.5 h-5 bg-black ml-0.5 animate-pulse" />
+              )}
+              {!inputValue && !isTyping && <span className="text-neutral-400 text-sm">Ask protocol_LM...</span>}
+            </div>
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-300 ${inputValue ? 'bg-black' : 'bg-neutral-200'}`}>
+               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+               </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -227,7 +184,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 4. AUTH MODAL ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -308,56 +265,47 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-white/95 backdrop-blur-md animate-in fade-in duration-300" />
-      
-      {/* TRACING BORDER ON MODAL */}
-      <div className="relative w-full max-w-[380px]">
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-black"/>
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-black"/>
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-black"/>
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-black"/>
-        
-        <div className="bg-white border border-neutral-200 p-10 relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-          <button onClick={onClose} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" /></svg>
+      <div onClick={onClose} className="absolute inset-0 bg-neutral-900/10 backdrop-blur-sm animate-in fade-in duration-300" />
+      <div className="w-full max-w-[380px] bg-white border border-white/50 shadow-2xl p-8 rounded-2xl relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 ring-1 ring-neutral-900/5">
+        <button onClick={onClose} className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold text-neutral-900 tracking-tight">
+            {view === 'signup' ? 'Create Account' : 'Welcome Back'}
+          </h2>
+        </div>
+
+        <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 hover:shadow-sm rounded-xl transition-all disabled:opacity-50 mb-6 group">
+          <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span className="text-sm font-semibold text-neutral-600 group-hover:text-neutral-900">Continue with Google</span>
+        </button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-100" /></div>
+          <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-neutral-400 font-medium">Or</span></div>
+        </div>
+
+        <form onSubmit={handleAuth} className="space-y-4">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:bg-white focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-xl transition-all" placeholder="Email address" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3.5 bg-neutral-50 border border-neutral-200 focus:bg-white focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 outline-none text-neutral-900 text-sm font-medium placeholder-neutral-400 rounded-xl transition-all" placeholder="Password" />
+          <button type="submit" disabled={loading} className="w-full bg-neutral-900 hover:bg-black text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-neutral-900/20 active:scale-[0.98] disabled:opacity-50 mt-2">
+            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
           </button>
+        </form>
 
-          <div className="text-center mb-10">
-            <h2 className="text-lg font-bold text-black tracking-tight uppercase font-mono">
-              {view === 'signup' ? 'Initiate Access' : 'Login'}
-            </h2>
-          </div>
-
-          <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center gap-3 p-3.5 bg-white border border-neutral-300 hover:bg-neutral-50 transition-all disabled:opacity-50 mb-6 group">
-            <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" className="text-[#4285F4]"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" className="text-[#34A853]"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" className="text-[#FBBC05]"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" className="text-[#EA4335]"/></svg>
-            <span className="text-xs font-bold text-neutral-700">Continue with Google</span>
+        <div className="mt-6 pt-6 border-t border-neutral-100 text-center">
+          <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs font-medium text-neutral-500 hover:text-black transition-colors">
+            {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
           </button>
-
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-neutral-200" /></div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest"><span className="px-3 bg-white text-neutral-400">Or</span></div>
-          </div>
-
-          <form onSubmit={handleAuth} className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-xs font-medium placeholder-neutral-400 transition-all" placeholder="EMAIL ADDRESS" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="w-full p-3 bg-neutral-50 border border-neutral-200 focus:border-black focus:bg-white outline-none text-neutral-900 text-xs font-medium placeholder-neutral-400 transition-all" placeholder="PASSWORD" />
-            <button type="submit" disabled={loading} className="w-full bg-black hover:bg-neutral-800 text-white font-bold py-3.5 text-xs uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 mt-2">
-              {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-neutral-100 text-center">
-            <button onClick={() => setView(view === 'signup' ? 'login' : 'signup')} className="text-xs font-medium text-neutral-500 hover:text-black transition-colors">
-              {view === 'signup' ? 'Already have an account? Sign in' : 'New to protocolLM? Create account'}
-            </button>
-          </div>
         </div>
       </div>
     </div>
   )
 }
 
-// --- 5. MAIN CONTENT ---
+// --- 3. MAIN CONTENT ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -381,62 +329,67 @@ function MainContent() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-black selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
+    <div className="min-h-screen w-full bg-white font-sans text-neutral-900 selection:bg-neutral-900 selection:text-white flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* 1. BACKGROUND (Self-Drawing Isometric) */}
-      <IsometricBackground />
+      {/* BACKGROUND (Subtle Modern Texture) */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-white">
+        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-[0.15] grayscale contrast-[1.1]">
+           <Image 
+             src="/background.png" 
+             alt="Background" 
+             fill 
+             className="object-cover" 
+             priority 
+           />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-transparent to-white/95"></div>
+      </div>
 
-      {/* 2. NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-4">
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-6">
         <div className={`w-full max-w-6xl flex justify-between items-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/')}>
-            <div className="w-3 h-3 bg-black transform rotate-45"></div>
-            <span className="text-xl font-bold tracking-tight text-black font-mono">
+            <span className="text-xl font-bold tracking-tight text-neutral-900">
               protocol<span className="text-neutral-400">LM</span>
             </span>
           </div>
           
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest font-mono">Pricing</button>
-            <button onClick={() => openAuth('login')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-widest font-mono">Log in</button>
-            <button onClick={() => openAuth('signup')} className="bg-black hover:bg-neutral-800 text-white px-5 py-2.5 text-xs font-bold transition-all uppercase tracking-widest shadow-lg active:scale-95 border border-black font-mono">
+            <button onClick={() => router.push('/pricing')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-wide">Pricing</button>
+            <button onClick={() => openAuth('login')} className="text-xs font-bold text-neutral-500 hover:text-black transition-colors uppercase tracking-wide">Log in</button>
+            <button onClick={() => openAuth('signup')} className="bg-neutral-900 hover:bg-black text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all uppercase tracking-wide shadow-lg hover:shadow-xl active:scale-95">
               Start Free Trial
             </button>
           </div>
         </div>
       </nav>
 
-      {/* 3. HERO SECTION (Centered) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-10 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION (Centered Single Column) */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-24 pb-8 flex flex-col items-center relative z-10 min-h-screen">
         
-        {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
-          
-          {/* Headline */}
-          <h1 className={`text-5xl md:text-7xl font-bold text-black tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Train your team <br />
-            before the inspector arrives.
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-4xl text-center mb-10">
+          <h1 className={`text-5xl md:text-6xl font-bold text-neutral-900 tracking-tighter leading-[1.0] mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            Employee errors are costing you money.
           </h1>
 
-          {/* Subheader */}
-          <p className={`text-[15px] text-neutral-600 leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          <p className={`text-[15px] md:text-[16px] text-neutral-600 leading-relaxed max-w-2xl mx-auto font-medium transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong>Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center mb-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest shadow-lg">
+          {/* MOBILE CTA */}
+          <div className={`md:hidden flex justify-center mt-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-neutral-900 hover:bg-black text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Tracing Demo Box) */}
-        <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
-          <TracingBorder>
-            <DemoChatContent />
-          </TracingBorder>
+        {/* MASSIVE DEMO BOX (Centered & Wide) */}
+        <div className={`w-full max-w-4xl h-[500px] md:h-[650px] transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+          <DemoChatContent />
         </div>
+
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
@@ -444,7 +397,7 @@ function MainContent() {
       <style jsx global>{`
         .custom-scroll::-webkit-scrollbar { width: 3px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #000; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #E5E5E5; border-radius: 10px; }
         
         .loader {
           height: 15px;
@@ -463,47 +416,6 @@ function MainContent() {
           83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
           100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
         }
-
-        /* --- TRACING ANIMATIONS --- */
-        @keyframes trace-grid {
-          0% { stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0; }
-          100% { stroke-dasharray: 100; stroke-dashoffset: 0; opacity: 0.2; }
-        }
-        .animate-trace-grid { animation: trace-grid 2s ease-out forwards; }
-
-        @keyframes trace-slow {
-          0% { stroke-dasharray: 200; stroke-dashoffset: 200; opacity: 0; }
-          100% { stroke-dasharray: 200; stroke-dashoffset: 0; opacity: 0.15; }
-        }
-        .animate-trace-slow { animation: trace-slow 4s ease-out forwards; }
-
-        @keyframes trace-slower {
-          0% { stroke-dasharray: 300; stroke-dashoffset: 300; opacity: 0; }
-          100% { stroke-dasharray: 300; stroke-dashoffset: 0; opacity: 0.15; }
-        }
-        .animate-trace-slower { animation: trace-slower 6s ease-out forwards; }
-
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        .animate-float-slow { animation: float-slow 8s ease-in-out infinite; }
-
-        @keyframes float-reverse {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(20px); }
-        }
-        .animate-float-reverse { animation: float-reverse 10s ease-in-out infinite; }
-
-        /* CORNER TRACING */
-        @keyframes trace-corner {
-          0% { width: 0; height: 0; opacity: 0; }
-          100% { width: 32px; height: 32px; opacity: 1; }
-        }
-        .animate-trace-corner-tl { animation: trace-corner 1s ease-out forwards; }
-        .animate-trace-corner-tr { animation: trace-corner 1s ease-out 0.2s forwards; opacity: 0; }
-        .animate-trace-corner-bl { animation: trace-corner 1s ease-out 0.4s forwards; opacity: 0; }
-        .animate-trace-corner-br { animation: trace-corner 1s ease-out 0.6s forwards; opacity: 0; }
       `}</style>
     </div>
   )
