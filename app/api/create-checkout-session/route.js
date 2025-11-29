@@ -36,17 +36,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
     }
 
-    // --- PLAN MAPPING ---
+    // --- FIXED PLAN MAPPING WITH YOUR ACTUAL PRICE IDs ---
     let planName = 'pro' // Default fallback
 
-    if (priceId === 'price_1SXXMWDlSrKA3nbAQowl0jTE') {
+    if (priceId === 'price_1SY95aDlSrKA3nbAsgxE0Jon') {
       planName = 'starter'
-    } else if (priceId === 'price_1SXXNcDlSrKA3nbAVqQKY8Jr') {
+    } else if (priceId === 'price_1SY96QDlSrKA3nbACxe8QasT') {
       planName = 'pro'
-    } else if (priceId === 'price_1SXXOvDlSrKA3nbArPSohz15') {
+    } else if (priceId === 'price_1SY97KDlSrKA3nbAauq4tP8g') {
       planName = 'enterprise'
     }
-    // --------------------
+    // --------------------------------------------------
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
@@ -59,7 +59,7 @@ export async function POST(request) {
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/documents?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}/?checkout=success`,
       cancel_url: `${baseUrl}/pricing`,
       customer_email: session.user.email,
       metadata: {
