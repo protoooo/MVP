@@ -421,77 +421,101 @@ export default function Page() {
         onSuccess={() => setShowAuthModal(false)}
       />
 
-      <div className="min-h-screen w-full bg-[#1C1C1C] text-[#EDEDED] flex flex-col font-sans selection:bg-[#3ECF8E] selection:text-black overflow-x-hidden">
-        {/* Header */}
-        <nav className="fixed top-0 w-full h-16 bg-[#1C1C1C]/95 backdrop-blur-md border-b border-[#2A2A2A] z-50 flex items-center justify-between px-4 sm:px-6 lg:px-12">
-          <div className="font-mono font-bold text-base sm:text-lg tracking-tight">protocol<span className="text-[#3ECF8E]">LM</span></div>
-          <div className="flex gap-2 sm:gap-4 items-center">
-            <button onClick={() => setShowAuthModal(true)} className="text-xs sm:text-sm text-[#888] hover:text-white transition-colors px-2 sm:px-0">Log In</button>
-            <button onClick={() => router.push('/pricing')} className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap">Get Started</button>
+      <div className="min-h-screen w-full bg-[#212121] text-[#ECECEC] flex flex-col font-sans selection:bg-[#3ECF8E] selection:text-black overflow-x-hidden">
+        {/* Minimal Header */}
+        <nav className="fixed top-0 w-full bg-[#212121] z-50 flex items-center justify-between px-4 sm:px-6 py-3">
+          <div className="font-semibold text-lg tracking-tight text-white">protocolLM</div>
+          <div className="flex gap-3 items-center">
+            <button onClick={() => setShowAuthModal(true)} className="text-sm text-[#C5C5C5] hover:text-white transition-colors">Log in</button>
+            <button onClick={() => router.push('/pricing')} className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign up</button>
           </div>
         </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 w-full pt-24 sm:pt-32 px-4 flex flex-col items-center justify-center text-center pb-12 sm:pb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#333] bg-[#232323] text-xs text-[#888] mb-6 sm:mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#3ECF8E]"></span>
-            Updated for 2025 Food Code
-          </div>
-          
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-white mb-4 sm:mb-6 tracking-tight max-w-3xl px-4">
-            AI Compliance Officer <br className="hidden sm:block" /> <span className="text-[#888]">for your kitchen.</span>
-          </h1>
-          
-          <p className="text-[#666] text-base sm:text-lg mb-6 sm:mb-8 max-w-xl px-4">
-            Prevent violations before the health inspector arrives. Instant answers, mock audits, and image analysis.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12 w-full max-w-sm sm:max-w-none px-4">
-            <button 
-              onClick={() => router.push('/pricing')}
-              className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-6 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
-            >
-              <Icons.Sparkles />
-              Start Free Trial
-            </button>
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="bg-[#232323] hover:bg-[#2A2A2A] border border-[#333] text-white px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
-            >
-              Sign In
-            </button>
-          </div>
-
-          {/* Demo Chat Window */}
-          <div className="w-full max-w-4xl mx-auto bg-[#161616] border border-[#2A2A2A] rounded-xl overflow-hidden shadow-2xl">
-            <div className="h-10 bg-[#1C1C1C] border-b border-[#2A2A2A] flex items-center px-4 gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#FEBC2E]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
+        {/* Centered Content */}
+        <main className="flex-1 w-full flex flex-col items-center justify-center px-4 py-20">
+          <div className="w-full max-w-3xl mx-auto text-center space-y-8">
+            
+            {/* Main Heading */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold text-white leading-tight">
+                Get instant answers from food safety code
+              </h1>
+              <p className="text-lg sm:text-xl text-[#C5C5C5] max-w-2xl mx-auto">
+                Upload inspection photos, ask questions, run mock audits—powered by AI trained on Michigan regulations.
+              </p>
             </div>
-            <div className="p-4 sm:p-6 space-y-4 min-h-[300px] sm:min-h-[400px] bg-[#1C1C1C]">
-              <div className="flex gap-3 sm:gap-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">U</div>
-                <div className="flex-1 bg-[#232323] border border-[#333] rounded-lg p-3 text-xs sm:text-sm text-[#EDEDED]">
-                  Is 48°F acceptable for a walk-in cooler holding raw chicken?
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-4">
+              <button 
+                onClick={() => router.push('/pricing')}
+                className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-6 py-3.5 rounded-lg text-base font-medium transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
+              >
+                Try protocolLM
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="border border-[#565869] hover:border-[#8E8EA0] text-white px-6 py-3.5 rounded-lg text-base font-medium transition-colors w-full sm:w-auto"
+              >
+                Log in
+              </button>
+            </div>
+
+            {/* Chat Demo - Minimalist Style */}
+            <div className="w-full max-w-2xl mx-auto mt-16 space-y-4">
+              {/* User Message */}
+              <div className="flex justify-end">
+                <div className="bg-[#2F2F2F] rounded-3xl px-5 py-3 max-w-[80%]">
+                  <p className="text-[15px] text-white">Is 48°F acceptable for a walk-in cooler holding raw chicken?</p>
                 </div>
               </div>
               
-              <div className="flex gap-3 sm:gap-4">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-[#232323] border border-[#333] flex items-center justify-center shrink-0 text-[#3ECF8E] text-xs font-mono">AI</div>
-                <div className="flex-1 text-xs sm:text-sm text-[#CCC] leading-relaxed">
-                  <p className="mb-3"><span className="text-red-400 font-bold">❌ VIOLATION:</span> NO - 48°F is not acceptable.</p>
-                  <p className="mb-3">Per Michigan Modified Food Code (3-501.16), TCS foods like raw chicken must be held at <span className="text-white font-bold">41°F or below</span>.</p>
-                  <p className="text-[#888]"><strong className="text-white">Action Required:</strong> Discard if time/temperature unknown, or rapid chill immediately and document corrective action.</p>
+              {/* AI Response */}
+              <div className="flex justify-start">
+                <div className="space-y-3 max-w-[85%]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-[#10A37F] flex items-center justify-center">
+                      <svg width="14" height="14" fill="white" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                    </div>
+                    <span className="text-xs font-semibold text-[#10A37F]">protocolLM</span>
+                  </div>
+                  <div className="bg-[#2F2F2F] rounded-3xl px-5 py-4 space-y-3">
+                    <p className="text-[15px] text-white leading-relaxed">
+                      <span className="inline-flex items-center gap-1.5 text-[#FF6B6B] font-semibold">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        VIOLATION
+                      </span>
+                      {' '}— No, 48°F is not acceptable.
+                    </p>
+                    <p className="text-[15px] text-[#C5C5C5] leading-relaxed">
+                      Per Michigan Modified Food Code (3-501.16), TCS foods like raw chicken must be held at <span className="text-white font-semibold">41°F or below</span>.
+                    </p>
+                    <p className="text-[15px] text-[#8E8EA0] leading-relaxed">
+                      <span className="text-white font-semibold">Action:</span> Discard if time/temp unknown, or rapid chill immediately and document.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <p className="mt-6 sm:mt-8 text-xs text-[#555] px-4">
-            Try it now — no credit card required for 30-day trial
-          </p>
+            {/* Fine Print */}
+            <p className="text-sm text-[#8E8EA0] pt-8">
+              Free 30-day trial • No credit card required • Cancel anytime
+            </p>
+          </div>
         </main>
+
+        {/* Footer */}
+        <footer className="py-6 text-center text-xs text-[#8E8EA0] border-t border-[#2F2F2F]">
+          <p>protocolLM • Trained on Michigan food safety regulations</p>
+        </footer>
       </div>
     </>
   )
