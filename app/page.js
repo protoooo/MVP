@@ -10,7 +10,7 @@ import { compressImage } from '@/lib/imageCompression'
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #000000 !important;
+      background-color: #121212 !important; /* Updated from #000000 */
       overscroll-behavior: none;
     }
     .loader {
@@ -608,19 +608,19 @@ export default function Page() {
     setActiveMode('chat') // Reset mode
   }
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div></div>
+  if (isLoading) return <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div></div>
 
   return (
     <>
       <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       
-      <div className="fixed inset-0 w-full h-full bg-[#0A0A0A] text-white overflow-hidden font-sans flex">
+      <div className="fixed inset-0 w-full h-full bg-[#121212] text-white overflow-hidden font-sans flex">
         
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         {/* Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#000000] border-r border-[#3ECF8E]/20 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#3ECF8E]/20 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
             <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3ECF8E] rounded-lg transition-all group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
@@ -691,8 +691,8 @@ export default function Page() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A]">
-          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#0A0A0A] border-b border-[#1C1C1C] text-white">
+        <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
+          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
             <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
             <span className="font-semibold text-sm">protocolLM</span>
             <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
@@ -773,7 +773,7 @@ export default function Page() {
                 )}
               </div>
 
-              <div className="w-full bg-[#0A0A0A] pt-2 shrink-0">
+              <div className="w-full bg-[#121212] pt-2 shrink-0">
                 <InputBox
                   input={input}
                   setInput={setInput}
