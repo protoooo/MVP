@@ -1,82 +1,92 @@
 export default function PrivacyPolicy() {
   return (
-    // Changed: bg-[#F0F9FF] and font-sans
-    <div className="min-h-screen bg-[#F0F9FF] font-sans selection:bg-[#0077B6] selection:text-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10 text-center md:text-left">
-          <h1 className="text-4xl font-bold text-[#023E8A] mb-2 tracking-tight">Privacy Policy</h1>
-          <p className="text-[#0077B6] font-bold text-xs uppercase tracking-widest">Last updated: November 25, 2025</p>
+    <div className="min-h-screen bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3B82F6] selection:text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        {/* Header */}
+        <div className="mb-12 text-center md:text-left border-b border-[#2C2C2C] pb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Privacy Policy</h1>
+          <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: November 25, 2025</p>
         </div>
 
-        <div className="prose prose-slate max-w-none prose-headings:text-[#023E8A] prose-a:text-[#0077B6] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#023E8A]">
+        <div className="space-y-6">
           
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-2xl font-bold mb-4">1. Information We Collect</h2>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2">
-              <li>Account details (email address, password)</li>
-              <li>Payment information (processed securely via Stripe)</li>
-              <li>Usage data (chat queries, uploaded images)</li>
+          {/* Section 1 */}
+          <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+            <h2 className="text-xl font-bold mb-4 text-white">1. Information We Collect</h2>
+            <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm leading-relaxed">
+              <li><span className="text-white font-medium">Account Details:</span> Email address, encrypted password credentials.</li>
+              <li><span className="text-white font-medium">Payment Information:</span> Processed securely via Stripe (we do not store card numbers).</li>
+              <li><span className="text-white font-medium">Usage Data:</span> Chat queries and uploaded images for compliance analysis.</li>
             </ul>
           </section>
 
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-2xl font-bold mb-4">2. How We Use Information</h2>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2">
-              <li>To provide AI-powered compliance guidance</li>
-              <li>To process subscription payments</li>
-              <li>To improve model accuracy and service quality</li>
-              <li>To send necessary technical alerts</li>
+          {/* Section 2 */}
+          <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+            <h2 className="text-xl font-bold mb-4 text-white">2. How We Use Information</h2>
+            <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm leading-relaxed">
+              <li>To provide real-time, AI-powered compliance guidance specific to local codes.</li>
+              <li>To process subscription payments and manage account status.</li>
+              <li>To improve model accuracy (non-identifiable aggregate data only).</li>
+              <li>To send necessary technical alerts or policy updates.</li>
             </ul>
           </section>
 
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-2xl font-bold mb-6">3. Third-Party Services</h2>
-            <div className="space-y-4">
-              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <h3 className="font-bold text-[#023E8A] mb-1">Supabase</h3>
-                <p className="text-slate-600 text-sm mb-2">Database & Authentication. Stores chat history and user profiles.</p>
-                <a href="https://supabase.com/privacy" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Supabase Privacy Policy →</a>
+          {/* Section 3 */}
+          <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+            <h2 className="text-xl font-bold mb-6 text-white">3. Third-Party Infrastructure</h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              {/* Supabase Card */}
+              <div className="bg-[#232323] border border-[#333] p-5 rounded-md hover:border-[#3B82F6]/50 transition-colors group">
+                <h3 className="font-bold text-white mb-2 text-sm">Supabase</h3>
+                <p className="text-[#888] text-xs mb-4 leading-relaxed">Database & Auth. Encrypted storage for chat history and user profiles.</p>
+                <a href="https://supabase.com/privacy" className="text-[#3B82F6] text-[10px] font-bold uppercase tracking-wider hover:text-white transition-colors group-hover:underline" target="_blank" rel="noopener">Read Policy →</a>
               </div>
               
-              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <h3 className="font-bold text-[#023E8A] mb-1">Google Vertex AI</h3>
-                <p className="text-slate-600 text-sm mb-2">AI Processing. Analyzes queries/images. Data is not used for model training.</p>
-                <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Google Cloud Policy →</a>
+              {/* Google Card */}
+              <div className="bg-[#232323] border border-[#333] p-5 rounded-md hover:border-[#3B82F6]/50 transition-colors group">
+                <h3 className="font-bold text-white mb-2 text-sm">Google Vertex AI</h3>
+                <p className="text-[#888] text-xs mb-4 leading-relaxed">AI Processing. Analyzes queries/images. Data is <strong className="text-white">not</strong> used for model training.</p>
+                <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-[#3B82F6] text-[10px] font-bold uppercase tracking-wider hover:text-white transition-colors group-hover:underline" target="_blank" rel="noopener">Cloud Policy →</a>
               </div>
               
-              <div className="bg-[#F0F9FF] border border-[#90E0EF] p-4 rounded-xl">
-                <h3 className="font-bold text-[#023E8A] mb-1">Stripe</h3>
-                <p className="text-slate-600 text-sm mb-2">Payment Processing. We do not store credit card numbers.</p>
-                <a href="https://stripe.com/privacy" className="text-[#0077B6] text-xs font-bold uppercase tracking-wider hover:underline" target="_blank" rel="noopener">Stripe Policy →</a>
+              {/* Stripe Card */}
+              <div className="bg-[#232323] border border-[#333] p-5 rounded-md hover:border-[#3B82F6]/50 transition-colors group">
+                <h3 className="font-bold text-white mb-2 text-sm">Stripe</h3>
+                <p className="text-[#888] text-xs mb-4 leading-relaxed">Payment Processing. Handles all PCI-compliant billing transactions.</p>
+                <a href="https://stripe.com/privacy" className="text-[#3B82F6] text-[10px] font-bold uppercase tracking-wider hover:text-white transition-colors group-hover:underline" target="_blank" rel="noopener">Stripe Policy →</a>
               </div>
             </div>
           </section>
 
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-2xl font-bold mb-4">4. Data Retention</h2>
-            <p className="text-slate-700 mb-4">
-              If you cancel your subscription:
+          {/* Section 4 */}
+          <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+            <h2 className="text-xl font-bold mb-4 text-white">4. Data Retention</h2>
+            <p className="text-[#A1A1AA] mb-4 text-sm">
+              Upon subscription cancellation:
             </p>
-            <ul className="list-disc pl-6 text-slate-700 space-y-2">
-              <li>Account & Chat data is retained for <strong>90 days</strong></li>
-              <li>Payment records are retained for <strong>7 years</strong> (legal requirement)</li>
+            <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
+              <li>Account & Chat data is retained for <strong>90 days</strong> to allow for reactivation, then purged.</li>
+              <li>Payment records are retained for <strong>7 years</strong> (required by tax law).</li>
             </ul>
           </section>
 
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-2xl font-bold mb-4">5. Contact Us</h2>
-            <p className="text-slate-700">
-              <strong>Email:</strong>{' '}
-              <a href="mailto:austinrnorthrop@gmail.com" className="text-[#0077B6] hover:underline font-bold">
+          {/* Section 5 */}
+          <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+            <h2 className="text-xl font-bold mb-4 text-white">5. Contact Us</h2>
+            <p className="text-[#A1A1AA] text-sm">
+              For privacy concerns or data deletion requests:
+              <br />
+              <a href="mailto:austinrnorthrop@gmail.com" className="text-[#3B82F6] hover:text-white font-medium transition-colors mt-2 inline-block">
                 austinrnorthrop@gmail.com
               </a>
             </p>
           </section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-[#90E0EF] text-center">
-          <a href="/" className="inline-flex items-center gap-2 text-[#0077B6] font-bold uppercase tracking-widest text-xs hover:text-[#023E8A] transition-colors">
-            ← Back to Home
+        <div className="mt-16 pt-8 border-t border-[#2C2C2C] text-center">
+          <a href="/" className="inline-flex items-center gap-2 text-[#888] hover:text-white font-mono text-xs uppercase tracking-widest transition-colors">
+            <span>←</span> Return Home
           </a>
         </div>
       </div>
