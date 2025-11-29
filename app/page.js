@@ -359,41 +359,55 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-0 flex flex-col items-center relative z-10 min-h-screen">
+      {/* HERO SECTION - TIGHTER & SINGLE LINE */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-20 md:pt-4 pb-24 flex flex-col items-center relative z-10 min-h-screen">
         
         {/* CENTERED TEXT */}
-        <div className="w-full max-w-5xl text-center mb-12">
-          {/* One-Line Powerful Header */}
-          <h1 className={`text-3xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+        <div className="w-full max-w-6xl text-center mb-8 mt-16 md:mt-20">
+          {/* 
+             Single Line Headline Fix: 
+             - max-w-5xl: Allows width to expand 
+             - text-4xl (mobile) -> text-6xl (desktop): Scales properly
+             - No <br/> tags
+          */}
+          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-4 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
             Train your team before the inspector arrives.
           </h1>
 
-          <div className={`flex flex-col items-center gap-2 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-            <p className="text-[15px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
+          <div className={`flex flex-col items-center gap-3 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+            <p className="text-[14px] md:text-[15px] text-[#888] leading-relaxed max-w-2xl mx-auto font-normal">
               Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, <strong className="text-white">Michigan Food Law</strong>, and <strong className="text-white">FDA Code</strong>.
             </p>
             
-            {/* Subtle "Coming Soon" Badge */}
-            <div className="flex items-center gap-2 mt-2 bg-[#232323] border border-[#333] rounded-full px-3 py-1">
+            <div className="flex items-center gap-2 bg-[#232323] border border-[#333] rounded-full px-4 py-1">
                <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80"></span>
                <span className="text-[10px] text-[#666] font-mono uppercase tracking-wide">Wayne & Oakland Support: Coming Q1</span>
             </div>
           </div>
 
           {/* Mobile CTA */}
-          <div className={`md:hidden flex justify-center mt-8 mb-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+          <div className={`md:hidden flex justify-center mt-8 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
             <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - Fixed Height Centered) */}
-        <div className={`flex-1 w-full max-w-4xl flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        {/* DEMO BOX - Centered */}
+        <div className={`w-full max-w-5xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
+
       </div>
+
+      {/* FOOTER */}
+      <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10">
+         <div className="flex justify-center items-center gap-8 text-xs text-[#666]">
+             <a href="/terms" className="hover:text-[#EDEDED] transition-colors">Terms</a>
+             <a href="/privacy" className="hover:text-[#EDEDED] transition-colors">Privacy</a>
+             <span className="text-[#444]">© 2025 protocolLM</span>
+         </div>
+      </footer>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
 
