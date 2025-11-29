@@ -555,7 +555,8 @@ export default function Page() {
         body: JSON.stringify({ 
           messages: [...messages, { ...newMsg, content: finalInput }], // Send modified prompt
           image: img,
-          chatId: activeChatId 
+          chatId: activeChatId,
+          mode: activeMode // PASS MODE TO API
         })
       })
 
@@ -608,7 +609,7 @@ export default function Page() {
     setActiveMode('chat') // Reset mode
   }
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div></div>
+  if (isLoading) return <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin"></div></div>
 
   return (
     <>
@@ -646,7 +647,8 @@ export default function Page() {
                 </button>
               ))}
             </div>
-            {/* PRICING BUTTON REMOVED FROM SIDEBAR */}
+            
+            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
           </div>
 
           {session ? (
