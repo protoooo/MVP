@@ -646,14 +646,21 @@ export default function Page() {
               ))}
             </div>
             
-            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
+            {!session && (
+              <div className="mt-4 px-1">
+                 <button onClick={() => router.push('/pricing')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#A1A1AA] hover:text-white hover:bg-[#1C1C1C] rounded-lg transition-colors">
+                    <Icons.Tag />
+                    Pricing
+                 </button>
+              </div>
+            )}
           </div>
 
           {session ? (
             <div className="p-3 border-t border-[#1C1C1C]">
               <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
-                  <div className="w-8 h-8 rounded-full bg-[#3ECF8E] flex items-center justify-center text-xs font-bold text-[#050505] shadow-lg shadow-emerald-900/20">
+                  <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
                     {session.user.email[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
