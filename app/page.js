@@ -161,6 +161,11 @@ const DashboardInterface = ({ user, onSignOut }) => {
   const [selectedImage, setSelectedImage] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showUploadMenu, setShowUploadMenu] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  const supabase = createClient()
+  const router = useRouter()
   
   // Audit
   const [auditResults, setAuditResults] = useState({})
@@ -171,6 +176,26 @@ const DashboardInterface = ({ user, onSignOut }) => {
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const auditImageRef = useRef(null)
+
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('is_subscribed')
+        .eq('id', user.id)
+        .single()
+      
+      setIsSubscribed(profile?.is_subscribed || false)
+      setIsLoading(false)
+      
+      // Redirect to pricing if not subscribed
+      if (!profile?.is_subscribed) {
+        router.push('/pricing')
+      }
+    }
+    checkSubscription()
+  }, [user.id, supabase, router])
 
   useEffect(() => { if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
 
@@ -215,6 +240,14 @@ const DashboardInterface = ({ user, onSignOut }) => {
   // Calculate Score
   const passed = Object.values(auditResults).filter(s => s === 'pass').length
   const total = AUDIT_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)
+  
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen bg-[#121212] items-center justify-center">
+        <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '48px', height: '48px' }} />
+      </div>
+    )
+  }
   
   return (
     <div className="flex h-screen w-screen bg-[#121212] text-[#EDEDED] overflow-hidden fixed inset-0">
@@ -300,124 +333,217 @@ const DashboardInterface = ({ user, onSignOut }) => {
          
          {activeTab === 'chat' ? (
              <>
-               <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:px-24 custom-scroll pb-36">
-                  {messages.length === 0 && (
-                     <div className="h-full flex flex-col items-center justify-center text-center">
-                        <div className="mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
-                          <svg className="w-8 h-8 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h2 className="text-lg font-semibold text-white mb-2">Ready for Compliance Analysis</h2>
-                        <p className="text-[13px] text-[#9CA3AF] max-w-md leading-relaxed">
-                          Upload inspection photos, ask regulatory questions, or run mock audits to prepare your team.
-                        </p>
-                     </div>
-                  )}
-                  {messages.map((m,i) => (
-                     <div key={i} className={`flex mb-6 ${m.role==='user'?'justify-end':'justify-start'}`}>
-                        <div className={`max-w-[85%] ${m.role==='user'?'bg-[#1A1A1A] border border-[#2C2C2C] p-4 rounded-xl':'border-l-2 border-[#3ECF8E] pl-4 py-2'}`}>
-                           {m.image && <img src={m.image} alt="Uploaded" className="mb-3 max-h-64 rounded-lg border border-[#2C2C2C] shadow-xl" />}
-                           <div className={`text-[13px] leading-relaxed whitespace-pre-wrap ${m.role==='user'?'text-white':'text-[#E5E7EB]'}`}>
-                             {m.content}
+               <div ref={scrollRef} className={`flex-1 overflow-y-auto custom-scroll ${messages.length === 0 ? 'flex items-center justify-center' : 'p-4 lg:px-24 pb-36'}`}>
+                  {messages.length === 0 ? (
+                     /* Centered Empty State */
+                     <div className="w-full max-w-3xl px-4">
+                        <div className="flex flex-col items-center text-center mb-8">
+                           <div className="mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+                             <svg className="w-8 h-8 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                             </svg>
                            </div>
+                           <h2 className="text-lg font-semibold text-white mb-2">Ready for Compliance Analysis</h2>
+                           <p className="text-[13px] text-[#9CA3AF] max-w-md leading-relaxed">
+                             Upload inspection photos, ask regulatory questions, or run mock audits to prepare your team.
+                           </p>
                         </div>
+                        
+                        {/* Centered Input */}
+                        <div className="bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl flex items-center shadow-2xl p-1.5">
+                           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImage}/>
+                           
+                           <div className="relative">
+                             <button 
+                               type="button" 
+                               onClick={() => setShowUploadMenu(!showUploadMenu)}
+                               className="p-2.5 text-[#9CA3AF] hover:text-[#3ECF8E] hover:bg-[#1A1A1A] rounded-lg transition-all"
+                             >
+                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                               </svg>
+                             </button>
+                             
+                             {showUploadMenu && (
+                               <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl shadow-2xl overflow-hidden">
+                                 <button
+                                   onClick={() => {
+                                     fileInputRef.current.click()
+                                     setShowUploadMenu(false)
+                                   }}
+                                   className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3 border-b border-[#1F1F1F]"
+                                 >
+                                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+                                     <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                     </svg>
+                                   </div>
+                                   <div>
+                                     <div className="text-[13px] font-semibold text-white">Image Analysis</div>
+                                     <div className="text-[11px] text-[#9CA3AF]">Upload facility photos</div>
+                                   </div>
+                                 </button>
+                                 <button
+                                   onClick={() => {
+                                     setActiveTab('audit')
+                                     setShowUploadMenu(false)
+                                   }}
+                                   className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3"
+                                 >
+                                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+                                     <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                     </svg>
+                                   </div>
+                                   <div>
+                                     <div className="text-[13px] font-semibold text-white">Mock Audit</div>
+                                     <div className="text-[11px] text-[#9CA3AF]">Run compliance checklist</div>
+                                   </div>
+                                 </button>
+                               </div>
+                             )}
+                           </div>
+                           
+                           <input 
+                             value={input} 
+                             onChange={e=>setInput(e.target.value)}
+                             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend(e)}
+                             className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white outline-none placeholder:text-[#6B7280]" 
+                             placeholder="Ask a compliance question..." 
+                           />
+                           <button 
+                             onClick={handleSend} 
+                             disabled={(!input.trim() && !selectedImage) || isSending}
+                             className="p-2.5 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black rounded-lg transition-all shadow-lg shadow-[#3ECF8E]/20 disabled:opacity-30 disabled:bg-[#2C2C2C] disabled:text-[#6B7280] disabled:cursor-not-allowed disabled:shadow-none"
+                           >
+                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7"/>
+                             </svg>
+                           </button>
+                        </div>
+                        
+                        {selectedImage && (
+                          <div className="mt-3 p-2 bg-[#1A1A1A] border border-[#2C2C2C] rounded-lg flex items-center gap-2">
+                            <img src={selectedImage} alt="Preview" className="w-12 h-12 rounded object-cover border border-[#2C2C2C]" />
+                            <span className="text-[11px] text-[#9CA3AF] flex-1">Image ready for analysis</span>
+                            <button onClick={() => setSelectedImage(null)} className="text-[#9CA3AF] hover:text-white transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                      </div>
-                  ))}
-                  {isSending && (
-                    <div className="flex items-center gap-2 text-[#9CA3AF] text-[13px] pl-4">
-                      <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '32px', height: '32px' }} />
-                      <span>Analyzing compliance data...</span>
-                    </div>
+                  ) : (
+                     /* Conversation View - Borderless */
+                     <>
+                       {messages.map((m,i) => (
+                          <div key={i} className={`flex mb-6 ${m.role==='user'?'justify-end':'justify-start'}`}>
+                             <div className={`max-w-[85%] ${m.role==='user'?'':'pl-0'}`}>
+                                {m.image && <img src={m.image} alt="Uploaded" className="mb-3 max-h-64 rounded-lg shadow-xl" />}
+                                <div className={`text-[13px] leading-relaxed whitespace-pre-wrap ${m.role==='user'?'text-white':'text-[#E5E7EB]'}`}>
+                                  {m.content}
+                                </div>
+                             </div>
+                          </div>
+                       ))}
+                       {isSending && (
+                         <div className="flex items-center gap-2 text-[#9CA3AF] text-[13px] mb-6">
+                           <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '32px', height: '32px' }} />
+                           <span>Analyzing compliance data...</span>
+                         </div>
+                       )}
+                     </>
                   )}
                </div>
 
-               <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#121212] via-[#121212] to-transparent pt-10 z-20">
-                  <div className="max-w-3xl mx-auto bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl flex items-center shadow-2xl p-1.5 relative">
-                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImage}/>
-                     
-                     {/* Plus Button with Dropdown */}
-                     <div className="relative">
+               {/* Bottom Input - Only show when messages exist */}
+               {messages.length > 0 && (
+                 <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#121212] via-[#121212] to-transparent pt-10 z-20">
+                    <div className="max-w-3xl mx-auto bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl flex items-center shadow-2xl p-1.5 relative">
+                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImage}/>
+                       
+                       <div className="relative">
+                         <button 
+                           type="button" 
+                           onClick={() => setShowUploadMenu(!showUploadMenu)}
+                           className="p-2.5 text-[#9CA3AF] hover:text-[#3ECF8E] hover:bg-[#1A1A1A] rounded-lg transition-all"
+                         >
+                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                           </svg>
+                         </button>
+                         
+                         {showUploadMenu && (
+                           <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl shadow-2xl overflow-hidden">
+                             <button
+                               onClick={() => {
+                                 fileInputRef.current.click()
+                                 setShowUploadMenu(false)
+                               }}
+                               className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3 border-b border-[#1F1F1F]"
+                             >
+                               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+                                 <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                 </svg>
+                               </div>
+                               <div>
+                                 <div className="text-[13px] font-semibold text-white">Image Analysis</div>
+                                 <div className="text-[11px] text-[#9CA3AF]">Upload facility photos</div>
+                               </div>
+                             </button>
+                             <button
+                               onClick={() => {
+                                 setActiveTab('audit')
+                                 setShowUploadMenu(false)
+                               }}
+                               className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3"
+                             >
+                               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
+                                 <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                 </svg>
+                               </div>
+                               <div>
+                                 <div className="text-[13px] font-semibold text-white">Mock Audit</div>
+                                 <div className="text-[11px] text-[#9CA3AF]">Run compliance checklist</div>
+                               </div>
+                             </button>
+                           </div>
+                         )}
+                       </div>
+                       
+                       <input 
+                         value={input} 
+                         onChange={e=>setInput(e.target.value)}
+                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend(e)}
+                         className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white outline-none placeholder:text-[#6B7280]" 
+                         placeholder="Ask a compliance question..." 
+                       />
                        <button 
-                         type="button" 
-                         onClick={() => setShowUploadMenu(!showUploadMenu)}
-                         className="p-2.5 text-[#9CA3AF] hover:text-[#3ECF8E] hover:bg-[#1A1A1A] rounded-lg transition-all"
+                         onClick={handleSend} 
+                         disabled={(!input.trim() && !selectedImage) || isSending}
+                         className="p-2.5 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black rounded-lg transition-all shadow-lg shadow-[#3ECF8E]/20 disabled:opacity-30 disabled:bg-[#2C2C2C] disabled:text-[#6B7280] disabled:cursor-not-allowed disabled:shadow-none"
                        >
-                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7"/>
                          </svg>
                        </button>
-                       
-                       {/* Dropdown Menu */}
-                       {showUploadMenu && (
-                         <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl shadow-2xl overflow-hidden">
-                           <button
-                             onClick={() => {
-                               fileInputRef.current.click()
-                               setShowUploadMenu(false)
-                             }}
-                             className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3 border-b border-[#1F1F1F]"
-                           >
-                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
-                               <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                               </svg>
-                             </div>
-                             <div>
-                               <div className="text-[13px] font-semibold text-white">Image Analysis</div>
-                               <div className="text-[11px] text-[#9CA3AF]">Upload facility photos</div>
-                             </div>
-                           </button>
-                           <button
-                             onClick={() => {
-                               setActiveTab('audit')
-                               setShowUploadMenu(false)
-                             }}
-                             className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3"
-                           >
-                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
-                               <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                               </svg>
-                             </div>
-                             <div>
-                               <div className="text-[13px] font-semibold text-white">Mock Audit</div>
-                               <div className="text-[11px] text-[#9CA3AF]">Run compliance checklist</div>
-                             </div>
-                           </button>
-                         </div>
-                       )}
-                     </div>
-                     
-                     <input 
-                       value={input} 
-                       onChange={e=>setInput(e.target.value)}
-                       onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend(e)}
-                       className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white outline-none placeholder:text-[#6B7280]" 
-                       placeholder="Ask a compliance question..." 
-                     />
-                     <button 
-                       onClick={handleSend} 
-                       disabled={(!input.trim() && !selectedImage) || isSending}
-                       className="p-2.5 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black rounded-lg transition-all shadow-lg shadow-[#3ECF8E]/20 disabled:opacity-30 disabled:bg-[#2C2C2C] disabled:text-[#6B7280] disabled:cursor-not-allowed disabled:shadow-none"
-                     >
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7"/>
-                       </svg>
-                     </button>
-                  </div>
-                  {selectedImage && (
-                    <div className="max-w-3xl mx-auto mt-2 p-2 bg-[#1A1A1A] border border-[#2C2C2C] rounded-lg flex items-center gap-2">
-                      <img src={selectedImage} alt="Preview" className="w-12 h-12 rounded object-cover border border-[#2C2C2C]" />
-                      <span className="text-[11px] text-[#9CA3AF] flex-1">Image ready for analysis</span>
-                      <button onClick={() => setSelectedImage(null)} className="text-[#9CA3AF] hover:text-white transition-colors">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
                     </div>
-                  )}
-               </div>
+                    {selectedImage && (
+                      <div className="max-w-3xl mx-auto mt-2 p-2 bg-[#1A1A1A] border border-[#2C2C2C] rounded-lg flex items-center gap-2">
+                        <img src={selectedImage} alt="Preview" className="w-12 h-12 rounded object-cover border border-[#2C2C2C]" />
+                        <span className="text-[11px] text-[#9CA3AF] flex-1">Image ready for analysis</span>
+                        <button onClick={() => setSelectedImage(null)} className="text-[#9CA3AF] hover:text-white transition-colors">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                 </div>
+               )}
              </>
          ) : (
              /* AUDIT VIEW */
