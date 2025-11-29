@@ -226,7 +226,7 @@ const ChatInterface = ({ session, onSignOut }) => {
   }
 
   return (
-    <div className="flex h-[100dvh] w-screen bg-[#1C1C1C] text-[#EDEDED] overflow-hidden">
+    <div className="flex h-screen w-full bg-[#1C1C1C] text-[#EDEDED] overflow-hidden fixed inset-0">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -402,7 +402,7 @@ export default function Page() {
   }, [supabase])
 
   if (isLoading) return (
-    <div className="h-screen w-screen bg-[#1C1C1C] flex items-center justify-center">
+    <div className="h-screen w-full bg-[#1C1C1C] flex items-center justify-center fixed inset-0">
       <div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div>
     </div>
   )
@@ -421,42 +421,42 @@ export default function Page() {
         onSuccess={() => setShowAuthModal(false)}
       />
 
-      <div className="min-h-screen bg-[#1C1C1C] text-[#EDEDED] flex flex-col font-sans selection:bg-[#3ECF8E] selection:text-black">
+      <div className="min-h-screen w-full bg-[#1C1C1C] text-[#EDEDED] flex flex-col font-sans selection:bg-[#3ECF8E] selection:text-black overflow-x-hidden">
         {/* Header */}
-        <nav className="fixed top-0 w-full h-16 bg-[#1C1C1C]/80 backdrop-blur border-b border-[#2A2A2A] z-50 flex items-center justify-between px-6 lg:px-12">
-          <div className="font-mono font-bold text-lg tracking-tight">protocol<span className="text-[#3ECF8E]">LM</span></div>
-          <div className="flex gap-4 items-center">
-            <button onClick={() => setShowAuthModal(true)} className="text-sm text-[#888] hover:text-white transition-colors">Log In</button>
-            <button onClick={() => router.push('/pricing')} className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-4 py-2 rounded-md text-sm font-medium transition-colors">Get Started</button>
+        <nav className="fixed top-0 w-full h-16 bg-[#1C1C1C]/95 backdrop-blur-md border-b border-[#2A2A2A] z-50 flex items-center justify-between px-4 sm:px-6 lg:px-12">
+          <div className="font-mono font-bold text-base sm:text-lg tracking-tight">protocol<span className="text-[#3ECF8E]">LM</span></div>
+          <div className="flex gap-2 sm:gap-4 items-center">
+            <button onClick={() => setShowAuthModal(true)} className="text-xs sm:text-sm text-[#888] hover:text-white transition-colors px-2 sm:px-0">Log In</button>
+            <button onClick={() => router.push('/pricing')} className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap">Get Started</button>
           </div>
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 pt-32 px-4 flex flex-col items-center justify-center text-center pb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#333] bg-[#232323] text-xs text-[#888] mb-8">
+        <main className="flex-1 w-full pt-24 sm:pt-32 px-4 flex flex-col items-center justify-center text-center pb-12 sm:pb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#333] bg-[#232323] text-xs text-[#888] mb-6 sm:mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-[#3ECF8E]"></span>
             Updated for 2025 Food Code
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-semibold text-white mb-6 tracking-tight max-w-3xl">
-            AI Compliance Officer <br/> <span className="text-[#888]">for your kitchen.</span>
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold text-white mb-4 sm:mb-6 tracking-tight max-w-3xl px-4">
+            AI Compliance Officer <br className="hidden sm:block" /> <span className="text-[#888]">for your kitchen.</span>
           </h1>
           
-          <p className="text-[#666] text-lg mb-8 max-w-xl">
+          <p className="text-[#666] text-base sm:text-lg mb-6 sm:mb-8 max-w-xl px-4">
             Prevent violations before the health inspector arrives. Instant answers, mock audits, and image analysis.
           </p>
 
-          <div className="flex gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-12 w-full max-w-sm sm:max-w-none px-4">
             <button 
               onClick={() => router.push('/pricing')}
-              className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-6 py-3 rounded-lg font-bold transition-colors flex items-center gap-2"
+              className="bg-[#3ECF8E] hover:bg-[#34D399] text-black px-6 py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <Icons.Sparkles />
               Start Free Trial
             </button>
             <button 
               onClick={() => setShowAuthModal(true)}
-              className="bg-[#232323] hover:bg-[#2A2A2A] border border-[#333] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="bg-[#232323] hover:bg-[#2A2A2A] border border-[#333] text-white px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
             >
               Sign In
             </button>
@@ -469,17 +469,17 @@ export default function Page() {
               <div className="w-3 h-3 rounded-full bg-[#FEBC2E]"></div>
               <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
             </div>
-            <div className="p-6 space-y-4 min-h-[400px] bg-[#1C1C1C]">
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">U</div>
-                <div className="flex-1 bg-[#232323] border border-[#333] rounded-lg p-3 text-sm text-[#EDEDED]">
+            <div className="p-4 sm:p-6 space-y-4 min-h-[300px] sm:min-h-[400px] bg-[#1C1C1C]">
+              <div className="flex gap-3 sm:gap-4">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">U</div>
+                <div className="flex-1 bg-[#232323] border border-[#333] rounded-lg p-3 text-xs sm:text-sm text-[#EDEDED]">
                   Is 48°F acceptable for a walk-in cooler holding raw chicken?
                 </div>
               </div>
               
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded bg-[#232323] border border-[#333] flex items-center justify-center shrink-0 text-[#3ECF8E] text-xs font-mono">AI</div>
-                <div className="flex-1 text-sm text-[#CCC] leading-relaxed">
+              <div className="flex gap-3 sm:gap-4">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-[#232323] border border-[#333] flex items-center justify-center shrink-0 text-[#3ECF8E] text-xs font-mono">AI</div>
+                <div className="flex-1 text-xs sm:text-sm text-[#CCC] leading-relaxed">
                   <p className="mb-3"><span className="text-red-400 font-bold">❌ VIOLATION:</span> NO - 48°F is not acceptable.</p>
                   <p className="mb-3">Per Michigan Modified Food Code (3-501.16), TCS foods like raw chicken must be held at <span className="text-white font-bold">41°F or below</span>.</p>
                   <p className="text-[#888]"><strong className="text-white">Action Required:</strong> Discard if time/temperature unknown, or rapid chill immediately and document corrective action.</p>
@@ -488,7 +488,7 @@ export default function Page() {
             </div>
           </div>
 
-          <p className="mt-8 text-xs text-[#555]">
+          <p className="mt-6 sm:mt-8 text-xs text-[#555] px-4">
             Try it now — no credit card required for 30-day trial
           </p>
         </main>
