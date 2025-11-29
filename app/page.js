@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// CUSTOM STYLES (Loader & Body Fix)
+// CUSTOM STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -13,7 +13,6 @@ const GlobalStyles = () => (
       background-color: #000000 !important;
       overscroll-behavior: none;
     }
-    /* Loader for "Thinking" state */
     .loader {
       height: 20px;
       aspect-ratio: 2.5;
@@ -39,7 +38,6 @@ const GlobalStyles = () => (
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  // Rotated 45 degrees so it points straight right
   Send: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(45deg)' }}>
       <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -50,7 +48,6 @@ const Icons = {
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
-  User: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
   Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
 }
 
@@ -67,12 +64,15 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* Container - Supabase Style */}
+      {/* 
+        Changes here: 
+        1. focus-within:ring-0 (Removes the halo)
+        2. focus-within:border-[#3ECF8E] (Supabase Green Border on click)
+      */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#404040]"
+        className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0"
       >
-        {/* Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -89,7 +89,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           className="hidden"
         />
 
-        {/* Text Area */}
         <textarea
           ref={inputRef}
           value={input}
@@ -106,18 +105,17 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
 
-        {/* Send Button - Supabase Button Style */}
         <button
           type="submit"
           disabled={(!input.trim() && !selectedImage) || isSending}
           className={`p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center ${
             (input.trim() || selectedImage) && !isSending
-              ? 'bg-[#3E7BFA] border-[#3E7BFA] text-white hover:bg-[#3469d4] hover:border-[#3469d4]'
+              ? 'bg-[#3ECF8E] border-[#3ECF8E] text-[#050505] hover:bg-[#34b27b] hover:border-[#34b27b]'
               : 'bg-[#2E2E2E] border-[#2E2E2E] text-[#525252] cursor-not-allowed'
           }`}
         >
           {isSending ? (
-            <div className="w-4 h-4 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-black/50 border-t-transparent rounded-full animate-spin" />
           ) : (
             <Icons.Send />
           )}
@@ -325,12 +323,10 @@ export default function Page() {
 
   const handleSignOut = async (e) => {
     if (e && e.preventDefault) e.preventDefault()
-    
     setSession(null)
     setProfile(null)
     setMessages([])
     setShowUserMenu(false)
-
     try {
       await supabase.auth.signOut()
     } catch (error) {
@@ -346,7 +342,6 @@ export default function Page() {
     if ((!input.trim() && !selectedImage) || isSending) return
 
     if (!session) {
-      // CHANGED: Specific message about the trial
       setAuthModalMessage('Start your 30-day free trial to chat')
       setShowAuthModal(true)
       return
@@ -425,7 +420,7 @@ export default function Page() {
     setSidebarOpen(false)
   }
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin"></div></div>
+  if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div></div>
 
   return (
     <>
@@ -437,10 +432,10 @@ export default function Page() {
         {/* Mobile Overlay */}
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#000000] border-r border-[#1C1C1C] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+        {/* Sidebar - Added subtle Supabase Green right border */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#000000] border-r border-[#3ECF8E]/20 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
-            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3E7BFA] rounded-lg transition-all group">
+            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3ECF8E] rounded-lg transition-all group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
             </button>
           </div>
@@ -453,7 +448,7 @@ export default function Page() {
             <div className="p-3 border-t border-[#1C1C1C]">
               <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
-                  <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
+                  <div className="w-8 h-8 rounded-full bg-[#3ECF8E] flex items-center justify-center text-xs font-bold text-[#050505] shadow-lg shadow-emerald-900/20">
                     {session.user.email[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -476,7 +471,7 @@ export default function Page() {
             </div>
           ) : (
             <div className="p-3 border-t border-[#1C1C1C]">
-              <button onClick={() => setShowAuthModal(true)} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2 rounded-lg text-sm transition-colors shadow-lg shadow-blue-900/20">
+              <button onClick={() => setShowAuthModal(true)} className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#050505] font-medium py-2 rounded-lg text-sm transition-colors shadow-lg shadow-emerald-900/20">
                 Sign in
               </button>
             </div>
@@ -496,25 +491,26 @@ export default function Page() {
             /* ================================== */
             /* LOGGED OUT VIEW (Centered) */
             /* ================================== */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full">
-              {/* Updated Header Font (Supabase Style) */}
-              <h1 className="text-3xl md:text-5xl text-white mb-4 text-center tracking-tight font-sans">
-                Washtenaw Food Safety
-              </h1>
-
-              {/* NEW: 30-Day Free Trial Badge/Pill */}
+            <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
+              
+              {/* Pill moved ABOVE header, changed to Supabase Green style */}
               <button 
                 onClick={() => setShowAuthModal(true)}
-                className="mb-8 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3E7BFA]/10 border border-[#3E7BFA]/30 hover:border-[#3E7BFA] hover:bg-[#3E7BFA]/20 transition-all cursor-pointer group"
+                className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/20 transition-all cursor-pointer group"
               >
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-[#3E7BFA] text-sm font-medium group-hover:text-blue-300">
-                  Start your 30-day free trial
+                <span className="text-[#3ECF8E] text-xs font-bold uppercase tracking-wider group-hover:text-emerald-300">
+                  Start 30-day free trial
                 </span>
               </button>
+
+              {/* Header below pill, tighter to input box, Supabase Font */}
+              <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
+                Washtenaw Food Safety
+              </h1>
 
               <div className="w-full max-w-2xl">
                 <InputBox
