@@ -1,19 +1,27 @@
 'use client'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Script from 'next/script'
-import Image from 'next/image'
+import { createClient } from '@/lib/supabase-browser'
 import SessionGuard from '@/components/SessionGuard'
 
-// --- CONSTANTS & DATA ---
-const SUGGESTIONS = [
-  { heading: 'Cold Storage', text: 'What happens if my walk-in is at 48°F?' },
-  { heading: 'Cooling Process', text: 'How fast must I cool chili from 135°F to 41°F?' },
-  { heading: 'Emergency', text: 'What is considered an imminent health hazard?' },
-  { heading: 'Illness Policy', text: 'Protocol for employee vomiting in kitchen?' },
-]
+// --- CONSTANTS (from Documents page) ---
+const COUNTY_LABELS: Record<string, string> = {
+  washtenaw: 'Washtenaw County',
+  wayne: 'Wayne County',
+  oakland: 'Oakland County',
+}
+
+const COUNTY_SUGGESTIONS: Record<string, string[]> = {
+  washtenaw: [
+    'What happens if my walk-in is at 48°F during an inspection?',
+    'How fast do I have to cool chili from 135°F to 41°F?',
+    'What is considered an imminent health hazard?',
+    'Do I have to throw away food if an employee vomits?',
+  ],
+  wayne: [],
+  oakland: [],
+}
 
 const AUDIT_CHECKLIST = [
   {
@@ -23,371 +31,1351 @@ const AUDIT_CHECKLIST = [
       { id: 'hot_holding', label: 'Hot holding at 135°F or above', critical: true },
       { id: 'cooking_temps', label: 'Proper cooking temperatures documented', critical: true },
       { id: 'cooling', label: 'Cooling procedures (135°F to 70°F in 2hrs)', critical: true },
-      { id: 'thermometers', label: 'Calibrated thermometers available', critical: false }
-    ]
+      { id: 'thermometers', label: 'Calibrated thermometers available', critical: false },
+    ],
   },
   {
     category: 'Personal Hygiene',
     items: [
       { id: 'handwashing', label: 'Handwashing sinks accessible and stocked', critical: true },
       { id: 'hand_antiseptic', label: 'Hand antiseptic used properly', critical: false },
-      { id: 'no_bare_hand', label: 'No bare hand contact with RTE foods', critical: true }
-    ]
+      { id: 'no_bare_hand', label: 'No bare hand contact with RTE foods', critical: true },
+      { id: 'hair_restraints', label: 'Hair restraints worn properly', critical: false },
+      { id: 'jewelry', label: 'No jewelry on hands/arms', critical: false },
+    ],
   },
   {
-    category: 'Facility & Equipment',
+    category: 'Cross Contamination',
     items: [
-      { id: 'three_comp_sink', label: '3-compartment sink setup correct', critical: true },
-      { id: 'pest_control', label: 'No evidence of pests', critical: true }
-    ]
-  }
+      { id: 'storage_separation', label: 'Raw meats stored below RTE foods', critical: true },
+      { id: 'cutting_boards', label: 'Color-coded cutting boards used', critical: false },
+      { id: 'wiping_cloths', label: 'Wiping cloths stored in sanitizer', critical: false },
+      { id: 'equipment_cleaning', label: 'Food contact surfaces sanitized', critical: true },
+    ],
+  },
 ]
 
-function classNames(...parts) { return parts.filter(Boolean).join(' ') }
+function classNames(...parts: (string | false | null | undefined)[]) {
+  return parts.filter(Boolean).join(' ')
+}
 
-// ==========================================
-// 1. THE LANDING PAGE (Logged Out)
-// ==========================================
+// --- AUTH MODAL (from landing) ---
+const AuthModal = ({
+  isOpen,
+  onClose,
+  defaultView = 'login',
+}: {
+  isOpen: boolean
+  onClose: () => void
+  defaultView?: 'login' | 'signup'
+}) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
+  const [view, setView] = useState<'login' | 'signup'>(defaultView)
+  const supabase = createClient()
 
-const LandingPage = ({ onAuth }) => {
-  // -- MARKETING DEMO STATE --
-  const [messages, setMessages] = useState([])
-  const [inputValue, setInputValue] = useState('')
-  const [isThinking, setIsThinking] = useState(false)
-  const scrollRef = useRef(null)
-
-  // Auto-typing logic for the demo
   useEffect(() => {
-    let isMounted = true
-    const wait = (ms) => new Promise(r => setTimeout(r, ms))
-    const typeChar = async (char) => {
-      setInputValue((prev) => prev + char)
-      await wait(35)
+    setView(defaultView)
+    setMessage(null)
+  }, [isOpen, defaultView])
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setMessage(null)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+        },
+      })
+      if (error) throw error
+    } catch (error: any) {
+      console.error('Google sign-in error:', error)
+      setMessage({ type: 'error', text: error.message })
+      setLoading(false)
     }
-    
-    const runDemo = async () => {
-      const sequence = [
-        { text: "We received a 'Chronic Violation' notice. Implications?", response: "ACTION REQUIRED: A Chronic Violation triggers an Administrative Conference. Failure to submit a Risk Control Plan results in license limitation." },
-        { text: "Can I serve a rare burger to a 10-year-old?", response: "VIOLATION: No. Michigan Modified Food Code strictly prohibits serving undercooked ground beef to Highly Susceptible Populations (children)." }
-      ]
-
-      while(isMounted) {
-        for (const step of sequence) {
-          if(!isMounted) return
-          setInputValue(''); await wait(1000)
-          for (const char of step.text) { if(!isMounted) return; await typeChar(char) }
-          await wait(400)
-          setMessages(p => [...p, {role: 'user', content: step.text}])
-          setInputValue('')
-          setIsThinking(true); await wait(2000); setIsThinking(false)
-          setMessages(p => [...p, {role: 'assistant', content: step.response}])
-          await wait(4000)
-        }
-        setMessages(prev => prev.slice(-2))
-      }
-    }
-    runDemo()
-    return () => { isMounted = false }
-  }, [])
-
-  // Auto-scroll demo
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages, isThinking])
-
-  // Demo Formatting
-  const formatDemo = (text) => {
-    if (text.includes('ACTION REQUIRED')) return <span><span className="text-red-500 font-bold">ACTION REQUIRED</span>{text.replace('ACTION REQUIRED', '')}</span>
-    if (text.includes('VIOLATION')) return <span><span className="text-red-500 font-bold">VIOLATION</span>{text.replace('VIOLATION', '')}</span>
-    return text
   }
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
+    try {
+      if (view === 'signup') {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: { county: 'washtenaw' },
+          },
+        })
+        if (error) throw error
+        if (data?.user && !data?.session) {
+          setMessage({ type: 'success', text: 'Check your email.' })
+        } else if (data?.session) {
+          window.location.href = '/accept-terms'
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('is_subscribed, accepted_terms, accepted_privacy')
+          .eq('id', data.session.user.id)
+          .single()
+
+        if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+          window.location.href = '/accept-terms'
+        } else if (profile?.is_subscribed) {
+          // You *could* redirect to '/' now that home is the main console.
+          window.location.href = '/documents'
+        } else {
+          window.location.href = '/pricing'
+        }
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
   return (
-    <div className="min-h-screen flex flex-col relative bg-[#121212] text-[#ECECEC]">
-       <nav className="fixed top-0 w-full h-16 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur z-50 flex items-center justify-between px-6">
-         <div className="text-lg font-bold tracking-tight">protocol<span className="text-blue-600">LM</span></div>
-         <div className="hidden md:flex gap-6 items-center">
-           <a href="/pricing" className="text-xs font-bold text-neutral-500 hover:text-white uppercase tracking-wider">Pricing</a>
-           <button onClick={() => onAuth('login')} className="text-xs font-bold text-neutral-500 hover:text-white uppercase tracking-wider">Log In</button>
-           <button onClick={() => onAuth('signup')} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full text-xs font-bold transition-all uppercase tracking-wider shadow-lg">Start Free Trial</button>
-         </div>
-         <button onClick={() => onAuth('login')} className="md:hidden text-xs font-bold text-blue-500">Log In</button>
-       </nav>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      />
+      <div className="w-full max-w-[380px] bg-[#1C1C1C] border border-[#2C2C2C] shadow-2xl p-8 rounded-md relative animate-in zoom-in-95 slide-in-from-bottom-4 duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#666] hover:text-white transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-       <div className="flex-1 flex flex-col items-center pt-24 px-4 pb-12 z-10">
-          <div className="w-full max-w-5xl text-center mb-8">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-white tracking-tight leading-tight mb-3 md:whitespace-nowrap">
-              Train your team before the inspector arrives
-            </h1>
-            <p className="text-[14px] text-[#888] leading-relaxed max-w-3xl mx-auto">
-              Instant answers from <strong>Washtenaw County</strong> regulations, <strong>Michigan Food Law</strong>, and <strong>FDA Code</strong>.
-            </p>
+        <div className="text-center mb-8">
+          <h2 className="text-lg font-medium text-[#EDEDED] tracking-tight">
+            {view === 'signup' ? 'Create Account' : 'Sign In'}
+          </h2>
+        </div>
+
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 p-2.5 bg-[#232323] text-[#EDEDED] border border-[#333333] hover:bg-[#2C2C2C] hover:border-[#444] transition-all disabled:opacity-50 mb-6 rounded-md"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          <span className="text-sm font-medium">Google</span>
+        </button>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#2C2C2C]" />
           </div>
-
-          {/* THE DEMO BOX */}
-          <div className="w-full max-w-5xl h-[500px] bg-[#1C1C1C] border border-[#2C2C2C] rounded-xl shadow-2xl overflow-hidden flex flex-col">
-             <div className="h-10 bg-[#232323] border-b border-[#2C2C2C] flex items-center justify-between px-4">
-                <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-mono">Protocol_LM // Preview</span>
-                <div className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div><span className="text-[10px] text-green-500 font-bold uppercase">Live</span></div>
-             </div>
-             <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto custom-scroll space-y-4">
-                {messages.map((m,i) => (
-                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                     <div className={`max-w-[85%] p-3.5 text-sm leading-relaxed rounded-xl ${m.role==='user'?'bg-[#252525] text-white border border-[#333]':'text-[#DDD]'}`}>
-                        {m.role === 'assistant' ? formatDemo(m.content) : m.content}
-                     </div>
-                  </div>
-                ))}
-                {isThinking && <div className="pl-2"><dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{width:'30px',height:'30px'}} /></div>}
-             </div>
-             <div className="p-4 bg-[#232323] border-t border-[#2C2C2C]">
-                <div className="flex items-center gap-3 bg-[#161616] border border-[#333] px-4 py-3 rounded-lg">
-                  <span className="text-blue-600 text-xs font-mono">{'>'}</span>
-                  <div className="flex-1 text-sm text-[#CCC] relative min-h-[20px]">{inputValue}{isTyping&&<span className="inline-block w-1.5 h-4 bg-blue-600 ml-1 align-middle animate-pulse"/>}</div>
-                </div>
-             </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-[#1C1C1C] text-[#666]">Or</span>
           </div>
+        </div>
 
-          {/* Mobile Only CTA */}
-          <div className="mt-8 md:hidden w-full flex justify-center">
-            <button onClick={() => onAuth('signup')} className="bg-blue-600 text-white px-8 py-3 rounded-full text-sm font-bold shadow-lg w-full max-w-xs">Start Free Trial</button>
-          </div>
-       </div>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]"
+            placeholder="Email"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full p-2.5 bg-[#161616] border border-[#333333] focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/20 outline-none text-[#EDEDED] text-sm rounded-md transition-all placeholder-[#555]"
+            placeholder="Password"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] font-semibold py-2.5 rounded-md text-sm transition-all disabled:opacity-50 mt-2 shadow-[0_0_10px_rgba(62,207,142,0.2)]"
+          >
+            {loading ? 'Processing...' : view === 'signup' ? 'Create Account' : 'Sign In'}
+          </button>
+        </form>
 
-       <footer className="py-8 border-t border-[#2C2C2C] text-center text-xs text-[#666] relative z-10 mt-auto">
-         <div className="flex justify-center gap-6 items-center">
-           <a href="/terms" className="hover:text-white">Terms</a>
-           <a href="/privacy" className="hover:text-white">Privacy</a>
-           <span>|</span>
-           <span className="uppercase tracking-widest">© 2025 protocolLM</span>
-         </div>
-       </footer>
+        {message && (
+          <p
+            className={classNames(
+              'mt-4 text-xs text-center',
+              message.type === 'error' ? 'text-red-400' : 'text-[#3ECF8E]'
+            )}
+          >
+            {message.text}
+          </p>
+        )}
+
+        <div className="mt-6 pt-6 border-t border-[#2C2C2C] text-center">
+          <button
+            onClick={() => setView(view === 'signup' ? 'login' : 'signup')}
+            className="text-xs text-[#888] hover:text-[#3ECF8E] transition-colors"
+          >
+            {view === 'signup' ? 'Have an account? Sign in' : 'No account? Sign up'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
 
+// --- CHAT + AUDIT CONSOLE (from Documents page, adapted) ---
+type ConsoleProps = {
+  onFirstInteraction?: () => void
+  onRequireAuth?: () => void
+}
 
-// ==========================================
-// 2. THE DASHBOARD (Logged In - Real App)
-// ==========================================
-const Dashboard = ({ user, signOut }) => {
-  const [activeTab, setActiveTab] = useState('chat')
-  const [messages, setMessages] = useState([])
+const ComplianceConsole = ({ onFirstInteraction, onRequireAuth }: ConsoleProps) => {
+  const router = useRouter()
+  const supabase = createClient()
+
+  // --- STATE (from DocumentsPage) ---
+  const [activeTab, setActiveTab] = useState<'chat' | 'audit'>('chat')
+  const [activeCounty] = useState<'washtenaw' | 'wayne' | 'oakland'>('washtenaw')
+  const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  
-  // Audit State
-  const [auditResults, setAuditResults] = useState({})
-  const [expandedCategories, setExpandedCategories] = useState({})
+  const [hasInteracted, setHasInteracted] = useState(false)
 
-  const fileInputRef = useRef(null)
-  const scrollRef = useRef(null)
-  
-  // Mock subscription check
-  const userPlan = 'pro' 
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
-  // --- Real Chat Logic ---
-  const handleSend = async (e) => {
+  const [userEmail, setUserEmail] = useState('')
+  const [userId, setUserId] = useState<string | null>(null)
+  const [userPlan, setUserPlan] = useState<'guest' | 'starter' | 'pro' | 'enterprise'>('guest')
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  // Mock Audit State
+  const [auditResults, setAuditResults] = useState<Record<string, 'pass' | 'fail' | 'na' | undefined>>({})
+  const [auditNotes, setAuditNotes] = useState<Record<string, string>>({})
+  const [auditImages, setAuditImages] = useState<Record<string, string>>({})
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
+
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const auditImageInputRef = useRef<HTMLInputElement | null>(null)
+  const [currentAuditImageItem, setCurrentAuditImageItem] = useState<string | null>(null)
+
+  // --- EFFECTS ---
+  useEffect(() => {
+    let cancelled = false
+    async function loadUser() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          if (!cancelled) {
+            setUserPlan('guest')
+            setLoadingUser(false)
+          }
+          return
+        }
+        if (!cancelled) {
+          setUserEmail(user.email || '')
+          setUserId(user.id)
+
+          const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('plan')
+            .eq('user_id', user.id)
+            .single()
+
+          if (sub?.plan) {
+            setUserPlan(sub.plan as any)
+          } else {
+            setUserPlan('starter')
+          }
+        }
+      } catch (err) {
+        console.error('Error loading user', err)
+      } finally {
+        if (!cancelled) setLoadingUser(false)
+      }
+    }
+    loadUser()
+    return () => {
+      cancelled = true
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    if (!scrollRef.current) return
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages])
+
+  // --- HANDLERS ---
+  const markInteracted = () => {
+    if (!hasInteracted) {
+      setHasInteracted(true)
+      onFirstInteraction?.()
+    }
+  }
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+    e.target.value = ''
+  }
+
+  const removeImage = () => setSelectedImage(null)
+
+  const handleAuditImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && currentAuditImageItem) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAuditImages((prev) => ({
+          ...prev,
+          [currentAuditImageItem]: reader.result as string,
+        }))
+      }
+      reader.readAsDataURL(file)
+    }
+    e.target.value = ''
+    setCurrentAuditImageItem(null)
+  }
+
+  const triggerAuditImageUpload = (itemId: string) => {
+    setCurrentAuditImageItem(itemId)
+    auditImageInputRef.current?.click()
+  }
+
+  const removeAuditImage = (itemId: string) => {
+    setAuditImages((prev) => {
+      const newImages = { ...prev }
+      delete newImages[itemId]
+      return newImages
+    })
+  }
+
+  async function handleSend(e?: React.FormEvent) {
     if (e) e.preventDefault()
-    if ((!input.trim() && !selectedImage) || isSending) return
 
-    const newMsg = { role: 'user', content: input, image: selectedImage }
-    setMessages(prev => [...prev, newMsg])
-    setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true)
+    const trimmed = input.trim()
+    if ((!trimmed && !selectedImage) || isSending) return
+
+    markInteracted()
+
+    const newUserMessage = {
+      role: 'user',
+      content: trimmed,
+      image: selectedImage,
+    }
+
+    setMessages((prev) => [...prev, newUserMessage])
+    setInput('')
+    const imageToSend = selectedImage
+    setSelectedImage(null)
+    setIsSending(true)
+
+    // Placeholder assistant bubble
+    setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
 
     try {
-      // Call your actual API route
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ messages: [...messages, newMsg], image: img, county: 'washtenaw' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, newUserMessage],
+          image: imageToSend,
+          county: activeCounty,
+        }),
       })
+
+      if (res.status === 401) {
+        // Unauthenticated
+        setMessages((prev) => {
+          const updated = [...prev]
+          updated[updated.length - 1] = {
+            role: 'assistant',
+            content:
+              'You need a ProtocolLM account to use the live console. Click “Log in” or “Start Free Trial” to continue.',
+          }
+          return updated
+        })
+        onRequireAuth?.()
+        return
+      }
+
+      if (!res.ok) {
+        setMessages((prev) => {
+          const updated = [...prev]
+          updated[updated.length - 1] = {
+            role: 'assistant',
+            content: 'Connection error. Please check your network.',
+          }
+          return updated
+        })
+        return
+      }
+
       const data = await res.json()
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message || "No response." }])
+      const replyText = data?.message || 'Error processing request.'
+
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: replyText,
+        }
+        return updated
+      })
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Error connecting to server." }])
+      console.error(err)
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: 'Network error. Please try again.',
+        }
+        return updated
+      })
     } finally {
       setIsSending(false)
     }
   }
 
-  const handleImage = (e) => {
-    if(e.target.files?.[0]) {
-      const r = new FileReader(); 
-      r.onloadend = () => setSelectedImage(r.result)
-      r.readAsDataURL(e.target.files[0])
+  const handleSuggestionClick = (text: string) => {
+    markInteracted()
+    setInput(text)
+    if (inputRef.current) inputRef.current.focus()
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setUserId(null)
+    setUserEmail('')
+    setUserPlan('guest')
+    router.push('/')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
     }
   }
 
-  // --- Dashboard JSX ---
+  // Audit logic
+  const handleAuditChange = (itemId: string, status: 'pass' | 'fail' | 'na') => {
+    setAuditResults((prev) => ({ ...prev, [itemId]: status }))
+  }
+
+  const handleNoteChange = (itemId: string, note: string) => {
+    setAuditNotes((prev) => ({ ...prev, [itemId]: note }))
+  }
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => ({ ...prev, [category]: !prev[category] }))
+  }
+
+  const generateAuditReport = () => {
+    const totalItems = AUDIT_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)
+    const completedItems = Object.keys(auditResults).length
+    const failedItems = Object.values(auditResults).filter((v) => v === 'fail').length
+
+    let report = `PROTOCOL_LM AUDIT REPORT\n`
+    report += `Date: ${new Date().toLocaleString()}\n`
+    report += `Items Checked: ${completedItems}/${totalItems}\n`
+    report += `Issues Found: ${failedItems}\n`
+
+    const blob = new Blob([report], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Audit-Report.txt`
+    a.click()
+  }
+
+  const clearAudit = () => {
+    if (confirm('Clear audit data?')) {
+      setAuditResults({})
+      setAuditNotes({})
+      setAuditImages({})
+    }
+  }
+
+  const suggestions = COUNTY_SUGGESTIONS[activeCounty] || []
+  const hasMockAuditAccess = userPlan === 'pro' || userPlan === 'enterprise'
+
   return (
-    <div className="flex h-screen bg-[#121212] text-[#ECECEC] overflow-hidden selection:bg-blue-600 selection:text-white">
-      {/* SIDEBAR (ChatGPT Style) */}
-      <div className={`fixed inset-y-0 left-0 w-[260px] bg-[#171717] border-r border-[#333] z-50 transition-transform duration-300 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-         <div className="h-14 flex items-center px-4 border-b border-[#333]">
-           <div className="font-bold tracking-tight text-white">protocol<span className="text-blue-500">LM</span></div>
-         </div>
-         <div className="p-3 flex-1 overflow-y-auto">
-           <div className="text-[10px] font-bold text-[#666] mb-2 px-2 uppercase tracking-wider">History</div>
-           {messages.length === 0 && <div className="px-2 text-xs text-[#444]">No history</div>}
-           {messages.filter(m => m.role === 'user').map((m, i) => (
-             <button key={i} className="w-full text-left px-3 py-2 text-sm text-[#AAA] hover:bg-[#222] rounded truncate transition-colors">{m.content || 'Image Query'}</button>
-           ))}
-         </div>
-         <div className="p-3 border-t border-[#333] bg-[#171717]">
-            <div className="flex items-center gap-3 px-2 py-2 hover:bg-[#222] rounded cursor-pointer">
-               <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-white truncate">{user.email}</div>
-                  <button onClick={signOut} className="text-[10px] text-red-400 hover:text-red-300">Log Out</button>
-               </div>
-            </div>
-         </div>
-      </div>
-      
-      {/* MOBILE OVERLAY */}
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+    <div className="w-full h-full bg-[#121212] text-[#EDEDED] flex rounded-md border border-[#2C2C2C] overflow-hidden">
+      {/* SESSION GUARD */}
+      {userId && <SessionGuard userId={userId} />}
 
-      {/* MAIN AREA */}
-      <div className="flex-1 flex flex-col relative">
-         {/* Mobile Header */}
-         <header className="h-14 border-b border-[#333] bg-[#121212]/90 flex items-center justify-between px-4 lg:px-8 z-20 sticky top-0">
-            <div className="flex items-center gap-3">
-               <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#888]"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-               <div className="flex bg-[#222] p-1 rounded">
-                  <button onClick={() => setActiveTab('chat')} className={`px-3 py-1 text-xs font-bold rounded ${activeTab === 'chat' ? 'bg-[#333] text-white shadow' : 'text-[#888]'}`}>Chat</button>
-                  <button onClick={() => setActiveTab('audit')} className={`px-3 py-1 text-xs font-bold rounded ${activeTab === 'audit' ? 'bg-[#333] text-white shadow' : 'text-[#888]'}`}>Audit</button>
-               </div>
-            </div>
-         </header>
+      {/* SIDEBAR */}
+      <aside className="hidden lg:flex lg:flex-col w-72 bg-[#1C1C1C] border-r border-[#2C2C2C] z-10">
+        <div className="h-16 flex items-center px-6 border-b border-[#2C2C2C]">
+          <div className="text-lg font-bold tracking-tight text-white">
+            protocol<span className="text-[#3B82F6]">LM</span>
+          </div>
+        </div>
 
-         {/* CONTENT */}
-         {activeTab === 'chat' ? (
-            <div className="flex-1 flex flex-col relative overflow-hidden">
-               <div className="flex-1 overflow-y-auto p-4 lg:p-0 lg:w-full lg:max-w-3xl lg:mx-auto pt-6">
-                  {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                       <div className="w-12 h-12 bg-[#1F1F1F] rounded-full flex items-center justify-center mb-4 shadow-lg border border-[#333]"><span className="text-xl">⚡️</span></div>
-                       <h2 className="text-white font-bold text-xl">ProtocolLM</h2>
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-xl mt-8">
-                          {SUGGESTIONS.map((s, i) => (
-                             <button key={i} onClick={() => setInput(s.text)} className="p-4 bg-[#18181B] border border-[#333] hover:bg-[#222] rounded-xl text-left transition-colors">
-                                <div className="text-xs font-bold text-gray-400 mb-1">{s.heading}</div>
-                                <div className="text-xs text-gray-200 truncate">{s.text}</div>
-                             </button>
-                          ))}
-                       </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-8 custom-scroll">
+          {/* Jurisdiction */}
+          <div>
+            <div className="px-2 mb-3 flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-[#888] uppercase tracking-wider">
+                Jurisdiction
+              </span>
+            </div>
+            <div className="space-y-1">
+              <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-medium bg-[#252525] border border-[#3B82F6]/30 text-white shadow-sm cursor-default">
+                <span>Washtenaw County</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+              </button>
+              <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-medium text-[#555] cursor-not-allowed border border-transparent">
+                <span>Wayne County</span>
+                <span className="text-[9px] uppercase tracking-wide font-bold opacity-50">Soon</span>
+              </button>
+              <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-medium text-[#555] cursor-not-allowed border border-transparent">
+                <span>Oakland County</span>
+                <span className="text-[9px] uppercase tracking-wide font-bold opacity-50">Soon</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Recent Inquiries */}
+          <div className="flex-1">
+            <div className="px-2 mb-3">
+              <span className="text-[10px] font-semibold text-[#888] uppercase tracking-wider">
+                Recent Inquiries
+              </span>
+            </div>
+            {messages.filter((m) => m.role === 'user').length === 0 ? (
+              <div className="px-3 py-6 text-center border border-dashed border-[#333] rounded-md">
+                <span className="text-[11px] text-[#555] font-medium">History Clear</span>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {messages
+                  .filter((m) => m.role === 'user')
+                  .slice(-6)
+                  .reverse()
+                  .map((m, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative flex items-start gap-3 px-3 py-2.5 rounded-md hover:bg-[#252525] transition-colors cursor-pointer border border-transparent hover:border-[#333]"
+                    >
+                      <div className="mt-1.5 w-1 h-1 rounded-full bg-[#555] group-hover:bg-[#3B82F6] transition-colors flex-shrink-0" />
+                      <span className="text-[12px] text-[#CCC] font-medium line-clamp-1 truncate">
+                        {m.content || 'Image Analysis'}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="space-y-6 pb-12">
-                       {messages.map((msg, i) => (
-                          <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                             {msg.role === 'assistant' && <div className="w-8 h-8 rounded-full bg-green-500/10 border border-green-500/50 flex items-center justify-center shrink-0"><div className="w-4 h-4 bg-green-500 rounded-sm"/></div>}
-                             <div className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-[#2F2F2F] text-white' : 'text-gray-100'}`}>
-                                {msg.image && <img src={msg.image} className="mb-3 rounded-lg border border-[#444]" />}
-                                <div className="whitespace-pre-wrap">{msg.content}</div>
-                             </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar footer */}
+        <div className="p-4 border-t border-[#2C2C2C] bg-[#18181B]">
+          <div className="flex items-center justify-between gap-3 p-2 rounded-md">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-white truncate">
+                {loadingUser ? 'Guest' : userEmail || 'Guest'}
+              </p>
+              <p className="text-[10px] text-[#888] font-medium uppercase mt-0.5">
+                {userPlan} Plan
+              </p>
+            </div>
+            {userId && (
+              <button
+                onClick={handleSignOut}
+                className="p-2 text-[#666] hover:text-white transition-colors"
+                title="Sign Out"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* MAIN COLUMN */}
+      <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-[#121212]">
+        {/* Header */}
+        <header className="h-16 flex-shrink-0 bg-[#121212]/80 backdrop-blur-md border-b border-[#2C2C2C] flex items-center justify-between px-4 md:px-6 z-10">
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden text-lg font-bold text-white tracking-tight">
+              protocol<span className="text-[#3B82F6]">LM</span>
+            </div>
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="w-1.5 h-4 bg-[#3B82F6] rounded-sm" />
+              <h1 className="text-sm font-bold text-white tracking-wide uppercase">
+                Washtenaw Compliance Console
+              </h1>
+            </div>
+          </div>
+          <div className="lg:hidden flex bg-[#222] p-1 rounded border border-[#333]">
+            <span className="w-6 h-6 flex items-center justify-center text-[10px] font-bold text-white bg-[#333] rounded shadow-sm">
+              W
+            </span>
+          </div>
+        </header>
+
+        {/* Tabs */}
+        <div className="flex border-b border-[#2C2C2C] bg-[#121212] px-4 md:px-6 z-10">
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={classNames(
+              'px-4 md:px-6 py-3 text-xs font-bold transition-colors relative uppercase tracking-wider',
+              activeTab === 'chat'
+                ? 'text-[#3B82F6] border-b-2 border-[#3B82F6]'
+                : 'text-[#888] hover:text-white'
+            )}
+          >
+            Assistant
+          </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={classNames(
+              'px-4 md:px-6 py-3 text-xs font-bold transition-colors relative flex items-center gap-2 uppercase tracking-wider',
+              activeTab === 'audit'
+                ? 'text-[#3B82F6] border-b-2 border-[#3B82F6]'
+                : 'text-[#888] hover:text-white'
+            )}
+          >
+            Protocol Audit
+            {!hasMockAuditAccess && (
+              <span className="text-[9px] bg-[#333] text-[#888] px-1.5 py-0.5 rounded font-bold border border-[#444]">
+                LOCKED
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Viewport */}
+        <div className="flex-1 flex flex-col overflow-hidden relative z-10 bg-[#121212]">
+          {activeTab === 'chat' ? (
+            <>
+              {/* Messages */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-4 lg:px-24 xl:px-32 py-8 custom-scroll space-y-6"
+              >
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center min-h-[340px]">
+                    <div className="w-12 h-12 bg-[#18181B] border border-[#333] rounded-lg flex items-center justify-center mb-4 shadow-lg">
+                      <svg
+                        className="w-6 h-6 text-[#3B82F6]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className="text-base md:text-lg font-bold text-white mb-4 tracking-wide text-center">
+                      Train your team before the inspector arrives.
+                    </h2>
+                    <p className="text-xs md:text-sm text-[#888] mb-6 text-center max-w-xl">
+                      Ask ProtocolLM real questions from your kitchen. Answers are grounded in{' '}
+                      <span className="text-[#EDEDED] font-semibold">Washtenaw County</span>,{' '}
+                      <span className="text-[#EDEDED] font-semibold">Michigan Food Law</span>, and the{' '}
+                      <span className="text-[#EDEDED] font-semibold">FDA Food Code 2022</span>.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+                      {suggestions.map((text, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSuggestionClick(text)}
+                          className="text-left p-4 rounded-lg bg-[#18181B] border border-[#2C2C2C] hover:border-[#3B82F6] hover:bg-[#252525] transition-all group"
+                        >
+                          <span className="text-[13px] text-[#CCC] font-medium leading-relaxed">
+                            {text}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((msg, idx) => {
+                    const isUser = msg.role === 'user'
+                    return (
+                      <div
+                        key={idx}
+                        className={classNames(
+                          'flex w-full',
+                          isUser ? 'justify-end' : 'justify-start'
+                        )}
+                      >
+                        <div
+                          className={classNames(
+                            'flex flex-col max-w-[85%] lg:max-w-[60%]',
+                            isUser ? 'items-end' : 'items-start'
+                          )}
+                        >
+                          <span className="text-[10px] font-bold text-[#666] mb-1.5 px-1 uppercase tracking-wider">
+                            {isUser ? 'Operator' : 'System'}
+                          </span>
+                          <div
+                            className={classNames(
+                              'px-5 py-3.5 text-[14px] leading-relaxed border shadow-sm',
+                              isUser
+                                ? 'bg-[#2C2C2C] text-white border-[#3F3F46] rounded-lg rounded-tr-sm'
+                                : 'bg-[#18181B] text-[#E4E4E7] border-[#333] rounded-lg rounded-tl-sm'
+                            )}
+                          >
+                            {msg.image && (
+                              <img
+                                src={msg.image}
+                                alt="Upload"
+                                className="mb-3 rounded border border-[#444] max-h-64 w-auto"
+                              />
+                            )}
+                            <div className="whitespace-pre-wrap">{msg.content}</div>
                           </div>
-                       ))}
-                       {isSending && <div className="pl-12"><dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '30px', height: '30px' }} /></div>}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+                {isSending && (
+                  <div className="flex justify-start pl-2">
+                    <span className="text-xs text-[#666] animate-pulse font-medium">
+                      Processing query...
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Input Bar */}
+              <div className="flex-shrink-0 z-20 bg-[#121212] border-t border-[#2C2C2C] px-4 lg:px-20 pt-4 pb-safe">
+                <div className="max-w-4xl mx-auto relative mb-4">
+                  {selectedImage && (
+                    <div className="absolute -top-24 left-0 p-2 bg-[#18181B] rounded-lg shadow-lg border border-[#333] animate-in fade-in slide-in-from-bottom-2">
+                      <img src={selectedImage} alt="Preview" className="h-20 w-auto rounded" />
+                      <button
+                        onClick={removeImage}
+                        className="absolute -top-2 -right-2 bg-red-900/90 text-white rounded-full p-1 hover:bg-red-700 transition-colors border border-red-700"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   )}
-               </div>
-               <div className="p-4 pb-8 w-full flex justify-center bg-[#121212]">
-                  <div className="w-full max-w-3xl relative bg-[#1E1E1E] border border-[#333] rounded-2xl focus-within:border-gray-500 shadow-lg flex flex-col">
-                     {selectedImage && <div className="p-2 border-b border-[#333]"><div className="relative inline-block"><img src={selectedImage} className="h-12 rounded" /><button onClick={removeImage} className="absolute -top-2 -right-2 bg-black text-white rounded-full w-5 h-5 text-xs border border-[#333]">✕</button></div></div>}
-                     <div className="flex items-end p-3 gap-3">
-                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImage} />
-                        <button onClick={() => fileInputRef.current.click()} className="text-[#888] hover:text-white p-2 rounded-lg hover:bg-[#333]">+</button>
-                        <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => {if(e.key==='Enter' && !e.shiftKey){e.preventDefault(); handleSend(e)}}} placeholder="Ask anything..." className="flex-1 bg-transparent text-white outline-none resize-none py-2 max-h-[200px] text-sm" rows={1} />
-                        <button onClick={handleSend} disabled={!input && !selectedImage} className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-lg"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg></button>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         ) : (
-            <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-               <div className="max-w-3xl mx-auto">
-                 <h2 className="text-2xl font-bold text-white mb-4">Compliance Checklist</h2>
-                 {AUDIT_CHECKLIST.map((cat) => (
-                    <div key={cat.category} className="mb-4 border border-[#333] rounded-lg overflow-hidden bg-[#18181B]">
-                       <button onClick={() => setExpandedCategories(p => ({...p, [cat.category]: !p[cat.category]}))} className="w-full px-4 py-3 flex justify-between text-sm font-bold text-gray-200 hover:bg-[#222]">{cat.category}</button>
-                       {expandedCategories[cat.category] !== false && (
-                          <div className="p-2 space-y-1 border-t border-[#333]">
-                             {cat.items.map(item => (
-                               <div key={item.id} className="p-2 hover:bg-[#222] rounded flex justify-between items-center">
-                                 <span className="text-xs text-gray-400">{item.label}</span>
-                                 <div className="flex gap-1"><button className="px-2 py-1 bg-green-900/30 text-green-500 text-[10px] rounded border border-green-900">Pass</button><button className="px-2 py-1 bg-red-900/30 text-red-500 text-[10px] rounded border border-red-900">Fail</button></div>
-                               </div>
-                             ))}
-                          </div>
-                       )}
+
+                  <form onSubmit={handleSend} className="relative group">
+                    {/* File Upload */}
+                    <div className="absolute inset-y-0 left-0 pl-2 flex items-center">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 text-[#666] hover:text-[#3B82F6] hover:bg-[#3B82F6]/10 rounded-lg transition-all"
+                      >
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </button>
                     </div>
-                 ))}
-               </div>
+
+                    {/* Text Input */}
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      disabled={isSending}
+                      placeholder="Ask protocolLM..."
+                      className="block w-full pl-12 pr-14 py-3.5 bg-[#18181B] border border-[#333] rounded-xl text-sm text-[#EDEDED] placeholder-[#52525B] focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/50 transition-all shadow-sm"
+                    />
+
+                    {/* Send Button */}
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                      <button
+                        type="submit"
+                        disabled={isSending || (!input.trim() && !selectedImage)}
+                        className={classNames(
+                          'p-2 rounded-lg transition-all duration-200 flex items-center justify-center',
+                          input.trim() || selectedImage
+                            ? 'bg-[#3B82F6] text-white shadow-md hover:bg-[#2563EB]'
+                            : 'bg-[#27272A] text-[#444] cursor-not-allowed'
+                        )}
+                      >
+                        {isSending ? (
+                          <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        ) : (
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2.5}
+                              d="M5 12h14M12 5l7 7-7 7"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </>
+          ) : (
+            // AUDIT TAB
+            <div className="flex-1 overflow-y-auto px-4 lg:px-32 py-8 custom-scroll bg-[#121212]">
+              {!hasMockAuditAccess ? (
+                <div className="max-w-xl mx-auto mt-20">
+                  <div className="bg-[#1C1C1C] border border-[#333] rounded-lg p-8 text-center shadow-2xl">
+                    <div className="w-12 h-12 bg-[#252525] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        className="w-6 h-6 text-[#F59E0B]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">Access Restricted</h3>
+                    <p className="text-[#888] text-sm mb-6">
+                      The Self-Audit Protocol is available on{' '}
+                      <strong className="text-[#3B82F6]">Pro</strong> &{' '}
+                      <strong className="text-[#3B82F6]">Enterprise</strong> plans.
+                    </p>
+                    <button
+                      onClick={() => router.push('/pricing')}
+                      className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-6 py-2.5 rounded-md text-xs font-bold transition-colors uppercase tracking-wide"
+                    >
+                      Upgrade Plan
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-[#1C1C1C] rounded-lg border border-[#333] p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h2 className="text-xl font-bold text-white">Self-Audit Protocol</h2>
+                        <p className="text-xs text-[#666] mt-1 uppercase tracking-wider font-bold">
+                          {COUNTY_LABELS[activeCounty]}
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={generateAuditReport}
+                          disabled={Object.keys(auditResults).length === 0}
+                          className="px-4 py-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-md font-bold text-xs uppercase tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Export
+                        </button>
+                        <button
+                          onClick={clearAudit}
+                          className="px-4 py-2 bg-[#252525] hover:bg-[#333] text-[#CCC] border border-[#333] rounded-md font-bold text-xs uppercase tracking-wide transition-colors"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Progress */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-[10px] font-bold text-[#666] mb-2 uppercase tracking-widest">
+                        <span>Completion Status</span>
+                        <span>
+                          {Object.keys(auditResults).length} /{' '}
+                          {AUDIT_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#111] rounded-full h-1.5 border border-[#222]">
+                        <div
+                          className="bg-[#3B82F6] h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${
+                              (Object.keys(auditResults).length /
+                                AUDIT_CHECKLIST.reduce((sum, cat) => sum + cat.items.length, 0)) *
+                              100
+                            }%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={auditImageInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleAuditImageSelect}
+                  />
+
+                  <div className="space-y-3">
+                    {AUDIT_CHECKLIST.map((category) => {
+                      const isExpanded = expandedCategories[category.category] !== false
+                      const categoryItems = category.items
+                      const checkedInCategory = categoryItems.filter(
+                        (item) => auditResults[item.id]
+                      ).length
+
+                      return (
+                        <div
+                          key={category.category}
+                          className="bg-[#1C1C1C] rounded-lg border border-[#333] overflow-hidden"
+                        >
+                          <button
+                            onClick={() => toggleCategory(category.category)}
+                            className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#232323] transition-colors group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <svg
+                                className={classNames(
+                                  'w-4 h-4 text-[#555] group-hover:text-[#3B82F6] transition-all',
+                                  isExpanded ? 'rotate-90' : ''
+                                )}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                              <h3 className="text-sm font-bold text-[#EDEDED] uppercase tracking-wide">
+                                {category.category}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-[#666] font-bold">
+                                {checkedInCategory}/{categoryItems.length}
+                              </span>
+                            </div>
+                          </button>
+
+                          {isExpanded && (
+                            <div className="border-t border-[#2C2C2C] bg-[#18181B]">
+                              {category.items.map((item) => {
+                                const status = auditResults[item.id]
+                                const note = auditNotes[item.id] || ''
+                                const image = auditImages[item.id]
+
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className="px-6 py-4 border-b border-[#252525] last:border-b-0"
+                                  >
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-1">
+                                          <p className="text-[13px] text-[#D4D4D8] font-medium">
+                                            {item.label}
+                                          </p>
+                                          {item.critical && (
+                                            <span className="text-[9px] bg-[#7F1D1D]/30 text-[#FCA5A5] px-1.5 py-0.5 rounded border border-[#F87171]/30 font-bold uppercase tracking-wider">
+                                              Critical
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button
+                                          onClick={() => handleAuditChange(item.id, 'pass')}
+                                          className={classNames(
+                                            'px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all',
+                                            status === 'pass'
+                                              ? 'bg-[#064E3B] text-[#6EE7B7] border-[#059669]'
+                                              : 'bg-[#222] text-[#666] border-[#333] hover:bg-[#2A2A2A]'
+                                          )}
+                                        >
+                                          Pass
+                                        </button>
+                                        <button
+                                          onClick={() => handleAuditChange(item.id, 'fail')}
+                                          className={classNames(
+                                            'px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all',
+                                            status === 'fail'
+                                              ? 'bg-[#7F1D1D] text-[#FCA5A5] border-[#DC2626]'
+                                              : 'bg-[#222] text-[#666] border-[#333] hover:bg-[#2A2A2A]'
+                                          )}
+                                        >
+                                          Fail
+                                        </button>
+                                        <button
+                                          onClick={() => handleAuditChange(item.id, 'na')}
+                                          className={classNames(
+                                            'px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border transition-all',
+                                            status === 'na'
+                                              ? 'bg-[#374151] text-[#D1D5DB] border-[#4B5563]'
+                                              : 'bg-[#222] text-[#666] border-[#333] hover:bg-[#2A2A2A]'
+                                          )}
+                                        >
+                                          N/A
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {status && status !== 'na' && (
+                                      <div className="mt-3 pl-1 flex flex-col gap-3">
+                                        <textarea
+                                          value={note}
+                                          onChange={(e) =>
+                                            handleNoteChange(item.id, e.target.value)
+                                          }
+                                          placeholder="Observations or corrective actions..."
+                                          className="w-full px-3 py-2 text-xs bg-[#121212] border border-[#333] rounded text-[#CCC] focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 resize-none"
+                                          rows={2}
+                                        />
+                                        <div className="flex items-center gap-3">
+                                          <button
+                                            onClick={() => triggerAuditImageUpload(item.id)}
+                                            className="flex items-center gap-2 px-3 py-1.5 bg-[#222] hover:bg-[#2C2C2C] border border-[#333] rounded text-[10px] font-bold text-[#888] hover:text-white transition-colors uppercase tracking-wide"
+                                          >
+                                            <svg
+                                              className="w-3.5 h-3.5"
+                                              fill="none"
+                                              viewBox="0 0 24 24"
+                                              stroke="currentColor"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                                              />
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                                              />
+                                            </svg>
+                                            {image ? 'Change Photo' : 'Add Evidence'}
+                                          </button>
+                                          {image && (
+                                            <div className="relative group">
+                                              <img
+                                                src={image}
+                                                alt="Proof"
+                                                className="h-10 w-10 rounded border border-[#444] object-cover"
+                                              />
+                                              <button
+                                                onClick={() => removeAuditImage(item.id)}
+                                                className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                              >
+                                                <svg
+                                                  className="w-2 h-2"
+                                                  fill="none"
+                                                  viewBox="0 0 24 24"
+                                                  stroke="currentColor"
+                                                >
+                                                  <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M6 18L18 6M6 6l12 12"
+                                                  />
+                                                </svg>
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-         )}
-      </div>
+          )}
+        </div>
+      </main>
+
+      <style jsx global>{`
+        .pb-safe {
+          padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+        }
+        .custom-scroll::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: #333;
+          border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background: #444;
+        }
+      `}</style>
     </div>
   )
 }
 
-// ==========================================
-// 4. ROOT COMPONENT
-// ==========================================
+// --- MAIN LANDING + CONSOLE WRAP ---
+function MainContent() {
+  const [mounted, setMounted] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login')
+  const [hasStartedChat, setHasStartedChat] = useState(false)
 
-export default function Page() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
-  const [authMode, setAuthMode] = useState(null) // 'login' or 'signup'
-  const supabase = createClient()
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
-    createClient().auth.getSession().then(({data}) => {
-      setSession(data.session)
-      setIsLoading(false)
-    })
-  }, [])
+    setMounted(true)
+    const authParam = searchParams.get('auth')
+    if (authParam === 'signup' || authParam === 'login') {
+      setAuthView(authParam)
+      setShowAuth(true)
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams])
 
-  const AuthModal = () => {
-     const [email, setEmail] = useState('')
-     const [password, setPassword] = useState('')
-     
-     const handleOAuth = async () => { await supabase.auth.signInWithOAuth({provider: 'google', options:{redirectTo:`${window.location.origin}/auth/callback`}}) }
-     const handleSubmit = async (e) => { e.preventDefault(); authMode === 'signup' ? await supabase.auth.signUp({email, password}) : await supabase.auth.signInWithPassword({email, password}) }
-     
-     if(!authMode) return null
-     
-     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-           <div className="bg-[#18181B] border border-[#333] p-6 rounded-lg w-full max-w-sm">
-              <button onClick={() => setAuthMode(null)} className="absolute top-4 right-4 text-gray-500">✕</button>
-              <h2 className="text-white font-bold text-lg mb-6 text-center">{authMode==='login' ? 'Welcome Back' : 'Create Account'}</h2>
-              <button onClick={handleOAuth} className="w-full bg-white text-black font-bold py-3 rounded-lg text-sm mb-4 flex justify-center gap-2">Google</button>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                 <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full p-3 bg-[#111] border border-[#333] rounded text-white text-sm outline-none focus:border-blue-600"/>
-                 <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 bg-[#111] border border-[#333] rounded text-white text-sm outline-none focus:border-blue-600"/>
-                 <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg text-sm">{authMode==='login'?'Log In':'Sign Up'}</button>
-              </form>
-              <div className="mt-4 text-center text-xs text-gray-500 cursor-pointer" onClick={() => setAuthMode(authMode==='login'?'signup':'login')}>{authMode==='login'?"Don't have an account?":"Already have one?"}</div>
-           </div>
-        </div>
-     )
+  const openAuth = (view: 'login' | 'signup') => {
+    setAuthView(view)
+    setShowAuth(true)
   }
 
-  if(isLoading) return <div className="min-h-screen bg-[#121212]"></div>
-  
-  // *** ROUTING LOGIC ***
-  // If Session -> Dashboard
-  if(session) {
-    return <Dashboard user={session.user} signOut={async () => { await supabase.auth.signOut(); setSession(null) }} />
-  }
-
-  // If No Session -> Landing Page
   return (
-    <>
-       <Script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module" strategy="afterInteractive" />
-       <LandingPage onAuth={(mode) => setAuthMode(mode)} />
-       <AuthModal />
-    </>
+    <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
+      {/* BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80" />
+      </div>
+
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex justify-center px-6 pt-0 border-b border-[#2C2C2C] bg-[#121212]/80 backdrop-blur-md">
+        <div
+          className={classNames(
+            'w-full max-w-6xl flex justify-between items-center h-16 transition-all duration-1000',
+            mounted ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
+            <span className="text-xl font-bold tracking-tight text-[#EDEDED]">
+              protocol<span className="text-[#3ECF8E]">LM</span>
+            </span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6">
+            <button
+              onClick={() => router.push('/pricing')}
+              className="text-xs font-medium text-[#888] hover:text-white transition-colors"
+            >
+              Pricing
+            </button>
+            <button
+              onClick={() => openAuth('login')}
+              className="text-xs font-medium text-[#888] hover:text-white transition-colors"
+            >
+              Log in
+            </button>
+            <button
+              onClick={() => openAuth('signup')}
+              className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-4 py-1.5 rounded-md text-xs font-semibold transition-all shadow-[0_0_10px_rgba(62,207,142,0.15)]"
+            >
+              Start Free Trial
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* BODY */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-24 pb-10 flex flex-col gap-6 relative z-10 min-h-[calc(100vh-64px)]">
+        {/* HERO ONLY BEFORE CHAT STARTS */}
+        {!hasStartedChat && (
+          <div className="w-full max-w-5xl text-center mx-auto mb-2 mt-4">
+            <h1
+              className={classNames(
+                'text-3xl md:text-4xl lg:text-5xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 md:whitespace-nowrap',
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              )}
+              style={{ transitionDelay: '200ms' }}
+            >
+              Train your team before the inspector arrives
+            </h1>
+
+            <div
+              className={classNames(
+                'flex flex-wrap justify-center gap-3 mb-4 transition-all duration-1000',
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              )}
+              style={{ transitionDelay: '300ms' }}
+            >
+              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#3ECF8E]/30 rounded px-3 py-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3ECF8E]" />
+                <span className="text-[11px] font-medium text-[#EDEDED] uppercase tracking-wide">
+                  Washtenaw County
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#333] rounded px-3 py-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#444]" />
+                <span className="text-[11px] font-medium text-[#888] uppercase tracking-wide">
+                  Michigan Food Law
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#333] rounded px-3 py-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#444]" />
+                <span className="text-[11px] font-medium text-[#888] uppercase tracking-wide">
+                  FDA Code 2022
+                </span>
+              </div>
+            </div>
+
+            {/* Mobile CTA */}
+            <div
+              className={classNames(
+                'md:hidden flex justify-center mt-4 transition-all duration-1000',
+                mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              )}
+              style={{ transitionDelay: '400ms' }}
+            >
+              <button
+                onClick={() => openAuth('signup')}
+                className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg"
+              >
+                Start Free Trial
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CONSOLE */}
+        <div className="flex-1 flex items-stretch">
+          <ComplianceConsole
+            onFirstInteraction={() => setHasStartedChat(true)}
+            onRequireAuth={() => openAuth('signup')}
+          />
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="w-full py-8 border-t border-[#2C2C2C] bg-[#121212] relative z-10 mt-auto">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 text-xs text-[#666]">
+          <div className="flex gap-6">
+            <a href="/terms" className="hover:text-[#EDEDED] transition-colors">
+              Terms
+            </a>
+            <a href="/privacy" className="hover:text-[#EDEDED] transition-colors">
+              Privacy
+            </a>
+          </div>
+          <span className="hidden md:inline text-[#333]">|</span>
+          <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2C2C2C] rounded-full px-3 py-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+            <span className="text-[10px] font-mono uppercase tracking-wide text-[#888]">
+              Wayne &amp; Oakland: Coming Q1
+            </span>
+          </div>
+          <span className="hidden md:inline text-[#333]">|</span>
+          <span className="text-[#444]">© 2025 protocolLM</span>
+        </div>
+      </footer>
+
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        defaultView={authView}
+      />
+    </div>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#121212]" />}>
+      <MainContent />
+    </Suspense>
   )
 }
