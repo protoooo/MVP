@@ -49,7 +49,8 @@ const Icons = {
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
   Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+  ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
+  Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
 }
 
 // ==========================================
@@ -65,10 +66,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* 
-        Container - Supabase Style 
-        Added focus-within:ring-0 and focus-within:outline-none to container just in case
-      */}
       <form
         onSubmit={handleSend}
         className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0 focus-within:outline-none"
@@ -89,11 +86,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           className="hidden"
         />
 
-        {/* 
-          TEXT AREA FIX:
-          Added `outline-none` and `focus:outline-none`
-          This explicitly tells the browser "Do not put your default blue line here"
-        */}
         <textarea
           ref={inputRef}
           value={input}
@@ -248,7 +240,7 @@ export default function Page() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
   // HISTORY STATES
-  const [chatHistory, setChatHistory] = useState([]) // List of previous chats
+  const [chatHistory, setChatHistory] = useState([]) 
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
   
@@ -266,6 +258,17 @@ export default function Page() {
   const router = useRouter()
 
   useEffect(() => {
+    // 1. Check for redirection from Pricing page
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('auth')) {
+        setAuthModalMessage(params.get('auth') === 'signup' ? 'Create an account to subscribe' : 'Sign in to continue')
+        setShowAuthModal(true)
+        window.history.replaceState({}, '', '/')
+      }
+    }
+
+    // 2. Init Auth
     const init = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession()
@@ -278,8 +281,6 @@ export default function Page() {
             .eq('id', currentSession.user.id)
             .single()
           setProfile(userProfile)
-          
-          // LOAD CHAT HISTORY SIDEBAR
           loadChatHistory()
         }
       } catch (e) {
@@ -314,7 +315,6 @@ export default function Page() {
     }
   }, [supabase])
 
-  // --- NEW: Load Sidebar History ---
   const loadChatHistory = async () => {
     const { data: chats } = await supabase
       .from('chats')
@@ -323,11 +323,10 @@ export default function Page() {
     if (chats) setChatHistory(chats)
   }
 
-  // --- NEW: Load Specific Chat Messages ---
   const loadChat = async (chatId) => {
     setIsLoading(true)
     setCurrentChatId(chatId)
-    setSidebarOpen(false) // Close sidebar on mobile
+    setSidebarOpen(false) 
     
     const { data: msgs } = await supabase
       .from('messages')
@@ -405,7 +404,6 @@ export default function Page() {
       }
     }
 
-    // --- NEW: Optimistic UI & Chat Creation ---
     const newMsg = { role: 'user', content: input, image: selectedImage }
     setMessages(p => [...p, newMsg])
     setInput('')
@@ -413,19 +411,17 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
-    // Temporary "thinking" message
     setMessages(p => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
 
     try {
-      // If this is the first message, CREATE THE CHAT in DB first
       if (!activeChatId) {
         const { data: newChat, error } = await supabase
           .from('chats')
           .insert({ 
              user_id: session.user.id, 
-             title: input.slice(0, 30) + '...' // Simple title generation
+             title: input.slice(0, 30) + '...' 
           })
           .select()
           .single()
@@ -433,7 +429,7 @@ export default function Page() {
         if (newChat) {
           activeChatId = newChat.id
           setCurrentChatId(newChat.id)
-          loadChatHistory() // Refresh sidebar
+          loadChatHistory() 
         }
       }
 
@@ -443,7 +439,7 @@ export default function Page() {
         body: JSON.stringify({ 
           messages: [...messages, newMsg], 
           image: img,
-          chatId: activeChatId // Pass ID to backend so it saves
+          chatId: activeChatId 
         })
       })
 
@@ -490,7 +486,7 @@ export default function Page() {
     setMessages([])
     setInput('')
     setSelectedImage(null)
-    setCurrentChatId(null) // Reset ID so next send creates new chat
+    setCurrentChatId(null) 
     setSidebarOpen(false)
   }
 
@@ -503,7 +499,6 @@ export default function Page() {
       
       <div className="fixed inset-0 w-full h-full bg-[#0A0A0A] text-white overflow-hidden font-sans flex">
         
-        {/* Mobile Overlay */}
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         {/* Sidebar */}
@@ -516,7 +511,6 @@ export default function Page() {
 
           <div className="flex-1 overflow-y-auto px-2">
             <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div>
-            {/* HISTORY LIST */}
             <div className="space-y-1">
               {chatHistory.map((chat) => (
                 <button
@@ -533,6 +527,16 @@ export default function Page() {
                 </button>
               ))}
             </div>
+            
+            {/* NEW: Pricing Link in Sidebar for Logged Out users */}
+            {!session && (
+              <div className="mt-4 px-1">
+                 <button onClick={() => router.push('/pricing')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#A1A1AA] hover:text-white hover:bg-[#1C1C1C] rounded-lg transition-colors">
+                    <Icons.Tag />
+                    Pricing
+                 </button>
+              </div>
+            )}
           </div>
 
           {session ? (
@@ -571,7 +575,6 @@ export default function Page() {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A]">
-          {/* Header (Mobile Only) */}
           <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#0A0A0A] border-b border-[#1C1C1C] text-white">
             <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
             <span className="font-semibold text-sm">protocolLM</span>
@@ -579,12 +582,18 @@ export default function Page() {
           </div>
 
           {!session ? (
-            /* ================================== */
-            /* LOGGED OUT VIEW (Centered) */
-            /* ================================== */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
+            <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
-              {/* Pill moved ABOVE header, changed to Supabase Green style */}
+              {/* NEW: Top Right Pricing Link */}
+              <div className="absolute top-4 right-4 z-20">
+                <button 
+                  onClick={() => router.push('/pricing')}
+                  className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors px-4 py-2"
+                >
+                  Pricing
+                </button>
+              </div>
+
               <button 
                 onClick={() => setShowAuthModal(true)}
                 className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/20 transition-all cursor-pointer group"
@@ -617,11 +626,7 @@ export default function Page() {
               </div>
             </div>
           ) : (
-            /* ================================== */
-            /* LOGGED IN VIEW (Chat) */
-            /* ================================== */
             <>
-              {/* Chat Container */}
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center p-4 text-center">
@@ -638,7 +643,6 @@ export default function Page() {
                         }`}>
                           {msg.image && <img src={msg.image} alt="Upload" className="rounded-lg mb-3 max-h-60 object-contain border border-white/10" />}
                           
-                          {/* Display content or Loader if thinking */}
                           {msg.role === 'assistant' && msg.content === '' && isSending ? (
                              <div className="loader my-1"></div>
                           ) : (
@@ -651,7 +655,6 @@ export default function Page() {
                 )}
               </div>
 
-              {/* Input Area (Bottom) */}
               <div className="w-full bg-[#0A0A0A] pt-2 shrink-0">
                 <InputBox
                   input={input}
