@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 
-// --- 1. CHAT DEMO (Supabase "Table Editor" Style - Fixed Height) ---
+// --- 1. CHAT DEMO (Fixed Height / Supabase Style) ---
 const DemoChatContent = () => {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState('')
@@ -103,12 +103,14 @@ const DemoChatContent = () => {
   }
 
   return (
-    <div className="relative w-full max-w-[600px] group mx-auto">
+    <div className="relative w-full max-w-4xl group mx-auto">
       {/* 
-          FIXED HEIGHT CONTAINER 
-          h-[500px] mobile / h-[600px] desktop
+          FIXED HEIGHT SETTING:
+          h-[500px] on Mobile
+          h-[650px] on Desktop
+          This prevents the box from growing with text.
       */}
-      <div className="flex flex-col h-[500px] md:h-[600px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
+      <div className="flex flex-col h-[500px] md:h-[650px] w-full bg-[#1C1C1C] border border-[#2C2C2C] rounded-md relative z-10 overflow-hidden shadow-2xl">
         
         {/* Header */}
         <div className="h-10 border-b border-[#2C2C2C] flex items-center px-4 justify-between bg-[#232323] shrink-0 sticky top-0 z-20">
@@ -187,7 +189,7 @@ const DemoChatContent = () => {
   )
 }
 
-// --- 2. AUTH MODAL (Supabase Style) ---
+// --- 2. AUTH MODAL ---
 const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -308,7 +310,7 @@ const AuthModal = ({ isOpen, onClose, defaultView = 'login' }) => {
   )
 }
 
-// --- 3. MAIN CONTENT ---
+// --- 3. MAIN CONTENT (Centered Layout) ---
 function MainContent() {
   const [mounted, setMounted] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
@@ -334,7 +336,7 @@ function MainContent() {
   return (
     <div className="min-h-screen w-full bg-[#121212] font-sans text-[#EDEDED] selection:bg-[#3ECF8E] selection:text-[#121212] flex flex-col relative overflow-hidden max-w-[100vw]">
       
-      {/* BACKGROUND: DOT GRID TEXTURE */}
+      {/* BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#121212]">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff15_1px,transparent_1px)] [background-size:24px_24px] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-[#121212]/80"></div>
@@ -362,32 +364,32 @@ function MainContent() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-4 pb-0 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 relative z-10 min-h-screen lg:h-screen lg:max-h-[850px] lg:min-h-[600px]">
+      {/* HERO SECTION - Centered Stack */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-6 pt-24 md:pt-32 pb-12 flex flex-col items-center relative z-10 min-h-screen">
         
-        {/* LEFT COLUMN */}
-        <div className="flex-1 w-full lg:max-w-lg text-center lg:text-left pt-20 lg:pt-0">
-          
-          <h1 className={`text-4xl md:text-5xl lg:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-            Train your team <br />
-            before the inspector arrives.
+        {/* CENTERED TEXT */}
+        <div className="w-full max-w-4xl text-center mb-16">
+          <h1 className={`text-4xl md:text-6xl font-medium text-[#EDEDED] tracking-tight leading-tight mb-6 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            Train your team before the inspector arrives.
           </h1>
 
-          <p className={`text-[15px] text-[#888] leading-relaxed max-w-md mx-auto lg:mx-0 mb-10 font-normal transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+          <p className={`text-[15px] text-[#888] leading-relaxed max-w-xl mx-auto mb-8 font-normal transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
             Instant answers from <strong className="text-white">Washtenaw County</strong> regulations, plus <strong>Michigan Modified Food Code, FDA Code 2022, & USDA</strong> guidelines. Stop losing revenue to preventable violations.
           </p>
 
-          <div className={`md:hidden flex justify-center mb-10 transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
-            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-2.5 rounded-md text-sm font-semibold shadow-lg">
+          {/* Mobile CTA */}
+          <div className={`md:hidden flex justify-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '400ms' }}>
+            <button onClick={() => openAuth('signup')} className="bg-[#3ECF8E] hover:bg-[#34b27b] text-[#151515] px-6 py-3 rounded-md text-sm font-semibold shadow-lg">
               Start Free Trial
             </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Demo - FIXED SIZE) */}
-        <div className={`flex-1 w-full max-w-[550px] flex justify-center transition-all duration-1000 ease-out delay-300 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'}`}>
+        {/* DEMO BOX - Centered & Fixed Height */}
+        <div className={`w-full max-w-4xl flex justify-center transition-all duration-1000 ease-out delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
           <DemoChatContent />
         </div>
+
       </div>
 
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} defaultView={authView} />
