@@ -227,47 +227,48 @@ const DashboardInterface = ({ user, onSignOut }) => {
       )}
       
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 flex flex-col w-64 border-r border-[#2C2C2C] bg-[#0A0A0A] transition-transform duration-200`}>
-         <div className="h-14 flex items-center px-6 border-b border-[#2C2C2C]">
-            <span className="text-sm font-bold tracking-tight text-white">PROTOCOL<span className="text-[#3ECF8E]">LM</span></span>
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 flex flex-col w-64 border-r border-[#1F1F1F] bg-[#0D0D0D] transition-transform duration-200`}>
+         <div className="h-14 flex items-center px-6 border-b border-[#1F1F1F]">
+            <span className="text-sm font-bold tracking-tight text-white">protocol<span className="text-[#3ECF8E]">LM</span></span>
          </div>
          <div className="flex-1 p-4 overflow-y-auto custom-scroll space-y-6">
             <div>
-               <div className="px-2 mb-3 text-[9px] font-bold text-[#555] uppercase tracking-[0.15em]">Jurisdiction</div>
-               <div className="bg-[#151515] border border-[#2C2C2C] p-3 rounded text-[13px] font-medium text-white flex items-center justify-between">
+               <div className="px-2 mb-3 text-[9px] font-bold text-[#6B7280] uppercase tracking-[0.15em]">Jurisdiction</div>
+               <div className="bg-[#1A1A1A] hover:bg-[#1F1F1F] border border-[#2C2C2C] p-3 rounded-lg text-[13px] font-medium text-white flex items-center justify-between cursor-pointer transition-all">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-[#3ECF8E] rounded-full shadow-[0_0_8px_rgba(62,207,142,0.6)]"></div>
                     Washtenaw County
                   </div>
-                  <svg className="w-3 h-3 text-[#666]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                </div>
             </div>
             <div>
-               <div className="px-2 mb-3 text-[9px] font-bold text-[#555] uppercase tracking-[0.15em]">Recent Queries</div>
+               <div className="px-2 mb-3 text-[9px] font-bold text-[#6B7280] uppercase tracking-[0.15em]">Recent Queries</div>
                <div className="space-y-1">
                  {messages.filter(m=>m.role==='user').slice(-5).map((m, i) => (
-                    <button key={i} className="w-full text-left px-3 py-2 rounded hover:bg-[#151515] text-[11px] text-[#999] truncate transition-colors border border-transparent hover:border-[#2C2C2C]">
+                    <button key={i} className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[#1A1A1A] text-[11px] text-[#9CA3AF] truncate transition-all border border-transparent hover:border-[#2C2C2C]">
                       {m.content || '📷 Image Analysis'}
                     </button>
                  ))}
                  {messages.filter(m=>m.role==='user').length === 0 && (
-                   <div className="text-[11px] text-[#555] px-3 py-2">No queries yet</div>
+                   <div className="text-[11px] text-[#6B7280] px-3 py-2.5">No queries yet</div>
                  )}
                </div>
             </div>
          </div>
-         <div className="p-4 border-t border-[#2C2C2C] bg-[#0A0A0A]">
-            <div className="flex items-center justify-between mb-3">
-               <div className="flex items-center gap-2">
-                 <div className="w-7 h-7 rounded-full bg-[#2C2C2C] flex items-center justify-center text-[10px] font-bold text-white">
-                   {user.email[0].toUpperCase()}
-                 </div>
-                 <span className="text-[11px] font-medium text-white truncate max-w-[120px]">{user.email}</span>
+         <div className="p-4 border-t border-[#1F1F1F] bg-[#0D0D0D]">
+            <div className="flex items-center gap-3 mb-3 p-2 rounded-lg hover:bg-[#1A1A1A] transition-colors cursor-pointer">
+               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3ECF8E] to-[#2ECC71] flex items-center justify-center text-[11px] font-bold text-black shadow-lg">
+                 {user.email[0].toUpperCase()}
+               </div>
+               <div className="flex-1 min-w-0">
+                 <div className="text-[12px] font-medium text-white truncate">{user.email.split('@')[0]}</div>
+                 <div className="text-[10px] text-[#6B7280]">Pro Plan</div>
                </div>
             </div>
-            <button onClick={onSignOut} className="w-full text-[10px] text-[#999] hover:text-white py-2 px-3 rounded border border-[#2C2C2C] hover:border-[#3C3C3C] transition-colors">
+            <button onClick={onSignOut} className="w-full text-[11px] font-medium text-[#9CA3AF] hover:text-white py-2.5 px-3 rounded-lg border border-[#2C2C2C] hover:border-[#3C3C3C] hover:bg-[#1A1A1A] transition-all">
               Sign Out
             </button>
          </div>
@@ -275,23 +276,23 @@ const DashboardInterface = ({ user, onSignOut }) => {
 
       {/* Main */}
       <main className="flex-1 flex flex-col relative overflow-hidden bg-[#121212]">
-         <header className="h-14 flex items-center justify-between px-4 border-b border-[#2C2C2C] bg-[#0A0A0A] z-10 shrink-0">
+         <header className="h-14 flex items-center justify-between px-4 border-b border-[#1F1F1F] bg-[#0D0D0D] z-10 shrink-0">
              <div className="flex items-center gap-3">
                <button 
                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                 className="lg:hidden p-2 hover:bg-[#2C2C2C] rounded-md transition-colors"
+                 className="lg:hidden p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
                >
                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                  </svg>
                </button>
-               <div className="text-sm font-bold tracking-tight text-white">PROTOCOL<span className="text-[#3ECF8E]">LM</span></div>
+               <div className="text-sm font-bold tracking-tight text-white">protocol<span className="text-[#3ECF8E]">LM</span></div>
              </div>
-             <div className="flex bg-[#151515] p-0.5 rounded-lg border border-[#2C2C2C]">
-                <button onClick={()=>setActiveTab('chat')} className={`px-5 py-1.5 text-[11px] font-bold rounded-md transition-all ${activeTab==='chat' ? 'bg-[#2C2C2C] text-white' : 'text-[#666] hover:text-white'}`}>
+             <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-[#2C2C2C]">
+                <button onClick={()=>setActiveTab('chat')} className={`px-5 py-1.5 text-[11px] font-semibold rounded-md transition-all ${activeTab==='chat' ? 'bg-[#2C2C2C] text-white shadow-sm' : 'text-[#9CA3AF] hover:text-white'}`}>
                   Chat
                 </button>
-                <button onClick={()=>setActiveTab('audit')} className={`px-5 py-1.5 text-[11px] font-bold rounded-md transition-all ${activeTab==='audit' ? 'bg-[#2C2C2C] text-white' : 'text-[#666] hover:text-white'}`}>
+                <button onClick={()=>setActiveTab('audit')} className={`px-5 py-1.5 text-[11px] font-semibold rounded-md transition-all ${activeTab==='audit' ? 'bg-[#2C2C2C] text-white shadow-sm' : 'text-[#9CA3AF] hover:text-white'}`}>
                   Audit
                 </button>
              </div>
@@ -302,29 +303,29 @@ const DashboardInterface = ({ user, onSignOut }) => {
                <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 lg:px-24 custom-scroll pb-36">
                   {messages.length === 0 && (
                      <div className="h-full flex flex-col items-center justify-center text-center">
-                        <div className="mb-6 w-16 h-16 rounded-full bg-[#151515] border border-[#2C2C2C] flex items-center justify-center">
+                        <div className="mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
                           <svg className="w-8 h-8 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
-                        <h2 className="text-lg font-bold text-white mb-2">Ready for Compliance Analysis</h2>
-                        <p className="text-[13px] text-[#777] max-w-md leading-relaxed">
+                        <h2 className="text-lg font-semibold text-white mb-2">Ready for Compliance Analysis</h2>
+                        <p className="text-[13px] text-[#9CA3AF] max-w-md leading-relaxed">
                           Upload inspection photos, ask regulatory questions, or run mock audits to prepare your team.
                         </p>
                      </div>
                   )}
                   {messages.map((m,i) => (
                      <div key={i} className={`flex mb-6 ${m.role==='user'?'justify-end':'justify-start'}`}>
-                        <div className={`max-w-[85%] ${m.role==='user'?'bg-[#151515] border border-[#2C2C2C] p-4 rounded-xl':'border-l-2 border-[#3ECF8E] pl-4 py-2'}`}>
-                           {m.image && <img src={m.image} alt="Uploaded" className="mb-3 max-h-64 rounded-lg border border-[#2C2C2C]" />}
-                           <div className={`text-[13px] leading-relaxed whitespace-pre-wrap ${m.role==='user'?'text-white':'text-[#DDD]'}`}>
+                        <div className={`max-w-[85%] ${m.role==='user'?'bg-[#1A1A1A] border border-[#2C2C2C] p-4 rounded-xl':'border-l-2 border-[#3ECF8E] pl-4 py-2'}`}>
+                           {m.image && <img src={m.image} alt="Uploaded" className="mb-3 max-h-64 rounded-lg border border-[#2C2C2C] shadow-xl" />}
+                           <div className={`text-[13px] leading-relaxed whitespace-pre-wrap ${m.role==='user'?'text-white':'text-[#E5E7EB]'}`}>
                              {m.content}
                            </div>
                         </div>
                      </div>
                   ))}
                   {isSending && (
-                    <div className="flex items-center gap-2 text-[#777] text-[13px] pl-4">
+                    <div className="flex items-center gap-2 text-[#9CA3AF] text-[13px] pl-4">
                       <dotlottie-wc src="https://lottie.host/75998d8b-95ab-4f51-82e3-7d3247321436/2itIM9PrZa.lottie" autoplay loop style={{ width: '32px', height: '32px' }} />
                       <span>Analyzing compliance data...</span>
                     </div>
@@ -332,7 +333,7 @@ const DashboardInterface = ({ user, onSignOut }) => {
                </div>
 
                <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-[#121212] via-[#121212] to-transparent pt-10 z-20">
-                  <div className="max-w-3xl mx-auto bg-[#0A0A0A] border border-[#2C2C2C] rounded-xl flex items-center shadow-2xl p-1.5 relative">
+                  <div className="max-w-3xl mx-auto bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl flex items-center shadow-2xl p-1.5 relative">
                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImage}/>
                      
                      {/* Plus Button with Dropdown */}
@@ -340,7 +341,7 @@ const DashboardInterface = ({ user, onSignOut }) => {
                        <button 
                          type="button" 
                          onClick={() => setShowUploadMenu(!showUploadMenu)}
-                         className="p-2.5 text-[#999] hover:text-[#3ECF8E] hover:bg-[#151515] rounded-lg transition-colors"
+                         className="p-2.5 text-[#9CA3AF] hover:text-[#3ECF8E] hover:bg-[#1A1A1A] rounded-lg transition-all"
                        >
                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -349,22 +350,22 @@ const DashboardInterface = ({ user, onSignOut }) => {
                        
                        {/* Dropdown Menu */}
                        {showUploadMenu && (
-                         <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#0A0A0A] border border-[#2C2C2C] rounded-lg shadow-2xl overflow-hidden">
+                         <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#0D0D0D] border border-[#2C2C2C] rounded-xl shadow-2xl overflow-hidden">
                            <button
                              onClick={() => {
                                fileInputRef.current.click()
                                setShowUploadMenu(false)
                              }}
-                             className="w-full px-4 py-3 text-left hover:bg-[#151515] transition-colors flex items-center gap-3 border-b border-[#2C2C2C]"
+                             className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3 border-b border-[#1F1F1F]"
                            >
-                             <div className="w-8 h-8 rounded-lg bg-[#151515] flex items-center justify-center">
+                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
                                <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                </svg>
                              </div>
                              <div>
-                               <div className="text-[13px] font-bold text-white">Image Analysis</div>
-                               <div className="text-[10px] text-[#777]">Upload facility photos</div>
+                               <div className="text-[13px] font-semibold text-white">Image Analysis</div>
+                               <div className="text-[11px] text-[#9CA3AF]">Upload facility photos</div>
                              </div>
                            </button>
                            <button
@@ -372,16 +373,16 @@ const DashboardInterface = ({ user, onSignOut }) => {
                                setActiveTab('audit')
                                setShowUploadMenu(false)
                              }}
-                             className="w-full px-4 py-3 text-left hover:bg-[#151515] transition-colors flex items-center gap-3"
+                             className="w-full px-4 py-3 text-left hover:bg-[#1A1A1A] transition-all flex items-center gap-3"
                            >
-                             <div className="w-8 h-8 rounded-lg bg-[#151515] flex items-center justify-center">
+                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#3ECF8E]/10 to-[#2ECC71]/10 border border-[#3ECF8E]/20 flex items-center justify-center">
                                <svg className="w-4 h-4 text-[#3ECF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                </svg>
                              </div>
                              <div>
-                               <div className="text-[13px] font-bold text-white">Mock Audit</div>
-                               <div className="text-[10px] text-[#777]">Run compliance checklist</div>
+                               <div className="text-[13px] font-semibold text-white">Mock Audit</div>
+                               <div className="text-[11px] text-[#9CA3AF]">Run compliance checklist</div>
                              </div>
                            </button>
                          </div>
@@ -392,13 +393,13 @@ const DashboardInterface = ({ user, onSignOut }) => {
                        value={input} 
                        onChange={e=>setInput(e.target.value)}
                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend(e)}
-                       className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white outline-none placeholder:text-[#555]" 
+                       className="flex-1 bg-transparent px-3 py-2 text-[13px] text-white outline-none placeholder:text-[#6B7280]" 
                        placeholder="Ask a compliance question..." 
                      />
                      <button 
                        onClick={handleSend} 
                        disabled={(!input.trim() && !selectedImage) || isSending}
-                       className="p-2.5 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black rounded-lg transition-colors disabled:opacity-30 disabled:bg-[#2C2C2C] disabled:text-[#555] disabled:cursor-not-allowed"
+                       className="p-2.5 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black rounded-lg transition-all shadow-lg shadow-[#3ECF8E]/20 disabled:opacity-30 disabled:bg-[#2C2C2C] disabled:text-[#6B7280] disabled:cursor-not-allowed disabled:shadow-none"
                      >
                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7"/>
@@ -406,10 +407,10 @@ const DashboardInterface = ({ user, onSignOut }) => {
                      </button>
                   </div>
                   {selectedImage && (
-                    <div className="max-w-3xl mx-auto mt-2 p-2 bg-[#151515] border border-[#2C2C2C] rounded-lg flex items-center gap-2">
-                      <img src={selectedImage} alt="Preview" className="w-12 h-12 rounded object-cover" />
-                      <span className="text-[11px] text-[#999] flex-1">Image ready for analysis</span>
-                      <button onClick={() => setSelectedImage(null)} className="text-[#999] hover:text-white">
+                    <div className="max-w-3xl mx-auto mt-2 p-2 bg-[#1A1A1A] border border-[#2C2C2C] rounded-lg flex items-center gap-2">
+                      <img src={selectedImage} alt="Preview" className="w-12 h-12 rounded object-cover border border-[#2C2C2C]" />
+                      <span className="text-[11px] text-[#9CA3AF] flex-1">Image ready for analysis</span>
+                      <button onClick={() => setSelectedImage(null)} className="text-[#9CA3AF] hover:text-white transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -422,33 +423,33 @@ const DashboardInterface = ({ user, onSignOut }) => {
              /* AUDIT VIEW */
              <div className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scroll">
                 <div className="max-w-3xl mx-auto mb-10">
-                   <div className="flex justify-between items-end mb-8 pb-6 border-b border-[#2C2C2C]">
+                   <div className="flex justify-between items-end mb-8 pb-6 border-b border-[#1F1F1F]">
                       <div>
-                         <h2 className="text-xl font-bold text-white mb-1">Mock Inspection Audit</h2>
-                         <p className="text-[11px] text-[#777] uppercase tracking-[0.1em]">Washtenaw County Standards</p>
+                         <h2 className="text-xl font-semibold text-white mb-1">Mock Inspection Audit</h2>
+                         <p className="text-[11px] text-[#9CA3AF] uppercase tracking-[0.1em]">Washtenaw County Standards</p>
                       </div>
                       <div className="text-right">
                          <div className="text-3xl font-bold text-[#3ECF8E] mb-1">{Math.round((passed/total)*100)}%</div>
-                         <div className="text-[10px] text-[#777] uppercase tracking-wider">Compliance</div>
+                         <div className="text-[10px] text-[#9CA3AF] uppercase tracking-wider">Compliance</div>
                       </div>
                    </div>
                    
                    {AUDIT_CHECKLIST.map((cat) => (
-                      <div key={cat.category} className="mb-6 bg-[#0A0A0A] border border-[#2C2C2C] rounded-xl overflow-hidden">
-                         <div className="px-5 py-3 bg-[#151515] text-[11px] font-bold text-white uppercase tracking-[0.1em] border-b border-[#2C2C2C]">
+                      <div key={cat.category} className="mb-6 bg-[#0D0D0D] border border-[#1F1F1F] rounded-xl overflow-hidden hover:border-[#2C2C2C] transition-colors">
+                         <div className="px-5 py-3 bg-[#1A1A1A] text-[11px] font-semibold text-white uppercase tracking-[0.1em] border-b border-[#1F1F1F]">
                            {cat.category}
                          </div>
-                         <div className="divide-y divide-[#2C2C2C]">
+                         <div className="divide-y divide-[#1F1F1F]">
                             {cat.items.map((item) => {
                                const status = auditResults[item.id]
                                return (
-                                  <div key={item.id} className="p-5 hover:bg-[#0F0F0F] transition-colors">
+                                  <div key={item.id} className="p-5 hover:bg-[#121212] transition-colors">
                                      <div className="flex justify-between items-start gap-4">
                                         <div className="flex-1">
-                                           <p className="text-[13px] text-white font-medium mb-1 leading-relaxed">{item.label}</p>
+                                           <p className="text-[13px] text-[#E5E7EB] font-medium mb-1 leading-relaxed">{item.label}</p>
                                            {item.critical && (
                                              <div className="inline-flex items-center gap-1.5 mt-1">
-                                               <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                                               <div className="w-1 h-1 bg-red-500 rounded-full shadow-[0_0_6px_rgba(239,68,68,0.6)]"></div>
                                                <span className="text-[9px] text-red-400 uppercase font-bold tracking-wider">Priority Violation</span>
                                              </div>
                                            )}
@@ -456,20 +457,20 @@ const DashboardInterface = ({ user, onSignOut }) => {
                                         <div className="flex gap-2 shrink-0">
                                            <button 
                                              onClick={()=>handleAuditChange(item.id, 'pass')} 
-                                             className={`px-4 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wide transition-all ${
+                                             className={`px-4 py-1.5 rounded-lg border text-[10px] font-semibold uppercase tracking-wide transition-all ${
                                                status==='pass'
-                                                 ?'bg-[#3ECF8E]/10 border-[#3ECF8E] text-[#3ECF8E]'
-                                                 :'bg-[#0A0A0A] border-[#2C2C2C] text-[#666] hover:border-[#3C3C3C] hover:text-white'
+                                                 ?'bg-[#3ECF8E]/10 border-[#3ECF8E] text-[#3ECF8E] shadow-sm shadow-[#3ECF8E]/20'
+                                                 :'bg-[#0D0D0D] border-[#2C2C2C] text-[#6B7280] hover:border-[#3C3C3C] hover:text-white hover:bg-[#1A1A1A]'
                                              }`}
                                            >
                                              Pass
                                            </button>
                                            <button 
                                              onClick={()=>handleAuditChange(item.id, 'fail')} 
-                                             className={`px-4 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wide transition-all ${
+                                             className={`px-4 py-1.5 rounded-lg border text-[10px] font-semibold uppercase tracking-wide transition-all ${
                                                status==='fail'
-                                                 ?'bg-red-900/20 border-red-800 text-red-400'
-                                                 :'bg-[#0A0A0A] border-[#2C2C2C] text-[#666] hover:border-[#3C3C3C] hover:text-white'
+                                                 ?'bg-red-900/20 border-red-700 text-red-400 shadow-sm shadow-red-900/20'
+                                                 :'bg-[#0D0D0D] border-[#2C2C2C] text-[#6B7280] hover:border-[#3C3C3C] hover:text-white hover:bg-[#1A1A1A]'
                                              }`}
                                            >
                                              Fail
@@ -483,13 +484,13 @@ const DashboardInterface = ({ user, onSignOut }) => {
                       </div>
                    ))}
                    
-                   <div className="mt-8 p-6 bg-[#0A0A0A] border border-[#2C2C2C] rounded-xl">
-                     <div className="text-[11px] font-bold text-[#777] uppercase tracking-[0.1em] mb-3">Actions</div>
+                   <div className="mt-8 p-6 bg-[#0D0D0D] border border-[#1F1F1F] rounded-xl">
+                     <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.1em] mb-4">Actions</div>
                      <div className="flex flex-col sm:flex-row gap-3">
-                       <button className="flex-1 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black text-[12px] font-bold py-3 px-4 rounded-lg transition-colors uppercase tracking-wide">
+                       <button className="flex-1 bg-[#3ECF8E] hover:bg-[#2ECC71] text-black text-[12px] font-semibold py-3 px-4 rounded-lg transition-all shadow-lg shadow-[#3ECF8E]/20 uppercase tracking-wide">
                          Export Report
                        </button>
-                       <button className="flex-1 bg-[#151515] hover:bg-[#1F1F1F] border border-[#2C2C2C] text-white text-[12px] font-bold py-3 px-4 rounded-lg transition-colors uppercase tracking-wide">
+                       <button className="flex-1 bg-[#1A1A1A] hover:bg-[#1F1F1F] border border-[#2C2C2C] text-white text-[12px] font-semibold py-3 px-4 rounded-lg transition-all uppercase tracking-wide">
                          Reset Audit
                        </button>
                      </div>
