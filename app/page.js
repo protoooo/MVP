@@ -4,9 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-// ==========================================
-// ICONS
-// ==========================================
 const Icons = {
   Menu: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
   Send: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>,
@@ -14,12 +11,11 @@ const Icons = {
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
-  Sparkles: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+  Sparkles: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
+  User: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
+  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
 }
 
-// ==========================================
-// AUTH MODAL
-// ==========================================
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -88,14 +84,14 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#2F2F2F] rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[#1C1C1C] border border-[#2D2D2D] rounded-xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">{message || 'Continue with protocolLM'}</h2>
-            <p className="text-sm text-[#C5C5C5]">Start your free trial</p>
+            <h2 className="text-2xl font-semibold text-white mb-2">{message || 'Welcome to protocolLM'}</h2>
+            <p className="text-sm text-[#A1A1AA]">Sign in to continue</p>
           </div>
-          <button onClick={onClose} className="text-[#8E8EA0] hover:text-white transition-colors">
+          <button onClick={onClose} className="text-[#71717A] hover:text-white transition-colors">
             <Icons.X />
           </button>
         </div>
@@ -103,7 +99,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         <button
           onClick={handleGoogleAuth}
           disabled={googleLoading || loading}
-          className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-3"
+          className="w-full bg-white hover:bg-gray-50 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 mb-4"
         >
           {googleLoading ? (
             <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
@@ -113,57 +109,54 @@ const AuthModal = ({ isOpen, onClose, message }) => {
           {googleLoading ? 'Connecting...' : 'Continue with Google'}
         </button>
 
-        <div className="relative my-4">
+        <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#565869]"></div>
+            <div className="w-full border-t border-[#2D2D2D]"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-[#2F2F2F] px-2 text-[#8E8EA0]">OR</span>
+            <span className="bg-[#1C1C1C] px-3 text-[#71717A]">OR</span>
           </div>
         </div>
 
-        <form onSubmit={handleEmailAuth} className="space-y-3">
+        <form onSubmit={handleEmailAuth} className="space-y-4">
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email address"
+            placeholder="you@example.com"
             required
-            className="w-full bg-[#40414F] border border-[#565869] rounded-xl px-4 py-3 text-sm text-white placeholder-[#8E8EA0] focus:outline-none focus:border-[#10A37F] transition-all"
+            className="w-full bg-[#0A0A0A] border border-[#2D2D2D] rounded-lg px-4 py-3 text-sm text-white placeholder-[#71717A] focus:outline-none focus:border-[#3ECF8E] transition-all"
           />
           <button 
             type="submit" 
             disabled={loading || googleLoading}
-            className="w-full bg-[#10A37F] hover:bg-[#0E8F6F] text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#3ECF8E] hover:bg-[#34B27B] text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending...' : 'Continue'}
+            {loading ? 'Sending...' : 'Continue with Email'}
           </button>
         </form>
 
         {statusMessage && (
-          <div className={`mt-4 p-3 rounded-xl text-sm ${
+          <div className={`mt-4 p-3 rounded-lg text-sm ${
             statusMessage.includes('Error') 
               ? 'bg-red-500/10 border border-red-500/20 text-red-400' 
-              : 'bg-[#10A37F]/10 border border-[#10A37F]/20 text-[#10A37F]'
+              : 'bg-[#3ECF8E]/10 border border-[#3ECF8E]/20 text-[#3ECF8E]'
           }`}>
             {statusMessage}
           </div>
         )}
 
-        <p className="text-xs text-[#8E8EA0] text-center mt-6">
+        <p className="text-xs text-[#71717A] text-center mt-6">
           By continuing, you agree to our{' '}
-          <a href="/terms" className="underline hover:text-white">Terms</a>
+          <a href="/terms" className="underline hover:text-white transition-colors">Terms</a>
           {' '}and{' '}
-          <a href="/privacy" className="underline hover:text-white">Privacy Policy</a>
+          <a href="/privacy" className="underline hover:text-white transition-colors">Privacy Policy</a>
         </p>
       </div>
     </div>
   )
 }
 
-// ==========================================
-// MAIN CHAT INTERFACE
-// ==========================================
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
@@ -175,9 +168,11 @@ export default function Page() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const userMenuRef = useRef(null)
   const supabase = createClient()
   const router = useRouter()
 
@@ -203,7 +198,6 @@ export default function Page() {
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       
-      // Fetch profile when session changes
       if (session) {
         const { data: userProfile } = await supabase
           .from('user_profiles')
@@ -219,6 +213,16 @@ export default function Page() {
     
     return () => listener.subscription.unsubscribe()
   }, [supabase])
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => { 
     if(scrollRef.current) {
@@ -236,14 +240,12 @@ export default function Page() {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
-    // Check if user needs to authenticate
     if (!session) {
-      setAuthModalMessage('Start your free trial to continue')
+      setAuthModalMessage('Sign in to start chatting')
       setShowAuthModal(true)
       return
     }
 
-    // If we have a session but no profile loaded yet, fetch it
     if (!profile) {
       const { data: userProfile } = await supabase
         .from('user_profiles')
@@ -253,7 +255,6 @@ export default function Page() {
       
       setProfile(userProfile)
       
-      // Check after fetching
       if (!userProfile?.accepted_terms || !userProfile?.accepted_privacy) {
         router.push('/accept-terms')
         return
@@ -264,7 +265,6 @@ export default function Page() {
         return
       }
     } else {
-      // Profile already loaded
       if (!profile.accepted_terms || !profile.accepted_privacy) {
         router.push('/accept-terms')
         return
@@ -342,11 +342,18 @@ export default function Page() {
     setMessages([])
     setInput('')
     setSelectedImage(null)
+    setSidebarOpen(false)
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setShowUserMenu(false)
+    router.push('/')
   }
 
   if (isLoading) return (
-    <div className="h-screen w-full bg-[#212121] flex items-center justify-center fixed inset-0">
-      <div className="w-6 h-6 border-2 border-[#10A37F] border-t-transparent rounded-full animate-spin"></div>
+    <div className="h-screen w-screen bg-[#0A0A0A] flex items-center justify-center fixed inset-0 overflow-hidden">
+      <div className="w-6 h-6 border-2 border-[#3ECF8E] border-t-transparent rounded-full animate-spin"></div>
     </div>
   )
 
@@ -360,38 +367,38 @@ export default function Page() {
         message={authModalMessage}
       />
 
-      <div className="flex h-screen w-full bg-[#212121] text-[#ECECEC] overflow-hidden fixed inset-0">
+      <div className="flex h-screen w-screen bg-[#0A0A0A] text-white overflow-hidden fixed inset-0">
         
         {sidebarOpen && (
           <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
         )}
 
         <aside className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-[#171717] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
+          fixed inset-y-0 left-0 z-50 w-64 bg-[#0F0F0F] border-r border-[#1C1C1C] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          flex flex-col
+          flex flex-col overflow-hidden
         `}>
-          <div className="p-3 border-b border-[#2F2F2F]">
+          <div className="p-3 border-b border-[#1C1C1C] shrink-0">
             <button 
               onClick={handleNewChat}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-[#565869] hover:bg-[#2F2F2F] text-sm text-white transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-[#2D2D2D] hover:bg-[#1C1C1C] hover:border-[#3ECF8E] text-sm text-white transition-all group"
             >
               <Icons.Plus />
-              New chat
+              <span className="group-hover:text-[#3ECF8E] transition-colors">New chat</span>
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-3">
-            <div className="text-xs text-[#8E8EA0] text-center py-8">
+            <div className="text-xs text-[#71717A] text-center py-8">
               {session ? 'Your chats appear here' : 'Sign in to save chats'}
             </div>
           </div>
 
-          <div className="p-3 border-t border-[#2F2F2F]">
+          <div className="p-3 border-t border-[#1C1C1C] shrink-0">
             {session ? (
               <div>
                 <div className="flex items-center gap-3 px-3 py-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-[#10A37F] flex items-center justify-center text-white font-bold text-xs">
+                  <div className="w-7 h-7 rounded-full bg-[#3ECF8E] flex items-center justify-center text-white font-bold text-xs">
                     {session.user.email[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -399,8 +406,8 @@ export default function Page() {
                   </div>
                 </div>
                 <button 
-                  onClick={() => supabase.auth.signOut()}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#565869] hover:bg-[#2F2F2F] text-xs text-[#C5C5C5] hover:text-white transition-colors"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#2D2D2D] hover:bg-[#1C1C1C] hover:border-red-500/50 text-xs text-[#A1A1AA] hover:text-red-400 transition-all"
                 >
                   <Icons.SignOut />
                   Log out
@@ -409,17 +416,17 @@ export default function Page() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="w-full bg-[#10A37F] hover:bg-[#0E8F6F] text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+                className="w-full bg-[#3ECF8E] hover:bg-[#34B27B] text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
               >
-                Sign up or log in
+                Sign in
               </button>
             )}
           </div>
         </aside>
 
-        <main className="flex-1 flex flex-col relative min-w-0">
-          <header className="h-14 border-b border-[#2F2F2F] flex items-center justify-between px-4 shrink-0 bg-[#212121]">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#C5C5C5] hover:text-white">
+        <main className="flex-1 flex flex-col relative min-w-0 overflow-hidden">
+          <header className="h-14 border-b border-[#1C1C1C] flex items-center justify-between px-4 shrink-0 bg-[#0A0A0A]">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#A1A1AA] hover:text-white transition-colors">
               <Icons.Menu />
             </button>
             <div className="flex-1 text-center lg:text-left lg:pl-4">
@@ -427,78 +434,85 @@ export default function Page() {
             </div>
             <div className="flex items-center gap-3">
               {!session && (
-                <>
-                  <button 
-                    onClick={() => setShowAuthModal(true)}
-                    className="text-sm text-[#C5C5C5] hover:text-white transition-colors hidden sm:block"
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-[#3ECF8E] hover:bg-[#34B27B] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Sign in
+                </button>
+              )}
+              {session && (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="w-8 h-8 rounded-full bg-[#3ECF8E] hover:bg-[#34B27B] flex items-center justify-center text-white font-bold text-sm transition-colors"
                   >
-                    Log in
+                    {session.user.email[0].toUpperCase()}
                   </button>
-                  <button 
-                    onClick={() => setShowAuthModal(true)}
-                    className="bg-[#10A37F] hover:bg-[#0E8F6F] text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Sign up
-                  </button>
-                </>
+                  
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-[#1C1C1C] border border-[#2D2D2D] rounded-lg shadow-xl overflow-hidden z-50">
+                      <div className="px-4 py-3 border-b border-[#2D2D2D]">
+                        <p className="text-xs text-[#71717A] mb-1">Signed in as</p>
+                        <p className="text-sm font-medium text-white truncate">{session.user.email}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          router.push('/pricing')
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#A1A1AA] hover:bg-[#0F0F0F] hover:text-white transition-colors flex items-center gap-2"
+                      >
+                        <Icons.Settings />
+                        Manage Subscription
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full px-4 py-2.5 text-left text-sm text-[#A1A1AA] hover:bg-[#0F0F0F] hover:text-red-400 transition-colors flex items-center gap-2 border-t border-[#2D2D2D]"
+                      >
+                        <Icons.SignOut />
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </header>
 
           <div className="flex-1 overflow-y-auto" ref={scrollRef}>
             {!hasStartedChat ? (
-              <div className="h-full flex flex-col items-center justify-center px-4">
+              <div className="h-full flex flex-col items-center justify-center px-4 pb-32">
                 <div className="w-full max-w-3xl">
                   <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#10A37F] mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#3ECF8E] mb-6">
                       <Icons.Sparkles />
                     </div>
                     <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4">
                       What can I help with?
                     </h2>
                     {!session && (
-                      <p className="text-[#C5C5C5] text-sm">
-                        Start your free trial to unlock AI-powered compliance guidance
+                      <p className="text-[#71717A] text-sm">
+                        Sign in to unlock AI-powered compliance guidance
                       </p>
                     )}
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-3 mb-12">
-                    {[
-                      { title: 'Temperature Control', prompt: 'What are the temperature requirements for cold holding?' },
-                      { title: 'Handwashing', prompt: 'Where should handwashing sinks be located?' },
-                      { title: 'Food Storage', prompt: 'How should I store raw meat in the refrigerator?' },
-                      { title: 'Inspection Prep', prompt: 'What should I prepare before a health inspection?' }
-                    ].map((item, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setInput(item.prompt)
-                          if (inputRef.current) inputRef.current.focus()
-                        }}
-                        className="text-left p-4 rounded-2xl border border-[#2F2F2F] hover:border-[#565869] hover:bg-[#2F2F2F] transition-all group"
-                      >
-                        <h3 className="text-white font-medium text-sm mb-1 group-hover:text-[#10A37F]">{item.title}</h3>
-                        <p className="text-[#8E8EA0] text-xs">{item.prompt}</p>
-                      </button>
-                    ))}
-                  </div>
-
                   <div className="relative">
                     {selectedImage && (
-                      <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
-                        <span className="text-xs text-[#C5C5C5]">Image attached</span>
-                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
+                      <div className="mb-3 p-2 bg-[#1C1C1C] border border-[#2D2D2D] rounded-lg flex items-center justify-between">
+                        <span className="text-xs text-[#A1A1AA]">Image attached</span>
+                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400 transition-colors">
                           <Icons.X />
                         </button>
                       </div>
                     )}
                     <form onSubmit={handleSend} className="relative">
-                      <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-full px-5 py-4 border border-[#565869] focus-within:border-[#8E8EA0] shadow-2xl hover:shadow-[#10A37F]/10 transition-shadow">
+                      <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2D2D2D] rounded-2xl px-5 py-4 focus-within:border-[#3ECF8E] shadow-2xl hover:shadow-[#3ECF8E]/10 transition-all">
                         <button 
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-[#C5C5C5] hover:text-white transition-colors p-1 shrink-0"
+                          className="text-[#71717A] hover:text-white transition-colors p-1 shrink-0"
                           title="Upload image"
                         >
                           <Icons.Upload />
@@ -514,20 +528,20 @@ export default function Page() {
                           ref={inputRef}
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
-                          placeholder="Message protocolLM"
-                          className="flex-1 bg-transparent border-none text-base text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
+                          placeholder="Ask about food safety compliance..."
+                          className="flex-1 bg-transparent border-none text-base text-white placeholder-[#71717A] focus:outline-none min-w-0"
                         />
                         <button 
                           type="submit"
                           disabled={(!input.trim() && !selectedImage) || isSending}
-                          className="text-white bg-[#10A37F] hover:bg-[#0E8F6F] disabled:bg-[#565869] disabled:cursor-not-allowed transition-colors p-2 rounded-full shrink-0"
+                          className="text-white bg-[#3ECF8E] hover:bg-[#34B27B] disabled:bg-[#2D2D2D] disabled:cursor-not-allowed transition-colors p-2 rounded-full shrink-0"
                         >
                           <Icons.Send />
                         </button>
                       </div>
                     </form>
-                    <p className="text-xs text-[#8E8EA0] text-center mt-4">
-                      protocolLM can make mistakes. Check important info with your health department.
+                    <p className="text-xs text-[#71717A] text-center mt-4">
+                      protocolLM can make mistakes. Verify important info with your health department.
                     </p>
                   </div>
                 </div>
@@ -538,13 +552,13 @@ export default function Page() {
                   {messages.map((msg, idx) => (
                     <div key={idx} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                       {msg.role !== 'user' && (
-                        <div className="w-8 h-8 rounded-full bg-[#10A37F] flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#3ECF8E] flex items-center justify-center shrink-0">
                           <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                           </svg>
                         </div>
                       )}
-                      <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#2F2F2F] rounded-3xl px-5 py-3' : ''}`}>
+                      <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-[#1C1C1C] border border-[#2D2D2D] rounded-2xl px-5 py-3' : ''}`}>
                         {msg.image && (
                           <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain" />
                         )}
@@ -556,22 +570,22 @@ export default function Page() {
                   ))}
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 bg-[#212121] border-t border-[#2F2F2F] p-4">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-transparent border-t border-[#1C1C1C] p-4">
                   <div className="max-w-3xl mx-auto">
                     {selectedImage && (
-                      <div className="mb-3 p-2 bg-[#2F2F2F] rounded-lg flex items-center justify-between">
-                        <span className="text-xs text-[#C5C5C5]">Image attached</span>
-                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400">
+                      <div className="mb-3 p-2 bg-[#1C1C1C] border border-[#2D2D2D] rounded-lg flex items-center justify-between">
+                        <span className="text-xs text-[#A1A1AA]">Image attached</span>
+                        <button onClick={() => setSelectedImage(null)} className="text-white hover:text-red-400 transition-colors">
                           <Icons.X />
                         </button>
                       </div>
                     )}
                     <form onSubmit={handleSend} className="relative">
-                      <div className="flex items-center gap-2 bg-[#2F2F2F] rounded-3xl px-4 py-3 border border-[#565869] focus-within:border-[#8E8EA0]">
+                      <div className="flex items-center gap-2 bg-[#1C1C1C] border border-[#2D2D2D] rounded-2xl px-4 py-3 focus-within:border-[#3ECF8E]">
                         <button 
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-[#C5C5C5] hover:text-white transition-colors p-1"
+                          className="text-[#71717A] hover:text-white transition-colors p-1"
                           title="Upload image"
                         >
                           <Icons.Upload />
@@ -588,19 +602,19 @@ export default function Page() {
                           value={input}
                           onChange={(e) => setInput(e.target.value)}
                           placeholder="Message protocolLM"
-                          className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#8E8EA0] focus:outline-none min-w-0"
+                          className="flex-1 bg-transparent border-none text-[15px] text-white placeholder-[#71717A] focus:outline-none min-w-0"
                         />
                         <button 
                           type="submit"
                           disabled={(!input.trim() && !selectedImage) || isSending}
-                          className="text-[#C5C5C5] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1 shrink-0"
+                          className="text-[#71717A] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors p-1 shrink-0"
                         >
                           <Icons.Send />
                         </button>
                       </div>
                     </form>
-                    <p className="text-xs text-[#8E8EA0] text-center mt-3">
-                      protocolLM can make mistakes. Check important info with your health department.
+                    <p className="text-xs text-[#71717A] text-center mt-3">
+                      protocolLM can make mistakes. Verify important info with your health department.
                     </p>
                   </div>
                 </div>
