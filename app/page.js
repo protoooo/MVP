@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// ICONS (Clean & Professional)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
@@ -16,7 +16,7 @@ const Icons = {
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
   User: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   Robot: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2zM4.5 19h15a.5.5 0 0 0 .5-.5v-9a5.5 5.5 0 0 0-11 0v9a.5.5 0 0 0 .5.5zM12 13a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
 }
 
@@ -30,13 +30,17 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // 1. Google Auth Fix: Hardcoded URL for Reliability
-  const redirectUrl = 'https://protocollm.org/auth/callback'
+  // Google Auth Logic (Uses Env Variable)
+  const getRedirectUrl = () => {
+    return `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+  }
 
   const handleEmailAuth = async (e) => {
     e.preventDefault()
     setLoading(true)
     setStatusMessage('')
+
+    const redirectUrl = getRedirectUrl()
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -54,6 +58,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const handleGoogleAuth = async () => {
     setGoogleLoading(true)
     setStatusMessage('')
+
+    const redirectUrl = getRedirectUrl()
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -172,6 +178,12 @@ export default function Page() {
     }
     init()
 
+    // SAFETY TIMER: Force loading to stop after 2 seconds regardless of Supabase
+    // This fixes the "stuck spinner" issue on first load.
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
@@ -185,7 +197,10 @@ export default function Page() {
         setProfile(null)
       }
     })
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timer)
+    }
   }, [supabase])
 
   useEffect(() => {
@@ -295,7 +310,7 @@ export default function Page() {
     }
   }
 
-  // 3. Floating Pill Box Input (Gemini Style)
+  // Floating Pill Box Input (Gemini Style)
   const InputBox = () => (
     <div className="w-full max-w-3xl mx-auto px-4 pb-4">
         {selectedImage && (
@@ -361,7 +376,7 @@ export default function Page() {
     <>
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
 
-      {/* 2. Fix for Screen Fit: Use h-[100dvh] instead of h-screen */}
+      {/* Screen Fit Fix: Use h-[100dvh] instead of h-screen */}
       <div className="flex h-[100dvh] w-full bg-[#0A0A0A] text-white overflow-hidden font-sans">
         
         {/* Mobile Overlay */}
