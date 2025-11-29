@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  // Always default back to the home page root, which now houses the dashboard
   const baseUrl = requestUrl.origin
 
   if (code) {
@@ -46,7 +45,7 @@ export async function GET(request) {
           await supabase.from('user_profiles').insert({
               id: session.user.id,
               email: session.user.email,
-              county: 'washtenaw', // Default for now
+              county: 'washtenaw',
               is_subscribed: false,
               accepted_terms: false,
               updated_at: new Date().toISOString()
@@ -55,15 +54,22 @@ export async function GET(request) {
           return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
       
+      // 3. Check if terms accepted
       if (!existingProfile.accepted_terms) {
          return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
-      // 3. Standard Redirect -> Home (which is now the dashboard)
-      return NextResponse.redirect(baseUrl)
+      // 4. Route based on subscription status
+      // Subscribed users → Dashboard (root)
+      // Non-subscribed users → Pricing
+      if (existingProfile.is_subscribed) {
+        return NextResponse.redirect(baseUrl) // Dashboard at root
+      } else {
+        return NextResponse.redirect(`${baseUrl}/pricing`)
+      }
     }
   }
 
-  // Fallback
+  // Fallback - go to homepage
   return NextResponse.redirect(baseUrl)
 }
