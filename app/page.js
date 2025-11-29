@@ -34,10 +34,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setLoading(true)
     setStatusMessage('')
 
-    // Use window.location for client-side redirect URL
-    const redirectUrl = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/callback`
-      : `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+    // FIX: Use environment variable for redirect URL to solve 0.0.0.0 binding issue
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
 
     console.log('📧 Email auth redirect URL:', redirectUrl)
 
@@ -61,10 +59,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     setGoogleLoading(true)
     setStatusMessage('')
 
-    // CRITICAL FIX: Use window.location.origin for production compatibility
-    const redirectUrl = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/callback`
-      : `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
+    // FIX: Use environment variable for redirect URL to solve 0.0.0.0 binding issue
+    const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`
 
     console.log('🔐 Google OAuth redirect URL:', redirectUrl)
 
@@ -84,7 +80,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
       setStatusMessage('Error: ' + error.message)
       setGoogleLoading(false)
     }
-    // If successful, user will be redirected - don't stop loading state
   }
 
   const GoogleIcon = () => (
@@ -199,7 +194,6 @@ export default function Page() {
     const init = async () => {
       console.log('🔐 Initializing auth...')
       
-      // Get current session
       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError) {
@@ -210,7 +204,6 @@ export default function Page() {
         console.log('✅ Session found:', currentSession.user.email)
         setSession(currentSession)
         
-        // Fetch user profile
         const { data: userProfile, error: profileError } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -232,14 +225,11 @@ export default function Page() {
 
     init()
     
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event)
-      
       setSession(session)
       
       if (session) {
-        // Refetch profile on auth change
         const { data: userProfile } = await supabase
           .from('user_profiles')
           .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -257,7 +247,6 @@ export default function Page() {
     }
   }, [supabase])
 
-  // Click outside user menu to close
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -268,14 +257,12 @@ export default function Page() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => { 
     if(scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight 
     }
   }, [messages])
 
-  // Focus input after sending message
   useEffect(() => {
     if (messages.length > 0 && inputRef.current && !isSending) {
       inputRef.current.focus()
@@ -286,16 +273,13 @@ export default function Page() {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
-    // Check auth
     if (!session) {
       setAuthModalMessage('Sign in to start chatting')
       setShowAuthModal(true)
       return
     }
 
-    // Check profile and subscription
     if (!profile) {
-      console.log('⏳ Profile not loaded yet, fetching...')
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('is_subscribed, accepted_terms, accepted_privacy')
@@ -480,8 +464,8 @@ export default function Page() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col relative min-w-0 overflow-hidden bg-[#0A0A0A]">
+        {/* Main Content - FIXED: Added h-screen and removed overflow-hidden */}
+        <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A] h-screen">
           {/* Header */}
           <header className="h-14 border-b border-[#1F1F1F] flex items-center justify-between px-4 shrink-0 bg-[#0A0A0A]">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-[#A1A1AA] hover:text-white transition-colors">
@@ -546,8 +530,8 @@ export default function Page() {
             </div>
           </header>
 
-          {/* Chat Area */}
-          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+          {/* Chat Area - FIXED: Added min-h-0 */}
+          <div className="flex-1 overflow-y-auto min-h-0" ref={scrollRef}>
             {!hasStartedChat ? (
               <div className="h-full flex flex-col items-center justify-center px-4 pb-32">
                 <div className="w-full max-w-3xl">
@@ -609,6 +593,7 @@ export default function Page() {
               </div>
             )}
           </div>
+          
           {/* Input Area */}
           <div className="border-t border-[#1F1F1F] bg-[#0A0A0A] p-4 shrink-0">
             <div className="max-w-3xl mx-auto">
