@@ -5,6 +5,39 @@ import { useRouter } from 'next/navigation'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
+// CUSTOM STYLES (Loader & Body Fix)
+// ==========================================
+// We insert this style to:
+// 1. Define your custom loader animation
+// 2. Force the browser body to black to prevent white lines leaking on scroll
+const GlobalStyles = () => (
+  <style jsx global>{`
+    body {
+      background-color: #000000 !important;
+      overscroll-behavior: none; /* Prevents rubber-banding on iOS */
+    }
+    .loader {
+      height: 30px;
+      aspect-ratio: 2.5;
+      /* Changed #000 to #FFFFFF so it shows on dark mode */
+      --_g: no-repeat radial-gradient(farthest-side,#FFFFFF 90%,#0000);
+      background:var(--_g), var(--_g), var(--_g), var(--_g);
+      background-size: 20% 50%;
+      animation: l43 1s infinite linear; 
+    }
+    @keyframes l43 {
+      0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
+      66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
+      83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
+      100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+    }
+  `}</style>
+)
+
+// ==========================================
 // ICONS
 // ==========================================
 const Icons = {
@@ -243,7 +276,6 @@ export default function Page() {
     }
     init()
 
-    // Safety timer to prevent infinite load
     const timer = setTimeout(() => setIsLoading(false), 2000)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -289,7 +321,6 @@ export default function Page() {
   }, [messages.length, isSending])
 
   const handleSignOut = async (e) => {
-    // 1. Prevent bubbling so the menu doesn't close before the click registers
     if (e) {
         e.preventDefault()
         e.stopPropagation()
@@ -300,7 +331,6 @@ export default function Page() {
       setProfile(null)
       setMessages([])
       setShowUserMenu(false)
-      // 2. Force a hard window reload to ensure clear state
       window.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
@@ -391,16 +421,15 @@ export default function Page() {
     setSidebarOpen(false)
   }
 
-  // Use fixed inset-0 to prevent white background leakage on mobile/landscape
   if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin"></div></div>
 
   return (
     <>
+      <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       
-      {/* FIX: Changed main container to 'fixed inset-0'. 
-        This locks the div to the viewport edges, preventing overscroll 
-        and the white background leak on landscape/mobile.
+      {/* FIX: 'fixed inset-0' combined with the GlobalStyles 'body { background: #000 }'
+         will prevent white lines from appearing on landscape/mobile scrolling.
       */}
       <div className="fixed inset-0 w-full h-full bg-[#0A0A0A] text-white overflow-hidden font-sans flex">
         
@@ -437,7 +466,6 @@ export default function Page() {
                       <Icons.Settings /> Subscription
                     </button>
                     <div className="h-px bg-[#2E2E2E] mx-0"></div>
-                    {/* Pass event (e) to handleSignOut to prevent bubbling */}
                     <button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2">
                       <Icons.SignOut /> Log out
                     </button>
@@ -467,9 +495,11 @@ export default function Page() {
           <div className="flex-1 overflow-y-auto" ref={scrollRef}>
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-16 h-16 bg-[#1C1C1C] border border-[#2E2E2E] rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-900/5">
-                  <Icons.Plus />
-                </div>
+                {/* UPDATED: Removed the Plus Icon container.
+                    Added the custom CSS loader class here.
+                */}
+                <div className="loader mb-6"></div>
+                
                 <h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1>
                 <p className="text-[#525252] text-sm">Ask about Michigan food safety compliance</p>
               </div>
@@ -477,8 +507,6 @@ export default function Page() {
               <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    
-                    {/* VISUAL UPDATE: Removed Robot Icon, Removed BG Boxes/Borders */}
                     <div className={`max-w-[85%] ${
                       msg.role === 'user'
                         ? 'text-white px-2'
