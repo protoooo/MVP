@@ -7,19 +7,16 @@ import { compressImage } from '@/lib/imageCompression'
 // ==========================================
 // CUSTOM STYLES (Loader & Body Fix)
 // ==========================================
-// We insert this style to:
-// 1. Define your custom loader animation
-// 2. Force the browser body to black to prevent white lines leaking on scroll
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
       background-color: #000000 !important;
-      overscroll-behavior: none; /* Prevents rubber-banding on iOS */
+      overscroll-behavior: none;
     }
+    /* Loader for "Thinking" state */
     .loader {
-      height: 30px;
+      height: 20px;
       aspect-ratio: 2.5;
-      /* Changed #000 to #FFFFFF so it shows on dark mode */
       --_g: no-repeat radial-gradient(farthest-side,#FFFFFF 90%,#0000);
       background:var(--_g), var(--_g), var(--_g), var(--_g);
       background-size: 20% 50%;
@@ -113,11 +110,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
               : 'bg-[#2E2E2E] text-[#71717A] cursor-not-allowed'
           }`}
         >
-          {isSending ? (
-            <div className="w-5 h-5 border-2 border-white/50 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Icons.Send />
-          )}
+          <Icons.Send />
         </button>
       </form>
       <p className="text-center text-[11px] text-[#525252] mt-3">
@@ -343,7 +336,7 @@ export default function Page() {
     if ((!input.trim() && !selectedImage) || isSending) return
 
     if (!session) {
-      setAuthModalMessage('Sign in to start chatting')
+      setAuthModalMessage('Sign up to start chatting')
       setShowAuthModal(true)
       return
     }
@@ -366,6 +359,7 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
+    // Add temporary assistant message for "thinking"
     setMessages(p => [...p, { role: 'assistant', content: '' }])
 
     try {
@@ -428,9 +422,6 @@ export default function Page() {
       <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       
-      {/* FIX: 'fixed inset-0' combined with the GlobalStyles 'body { background: #000 }'
-         will prevent white lines from appearing on landscape/mobile scrolling.
-      */}
       <div className="fixed inset-0 w-full h-full bg-[#0A0A0A] text-white overflow-hidden font-sans flex">
         
         {/* Mobile Overlay */}
@@ -491,50 +482,79 @@ export default function Page() {
             <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
           </div>
 
-          {/* Chat Container */}
-          <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-            {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-                {/* UPDATED: Removed the Plus Icon container.
-                    Added the custom CSS loader class here.
-                */}
-                <div className="loader mb-6"></div>
-                
-                <h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1>
-                <p className="text-[#525252] text-sm">Ask about Michigan food safety compliance</p>
+          {!session ? (
+            /* ================================== */
+            /* LOGGED OUT VIEW (Centered) */
+            /* ================================== */
+            <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full">
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center tracking-tight">
+                Washtenaw Food Safety
+              </h1>
+              <div className="w-full max-w-2xl">
+                <InputBox
+                  input={input}
+                  setInput={setInput}
+                  handleSend={handleSend}
+                  handleImage={handleImage}
+                  isSending={isSending}
+                  fileInputRef={fileInputRef}
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  inputRef={inputRef}
+                />
               </div>
-            ) : (
-              <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] ${
-                      msg.role === 'user'
-                        ? 'text-white px-2'
-                        : 'text-[#EDEDED] px-2'
-                    }`}>
-                      {msg.image && <img src={msg.image} alt="Upload" className="rounded-lg mb-3 max-h-60 object-contain border border-white/10" />}
-                      <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>
-                    </div>
+            </div>
+          ) : (
+            /* ================================== */
+            /* LOGGED IN VIEW (Chat) */
+            /* ================================== */
+            <>
+              {/* Chat Container */}
+              <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                    <h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1>
                   </div>
-                ))}
+                ) : (
+                  <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] ${
+                          msg.role === 'user'
+                            ? 'text-white px-2'
+                            : 'text-[#EDEDED] px-2'
+                        }`}>
+                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-lg mb-3 max-h-60 object-contain border border-white/10" />}
+                          
+                          {/* Display content or Loader if thinking */}
+                          {msg.role === 'assistant' && msg.content === '' && isSending ? (
+                             <div className="loader my-1"></div>
+                          ) : (
+                             <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Input Area */}
-          <div className="w-full bg-[#0A0A0A] pt-2 shrink-0">
-            <InputBox
-              input={input}
-              setInput={setInput}
-              handleSend={handleSend}
-              handleImage={handleImage}
-              isSending={isSending}
-              fileInputRef={fileInputRef}
-              selectedImage={selectedImage}
-              setSelectedImage={setSelectedImage}
-              inputRef={inputRef}
-            />
-          </div>
+              {/* Input Area (Bottom) */}
+              <div className="w-full bg-[#0A0A0A] pt-2 shrink-0">
+                <InputBox
+                  input={input}
+                  setInput={setInput}
+                  handleSend={handleSend}
+                  handleImage={handleImage}
+                  isSending={isSending}
+                  fileInputRef={fileInputRef}
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  inputRef={inputRef}
+                />
+              </div>
+            </>
+          )}
         </main>
       </div>
     </>
