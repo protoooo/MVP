@@ -49,6 +49,7 @@ const Icons = {
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
   Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
   Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
 }
 
 // ==========================================
@@ -64,11 +65,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
       
-      {/* 
-        Changes here: 
-        1. focus-within:ring-0 (Removes the halo)
-        2. focus-within:border-[#3ECF8E] (Supabase Green Border on click)
-      */}
+      {/* NO BLUE RING - Clean Supabase Style */}
       <form
         onSubmit={handleSend}
         className="relative flex items-end w-full bg-[#161616] border border-[#2E2E2E] rounded-lg shadow-sm transition-colors focus-within:border-[#3ECF8E] focus-within:ring-0"
@@ -241,7 +238,12 @@ export default function Page() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // HISTORY STATES
+  const [chatHistory, setChatHistory] = useState([]) // List of previous chats
+  const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
+  
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -268,6 +270,9 @@ export default function Page() {
             .eq('id', currentSession.user.id)
             .single()
           setProfile(userProfile)
+          
+          // LOAD CHAT HISTORY SIDEBAR
+          loadChatHistory()
         }
       } catch (e) {
         console.error(e)
@@ -288,8 +293,10 @@ export default function Page() {
           .eq('id', session.user.id)
           .single()
         setProfile(userProfile)
+        loadChatHistory()
       } else {
         setProfile(null)
+        setChatHistory([])
       }
     })
 
@@ -298,6 +305,37 @@ export default function Page() {
       clearTimeout(timer)
     }
   }, [supabase])
+
+  // --- NEW: Load Sidebar History ---
+  const loadChatHistory = async () => {
+    const { data: chats } = await supabase
+      .from('chats')
+      .select('id, title, created_at')
+      .order('created_at', { ascending: false })
+    if (chats) setChatHistory(chats)
+  }
+
+  // --- NEW: Load Specific Chat Messages ---
+  const loadChat = async (chatId) => {
+    setIsLoading(true)
+    setCurrentChatId(chatId)
+    setSidebarOpen(false) // Close sidebar on mobile
+    
+    const { data: msgs } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true })
+      
+    if (msgs) {
+      setMessages(msgs.map(m => ({
+        role: m.role,
+        content: m.content,
+        image: m.image
+      })))
+    }
+    setIsLoading(false)
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -326,6 +364,7 @@ export default function Page() {
     setSession(null)
     setProfile(null)
     setMessages([])
+    setChatHistory([])
     setShowUserMenu(false)
     try {
       await supabase.auth.signOut()
@@ -358,6 +397,7 @@ export default function Page() {
       }
     }
 
+    // --- NEW: Optimistic UI & Chat Creation ---
     const newMsg = { role: 'user', content: input, image: selectedImage }
     setMessages(p => [...p, newMsg])
     setInput('')
@@ -365,13 +405,38 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
+    // Temporary "thinking" message
     setMessages(p => [...p, { role: 'assistant', content: '' }])
 
+    let activeChatId = currentChatId
+
     try {
+      // If this is the first message, CREATE THE CHAT in DB first
+      if (!activeChatId) {
+        const { data: newChat, error } = await supabase
+          .from('chats')
+          .insert({ 
+             user_id: session.user.id, 
+             title: input.slice(0, 30) + '...' // Simple title generation
+          })
+          .select()
+          .single()
+        
+        if (newChat) {
+          activeChatId = newChat.id
+          setCurrentChatId(newChat.id)
+          loadChatHistory() // Refresh sidebar
+        }
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, newMsg], image: img })
+        body: JSON.stringify({ 
+          messages: [...messages, newMsg], 
+          image: img,
+          chatId: activeChatId // Pass ID to backend so it saves
+        })
       })
 
       if (res.status === 401) {
@@ -417,6 +482,7 @@ export default function Page() {
     setMessages([])
     setInput('')
     setSelectedImage(null)
+    setCurrentChatId(null) // Reset ID so next send creates new chat
     setSidebarOpen(false)
   }
 
@@ -432,7 +498,7 @@ export default function Page() {
         {/* Mobile Overlay */}
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Sidebar - Added subtle Supabase Green right border */}
+        {/* Sidebar */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#000000] border-r border-[#3ECF8E]/20 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
             <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3ECF8E] rounded-lg transition-all group">
@@ -442,6 +508,23 @@ export default function Page() {
 
           <div className="flex-1 overflow-y-auto px-2">
             <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div>
+            {/* HISTORY LIST */}
+            <div className="space-y-1">
+              {chatHistory.map((chat) => (
+                <button
+                  key={chat.id}
+                  onClick={() => loadChat(chat.id)}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center gap-2 ${
+                    currentChatId === chat.id 
+                      ? 'bg-[#1C1C1C] text-white border border-[#333]' 
+                      : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111]'
+                  }`}
+                >
+                  <Icons.ChatBubble />
+                  <span className="truncate">{chat.title || 'New Chat'}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {session ? (
@@ -493,7 +576,7 @@ export default function Page() {
             /* ================================== */
             <div className="flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
-              {/* Pill moved ABOVE header, changed to Supabase Green style */}
+              {/* FLIPPED ORDER: Pill on top, Header below */}
               <button 
                 onClick={() => setShowAuthModal(true)}
                 className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/20 transition-all cursor-pointer group"
@@ -507,7 +590,6 @@ export default function Page() {
                 </span>
               </button>
 
-              {/* Header below pill, tighter to input box, Supabase Font */}
               <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
                 Washtenaw Food Safety
               </h1>
