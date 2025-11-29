@@ -10,7 +10,7 @@ import { compressImage } from '@/lib/imageCompression'
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #121212 !important; /* Updated from #000000 */
+      background-color: #121212 !important;
       overscroll-behavior: none;
     }
     .loader {
@@ -620,7 +620,7 @@ export default function Page() {
         {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         {/* Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#3ECF8E]/20 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r-2 border-[#3E7BFA]/40 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
             <button onClick={handleNewChat} className="flex items-center justify-between w-full px-3 py-2 text-sm text-white bg-[#1C1C1C] border border-[#2E2E2E] hover:border-[#3ECF8E] rounded-lg transition-all group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
@@ -646,14 +646,7 @@ export default function Page() {
               ))}
             </div>
             
-            {!session && (
-              <div className="mt-4 px-1">
-                 <button onClick={() => router.push('/pricing')} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#A1A1AA] hover:text-white hover:bg-[#1C1C1C] rounded-lg transition-colors">
-                    <Icons.Tag />
-                    Pricing
-                 </button>
-              </div>
-            )}
+            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
           </div>
 
           {session ? (
