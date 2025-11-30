@@ -623,8 +623,8 @@ export default function Page() {
         {/* Sidebar */}
         <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r-2 border-[#3E7BFA]/40 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
           <div className="p-3">
-            {/* NEW CHAT BUTTON: Blue Style */}
-            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-white bg-[#3E7BFA] hover:bg-[#3469d4] rounded-lg transition-colors shadow-lg shadow-blue-900/20 group">
+            {/* NEW CHAT BUTTON: OUTLINE STYLE (Blue) */}
+            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#3E7BFA] bg-transparent border border-[#3E7BFA] hover:bg-[#3E7BFA]/10 rounded-lg transition-colors group">
               <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
             </button>
           </div>
@@ -647,15 +647,12 @@ export default function Page() {
                 </button>
               ))}
             </div>
-            
-            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
           </div>
 
-          {session ? (
+          {session && (
             <div className="p-3 border-t border-[#1C1C1C]">
               <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
-                  {/* USER AVATAR: Blue Style */}
                   <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
                     {session.user.email[0].toUpperCase()}
                   </div>
@@ -677,13 +674,6 @@ export default function Page() {
                 )}
               </div>
             </div>
-          ) : (
-            <div className="p-3 border-t border-[#1C1C1C]">
-              {/* SIGN IN BUTTON: Blue Style */}
-              <button onClick={() => setShowAuthModal(true)} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2 rounded-lg text-sm transition-colors shadow-lg shadow-blue-900/20">
-                Sign in
-              </button>
-            </div>
           )}
         </aside>
 
@@ -698,27 +688,32 @@ export default function Page() {
           {!session ? (
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
-              <div className="absolute top-4 right-4 z-20">
+              {/* TOP RIGHT NAV (Logged Out) */}
+              <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
+                {/* Start Free Trial - Green Button */}
+                <button 
+                  onClick={() => setShowAuthModal(true)} 
+                  className="bg-[#3ECF8E] hover:bg-[#34b27b] text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
+                >
+                  Start Free Trial
+                </button>
+
+                {/* Pricing - Text Link */}
                 <button 
                   onClick={() => router.push('/pricing')}
-                  className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors px-4 py-2"
+                  className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
                 >
                   Pricing
                 </button>
-              </div>
 
-              <button 
-                onClick={() => setShowAuthModal(true)}
-                className="mb-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3ECF8E]/10 border border-[#3ECF8E]/30 hover:border-[#3ECF8E] hover:bg-[#3ECF8E]/20 transition-all cursor-pointer group"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <span className="text-[#3ECF8E] text-xs font-bold uppercase tracking-wider group-hover:text-emerald-300">
-                  Start 30-day free trial
-                </span>
-              </button>
+                {/* Sign In - Blue Text Link */}
+                <button 
+                  onClick={() => setShowAuthModal(true)} 
+                  className="text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
 
               <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
                 Washtenaw Food Safety
