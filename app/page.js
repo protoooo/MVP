@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// CUSTOM STYLES
+// GLOBAL STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -48,34 +48,133 @@ const GlobalStyles = () => (
 // ==========================================
 const Icons = {
   // UI Icons
-  Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  Send: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(45deg)' }}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
-  SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
-  X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
-  Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
-  Upload: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
-  Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  
+  Menu: () => (
+    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  ),
+  Send: () => (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ transform: 'rotate(45deg)' }}
+    >
+      <line x1="22" y1="2" x2="11" y2="13"></line>
+      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+    </svg>
+  ),
+  SignOut: () => (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    </svg>
+  ),
+  X: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  Upload: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+    </svg>
+  ),
+  Settings: () => (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  ChatBubble: () => (
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+    </svg>
+  ),
+  Tag: () => (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+    </svg>
+  ),
+
   // Mode Icons
-  MessageSquare: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
-  Camera: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-  ClipboardCheck: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
-  Shield: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.572c-2.88 0-5.382-.874-6.86-2.195a1 1 0 00-1.396 1.135 12.001 12.001 0 006.583 9.473 1.002 1.002 0 001.346 0 12.001 12.001 0 006.583-9.473 1 1 0 00-1.396-1.135C15.382 5.698 12.88 6.572 12 6.572z" /></svg>,
-  AcademicCap: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>,
-  Table: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
-  
+  MessageSquare: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+  ),
+  Camera: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  ClipboardCheck: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+  ),
+  Shield: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.572c-2.88 0-5.382-.874-6.86-2.195a1 1 0 00-1.396 1.135 12.001 12.001 0 006.583 9.473 1.002 1.002 0 001.346 0 12.001 12.001 0 006.583-9.473 1 1 0 00-1.396-1.135C15.382 5.698 12.88 6.572 12 6.572z" />
+    </svg>
+  ),
+  AcademicCap: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path d="M12 14l9-5-9-5-9 5 9 5z" />
+      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+    </svg>
+  ),
+  Table: () => (
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  ),
+
   // Pricing Icons
-  Check: ({ color = "text-[#EDEDED]" }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
-  CloseX: () => <svg className="w-4 h-4 text-[#333] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+  Check: ({ color = 'text-[#EDEDED]' }) => (
+    <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+  ),
+  CloseX: () => (
+    <svg className="w-4 h-4 text-[#333] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
 }
 
 // ==========================================
 // INPUT COMPONENT
 // ==========================================
-const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode }) => {
-  
+const InputBox = ({
+  input,
+  setInput,
+  handleSend,
+  handleImage,
+  isSending,
+  fileInputRef,
+  selectedImage,
+  setSelectedImage,
+  inputRef,
+  activeMode,
+  setActiveMode,
+}) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
     if (mode === 'image') {
@@ -85,79 +184,145 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
 
   // Helper to determine active color
   const getActiveColor = () => {
-    switch(activeMode) {
-      case 'chat': return '#3E7BFA'; // Blue
-      case 'image': return '#F5A623'; // Orange
-      case 'audit': return '#FDD901'; // Yellow
-      case 'critical': return '#EF4444'; // Red
-      case 'training': return '#A855F7'; // Purple
-      case 'sop': return '#3ECF8E'; // Green
-      default: return '#3E7BFA';
+    switch (activeMode) {
+      case 'chat':
+        return '#3E7BFA' // Blue
+      case 'image':
+        return '#F5A623' // Orange
+      case 'audit':
+        return '#FDD901' // Yellow
+      case 'critical':
+        return '#EF4444' // Red
+      case 'training':
+        return '#A855F7' // Purple
+      case 'sop':
+        return '#3ECF8E' // Green
+      default:
+        return '#3E7BFA'
     }
   }
 
-  const activeColor = getActiveColor();
+  const activeColor = getActiveColor()
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 pb-6">
-      
       {/* SCROLLABLE MODE BAR */}
       <div className="flex items-center gap-1 mb-2 px-1 overflow-x-auto no-scrollbar pb-1">
-        
         {/* Chat (Blue) */}
-        <button onClick={() => handleModeClick('chat')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'chat' ? 'text-[#3E7BFA] bg-[#3E7BFA]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('chat')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'chat'
+              ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.MessageSquare /> <span>Chat</span>
-          {activeMode === 'chat' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]"></div>}
+          {activeMode === 'chat' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]" />
+          )}
         </button>
 
         {/* Image (Orange) */}
-        <button onClick={() => handleModeClick('image')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'image' || selectedImage ? 'text-[#F5A623] bg-[#F5A623]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('image')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'image' || selectedImage
+              ? 'text-[#F5A623] bg-[#F5A623]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.Camera /> <span>Image</span>
-          {(activeMode === 'image' || selectedImage) && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]"></div>}
+          {(activeMode === 'image' || selectedImage) && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]" />
+          )}
         </button>
 
         {/* Mock Audit (Yellow) */}
-        <button onClick={() => handleModeClick('audit')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'audit' ? 'text-[#FDD901] bg-[#FDD901]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('audit')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'audit'
+              ? 'text-[#FDD901] bg-[#FDD901]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.ClipboardCheck /> <span>Audit</span>
-          {activeMode === 'audit' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]"></div>}
+          {activeMode === 'audit' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]" />
+          )}
         </button>
 
         {/* Crisis (Red - Shield) */}
-        <button onClick={() => handleModeClick('critical')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'critical' ? 'text-[#EF4444] bg-[#EF4444]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('critical')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'critical'
+              ? 'text-[#EF4444] bg-[#EF4444]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.Shield /> <span>Crisis</span>
-          {activeMode === 'critical' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF4444] rounded-full shadow-[0_0_8px_#EF4444]"></div>}
+          {activeMode === 'critical' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF4444] rounded-full shadow-[0_0_8px_#EF4444]" />
+          )}
         </button>
 
         {/* Training (Purple) */}
-        <button onClick={() => handleModeClick('training')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'training' ? 'text-[#A855F7] bg-[#A855F7]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('training')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'training'
+              ? 'text-[#A855F7] bg-[#A855F7]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.AcademicCap /> <span>Train</span>
-          {activeMode === 'training' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#A855F7] rounded-full shadow-[0_0_8px_#A855F7]"></div>}
+          {activeMode === 'training' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#A855F7] rounded-full shadow-[0_0_8px_#A855F7]" />
+          )}
         </button>
 
         {/* SOPs (Green) */}
-        <button onClick={() => handleModeClick('sop')} className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'sop' ? 'text-[#3ECF8E] bg-[#3ECF8E]/10' : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'}`}>
+        <button
+          onClick={() => handleModeClick('sop')}
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+            activeMode === 'sop'
+              ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
+              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+          }`}
+        >
           <Icons.Table /> <span>Logs</span>
-          {activeMode === 'sop' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3ECF8E] rounded-full shadow-[0_0_8px_#3ECF8E]"></div>}
+          {activeMode === 'sop' && (
+            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3ECF8E] rounded-full shadow-[0_0_8px_#3ECF8E]" />
+          )}
         </button>
-
       </div>
 
       {selectedImage && (
         <div className="mb-2 mx-1 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#F5A623]/30">
           <span className="text-xs text-[#F5A623] font-medium flex items-center gap-1">
-             <Icons.Camera /> Analyzing Image
+            <Icons.Camera /> Analyzing Image
           </span>
-          <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-[#525252] hover:text-white"><Icons.X /></button>
+          <button
+            onClick={() => {
+              setSelectedImage(null)
+              setActiveMode('chat')
+            }}
+            className="text-[#525252] hover:text-white"
+          >
+            <Icons.X />
+          </button>
         </div>
       )}
-      
+
       {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
         className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
-        style={{ 
-          borderColor: activeMode === 'chat' ? `${activeColor}4D` : `${activeColor}4D`, 
-          '--active-color': activeColor 
+        style={{
+          borderColor: `${activeColor}4D`,
+          '--active-color': activeColor,
         }}
       >
         <style jsx>{`
@@ -166,13 +331,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           }
         `}</style>
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleImage}
-          accept="image/*"
-          className="hidden"
-        />
+        <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
 
         <textarea
           ref={inputRef}
@@ -185,12 +344,17 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             }
           }}
           placeholder={
-            activeMode === 'chat' ? "Ask anything..." :
-            activeMode === 'image' ? "Upload an image to analyze..." :
-            activeMode === 'audit' ? "Describe area for mock audit..." :
-            activeMode === 'critical' ? "Describe the emergency (e.g. power outage)..." :
-            activeMode === 'training' ? "Topic for staff training (e.g. handwashing)..." :
-            "What kind of log or SOP do you need?"
+            activeMode === 'chat'
+              ? 'Ask anything...'
+              : activeMode === 'image'
+              ? 'Upload an image to analyze...'
+              : activeMode === 'audit'
+              ? 'Describe area for mock audit...'
+              : activeMode === 'critical'
+              ? 'Describe the emergency (e.g. power outage)...'
+              : activeMode === 'training'
+              ? 'Topic for staff training (e.g. handwashing)...'
+              : 'What kind of log or SOP do you need?'
           }
           className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
@@ -202,10 +366,15 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           disabled={(!input.trim() && !selectedImage) || isSending}
           className="p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center"
           style={{
-            backgroundColor: (!input.trim() && !selectedImage) ? '#2E2E2E' : activeColor,
-            borderColor: (!input.trim() && !selectedImage) ? '#2E2E2E' : activeColor,
-            color: (!input.trim() && !selectedImage) ? '#525252' : (activeMode === 'chat' || activeMode === 'critical' || activeMode === 'training') ? 'white' : 'black',
-            cursor: (!input.trim() && !selectedImage) ? 'not-allowed' : 'pointer'
+            backgroundColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+            borderColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+            color:
+              !input.trim() && !selectedImage
+                ? '#525252'
+                : activeMode === 'chat' || activeMode === 'critical' || activeMode === 'training'
+                ? 'white'
+                : 'black',
+            cursor: !input.trim() && !selectedImage ? 'not-allowed' : 'pointer',
           }}
         >
           {isSending ? (
@@ -215,9 +384,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           )}
         </button>
       </form>
-      <p className="text-center text-[11px] text-[#525252] mt-3">
-        protocolLM can make mistakes. Verify important info.
-      </p>
+      <p className="text-center text-[11px] text-[#525252] mt-3">protocolLM can make mistakes. Verify important info.</p>
     </div>
   )
 }
@@ -273,8 +440,14 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-[#181818] border border-[#2E2E2E] rounded-xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#181818] border border-[#2E2E2E] rounded-xl w-full max-w-md p-8 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2 className="text-xl font-semibold text-white mb-1">{message || 'Welcome to protocolLM'}</h2>
@@ -293,14 +466,35 @@ const AuthModal = ({ isOpen, onClose, message }) => {
           {googleLoading ? (
             <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
           ) : (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+                fill="#4285F4"
+              />
+              <path
+                d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z"
+                fill="#34A853"
+              />
+              <path
+                d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z"
+                fill="#EA4335"
+              />
+            </svg>
           )}
           Continue with Google
         </button>
 
         <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#2E2E2E]"></div></div>
-          <div className="relative flex justify-center text-xs"><span className="bg-[#181818] px-3 text-[#888888]">OR</span></div>
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#2E2E2E]" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-[#181818] px-3 text-[#888888]">OR</span>
+          </div>
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-4">
@@ -312,13 +506,23 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             required
             className="w-full bg-[#0A0A0A] border border-[#2E2E2E] rounded-lg px-4 py-2.5 text-sm text-white placeholder-[#666666] focus:outline-none focus:border-[#3E7BFA] transition-all"
           />
-          <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2.5 rounded-lg transition-colors">
+          <button
+            type="submit"
+            disabled={loading || googleLoading}
+            className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2.5 rounded-lg transition-colors"
+          >
             {loading ? 'Sending...' : 'Continue with Email'}
           </button>
         </form>
 
         {statusMessage && (
-          <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>
+          <div
+            className={`mt-4 p-3 rounded-lg text-sm border ${
+              statusMessage.includes('Error')
+                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                : 'bg-green-500/10 border-green-500/20 text-green-400'
+            }`}
+          >
             {statusMessage}
           </div>
         )}
@@ -328,81 +532,331 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 }
 
 // ==========================================
-// PRICING MODAL
+// USAGE COUNTER
+// ==========================================
+const UsageCounter = ({ session }) => {
+  const [usage, setUsage] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchUsage = async () => {
+      if (!session) return
+
+      try {
+        // Get profile data
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('requests_used, images_used, is_subscribed')
+          .eq('id', session.user.id)
+          .single()
+
+        // Get subscription data
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('plan, status, current_period_end')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+
+        let planName = 'free'
+        if (sub && (sub.status === 'active' || sub.status === 'trialing')) {
+          planName = sub.plan || 'pro'
+        } else if (profile?.is_subscribed) {
+          planName = 'pro'
+        }
+
+        // Define limits (synced with pricing)
+        const limits = {
+          free: { text: 10, images: 0 },
+          starter: { text: 2000, images: 10 },
+          pro: { text: 100000, images: 250 },
+          enterprise: { text: 100000, images: 1000 },
+        }
+
+        const planLimits = limits[planName] || limits.free
+
+        setUsage({
+          textUsed: profile?.requests_used || 0,
+          textLimit: planLimits.text,
+          imagesUsed: profile?.images_used || 0,
+          imageLimit: planLimits.images,
+          plan: planName,
+          resetDate: sub?.current_period_end ? new Date(sub.current_period_end) : null,
+        })
+      } catch (error) {
+        console.error('Error fetching usage:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsage()
+    const interval = setInterval(fetchUsage, 30000)
+    return () => clearInterval(interval)
+  }, [session, supabase])
+
+  if (!session || loading || !usage) return null
+
+  const textPercentage =
+    usage.textLimit === 100000 ? 0 : (usage.textUsed / usage.textLimit) * 100
+  const imagePercentage =
+    usage.imageLimit === 0 ? 0 : (usage.imagesUsed / usage.imageLimit) * 100
+
+  const formatResetDate = (date) => {
+    if (!date) return 'Unknown'
+    const now = new Date()
+    const diff = date - now
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+    if (days <= 0) return 'Today'
+    if (days === 1) return 'Tomorrow'
+    return `${days} days`
+  }
+
+  return (
+    <div className="w-full max-w-4xl mx-auto px-4 mb-4">
+      <div className="bg-[#1C1C1C] border border-[#2E2E2E] rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest">
+            Usage This Month
+          </h3>
+          <span className="text-xs text-[#555]">
+            Resets in {formatResetDate(usage.resetDate)}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Text Queries */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[#A1A1AA] font-medium">
+                Text Queries
+              </span>
+              <span className="text-xs font-mono text-white">
+                {usage.textLimit === 100000 ? (
+                  <span className="text-[#3ECF8E]">Unlimited ✨</span>
+                ) : (
+                  `${usage.textUsed.toLocaleString()} / ${usage.textLimit.toLocaleString()}`
+                )}
+              </span>
+            </div>
+            {usage.textLimit !== 100000 && (
+              <div className="w-full bg-[#0A0A0A] rounded-full h-2 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    textPercentage >= 90
+                      ? 'bg-red-500'
+                      : textPercentage >= 70
+                      ? 'bg-yellow-500'
+                      : 'bg-[#3E7BFA]'
+                  }`}
+                  style={{ width: `${Math.min(textPercentage, 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Image Analyses */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[#A1A1AA] font-medium">
+                Image Analyses
+              </span>
+              <span className="text-xs font-mono text-white">
+                {usage.imageLimit === 0 ? (
+                  <span className="text-[#666]">Not Available</span>
+                ) : (
+                  `${usage.imagesUsed.toLocaleString()} / ${usage.imageLimit.toLocaleString()}`
+                )}
+              </span>
+            </div>
+            {usage.imageLimit > 0 && (
+              <div className="w-full bg-[#0A0A0A] rounded-full h-2 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    imagePercentage >= 90
+                      ? 'bg-red-500'
+                      : imagePercentage >= 70
+                      ? 'bg-yellow-500'
+                      : 'bg-[#F5A623]'
+                  }`}
+                  style={{ width: `${Math.min(imagePercentage, 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// PRICING MODAL (UPDATED QUOTAS / COPY)
 // ==========================================
 const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
   if (!isOpen) return null
-  
+
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-[#121212] border border-[#2C2C2C] rounded-2xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-6 right-6 text-[#888] hover:text-white transition-colors"><Icons.X /></button>
-        
+    <div
+      className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-[#121212] border border-[#2C2C2C] rounded-2xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-[#888] hover:text-white transition-colors"
+        >
+          <Icons.X />
+        </button>
+
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Choose your protection level.</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            Choose your protection level.
+          </h2>
           <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Starter */}
           <div className="bg-[#1C1C1C] border border-[#333] rounded-lg p-6 flex flex-col hover:border-[#555] transition-colors">
-            <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">Starter</h3>
+            <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">
+              Starter
+            </h3>
             <div className="flex items-baseline text-white">
-              <span className="text-4xl font-bold tracking-tight font-mono">$49</span>
-              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+              <span className="text-4xl font-bold tracking-tight font-mono">
+                $49
+              </span>
+              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
+                /mo
+              </span>
             </div>
-            <p className="text-sm text-[#666] mt-4 mb-6 leading-relaxed">Essential compliance for single locations.</p>
+            <p className="text-sm text-[#666] mt-4 mb-6 leading-relaxed">
+              Basic protection for solo operators.
+            </p>
             <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]"><Icons.Check />500 Text Queries / Mo</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#444]"><Icons.CloseX />No Image Analysis</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]"><Icons.Check />County Document Access</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#444]"><Icons.CloseX />No Mock Audits</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
+                <Icons.Check />
+                2,000 Text Queries / Mo
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
+                <Icons.Check />
+                10 Image Analyses / Mo
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
+                <Icons.Check />
+                County Document Access
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#444]">
+                <Icons.CloseX />
+                No Mock Audits
+              </li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')} disabled={loading !== null} className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all">
+            <button
+              onClick={() =>
+                handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')
+              }
+              disabled={loading !== null}
+              className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all"
+            >
               {loading === 'starter' ? 'Processing...' : 'Select Starter'}
             </button>
           </div>
 
           {/* Pro */}
           <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-lg p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">Most Popular</div>
-            <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2">Pro</h3>
-            <div className="flex items-baseline text-white">
-              <span className="text-5xl font-bold tracking-tight font-mono">$99</span>
-              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
+              Most Popular
             </div>
-            <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">Visual compliance for proactive managers.</p>
+            <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2">
+              Pro
+            </h3>
+            <div className="flex items-baseline text-white">
+              <span className="text-5xl font-bold tracking-tight font-mono">
+                $99
+              </span>
+              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
+                /mo
+              </span>
+            </div>
+            <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">
+              Full compliance shield with confidence.
+            </p>
             <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Unlimited Text Queries</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>100 Image Analyses / Mo</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Full Database Access</li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Mock Audit Workflow</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white">
+                <Icons.Check color="text-[#3E7BFA]" />
+                Unlimited Text Queries
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white">
+                <Icons.Check color="text-[#3E7BFA]" />
+                250 Image Analyses / Mo
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white">
+                <Icons.Check color="text-[#3E7BFA]" />
+                Full Database Access
+              </li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white">
+                <Icons.Check color="text-[#3E7BFA]" />
+                Mock Audit Workflow
+              </li>
             </ul>
-            <button onClick={() => handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')} disabled={loading !== null} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg">
+            <button
+              onClick={() =>
+                handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')
+              }
+              disabled={loading !== null}
+              className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg"
+            >
               {loading === 'pro' ? 'Processing...' : 'Select Pro'}
             </button>
           </div>
 
           {/* Enterprise */}
           <div className="relative p-6 flex flex-col z-0 group rounded-lg bg-[#1C1C1C] overflow-hidden">
-            <div className="absolute inset-0 p-[1px] rounded-lg bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none"></div>
+            <div className="absolute inset-0 p-[1px] rounded-lg bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none" />
             <div className="relative z-10">
               <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
-                 <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-white to-slate-400 shadow-[0_0_8px_white]"></span>
-                 Enterprise
+                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-white to-slate-400 shadow-[0_0_8px_white]" />
+                Enterprise
               </h3>
               <div className="flex items-baseline text-white">
-                <span className="text-4xl font-bold tracking-tight font-mono">$199</span>
-                <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+                <span className="text-4xl font-bold tracking-tight font-mono">
+                  $199
+                </span>
+                <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
+                  /mo
+                </span>
               </div>
-              <p className="text-sm text-[#888] mt-4 mb-6 leading-relaxed">Automation for zero-tolerance operators.</p>
+              <p className="text-sm text-[#888] mt-4 mb-6 leading-relaxed">
+                Zero-tolerance protection for serious operations.
+              </p>
               <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Unlimited Text Queries</li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>500 Image Analyses / Mo</li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Mock Audit Workflow</li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Staff Memo Generator</li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
+                  <Icons.Check color="text-white" />
+                  Unlimited Text Queries
+                </li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
+                  <Icons.Check color="text-white" />
+                  1,000 Image Analyses / Mo
+                </li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
+                  <Icons.Check color="text-white" />
+                  Mock Audit Workflow
+                </li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
+                  <Icons.Check color="text-white" />
+                  Staff Memo Generator
+                </li>
               </ul>
-              <button onClick={() => handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')} disabled={loading !== null} className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white">
+              <button
+                onClick={() =>
+                  handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')
+                }
+                disabled={loading !== null}
+                className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
+              >
                 {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
               </button>
             </div>
@@ -410,7 +864,9 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
         </div>
 
         <div className="mt-10 text-center max-w-md mx-auto opacity-60">
-          <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-2">Secure Stripe Checkout</p>
+          <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-2">
+            30-Day Free Trial • Secure Stripe Checkout
+          </p>
           <p className="text-sm text-[#666] font-serif italic">
             &quot;One failed inspection costs more than 5 years of the Enterprise plan.&quot;
           </p>
@@ -428,24 +884,24 @@ export default function Page() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   // HISTORY STATES
-  const [chatHistory, setChatHistory] = useState([]) 
+  const [chatHistory, setChatHistory] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
-  
+
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  
+
   // NEW: ACTIVE MODE STATE
   const [activeMode, setActiveMode] = useState('chat') // 'chat', 'image', 'audit', 'critical', 'training', 'sop'
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
-  
+
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
@@ -458,7 +914,11 @@ export default function Page() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       if (params.get('auth')) {
-        setAuthModalMessage(params.get('auth') === 'signup' ? 'Create an account to subscribe' : 'Sign in to continue')
+        setAuthModalMessage(
+          params.get('auth') === 'signup'
+            ? 'Create an account to subscribe'
+            : 'Sign in to continue'
+        )
         setShowAuthModal(true)
         window.history.replaceState({}, '', '/')
       }
@@ -467,7 +927,9 @@ export default function Page() {
     // 2. Init Auth
     const init = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession()
         setSession(currentSession)
 
         if (currentSession) {
@@ -489,7 +951,9 @@ export default function Page() {
 
     const timer = setTimeout(() => setIsLoading(false), 2000)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
         const { data: userProfile } = await supabase
@@ -522,20 +986,22 @@ export default function Page() {
   const loadChat = async (chatId) => {
     setIsLoading(true)
     setCurrentChatId(chatId)
-    setSidebarOpen(false) 
-    
+    setSidebarOpen(false)
+
     const { data: msgs } = await supabase
       .from('messages')
       .select('*')
       .eq('chat_id', chatId)
       .order('created_at', { ascending: true })
-      
+
     if (msgs) {
-      setMessages(msgs.map(m => ({
-        role: m.role,
-        content: m.content,
-        image: m.image
-      })))
+      setMessages(
+        msgs.map((m) => ({
+          role: m.role,
+          content: m.content,
+          image: m.image,
+        }))
+      )
     }
     setIsLoading(false)
   }
@@ -578,7 +1044,7 @@ export default function Page() {
       window.location.href = '/'
     }
   }
-  
+
   const handleCheckout = async (priceId, planName) => {
     setCheckoutLoading(planName)
     if (!session) {
@@ -592,13 +1058,17 @@ export default function Page() {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }), 
+        body: JSON.stringify({ priceId }),
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else alert('System busy. Please try again.')
-    } catch (error) { console.error(error); alert('Connection error.') } 
-    finally { setCheckoutLoading(null) }
+    } catch (error) {
+      console.error(error)
+      alert('Connection error.')
+    } finally {
+      setCheckoutLoading(null)
+    }
   }
 
   const handleSend = async (e) => {
@@ -617,14 +1087,14 @@ export default function Page() {
         return
       }
       if (!profile.is_subscribed) {
-        setShowPricingModal(true) // SHOW MODAL INSTEAD OF REDIRECT
+        setShowPricingModal(true)
         return
       }
     }
 
     // --- MODIFY PROMPT BASED ON MODE ---
     let finalInput = input
-    
+
     if (activeMode === 'audit') {
       finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
     } else if (activeMode === 'critical') {
@@ -636,13 +1106,13 @@ export default function Page() {
     }
 
     const newMsg = { role: 'user', content: input, image: selectedImage } // Store original input for UI
-    setMessages(p => [...p, newMsg])
+    setMessages((p) => [...p, newMsg])
     setInput('')
     const img = selectedImage
     setSelectedImage(null)
     setIsSending(true)
 
-    setMessages(p => [...p, { role: 'assistant', content: '' }])
+    setMessages((p) => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
 
@@ -650,45 +1120,46 @@ export default function Page() {
       if (!activeChatId) {
         const { data: newChat, error } = await supabase
           .from('chats')
-          .insert({ 
-             user_id: session.user.id, 
-             title: input.slice(0, 30) + '...' 
+          .insert({
+            user_id: session.user.id,
+            title: input.slice(0, 30) + '...',
           })
           .select()
           .single()
-        
+
         if (newChat) {
           activeChatId = newChat.id
           setCurrentChatId(newChat.id)
-          loadChatHistory() 
+          loadChatHistory()
         }
       }
 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: [...messages, { ...newMsg, content: finalInput }], // Send modified prompt
+        body: JSON.stringify({
+          messages: [...messages, { ...newMsg, content: finalInput }],
           image: img,
           chatId: activeChatId,
-          mode: activeMode // PASS MODE TO API
-        })
+          mode: activeMode,
+        }),
       })
 
       if (res.status === 401) {
         setShowAuthModal(true)
-        setMessages(p => p.slice(0, -2))
+        setMessages((p) => p.slice(0, -2))
         return
       }
 
       const data = await res.json()
-      setMessages(p => {
+      setMessages((p) => {
         const u = [...p]
-        u[u.length - 1].content = data.message || (data.error ? `Error: ${data.error}` : 'Error processing request.')
+        u[u.length - 1].content =
+          data.message || (data.error ? `Error: ${data.error}` : 'Error processing request.')
         return u
       })
     } catch (err) {
-      setMessages(p => {
+      setMessages((p) => {
         const u = [...p]
         u[u.length - 1].content = 'Network error. Please try again.'
         return u
@@ -708,7 +1179,7 @@ export default function Page() {
       try {
         const compressed = await compressImage(e.target.files[0])
         setSelectedImage(compressed)
-        setActiveMode('image') // Auto-switch mode
+        setActiveMode('image')
       } catch (error) {
         console.error(error)
       }
@@ -719,46 +1190,72 @@ export default function Page() {
     setMessages([])
     setInput('')
     setSelectedImage(null)
-    setCurrentChatId(null) 
+    setCurrentChatId(null)
     setSidebarOpen(false)
-    setActiveMode('chat') // Reset mode
+    setActiveMode('chat')
   }
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin"></div></div>
+  if (isLoading)
+    return (
+      <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
 
   return (
     <>
       <GlobalStyles />
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} handleCheckout={handleCheckout} loading={checkoutLoading} />
-      
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        message={authModalMessage}
+      />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        handleCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
+
       <div className="fixed inset-0 w-full h-full bg-[#121212] text-white overflow-hidden font-sans flex">
-        
-        {session && sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+        {session && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* Sidebar (only when logged in) */}
         {session && (
-          <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+          <aside
+            className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            } flex flex-col`}
+          >
             <div className="p-3">
               {/* NEW CHAT BUTTON: Light grey outline style */}
               <button
                 onClick={handleNewChat}
                 className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-lg transition-colors group"
               >
-                <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
+                <span className="flex items-center gap-2">
+                  <Icons.Plus /> New chat
+                </span>
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto px-2">
-              <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div>
+              <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">
+                Recent
+              </div>
               <div className="space-y-1">
                 {chatHistory.map((chat) => (
                   <button
                     key={chat.id}
                     onClick={() => loadChat(chat.id)}
                     className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center gap-2 ${
-                      currentChatId === chat.id 
-                        ? 'bg-[#1C1C1C] text-white border border-[#333]' 
+                      currentChatId === chat.id
+                        ? 'bg-[#1C1C1C] text-white border border-[#333]'
                         : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111]'
                     }`}
                   >
@@ -772,23 +1269,34 @@ export default function Page() {
             {session && (
               <div className="p-3 border-t border-[#1C1C1C]">
                 <div className="relative" ref={userMenuRef}>
-                  <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]"
+                  >
                     {/* USER AVATAR */}
                     <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
                       {session.user.email[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">{session.user.email}</div>
+                      <div className="text-sm font-medium text-white truncate">
+                        {session.user.email}
+                      </div>
                     </div>
                   </button>
 
                   {showUserMenu && (
                     <div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                      <button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2">
+                      <button
+                        onClick={() => setShowPricingModal(true)}
+                        className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2"
+                      >
                         <Icons.Settings /> Subscription
                       </button>
-                      <div className="h-px bg-[#2E2E2E] mx-0"></div>
-                      <button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2">
+                      <div className="h-px bg-[#2E2E2E] mx-0" />
+                      <button
+                        onClick={(e) => handleSignOut(e)}
+                        className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2"
+                      >
                         <Icons.SignOut /> Log out
                       </button>
                     </div>
@@ -801,36 +1309,46 @@ export default function Page() {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
-          {/* Mobile header only when logged in (so logged-out view is clean & centered) */}
+          {/* Mobile header only when logged in */}
           {session && (
             <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
-              <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1 text-[#A1A1AA] hover:text-white"
+              >
+                <Icons.Menu />
+              </button>
               <span className="font-semibold text-sm">protocolLM</span>
-              <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
+              <button
+                onClick={handleNewChat}
+                className="p-1 text-[#A1A1AA] hover:text-white"
+              >
+                <Icons.Plus />
+              </button>
             </div>
           )}
 
           {!session ? (
+            // LOGGED-OUT VIEW (centered)
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
-              
               {/* TOP RIGHT NAV (Logged Out) */}
               <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
-                <button 
-                  onClick={() => setShowAuthModal(true)} 
+                <button
+                  onClick={() => setShowAuthModal(true)}
                   className="bg-[#3ECF8E] hover:bg-[#34b27b] text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
                 >
                   Start Free Trial
                 </button>
 
-                <button 
+                <button
                   onClick={() => setShowPricingModal(true)}
                   className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
                 >
                   Pricing
                 </button>
 
-                <button 
-                  onClick={() => setShowAuthModal(true)} 
+                <button
+                  onClick={() => setShowAuthModal(true)}
                   className="text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
                 >
                   Sign In
@@ -840,9 +1358,9 @@ export default function Page() {
               <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
                 Washtenaw Food Safety
               </h1>
-              
+
               <p className="text-[#A1A1AA] text-sm mt-0 mb-8 font-medium text-center">
-                Trained on Washtenaw, Michigan & FDA Regulations
+                Trained on Washtenaw, Michigan &amp; FDA Regulations
               </p>
 
               <div className="w-full max-w-2xl">
@@ -862,27 +1380,49 @@ export default function Page() {
               </div>
             </div>
           ) : (
+            // LOGGED-IN VIEW
             <>
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-                    <h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1>
+                    <h1 className="text-2xl font-semibold text-white mb-2">
+                      What can I help with?
+                    </h1>
                   </div>
                 ) : (
                   <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ${
+                      <div
+                        key={idx}
+                        className={`w-full flex ${
                           msg.role === 'user'
-                            ? 'text-white px-2'
-                            : 'text-[#EDEDED] px-2'
-                        }`}>
-                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-lg mb-3 max-h-60 object-contain border border-white/10" />}
-                          
-                          {msg.role === 'assistant' && msg.content === '' && isSending ? (
-                             <div className="loader my-1"></div>
+                            ? 'justify-end'
+                            : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[85%] ${
+                            msg.role === 'user'
+                              ? 'text-white px-2'
+                              : 'text-[#EDEDED] px-2'
+                          }`}
+                        >
+                          {msg.image && (
+                            <img
+                              src={msg.image}
+                              alt="Upload"
+                              className="rounded-lg mb-3 max-h-60 object-contain border border-white/10"
+                            />
+                          )}
+
+                          {msg.role === 'assistant' &&
+                          msg.content === '' &&
+                          isSending ? (
+                            <div className="loader my-1" />
                           ) : (
-                             <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>
+                            <div className="text-[16px] leading-7 whitespace-pre-wrap">
+                              {msg.content}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -892,6 +1432,9 @@ export default function Page() {
               </div>
 
               <div className="w-full bg-[#121212] pt-2 shrink-0">
+                {/* NEW: Usage Counter just above the input (logged-in only) */}
+                <UsageCounter session={session} />
+
                 <InputBox
                   input={input}
                   setInput={setInput}
