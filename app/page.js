@@ -6,6 +6,27 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
+// DOCUMENT SOURCES DATA
+// ==========================================
+const SOURCE_DOCUMENTS = [
+  "FDA Food Code 2022",
+  "Washtenaw Co. Inspection Report Types",
+  "Michigan Modified Food Code (2009)",
+  "Proper Use of 3-Compartment Sink",
+  "USDA Safe Minimum Internal Temps",
+  "Food Law, Act 92 of 2000",
+  "Washtenaw Co. Violation Types",
+  "Emergency Action Plans for Retail",
+  "Norovirus Cleaning Guidelines",
+  "FOG (Fats, Oils, and Greases) Protocol",
+  "Michigan Consumer Advisory Laws",
+  "Allergen Awareness for Operators",
+  "Preventing Cross-Contamination",
+  "Date Marking Guide (§3-501.17)",
+  "Enforcement Action Procedures"
+]
+
+// ==========================================
 // GLOBAL STYLES
 // ==========================================
 const GlobalStyles = () => (
@@ -32,6 +53,17 @@ const GlobalStyles = () => (
       100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
     }
     
+    /* Smooth Fade/Slide Animation for Ticker */
+    @keyframes slideUpFade {
+      0% { opacity: 0; transform: translateY(10px); }
+      15% { opacity: 1; transform: translateY(0); }
+      85% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+    .animate-source-ticker {
+      animation: slideUpFade 3s ease-in-out infinite;
+    }
+
     /* Custom Scrollbar for Chat */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -111,9 +143,9 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
     </svg>
   ),
-  Tag: () => (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+  Book: () => (
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
   ),
 
@@ -134,7 +166,6 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
     </svg>
   ),
-  // UPDATED: Exclamation Triangle for "Urgent"
   Alert: () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -164,6 +195,33 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
+}
+
+// ==========================================
+// SOURCE TICKER COMPONENT
+// ==========================================
+const SourceTicker = () => {
+  const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % SOURCE_DOCUMENTS.length)
+    }, 3000) // Change every 3 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="flex justify-center mt-6">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
+        <span className="text-[#3E7BFA]"><Icons.Book /></span>
+        <div className="w-[220px] text-center overflow-hidden h-4 relative">
+          <key className="absolute inset-0 flex items-center justify-center text-[11px] text-[#888] font-medium tracking-wide animate-source-ticker uppercase">
+            {SOURCE_DOCUMENTS[index]}
+          </key>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ==========================================
@@ -1243,6 +1301,9 @@ export default function Page() {
               <p className="text-[#A1A1AA] text-lg md:text-xl mt-6 font-medium text-center">
                 Trained on <span className="text-white font-semibold">Washtenaw, Michigan</span> &amp; FDA Regulations
               </p>
+
+              {/* SOURCE TICKER */}
+              <SourceTicker />
 
               {/* FOOTER LINKS */}
               <div className="flex gap-4 mt-12 text-xs text-[#525252] fixed bottom-6">
