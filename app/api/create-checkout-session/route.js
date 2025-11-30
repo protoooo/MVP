@@ -34,7 +34,6 @@ export async function POST(req) {
 
     // SECURITY FIX: Validate against environment variables (not hardcoded values)
     const VALID_PRICE_IDS = {
-      [process.env.STRIPE_STARTER_PRICE_ID]: 'starter',
       [process.env.STRIPE_PRO_PRICE_ID]: 'pro',
       [process.env.STRIPE_ENTERPRISE_PRICE_ID]: 'enterprise'
     }
