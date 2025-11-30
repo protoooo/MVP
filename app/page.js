@@ -885,52 +885,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
           <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Starter */}
-          <div className="bg-[#1C1C1C] border border-[#333] rounded-2xl p-6 flex flex-col hover:border-white transition-colors">
-            <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">
-              Starter
-            </h3>
-            <div className="flex items-baseline text-white">
-              <span className="text-4xl font-bold tracking-tight font-mono">
-                $49
-              </span>
-              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
-                /mo
-              </span>
-            </div>
-            <p className="text-sm text-[#666] mt-4 mb-6 leading-relaxed">
-              Basic protection for solo operators.
-            </p>
-            <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
-                <Icons.Check />
-                2,000 Text Queries / Mo
-              </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
-                <Icons.Check />
-                10 Image Analyses / Mo
-              </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]">
-                <Icons.Check />
-                County Document Access
-              </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-[#444]">
-                <Icons.CloseX />
-                No Mock Audits
-              </li>
-            </ul>
-            <button
-              onClick={() =>
-                handleCheckout('price_1SZAvjDlSrKA3nbA34gnzybi', 'starter')
-              }
-              disabled={loading !== null}
-              className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all"
-            >
-              {loading === 'starter' ? 'Processing...' : 'Select Starter'}
-            </button>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pro */}
           <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-2xl p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
