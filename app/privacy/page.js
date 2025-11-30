@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
               <p className="text-[#A1A1AA] text-sm leading-relaxed">
                 protocolLM (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use 
-                our compliance service powered by Google's Gemini API.
+                our compliance service powered by Google&apos;s Gemini API.
               </p>
             </section>
 
@@ -125,7 +125,7 @@ export default function PrivacyPolicy() {
                 <div>
                   <h3 className="text-white font-bold mb-2 text-sm">3.1 Third-Party Processing</h3>
                   <p className="text-[#A1A1AA] text-sm mb-3 leading-relaxed">
-                    Our Service uses Google Vertex AI (including Google's Gemini API) to process your queries and analyze uploaded images. When you use 
+                    Our Service uses Google Vertex AI (including Google&apos;s Gemini API) to process your queries and analyze uploaded images. When you use 
                     our Service:
                   </p>
                   <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
@@ -441,4 +441,23 @@ export default function PrivacyPolicy() {
                     austinrnorthrop@gmail.com
                   </a>
                 </p>
-                <p class
+                <p className="text-[#888] text-xs mt-2">
+                  Subject line: &quot;Privacy Request&quot; (for faster processing)
+                </p>
+              </div>
+              <p className="text-[#888] text-xs mt-4">
+                We will respond to all requests within 30 days as required by applicable privacy laws.
+              </p>
+            </section>
+          </div>
+
+          <div className="mt-16 pt-8 border-t border-[#2C2C2C] text-center">
+            <a href="/" className="inline-flex items-center gap-2 text-[#888] hover:text-white font-mono text-xs uppercase tracking-widest transition-colors">
+              <span>←</span> Return Home
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
