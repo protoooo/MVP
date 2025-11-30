@@ -1,57 +1,29 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
+import { NextResponse } from 'next/server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
 
-function createSupabaseServer() {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value
-        }
-      }
-    }
-  )
-}
-
-export async function POST(request) {
-  const supabase = createSupabaseServer()
-  
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-  }
-
+export async function POST(req) {
   try {
-    const { priceId } = await request.json()
+    // 1. Get User from Supabase Auth
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) return NextResponse.json({ error: 'No authorization header' }, { status: 401 })
+    
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    
+    if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!priceId) {
-      return NextResponse.json({ error: 'Price ID required' }, { status: 400 })
-    }
+    // 2. Get Price ID from body
+    const { priceId } = await req.json()
 
-    // --- FIXED PLAN MAPPING WITH YOUR ACTUAL PRICE IDs ---
-    let planName = 'pro' // Default fallback
-
-    if (priceId === 'price_1SY95aDlSrKA3nbAsgxE0Jon') {
-      planName = 'starter'
-    } else if (priceId === 'price_1SY96QDlSrKA3nbACxe8QasT') {
-      planName = 'pro'
-    } else if (priceId === 'price_1SY97KDlSrKA3nbAauq4tP8g') {
-      planName = 'enterprise'
-    }
-    // --------------------------------------------------
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+    // 3. Create Stripe Session
+    const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
@@ -59,25 +31,19 @@ export async function POST(request) {
           quantity: 1,
         },
       ],
-      success_url: `${baseUrl}/?checkout=success`,
-      cancel_url: `${baseUrl}/pricing`,
-      customer_email: session.user.email,
+      mode: 'subscription',
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=cancelled`,
+      customer_email: user.email,
       metadata: {
-        userId: session.user.id,
-        plan: planName,
-      },
-      subscription_data: {
-        trial_period_days: 30, // All plans get the trial
-        metadata: {
-          userId: session.user.id,
-          plan: planName,
-        },
+        userId: user.id, // CRITICAL: This links payment to Supabase user
       },
     })
 
-    return NextResponse.json({ url: checkoutSession.url })
+    return NextResponse.json({ url: session.url })
+
   } catch (err) {
-    console.error('❌ Stripe checkout error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    console.error('Stripe Error:', err)
+    return NextResponse.json({ error: 'Error creating session' }, { status: 500 })
   }
 }
