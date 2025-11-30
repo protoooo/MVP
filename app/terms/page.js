@@ -134,9 +134,9 @@ export default function TermsOfService() {
                     <p className="text-white font-bold mb-2 text-sm">Starter Plan</p>
                     <p className="text-[#3ECF8E] font-mono text-xs mb-4">$49/month</p>
                     <ul className="text-[#888] space-y-1 text-xs list-disc pl-4">
-                      <li>500 Text Queries/mo</li>
+                      <li>2,000 Text Queries/mo</li>
+                      <li>10 Image Analyses/mo</li>
                       <li>County Doc Access</li>
-                      <li>Chat History</li>
                     </ul>
                   </div>
 
@@ -147,7 +147,7 @@ export default function TermsOfService() {
                     <p className="text-[#3ECF8E] font-mono text-xs mb-4">$99/month</p>
                     <ul className="text-[#BBB] space-y-1 text-xs list-disc pl-4">
                       <li>Unlimited Queries</li>
-                      <li>100 Image Analyses</li>
+                      <li>250 Image Analyses/mo</li>
                       <li>Mock Audit Workflow</li>
                     </ul>
                   </div>
@@ -158,7 +158,7 @@ export default function TermsOfService() {
                     <p className="text-[#3ECF8E] font-mono text-xs mb-4">$199/month</p>
                     <ul className="text-[#888] space-y-1 text-xs list-disc pl-4">
                       <li>Unlimited All Features</li>
-                      <li>500 Image Analyses</li>
+                      <li>1,000 Image Analyses/mo</li>
                       <li>Staff Memo Gen</li>
                     </ul>
                   </div>
