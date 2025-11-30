@@ -133,15 +133,15 @@ export async function POST(req) {
     const vertex_ai = new VertexAI(vertexConfig)
     
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-1.5-pro', // CHANGED: Used stable model version
       generationConfig: {
-        maxOutputTokens: 8192, // Gemini 3 Pro supports more output tokens
+        maxOutputTokens: 8192,
         temperature: 0.3,
         topP: 0.95,
       },
     })
 
-    console.log('✅ Vertex AI model initialized: gemini-2.5-pro')
+    console.log('✅ Vertex AI model initialized')
 
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
@@ -217,17 +217,14 @@ export async function POST(req) {
           if (countyDocs.length > 0) {
             contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + 
               countyDocs.map(d => `"${d.text}"`).join('\n'))
-            console.log(`  📍 County docs: ${countyDocs.length}`)
           }
           if (stateDocs.length > 0) {
             contextParts.push('=== MICHIGAN STATE CODE ===\n' + 
               stateDocs.map(d => `"${d.text}"`).join('\n'))
-            console.log(`  📍 State docs: ${stateDocs.length}`)
           }
           if (federalDocs.length > 0) {
             contextParts.push('=== FDA GUIDANCE ===\n' + 
               federalDocs.map(d => `"${d.text}"`).join('\n'))
-            console.log(`  📍 Federal docs: ${federalDocs.length}`)
           }
           
           context = contextParts.join('\n\n')
@@ -235,8 +232,6 @@ export async function POST(req) {
             document: doc.source.replace('.pdf', ''), 
             pages: [doc.page] 
           }))
-        } else {
-          console.log('⚠️ No search results found')
         }
       } catch (err) { 
         console.error('❌ Search Error:', err)
@@ -255,8 +250,6 @@ ${context || 'No specific text context found. Use general knowledge.'}
 
 USER INPUT:
 ${lastMessage.content}`
-
-    console.log('📝 Prompt length:', promptText.length)
 
     // Prepare the request
     const request = {
@@ -284,43 +277,22 @@ ${lastMessage.content}`
       })
     }
 
-    console.log('🚀 Calling Vertex AI with gemini-3-pro-preview...')
+    console.log('🚀 Calling Vertex AI...')
 
-    // Generate content with proper error handling
+    // Generate content
     const result = await generativeModel.generateContent(request)
-    
-    console.log('✅ Vertex AI response received')
-
     const response = result.response
-    if (!response || !response.candidates || response.candidates.length === 0) {
-      console.error('❌ No candidates in response')
-      throw new Error('No response from AI model')
-    }
-
-    const candidate = response.candidates[0]
-    if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-      console.error('❌ No content parts in response')
-      throw new Error('Invalid response structure')
-    }
-
-    let text = candidate.content.parts[0].text
-
-    if (!text) {
-      console.error('❌ No text in response')
-      throw new Error('Empty response from AI')
-    }
-
-    console.log('✅ Response text length:', text.length)
+    const text = response.candidates[0].content.parts[0].text
 
     // Remove asterisks
-    text = text.replace(/\*\*/g, '').replace(/\*/g, '')
+    const cleanText = text.replace(/\*\*/g, '').replace(/\*/g, '')
 
     // Save Assistant Message
     if (chatId) {
       await supabase.from('messages').insert({
         chat_id: chatId,
         role: 'assistant',
-        content: text
+        content: cleanText
       })
     }
 
@@ -329,25 +301,16 @@ ${lastMessage.content}`
       is_image: !!image 
     })
 
-    console.log('✅ Request completed successfully')
-
     return NextResponse.json({ 
-      message: text, 
+      message: cleanText, 
       citations: citations 
     })
 
   } catch (error) {
     console.error('❌ Vertex AI Error:', error)
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    })
-    
     return NextResponse.json({ 
       error: 'Failed to process request. Please try again.', 
-      details: error.message,
-      fallback: true 
+      details: error.message 
     }, { status: 500 })
   }
 }
