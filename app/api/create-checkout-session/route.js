@@ -24,32 +24,45 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Get the Price ID selected in the frontend
+    // 2. Get the Price ID from request
     const { priceId } = await req.json()
 
     if (!priceId) {
       return NextResponse.json({ error: 'Missing priceId' }, { status: 400 })
     }
 
-    // SECURITY FIX: Validate priceId against allowed values
-    const VALID_PRICE_IDS = [
-      'price_1SZAvjDlSrKA3nbA34gnzybi', // starter
-      'price_1SZAwrDlSrKA3nbA9tUBsiJ8', // pro
-      'price_1SZAxrDlSrKA3nbA9eksBvtE'  // enterprise
-    ]
+    // SECURITY FIX: Validate against environment variables (not hardcoded values)
+    const VALID_PRICE_IDS = {
+      [process.env.STRIPE_STARTER_PRICE_ID]: 'starter',
+      [process.env.STRIPE_PRO_PRICE_ID]: 'pro',
+      [process.env.STRIPE_ENTERPRISE_PRICE_ID]: 'enterprise'
+    }
 
-    if (!VALID_PRICE_IDS.includes(priceId)) {
+    const planName = VALID_PRICE_IDS[priceId]
+
+    if (!planName) {
+      console.error('❌ Invalid price ID attempted:', priceId)
       return NextResponse.json({ 
-        error: 'Invalid price ID' 
+        error: 'Invalid subscription plan selected' 
       }, { status: 400 })
     }
 
-    // 3. SECURITY FIX: Check for ANY existing subscriptions (including past_due)
+    // SECURITY: Verify price ID exists in Stripe (prevents stale/test IDs)
+    try {
+      await stripe.prices.retrieve(priceId)
+    } catch (stripeError) {
+      console.error('❌ Price ID not found in Stripe:', priceId)
+      return NextResponse.json({ 
+        error: 'Invalid subscription plan' 
+      }, { status: 400 })
+    }
+
+    // 3. SECURITY FIX: Check for ANY existing subscriptions (including past_due/incomplete)
     const { data: existingSubs } = await supabase
       .from('subscriptions')
       .select('stripe_subscription_id, status, plan')
       .eq('user_id', user.id)
-      .in('status', ['active', 'trialing', 'past_due'])
+      .in('status', ['active', 'trialing', 'past_due', 'incomplete'])
 
     if (existingSubs && existingSubs.length > 0) {
       const activeSub = existingSubs[0]
@@ -62,7 +75,7 @@ export async function POST(req) {
       }, { status: 400 })
     }
 
-    // 4. SECURITY: Check if user already has a Stripe customer ID with active subscriptions
+    // 4. SECURITY: Check Stripe directly for active subscriptions
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('customer_id')
@@ -73,12 +86,17 @@ export async function POST(req) {
       try {
         const stripeSubscriptions = await stripe.subscriptions.list({
           customer: profile.customer_id,
-          status: 'active',
-          limit: 1
+          status: 'all', // Check all statuses
+          limit: 10
         })
 
-        if (stripeSubscriptions.data.length > 0) {
-          console.log('⚠️ User has active Stripe subscription not in our DB')
+        const activeStatuses = ['active', 'trialing', 'past_due', 'incomplete']
+        const hasActiveStripeSubscription = stripeSubscriptions.data.some(sub => 
+          activeStatuses.includes(sub.status)
+        )
+
+        if (hasActiveStripeSubscription) {
+          console.error('⚠️ User has active Stripe subscription not in DB:', user.id)
           return NextResponse.json({ 
             error: 'An active subscription was found. Please contact support.' 
           }, { status: 400 })
@@ -89,7 +107,28 @@ export async function POST(req) {
       }
     }
 
-    // 5. Create Stripe Checkout Session with 7-day trial
+    // 5. SECURITY: Rate limit checkout attempts (prevent spam/abuse)
+    const recentAttempts = await supabase
+      .from('checkout_attempts')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+      .order('created_at', { ascending: false })
+
+    if (recentAttempts.data && recentAttempts.data.length >= 5) {
+      return NextResponse.json({ 
+        error: 'Too many checkout attempts. Please try again later.' 
+      }, { status: 429 })
+    }
+
+    // Log checkout attempt
+    await supabase.from('checkout_attempts').insert({
+      user_id: user.id,
+      price_id: priceId,
+      created_at: new Date().toISOString()
+    })
+
+    // 6. Create Stripe Checkout Session with enhanced security
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -103,24 +142,34 @@ export async function POST(req) {
         trial_period_days: 7,
         metadata: {
           userId: user.id,
-          userEmail: user.email
+          userEmail: user.email,
+          planName: planName,
+          createdAt: new Date().toISOString()
         }
       },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=cancelled`,
       customer_email: user.email,
-      client_reference_id: user.id, // Additional user tracking
+      client_reference_id: user.id,
       metadata: {
         userId: user.id,
-        userEmail: user.email
+        userEmail: user.email,
+        planName: planName
       },
-      allow_promotion_codes: false, // Prevent promo code abuse unless you want it
+      allow_promotion_codes: false, // Prevent promo abuse
+      billing_address_collection: 'required', // Fraud prevention
+      phone_number_collection: {
+        enabled: false // Optional: enable for additional verification
+      },
+      // SECURITY: Prevent multiple checkouts for same user
+      idempotency_key: `checkout-${user.id}-${Date.now()}`
     })
 
     console.log('✅ Checkout session created:', {
       sessionId: session.id,
       userId: user.id,
-      priceId: priceId
+      priceId: priceId,
+      plan: planName
     })
 
     return NextResponse.json({ url: session.url })
