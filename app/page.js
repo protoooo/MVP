@@ -217,7 +217,7 @@ const InputBox = ({
         {/* Chat (Blue) */}
         <button
           onClick={() => handleModeClick('chat')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'chat'
               ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -232,7 +232,7 @@ const InputBox = ({
         {/* Image (Orange) */}
         <button
           onClick={() => handleModeClick('image')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'image' || selectedImage
               ? 'text-[#F5A623] bg-[#F5A623]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -247,7 +247,7 @@ const InputBox = ({
         {/* Mock Audit (Yellow) */}
         <button
           onClick={() => handleModeClick('audit')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'audit'
               ? 'text-[#FDD901] bg-[#FDD901]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -262,7 +262,7 @@ const InputBox = ({
         {/* Crisis/Urgent (Red - Siren) */}
         <button
           onClick={() => handleModeClick('critical')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'critical'
               ? 'text-[#EF4444] bg-[#EF4444]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -277,7 +277,7 @@ const InputBox = ({
         {/* Training (Purple) */}
         <button
           onClick={() => handleModeClick('training')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'training'
               ? 'text-[#A855F7] bg-[#A855F7]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -292,7 +292,7 @@ const InputBox = ({
         {/* SOPs (Green) */}
         <button
           onClick={() => handleModeClick('sop')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
+          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
             activeMode === 'sop'
               ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -306,7 +306,7 @@ const InputBox = ({
       </div>
 
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-[#1C1C1C] rounded-lg inline-flex items-center gap-2 border border-[#F5A623]/30">
+        <div className="mb-2 mx-1 p-2 bg-[#1C1C1C] rounded-2xl inline-flex items-center gap-2 border border-[#F5A623]/30">
           <span className="text-xs text-[#F5A623] font-medium flex items-center gap-1">
             <Icons.Camera /> Analyzing Image
           </span>
@@ -325,7 +325,7 @@ const InputBox = ({
       {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
-        className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
+        className={`relative flex items-end w-full bg-[#161616] border rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
         style={{
           borderColor: `${activeColor}4D`,
           '--active-color': activeColor,
@@ -370,7 +370,7 @@ const InputBox = ({
         <button
           type="submit"
           disabled={(!input.trim() && !selectedImage) || isSending}
-          className="p-2.5 m-1.5 rounded-md border transition-all flex items-center justify-center"
+          className="p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center"
           style={{
             backgroundColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
             borderColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
@@ -450,7 +450,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
       onClick={onClose}
     >
       <div
-        className="bg-[#181818] border border-[#2E2E2E] rounded-xl w-full max-w-md p-8 shadow-2xl"
+        className="bg-[#181818] border border-[#2E2E2E] rounded-2xl w-full max-w-md p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-start mb-6">
@@ -466,7 +466,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         <button
           onClick={handleGoogleAuth}
           disabled={googleLoading || loading}
-          className="w-full bg-white hover:bg-gray-200 text-black font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-4"
+          className="w-full bg-white hover:bg-gray-200 text-black font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4"
         >
           {googleLoading ? (
             <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
@@ -509,12 +509,12 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email address"
             required
-            className="w-full bg-[#0A0A0A] border border-[#2E2E2E] rounded-lg px-4 py-2.5 text-sm text-white placeholder-[#666666] focus:outline-none focus:border-[#3E7BFA] transition-all"
+            className="w-full bg-[#0A0A0A] border border-[#2E2E2E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#666666] focus:outline-none focus:border-[#3E7BFA] transition-all"
           />
           <button
             type="submit"
             disabled={loading || googleLoading}
-            className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2.5 rounded-lg transition-colors"
+            className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2.5 rounded-full transition-colors"
           >
             {loading ? 'Sending...' : 'Continue with Email'}
           </button>
@@ -548,7 +548,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
       onClick={onClose}
     >
       <div
-        className="bg-[#121212] border border-[#2C2C2C] rounded-2xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]"
+        className="bg-[#121212] border border-[#2C2C2C] rounded-3xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -567,7 +567,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Starter */}
-          <div className="bg-[#1C1C1C] border border-[#333] rounded-lg p-6 flex flex-col hover:border-[#555] transition-colors">
+          <div className="bg-[#1C1C1C] border border-[#333] rounded-2xl p-6 flex flex-col hover:border-[#555] transition-colors">
             <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">
               Starter
             </h3>
@@ -605,14 +605,14 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
                 handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')
               }
               disabled={loading !== null}
-              className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all"
+              className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all"
             >
               {loading === 'starter' ? 'Processing...' : 'Select Starter'}
             </button>
           </div>
 
           {/* Pro */}
-          <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-lg p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
+          <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-2xl p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
               Most Popular
             </div>
@@ -653,15 +653,15 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
                 handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')
               }
               disabled={loading !== null}
-              className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg"
+              className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg"
             >
               {loading === 'pro' ? 'Processing...' : 'Select Pro'}
             </button>
           </div>
 
           {/* Enterprise */}
-          <div className="relative p-6 flex flex-col z-0 group rounded-lg bg-[#1C1C1C] overflow-hidden">
-            <div className="absolute inset-0 p-[1px] rounded-lg bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none" />
+          <div className="relative p-6 flex flex-col z-0 group rounded-2xl bg-[#1C1C1C] overflow-hidden">
+            <div className="absolute inset-0 p-[1px] rounded-2xl bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none" />
             <div className="relative z-10">
               <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-white to-slate-400 shadow-[0_0_8px_white]" />
@@ -701,7 +701,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
                   handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')
                 }
                 disabled={loading !== null}
-                className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
+                className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
               >
                 {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
               </button>
@@ -1103,7 +1103,7 @@ export default function Page() {
               {/* NEW CHAT BUTTON: Light grey outline style */}
               <button
                 onClick={handleNewChat}
-                className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-lg transition-colors group"
+                className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-full transition-colors group"
               >
                 <span className="flex items-center gap-2">
                   <Icons.Plus /> New chat
@@ -1120,7 +1120,7 @@ export default function Page() {
                   <button
                     key={chat.id}
                     onClick={() => loadChat(chat.id)}
-                    className={`group w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center justify-between ${
+                    className={`group w-full text-left px-3 py-2 text-sm rounded-2xl truncate transition-colors flex items-center justify-between ${
                       currentChatId === chat.id
                         ? 'bg-[#1C1C1C] text-white border border-[#333]'
                         : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111] border border-transparent'
@@ -1147,7 +1147,7 @@ export default function Page() {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]"
+                    className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-2xl transition-colors text-left border border-transparent hover:border-[#2E2E2E]"
                   >
                     {/* USER AVATAR */}
                     <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
@@ -1217,7 +1217,7 @@ export default function Page() {
               <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
+                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
                 >
                   Start Free Trial
                 </button>
@@ -1297,7 +1297,7 @@ export default function Page() {
                             <img
                               src={msg.image}
                               alt="Upload"
-                              className="rounded-lg mb-3 max-h-60 object-contain border border-white/10"
+                              className="rounded-2xl mb-3 max-h-60 object-contain border border-white/10"
                             />
                           )}
 
