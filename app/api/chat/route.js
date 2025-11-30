@@ -102,45 +102,42 @@ export async function POST(req) {
     const body = await req.json()
     const { messages, image, county, chatId, mode = 'chat' } = body
 
-    // --- VERTEX AI AUTHENTICATION FOR RAILWAY ---
+    console.log('🔍 Chat request received:', { mode, hasImage: !!image, county })
+
+    // --- VERTEX AI AUTHENTICATION ---
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID || 'food-safety-production'
     const location = 'us-central1'
     
-    let vertexConfig = { project: projectId, location: location };
+    let vertexConfig = { project: projectId, location: location }
 
-    // FIX: Handle Credential Parsing Robustly
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
       try {
-        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-        
-        // CRITICAL FIX: Replace escaped newlines with actual newlines
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
         const privateKey = credentials.private_key 
           ? credentials.private_key.replace(/\\n/g, '\n')
-          : undefined;
+          : undefined
 
         vertexConfig.googleAuthOptions = {
           credentials: {
             client_email: credentials.client_email,
             private_key: privateKey,
           }
-        };
+        }
+        console.log('✅ Vertex AI credentials configured')
       } catch (e) {
-        console.error("❌ Failed to parse GOOGLE_CREDENTIALS_JSON:", e);
-        return NextResponse.json({ error: 'Server Configuration Error' }, { status: 500 });
+        console.error("❌ Failed to parse GOOGLE_CREDENTIALS_JSON:", e)
+        return NextResponse.json({ error: 'Server Configuration Error' }, { status: 500 })
       }
     }
     
-    const vertex_ai = new VertexAI(vertexConfig);
+    const vertex_ai = new VertexAI(vertexConfig)
     
-    // FIXED: Updated to latest stable model
-    const model = vertex_ai.preview.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        'maxOutputTokens': 2048,
-        'temperature': 0.3,
-        'topP': 0.95,
-      },
-    });
+    // Use the correct model initialization
+    const generativeModel = vertex_ai.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+    })
+
+    console.log('✅ Vertex AI model initialized')
 
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
@@ -150,93 +147,169 @@ export async function POST(req) {
       {
         cookies: {
           getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {} },
+          setAll(cookiesToSet) { 
+            try { 
+              cookiesToSet.forEach(({ name, value, options }) => 
+                cookieStore.set(name, value, options)
+              ) 
+            } catch {} 
+          },
         },
       }
     )
 
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session) {
+      console.log('❌ No session found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    console.log('✅ User authenticated:', session.user.email)
 
     const limitCheck = await checkRateLimit(session.user.id)
-    if (!limitCheck.success) return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
+    if (!limitCheck.success) {
+      console.log('❌ Rate limit exceeded')
+      return NextResponse.json({ 
+        error: limitCheck.message, 
+        limitReached: true 
+      }, { status: 429 })
+    }
     
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
-      return NextResponse.json({ error: 'Image limit reached.', limitReached: true }, { status: 429 })
+      console.log('❌ Image limit exceeded')
+      return NextResponse.json({ 
+        error: 'Image limit reached.', 
+        limitReached: true 
+      }, { status: 429 })
     }
 
     const lastMessage = messages[messages.length - 1]
 
     // Save User Message
     if (chatId) {
-       await supabase.from('messages').insert({
-         chat_id: chatId,
-         role: 'user',
-         content: lastMessage.content,
-         image: image || null
-       })
+      await supabase.from('messages').insert({
+        chat_id: chatId,
+        role: 'user',
+        content: lastMessage.content,
+        image: image || null
+      })
     }
 
     // RAG Logic
     let context = ''
     let citations = []
     if (lastMessage.content && !image) {
+      console.log('🔍 Searching documents...')
       try {
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
+        console.log(`📚 Found ${searchResults?.length || 0} search results`)
+        
         if (searchResults && searchResults.length > 0) {
-           const countyDocs = searchResults.filter(d => d.docType === 'county')
-           const stateDocs = searchResults.filter(d => d.docType === 'state')
-           const federalDocs = searchResults.filter(d => d.docType === 'federal')
-           
-           let contextParts = []
-           if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + countyDocs.map(d => `"${d.text}"`).join('\n'))
-           if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map(d => `"${d.text}"`).join('\n'))
-           if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map(d => `"${d.text}"`).join('\n'))
-           
-           context = contextParts.join('\n\n')
-           citations = searchResults.map(doc => ({ document: doc.source.replace('.pdf', ''), pages: [doc.page] }))
+          const countyDocs = searchResults.filter(d => d.docType === 'county')
+          const stateDocs = searchResults.filter(d => d.docType === 'state')
+          const federalDocs = searchResults.filter(d => d.docType === 'federal')
+          
+          let contextParts = []
+          if (countyDocs.length > 0) {
+            contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + 
+              countyDocs.map(d => `"${d.text}"`).join('\n'))
+            console.log(`  📍 County docs: ${countyDocs.length}`)
+          }
+          if (stateDocs.length > 0) {
+            contextParts.push('=== MICHIGAN STATE CODE ===\n' + 
+              stateDocs.map(d => `"${d.text}"`).join('\n'))
+            console.log(`  📍 State docs: ${stateDocs.length}`)
+          }
+          if (federalDocs.length > 0) {
+            contextParts.push('=== FDA GUIDANCE ===\n' + 
+              federalDocs.map(d => `"${d.text}"`).join('\n'))
+            console.log(`  📍 Federal docs: ${federalDocs.length}`)
+          }
+          
+          context = contextParts.join('\n\n')
+          citations = searchResults.map(doc => ({ 
+            document: doc.source.replace('.pdf', ''), 
+            pages: [doc.page] 
+          }))
+        } else {
+          console.log('⚠️ No search results found')
         }
-      } catch (err) { console.error('Search Error:', err) }
+      } catch (err) { 
+        console.error('❌ Search Error:', err)
+      }
     }
 
     const selectedSystemPrompt = PROMPTS[mode] || PROMPTS.chat
 
-    // --- VERTEX PROMPT CONSTRUCTION ---
-    const textPrompt = {
-        text: `${selectedSystemPrompt}
-        
-        JURISDICTION: ${county || 'washtenaw'}
-        
-        OFFICIAL CONTEXT:
-        ${context || 'No specific text context found. Use general knowledge.'}
-        
-        USER INPUT:
-        ${lastMessage.content}`
+    // Build the prompt
+    let promptText = `${selectedSystemPrompt}
+
+JURISDICTION: ${county || 'washtenaw'}
+
+OFFICIAL CONTEXT:
+${context || 'No specific text context found. Use general knowledge.'}
+
+USER INPUT:
+${lastMessage.content}`
+
+    console.log('📝 Prompt length:', promptText.length)
+
+    // Prepare the request
+    const request = {
+      contents: [{
+        role: 'user',
+        parts: []
+      }]
     }
 
-    const parts = [textPrompt]
+    // Add text
+    request.contents[0].parts.push({ text: promptText })
 
+    // Add image if present
     if (image) {
+      console.log('🖼️ Adding image to request')
       const base64Data = image.split(',')[1]
-      parts.push({
+      request.contents[0].parts.push({
         inlineData: {
           mimeType: 'image/jpeg',
           data: base64Data
         }
       })
-      parts.push({ text: "Analyze this image based on the specific mode objectives defined above. Be specific about violations." })
+      request.contents[0].parts.push({ 
+        text: "Analyze this image based on the specific mode objectives defined above. Be specific about violations." 
+      })
     }
 
-    // Generate content
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: parts }]
-    });
-    
-    const response = await result.response;
-    let text = response.candidates[0].content.parts[0].text;
+    console.log('🚀 Calling Vertex AI...')
 
-    // ADDED: Remove all asterisks from the response
-    text = text.replace(/\*\*/g, '').replace(/\*/g, '');
+    // Generate content with proper error handling
+    const result = await generativeModel.generateContent(request)
+    
+    console.log('✅ Vertex AI response received')
+
+    const response = result.response
+    if (!response || !response.candidates || response.candidates.length === 0) {
+      console.error('❌ No candidates in response')
+      throw new Error('No response from AI model')
+    }
+
+    const candidate = response.candidates[0]
+    if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+      console.error('❌ No content parts in response')
+      throw new Error('Invalid response structure')
+    }
+
+    let text = candidate.content.parts[0].text
+
+    if (!text) {
+      console.error('❌ No text in response')
+      throw new Error('Empty response from AI')
+    }
+
+    console.log('✅ Response text length:', text.length)
+
+    // Remove asterisks
+    text = text.replace(/\*\*/g, '').replace(/\*/g, '')
 
     // Save Assistant Message
     if (chatId) {
@@ -247,12 +320,30 @@ export async function POST(req) {
       })
     }
 
-    await supabase.rpc('increment_usage', { user_id: session.user.id, is_image: !!image })
+    await supabase.rpc('increment_usage', { 
+      user_id: session.user.id, 
+      is_image: !!image 
+    })
 
-    return NextResponse.json({ message: text, citations: citations })
+    console.log('✅ Request completed successfully')
+
+    return NextResponse.json({ 
+      message: text, 
+      citations: citations 
+    })
 
   } catch (error) {
-    console.error('Vertex AI Error:', error)
-    return NextResponse.json({ error: 'System processing error. Please try again.', fallback: true }, { status: 500 })
+    console.error('❌ Vertex AI Error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
+    return NextResponse.json({ 
+      error: 'Failed to process request. Please try again.', 
+      details: error.message,
+      fallback: true 
+    }, { status: 500 })
   }
 }
