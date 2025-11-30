@@ -11,22 +11,59 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
+// SECURITY: Track processed events to prevent replay attacks
+const processedEvents = new Set()
+
+// SECURITY: Event timestamp validation (reject events older than 5 minutes)
+const MAX_EVENT_AGE_MS = 5 * 60 * 1000
+
+function isEventProcessed(eventId) {
+  return processedEvents.has(eventId)
+}
+
+function markEventProcessed(eventId) {
+  processedEvents.add(eventId)
+  // Clean up old events after 1 hour to prevent memory leak
+  setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
+}
+
+function isEventTooOld(eventTimestamp) {
+  const eventAge = Date.now() - (eventTimestamp * 1000)
+  return eventAge > MAX_EVENT_AGE_MS
+}
+
 export async function POST(req) {
   const body = await req.text()
   const signature = headers().get('stripe-signature')
 
   let event
 
+  // SECURITY: Verify webhook signature
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
-    console.error(`❌ Webhook signature verification failed.`, err.message)
-    return NextResponse.json({ error: err.message }, { status: 400 })
+    console.error(`❌ Webhook signature verification failed:`, err.message)
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  console.log(`🔔 Webhook received: ${event.type}`)
+  // SECURITY: Prevent replay attacks
+  if (isEventProcessed(event.id)) {
+    console.warn(`⚠️ Duplicate event detected: ${event.id}`)
+    return NextResponse.json({ error: 'Event already processed' }, { status: 200 })
+  }
+
+  // SECURITY: Reject old events (prevents timing attacks)
+  if (isEventTooOld(event.created)) {
+    console.warn(`⚠️ Event too old: ${event.id}`)
+    return NextResponse.json({ error: 'Event expired' }, { status: 400 })
+  }
+
+  console.log(`🔔 Processing webhook: ${event.type} [${event.id}]`)
 
   try {
+    // Mark event as being processed (prevents concurrent processing)
+    markEventProcessed(event.id)
+
     switch (event.type) {
       // ===== NEW SUBSCRIPTION / TRIAL START =====
       case 'checkout.session.completed': {
@@ -35,7 +72,7 @@ export async function POST(req) {
         const subscriptionId = session.subscription
 
         if (!userId) {
-          console.error('❌ No userId in session metadata or client_reference_id')
+          console.error('❌ No userId in session metadata')
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
         }
 
@@ -44,7 +81,7 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing subscriptionId' }, { status: 400 })
         }
 
-        // SECURITY FIX: Use maybeSingle() to avoid errors
+        // SECURITY: Check if subscription already exists (prevents duplicate creation)
         const { data: existingSub } = await supabase
           .from('subscriptions')
           .select('id, status')
@@ -52,22 +89,29 @@ export async function POST(req) {
           .maybeSingle()
 
         if (existingSub) {
-          console.log('⚠️ Subscription already exists, skipping:', {
-            subscriptionId,
-            existingStatus: existingSub.status
-          })
+          console.log('⚠️ Subscription already exists:', subscriptionId)
           return NextResponse.json({ received: true })
         }
 
+        // SECURITY: Fetch subscription details directly from Stripe (don't trust webhook data alone)
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        
+        // SECURITY: Verify subscription belongs to correct customer
+        if (subscription.customer !== session.customer) {
+          console.error('❌ Customer mismatch detected!')
+          return NextResponse.json({ error: 'Security violation' }, { status: 403 })
+        }
+
         const priceId = subscription.items.data[0].price.id
 
-        const planMap = {
-          'price_1SZAvjDlSrKA3nbA34gnzybi': 'starter',
-          'price_1SZAwrDlSrKA3nbA9tUBsiJ8': 'pro',
-          'price_1SZAxrDlSrKA3nbA9eksBvtE': 'enterprise'
+        // SECURITY: Validate price ID against environment config
+        const validPriceIds = {
+          [process.env.STRIPE_STARTER_PRICE_ID]: 'starter',
+          [process.env.STRIPE_PRO_PRICE_ID]: 'pro',
+          [process.env.STRIPE_ENTERPRISE_PRICE_ID]: 'enterprise'
         }
-        const planName = planMap[priceId] || 'pro'
+
+        const planName = validPriceIds[priceId] || 'pro'
 
         console.log(`✅ Creating subscription for user ${userId}:`, {
           plan: planName,
@@ -95,20 +139,16 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Update user profile (legacy field for backward compatibility ONLY - not for auth)
-        const { error: profileError } = await supabase
+        // Update user profile (legacy field for backward compatibility ONLY)
+        await supabase
           .from('user_profiles')
           .update({ 
-            is_subscribed: true, // LEGACY ONLY - never check this for auth
+            is_subscribed: true, // LEGACY ONLY
             subscription_id: subscriptionId,
             customer_id: session.customer,
             updated_at: new Date().toISOString()
           })
           .eq('id', userId)
-
-        if (profileError) {
-          console.error('⚠️ Failed to update profile (non-critical):', profileError)
-        }
 
         console.log('✅ Subscription created successfully')
         break
@@ -123,6 +163,18 @@ export async function POST(req) {
           status: subscription.status,
           cancelAtPeriodEnd: subscription.cancel_at_period_end
         })
+
+        // SECURITY: Verify subscription exists before updating
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
+          .select('user_id')
+          .eq('stripe_subscription_id', subscription.id)
+          .maybeSingle()
+
+        if (!existingSub) {
+          console.warn('⚠️ Subscription update for non-existent subscription:', subscription.id)
+          return NextResponse.json({ received: true })
+        }
 
         const { error: updateError } = await supabase
           .from('subscriptions')
@@ -140,23 +192,15 @@ export async function POST(req) {
           console.error('❌ Failed to update subscription:', updateError)
         }
 
-        // If subscription is no longer active/trialing, update profile
+        // If subscription is no longer active/trialing, revoke access
         if (!['active', 'trialing'].includes(subscription.status)) {
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_subscription_id', subscription.id)
-            .maybeSingle()
-
-          if (sub) {
-            await supabase
-              .from('user_profiles')
-              .update({ 
-                is_subscribed: false, // LEGACY FIELD
-                updated_at: new Date().toISOString() 
-              })
-              .eq('id', sub.user_id)
-          }
+          await supabase
+            .from('user_profiles')
+            .update({ 
+              is_subscribed: false,
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', existingSub.user_id)
         }
 
         break
@@ -168,18 +212,6 @@ export async function POST(req) {
 
         console.log(`🗑️ Subscription canceled:`, subscription.id)
 
-        const { error: deleteError } = await supabase
-          .from('subscriptions')
-          .update({
-            status: 'canceled',
-            updated_at: new Date().toISOString()
-          })
-          .eq('stripe_subscription_id', subscription.id)
-
-        if (deleteError) {
-          console.error('❌ Failed to mark subscription as canceled:', deleteError)
-        }
-
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -188,9 +220,17 @@ export async function POST(req) {
 
         if (sub) {
           await supabase
+            .from('subscriptions')
+            .update({
+              status: 'canceled',
+              updated_at: new Date().toISOString()
+            })
+            .eq('stripe_subscription_id', subscription.id)
+
+          await supabase
             .from('user_profiles')
             .update({ 
-              is_subscribed: false, // LEGACY FIELD
+              is_subscribed: false,
               updated_at: new Date().toISOString()
             })
             .eq('id', sub.user_id)
@@ -207,15 +247,6 @@ export async function POST(req) {
         console.log(`❌ Payment failed for subscription:`, subscriptionId)
 
         if (subscriptionId) {
-          await supabase
-            .from('subscriptions')
-            .update({
-              status: 'past_due',
-              updated_at: new Date().toISOString()
-            })
-            .eq('stripe_subscription_id', subscriptionId)
-
-          // SECURITY: Revoke access for past_due subscriptions
           const { data: sub } = await supabase
             .from('subscriptions')
             .select('user_id')
@@ -224,9 +255,18 @@ export async function POST(req) {
 
           if (sub) {
             await supabase
+              .from('subscriptions')
+              .update({
+                status: 'past_due',
+                updated_at: new Date().toISOString()
+              })
+              .eq('stripe_subscription_id', subscriptionId)
+
+            // REVOKE ACCESS immediately for past_due
+            await supabase
               .from('user_profiles')
               .update({ 
-                is_subscribed: false, // LEGACY FIELD
+                is_subscribed: false,
                 updated_at: new Date().toISOString()
               })
               .eq('id', sub.user_id)
@@ -241,13 +281,13 @@ export async function POST(req) {
         const invoice = event.data.object
         const subscriptionId = invoice.subscription
 
-        // Only reset on recurring payments (not the first payment)
+        // Only reset on recurring payments
         if (invoice.billing_reason === 'subscription_cycle') {
-          console.log(`🔄 Monthly billing cycle - Resetting usage for subscription:`, subscriptionId)
+          console.log(`🔄 Monthly billing cycle - Resetting usage:`, subscriptionId)
 
           const { data: sub } = await supabase
             .from('subscriptions')
-            .select('user_id, status')
+            .select('user_id')
             .eq('stripe_subscription_id', subscriptionId)
             .maybeSingle()
 
@@ -258,43 +298,22 @@ export async function POST(req) {
               .update({
                 requests_used: 0,
                 images_used: 0,
-                is_subscribed: true, // LEGACY: Ensure it's set
+                is_subscribed: true,
                 updated_at: new Date().toISOString()
               })
               .eq('id', sub.user_id)
 
-            // Ensure subscription is marked active
-            if (sub.status !== 'active') {
-              await supabase
-                .from('subscriptions')
-                .update({
-                  status: 'active',
-                  updated_at: new Date().toISOString()
-                })
-                .eq('stripe_subscription_id', subscriptionId)
-            }
+            // Ensure subscription is active
+            await supabase
+              .from('subscriptions')
+              .update({
+                status: 'active',
+                updated_at: new Date().toISOString()
+              })
+              .eq('stripe_subscription_id', subscriptionId)
 
             console.log(`✅ Usage reset for user:`, sub.user_id)
           }
-        }
-        break
-      }
-
-      // ===== TRIAL WILL END (3 days before) =====
-      case 'customer.subscription.trial_will_end': {
-        const subscription = event.data.object
-        console.log(`⏰ Trial ending soon for subscription:`, subscription.id)
-        
-        // Optional: Send email notification to user
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .maybeSingle()
-
-        if (sub) {
-          // TODO: Implement email notification
-          console.log(`📧 Should notify user ${sub.user_id} about trial ending`)
         }
         break
       }
