@@ -2,10 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import { NextResponse } from 'next/server'
 
-// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Initialize Admin Supabase (to verify user securely)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -29,7 +27,25 @@ export async function POST(req) {
     // 2. Get the Price ID selected in the frontend
     const { priceId } = await req.json()
 
-    // 3. Create Stripe Checkout Session
+    if (!priceId) {
+      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 })
+    }
+
+    // 3. Check if user already has an active subscription
+    const { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .single()
+
+    if (existingSub) {
+      return NextResponse.json({ 
+        error: 'You already have an active subscription. Please manage it from your settings.' 
+      }, { status: 400 })
+    }
+
+    // 4. Create Stripe Checkout Session with 30-day trial
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -39,11 +55,12 @@ export async function POST(req) {
         },
       ],
       mode: 'subscription',
-      // Redirects
+      subscription_data: {
+        trial_period_days: 30, // CRITICAL: Add 30-day trial
+      },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}?payment=cancelled`,
       customer_email: user.email,
-      // CRITICAL: Pass User ID to metadata so Webhook can fulfill
       metadata: {
         userId: user.id, 
       },
@@ -53,6 +70,6 @@ export async function POST(req) {
 
   } catch (err) {
     console.error('Stripe Checkout Error:', err)
-    return NextResponse.json({ error: 'Error creating session' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Error creating session' }, { status: 500 })
   }
 }
