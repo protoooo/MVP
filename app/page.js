@@ -6,24 +6,22 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA
+// DOCUMENT SOURCES DATA (REFINED)
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  "FDA Food Code 2022",
-  "Washtenaw Co. Inspection Report Types",
-  "Michigan Modified Food Code (2009)",
-  "Proper Use of 3-Compartment Sink",
+  "FDA Food Code Regulations",
+  "Michigan Modified Food Code",
+  "County Enforcement Procedures",
   "USDA Safe Minimum Internal Temps",
-  "Food Law, Act 92 of 2000",
-  "Washtenaw Co. Violation Types",
-  "Emergency Action Plans for Retail",
+  "Michigan Food Law (Act 92)",
+  "Emergency Action Plans",
   "Norovirus Cleaning Guidelines",
-  "FOG (Fats, Oils, and Greases) Protocol",
-  "Michigan Consumer Advisory Laws",
-  "Allergen Awareness for Operators",
-  "Preventing Cross-Contamination",
-  "Date Marking Guide (§3-501.17)",
-  "Enforcement Action Procedures"
+  "FOG (Fats, Oils, & Grease) Protocol",
+  "Cross-Contamination Prevention",
+  "Consumer Advisory Guidelines",
+  "Allergen Awareness Standards",
+  "Food Cooling & Holding Criteria",
+  "Food Date Marking Guide"
 ]
 
 // ==========================================
@@ -144,7 +142,7 @@ const Icons = {
     </svg>
   ),
   Book: () => (
-    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     </svg>
   ),
@@ -212,10 +210,10 @@ const SourceTicker = () => {
 
   return (
     <div className="flex justify-center mt-6">
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
+      <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
         <span className="text-[#3E7BFA]"><Icons.Book /></span>
-        <div className="w-[220px] text-center overflow-hidden h-4 relative">
-          <key className="absolute inset-0 flex items-center justify-center text-[11px] text-[#888] font-medium tracking-wide animate-source-ticker uppercase">
+        <div className="w-[280px] md:w-[320px] text-center overflow-hidden h-5 relative">
+          <key className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase">
             {SOURCE_DOCUMENTS[index]}
           </key>
         </div>
