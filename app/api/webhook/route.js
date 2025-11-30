@@ -39,6 +39,18 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
         }
 
+        // SECURITY FIX: Check if subscription already exists
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('stripe_subscription_id', subscriptionId)
+          .single()
+
+        if (existingSub) {
+          console.log('⚠️ Subscription already exists, skipping:', subscriptionId)
+          return NextResponse.json({ received: true })
+        }
+
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
 
@@ -49,9 +61,10 @@ export async function POST(req) {
         }
         const planName = planMap[priceId] || 'pro'
 
-        console.log(`✅ Subscription created for user ${userId}: ${planName}`)
+        console.log(`✅ Creating subscription for user ${userId}: ${planName}`)
 
-        await supabase.from('subscriptions').upsert({
+        // Insert into subscriptions table
+        const { error: subInsertError } = await supabase.from('subscriptions').insert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: session.customer,
@@ -60,9 +73,16 @@ export async function POST(req) {
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }, { onConflict: 'stripe_subscription_id' })
+        })
 
+        if (subInsertError) {
+          console.error('❌ Failed to insert subscription:', subInsertError)
+          return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        }
+
+        // Update user profile (legacy field for backward compatibility)
         await supabase
           .from('user_profiles')
           .update({ 
@@ -73,6 +93,7 @@ export async function POST(req) {
           })
           .eq('id', userId)
 
+        console.log('✅ Subscription created successfully')
         break
       }
 
