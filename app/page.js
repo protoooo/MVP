@@ -47,13 +47,9 @@ const GlobalStyles = () => (
 // ICONS
 // ==========================================
 const Icons = {
+  // UI Icons
   Menu: () => <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>,
-  Send: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(45deg)' }}>
-      <line x1="22" y1="2" x2="11" y2="13"></line>
-      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-    </svg>
-  ),
+  Send: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(45deg)' }}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
   X: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>,
   Plus: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
@@ -61,17 +57,18 @@ const Icons = {
   Settings: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>,
   Tag: () => <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
-  DocumentCheck: () => <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
   
-  // --- MODE ICONS ---
+  // Mode Icons
   MessageSquare: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
   Camera: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
   ClipboardCheck: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
-  
-  // NEW UTILITY ICONS
   Shield: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.572c-2.88 0-5.382-.874-6.86-2.195a1 1 0 00-1.396 1.135 12.001 12.001 0 006.583 9.473 1.002 1.002 0 001.346 0 12.001 12.001 0 006.583-9.473 1 1 0 00-1.396-1.135C15.382 5.698 12.88 6.572 12 6.572z" /></svg>,
   AcademicCap: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>,
-  Table: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+  Table: () => <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
+  
+  // Pricing Icons
+  Check: ({ color = "text-[#EDEDED]" }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>,
+  CloseX: () => <svg className="w-4 h-4 text-[#333] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
 }
 
 // ==========================================
@@ -159,7 +156,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         onSubmit={handleSend}
         className={`relative flex items-end w-full bg-[#161616] border rounded-lg shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
         style={{ 
-          borderColor: activeMode === 'chat' ? `${activeColor}4D` : `${activeColor}4D`, // Updated: Chat now also uses 30% opacity base like others
+          borderColor: activeMode === 'chat' ? `${activeColor}4D` : `${activeColor}4D`, 
           '--active-color': activeColor 
         }}
       >
@@ -331,6 +328,99 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 }
 
 // ==========================================
+// PRICING MODAL
+// ==========================================
+const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
+  if (!isOpen) return null
+  
+  return (
+    <div className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-[#121212] border border-[#2C2C2C] rounded-2xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-6 right-6 text-[#888] hover:text-white transition-colors"><Icons.X /></button>
+        
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Choose your protection level.</h2>
+          <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Starter */}
+          <div className="bg-[#1C1C1C] border border-[#333] rounded-lg p-6 flex flex-col hover:border-[#555] transition-colors">
+            <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">Starter</h3>
+            <div className="flex items-baseline text-white">
+              <span className="text-4xl font-bold tracking-tight font-mono">$49</span>
+              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+            </div>
+            <p className="text-sm text-[#666] mt-4 mb-6 leading-relaxed">Essential compliance for single locations.</p>
+            <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
+              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]"><Icons.Check />500 Text Queries / Mo</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#444]"><Icons.CloseX />No Image Analysis</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#CCC]"><Icons.Check />County Document Access</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-[#444]"><Icons.CloseX />No Mock Audits</li>
+            </ul>
+            <button onClick={() => handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')} disabled={loading !== null} className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all">
+              {loading === 'starter' ? 'Processing...' : 'Select Starter'}
+            </button>
+          </div>
+
+          {/* Pro */}
+          <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-lg p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">Most Popular</div>
+            <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2">Pro</h3>
+            <div className="flex items-baseline text-white">
+              <span className="text-5xl font-bold tracking-tight font-mono">$99</span>
+              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+            </div>
+            <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">Visual compliance for proactive managers.</p>
+            <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
+              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Unlimited Text Queries</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>100 Image Analyses / Mo</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Full Database Access</li>
+              <li className="flex items-start gap-3 text-xs font-medium text-white"><Icons.Check color="text-[#3E7BFA]"/>Mock Audit Workflow</li>
+            </ul>
+            <button onClick={() => handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')} disabled={loading !== null} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg">
+              {loading === 'pro' ? 'Processing...' : 'Select Pro'}
+            </button>
+          </div>
+
+          {/* Enterprise */}
+          <div className="relative p-6 flex flex-col z-0 group rounded-lg bg-[#1C1C1C] overflow-hidden">
+            <div className="absolute inset-0 p-[1px] rounded-lg bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none"></div>
+            <div className="relative z-10">
+              <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
+                 <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-white to-slate-400 shadow-[0_0_8px_white]"></span>
+                 Enterprise
+              </h3>
+              <div className="flex items-baseline text-white">
+                <span className="text-4xl font-bold tracking-tight font-mono">$199</span>
+                <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">/mo</span>
+              </div>
+              <p className="text-sm text-[#888] mt-4 mb-6 leading-relaxed">Automation for zero-tolerance operators.</p>
+              <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Unlimited Text Queries</li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>500 Image Analyses / Mo</li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Mock Audit Workflow</li>
+                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]"><Icons.Check color="text-white"/>Staff Memo Generator</li>
+              </ul>
+              <button onClick={() => handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')} disabled={loading !== null} className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-md text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white">
+                {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10 text-center max-w-md mx-auto opacity-60">
+          <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-2">Secure Stripe Checkout</p>
+          <p className="text-sm text-[#666] font-serif italic">
+            &quot;One failed inspection costs more than 5 years of the Enterprise plan.&quot;
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
 // MAIN PAGE
 // ==========================================
 export default function Page() {
@@ -353,6 +443,8 @@ export default function Page() {
   
   // NEW: ACTIVE MODE STATE
   const [activeMode, setActiveMode] = useState('chat') // 'chat', 'image', 'audit', 'critical', 'training', 'sop'
+  const [showPricingModal, setShowPricingModal] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(null)
   
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -486,6 +578,28 @@ export default function Page() {
       window.location.href = '/'
     }
   }
+  
+  const handleCheckout = async (priceId, planName) => {
+    setCheckoutLoading(planName)
+    if (!session) {
+      setShowPricingModal(false)
+      setAuthModalMessage('Create an account to subscribe')
+      setShowAuthModal(true)
+      setCheckoutLoading(null)
+      return
+    }
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId }), 
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else alert('System busy. Please try again.')
+    } catch (error) { console.error(error); alert('Connection error.') } 
+    finally { setCheckoutLoading(null) }
+  }
 
   const handleSend = async (e) => {
     if (e) e.preventDefault()
@@ -503,7 +617,7 @@ export default function Page() {
         return
       }
       if (!profile.is_subscribed) {
-        router.push('/pricing')
+        setShowPricingModal(true) // SHOW MODAL INSTEAD OF REDIRECT
         return
       }
     }
@@ -616,6 +730,7 @@ export default function Page() {
     <>
       <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} handleCheckout={handleCheckout} loading={checkoutLoading} />
       
       <div className="fixed inset-0 w-full h-full bg-[#121212] text-white overflow-hidden font-sans flex">
         
@@ -648,6 +763,8 @@ export default function Page() {
                 </button>
               ))}
             </div>
+            
+            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
           </div>
 
           {session && (
@@ -665,7 +782,7 @@ export default function Page() {
 
                 {showUserMenu && (
                   <div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                    <button onClick={() => router.push('/pricing')} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2">
+                    <button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2">
                       <Icons.Settings /> Subscription
                     </button>
                     <div className="h-px bg-[#2E2E2E] mx-0"></div>
@@ -702,7 +819,7 @@ export default function Page() {
 
                 {/* Pricing - Text Link */}
                 <button 
-                  onClick={() => router.push('/pricing')}
+                  onClick={() => setShowPricingModal(true)}
                   className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
                 >
                   Pricing
@@ -717,7 +834,7 @@ export default function Page() {
                 </button>
               </div>
 
-              <h1 className="text-3xl md:text-5xl text-white mb-4 text-center tracking-tight font-sans font-semibold">
+              <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
                 Washtenaw Food Safety
               </h1>
               
