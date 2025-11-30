@@ -456,7 +456,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT
+// INPUT COMPONENT (UPDATED FOR MOBILE)
 // ==========================================
 const InputBox = ({
   input,
@@ -500,14 +500,14 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 pb-0">
-      {/* SCROLLABLE MODE BAR - CENTERED */}
-      <div className="flex justify-center w-full">
-        <div className="flex items-center gap-2 mb-4 px-1 overflow-x-auto no-scrollbar pb-1 max-w-full">
+    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0">
+      {/* SCROLLABLE MODE BAR - Better mobile handling */}
+      <div className="flex justify-start md:justify-center w-full overflow-x-auto">
+        <div className="flex items-center gap-2 mb-3 md:mb-4 px-1 no-scrollbar pb-1">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'chat'
                 ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -519,7 +519,7 @@ const InputBox = ({
           {/* Image */}
           <button
             onClick={() => handleModeClick('image')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'image' || selectedImage
                 ? 'text-[#F5A623] bg-[#F5A623]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -531,7 +531,7 @@ const InputBox = ({
           {/* Mock Audit */}
           <button
             onClick={() => handleModeClick('audit')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'audit'
                 ? 'text-[#FDD901] bg-[#FDD901]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -543,7 +543,7 @@ const InputBox = ({
           {/* Crisis/Urgent */}
           <button
             onClick={() => handleModeClick('critical')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'critical'
                 ? 'text-[#EF4444] bg-[#EF4444]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -555,7 +555,7 @@ const InputBox = ({
           {/* Training */}
           <button
             onClick={() => handleModeClick('training')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'training'
                 ? 'text-[#A855F7] bg-[#A855F7]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -567,7 +567,7 @@ const InputBox = ({
           {/* SOPs */}
           <button
             onClick={() => handleModeClick('sop')}
-            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
               activeMode === 'sop'
                 ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -641,7 +641,7 @@ const InputBox = ({
               ? 'Topic for staff training (e.g. handwashing)...'
               : 'What kind of log or SOP do you need?'
           }
-          className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
+          className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -649,7 +649,7 @@ const InputBox = ({
         <button
           type="submit"
           disabled={(!input.trim() && !selectedImage) || isSending}
-          className="p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center"
+          className="p-2 md:p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center"
           style={{
             backgroundColor:
               !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
@@ -1535,40 +1535,41 @@ export default function Page() {
           )}
 
           {!session ? (
-            // LOGGED-OUT VIEW (centered)
+            // LOGGED-OUT VIEW (centered, UPDATED FOR MOBILE)
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               {/* TOP LEFT BRANDING */}
-              <div className="absolute top-6 left-6 z-20">
-                <span className="text-white font-semibold tracking-tight">
+              <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
+                <span className="text-white font-semibold tracking-tight text-sm md:text-base">
                   protocolLM v.1
                 </span>
               </div>
 
-              {/* TOP RIGHT NAV (Logged Out) */}
-              <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
+              {/* TOP RIGHT NAV (Logged Out) - RESPONSIVE */}
+              <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-2 md:gap-6">
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
+                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
                 >
                   Start Free Trial
                 </button>
 
                 <button
                   onClick={() => setShowPricingModal(true)}
-                  className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
+                  className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
                 >
                   Pricing
                 </button>
 
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
+                  className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
                 >
                   Sign In
                 </button>
               </div>
 
-              <div className="w-full max-w-2xl mt-12">
+              {/* INPUT BOX - Adjusted spacing for mobile */}
+              <div className="w-full max-w-2xl mt-8 md:mt-12 px-2 md:px-0">
                 <InputBox
                   input={input}
                   setInput={setInput}
@@ -1584,8 +1585,8 @@ export default function Page() {
                 />
               </div>
 
-              {/* Subtitle BELOW chat box */}
-              <p className="text-[#A1A1AA] text-lg md:text-xl mt-6 font-medium text-center">
+              {/* SUBTITLE - Responsive text size */}
+              <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-4 md:mt-6 font-medium text-center px-4">
                 Trained on{' '}
                 <span className="text-white font-semibold">
                   Washtenaw, Michigan
@@ -1593,11 +1594,13 @@ export default function Page() {
                 &amp; FDA Regulations
               </p>
 
-              {/* Source ticker */}
-              <SourceTicker />
+              {/* SOURCE TICKER - Hidden on small mobile */}
+              <div className="hidden sm:block">
+                <SourceTicker />
+              </div>
 
-              {/* Footer links */}
-              <div className="flex gap-4 mt-12 text-xs text-[#525252] fixed bottom-6">
+              {/* FOOTER LINKS - Responsive positioning */}
+              <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
                 <Link
                   href="/privacy"
                   className="hover:text-white transition-colors"
