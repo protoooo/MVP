@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -86,7 +87,7 @@ export async function POST(req) {
       try {
         const stripeSubscriptions = await stripe.subscriptions.list({
           customer: profile.customer_id,
-          status: 'all', // Check all statuses
+          status: 'all',
           limit: 10
         })
 
@@ -112,7 +113,7 @@ export async function POST(req) {
       .from('checkout_attempts')
       .select('created_at')
       .eq('user_id', user.id)
-      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString()) // Last hour
+      .gte('created_at', new Date(Date.now() - 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
 
     if (recentAttempts.data && recentAttempts.data.length >= 5) {
@@ -128,7 +129,10 @@ export async function POST(req) {
       created_at: new Date().toISOString()
     })
 
-    // 6. Create Stripe Checkout Session with enhanced security
+    // 6. SECURITY FIX: Cryptographically secure idempotency key
+    const idempotencyKey = `checkout-${user.id}-${crypto.randomUUID()}`
+
+    // 7. Create Stripe Checkout Session with enhanced security
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -156,20 +160,20 @@ export async function POST(req) {
         userEmail: user.email,
         planName: planName
       },
-      allow_promotion_codes: false, // Prevent promo abuse
-      billing_address_collection: 'required', // Fraud prevention
+      allow_promotion_codes: false,
+      billing_address_collection: 'required',
       phone_number_collection: {
-        enabled: false // Optional: enable for additional verification
+        enabled: false
       },
-      // SECURITY: Prevent multiple checkouts for same user
-      idempotency_key: `checkout-${user.id}-${Date.now()}`
+      idempotency_key: idempotencyKey
     })
 
     console.log('✅ Checkout session created:', {
       sessionId: session.id,
       userId: user.id,
       priceId: priceId,
-      plan: planName
+      plan: planName,
+      idempotencyKey: idempotencyKey.substring(0, 20) + '...'
     })
 
     return NextResponse.json({ url: session.url })
