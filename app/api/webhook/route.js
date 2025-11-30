@@ -39,11 +39,9 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
         }
 
-        // Fetch full subscription details from Stripe
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
 
-        // Map price ID to plan name
         const planMap = {
           'price_1SY95aDlSrKA3nbAsgxE0Jon': 'starter',
           'price_1SY96QDlSrKA3nbACxe8QasT': 'pro',
@@ -53,20 +51,18 @@ export async function POST(req) {
 
         console.log(`✅ Subscription created for user ${userId}: ${planName}`)
 
-        // Insert into subscriptions table
         await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
           stripe_customer_id: session.customer,
           plan: planName,
-          status: subscription.status, // 'trialing' or 'active'
+          status: subscription.status,
           current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
           updated_at: new Date().toISOString()
         }, { onConflict: 'stripe_subscription_id' })
 
-        // Update user profile
         await supabase
           .from('user_profiles')
           .update({ 
@@ -80,7 +76,7 @@ export async function POST(req) {
         break
       }
 
-      // ===== SUBSCRIPTION UPDATED (e.g., trial ended, plan changed) =====
+      // ===== SUBSCRIPTION UPDATED =====
       case 'customer.subscription.updated': {
         const subscription = event.data.object
 
@@ -94,7 +90,6 @@ export async function POST(req) {
           updated_at: new Date().toISOString()
         }).eq('stripe_subscription_id', subscription.id)
 
-        // If subscription became inactive, update profile
         if (!['active', 'trialing'].includes(subscription.status)) {
           const { data: sub } = await supabase
             .from('subscriptions')
@@ -113,19 +108,17 @@ export async function POST(req) {
         break
       }
 
-      // ===== SUBSCRIPTION DELETED/CANCELED =====
+      // ===== SUBSCRIPTION DELETED =====
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
 
         console.log(`🗑️ Subscription canceled: ${subscription.id}`)
 
-        // Update status to 'canceled'
         await supabase.from('subscriptions').update({
           status: 'canceled',
           updated_at: new Date().toISOString()
         }).eq('stripe_subscription_id', subscription.id)
 
-        // Disable access
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -157,6 +150,37 @@ export async function POST(req) {
           updated_at: new Date().toISOString()
         }).eq('stripe_subscription_id', subscriptionId)
 
+        break
+      }
+
+      // ===== MONTHLY PAYMENT SUCCESS - RESET USAGE =====
+      case 'invoice.paid': {
+        const invoice = event.data.object
+        const subscriptionId = invoice.subscription
+
+        // Only reset on recurring payments (not the first payment)
+        if (invoice.billing_reason === 'subscription_cycle') {
+          console.log(`🔄 Monthly billing cycle - Resetting usage for subscription: ${subscriptionId}`)
+
+          const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('user_id')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single()
+
+          if (sub) {
+            await supabase
+              .from('user_profiles')
+              .update({
+                requests_used: 0,
+                images_used: 0,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', sub.user_id)
+
+            console.log(`✅ Usage reset for user: ${sub.user_id}`)
+          }
+        }
         break
       }
 
