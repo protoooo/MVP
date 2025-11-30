@@ -141,7 +141,7 @@ export async function POST(req) {
       },
     })
 
-    console.log('✅ Vertex AI model initialized: gemini-3-pro-preview')
+    console.log('✅ Vertex AI model initialized: gemini-2.5-pro')
 
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
