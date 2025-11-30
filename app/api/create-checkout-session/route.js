@@ -32,22 +32,17 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing priceId' }, { status: 400 })
     }
 
-    // SECURITY FIX: Validate against environment variables (not hardcoded values)
-    const VALID_PRICE_IDS = {
-      [process.env.STRIPE_PRO_PRICE_ID]: 'pro',
-      [process.env.STRIPE_ENTERPRISE_PRICE_ID]: 'enterprise'
-    }
-
-    const planName = VALID_PRICE_IDS[priceId]
-
-    if (!planName) {
+    // SECURITY FIX: Only one valid price ID for single plan
+    const VALID_PRICE_ID = process.env.STRIPE_PROTOCOLLM_PRICE_ID
+    
+    if (priceId !== VALID_PRICE_ID) {
       console.error('❌ Invalid price ID attempted:', priceId)
       return NextResponse.json({ 
         error: 'Invalid subscription plan selected' 
       }, { status: 400 })
     }
 
-    // SECURITY: Verify price ID exists in Stripe (prevents stale/test IDs)
+    // SECURITY: Verify price ID exists in Stripe
     try {
       await stripe.prices.retrieve(priceId)
     } catch (stripeError) {
@@ -57,19 +52,18 @@ export async function POST(req) {
       }, { status: 400 })
     }
 
-    // 3. SECURITY FIX: Check for ANY existing subscriptions (including past_due/incomplete)
+    // 3. SECURITY FIX: Check for ANY existing subscriptions
     const { data: existingSubs } = await supabase
       .from('subscriptions')
-      .select('stripe_subscription_id, status, plan')
+      .select('stripe_subscription_id, status')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing', 'past_due', 'incomplete'])
 
     if (existingSubs && existingSubs.length > 0) {
       const activeSub = existingSubs[0]
       return NextResponse.json({ 
-        error: `You already have ${activeSub.status === 'past_due' ? 'a past due' : 'an active'} ${activeSub.plan} subscription. Please manage it from your settings or contact support.`,
+        error: `You already have ${activeSub.status === 'past_due' ? 'a past due' : 'an active'} subscription. Please manage it from your settings or contact support.`,
         existingSubscription: {
-          plan: activeSub.plan,
           status: activeSub.status
         }
       }, { status: 400 })
@@ -107,7 +101,7 @@ export async function POST(req) {
       }
     }
 
-    // 5. SECURITY: Rate limit checkout attempts (prevent spam/abuse)
+    // 5. SECURITY: Rate limit checkout attempts
     const recentAttempts = await supabase
       .from('checkout_attempts')
       .select('created_at')
@@ -131,7 +125,7 @@ export async function POST(req) {
     // 6. SECURITY FIX: Cryptographically secure idempotency key
     const idempotencyKey = `checkout-${user.id}-${crypto.randomUUID()}`
 
-    // 7. Create Stripe Checkout Session with enhanced security
+    // 7. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -146,7 +140,7 @@ export async function POST(req) {
         metadata: {
           userId: user.id,
           userEmail: user.email,
-          planName: planName,
+          planName: 'protocollm',
           createdAt: new Date().toISOString()
         }
       },
@@ -157,7 +151,7 @@ export async function POST(req) {
       metadata: {
         userId: user.id,
         userEmail: user.email,
-        planName: planName
+        planName: 'protocollm'
       },
       allow_promotion_codes: false,
       billing_address_collection: 'required',
@@ -171,7 +165,7 @@ export async function POST(req) {
       sessionId: session.id,
       userId: user.id,
       priceId: priceId,
-      plan: planName,
+      plan: 'protocollm',
       idempotencyKey: idempotencyKey.substring(0, 20) + '...'
     })
 
