@@ -33,9 +33,9 @@ export async function POST(req) {
 
     // SECURITY FIX: Validate priceId against allowed values
     const VALID_PRICE_IDS = [
-      'price_1SY95aDlSrKA3nbAsgxE0Jon', // starter
-      'price_1SY96QDlSrKA3nbACxe8QasT', // pro
-      'price_1SY97KDlSrKA3nbAauq4tP8g'  // enterprise
+      'price_1SZAvjDlSrKA3nbA34gnzybi', // starter
+      'price_1SZAwrDlSrKA3nbA9tUBsiJ8', // pro
+      'price_1SZAxrDlSrKA3nbA9eksBvtE'  // enterprise
     ]
 
     if (!VALID_PRICE_IDS.includes(priceId)) {
@@ -89,7 +89,7 @@ export async function POST(req) {
       }
     }
 
-    // 5. Create Stripe Checkout Session with 30-day trial
+    // 5. Create Stripe Checkout Session with 7-day trial
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -100,7 +100,7 @@ export async function POST(req) {
       ],
       mode: 'subscription',
       subscription_data: {
-        trial_period_days: 30,
+        trial_period_days: 7,
         metadata: {
           userId: user.id,
           userEmail: user.email
