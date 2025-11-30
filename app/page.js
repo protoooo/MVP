@@ -1108,7 +1108,32 @@ export default function Page() {
             .eq('id', currentSession.user.id)
             .single()
           setProfile(userProfile)
-          loadChatHistory()
+          
+          // SECURITY: Verify active subscription from subscriptions table
+          if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
+            const { data: activeSub } = await supabase
+              .from('subscriptions')
+              .select('status, current_period_end')
+              .eq('user_id', currentSession.user.id)
+              .in('status', ['active', 'trialing'])
+              .maybeSingle()
+
+            if (!activeSub) {
+              console.log('⚠️ No active subscription found')
+              setShowPricingModal(true)
+            } else {
+              // Verify not expired
+              const periodEnd = new Date(activeSub.current_period_end)
+              if (periodEnd < new Date()) {
+                console.log('⚠️ Subscription expired')
+                setShowPricingModal(true)
+              } else {
+                loadChatHistory()
+              }
+            }
+          } else {
+            loadChatHistory()
+          }
         }
       } catch (e) {
         console.error(e)
@@ -1396,20 +1421,39 @@ export default function Page() {
     }
   }
 
+  // ENHANCED SECURITY IMAGE HANDLER
   const handleImage = async (e) => {
-    if (e.target.files?.[0]) {
-      if (!session) {
-        setAuthModalMessage('Image analysis requires an account')
-        setShowAuthModal(true)
-        return
-      }
-      try {
-        const compressed = await compressImage(e.target.files[0])
-        setSelectedImage(compressed)
-        setActiveMode('image')
-      } catch (error) {
-        console.error(error)
-      }
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!session) {
+      setAuthModalMessage('Image analysis requires an account')
+      setShowAuthModal(true)
+      return
+    }
+
+    // SECURITY: Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image must be under 10MB')
+      e.target.value = '' // Reset file input
+      return
+    }
+
+    // SECURITY: Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are allowed')
+      e.target.value = '' // Reset file input
+      return
+    }
+
+    try {
+      const compressed = await compressImage(file)
+      setSelectedImage(compressed)
+      setActiveMode('image')
+    } catch (error) {
+      console.error('Image compression error:', error)
+      alert('Failed to process image. Please try a different file.')
+      e.target.value = '' // Reset file input
     }
   }
 
