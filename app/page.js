@@ -456,7 +456,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (Fixed More Arrow + Shortened Text)
+// INPUT COMPONENT (Fixed Arrow Centering)
 // ==========================================
 const InputBox = ({
   input,
@@ -502,12 +502,16 @@ const InputBox = ({
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0 md:pb-0">
       {/* SCROLLABLE MODE BAR */}
-      <div className="relative flex justify-start md:justify-center w-full">
+      {/* FIX: Moved margin-bottom (mb-3) to this PARENT wrapper. 
+          This ensures the relative parent height matches the button height exactly,
+          so absolute positioning (top-0 bottom-0) centers the arrow correctly. */}
+      <div className="relative flex justify-start md:justify-center w-full mb-3 md:mb-4">
+        
         {/* Left fade */}
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
 
-        {/* Scrollable container */}
-        <div className="flex items-center gap-2 mb-3 md:mb-4 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
+        {/* Scrollable container (No margin here anymore) */}
+        <div className="flex items-center gap-2 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
@@ -582,7 +586,8 @@ const InputBox = ({
         </div>
 
         {/* Right fade + CLEAN ARROW (No Text) */}
-        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-2">
+        {/* Adjusted gradient to be stronger so the arrow pops more clearly */}
+        <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-3">
             <svg
                 width="20"
                 height="20"
