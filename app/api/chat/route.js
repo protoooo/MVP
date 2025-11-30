@@ -5,25 +5,39 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// --- DOCUMENT LIST FOR AI AWARENESS ---
+const KNOWLEDGE_SCOPE = `
+YOU HAVE ACCESS TO THE FOLLOWING SPECIFIC DOCUMENTS:
+1. LOCAL (WASHTENAW): Food Service Inspection Program, proper use of 3-Compartment Sink, FOG Guidelines, Cross-Contamination, Cooling Foods, Enforcement Action Procedures.
+2. STATE (MICHIGAN): Food Law Act 92 of 2000, Michigan Modified Food Code (2009/2012), Norovirus Guidelines, Employee Illness Guidelines.
+3. FEDERAL: FDA Food Code 2022, USDA Temp Charts.
+`
+
 // --- DEFINING MODES & PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
+  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Help operators understand codes and fix violations.
-  HIERARCHY: 1. Local County Code (Washtenaw/Wayne/Oakland). 2. Michigan Modified Food Code. 3. FDA Food Code.
+  HIERARCHY: 
+  1. Local County Code (Washtenaw/Wayne/Oakland) - HIGHEST AUTHORITY.
+  2. Michigan Modified Food Code - STATE AUTHORITY.
+  3. FDA Food Code 2022 - GUIDANCE ONLY.
   STYLE: Concise, authoritative, helpful. No fluff.
   STRUCTURE: Direct Answer -> The Fix -> Evidence [Source, Page].`,
 
   audit: `You are a strict Local Health Inspector performing a mock audit.
-  OBJECTIVE: Analyze the user's input (or image) specifically for violations.
+  ${KNOWLEDGE_SCOPE}
+  OBJECTIVE: Analyze the user's input (or image) specifically for violations against the Michigan Modified Food Code and Washtenaw Local Regulations.
   STYLE: Formal, critical, observant.
   STRUCTURE: 
   1. Identify Potential Violations.
-  2. Cite the specific code violation.
+  2. Cite the specific code violation (e.g. "Violation of Michigan Modified Food Code §3-501.16").
   3. Assign Priority (Priority, Priority Foundation, Core).
   4. Required Corrective Action.`,
 
   critical: `You are an Emergency Response Protocol System.
-  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee).
+  ${KNOWLEDGE_SCOPE}
+  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee) using the "Emergency Action Plans for Retail Food Establishments" document.
   STYLE: Calm, imperative, step-by-step. Use bolding for critical actions.
   STRUCTURE:
   1. IMMEDIATE ACTION REQUIRED (What to do RIGHT NOW).
@@ -32,6 +46,7 @@ const PROMPTS = {
   4. WHO TO CALL.`,
 
   training: `You are an engaging Food Safety Trainer.
+  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Create a short training script and quiz for kitchen staff based on the user's topic.
   STYLE: Engaging, simple language, encouraging. (Fluff is okay here).
   OUTPUT:
@@ -39,6 +54,7 @@ const PROMPTS = {
   2. "Pop Quiz" (3 questions with answers at the bottom).`,
 
   sop: `You are a Documentation Specialist.
+  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Generate a formal Standard Operating Procedure (SOP) or a Log Sheet.
   STYLE: Bureaucratic, clean, formatted.
   OUTPUT: strictly use Markdown Tables or Bulleted Lists that can be printed. Include fields for 'Date', 'Time', 'Manager Signature'.`
@@ -55,13 +71,17 @@ export async function POST(req) {
 
     // If running in Railway, use the JSON variable
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
-      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-      vertexConfig.googleAuthOptions = {
-        credentials: {
-          client_email: credentials.client_email,
-          private_key: credentials.private_key,
-        }
-      };
+      try {
+        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+        vertexConfig.googleAuthOptions = {
+          credentials: {
+            client_email: credentials.client_email,
+            private_key: credentials.private_key,
+          }
+        };
+      } catch (e) {
+        console.error("Error parsing GOOGLE_CREDENTIALS_JSON", e);
+      }
     }
     
     const vertex_ai = new VertexAI(vertexConfig);
@@ -124,9 +144,9 @@ export async function POST(req) {
            const federalDocs = searchResults.filter(d => d.docType === 'federal')
            
            let contextParts = []
-           if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + countyDocs.map(d => `"${d.text}"`).join('\n'))
-           if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map(d => `"${d.text}"`).join('\n'))
-           if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map(d => `"${d.text}"`).join('\n'))
+           if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS (Use these FIRST) ===\n' + countyDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
+           if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE (Use these SECOND) ===\n' + stateDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
+           if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE (Use these LAST) ===\n' + federalDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
            
            context = contextParts.join('\n\n')
            citations = searchResults.map(doc => ({ document: doc.source.replace('.pdf', ''), pages: [doc.page] }))
@@ -140,9 +160,9 @@ export async function POST(req) {
     const textPrompt = {
         text: `${selectedSystemPrompt}
         
-        JURISDICTION: ${county || 'washtenaw'}
+        CURRENT USER JURISDICTION: ${county || 'washtenaw'}
         
-        OFFICIAL CONTEXT:
+        RETRIEVED CONTEXT FROM DATABASE:
         ${context}
         
         USER INPUT:
@@ -152,7 +172,6 @@ export async function POST(req) {
     const parts = [textPrompt]
 
     if (image) {
-      // Vertex AI expects base64 without the header
       const base64Data = image.split(',')[1]
       parts.push({
         inlineData: {
@@ -160,7 +179,7 @@ export async function POST(req) {
           data: base64Data
         }
       })
-      parts.push({ text: "Analyze this image based on the specific mode objectives above." })
+      parts.push({ text: "Analyze this image based on the specific mode objectives above. Identify violations immediately." })
     }
 
     const result = await model.generateContent({
