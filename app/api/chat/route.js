@@ -105,15 +105,18 @@ export async function POST(req) {
     console.log('🔍 Chat request received:', { mode, hasImage: !!image, county })
 
     // --- VERTEX AI AUTHENTICATION ---
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID || 'food-safety-production'
+    const projectId =
+      process.env.GOOGLE_CLOUD_PROJECT_ID ||
+      process.env.GCLOUD_PROJECT_ID ||
+      'food-safety-production'
     const location = 'us-central1'
     
-    let vertexConfig = { project: projectId, location: location }
+    let vertexConfig: any = { project: projectId, location: location }
 
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
       try {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
-        const privateKey = credentials.private_key 
+        const privateKey = credentials.private_key
           ? credentials.private_key.replace(/\\n/g, '\n')
           : undefined
 
@@ -121,12 +124,15 @@ export async function POST(req) {
           credentials: {
             client_email: credentials.client_email,
             private_key: privateKey,
-          }
+          },
         }
         console.log('✅ Vertex AI credentials configured')
       } catch (e) {
-        console.error("❌ Failed to parse GOOGLE_CREDENTIALS_JSON:", e)
-        return NextResponse.json({ error: 'Server Configuration Error' }, { status: 500 })
+        console.error('❌ Failed to parse GOOGLE_CREDENTIALS_JSON:', e)
+        return NextResponse.json(
+          { error: 'Server Configuration Error' },
+          { status: 500 }
+        )
       }
     }
     
@@ -146,23 +152,27 @@ export async function POST(req) {
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) { 
-            try { 
-              cookiesToSet.forEach(({ name, value, options }) => 
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
-              ) 
-            } catch {} 
+              )
+            } catch {}
           },
         },
       }
     )
 
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       console.log('❌ No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -170,21 +180,67 @@ export async function POST(req) {
 
     console.log('✅ User authenticated:', session.user.email)
 
+    // CRITICAL FIX: Check terms acceptance
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('accepted_terms, accepted_privacy')
+      .eq('id', session.user.id)
+      .single()
+
+    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+      console.log('❌ Terms not accepted')
+      return NextResponse.json(
+        {
+          error: 'Please accept terms of service',
+          requiresTerms: true,
+        },
+        { status: 403 }
+      )
+    }
+
+    // CRITICAL FIX: Check ACTUAL subscription status from subscriptions table
+    const { data: activeSub, error: subError } = await supabase
+      .from('subscriptions')
+      .select('status, plan')
+      .eq('user_id', session.user.id)
+      .in('status', ['active', 'trialing'])
+      .single()
+
+    if (subError || !activeSub) {
+      console.log('❌ No active subscription:', subError?.message)
+      return NextResponse.json(
+        {
+          error: 'Active subscription required',
+          requiresSubscription: true,
+        },
+        { status: 402 }
+      )
+    }
+
+    console.log('✅ Active subscription verified:', activeSub.plan, activeSub.status)
+
+    // NOW check rate limits
     const limitCheck = await checkRateLimit(session.user.id)
     if (!limitCheck.success) {
       console.log('❌ Rate limit exceeded')
-      return NextResponse.json({ 
-        error: limitCheck.message, 
-        limitReached: true 
-      }, { status: 429 })
+      return NextResponse.json(
+        {
+          error: limitCheck.message,
+          limitReached: true,
+        },
+        { status: 429 }
+      )
     }
-    
+
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
       console.log('❌ Image limit exceeded')
-      return NextResponse.json({ 
-        error: 'Image limit reached.', 
-        limitReached: true 
-      }, { status: 429 })
+      return NextResponse.json(
+        {
+          error: 'Image limit reached.',
+          limitReached: true,
+        },
+        { status: 429 }
+      )
     }
 
     const lastMessage = messages[messages.length - 1]
@@ -195,45 +251,54 @@ export async function POST(req) {
         chat_id: chatId,
         role: 'user',
         content: lastMessage.content,
-        image: image || null
+        image: image || null,
       })
     }
 
     // RAG Logic
     let context = ''
-    let citations = []
+    let citations: { document: string; pages: number[] }[] = []
     if (lastMessage.content && !image) {
       console.log('🔍 Searching documents...')
       try {
-        const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
+        const searchResults = await searchDocuments(
+          lastMessage.content,
+          county || 'washtenaw'
+        )
         console.log(`📚 Found ${searchResults?.length || 0} search results`)
         
         if (searchResults && searchResults.length > 0) {
-          const countyDocs = searchResults.filter(d => d.docType === 'county')
-          const stateDocs = searchResults.filter(d => d.docType === 'state')
-          const federalDocs = searchResults.filter(d => d.docType === 'federal')
+          const countyDocs = searchResults.filter((d: any) => d.docType === 'county')
+          const stateDocs = searchResults.filter((d: any) => d.docType === 'state')
+          const federalDocs = searchResults.filter((d: any) => d.docType === 'federal')
           
-          let contextParts = []
+          let contextParts: string[] = []
           if (countyDocs.length > 0) {
-            contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + 
-              countyDocs.map(d => `"${d.text}"`).join('\n'))
+            contextParts.push(
+              '=== LOCAL COUNTY REGULATIONS ===\n' +
+                countyDocs.map((d: any) => `"${d.text}"`).join('\n')
+            )
           }
           if (stateDocs.length > 0) {
-            contextParts.push('=== MICHIGAN STATE CODE ===\n' + 
-              stateDocs.map(d => `"${d.text}"`).join('\n'))
+            contextParts.push(
+              '=== MICHIGAN STATE CODE ===\n' +
+                stateDocs.map((d: any) => `"${d.text}"`).join('\n')
+            )
           }
           if (federalDocs.length > 0) {
-            contextParts.push('=== FDA GUIDANCE ===\n' + 
-              federalDocs.map(d => `"${d.text}"`).join('\n'))
+            contextParts.push(
+              '=== FDA GUIDANCE ===\n' +
+                federalDocs.map((d: any) => `"${d.text}"`).join('\n')
+            )
           }
           
           context = contextParts.join('\n\n')
-          citations = searchResults.map(doc => ({ 
-            document: doc.source.replace('.pdf', ''), 
-            pages: [doc.page] 
+          citations = searchResults.map((doc: any) => ({
+            document: doc.source.replace('.pdf', ''),
+            pages: [doc.page],
           }))
         }
-      } catch (err) { 
+      } catch (err) {
         console.error('❌ Search Error:', err)
       }
     }
@@ -252,11 +317,13 @@ USER INPUT:
 ${lastMessage.content}`
 
     // Prepare the request
-    const request = {
-      contents: [{
-        role: 'user',
-        parts: []
-      }]
+    const request: any = {
+      contents: [
+        {
+          role: 'user',
+          parts: [],
+        },
+      ],
     }
 
     // Add text
@@ -269,11 +336,11 @@ ${lastMessage.content}`
       request.contents[0].parts.push({
         inlineData: {
           mimeType: 'image/jpeg',
-          data: base64Data
-        }
+          data: base64Data,
+        },
       })
-      request.contents[0].parts.push({ 
-        text: "Analyze this image based on the specific mode objectives defined above. Be specific about violations." 
+      request.contents[0].parts.push({
+        text: 'Analyze this image based on the specific mode objectives defined above. Be specific about violations.',
       })
     }
 
@@ -292,25 +359,27 @@ ${lastMessage.content}`
       await supabase.from('messages').insert({
         chat_id: chatId,
         role: 'assistant',
-        content: cleanText
+        content: cleanText,
       })
     }
 
-    await supabase.rpc('increment_usage', { 
-      user_id: session.user.id, 
-      is_image: !!image 
+    await supabase.rpc('increment_usage', {
+      user_id: session.user.id,
+      is_image: !!image,
     })
 
-    return NextResponse.json({ 
-      message: cleanText, 
-      citations: citations 
+    return NextResponse.json({
+      message: cleanText,
+      citations: citations,
     })
-
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Vertex AI Error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to process request. Please try again.', 
-      details: error.message 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'Failed to process request. Please try again.',
+        details: error.message,
+      },
+      { status: 500 }
+    )
   }
 }
