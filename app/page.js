@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA (REFINED)
+// DOCUMENT SOURCES DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
   "FDA Food Code Regulations",
@@ -51,15 +51,18 @@ const GlobalStyles = () => (
       100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
     }
     
-    /* Smooth Fade/Slide Animation for Ticker */
+    /* 
+       Fixed Animation Logic: 
+       Removed 'infinite' and tuned keyframes so it plays once per key-change.
+    */
     @keyframes slideUpFade {
       0% { opacity: 0; transform: translateY(10px); }
-      15% { opacity: 1; transform: translateY(0); }
-      85% { opacity: 1; transform: translateY(0); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
       100% { opacity: 0; transform: translateY(-10px); }
     }
     .animate-source-ticker {
-      animation: slideUpFade 3s ease-in-out infinite;
+      animation: slideUpFade 3s ease-in-out forwards;
     }
 
     /* Custom Scrollbar for Chat */
@@ -213,9 +216,12 @@ const SourceTicker = () => {
       <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
         <span className="text-[#3E7BFA]"><Icons.Book /></span>
         <div className="w-[280px] md:w-[320px] text-center overflow-hidden h-5 relative">
-          <key className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase">
+          <div 
+            key={index} 
+            className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase"
+          >
             {SOURCE_DOCUMENTS[index]}
-          </key>
+          </div>
         </div>
       </div>
     </div>
