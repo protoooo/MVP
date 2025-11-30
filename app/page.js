@@ -356,7 +356,7 @@ const InputBox = ({
               ? 'Topic for staff training (e.g. handwashing)...'
               : 'What kind of log or SOP do you need?'
           }
-          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
+          className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -526,165 +526,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             {statusMessage}
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// ==========================================
-// USAGE COUNTER
-// ==========================================
-const UsageCounter = ({ session }) => {
-  const [usage, setUsage] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const fetchUsage = async () => {
-      if (!session) return
-
-      try {
-        // Get profile data
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('requests_used, images_used, is_subscribed')
-          .eq('id', session.user.id)
-          .single()
-
-        // Get subscription data
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('plan, status, current_period_end')
-          .eq('user_id', session.user.id)
-          .maybeSingle()
-
-        let planName = 'free'
-        if (sub && (sub.status === 'active' || sub.status === 'trialing')) {
-          planName = sub.plan || 'pro'
-        } else if (profile?.is_subscribed) {
-          planName = 'pro'
-        }
-
-        // Define limits (synced with pricing)
-        const limits = {
-          free: { text: 10, images: 0 },
-          starter: { text: 2000, images: 10 },
-          pro: { text: 100000, images: 250 },
-          enterprise: { text: 100000, images: 1000 },
-        }
-
-        const planLimits = limits[planName] || limits.free
-
-        setUsage({
-          textUsed: profile?.requests_used || 0,
-          textLimit: planLimits.text,
-          imagesUsed: profile?.images_used || 0,
-          imageLimit: planLimits.images,
-          plan: planName,
-          resetDate: sub?.current_period_end ? new Date(sub.current_period_end) : null,
-        })
-      } catch (error) {
-        console.error('Error fetching usage:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUsage()
-    const interval = setInterval(fetchUsage, 30000)
-    return () => clearInterval(interval)
-  }, [session, supabase])
-
-  if (!session || loading || !usage) return null
-
-  const textPercentage =
-    usage.textLimit === 100000 ? 0 : (usage.textUsed / usage.textLimit) * 100
-  const imagePercentage =
-    usage.imageLimit === 0 ? 0 : (usage.imagesUsed / usage.imageLimit) * 100
-
-  const formatResetDate = (date) => {
-    if (!date) return 'Unknown'
-    const now = new Date()
-    const diff = date - now
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-    if (days <= 0) return 'Today'
-    if (days === 1) return 'Tomorrow'
-    return `${days} days`
-  }
-
-  return (
-    <div className="w-full max-w-4xl mx-auto px-4 mb-4">
-      <div className="bg-[#1C1C1C] border border-[#2E2E2E] rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest">
-            Usage This Month
-          </h3>
-          <span className="text-xs text-[#555]">
-            Resets in {formatResetDate(usage.resetDate)}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Text Queries */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#A1A1AA] font-medium">
-                Text Queries
-              </span>
-              <span className="text-xs font-mono text-white">
-                {usage.textLimit === 100000 ? (
-                  <span className="text-[#3ECF8E]">Unlimited ✨</span>
-                ) : (
-                  `${usage.textUsed.toLocaleString()} / ${usage.textLimit.toLocaleString()}`
-                )}
-              </span>
-            </div>
-            {usage.textLimit !== 100000 && (
-              <div className="w-full bg-[#0A0A0A] rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    textPercentage >= 90
-                      ? 'bg-red-500'
-                      : textPercentage >= 70
-                      ? 'bg-yellow-500'
-                      : 'bg-[#3E7BFA]'
-                  }`}
-                  style={{ width: `${Math.min(textPercentage, 100)}%` }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Image Analyses */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#A1A1AA] font-medium">
-                Image Analyses
-              </span>
-              <span className="text-xs font-mono text-white">
-                {usage.imageLimit === 0 ? (
-                  <span className="text-[#666]">Not Available</span>
-                ) : (
-                  `${usage.imagesUsed.toLocaleString()} / ${usage.imageLimit.toLocaleString()}`
-                )}
-              </span>
-            </div>
-            {usage.imageLimit > 0 && (
-              <div className="w-full bg-[#0A0A0A] rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    imagePercentage >= 90
-                      ? 'bg-red-500'
-                      : imagePercentage >= 70
-                      ? 'bg-yellow-500'
-                      : 'bg-[#F5A623]'
-                  }`}
-                  style={{ width: `${Math.min(imagePercentage, 100)}%` }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -1432,9 +1273,6 @@ export default function Page() {
               </div>
 
               <div className="w-full bg-[#121212] pt-2 shrink-0">
-                {/* NEW: Usage Counter just above the input (logged-in only) */}
-                <UsageCounter session={session} />
-
                 <InputBox
                   input={input}
                   setInput={setInput}
