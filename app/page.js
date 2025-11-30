@@ -456,7 +456,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (with enhanced mobile scrolling)
+// INPUT COMPONENT (Fixed More Arrow + Shortened Text)
 // ==========================================
 const InputBox = ({
   input,
@@ -501,12 +501,12 @@ const InputBox = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0 md:pb-0">
-      {/* SCROLLABLE MODE BAR with clearer mobile indicators */}
+      {/* SCROLLABLE MODE BAR */}
       <div className="relative flex justify-start md:justify-center w-full">
-        {/* Left fade (shows when scrolled) */}
+        {/* Left fade */}
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
 
-        {/* Scrollable container - Added shrink-0 and whitespace-nowrap to all children buttons to prevent squishing */}
+        {/* Scrollable container */}
         <div className="flex items-center gap-2 mb-3 md:mb-4 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
           {/* Chat */}
           <button
@@ -581,26 +581,23 @@ const InputBox = ({
           </button>
         </div>
 
-        {/* Right fade + ENHANCED ARROW indicator for mobile */}
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#121212] via-[#121212]/90 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-2">
-            <div className="flex items-center gap-1 animate-pulse">
-                <span className="text-[9px] text-[#525252] font-semibold tracking-tighter">More</span>
-                <svg
-                    width="16"
-                    height="16"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="#3E7BFA"
-                    className="shrink-0"
-                >
-                    <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M9 5l7 7-7 7"
-                    />
-                </svg>
-            </div>
+        {/* Right fade + CLEAN ARROW (No Text) */}
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-2">
+            <svg
+                width="20"
+                height="20"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="#3E7BFA"
+                className="animate-pulse drop-shadow-md"
+            >
+                <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M9 5l7 7-7 7"
+                />
+            </svg>
         </div>
       </div>
 
@@ -654,18 +651,19 @@ const InputBox = ({
               handleSend(e)
             }
           }}
+          // SHORTENED PLACEHOLDERS TO FIT MOBILE BOX
           placeholder={
             activeMode === 'chat'
               ? 'Ask anything...'
               : activeMode === 'image'
-              ? 'Upload an image to analyze...'
+              ? 'Upload an image...'
               : activeMode === 'audit'
-              ? 'Describe area for mock audit...'
+              ? 'Describe area...'
               : activeMode === 'critical'
-              ? 'Describe the emergency (e.g. power outage)...'
+              ? 'Describe the emergency...'
               : activeMode === 'training'
-              ? 'Topic for staff training...'
-              : 'What kind of log or SOP do you need?'
+              ? 'Enter training topic...'
+              : 'Describe log or SOP needed...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
           rows={1}
