@@ -22,7 +22,7 @@ export default function TermsOfService() {
           {/* Header */}
           <div className="mb-12 text-center md:text-left border-b border-[#2C2C2C] pb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Terms of Service</h1>
-            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: November 25, 2025</p>
+            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: November 30, 2024</p>
           </div>
 
           <div className="space-y-6">
@@ -48,10 +48,10 @@ export default function TermsOfService() {
                 <li>Image analysis for equipment and facility compliance</li>
                 <li>Mock Audit workflows (Pro & Enterprise Plans)</li>
                 <li>Staff Memo generation (Enterprise Plan only)</li>
-                <li>County-specific guidance (Washtenaw, Wayne, Oakland)</li>
+                <li>County-specific guidance (currently Washtenaw County)</li>
               </ul>
               
-              <div className="bg-[#7F1D1D]/20 border-l-2 border-[#F87171] p-4 rounded-r-md">
+              <div className="bg-[#7F1D1D]/20 border-l-2 border-[#F87171] p-4 rounded-r-md mb-6">
                 <p className="text-[#FCA5A5] font-bold mb-1 text-xs uppercase tracking-wide font-mono">⚠️ Critical Disclaimer</p>
                 <p className="text-[#FECACA] text-sm leading-relaxed opacity-90">
                   protocolLM is a reference tool only. It does NOT replace professional legal advice, official health 
@@ -61,33 +61,72 @@ export default function TermsOfService() {
               </div>
             </section>
 
-            {/* Section 3 */}
+            {/* NEW: AI-Specific Disclaimers */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#F59E0B]">
+              <h2 className="text-xl font-bold mb-4 text-white">3. AI-Generated Content Disclaimer</h2>
+              <p className="text-[#A1A1AA] text-sm mb-4">
+                Our Service uses artificial intelligence (AI) and machine learning models to analyze documents 
+                and generate responses. You acknowledge and agree that:
+              </p>
+              <ul className="list-disc pl-5 text-[#A1A1AA] space-y-3 text-sm">
+                <li>
+                  <span className="text-white font-medium">AI Limitations:</span> AI-generated responses may contain errors, inaccuracies, 
+                  or &quot;hallucinations&quot; (false information presented as fact). The AI may misinterpret regulations or provide 
+                  outdated information.
+                </li>
+                <li>
+                  <span className="text-white font-medium">No Substitute for Professional Review:</span> All AI-generated outputs must be 
+                  independently verified by you before taking any action. Do not rely solely on AI responses 
+                  for compliance decisions.
+                </li>
+                <li>
+                  <span className="text-white font-medium">Human Review Required:</span> You acknowledge that compliance decisions should not 
+                  be determined solely by AI output, but instead require your human review and final judgment.
+                </li>
+                <li>
+                  <span className="text-white font-medium">Training Data Limitations:</span> Our AI is trained on publicly available documents 
+                  and may not reflect the most current regulations, county-specific interpretations, or recent policy changes.
+                </li>
+                <li>
+                  <span className="text-white font-medium">No Guarantee of Compliance:</span> Use of this Service does not guarantee compliance 
+                  with health codes or prevent inspection violations, fines, or business closure.
+                </li>
+                <li>
+                  <span className="text-white font-medium">Image Analysis Accuracy:</span> AI image analysis may fail to identify violations 
+                  or incorrectly flag compliant conditions. Always verify findings with official inspection standards.
+                </li>
+              </ul>
+            </section>
+
+            {/* Section 4 - Account Registration */}
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
-              <h2 className="text-xl font-bold mb-4 text-white">3. Account Registration</h2>
+              <h2 className="text-xl font-bold mb-4 text-white">4. Account Registration</h2>
               <p className="text-[#A1A1AA] text-sm mb-4">To use the Service, you must:</p>
               <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
                 <li>Be at least 18 years old</li>
                 <li>Provide accurate and complete registration information</li>
                 <li>Maintain the security of your account credentials</li>
                 <li>Notify us immediately of any unauthorized access</li>
+                <li>Accept responsibility for all activity under your account</li>
               </ul>
             </section>
 
-            {/* Section 4 */}
+            {/* Section 5 - Subscription and Billing */}
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
-              <h2 className="text-xl font-bold mb-6 text-white">4. Subscription and Billing</h2>
+              <h2 className="text-xl font-bold mb-6 text-white">5. Subscription and Billing</h2>
               
               <div className="space-y-4 mb-8">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">4.1 Free Trial</h3>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.1 Free Trial</h3>
                 <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
                   <li>New users receive a 30-day free trial.</li>
                   <li>A valid payment method is required to start the trial.</li>
                   <li>You will be charged automatically after the trial ends unless you cancel.</li>
+                  <li>Only one free trial per user or business entity is permitted.</li>
                 </ul>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">4.2 Subscription Plans</h3>
+              <div className="space-y-4 mb-8">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.2 Subscription Plans</h3>
                 <div className="grid gap-4 md:grid-cols-3">
                   
                   {/* Starter */}
@@ -97,6 +136,7 @@ export default function TermsOfService() {
                     <ul className="text-[#888] space-y-1 text-xs list-disc pl-4">
                       <li>500 Text Queries/mo</li>
                       <li>County Doc Access</li>
+                      <li>Chat History</li>
                     </ul>
                   </div>
 
@@ -125,33 +165,216 @@ export default function TermsOfService() {
                 </div>
               </div>
 
-              <div className="mt-8">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">4.4 Cancellation</h3>
+              <div className="space-y-4 mb-8">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.3 Payment Terms</h3>
+                <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
+                  <li>All subscriptions are billed monthly in advance.</li>
+                  <li>Payments are processed securely through Stripe.</li>
+                  <li>You authorize us to charge your payment method for recurring subscription fees.</li>
+                  <li>Failed payments may result in immediate service suspension.</li>
+                  <li>We reserve the right to modify pricing with 30 days notice to existing subscribers.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.4 Cancellation and Refunds</h3>
                 <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
                   <li>You may cancel your subscription at any time via the Billing Portal.</li>
                   <li>Access continues until the end of the paid period.</li>
+                  <li>No refunds are provided for partial months or unused features.</li>
+                  <li>Cancellation during the free trial prevents any charges.</li>
                 </ul>
               </div>
             </section>
 
-            {/* Section 5 */}
+            {/* Section 6 - Usage Limits */}
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
-              <h2 className="text-xl font-bold mb-4 text-white">5. Usage Limits</h2>
+              <h2 className="text-xl font-bold mb-4 text-white">6. Usage Limits and Fair Use</h2>
               <p className="text-[#A1A1AA] text-sm mb-4 leading-relaxed">
-                &quot;Unlimited&quot; usage is subject to a Fair Use Policy prohibiting automated scraping or bot activity. 
-                Rate limits apply to prevent system abuse.
+                &quot;Unlimited&quot; usage is subject to a Fair Use Policy. We prohibit:
+              </p>
+              <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
+                <li>Automated scraping, bot activity, or bulk data extraction</li>
+                <li>Reselling or redistributing Service access to third parties</li>
+                <li>Excessive usage that degrades system performance for other users</li>
+                <li>Using the Service for any illegal or unauthorized purpose</li>
+              </ul>
+              <p className="text-[#A1A1AA] text-sm mt-4">
+                Rate limits apply to prevent system abuse. Violation may result in immediate account suspension.
               </p>
             </section>
 
-            {/* Section 6 */}
+            {/* Section 7 - NEW: Limitation of Liability */}
+            <section className="bg-[#7F1D1D]/20 p-8 rounded-lg border-2 border-[#F87171]">
+              <h2 className="text-xl font-bold mb-4 text-white">7. LIMITATION OF LIABILITY</h2>
+              <p className="text-[#FCA5A5] mb-4 uppercase text-xs font-bold tracking-widest font-mono">⚠️ READ CAREFULLY - LEGAL PROTECTIONS</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">7.1 AS-IS SERVICE</h3>
+                  <p className="text-[#FECACA] text-sm leading-relaxed">
+                    THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, 
+                    EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+                    PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">7.2 MAXIMUM LIABILITY CAP</h3>
+                  <p className="text-[#FECACA] text-sm leading-relaxed mb-3">
+                    OUR TOTAL AGGREGATE LIABILITY TO YOU FOR ANY AND ALL CLAIMS ARISING OUT OF OR RELATED TO THIS SERVICE 
+                    SHALL NOT EXCEED THE TOTAL AMOUNT OF FEES YOU PAID TO US IN THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING 
+                    THE EVENT GIVING RISE TO THE CLAIM, OR $100 USD, WHICHEVER IS GREATER.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">7.3 CONSEQUENTIAL DAMAGES EXCLUSION</h3>
+                  <p className="text-[#FECACA] text-sm leading-relaxed mb-3">
+                    TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PROTOCOLLM, ITS OFFICERS, DIRECTORS, 
+                    EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, 
+                    INCLUDING WITHOUT LIMITATION:
+                  </p>
+                  <ul className="list-disc pl-5 text-[#FECACA] space-y-1 text-sm">
+                    <li>LOST PROFITS OR REVENUE</li>
+                    <li>BUSINESS INTERRUPTION OR LOST BUSINESS OPPORTUNITIES</li>
+                    <li>LOSS OF DATA, GOODWILL, OR REPUTATION</li>
+                    <li>COST OF SUBSTITUTE SERVICES</li>
+                    <li>FINES, PENALTIES, OR CITATIONS FROM REGULATORY AGENCIES</li>
+                    <li>CLOSURE, SUSPENSION, OR LICENSE REVOCATION OF YOUR BUSINESS</li>
+                    <li>FAILED HEALTH INSPECTIONS OR COMPLIANCE VIOLATIONS</li>
+                    <li>PERSONAL INJURY OR PROPERTY DAMAGE</li>
+                  </ul>
+                  <p className="text-[#FECACA] text-sm leading-relaxed mt-3">
+                    THIS LIMITATION APPLIES REGARDLESS OF THE LEGAL THEORY ON WHICH THE CLAIM IS BASED, WHETHER IN 
+                    CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR OTHERWISE, AND WHETHER OR NOT WE HAVE 
+                    BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">7.4 NO LIABILITY FOR AI ERRORS</h3>
+                  <p className="text-[#FECACA] text-sm leading-relaxed">
+                    WE SHALL NOT BE LIABLE FOR ANY INACCURATE, INCOMPLETE, OR MISLEADING INFORMATION PROVIDED BY THE AI, 
+                    INCLUDING BUT NOT LIMITED TO AI HALLUCINATIONS, MISINTERPRETATIONS OF REGULATIONS, OUTDATED INFORMATION, 
+                    OR FAILED IMAGE ANALYSIS.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 8 - NEW: User Indemnification */}
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
-              <h2 className="text-xl font-bold mb-4 text-white">6. Liability & Indemnification</h2>
-              <p className="text-[#3ECF8E] mb-4 uppercase text-xs font-bold tracking-widest font-mono">READ CAREFULLY</p>
-              <p className="text-white font-medium mb-4 text-sm border-l-2 border-white/20 pl-4 italic">
-                THE SERVICE IS PROVIDED &quot;AS IS&quot;. PROTOCOLLM SHALL NOT BE LIABLE FOR INSPECTION FAILURES, FINES, OR LOST REVENUE.
+              <h2 className="text-xl font-bold mb-4 text-white">8. User Indemnification</h2>
+              <p className="text-[#A1A1AA] text-sm mb-4">
+                You agree to indemnify, defend, and hold harmless protocolLM and its officers, directors, employees, 
+                agents, and affiliates from and against any and all claims, damages, obligations, losses, liabilities, 
+                costs, and expenses (including but not limited to reasonable attorney&apos;s fees) arising from:
+              </p>
+              <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
+                <li>Your use or misuse of the Service</li>
+                <li>Your reliance on AI-generated information without independent verification</li>
+                <li>Your violation of any health codes, regulations, or laws</li>
+                <li>Your breach of these Terms of Service</li>
+                <li>Any failed health inspection, regulatory action, or enforcement proceeding against your business</li>
+                <li>Any infringement of third-party intellectual property rights</li>
+                <li>Any harm caused to third parties resulting from your use of the Service</li>
+              </ul>
+            </section>
+
+            {/* Section 9 - NEW: Governing Law and Disputes */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+              <h2 className="text-xl font-bold mb-4 text-white">9. Governing Law and Dispute Resolution</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">9.1 Governing Law</h3>
+                  <p className="text-[#A1A1AA] text-sm">
+                    These Terms shall be governed by and construed in accordance with the laws of the State of Michigan, 
+                    without regard to its conflict of law provisions.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">9.2 Dispute Resolution</h3>
+                  <p className="text-[#A1A1AA] text-sm mb-2">
+                    Any disputes arising from these Terms or your use of the Service shall be resolved through binding 
+                    arbitration in Washtenaw County, Michigan, in accordance with the Commercial Arbitration Rules of 
+                    the American Arbitration Association.
+                  </p>
+                  <p className="text-[#A1A1AA] text-sm">
+                    Either party may seek injunctive relief in court for intellectual property violations or to enforce 
+                    confidentiality obligations.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">9.3 Class Action Waiver</h3>
+                  <p className="text-[#A1A1AA] text-sm">
+                    YOU AGREE TO RESOLVE DISPUTES ON AN INDIVIDUAL BASIS AND WAIVE YOUR RIGHT TO PARTICIPATE IN CLASS 
+                    ACTION LAWSUITS, CLASS-WIDE ARBITRATIONS, OR REPRESENTATIVE ACTIONS AGAINST PROTOCOLLM.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-white font-bold mb-2 text-sm">9.4 Venue</h3>
+                  <p className="text-[#A1A1AA] text-sm">
+                    For any claims not subject to arbitration, you agree that the exclusive venue shall be the state 
+                    and federal courts located in Washtenaw County, Michigan.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 10 - Intellectual Property */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+              <h2 className="text-xl font-bold mb-4 text-white">10. Intellectual Property</h2>
+              <p className="text-[#A1A1AA] text-sm mb-4">
+                All content, features, and functionality of the Service, including but not limited to text, graphics, 
+                logos, software, and AI models, are the exclusive property of protocolLM and are protected by copyright, 
+                trademark, and other intellectual property laws.
               </p>
               <p className="text-[#A1A1AA] text-sm">
-                You agree to indemnify protocolLM from any claims arising from your use of the Service.
+                You may not copy, modify, distribute, sell, or reverse engineer any part of the Service without our 
+                express written permission.
+              </p>
+            </section>
+
+            {/* Section 11 - Termination */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+              <h2 className="text-xl font-bold mb-4 text-white">11. Termination</h2>
+              <p className="text-[#A1A1AA] text-sm mb-4">
+                We reserve the right to suspend or terminate your account immediately, without prior notice, for:
+              </p>
+              <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
+                <li>Violation of these Terms of Service</li>
+                <li>Fraudulent or illegal activity</li>
+                <li>Excessive usage that violates Fair Use Policy</li>
+                <li>Non-payment of subscription fees</li>
+                <li>Any conduct that harms other users or the Service</li>
+              </ul>
+              <p className="text-[#A1A1AA] text-sm mt-4">
+                Upon termination, your right to access the Service will immediately cease. Termination does not relieve 
+                you of obligations incurred prior to termination.
+              </p>
+            </section>
+
+            {/* Section 12 - Changes to Terms */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+              <h2 className="text-xl font-bold mb-4 text-white">12. Changes to Terms</h2>
+              <p className="text-[#A1A1AA] text-sm">
+                We reserve the right to modify these Terms at any time. Material changes will be communicated via email 
+                or in-app notification at least 30 days before taking effect. Continued use of the Service after changes 
+                constitutes acceptance of the updated Terms.
+              </p>
+            </section>
+
+            {/* Section 13 - Severability */}
+            <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
+              <h2 className="text-xl font-bold mb-4 text-white">13. Severability</h2>
+              <p className="text-[#A1A1AA] text-sm">
+                If any provision of these Terms is found to be unenforceable or invalid, that provision will be limited 
+                or eliminated to the minimum extent necessary so that these Terms will otherwise remain in full force and effect.
               </p>
             </section>
 
@@ -159,6 +382,8 @@ export default function TermsOfService() {
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#2C2C2C]">
               <h2 className="text-xl font-bold mb-4 text-white">Contact Information</h2>
               <p className="text-[#A1A1AA] text-sm">
+                For questions about these Terms:
+                <br />
                 <strong className="text-white">Email:</strong>{' '}
                 <a href="mailto:austinrnorthrop@gmail.com" className="text-[#3ECF8E] hover:text-white transition-colors font-medium">
                   austinrnorthrop@gmail.com
