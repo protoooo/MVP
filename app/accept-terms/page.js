@@ -1,110 +1,110 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
-import TermsAcceptanceModal from '@/components/TermsAcceptanceModal'
 
 export default function AcceptTermsPage() {
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const supabase = createClient()
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        router.push('/')
-        return
-      }
-
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('accepted_terms, accepted_privacy, is_subscribed')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profile?.accepted_terms && profile?.accepted_privacy) {
-        // Terms already accepted - route to appropriate page
-        if (profile.is_subscribed) {
-          router.push('/') // Dashboard is now at root
-        } else {
-          router.push('/pricing')
-        }
-        return
-      }
-
-      setSession(session)
-      setLoading(false)
-    }
-
-    checkAuth()
-  }, [supabase, router])
-
-  const handleAccept = async () => {
+  // 1. Agree Function
+  const handleAgree = async () => {
     setLoading(true)
     
-    try {
-      const response = await fetch('/api/accept-terms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          acceptedTerms: true,
-          acceptedPrivacy: true
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (user) {
+      // Update DB directly
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          accepted_terms: true,
+          accepted_privacy: true 
         })
-      })
+        .eq('id', user.id)
 
-      if (response.ok) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('is_subscribed')
-          .eq('id', session.user.id)
-          .single()
-
-        // Route based on subscription status
-        if (profile?.is_subscribed) {
-          router.push('/') // Dashboard is now at root
-        } else {
-          router.push('/pricing')
-        }
+      if (!error) {
+        // Success: Send them back to the chat (Home)
+        // The Home page will handle the "Is Subscribed?" check
+        router.push('/') 
+        router.refresh()
       } else {
-        alert('Failed to record acceptance. Please try again.')
+        alert('Error updating profile. Please try again.')
         setLoading(false)
       }
-    } catch (error) {
-      console.error('Error accepting terms:', error)
-      alert('An error occurred. Please try again.')
-      setLoading(false)
     }
   }
 
+  // 2. Decline Function
   const handleDecline = async () => {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <TermsAcceptanceModal
-      isOpen={true}
-      onAccept={handleAccept}
-      onDecline={handleDecline}
-      userEmail={session?.user?.email}
-    />
+    <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4 font-sans">
+      <div className="max-w-md w-full bg-[#1C1C1C] border border-[#333] rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+        
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-white mb-2">Update Required</h1>
+          <p className="text-[#A1A1AA] text-sm leading-relaxed">
+            To continue using <span className="text-white font-semibold">protocolLM</span>, you must review and agree to our updated policies.
+          </p>
+        </div>
+
+        {/* Links */}
+        <div className="space-y-3 mb-8">
+          <a 
+            href="/terms" 
+            target="_blank" 
+            className="flex items-center justify-between p-4 rounded-lg bg-[#121212] border border-[#2E2E2E] hover:border-[#555] transition-all group"
+          >
+            <span className="text-sm font-medium text-white group-hover:text-[#3E7BFA] transition-colors">Terms of Service</span>
+            <svg className="w-4 h-4 text-[#555] group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+
+          <a 
+            href="/privacy" 
+            target="_blank" 
+            className="flex items-center justify-between p-4 rounded-lg bg-[#121212] border border-[#2E2E2E] hover:border-[#555] transition-all group"
+          >
+            <span className="text-sm font-medium text-white group-hover:text-[#3E7BFA] transition-colors">Privacy Policy</span>
+            <svg className="w-4 h-4 text-[#555] group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={handleAgree}
+            disabled={loading}
+            className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3.5 rounded-lg transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+               <span className="flex items-center justify-center gap-2">
+                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                 Updating...
+               </span>
+            ) : 'I Agree & Continue'}
+          </button>
+
+          <button
+            onClick={handleDecline}
+            disabled={loading}
+            className="w-full text-xs text-[#525252] hover:text-red-400 py-2 transition-colors"
+          >
+            Decline and Sign Out
+          </button>
+        </div>
+
+      </div>
+    </div>
   )
 }
