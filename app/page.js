@@ -667,7 +667,7 @@ const InputBox = ({
               ? 'Topic for staff training...'
               : 'What kind of log or SOP do you need?'
           }
-          className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
+          className="flex-1 max-h-[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -1136,7 +1136,8 @@ export default function Page() {
       subscription.unsubscribe()
       clearTimeout(timer)
     }
-  }, [supabase])
+    // CRITICAL FIX: Removed [supabase] from dependency array to prevent infinite loop
+  }, [])
 
   const loadChatHistory = async () => {
     const { data: chats } = await supabase
