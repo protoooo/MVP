@@ -424,15 +424,6 @@ const Icons = {
 }
 
 // ==========================================
-// STRIPE PRICE IDS (for validation elsewhere)
-// ==========================================
-const VALID_PRICE_IDS = [
-  'price_1SZAvjDlSrKA3nbA34gnzybi', // starter
-  'price_1SZAwrDlSrKA3nbA9tUBsiJ8', // pro
-  'price_1SZAxrDlSrKA3nbA9eksBvtE', // enterprise
-]
-
-// ==========================================
 // SOURCE TICKER COMPONENT
 // ==========================================
 const SourceTicker = () => {
@@ -465,7 +456,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (with fades + arrow)
+// INPUT COMPONENT (with enhanced mobile scrolling)
 // ==========================================
 const InputBox = ({
   input,
@@ -509,14 +500,14 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0">
-      {/* SCROLLABLE MODE BAR with fade indicators */}
+    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0 md:pb-0">
+      {/* SCROLLABLE MODE BAR with clearer mobile indicators */}
       <div className="relative flex justify-start md:justify-center w-full">
         {/* Left fade (shows when scrolled) */}
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
 
         {/* Scrollable container */}
-        <div className="flex items-center gap-2 mb-3 md:mb-4 px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth">
+        <div className="flex items-center gap-2 mb-3 md:mb-4 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
@@ -580,7 +571,7 @@ const InputBox = ({
           {/* Logs */}
           <button
             onClick={() => handleModeClick('sop')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap pr-8 md:pr-4 ${
               activeMode === 'sop'
                 ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -590,23 +581,26 @@ const InputBox = ({
           </button>
         </div>
 
-        {/* Right fade + arrow indicator */}
-        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#121212] via-[#121212]/90 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-1">
-          <svg
-            width="14"
-            height="14"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="text-[#525252] animate-pulse"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+        {/* Right fade + ENHANCED ARROW indicator for mobile */}
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#121212] via-[#121212]/90 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-2">
+            <div className="flex items-center gap-1 animate-pulse">
+                <span className="text-[9px] text-[#525252] font-semibold tracking-tighter">More</span>
+                <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="#3E7BFA"
+                    className="shrink-0"
+                >
+                    <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M9 5l7 7-7 7"
+                    />
+                </svg>
+            </div>
         </div>
       </div>
 
@@ -670,7 +664,7 @@ const InputBox = ({
               : activeMode === 'critical'
               ? 'Describe the emergency (e.g. power outage)...'
               : activeMode === 'training'
-              ? 'Topic for staff training (e.g. handwashing)...'
+              ? 'Topic for staff training...'
               : 'What kind of log or SOP do you need?'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
@@ -1444,7 +1438,10 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="fixed inset-0 w-full h-full bg-[#121212] text-white overflow-hidden font-sans flex">
+      <div
+        className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex"
+        style={{ height: '100dvh' }}
+      >
         {session && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/60 z-40 lg:hidden"
@@ -1565,7 +1562,7 @@ export default function Page() {
 
           {!session ? (
             // LOGGED-OUT VIEW (centered, UPDATED FOR MOBILE)
-            <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
+            <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-24 md:pb-20">
               {/* TOP LEFT BRANDING */}
               <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
                 <span className="text-white font-semibold tracking-tight text-sm md:text-base">
