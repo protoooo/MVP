@@ -63,9 +63,9 @@ export async function POST(req) {
         const priceId = subscription.items.data[0].price.id
 
         const planMap = {
-          'price_1SY95aDlSrKA3nbAsgxE0Jon': 'starter',
-          'price_1SY96QDlSrKA3nbACxe8QasT': 'pro',
-          'price_1SY97KDlSrKA3nbAauq4tP8g': 'enterprise'
+          'price_1SZAvjDlSrKA3nbA34gnzybi': 'starter',
+          'price_1SZAwrDlSrKA3nbA9tUBsiJ8': 'pro',
+          'price_1SZAxrDlSrKA3nbA9eksBvtE': 'enterprise'
         }
         const planName = planMap[priceId] || 'pro'
 
