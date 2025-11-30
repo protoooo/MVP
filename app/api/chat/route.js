@@ -132,12 +132,17 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     
-    // Use the correct model initialization
+    // USING GEMINI 3 PRO - The smartest model!
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-3-pro-preview',
+      generationConfig: {
+        maxOutputTokens: 8192, // Gemini 3 Pro supports more output tokens
+        temperature: 0.3,
+        topP: 0.95,
+      },
     })
 
-    console.log('✅ Vertex AI model initialized')
+    console.log('✅ Vertex AI model initialized: gemini-3-pro-preview')
 
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
@@ -280,7 +285,7 @@ ${lastMessage.content}`
       })
     }
 
-    console.log('🚀 Calling Vertex AI...')
+    console.log('🚀 Calling Vertex AI with gemini-3-pro-preview...')
 
     // Generate content with proper error handling
     const result = await generativeModel.generateContent(request)
