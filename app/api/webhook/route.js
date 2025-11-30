@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+
+// Initialize Admin Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -19,11 +21,11 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
-    console.error(`Webhook signature verification failed.`, err.message)
+    console.error(`❌ Webhook signature verification failed.`, err.message)
     return NextResponse.json({ error: err.message }, { status: 400 })
   }
 
-  // Handle the event
+  // Handle "Checkout Session Completed"
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
     const userId = session.metadata.userId
@@ -31,7 +33,7 @@ export async function POST(req) {
     if (userId) {
       console.log(`✅ Payment successful for User: ${userId}`)
       
-      // Update Supabase
+      // Update User Profile in Supabase
       const { error } = await supabase
         .from('user_profiles')
         .update({ 
@@ -41,7 +43,10 @@ export async function POST(req) {
         })
         .eq('id', userId)
 
-      if (error) console.error('Supabase update failed:', error)
+      if (error) {
+        console.error('❌ Supabase update failed:', error)
+        return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+      }
     }
   }
 
