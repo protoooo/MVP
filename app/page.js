@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
@@ -205,7 +206,7 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 pb-6">
+    <div className="w-full max-w-4xl mx-auto px-4 pb-0">
       {/* SCROLLABLE MODE BAR */}
       <div className="flex items-center gap-1 mb-2 px-1 overflow-x-auto no-scrollbar pb-1">
         {/* Chat (Blue) */}
@@ -384,7 +385,6 @@ const InputBox = ({
           )}
         </button>
       </form>
-      <p className="text-center text-[11px] text-[#525252] mt-3">protocolLM can make mistakes. Verify important info.</p>
     </div>
   )
 }
@@ -1160,7 +1160,7 @@ export default function Page() {
               >
                 <Icons.Menu />
               </button>
-              <span className="font-semibold text-sm">protocolLM</span>
+              <span className="font-semibold text-sm">protocolLM v1</span>
               <button
                 onClick={handleNewChat}
                 className="p-1 text-[#A1A1AA] hover:text-white"
@@ -1173,6 +1173,12 @@ export default function Page() {
           {!session ? (
             // LOGGED-OUT VIEW (centered)
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
+              
+              {/* TOP LEFT BRANDING */}
+              <div className="absolute top-6 left-6 z-20">
+                 <span className="text-white font-semibold tracking-tight">protocolLM v1</span>
+              </div>
+
               {/* TOP RIGHT NAV (Logged Out) */}
               <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
                 <button
@@ -1197,15 +1203,9 @@ export default function Page() {
                 </button>
               </div>
 
-              <h1 className="text-3xl md:text-5xl text-white mb-6 text-center tracking-tight font-sans font-semibold">
-                Washtenaw Food Safety
-              </h1>
-
-              <p className="text-[#A1A1AA] text-sm mt-0 mb-8 font-medium text-center">
-                Trained on Washtenaw, Michigan &amp; FDA Regulations
-              </p>
-
-              <div className="w-full max-w-2xl">
+              {/* Removed H1 Washtenaw Food Safety */}
+              
+              <div className="w-full max-w-2xl mt-12">
                 <InputBox
                   input={input}
                   setInput={setInput}
@@ -1220,6 +1220,18 @@ export default function Page() {
                   setActiveMode={setActiveMode}
                 />
               </div>
+
+              {/* MOVED SUBTITLE BELOW CHAT BOX & INCREASED SIZE */}
+              <p className="text-[#A1A1AA] text-lg md:text-xl mt-6 font-medium text-center">
+                Trained on Washtenaw, Michigan &amp; FDA Regulations
+              </p>
+
+              {/* FOOTER LINKS */}
+              <div className="flex gap-4 mt-12 text-xs text-[#525252] fixed bottom-6">
+                  <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                  <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+              </div>
+
             </div>
           ) : (
             // LOGGED-IN VIEW
@@ -1275,7 +1287,7 @@ export default function Page() {
                 )}
               </div>
 
-              <div className="w-full bg-[#121212] pt-2 shrink-0">
+              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0">
                 <InputBox
                   input={input}
                   setInput={setInput}
@@ -1289,6 +1301,7 @@ export default function Page() {
                   activeMode={activeMode}
                   setActiveMode={setActiveMode}
                 />
+                <p className="text-center text-[11px] text-[#525252] mt-2">protocolLM can make mistakes. Verify important info.</p>
               </div>
             </>
           )}
