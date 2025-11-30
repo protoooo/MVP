@@ -132,9 +132,8 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     
-    // USING GEMINI 3 PRO - The smartest model!
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.5-pro',
       generationConfig: {
         maxOutputTokens: 8192, // Gemini 3 Pro supports more output tokens
         temperature: 0.3,
