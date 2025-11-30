@@ -5,39 +5,31 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// --- DOCUMENT LIST FOR AI AWARENESS ---
-const KNOWLEDGE_SCOPE = `
-YOU HAVE ACCESS TO THE FOLLOWING SPECIFIC DOCUMENTS:
-1. LOCAL (WASHTENAW): Food Service Inspection Program, proper use of 3-Compartment Sink, FOG Guidelines, Cross-Contamination, Cooling Foods, Enforcement Action Procedures.
-2. STATE (MICHIGAN): Food Law Act 92 of 2000, Michigan Modified Food Code (2009/2012), Norovirus Guidelines, Employee Illness Guidelines.
-3. FEDERAL: FDA Food Code 2022, USDA Temp Charts.
-`
-
 // --- DEFINING MODES & PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
-  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Help operators understand codes and fix violations.
-  HIERARCHY: 
-  1. Local County Code (Washtenaw/Wayne/Oakland) - HIGHEST AUTHORITY.
-  2. Michigan Modified Food Code - STATE AUTHORITY.
-  3. FDA Food Code 2022 - GUIDANCE ONLY.
+  HIERARCHY: 1. Local County Code (Washtenaw/Wayne/Oakland). 2. Michigan Modified Food Code. 3. FDA Food Code.
   STYLE: Concise, authoritative, helpful. No fluff.
   STRUCTURE: Direct Answer -> The Fix -> Evidence [Source, Page].`,
+  
+  // Fallback for image mode if not specifically defined
+  image: `You are an AI Health Inspector. 
+  OBJECTIVE: Analyze the provided image for any food safety violations or compliance issues. 
+  STYLE: Direct and observational. 
+  OUTPUT: List observations and potential violations.`,
 
   audit: `You are a strict Local Health Inspector performing a mock audit.
-  ${KNOWLEDGE_SCOPE}
-  OBJECTIVE: Analyze the user's input (or image) specifically for violations against the Michigan Modified Food Code and Washtenaw Local Regulations.
+  OBJECTIVE: Analyze the user's input (or image) specifically for violations.
   STYLE: Formal, critical, observant.
   STRUCTURE: 
   1. Identify Potential Violations.
-  2. Cite the specific code violation (e.g. "Violation of Michigan Modified Food Code §3-501.16").
+  2. Cite the specific code violation.
   3. Assign Priority (Priority, Priority Foundation, Core).
   4. Required Corrective Action.`,
 
   critical: `You are an Emergency Response Protocol System.
-  ${KNOWLEDGE_SCOPE}
-  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee) using the "Emergency Action Plans for Retail Food Establishments" document.
+  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee).
   STYLE: Calm, imperative, step-by-step. Use bolding for critical actions.
   STRUCTURE:
   1. IMMEDIATE ACTION REQUIRED (What to do RIGHT NOW).
@@ -46,7 +38,6 @@ const PROMPTS = {
   4. WHO TO CALL.`,
 
   training: `You are an engaging Food Safety Trainer.
-  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Create a short training script and quiz for kitchen staff based on the user's topic.
   STYLE: Engaging, simple language, encouraging. (Fluff is okay here).
   OUTPUT:
@@ -54,7 +45,6 @@ const PROMPTS = {
   2. "Pop Quiz" (3 questions with answers at the bottom).`,
 
   sop: `You are a Documentation Specialist.
-  ${KNOWLEDGE_SCOPE}
   OBJECTIVE: Generate a formal Standard Operating Procedure (SOP) or a Log Sheet.
   STYLE: Bureaucratic, clean, formatted.
   OUTPUT: strictly use Markdown Tables or Bulleted Lists that can be printed. Include fields for 'Date', 'Time', 'Manager Signature'.`
@@ -62,25 +52,34 @@ const PROMPTS = {
 
 export async function POST(req) {
   try {
+    const body = await req.json()
+    const { messages, image, county, chatId, mode = 'chat' } = body
+
     // --- VERTEX AI AUTHENTICATION FOR RAILWAY ---
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID || 'food-safety-production'
     const location = 'us-central1'
     
-    // Config object
     let vertexConfig = { project: projectId, location: location };
 
-    // If running in Railway, use the JSON variable
+    // FIX: Handle Credential Parsing Robustly
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
       try {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+        
+        // CRITICAL FIX: Replace escaped newlines with actual newlines
+        const privateKey = credentials.private_key 
+          ? credentials.private_key.replace(/\\n/g, '\n')
+          : undefined;
+
         vertexConfig.googleAuthOptions = {
           credentials: {
             client_email: credentials.client_email,
-            private_key: credentials.private_key,
+            private_key: privateKey,
           }
         };
       } catch (e) {
-        console.error("Error parsing GOOGLE_CREDENTIALS_JSON", e);
+        console.error("❌ Failed to parse GOOGLE_CREDENTIALS_JSON:", e);
+        return NextResponse.json({ error: 'Server Configuration Error' }, { status: 500 });
       }
     }
     
@@ -95,6 +94,7 @@ export async function POST(req) {
       },
     });
 
+    // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -112,9 +112,6 @@ export async function POST(req) {
 
     const limitCheck = await checkRateLimit(session.user.id)
     if (!limitCheck.success) return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
-    
-    const body = await req.json()
-    const { messages, image, county, chatId, mode = 'chat' } = body
     
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
       return NextResponse.json({ error: 'Image limit reached.', limitReached: true }, { status: 429 })
@@ -135,7 +132,7 @@ export async function POST(req) {
     // RAG Logic
     let context = ''
     let citations = []
-    if (lastMessage.content) {
+    if (lastMessage.content && !image) { // Skip RAG for pure image analysis to save time/tokens
       try {
         const searchResults = await searchDocuments(lastMessage.content, county || 'washtenaw')
         if (searchResults && searchResults.length > 0) {
@@ -144,9 +141,9 @@ export async function POST(req) {
            const federalDocs = searchResults.filter(d => d.docType === 'federal')
            
            let contextParts = []
-           if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS (Use these FIRST) ===\n' + countyDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
-           if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE (Use these SECOND) ===\n' + stateDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
-           if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE (Use these LAST) ===\n' + federalDocs.map(d => `SOURCE: ${d.source}\n"${d.text}"`).join('\n'))
+           if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + countyDocs.map(d => `"${d.text}"`).join('\n'))
+           if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map(d => `"${d.text}"`).join('\n'))
+           if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map(d => `"${d.text}"`).join('\n'))
            
            context = contextParts.join('\n\n')
            citations = searchResults.map(doc => ({ document: doc.source.replace('.pdf', ''), pages: [doc.page] }))
@@ -160,10 +157,10 @@ export async function POST(req) {
     const textPrompt = {
         text: `${selectedSystemPrompt}
         
-        CURRENT USER JURISDICTION: ${county || 'washtenaw'}
+        JURISDICTION: ${county || 'washtenaw'}
         
-        RETRIEVED CONTEXT FROM DATABASE:
-        ${context}
+        OFFICIAL CONTEXT:
+        ${context || 'No specific text context found. Use general knowledge.'}
         
         USER INPUT:
         ${lastMessage.content}`
@@ -179,9 +176,10 @@ export async function POST(req) {
           data: base64Data
         }
       })
-      parts.push({ text: "Analyze this image based on the specific mode objectives above. Identify violations immediately." })
+      parts.push({ text: "Analyze this image based on the specific mode objectives defined above. Be specific about violations." })
     }
 
+    // Generate content
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: parts }]
     });
@@ -204,6 +202,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('Vertex AI Error:', error)
-    return NextResponse.json({ error: 'Processing error.', fallback: true }, { status: 500 })
+    return NextResponse.json({ error: 'System processing error. Please try again.', fallback: true }, { status: 500 })
   }
 }
