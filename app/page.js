@@ -134,9 +134,10 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
     </svg>
   ),
-  Siren: () => (
+  // UPDATED: Exclamation Triangle for "Urgent"
+  Alert: () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   ),
   AcademicCap: () => (
@@ -212,97 +213,82 @@ const InputBox = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 pb-0">
-      {/* SCROLLABLE MODE BAR */}
-      <div className="flex items-center gap-1 mb-2 px-1 overflow-x-auto no-scrollbar pb-1">
-        {/* Chat (Blue) */}
-        <button
-          onClick={() => handleModeClick('chat')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'chat'
-              ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.MessageSquare /> <span>Chat</span>
-          {activeMode === 'chat' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3E7BFA] rounded-full shadow-[0_0_8px_#3E7BFA]" />
-          )}
-        </button>
+      
+      {/* SCROLLABLE MODE BAR - CENTERED */}
+      <div className="flex justify-center w-full">
+        <div className="flex items-center gap-2 mb-4 px-1 overflow-x-auto no-scrollbar pb-1 max-w-full">
+          {/* Chat (Blue) */}
+          <button
+            onClick={() => handleModeClick('chat')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'chat'
+                ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.MessageSquare /> <span>Chat</span>
+          </button>
 
-        {/* Image (Orange) */}
-        <button
-          onClick={() => handleModeClick('image')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'image' || selectedImage
-              ? 'text-[#F5A623] bg-[#F5A623]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.Camera /> <span>Image</span>
-          {(activeMode === 'image' || selectedImage) && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#F5A623] rounded-full shadow-[0_0_8px_#F5A623]" />
-          )}
-        </button>
+          {/* Image (Orange) */}
+          <button
+            onClick={() => handleModeClick('image')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'image' || selectedImage
+                ? 'text-[#F5A623] bg-[#F5A623]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.Camera /> <span>Image</span>
+          </button>
 
-        {/* Mock Audit (Yellow) */}
-        <button
-          onClick={() => handleModeClick('audit')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'audit'
-              ? 'text-[#FDD901] bg-[#FDD901]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.ClipboardCheck /> <span>Audit</span>
-          {activeMode === 'audit' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FDD901] rounded-full shadow-[0_0_8px_#FDD901]" />
-          )}
-        </button>
+          {/* Mock Audit (Yellow) */}
+          <button
+            onClick={() => handleModeClick('audit')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'audit'
+                ? 'text-[#FDD901] bg-[#FDD901]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.ClipboardCheck /> <span>Audit</span>
+          </button>
 
-        {/* Crisis/Urgent (Red - Siren) */}
-        <button
-          onClick={() => handleModeClick('critical')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'critical'
-              ? 'text-[#EF4444] bg-[#EF4444]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.Siren /> <span>Urgent</span>
-          {activeMode === 'critical' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF4444] rounded-full shadow-[0_0_8px_#EF4444]" />
-          )}
-        </button>
+          {/* Crisis/Urgent (Red - Alert Triangle) */}
+          <button
+            onClick={() => handleModeClick('critical')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'critical'
+                ? 'text-[#EF4444] bg-[#EF4444]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.Alert /> <span>Urgent</span>
+          </button>
 
-        {/* Training (Purple) */}
-        <button
-          onClick={() => handleModeClick('training')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'training'
-              ? 'text-[#A855F7] bg-[#A855F7]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.AcademicCap /> <span>Train</span>
-          {activeMode === 'training' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#A855F7] rounded-full shadow-[0_0_8px_#A855F7]" />
-          )}
-        </button>
+          {/* Training (Purple) */}
+          <button
+            onClick={() => handleModeClick('training')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'training'
+                ? 'text-[#A855F7] bg-[#A855F7]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.AcademicCap /> <span>Train</span>
+          </button>
 
-        {/* SOPs (Green) */}
-        <button
-          onClick={() => handleModeClick('sop')}
-          className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
-            activeMode === 'sop'
-              ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
-              : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-          }`}
-        >
-          <Icons.Table /> <span>Logs</span>
-          {activeMode === 'sop' && (
-            <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#3ECF8E] rounded-full shadow-[0_0_8px_#3ECF8E]" />
-          )}
-        </button>
+          {/* SOPs (Green) */}
+          <button
+            onClick={() => handleModeClick('sop')}
+            className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
+              activeMode === 'sop'
+                ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
+                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+            }`}
+          >
+            <Icons.Table /> <span>Logs</span>
+          </button>
+        </div>
       </div>
 
       {selectedImage && (
