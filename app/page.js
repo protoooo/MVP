@@ -734,82 +734,87 @@ export default function Page() {
       
       <div className="fixed inset-0 w-full h-full bg-[#121212] text-white overflow-hidden font-sans flex">
         
-        {sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+        {session && sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Sidebar */}
-        <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r-2 border-[#3E7BFA]/40 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-          <div className="p-3">
-            {/* NEW CHAT BUTTON: OUTLINE STYLE (Blue) */}
-            <button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#3E7BFA] bg-transparent border border-[#3E7BFA] hover:bg-[#3E7BFA]/10 rounded-lg transition-colors group">
-              <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-2">
-            <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div>
-            <div className="space-y-1">
-              {chatHistory.map((chat) => (
-                <button
-                  key={chat.id}
-                  onClick={() => loadChat(chat.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center gap-2 ${
-                    currentChatId === chat.id 
-                      ? 'bg-[#1C1C1C] text-white border border-[#333]' 
-                      : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111]'
-                  }`}
-                >
-                  <Icons.ChatBubble />
-                  <span className="truncate">{chat.title || 'New Chat'}</span>
-                </button>
-              ))}
+        {/* Sidebar (only when logged in) */}
+        {session && (
+          <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+            <div className="p-3">
+              {/* NEW CHAT BUTTON: Light grey outline style */}
+              <button
+                onClick={handleNewChat}
+                className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-lg transition-colors group"
+              >
+                <span className="flex items-center gap-2"><Icons.Plus /> New chat</span>
+              </button>
             </div>
-            
-            {/* PRICING BUTTON REMOVED FROM HERE AS REQUESTED */}
-          </div>
 
-          {session && (
-            <div className="p-3 border-t border-[#1C1C1C]">
-              <div className="relative" ref={userMenuRef}>
-                <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
-                  {/* USER AVATAR: Blue Style */}
-                  <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
-                    {session.user.email[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white truncate">{session.user.email}</div>
-                  </div>
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
-                    <button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2">
-                      <Icons.Settings /> Subscription
-                    </button>
-                    <div className="h-px bg-[#2E2E2E] mx-0"></div>
-                    <button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2">
-                      <Icons.SignOut /> Log out
-                    </button>
-                  </div>
-                )}
+            <div className="flex-1 overflow-y-auto px-2">
+              <div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div>
+              <div className="space-y-1">
+                {chatHistory.map((chat) => (
+                  <button
+                    key={chat.id}
+                    onClick={() => loadChat(chat.id)}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center gap-2 ${
+                      currentChatId === chat.id 
+                        ? 'bg-[#1C1C1C] text-white border border-[#333]' 
+                        : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111]'
+                    }`}
+                  >
+                    <Icons.ChatBubble />
+                    <span className="truncate">{chat.title || 'New Chat'}</span>
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-        </aside>
+
+            {session && (
+              <div className="p-3 border-t border-[#1C1C1C]">
+                <div className="relative" ref={userMenuRef}>
+                  <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-[#2E2E2E]">
+                    {/* USER AVATAR */}
+                    <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
+                      {session.user.email[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">{session.user.email}</div>
+                    </div>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
+                      <button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2">
+                        <Icons.Settings /> Subscription
+                      </button>
+                      <div className="h-px bg-[#2E2E2E] mx-0"></div>
+                      <button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2">
+                        <Icons.SignOut /> Log out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </aside>
+        )}
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
-          <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
-            <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
-            <span className="font-semibold text-sm">protocolLM</span>
-            <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
-          </div>
+          {/* Mobile header only when logged in (so logged-out view is clean & centered) */}
+          {session && (
+            <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
+              <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button>
+              <span className="font-semibold text-sm">protocolLM</span>
+              <button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
+            </div>
+          )}
 
           {!session ? (
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
               
               {/* TOP RIGHT NAV (Logged Out) */}
               <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
-                {/* Start Free Trial - Green Button */}
                 <button 
                   onClick={() => setShowAuthModal(true)} 
                   className="bg-[#3ECF8E] hover:bg-[#34b27b] text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
@@ -817,7 +822,6 @@ export default function Page() {
                   Start Free Trial
                 </button>
 
-                {/* Pricing - Text Link */}
                 <button 
                   onClick={() => setShowPricingModal(true)}
                   className="text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
@@ -825,7 +829,6 @@ export default function Page() {
                   Pricing
                 </button>
 
-                {/* Sign In - Blue Text Link */}
                 <button 
                   onClick={() => setShowAuthModal(true)} 
                   className="text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
@@ -838,8 +841,7 @@ export default function Page() {
                 Washtenaw Food Safety
               </h1>
               
-              {/* SUBTITLE: Credibility Indicator */}
-              <p className="text-[#A1A1AA] text-sm mt-0 mb-8 font-medium">
+              <p className="text-[#A1A1AA] text-sm mt-0 mb-8 font-medium text-center">
                 Trained on Washtenaw, Michigan & FDA Regulations
               </p>
 
