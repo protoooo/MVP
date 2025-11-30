@@ -45,23 +45,23 @@ export async function GET(request) {
         .single()
       
       if (!existingProfile) {
-          // NEW USER: Create profile and mark as needing terms
-          await supabase.from('user_profiles').insert({
-              id: session.user.id,
-              email: session.user.email,
-              county: 'washtenaw',
-              is_subscribed: false,
-              accepted_terms: false,
-              requests_used: 0,
-              images_used: 0,
-              updated_at: new Date().toISOString()
-          })
-          return NextResponse.redirect(`${baseUrl}/accept-terms`)
+        // NEW USER: Create profile and mark as needing terms
+        await supabase.from('user_profiles').insert({
+          id: session.user.id,
+          email: session.user.email,
+          county: 'washtenaw',
+          is_subscribed: false,
+          accepted_terms: false,
+          requests_used: 0,
+          images_used: 0,
+          updated_at: new Date().toISOString()
+        })
+        return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
       
       // 3. EXISTING USER: Check if terms accepted
       if (!existingProfile.accepted_terms) {
-         return NextResponse.redirect(`${baseUrl}/accept-terms`)
+        return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
       // 4. CRITICAL FIX: Check subscription status from subscriptions table
@@ -70,19 +70,33 @@ export async function GET(request) {
         .select('status, plan')
         .eq('user_id', session.user.id)
         .in('status', ['active', 'trialing'])
-        .single()
+        .maybeSingle()
 
       // If they have an active/trialing subscription, sync it to profile
       if (activeSub) {
+        console.log('✅ Active subscription found:', activeSub.plan, activeSub.status)
+        
+        // Sync to profile for backward compatibility
         await supabase
           .from('user_profiles')
-          .update({ is_subscribed: true })
+          .update({ 
+            is_subscribed: true,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', session.user.id)
         
         return NextResponse.redirect(baseUrl) // Dashboard
       }
 
+      // SECURITY FIX: Also check if profile has legacy is_subscribed flag
+      // (This handles users who subscribed before the subscriptions table existed)
+      if (existingProfile.is_subscribed) {
+        console.log('⚠️ Legacy subscription flag found, allowing access')
+        return NextResponse.redirect(baseUrl)
+      }
+
       // 5. No active subscription - send to pricing
+      console.log('❌ No subscription found, redirecting to pricing')
       return NextResponse.redirect(`${baseUrl}/pricing`)
     }
   }
