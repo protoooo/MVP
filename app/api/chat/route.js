@@ -5,6 +5,36 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// Input validation utilities
+function sanitizeString(input, maxLength = 5000) {
+  if (typeof input !== 'string') return ''
+  return input
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .trim()
+    .substring(0, maxLength)
+}
+
+function sanitizeCounty(county) {
+  const validCounties = ['washtenaw', 'wayne', 'oakland']
+  if (typeof county !== 'string') return 'washtenaw'
+  const normalized = county.toLowerCase().trim()
+  return validCounties.includes(normalized) ? normalized : 'washtenaw'
+}
+
+function validateMessages(messages) {
+  if (!Array.isArray(messages)) return []
+  if (messages.length > 100) return messages.slice(-100)
+  
+  return messages.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'assistant',
+    content: sanitizeString(msg.content, 5000),
+    image: msg.image || null
+  }))
+}
+
 // --- DEFINING MODES & PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
@@ -100,18 +130,45 @@ const PROMPTS = {
 export async function POST(req) {
   try {
     const body = await req.json()
-    const { messages, image, county, chatId, mode = 'chat' } = body
+    
+    // SECURITY: Validate and sanitize all inputs
+    const messages = validateMessages(body.messages || [])
+    const image = body.image && typeof body.image === 'string' ? body.image : null
+    const county = sanitizeCounty(body.county)
+    const chatId = body.chatId || null
+    const mode = ['chat', 'image', 'audit', 'critical', 'training', 'sop'].includes(body.mode) 
+      ? body.mode 
+      : 'chat'
 
-    console.log('🔍 Chat request received:', { mode, hasImage: !!image, county })
+    console.log('🔍 Chat request received:', { 
+      mode, 
+      hasImage: !!image, 
+      county,
+      messageCount: messages.length 
+    })
+
+    // SECURITY: Validate image size (base64 encoded ~10MB limit)
+    if (image && image.length > 10_000_000) {
+      return NextResponse.json(
+        { error: 'Image too large. Maximum size is 10MB.' },
+        { status: 413 }
+      )
+    }
 
     // --- VERTEX AI AUTHENTICATION ---
-    const projectId =
-      process.env.GOOGLE_CLOUD_PROJECT_ID ||
-      process.env.GCLOUD_PROJECT_ID ||
-      'food-safety-production'
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
     const location = 'us-central1'
     
-    let vertexConfig: any = { project: projectId, location: location }
+    // SECURITY FIX: Fail if no project ID
+    if (!projectId) {
+      console.error('❌ Missing GOOGLE_CLOUD_PROJECT_ID')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+    
+    let vertexConfig = { project: projectId, location: location }
 
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
       try {
@@ -139,7 +196,7 @@ export async function POST(req) {
     const vertex_ai = new VertexAI(vertexConfig)
     
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-1.5-pro', // CHANGED: Used stable model version
+      model: 'gemini-1.5-pro',
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
@@ -152,8 +209,8 @@ export async function POST(req) {
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
@@ -173,6 +230,7 @@ export async function POST(req) {
     const {
       data: { session },
     } = await supabase.auth.getSession()
+    
     if (!session) {
       console.log('❌ No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -180,7 +238,7 @@ export async function POST(req) {
 
     console.log('✅ User authenticated:', session.user.email)
 
-    // CRITICAL FIX: Check terms acceptance
+    // CRITICAL: Check terms acceptance
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('accepted_terms, accepted_privacy')
@@ -198,19 +256,34 @@ export async function POST(req) {
       )
     }
 
-    // CRITICAL FIX: Check ACTUAL subscription status from subscriptions table
+    // CRITICAL SECURITY: Check ACTUAL subscription status from subscriptions table ONLY
     const { data: activeSub, error: subError } = await supabase
       .from('subscriptions')
-      .select('status, plan')
+      .select('status, plan, current_period_end')
       .eq('user_id', session.user.id)
       .in('status', ['active', 'trialing'])
-      .single()
+      .maybeSingle()
 
     if (subError || !activeSub) {
       console.log('❌ No active subscription:', subError?.message)
       return NextResponse.json(
         {
           error: 'Active subscription required',
+          requiresSubscription: true,
+        },
+        { status: 402 }
+      )
+    }
+
+    // SECURITY: Verify subscription hasn't expired
+    const periodEnd = new Date(activeSub.current_period_end)
+    const now = new Date()
+    
+    if (periodEnd < now) {
+      console.log('❌ Subscription expired')
+      return NextResponse.json(
+        {
+          error: 'Your subscription has expired. Please renew to continue.',
           requiresSubscription: true,
         },
         { status: 402 }
@@ -236,7 +309,7 @@ export async function POST(req) {
       console.log('❌ Image limit exceeded')
       return NextResponse.json(
         {
-          error: 'Image limit reached.',
+          error: 'Image analysis limit reached for this billing period.',
           limitReached: true,
         },
         { status: 429 }
@@ -257,43 +330,43 @@ export async function POST(req) {
 
     // RAG Logic
     let context = ''
-    let citations: { document: string; pages: number[] }[] = []
+    let citations = []
     if (lastMessage.content && !image) {
       console.log('🔍 Searching documents...')
       try {
         const searchResults = await searchDocuments(
           lastMessage.content,
-          county || 'washtenaw'
+          county
         )
         console.log(`📚 Found ${searchResults?.length || 0} search results`)
         
         if (searchResults && searchResults.length > 0) {
-          const countyDocs = searchResults.filter((d: any) => d.docType === 'county')
-          const stateDocs = searchResults.filter((d: any) => d.docType === 'state')
-          const federalDocs = searchResults.filter((d: any) => d.docType === 'federal')
+          const countyDocs = searchResults.filter((d) => d.docType === 'county')
+          const stateDocs = searchResults.filter((d) => d.docType === 'state')
+          const federalDocs = searchResults.filter((d) => d.docType === 'federal')
           
-          let contextParts: string[] = []
+          let contextParts = []
           if (countyDocs.length > 0) {
             contextParts.push(
               '=== LOCAL COUNTY REGULATIONS ===\n' +
-                countyDocs.map((d: any) => `"${d.text}"`).join('\n')
+                countyDocs.map((d) => `"${d.text}"`).join('\n')
             )
           }
           if (stateDocs.length > 0) {
             contextParts.push(
               '=== MICHIGAN STATE CODE ===\n' +
-                stateDocs.map((d: any) => `"${d.text}"`).join('\n')
+                stateDocs.map((d) => `"${d.text}"`).join('\n')
             )
           }
           if (federalDocs.length > 0) {
             contextParts.push(
               '=== FDA GUIDANCE ===\n' +
-                federalDocs.map((d: any) => `"${d.text}"`).join('\n')
+                federalDocs.map((d) => `"${d.text}"`).join('\n')
             )
           }
           
           context = contextParts.join('\n\n')
-          citations = searchResults.map((doc: any) => ({
+          citations = searchResults.map((doc) => ({
             document: doc.source.replace('.pdf', ''),
             pages: [doc.page],
           }))
@@ -308,7 +381,7 @@ export async function POST(req) {
     // Build the prompt
     let promptText = `${selectedSystemPrompt}
 
-JURISDICTION: ${county || 'washtenaw'}
+JURISDICTION: ${county}
 
 OFFICIAL CONTEXT:
 ${context || 'No specific text context found. Use general knowledge.'}
@@ -317,7 +390,7 @@ USER INPUT:
 ${lastMessage.content}`
 
     // Prepare the request
-    const request: any = {
+    const request = {
       contents: [
         {
           role: 'user',
@@ -363,6 +436,7 @@ ${lastMessage.content}`
       })
     }
 
+    // Increment usage counter
     await supabase.rpc('increment_usage', {
       user_id: session.user.id,
       is_image: !!image,
@@ -372,12 +446,12 @@ ${lastMessage.content}`
       message: cleanText,
       citations: citations,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Vertex AI Error:', error)
     return NextResponse.json(
       {
         error: 'Failed to process request. Please try again.',
-        details: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       { status: 500 }
     )
