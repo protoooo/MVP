@@ -9,19 +9,19 @@ import { compressImage } from '@/lib/imageCompression'
 // DOCUMENT SOURCES DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  "FDA Food Code Regulations",
-  "Michigan Modified Food Code",
-  "County Enforcement Procedures",
-  "USDA Safe Minimum Internal Temps",
-  "Michigan Food Law (Act 92)",
-  "Emergency Action Plans",
-  "Norovirus Cleaning Guidelines",
-  "FOG (Fats, Oils, & Grease) Protocol",
-  "Cross-Contamination Prevention",
-  "Consumer Advisory Guidelines",
-  "Allergen Awareness Standards",
-  "Food Cooling & Holding Criteria",
-  "Food Date Marking Guide"
+  'FDA Food Code Regulations',
+  'Michigan Modified Food Code',
+  'County Enforcement Procedures',
+  'USDA Safe Minimum Internal Temps',
+  'Michigan Food Law (Act 92)',
+  'Emergency Action Plans',
+  'Norovirus Cleaning Guidelines',
+  'FOG (Fats, Oils, & Grease) Protocol',
+  'Cross-Contamination Prevention',
+  'Consumer Advisory Guidelines',
+  'Allergen Awareness Standards',
+  'Food Cooling & Holding Criteria',
+  'Food Date Marking Guide',
 ]
 
 // ==========================================
@@ -36,44 +36,87 @@ const GlobalStyles = () => (
     .loader {
       height: 20px;
       aspect-ratio: 2.5;
-      --_g: no-repeat radial-gradient(farthest-side,#FFFFFF 90%,#0000);
-      background:var(--_g), var(--_g), var(--_g), var(--_g);
+      --_g: no-repeat radial-gradient(farthest-side, #ffffff 90%, #0000);
+      background: var(--_g), var(--_g), var(--_g), var(--_g);
       background-size: 20% 50%;
-      animation: l43 1s infinite linear; 
+      animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
-      66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
-      83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
-      100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      0% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      16.67% {
+        background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      33.33% {
+        background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      50% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%,
+          calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%;
+      }
+      66.67% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0;
+      }
+      83.33% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%;
+      }
+      100% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
     }
-    
-    /* 
-       Fixed Animation Logic: 
-       Removed 'infinite' and tuned keyframes so it plays once per key-change.
-    */
+
     @keyframes slideUpFade {
-      0% { opacity: 0; transform: translateY(10px); }
-      10% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-10px); }
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      10% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      90% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
     }
     .animate-source-ticker {
       animation: slideUpFade 3s ease-in-out forwards;
     }
 
     /* Custom Scrollbar for Chat */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
 
     /* Hide Scrollbar for Mode Bar */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   `}</style>
 )
 
@@ -83,8 +126,19 @@ const GlobalStyles = () => (
 const Icons = {
   // UI Icons
   Menu: () => (
-    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+    <svg
+      width="24"
+      height="24"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M4 6h16M4 12h16M4 18h16"
+      />
     </svg>
   ),
   Send: () => (
@@ -104,95 +158,266 @@ const Icons = {
     </svg>
   ),
   SignOut: () => (
-    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+    <svg
+      width="16"
+      height="16"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+      />
     </svg>
   ),
   X: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   ),
   Plus: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 4v16m8-8H4"
+      />
     </svg>
   ),
   Trash: () => (
-    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    <svg
+      width="14"
+      height="14"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+      />
     </svg>
   ),
   Upload: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+      />
     </svg>
   ),
   Settings: () => (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1.5}
         d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
       />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
     </svg>
   ),
   ChatBubble: () => (
-    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+    <svg
+      width="16"
+      height="16"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+      />
     </svg>
   ),
   Book: () => (
-    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    <svg
+      width="16"
+      height="16"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+      />
     </svg>
   ),
 
   // Mode Icons
   MessageSquare: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+      />
     </svg>
   ),
   Camera: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+      />
     </svg>
   ),
   ClipboardCheck: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+      />
     </svg>
   ),
   Alert: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
     </svg>
   ),
   AcademicCap: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path d="M12 14l9-5-9-5-9 5 9 5z" />
       <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+      />
     </svg>
   ),
   Table: () => (
-    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+      />
     </svg>
   ),
 
   // Pricing Icons
   Check: ({ color = 'text-[#EDEDED]' }) => (
-    <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+    <svg
+      className={`w-4 h-4 ${color} shrink-0`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="3"
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
   ),
   CloseX: () => (
-    <svg className="w-4 h-4 text-[#333] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+    <svg
+      className="w-4 h-4 text-[#333] shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="3"
+    >
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
@@ -207,17 +432,19 @@ const SourceTicker = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % SOURCE_DOCUMENTS.length)
-    }, 3000) // Change every 3 seconds
+    }, 3000)
     return () => clearInterval(interval)
   }, [])
 
   return (
     <div className="flex justify-center mt-6">
       <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
-        <span className="text-[#3E7BFA]"><Icons.Book /></span>
+        <span className="text-[#3E7BFA]">
+          <Icons.Book />
+        </span>
         <div className="w-[280px] md:w-[320px] text-center overflow-hidden h-5 relative">
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase"
           >
             {SOURCE_DOCUMENTS[index]}
@@ -251,21 +478,20 @@ const InputBox = ({
     }
   }
 
-  // Helper to determine active color
   const getActiveColor = () => {
     switch (activeMode) {
       case 'chat':
-        return '#3E7BFA' // Blue
+        return '#3E7BFA'
       case 'image':
-        return '#F5A623' // Orange
+        return '#F5A623'
       case 'audit':
-        return '#FDD901' // Yellow
+        return '#FDD901'
       case 'critical':
-        return '#EF4444' // Red
+        return '#EF4444'
       case 'training':
-        return '#A855F7' // Purple
+        return '#A855F7'
       case 'sop':
-        return '#3ECF8E' // Green
+        return '#3ECF8E'
       default:
         return '#3E7BFA'
     }
@@ -275,11 +501,10 @@ const InputBox = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 pb-0">
-      
       {/* SCROLLABLE MODE BAR - CENTERED */}
       <div className="flex justify-center w-full">
         <div className="flex items-center gap-2 mb-4 px-1 overflow-x-auto no-scrollbar pb-1 max-w-full">
-          {/* Chat (Blue) */}
+          {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -291,7 +516,7 @@ const InputBox = ({
             <Icons.MessageSquare /> <span>Chat</span>
           </button>
 
-          {/* Image (Orange) */}
+          {/* Image */}
           <button
             onClick={() => handleModeClick('image')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -303,7 +528,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Mock Audit (Yellow) */}
+          {/* Mock Audit */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -315,7 +540,7 @@ const InputBox = ({
             <Icons.ClipboardCheck /> <span>Audit</span>
           </button>
 
-          {/* Crisis/Urgent (Red - Alert Triangle) */}
+          {/* Crisis/Urgent */}
           <button
             onClick={() => handleModeClick('critical')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -327,7 +552,7 @@ const InputBox = ({
             <Icons.Alert /> <span>Urgent</span>
           </button>
 
-          {/* Training (Purple) */}
+          {/* Training */}
           <button
             onClick={() => handleModeClick('training')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -339,7 +564,7 @@ const InputBox = ({
             <Icons.AcademicCap /> <span>Train</span>
           </button>
 
-          {/* SOPs (Green) */}
+          {/* SOPs */}
           <button
             onClick={() => handleModeClick('sop')}
             className={`relative group flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -373,7 +598,7 @@ const InputBox = ({
       {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
-        className={`relative flex items-end w-full bg-[#161616] border rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none`}
+        className="relative flex items-end w-full bg-[#161616] border rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
         style={{
           borderColor: `${activeColor}4D`,
           '--active-color': activeColor,
@@ -385,7 +610,13 @@ const InputBox = ({
           }
         `}</style>
 
-        <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImage}
+          accept="image/*"
+          className="hidden"
+        />
 
         <textarea
           ref={inputRef}
@@ -420,15 +651,20 @@ const InputBox = ({
           disabled={(!input.trim() && !selectedImage) || isSending}
           className="p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center"
           style={{
-            backgroundColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
-            borderColor: !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+            backgroundColor:
+              !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+            borderColor:
+              !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
             color:
               !input.trim() && !selectedImage
                 ? '#525252'
-                : activeMode === 'chat' || activeMode === 'critical' || activeMode === 'training'
+                : activeMode === 'chat' ||
+                  activeMode === 'critical' ||
+                  activeMode === 'training'
                 ? 'white'
                 : 'black',
-            cursor: !input.trim() && !selectedImage ? 'not-allowed' : 'pointer',
+            cursor:
+              !input.trim() && !selectedImage ? 'not-allowed' : 'pointer',
           }}
         >
           {isSending ? (
@@ -503,10 +739,17 @@ const AuthModal = ({ isOpen, onClose, message }) => {
       >
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-white mb-1">{message || 'Welcome to protocolLM'}</h2>
-            <p className="text-sm text-[#888888]">Sign in to continue your session</p>
+            <h2 className="text-xl font-semibold text-white mb-1">
+              {message || 'Welcome to protocolLM'}
+            </h2>
+            <p className="text-sm text-[#888888]">
+              Sign in to continue your session
+            </p>
           </div>
-          <button onClick={onClose} className="text-[#888888] hover:text-white transition-colors">
+          <button
+            onClick={onClose}
+            className="text-[#888888] hover:text-white transition-colors"
+          >
             <Icons.X />
           </button>
         </div>
@@ -585,7 +828,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 }
 
 // ==========================================
-// PRICING MODAL (UPDATED QUOTAS / COPY)
+// PRICING MODAL
 // ==========================================
 const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
   if (!isOpen) return null
@@ -746,12 +989,17 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
               </ul>
               <button
                 onClick={() =>
-                  handleCheckout('price_1SY97KDlSrKA3nbAauq4tP8g', 'enterprise')
+                  handleCheckout(
+                    'price_1SY97KDlSrKA3nbAauq4tP8g',
+                    'enterprise'
+                  )
                 }
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
               >
-                {loading === 'enterprise' ? 'Processing...' : 'Select Enterprise'}
+                {loading === 'enterprise'
+                  ? 'Processing...'
+                  : 'Select Enterprise'}
               </button>
             </div>
           </div>
@@ -762,7 +1010,8 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
             30-Day Free Trial • Secure Stripe Checkout
           </p>
           <p className="text-sm text-[#666] font-serif italic">
-            &quot;One failed inspection costs more than 5 years of the Enterprise plan.&quot;
+            &quot;One failed inspection costs more than 5 years of the
+            Enterprise plan.&quot;
           </p>
         </div>
       </div>
@@ -779,7 +1028,6 @@ export default function Page() {
   const [profile, setProfile] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // HISTORY STATES
   const [chatHistory, setChatHistory] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -791,8 +1039,7 @@ export default function Page() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  // NEW: ACTIVE MODE STATE
-  const [activeMode, setActiveMode] = useState('chat') // 'chat', 'image', 'audit', 'critical', 'training', 'sop'
+  const [activeMode, setActiveMode] = useState('chat')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
@@ -818,7 +1065,6 @@ export default function Page() {
       }
     }
 
-    // 2. Init Auth
     const init = async () => {
       try {
         const {
@@ -903,20 +1149,17 @@ export default function Page() {
   const deleteChat = async (e, chatId) => {
     e.stopPropagation()
     if (!confirm('Are you sure you want to delete this chat?')) return
-    
-    // Optimistic UI update
-    setChatHistory(prev => prev.filter(c => c.id !== chatId))
-    
-    // If we deleted the current chat, clear screen
+
+    setChatHistory((prev) => prev.filter((c) => c.id !== chatId))
+
     if (currentChatId === chatId) {
-        handleNewChat()
+      handleNewChat()
     }
 
-    // Backend delete
     const { error } = await supabase.from('chats').delete().eq('id', chatId)
     if (error) {
-        console.error('Error deleting chat:', error)
-        loadChatHistory() // Revert if failed
+      console.error('Error deleting chat:', error)
+      loadChatHistory()
     }
   }
 
@@ -959,6 +1202,7 @@ export default function Page() {
     }
   }
 
+  // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN
   const handleCheckout = async (priceId, planName) => {
     setCheckoutLoading(planName)
     if (!session) {
@@ -969,18 +1213,42 @@ export default function Page() {
       return
     }
     try {
+      // Get fresh session token
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession()
+
+      if (!currentSession) {
+        alert('Session expired. Please sign in again.')
+        setCheckoutLoading(null)
+        return
+      }
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
         body: JSON.stringify({ priceId }),
       })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else alert('System busy. Please try again.')
+
+      if (!res.ok) {
+        alert(data.error || 'Checkout failed. Please try again.')
+        setCheckoutLoading(null)
+        return
+      }
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert('System busy. Please try again.')
+        setCheckoutLoading(null)
+      }
     } catch (error) {
       console.error(error)
       alert('Connection error.')
-    } finally {
       setCheckoutLoading(null)
     }
   }
@@ -1006,7 +1274,6 @@ export default function Page() {
       }
     }
 
-    // --- MODIFY PROMPT BASED ON MODE ---
     let finalInput = input
 
     if (activeMode === 'audit') {
@@ -1019,14 +1286,14 @@ export default function Page() {
       finalInput = `[SOP/LOG GENERATOR MODE] Generate a clean Markdown table/form for a Standard Operating Procedure or Log Sheet regarding: ${input}`
     }
 
-    const newMsg = { role: 'user', content: input, image: selectedImage } // Store original input for UI
+    const newMsg = { role: 'user', content: input, image: selectedImage }
     setMessages((p) => [...p, newMsg])
     setInput('')
     const img = selectedImage
     setSelectedImage(null)
     setIsSending(true)
 
-    // add placeholder assistant message
+    // placeholder assistant msg
     setMessages((p) => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
@@ -1061,7 +1328,22 @@ export default function Page() {
       })
 
       if (res.status === 401) {
+        setAuthModalMessage('Please sign in to continue')
         setShowAuthModal(true)
+        setMessages((p) => p.slice(0, -2))
+        return
+      }
+
+      if (res.status === 402) {
+        // Subscription required
+        setShowPricingModal(true)
+        setMessages((p) => p.slice(0, -2))
+        return
+      }
+
+      if (res.status === 403) {
+        // Terms not accepted
+        router.push('/accept-terms')
         setMessages((p) => p.slice(0, -2))
         return
       }
@@ -1070,7 +1352,8 @@ export default function Page() {
       setMessages((p) => {
         const u = [...p]
         u[u.length - 1].content =
-          data.message || (data.error ? `Error: ${data.error}` : 'Error processing request.')
+          data.message ||
+          (data.error ? `Error: ${data.error}` : 'Error processing request.')
         return u
       })
     } catch (err) {
@@ -1148,7 +1431,6 @@ export default function Page() {
             } flex flex-col`}
           >
             <div className="p-3">
-              {/* NEW CHAT BUTTON: Light grey outline style */}
               <button
                 onClick={handleNewChat}
                 className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-full transition-colors group"
@@ -1175,15 +1457,16 @@ export default function Page() {
                     }`}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
-                        <Icons.ChatBubble />
-                        <span className="truncate">{chat.title || 'New Chat'}</span>
+                      <Icons.ChatBubble />
+                      <span className="truncate">
+                        {chat.title || 'New Chat'}
+                      </span>
                     </div>
-                    {/* TRASH ICON - Only shows on hover (group-hover) */}
-                    <div 
-                        onClick={(e) => deleteChat(e, chat.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-[#525252] hover:text-red-400 transition-all"
+                    <div
+                      onClick={(e) => deleteChat(e, chat.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-[#525252] hover:text-red-400 transition-all"
                     >
-                        <Icons.Trash />
+                      <Icons.Trash />
                     </div>
                   </button>
                 ))}
@@ -1197,7 +1480,6 @@ export default function Page() {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-2xl transition-colors text-left border border-transparent hover:border-[#2E2E2E]"
                   >
-                    {/* USER AVATAR */}
                     <div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">
                       {session.user.email[0].toUpperCase()}
                     </div>
@@ -1255,10 +1537,11 @@ export default function Page() {
           {!session ? (
             // LOGGED-OUT VIEW (centered)
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-20">
-              
               {/* TOP LEFT BRANDING */}
               <div className="absolute top-6 left-6 z-20">
-                 <span className="text-white font-semibold tracking-tight">protocolLM v.1</span>
+                <span className="text-white font-semibold tracking-tight">
+                  protocolLM v.1
+                </span>
               </div>
 
               {/* TOP RIGHT NAV (Logged Out) */}
@@ -1284,7 +1567,7 @@ export default function Page() {
                   Sign In
                 </button>
               </div>
-              
+
               <div className="w-full max-w-2xl mt-12">
                 <InputBox
                   input={input}
@@ -1301,20 +1584,33 @@ export default function Page() {
                 />
               </div>
 
-              {/* MOVED SUBTITLE BELOW CHAT BOX & INCREASED SIZE & HIGHLIGHTED WASHTENAW */}
+              {/* Subtitle BELOW chat box */}
               <p className="text-[#A1A1AA] text-lg md:text-xl mt-6 font-medium text-center">
-                Trained on <span className="text-white font-semibold">Washtenaw, Michigan</span> &amp; FDA Regulations
+                Trained on{' '}
+                <span className="text-white font-semibold">
+                  Washtenaw, Michigan
+                </span>{' '}
+                &amp; FDA Regulations
               </p>
 
-              {/* SOURCE TICKER */}
+              {/* Source ticker */}
               <SourceTicker />
 
-              {/* FOOTER LINKS */}
+              {/* Footer links */}
               <div className="flex gap-4 mt-12 text-xs text-[#525252] fixed bottom-6">
-                  <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                  <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors"
+                >
+                  Terms of Service
+                </Link>
               </div>
-
             </div>
           ) : (
             // LOGGED-IN VIEW
@@ -1352,7 +1648,6 @@ export default function Page() {
                             />
                           )}
 
-                          {/* FIXED: Only show loader on the LAST assistant message while sending */}
                           {msg.role === 'assistant' &&
                           msg.content === '' &&
                           isSending &&
