@@ -8,7 +8,6 @@ export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   
-  // FIX: Force production URL, fallback to origin only for localhost
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL 
     ? process.env.NEXT_PUBLIC_BASE_URL 
     : requestUrl.origin
@@ -46,29 +45,45 @@ export async function GET(request) {
         .single()
       
       if (!existingProfile) {
+          // NEW USER: Create profile and mark as needing terms
           await supabase.from('user_profiles').insert({
               id: session.user.id,
               email: session.user.email,
               county: 'washtenaw',
-              is_subscribed: false, // Default to false
+              is_subscribed: false,
               accepted_terms: false,
+              requests_used: 0,
+              images_used: 0,
               updated_at: new Date().toISOString()
           })
-          // New user -> Send to terms
           return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
       
-      // 3. Check if terms accepted
+      // 3. EXISTING USER: Check if terms accepted
       if (!existingProfile.accepted_terms) {
          return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
-      // 4. Route based on subscription status
-      if (existingProfile.is_subscribed) {
-        return NextResponse.redirect(baseUrl) // Dashboard at root
-      } else {
-        return NextResponse.redirect(`${baseUrl}/pricing`)
+      // 4. CRITICAL FIX: Check subscription status from subscriptions table
+      const { data: activeSub } = await supabase
+        .from('subscriptions')
+        .select('status, plan')
+        .eq('user_id', session.user.id)
+        .in('status', ['active', 'trialing'])
+        .single()
+
+      // If they have an active/trialing subscription, sync it to profile
+      if (activeSub) {
+        await supabase
+          .from('user_profiles')
+          .update({ is_subscribed: true })
+          .eq('id', session.user.id)
+        
+        return NextResponse.redirect(baseUrl) // Dashboard
       }
+
+      // 5. No active subscription - send to pricing
+      return NextResponse.redirect(`${baseUrl}/pricing`)
     }
   }
 
