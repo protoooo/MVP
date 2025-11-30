@@ -50,53 +50,57 @@ export async function GET(request) {
           id: session.user.id,
           email: session.user.email,
           county: 'washtenaw',
-          is_subscribed: false,
+          is_subscribed: false, // LEGACY FIELD - never use for auth
           accepted_terms: false,
           requests_used: 0,
           images_used: 0,
           updated_at: new Date().toISOString()
         })
+        
+        console.log('✅ New user created:', session.user.email)
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
       
       // 3. EXISTING USER: Check if terms accepted
       if (!existingProfile.accepted_terms) {
+        console.log('⚠️ Terms not accepted, redirecting:', session.user.email)
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
 
-      // 4. CRITICAL FIX: Check subscription status from subscriptions table
+      // 4. CRITICAL FIX: ONLY check subscriptions table - NO LEGACY BYPASS
       const { data: activeSub } = await supabase
         .from('subscriptions')
-        .select('status, plan')
+        .select('status, plan, current_period_end')
         .eq('user_id', session.user.id)
         .in('status', ['active', 'trialing'])
         .maybeSingle()
 
-      // If they have an active/trialing subscription, sync it to profile
+      // SECURITY: Verify subscription hasn't expired
       if (activeSub) {
-        console.log('✅ Active subscription found:', activeSub.plan, activeSub.status)
+        const periodEnd = new Date(activeSub.current_period_end)
+        const now = new Date()
         
-        // Sync to profile for backward compatibility
-        await supabase
-          .from('user_profiles')
-          .update({ 
-            is_subscribed: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.user.id)
-        
-        return NextResponse.redirect(baseUrl) // Dashboard
+        if (periodEnd >= now) {
+          console.log('✅ Active subscription verified:', activeSub.plan, activeSub.status)
+          
+          // Sync to profile for backward compatibility only (not for auth!)
+          await supabase
+            .from('user_profiles')
+            .update({ 
+              is_subscribed: true, // LEGACY FIELD ONLY
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', session.user.id)
+          
+          return NextResponse.redirect(baseUrl) // Dashboard
+        } else {
+          console.log('❌ Subscription expired:', activeSub.plan)
+          // Fall through to pricing redirect
+        }
       }
 
-      // SECURITY FIX: Also check if profile has legacy is_subscribed flag
-      // (This handles users who subscribed before the subscriptions table existed)
-      if (existingProfile.is_subscribed) {
-        console.log('⚠️ Legacy subscription flag found, allowing access')
-        return NextResponse.redirect(baseUrl)
-      }
-
-      // 5. No active subscription - send to pricing
-      console.log('❌ No subscription found, redirecting to pricing')
+      // 5. NO ACTIVE SUBSCRIPTION - ALWAYS redirect to pricing (no legacy bypass)
+      console.log('❌ No active subscription found for:', session.user.email)
       return NextResponse.redirect(`${baseUrl}/pricing`)
     }
   }
