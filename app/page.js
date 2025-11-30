@@ -885,114 +885,64 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
           <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Pro */}
-          <div className="bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-2xl p-6 flex flex-col relative transform md:-translate-y-2 z-10 shadow-[0_0_30px_-10px_rgba(62,123,250,0.3)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3E7BFA] text-white px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
-              Most Popular
+        <div className="flex justify-center">
+          {/* Single Plan */}
+          <div className="bg-[#1C1C1C] border-2 border-[#3ECF8E] rounded-2xl p-8 flex flex-col relative max-w-md w-full shadow-[0_0_30px_-10px_rgba(62,207,142,0.3)]">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3ECF8E] text-black px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
+              Don&apos;t Get 86&apos;d
             </div>
-            <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2">
-              Pro
+            <h3 className="text-xs font-bold text-[#3ECF8E] uppercase tracking-widest mb-2">
+              protocolLM
             </h3>
             <div className="flex items-baseline text-white">
-              <span className="text-5xl font-bold tracking-tight font-mono">
-                $99
+              <span className="text-6xl font-bold tracking-tight font-mono">
+                $86
               </span>
-              <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
-                /mo
+              <span className="ml-2 text-[#555] text-xs font-bold uppercase">
+                /month
               </span>
             </div>
             <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">
-              Full compliance shield with confidence.
+              Complete compliance protection for Washtenaw County restaurants.
             </p>
             <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-              <li className="flex items-start gap-3 text-xs font-medium text-white">
-                <Icons.Check color="text-[#3E7BFA]" />
+              <li className="flex items-start gap-3 text-sm font-medium text-white">
+                <Icons.Check color="text-[#3ECF8E]" />
                 Unlimited Text Queries
               </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white">
-                <Icons.Check color="text-[#3E7BFA]" />
-                250 Image Analyses / Mo
+              <li className="flex items-start gap-3 text-sm font-medium text-white">
+                <Icons.Check color="text-[#3ECF8E]" />
+                Unlimited Image Analysis
               </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white">
-                <Icons.Check color="text-[#3E7BFA]" />
-                Full Database Access
+              <li className="flex items-start gap-3 text-sm font-medium text-white">
+                <Icons.Check color="text-[#3ECF8E]" />
+                Full Washtenaw County Database
               </li>
-              <li className="flex items-start gap-3 text-xs font-medium text-white">
-                <Icons.Check color="text-[#3E7BFA]" />
+              <li className="flex items-start gap-3 text-sm font-medium text-white">
+                <Icons.Check color="text-[#3ECF8E]" />
                 Mock Audit Workflow
+              </li>
+              <li className="flex items-start gap-3 text-sm font-medium text-white">
+                <Icons.Check color="text-[#3ECF8E]" />
+                Training Materials & SOP Generators
               </li>
             </ul>
             <button
-              onClick={() =>
-                handleCheckout('price_1SZAwrDlSrKA3nbA9tUBsiJ8', 'pro')
-              }
+              onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
               disabled={loading !== null}
-              className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg"
+              className="w-full bg-[#3ECF8E] hover:bg-[#2eb87a] text-black font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg"
             >
-              {loading === 'pro' ? 'Processing...' : 'Select Pro'}
+              {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
             </button>
-          </div>
-
-          {/* Enterprise */}
-          <div className="relative p-6 flex flex-col z-0 group rounded-2xl bg-[#1C1C1C] overflow-hidden">
-            <div className="absolute inset-0 p-[1px] rounded-2xl bg-gradient-to-br from-[#ffffff40] via-[#ffffff10] to-[#ffffff40] pointer-events-none" />
-            <div className="relative z-10">
-              <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-white to-slate-400 shadow-[0_0_8px_white]" />
-                Enterprise
-              </h3>
-              <div className="flex items-baseline text-white">
-                <span className="text-4xl font-bold tracking-tight font-mono">
-                  $199
-                </span>
-                <span className="ml-2 text-[#555] text-[10px] font-bold uppercase">
-                  /mo
-                </span>
-              </div>
-              <p className="text-sm text-[#888] mt-4 mb-6 leading-relaxed">
-                Zero-tolerance protection for serious operations.
-              </p>
-              <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
-                  <Icons.Check color="text-white" />
-                  Unlimited Text Queries
-                </li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
-                  <Icons.Check color="text-white" />
-                  1,000 Image Analyses / Mo
-                </li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
-                  <Icons.Check color="text-white" />
-                  Mock Audit Workflow
-                </li>
-                <li className="flex items-start gap-3 text-xs font-medium text-[#EDEDED]">
-                  <Icons.Check color="text-white" />
-                  Staff Memo Generator
-                </li>
-              </ul>
-              <button
-                onClick={() =>
-                  handleCheckout('price_1SZAxrDlSrKA3nbA9eksBvtE', 'enterprise')
-                }
-                disabled={loading !== null}
-                className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
-              >
-                {loading === 'enterprise'
-                  ? 'Processing...'
-                  : 'Select Enterprise'}
-              </button>
-            </div>
           </div>
         </div>
 
         <div className="mt-10 text-center max-w-md mx-auto opacity-60">
-          <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-2">
-            7-Day Free Trial • Secure Stripe Checkout
+          <p className="text-[10px] text-[#3ECF8E] uppercase tracking-widest font-bold mb-2">
+            7-Day Free Trial • $86/month • Cancel Anytime
           </p>
           <p className="text-sm text-[#666] font-serif italic">
-            &quot;One failed inspection costs more than 5 years of the
-            Enterprise plan.&quot;
+            &quot;Don&apos;t get 86&apos;d by the health inspector.&quot;
           </p>
         </div>
       </div>
