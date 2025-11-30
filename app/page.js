@@ -506,7 +506,7 @@ const InputBox = ({
         {/* Left fade (shows when scrolled) */}
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
 
-        {/* Scrollable container */}
+        {/* Scrollable container - Added shrink-0 and whitespace-nowrap to all children buttons to prevent squishing */}
         <div className="flex items-center gap-2 mb-3 md:mb-4 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
           {/* Chat */}
           <button
@@ -1561,85 +1561,87 @@ export default function Page() {
           )}
 
           {!session ? (
-            // LOGGED-OUT VIEW (centered, UPDATED FOR MOBILE)
-            <div className="relative flex-1 flex flex-col items-center justify-center px-4 w-full h-full pb-24 md:pb-20">
-              {/* TOP LEFT BRANDING */}
-              <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
-                <span className="text-white font-semibold tracking-tight text-sm md:text-base">
-                  protocolLM v.1
-                </span>
-              </div>
+            // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
+            <div className="flex flex-col h-full w-full">
+                {/* Header - Changed to Flexbox to prevent overlaps */}
+                <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
+                    <div className="font-semibold tracking-tight text-sm md:text-base text-white">
+                        protocolLM v.1
+                    </div>
+                    
+                    <div className="flex items-center gap-2 md:gap-6">
+                         <button
+                            onClick={() => setShowAuthModal(true)}
+                            className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap"
+                        >
+                            Start Free Trial
+                        </button>
 
-              {/* TOP RIGHT NAV (Logged Out) - RESPONSIVE */}
-              <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-2 md:gap-6">
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
-                >
-                  Start Free Trial
-                </button>
+                        <button
+                            onClick={() => setShowPricingModal(true)}
+                            className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors hidden sm:block"
+                        >
+                            Pricing
+                        </button>
 
-                <button
-                  onClick={() => setShowPricingModal(true)}
-                  className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors"
-                >
-                  Pricing
-                </button>
+                        <button
+                            onClick={() => setShowAuthModal(true)}
+                            className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors whitespace-nowrap"
+                        >
+                            Sign In
+                        </button>
+                    </div>
+                </header>
 
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors"
-                >
-                  Sign In
-                </button>
-              </div>
+                {/* Main Content Centered */}
+                <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
+                    {/* INPUT BOX - Adjusted spacing for mobile */}
+                    <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0">
+                        <InputBox
+                        input={input}
+                        setInput={setInput}
+                        handleSend={handleSend}
+                        handleImage={handleImage}
+                        isSending={isSending}
+                        fileInputRef={fileInputRef}
+                        selectedImage={selectedImage}
+                        setSelectedImage={setSelectedImage}
+                        inputRef={inputRef}
+                        activeMode={activeMode}
+                        setActiveMode={setActiveMode}
+                        />
+                    </div>
 
-              {/* INPUT BOX - Adjusted spacing for mobile */}
-              <div className="w-full max-w-2xl mt-8 md:mt-12 px-2 md:px-0">
-                <InputBox
-                  input={input}
-                  setInput={setInput}
-                  handleSend={handleSend}
-                  handleImage={handleImage}
-                  isSending={isSending}
-                  fileInputRef={fileInputRef}
-                  selectedImage={selectedImage}
-                  setSelectedImage={setSelectedImage}
-                  inputRef={inputRef}
-                  activeMode={activeMode}
-                  setActiveMode={setActiveMode}
-                />
-              </div>
+                    {/* SUBTITLE - Responsive text size */}
+                    <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-4 md:mt-6 font-medium text-center px-4">
+                        Trained on{' '}
+                        <span className="text-white font-semibold">
+                        Washtenaw, Michigan
+                        </span>{' '}
+                        &amp; FDA Regulations
+                    </p>
 
-              {/* SUBTITLE - Responsive text size */}
-              <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-4 md:mt-6 font-medium text-center px-4">
-                Trained on{' '}
-                <span className="text-white font-semibold">
-                  Washtenaw, Michigan
-                </span>{' '}
-                &amp; FDA Regulations
-              </p>
+                    {/* SOURCE TICKER - Hidden on small mobile */}
+                    <div className="hidden sm:block">
+                        <SourceTicker />
+                    </div>
 
-              {/* SOURCE TICKER - Hidden on small mobile */}
-              <div className="hidden sm:block">
-                <SourceTicker />
-              </div>
-
-              {/* FOOTER LINKS - Responsive positioning */}
-              <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
-                <Link
-                  href="/privacy"
-                  className="hover:text-white transition-colors"
-                >
-                  Privacy Policy
-                </Link>
-                <Link
-                  href="/terms"
-                  className="hover:text-white transition-colors"
-                >
-                  Terms of Service
-                </Link>
-              </div>
+                    {/* FOOTER LINKS - Responsive positioning */}
+                    <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
+                        <Link
+                        href="/privacy"
+                        className="hover:text-white transition-colors"
+                        >
+                        Privacy Policy
+                        </Link>
+                        <Link
+                        href="/terms"
+                        className="hover:text-white transition-colors"
+                        >
+                        Terms of Service
+                        </Link>
+                    </div>
+                </div>
             </div>
           ) : (
             // LOGGED-IN VIEW
