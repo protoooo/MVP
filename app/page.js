@@ -456,7 +456,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (UPDATED FOR MOBILE)
+// INPUT COMPONENT (with fades + arrow)
 // ==========================================
 const InputBox = ({
   input,
@@ -501,9 +501,13 @@ const InputBox = ({
 
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0">
-      {/* SCROLLABLE MODE BAR - Better mobile handling */}
-      <div className="flex justify-start md:justify-center w-full overflow-x-auto">
-        <div className="flex items-center gap-2 mb-3 md:mb-4 px-1 no-scrollbar pb-1">
+      {/* SCROLLABLE MODE BAR with fade indicators */}
+      <div className="relative flex justify-start md:justify-center w-full">
+        {/* Left fade (shows when scrolled) */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
+
+        {/* Scrollable container */}
+        <div className="flex items-center gap-2 mb-3 md:mb-4 px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
@@ -528,7 +532,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Mock Audit */}
+          {/* Audit */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
@@ -540,7 +544,7 @@ const InputBox = ({
             <Icons.ClipboardCheck /> <span>Audit</span>
           </button>
 
-          {/* Crisis/Urgent */}
+          {/* Urgent */}
           <button
             onClick={() => handleModeClick('critical')}
             className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
@@ -552,7 +556,7 @@ const InputBox = ({
             <Icons.Alert /> <span>Urgent</span>
           </button>
 
-          {/* Training */}
+          {/* Train */}
           <button
             onClick={() => handleModeClick('training')}
             className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
@@ -564,7 +568,7 @@ const InputBox = ({
             <Icons.AcademicCap /> <span>Train</span>
           </button>
 
-          {/* SOPs */}
+          {/* Logs */}
           <button
             onClick={() => handleModeClick('sop')}
             className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
@@ -575,6 +579,25 @@ const InputBox = ({
           >
             <Icons.Table /> <span>Logs</span>
           </button>
+        </div>
+
+        {/* Right fade + arrow indicator */}
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#121212] via-[#121212]/90 to-transparent pointer-events-none z-10 md:hidden flex items-center justify-end pr-1">
+          <svg
+            width="14"
+            height="14"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="text-[#525252] animate-pulse"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </div>
       </div>
 
