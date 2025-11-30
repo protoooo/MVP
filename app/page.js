@@ -85,6 +85,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
     </svg>
   ),
+  Trash: () => (
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  ),
   Upload: () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -129,9 +134,9 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
     </svg>
   ),
-  Shield: () => (
+  Siren: () => (
     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.572c-2.88 0-5.382-.874-6.86-2.195a1 1 0 00-1.396 1.135 12.001 12.001 0 006.583 9.473 1.002 1.002 0 001.346 0 12.001 12.001 0 006.583-9.473 1 1 0 00-1.396-1.135C15.382 5.698 12.88 6.572 12 6.572z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
     </svg>
   ),
   AcademicCap: () => (
@@ -254,7 +259,7 @@ const InputBox = ({
           )}
         </button>
 
-        {/* Crisis (Red - Shield) */}
+        {/* Crisis/Urgent (Red - Siren) */}
         <button
           onClick={() => handleModeClick('critical')}
           className={`relative group flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -263,7 +268,7 @@ const InputBox = ({
               : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
           }`}
         >
-          <Icons.Shield /> <span>Crisis</span>
+          <Icons.Siren /> <span>Urgent</span>
           {activeMode === 'critical' && (
             <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF4444] rounded-full shadow-[0_0_8px_#EF4444]" />
           )}
@@ -847,6 +852,26 @@ export default function Page() {
     setIsLoading(false)
   }
 
+  const deleteChat = async (e, chatId) => {
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this chat?')) return
+    
+    // Optimistic UI update
+    setChatHistory(prev => prev.filter(c => c.id !== chatId))
+    
+    // If we deleted the current chat, clear screen
+    if (currentChatId === chatId) {
+        handleNewChat()
+    }
+
+    // Backend delete
+    const { error } = await supabase.from('chats').delete().eq('id', chatId)
+    if (error) {
+        console.error('Error deleting chat:', error)
+        loadChatHistory() // Revert if failed
+    }
+  }
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -1095,14 +1120,23 @@ export default function Page() {
                   <button
                     key={chat.id}
                     onClick={() => loadChat(chat.id)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center gap-2 ${
+                    className={`group w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center justify-between ${
                       currentChatId === chat.id
                         ? 'bg-[#1C1C1C] text-white border border-[#333]'
-                        : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111]'
+                        : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111] border border-transparent'
                     }`}
                   >
-                    <Icons.ChatBubble />
-                    <span className="truncate">{chat.title || 'New Chat'}</span>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                        <Icons.ChatBubble />
+                        <span className="truncate">{chat.title || 'New Chat'}</span>
+                    </div>
+                    {/* TRASH ICON - Only shows on hover (group-hover) */}
+                    <div 
+                        onClick={(e) => deleteChat(e, chat.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-[#525252] hover:text-red-400 transition-all"
+                    >
+                        <Icons.Trash />
+                    </div>
                   </button>
                 ))}
               </div>
@@ -1160,7 +1194,7 @@ export default function Page() {
               >
                 <Icons.Menu />
               </button>
-              <span className="font-semibold text-sm">protocolLM v1</span>
+              <span className="font-semibold text-sm">protocolLM v.1</span>
               <button
                 onClick={handleNewChat}
                 className="p-1 text-[#A1A1AA] hover:text-white"
@@ -1176,14 +1210,14 @@ export default function Page() {
               
               {/* TOP LEFT BRANDING */}
               <div className="absolute top-6 left-6 z-20">
-                 <span className="text-white font-semibold tracking-tight">protocolLM v1</span>
+                 <span className="text-white font-semibold tracking-tight">protocolLM v.1</span>
               </div>
 
               {/* TOP RIGHT NAV (Logged Out) */}
               <div className="absolute top-6 right-6 z-20 flex items-center gap-6">
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-[#3ECF8E] hover:bg-[#34b27b] text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-emerald-900/20"
+                  className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20"
                 >
                   Start Free Trial
                 </button>
@@ -1202,8 +1236,6 @@ export default function Page() {
                   Sign In
                 </button>
               </div>
-
-              {/* Removed H1 Washtenaw Food Safety */}
               
               <div className="w-full max-w-2xl mt-12">
                 <InputBox
@@ -1221,9 +1253,9 @@ export default function Page() {
                 />
               </div>
 
-              {/* MOVED SUBTITLE BELOW CHAT BOX & INCREASED SIZE */}
+              {/* MOVED SUBTITLE BELOW CHAT BOX & INCREASED SIZE & HIGHLIGHTED WASHTENAW */}
               <p className="text-[#A1A1AA] text-lg md:text-xl mt-6 font-medium text-center">
-                Trained on Washtenaw, Michigan &amp; FDA Regulations
+                Trained on <span className="text-white font-semibold">Washtenaw, Michigan</span> &amp; FDA Regulations
               </p>
 
               {/* FOOTER LINKS */}
@@ -1301,7 +1333,6 @@ export default function Page() {
                   activeMode={activeMode}
                   setActiveMode={setActiveMode}
                 />
-                <p className="text-center text-[11px] text-[#525252] mt-2">protocolLM can make mistakes. Verify important info.</p>
               </div>
             </>
           )}
