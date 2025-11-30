@@ -424,6 +424,15 @@ const Icons = {
 }
 
 // ==========================================
+// STRIPE PRICE IDS (for validation elsewhere)
+// ==========================================
+const VALID_PRICE_IDS = [
+  'price_1SZAvjDlSrKA3nbA34gnzybi', // starter
+  'price_1SZAwrDlSrKA3nbA9tUBsiJ8', // pro
+  'price_1SZAxrDlSrKA3nbA9eksBvtE', // enterprise
+]
+
+// ==========================================
 // SOURCE TICKER COMPONENT
 // ==========================================
 const SourceTicker = () => {
@@ -881,7 +890,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Starter */}
-          <div className="bg-[#1C1C1C] border border-[#333] rounded-2xl p-6 flex flex-col hover:border-[#555] transition-colors">
+          <div className="bg-[#1C1C1C] border border-[#333] rounded-2xl p-6 flex flex-col hover:border-white transition-colors">
             <h3 className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">
               Starter
             </h3>
@@ -916,7 +925,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
             </ul>
             <button
               onClick={() =>
-                handleCheckout('price_1SY95aDlSrKA3nbAsgxE0Jon', 'starter')
+                handleCheckout('price_1SZAvjDlSrKA3nbA34gnzybi', 'starter')
               }
               disabled={loading !== null}
               className="w-full bg-[#252525] border border-[#333] text-[#CCC] hover:text-white hover:border-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all"
@@ -964,7 +973,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
             </ul>
             <button
               onClick={() =>
-                handleCheckout('price_1SY96QDlSrKA3nbACxe8QasT', 'pro')
+                handleCheckout('price_1SZAwrDlSrKA3nbA9tUBsiJ8', 'pro')
               }
               disabled={loading !== null}
               className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg"
@@ -1012,10 +1021,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
               </ul>
               <button
                 onClick={() =>
-                  handleCheckout(
-                    'price_1SY97KDlSrKA3nbAauq4tP8g',
-                    'enterprise'
-                  )
+                  handleCheckout('price_1SZAxrDlSrKA3nbA9eksBvtE', 'enterprise')
                 }
                 disabled={loading !== null}
                 className="w-full bg-gradient-to-b from-white to-[#ccc] hover:from-[#eee] hover:to-[#bbb] text-black font-bold py-3 rounded-full text-xs uppercase tracking-widest transition-all shadow-lg border-t border-white"
@@ -1030,7 +1036,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
 
         <div className="mt-10 text-center max-w-md mx-auto opacity-60">
           <p className="text-[10px] text-[#3E7BFA] uppercase tracking-widest font-bold mb-2">
-            30-Day Free Trial • Secure Stripe Checkout
+            7-Day Free Trial • Secure Stripe Checkout
           </p>
           <p className="text-sm text-[#666] font-serif italic">
             &quot;One failed inspection costs more than 5 years of the
@@ -1281,7 +1287,7 @@ export default function Page() {
     if ((!input.trim() && !selectedImage) || isSending) return
 
     if (!session) {
-      setAuthModalMessage('Start your 30-day free trial to chat')
+      setAuthModalMessage('Start your 7-day free trial to chat')
       setShowAuthModal(true)
       return
     }
