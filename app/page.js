@@ -953,13 +953,14 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
+    // add placeholder assistant message
     setMessages((p) => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
 
     try {
       if (!activeChatId) {
-        const { data: newChat, error } = await supabase
+        const { data: newChat } = await supabase
           .from('chats')
           .insert({
             user_id: session.user.id,
@@ -1256,9 +1257,11 @@ export default function Page() {
                             />
                           )}
 
+                          {/* FIXED: Only show loader on the LAST assistant message while sending */}
                           {msg.role === 'assistant' &&
                           msg.content === '' &&
-                          isSending ? (
+                          isSending &&
+                          idx === messages.length - 1 ? (
                             <div className="loader my-1" />
                           ) : (
                             <div className="text-[16px] leading-7 whitespace-pre-wrap">
