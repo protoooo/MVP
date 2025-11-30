@@ -118,7 +118,7 @@ export default function TermsOfService() {
               <div className="space-y-4 mb-8">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.1 Free Trial</h3>
                 <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
-                  <li>New users receive a 30-day free trial.</li>
+                  <li>New users receive a 7-day free trial.</li>
                   <li>A valid payment method is required to start the trial.</li>
                   <li>You will be charged automatically after the trial ends unless you cancel.</li>
                   <li>Only one free trial per user or business entity is permitted.</li>
@@ -127,18 +127,7 @@ export default function TermsOfService() {
 
               <div className="space-y-4 mb-8">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.2 Subscription Plans</h3>
-                <div className="grid gap-4 md:grid-cols-3">
-                  
-                  {/* Starter */}
-                  <div className="bg-[#232323] border border-[#333] p-5 rounded-md">
-                    <p className="text-white font-bold mb-2 text-sm">Starter Plan</p>
-                    <p className="text-[#3ECF8E] font-mono text-xs mb-4">$49/month</p>
-                    <ul className="text-[#888] space-y-1 text-xs list-disc pl-4">
-                      <li>2,000 Text Queries/mo</li>
-                      <li>10 Image Analyses/mo</li>
-                      <li>County Doc Access</li>
-                    </ul>
-                  </div>
+                <div className="grid gap-4 md:grid-cols-2">
 
                   {/* Pro */}
                   <div className="bg-[#232323] border border-[#3ECF8E] p-5 rounded-md relative overflow-hidden">
