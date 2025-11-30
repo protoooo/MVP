@@ -168,6 +168,7 @@ export async function POST(req) {
       )
     }
     
+    // FIXED: Removed TypeScript type annotation
     let vertexConfig = { project: projectId, location: location }
 
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
