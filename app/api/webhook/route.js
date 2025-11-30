@@ -14,8 +14,8 @@ const supabase = createClient(
 // SECURITY: Track processed events to prevent replay attacks
 const processedEvents = new Set()
 
-// SECURITY: Event timestamp validation (reject events older than 5 minutes)
-const MAX_EVENT_AGE_MS = 5 * 60 * 1000
+// SECURITY FIX: Reduced from 5 minutes to 2 minutes for better security
+const MAX_EVENT_AGE_MS = 2 * 60 * 1000
 
 function isEventProcessed(eventId) {
   return processedEvents.has(eventId)
