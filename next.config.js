@@ -33,6 +33,18 @@ const nextConfig = {
         source: '/api/:path*',
         headers: [
           { 
+            key: 'Access-Control-Allow-Origin', 
+            value: process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.com'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'POST, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          },
+          { 
             key: 'Cache-Control', 
             value: 'no-store, must-revalidate' 
           },
