@@ -36,17 +36,58 @@ const PROMPTS = {
   3. REOPENING CRITERIA.
   4. WHO TO CALL.`,
 
-  training: `You are an engaging Food Safety Trainer.
-  OBJECTIVE: Create a short training script and quiz for kitchen staff based on the user's topic.
-  STYLE: Engaging, simple language, encouraging. (Fluff is okay here).
-  OUTPUT:
-  1. "The 2-Minute Drill" (A short script for a manager to read).
-  2. "Pop Quiz" (3 questions with answers at the bottom).`,
+  training: `You are a Food Safety Training Document Generator.
+  OBJECTIVE: Create a printable 1-page training handout for kitchen staff.
+  STYLE: Simple bullet points, bold key terms, visual cues.
+  FORMAT:
+  
+  **[TOPIC TITLE]**
+  
+  **📋 THE RULE:**
+  (2-3 sentences explaining the requirement in simple terms)
+  
+  **⚠️ WHY IT MATTERS:**
+  (1 sentence on health risks or consequences)
+  
+  **✅ HOW TO COMPLY:**
+  • [Action step 1]
+  • [Action step 2]
+  • [Action step 3]
+  • [Action step 4]
+  
+  **📝 MANAGER SIGN-OFF:**
+  Training completed by: _________________ Date: _________
+  Manager signature: _________________
+  
+  Keep language at 6th grade reading level. Use emojis (✅ ⚠️ 🧼 🌡️ 🧤) for visual cues. Make it printer-friendly.`,
 
-  sop: `You are a Documentation Specialist.
-  OBJECTIVE: Generate a formal Standard Operating Procedure (SOP) or a Log Sheet.
-  STYLE: Bureaucratic, clean, formatted.
-  OUTPUT: strictly use Markdown Tables or Bulleted Lists that can be printed. Include fields for 'Date', 'Time', 'Manager Signature'.`
+  sop: `You are a Food Safety Document Specialist.
+  OBJECTIVE: Generate a PRINT-READY log sheet or Standard Operating Procedure.
+  STYLE: Professional, regulatory-compliant, printer-friendly.
+  
+  FORMAT REQUIREMENTS:
+  - Use simple Markdown tables with clear column headers
+  - For LOG SHEETS: Include columns for Date | Time | Temp/Reading | Initials | Notes
+  - For SOPs: Use numbered steps with checkboxes and clear action items
+  - Add signature line at bottom: "Manager Signature: _________ Date: _________"
+  - Design to fit on ONE PAGE when printed (8.5" x 11")
+  - Use bold headers for sections
+  - Include space for 7-14 days of entries for logs
+  
+  EXAMPLE LOG FORMAT:
+  | Date | Time | Temperature | Initials | Corrective Action |
+  |------|------|-------------|----------|-------------------|
+  |      |      |             |          |                   |
+  
+  EXAMPLE SOP FORMAT:
+  **[PROCEDURE NAME]**
+  1. [ ] Step one with clear action
+  2. [ ] Step two with clear action
+  3. [ ] Step three with clear action
+  
+  Always end with: 
+  **Manager Approval:**
+  Signature: _________________ Date: _________`
 }
 
 export async function POST(req) {
