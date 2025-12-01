@@ -6,14 +6,17 @@ import { NextResponse } from 'next/server'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const next = requestUrl.searchParams.get('next') || '/'
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
   
-  // ✅ CRITICAL: Use env var, NOT requestUrl.origin
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org'
   
-  console.log('🔄 Auth callback:', { hasCode: !!code, hasError: !!error, baseUrl })
+  console.log('🔄 Auth callback:', { 
+    hasCode: !!code, 
+    hasError: !!error, 
+    baseUrl,
+    fullUrl: request.url 
+  })
 
   // Handle OAuth errors
   if (error) {
@@ -60,7 +63,7 @@ export async function GET(request) {
 
     console.log('✅ Session established:', data.user?.email)
 
-    // Check if user needs to accept terms
+    // ✅ FIX: Check profile and subscription status BEFORE deciding redirect
     if (data.user) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -68,13 +71,36 @@ export async function GET(request) {
         .eq('id', data.user.id)
         .single()
 
+      // If terms not accepted, go to terms page
       if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-        console.log('⚠️ Redirecting to terms acceptance')
+        console.log('⚠️ Terms not accepted, redirecting to /accept-terms')
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
+
+      // ✅ NEW: Check if user has active subscription
+      const { data: activeSub } = await supabase
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', data.user.id)
+        .in('status', ['active', 'trialing'])
+        .maybeSingle()
+
+      // If no active subscription, redirect to pricing
+      if (!activeSub) {
+        console.log('⚠️ No active subscription, redirecting to home (pricing modal will open)')
+        return NextResponse.redirect(`${baseUrl}/?showPricing=true`)
+      }
+
+      // Check if subscription expired
+      const periodEnd = new Date(activeSub.current_period_end)
+      if (periodEnd < new Date()) {
+        console.log('⚠️ Subscription expired, redirecting to home')
+        return NextResponse.redirect(`${baseUrl}/?showPricing=true`)
+      }
+
+      console.log('✅ All checks passed, redirecting to home')
     }
   }
 
-  // ✅ Always redirect to baseUrl
-  return NextResponse.redirect(`${baseUrl}${next}`)
+  return NextResponse.redirect(`${baseUrl}`)
 }
