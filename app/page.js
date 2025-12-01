@@ -960,6 +960,7 @@ export default function Page() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
   const [chatHistory, setChatHistory] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -1016,30 +1017,45 @@ export default function Page() {
             .single()
           setProfile(userProfile)
           
-          // SECURITY: Verify active subscription from subscriptions table
+          // After loading profile:
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            const { data: activeSub } = await supabase
+            console.log('🔍 Checking subscription...')
+            
+            const { data: activeSub, error: subError } = await supabase
               .from('subscriptions')
-              .select('status, current_period_end')
+              .select('status, current_period_end, plan')
               .eq('user_id', currentSession.user.id)
               .in('status', ['active', 'trialing'])
               .maybeSingle()
 
-            if (!activeSub) {
-              console.log('⚠️ No active subscription found')
+            if (subError) {
+              console.error('❌ Subscription check failed:', subError)
+              setHasActiveSubscription(false)
+              setShowPricingModal(true)
+            } else if (!activeSub) {
+              console.log('❌ No active subscription found')
+              setHasActiveSubscription(false)
               setShowPricingModal(true)
             } else {
               // Verify not expired
               const periodEnd = new Date(activeSub.current_period_end)
               if (periodEnd < new Date()) {
-                console.log('⚠️ Subscription expired')
+                console.log('❌ Subscription expired:', periodEnd.toISOString())
+                setHasActiveSubscription(false)
                 setShowPricingModal(true)
               } else {
+                console.log('✅ Active subscription verified:', {
+                  plan: activeSub.plan,
+                  status: activeSub.status,
+                  expires: periodEnd.toLocaleDateString()
+                })
+                setHasActiveSubscription(true)
                 loadChatHistory()
               }
             }
           } else {
-            loadChatHistory()
+            console.log('⚠️ Terms not accepted, redirecting...')
+            router.push('/accept-terms')
           }
         }
       } catch (e) {
@@ -1063,10 +1079,32 @@ export default function Page() {
           .eq('id', session.user.id)
           .single()
         setProfile(userProfile)
-        loadChatHistory()
+        
+        // Check subscription again on auth change
+        if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
+            const { data: activeSub, error: subError } = await supabase
+              .from('subscriptions')
+              .select('status, current_period_end, plan')
+              .eq('user_id', session.user.id)
+              .in('status', ['active', 'trialing'])
+              .maybeSingle()
+
+            if (!subError && activeSub) {
+                const periodEnd = new Date(activeSub.current_period_end)
+                if (periodEnd >= new Date()) {
+                    setHasActiveSubscription(true)
+                    loadChatHistory()
+                } else {
+                    setHasActiveSubscription(false)
+                }
+            } else {
+                setHasActiveSubscription(false)
+            }
+        }
       } else {
         setProfile(null)
         setChatHistory([])
+        setHasActiveSubscription(false)
       }
     })
 
@@ -1224,15 +1262,11 @@ export default function Page() {
       return
     }
 
-    if (profile) {
-      if (!profile.accepted_terms || !profile.accepted_privacy) {
-        router.push('/accept-terms')
-        return
-      }
-      if (!profile.is_subscribed) {
-        setShowPricingModal(true)
-        return
-      }
+    // ✅ CRITICAL: Block if no active subscription
+    if (!hasActiveSubscription) {
+      console.log('❌ Blocked: No active subscription')
+      setShowPricingModal(true)
+      return
     }
 
     let finalInput = input
@@ -1399,6 +1433,19 @@ export default function Page() {
         className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex"
         style={{ height: '100dvh' }}
       >
+        {/* Subscription Warning Banner */}
+        {session && !hasActiveSubscription && (
+          <div className="fixed top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center text-sm font-medium z-50">
+            ⚠️ Active subscription required. 
+            <button 
+              onClick={() => setShowPricingModal(true)} 
+              className="underline font-bold ml-2"
+            >
+              Subscribe now
+            </button>
+          </div>
+        )}
+
         {session && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/60 z-40 lg:hidden"
