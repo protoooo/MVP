@@ -6,33 +6,23 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA (Mapped to your Files)
+// DOCUMENT SOURCES DATA (Cleaned Up)
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  'Washtenaw 3-Compartment Sink Guide',
-  'Consumer Advisory Standards',
-  'Cooling Foods Protocol',
-  'Cross-Contamination Prevention',
   'Washtenaw Enforcement Actions',
+  'Sanitizing Protocols',
   'FDA Food Code 2022',
-  'Fats, Oils, & Grease (FOG) Protocol',
-  'Allergen Awareness Info',
-  'Food Service Inspection Program',
-  'Foodborne Illness Response Guide',
-  'Safe Food Temperatures',
-  'Inspection Report Types',
-  'Internal Cooking Temperatures',
   'Michigan Modified Food Code',
-  'Norovirus Cleaning Guide',
-  'Admin & Enforcement Procedures',
-  'Cooking Temp Summary Chart',
-  'USDA Safe Minimum Temps',
-  'Washtenaw Violation Types',
-  'Date Marking Guide',
+  'Emergency Action Plans',
+  'Norovirus Cleaning Guidelines',
+  'Fats, Oils, & Grease (FOG) Protocol',
+  'Cross-Contamination Prevention',
+  'Consumer Advisory Guidelines',
+  'Allergen Awareness Standards',
+  'Time & Temp Control (TCS)',
   'Food Labeling Guide',
-  'Michigan Food Law (Act 92)',
-  'New Business Info Packet',
-  'Emergency Action Plans'
+  'Date Marking Guide',
+  'USDA Safe Minimum Temps',
 ]
 
 // ==========================================
@@ -105,7 +95,7 @@ const GlobalStyles = () => (
     @keyframes slideUpFade {
       0% {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(5px);
       }
       10% {
         opacity: 1;
@@ -117,7 +107,7 @@ const GlobalStyles = () => (
       }
       100% {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(-5px);
       }
     }
     .animate-source-ticker {
@@ -420,7 +410,7 @@ const Icons = {
 }
 
 // ==========================================
-// SOURCE TICKER COMPONENT
+// SOURCE TICKER COMPONENT (Fixed Width & Location)
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -433,16 +423,13 @@ const SourceTicker = () => {
   }, [])
 
   return (
-    <div className="flex justify-center mt-6">
-      <div className="flex items-center gap-3 px-4 py-2 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
-        <span className="text-[#3E7BFA]">
-          <Icons.Book />
-        </span>
-        {/* INCREASED WIDTH TO 500PX FOR LONG TITLES */}
-        <div className="w-[320px] md:w-[500px] text-center overflow-hidden h-5 relative">
+    <div className="flex justify-center mt-2"> {/* Reduced top margin to sit close to input */}
+      <div className="flex items-center gap-3 px-4 py-1.5 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
+        {/* REMOVED BOOKMARK ICON */}
+        <div className="w-[280px] md:w-[500px] text-center overflow-hidden h-4 relative">
           <div
             key={index}
-            className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase"
+            className="absolute inset-0 flex items-center justify-center text-[10px] text-[#525252] font-medium tracking-wider animate-source-ticker uppercase"
           >
             {SOURCE_DOCUMENTS[index]}
           </div>
@@ -467,10 +454,12 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
+  session // PASSED SESSION PROP
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    if (mode === 'image') {
+    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
+    if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
   }
@@ -605,7 +594,7 @@ const InputBox = ({
               : activeMode === 'image'
               ? 'Upload an image...'
               : activeMode === 'audit'
-              ? 'Describe area...'
+              ? 'Describe area to audit...'
               : 'Describe the emergency...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
@@ -626,7 +615,8 @@ const InputBox = ({
               !input.trim() && !selectedImage
                 ? '#525252'
                 : activeMode === 'chat' ||
-                  activeMode === 'critical'
+                  activeMode === 'critical' ||
+                  activeMode === 'audit'
                 ? 'white'
                 : 'black',
             cursor:
@@ -640,6 +630,9 @@ const InputBox = ({
           )}
         </button>
       </form>
+      
+      {/* TICKER MOVED INSIDE INPUT BOX AREA (Only if !session to keep chat clean) */}
+      {!session && <SourceTicker />}
     </div>
   )
 }
@@ -1530,7 +1523,8 @@ export default function Page() {
                 {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-sm md:text-base text-white">
-                        protocolLM v.1
+                        protocol<span className="text-[#3E7BFA]">LM</span>
+                        <span className="hidden md:inline text-[#525252] ml-3 font-normal">|&nbsp;&nbsp;Trained on Washtenaw, MI & FDA Regs</span>
                     </div>
                     
                     <div className="flex items-center gap-2 md:gap-6">
@@ -1573,22 +1567,21 @@ export default function Page() {
                         inputRef={inputRef}
                         activeMode={activeMode}
                         setActiveMode={setActiveMode}
+                        session={session}
                         />
                     </div>
 
+                    {/* TICKER MOVED BELOW INPUT */}
+                    {!session && <SourceTicker />}
+
                     {/* SUBTITLE - Responsive text size */}
-                    <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-4 md:mt-6 font-medium text-center px-4">
+                    <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-6 font-medium text-center px-4">
                         Trained on{' '}
                         <span className="text-white font-semibold">
                         Washtenaw, Michigan
                         </span>{' '}
                         &amp; FDA Regulations
                     </p>
-
-                    {/* SOURCE TICKER - Hidden on small mobile */}
-                    <div className="hidden sm:block">
-                        <SourceTicker />
-                    </div>
 
                     {/* FOOTER LINKS - Responsive positioning */}
                     <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
@@ -1673,6 +1666,7 @@ export default function Page() {
                   inputRef={inputRef}
                   activeMode={activeMode}
                   setActiveMode={setActiveMode}
+                  session={session}
                 />
               </div>
             </>
