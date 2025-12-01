@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -8,24 +8,38 @@ export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
 
-  // If Google sends a code, exchange it for a user session
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    )
     
-    try {
-      await supabase.auth.exchangeCodeForSession(code)
-      
-      // Optional: Check if user exists in your profile table here
-      // But usually, we just let the page.js handle the profile check
-      
-    } catch (error) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (error) {
       console.error('Auth Callback Error:', error)
     }
   }
 
-  // ✅ REDIRECT TO HOME
-  // We redirect to origin (https://protocollm.org) because that's where the 
-  // logic lives (the modal, the chat, etc).
-  // We do NOT redirect to /pricing because that page doesn't exist anymore.
+  // URL to redirect to after sign in process completes
   return NextResponse.redirect(requestUrl.origin)
 }
