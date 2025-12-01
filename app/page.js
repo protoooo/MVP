@@ -382,40 +382,6 @@ const Icons = {
       />
     </svg>
   ),
-  AcademicCap: () => (
-    <svg
-      width="20"
-      height="20"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path d="M12 14l9-5-9-5-9 5 9 5z" />
-      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-      />
-    </svg>
-  ),
-  Table: () => (
-    <svg
-      width="20"
-      height="20"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-      />
-    </svg>
-  ),
 
   // Pricing Icons
   Check: ({ color = 'text-[#EDEDED]' }) => (
@@ -507,10 +473,6 @@ const InputBox = ({
         return '#FDD901'
       case 'critical':
         return '#EF4444'
-      case 'training':
-        return '#A855F7'
-      case 'sop':
-        return '#3ECF8E'
       default:
         return '#3E7BFA'
     }
@@ -574,30 +536,6 @@ const InputBox = ({
             }`}
           >
             <Icons.Alert /> <span>Urgent</span>
-          </button>
-
-          {/* Train */}
-          <button
-            onClick={() => handleModeClick('training')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
-              activeMode === 'training'
-                ? 'text-[#A855F7] bg-[#A855F7]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-            }`}
-          >
-            <Icons.AcademicCap /> <span>Train</span>
-          </button>
-
-          {/* Logs */}
-          <button
-            onClick={() => handleModeClick('sop')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap pr-8 md:pr-4 ${
-              activeMode === 'sop'
-                ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-            }`}
-          >
-            <Icons.Table /> <span>Logs</span>
           </button>
         </div>
 
@@ -678,11 +616,7 @@ const InputBox = ({
               ? 'Upload an image...'
               : activeMode === 'audit'
               ? 'Describe area...'
-              : activeMode === 'critical'
-              ? 'Describe the emergency...'
-              : activeMode === 'training'
-              ? 'Enter training topic...'
-              : 'Describe log or SOP needed...'
+              : 'Describe the emergency...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
           rows={1}
@@ -702,8 +636,7 @@ const InputBox = ({
               !input.trim() && !selectedImage
                 ? '#525252'
                 : activeMode === 'chat' ||
-                  activeMode === 'critical' ||
-                  activeMode === 'training'
+                  activeMode === 'critical'
                 ? 'white'
                 : 'black',
             cursor:
@@ -1296,11 +1229,7 @@ export default function Page() {
       finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
     } else if (activeMode === 'critical') {
       finalInput = `[CRITICAL EMERGENCY MODE] The user is reporting a food safety emergency. Provide immediate, step-by-step corrective actions based on Imminent Health Hazard protocols. Be concise and authoritative. Input: ${input}`
-    } else if (activeMode === 'training') {
-      finalInput = `[TRAINING GENERATOR MODE] Create a short, engaging staff training script and a 3-question quiz for kitchen staff regarding: ${input}`
-    } else if (activeMode === 'sop') {
-      finalInput = `[SOP/LOG GENERATOR MODE] Generate a clean Markdown table/form for a Standard Operating Procedure or Log Sheet regarding: ${input}`
-    }
+    } 
 
     const newMsg = { role: 'user', content: input, image: selectedImage }
     setMessages((p) => [...p, newMsg])
