@@ -32,6 +32,7 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
+      /* FIX: Use dynamic viewport height for mobile browsers */
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -1053,6 +1054,11 @@ export default function Page() {
     }
     init()
 
+    // SAFETY VALVE: Force load if DB hangs
+    const safetyTimer = setTimeout(() => {
+        setIsLoading(false)
+    }, 2000)
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -1097,6 +1103,7 @@ export default function Page() {
 
     return () => {
       subscription.unsubscribe()
+      clearTimeout(safetyTimer)
     }
   }, [])
 
