@@ -41,8 +41,9 @@ const PROMPTS = {
   
   image: `You are an AI Health Inspector. 
   OBJECTIVE: Analyze the provided image for any food safety violations or compliance issues. 
+  CRITICAL: You must cross-reference your visual observations with the provided OFFICIAL CONTEXT (Washtenaw/Michigan codes) to cite specific violations.
   STYLE: Direct and observational. 
-  OUTPUT: List observations and potential violations.
+  OUTPUT: List observations and potential violations with citations from the context if available.
   FORMATTING: Do NOT use asterisks. Use CAPS for emphasis.`,
 
   audit: `You are a strict Local Health Inspector performing a mock audit.
@@ -50,7 +51,7 @@ const PROMPTS = {
   STYLE: Formal, critical, observant.
   STRUCTURE: 
   1. Identify Potential Violations.
-  2. Cite the specific code violation.
+  2. Cite the specific code violation from the provided CONTEXT.
   3. Assign Priority (Priority, Priority Foundation, Core).
   4. Required Corrective Action.
   FORMATTING: Do NOT use asterisks. Use CAPS or underscores for emphasis.`,
@@ -227,12 +228,7 @@ export async function POST(req) {
       .maybeSingle()
 
     if (subError || !activeSub) {
-      console.log('❌ Subscription validation failed:', {
-        user: user.email,
-        hasError: !!subError,
-        hasSubscription: !!activeSub,
-        errorMessage: subError?.message
-      })
+      console.log('❌ Subscription validation failed')
       return NextResponse.json({ 
         error: 'Active subscription required', 
         requiresSubscription: true 
@@ -241,70 +237,39 @@ export async function POST(req) {
 
     // Validate subscription hasn't expired
     if (!activeSub.current_period_end) {
-      console.error('❌ Subscription missing expiration date:', activeSub)
-      return NextResponse.json({ 
-        error: 'Invalid subscription data', 
-        requiresSubscription: true 
-      }, { status: 402 })
+      return NextResponse.json({ error: 'Invalid subscription data', requiresSubscription: true }, { status: 402 })
     }
 
     const periodEnd = new Date(activeSub.current_period_end)
     const now = new Date()
     
     if (periodEnd < now) {
-      console.log('❌ Subscription expired:', {
-        user: user.email,
-        expiredOn: periodEnd.toISOString()
-      })
-      
+      console.log('❌ Subscription expired:', periodEnd.toISOString())
       await supabase
         .from('subscriptions')
-        .update({ 
-          status: 'expired',
-          updated_at: new Date().toISOString()
-        })
+        .update({ status: 'expired', updated_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
       
-      return NextResponse.json({ 
-        error: 'Subscription expired', 
-        requiresSubscription: true 
-      }, { status: 402 })
+      return NextResponse.json({ error: 'Subscription expired', requiresSubscription: true }, { status: 402 })
     }
-
-    const VALID_STATUSES = ['active', 'trialing']
-    if (!VALID_STATUSES.includes(activeSub.status)) {
-      console.log('❌ Invalid subscription status:', activeSub.status)
-      return NextResponse.json({ 
-        error: 'Invalid subscription status', 
-        requiresSubscription: true 
-      }, { status: 402 })
-    }
-
-    console.log('✅ Valid subscription verified:', {
-      user: user.email,
-      plan: activeSub.plan,
-      status: activeSub.status,
-      expires: periodEnd.toLocaleDateString()
-    })
 
     // Check Rate Limits
     const limitCheck = await checkRateLimit(user.id)
     if (!limitCheck.success) {
-      console.log('⚠️ Rate limit exceeded:', limitCheck.message)
       return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
     }
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
-      console.log('⚠️ Image limit exceeded')
       return NextResponse.json({ error: 'Image limit reached', limitReached: true }, { status: 429 })
     }
 
-    // --- RAG SEARCH (Fixed to always use washtenaw) ---
+    // --- RAG SEARCH ---
     const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
-    if (lastMessage.content && !image) {
+    // ✅ FIX: Removed "!image" check. We search text even if an image exists.
+    if (lastMessage.content) {
       try {
         console.log('🔍 Searching documents for:', lastMessage.content.substring(0, 50))
         const searchResults = await searchDocuments(lastMessage.content, 'washtenaw')
@@ -414,7 +379,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('❌ Chat API Error:', error)
-    
     return NextResponse.json(
       { error: 'Service error. Please try again.' },
       { status: 500 }
