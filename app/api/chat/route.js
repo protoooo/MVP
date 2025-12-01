@@ -19,13 +19,6 @@ function sanitizeString(input, maxLength = 5000) {
     .substring(0, maxLength)
 }
 
-function sanitizeCounty(county) {
-  const validCounties = ['washtenaw', 'wayne', 'oakland']
-  if (typeof county !== 'string') return 'washtenaw'
-  const normalized = county.toLowerCase().trim()
-  return validCounties.includes(normalized) ? normalized : 'washtenaw'
-}
-
 function validateMessages(messages) {
   if (!Array.isArray(messages)) return []
   if (messages.length > 100) return messages.slice(-100)
@@ -37,11 +30,11 @@ function validateMessages(messages) {
   }))
 }
 
-// --- FULL SYSTEM PROMPTS ---
+// --- SYSTEM PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
   OBJECTIVE: Help operators understand codes and fix violations.
-  HIERARCHY: 1. Local County Code (Washtenaw/Wayne/Oakland). 2. Michigan Modified Food Code. 3. FDA Food Code.
+  HIERARCHY: 1. Local County Code (Washtenaw). 2. Michigan Modified Food Code. 3. FDA Food Code.
   STYLE: Concise, authoritative, helpful. No fluff.
   STRUCTURE: Direct Answer -> The Fix -> Evidence [Source, Page].
   FORMATTING: Do NOT use asterisks for bold or italics. Use CAPS for emphasis instead.`,
@@ -135,13 +128,12 @@ export async function POST(req) {
     
     const messages = validateMessages(body.messages || [])
     const image = body.image && typeof body.image === 'string' ? body.image : null
-    const county = sanitizeCounty(body.county)
     const chatId = body.chatId || null
     const mode = ['chat', 'image', 'audit', 'critical', 'training', 'sop'].includes(body.mode) 
       ? body.mode 
       : 'chat'
 
-    console.log('📝 Chat API Request:', { mode, county, hasImage: !!image, messageCount: messages.length })
+    console.log('📝 Chat API Request:', { mode, hasImage: !!image, messageCount: messages.length })
 
     // --- VERTEX AI SETUP ---
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
@@ -224,7 +216,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Please accept terms', requiresTerms: true }, { status: 403 })
     }
 
-    // ✅ SECURITY FIX: Strict Subscription Check
+    // ✅ STRICT SUBSCRIPTION CHECK
     console.log('🔍 Checking subscription status...')
     
     const { data: activeSub, error: subError } = await supabase
@@ -234,7 +226,6 @@ export async function POST(req) {
       .in('status', ['active', 'trialing'])
       .maybeSingle()
 
-    // ✅ CRITICAL FIX: Treat ANY error or missing subscription as "no access"
     if (subError || !activeSub) {
       console.log('❌ Subscription validation failed:', {
         user: user.email,
@@ -248,7 +239,7 @@ export async function POST(req) {
       }, { status: 402 })
     }
 
-    // ✅ SECURITY: Validate subscription hasn't expired
+    // Validate subscription hasn't expired
     if (!activeSub.current_period_end) {
       console.error('❌ Subscription missing expiration date:', activeSub)
       return NextResponse.json({ 
@@ -266,7 +257,6 @@ export async function POST(req) {
         expiredOn: periodEnd.toISOString()
       })
       
-      // Mark as expired BEFORE returning error
       await supabase
         .from('subscriptions')
         .update({ 
@@ -282,7 +272,6 @@ export async function POST(req) {
       }, { status: 402 })
     }
 
-    // ✅ SECURITY: Verify status is explicitly valid
     const VALID_STATUSES = ['active', 'trialing']
     if (!VALID_STATUSES.includes(activeSub.status)) {
       console.log('❌ Invalid subscription status:', activeSub.status)
@@ -310,16 +299,16 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Image limit reached', limitReached: true }, { status: 429 })
     }
 
-    // --- PROMPT BUILDING ---
+    // --- RAG SEARCH (Fixed to always use washtenaw) ---
     const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
-    // RAG (Search Documents) if not image mode
     if (lastMessage.content && !image) {
       try {
         console.log('🔍 Searching documents for:', lastMessage.content.substring(0, 50))
-        const searchResults = await searchDocuments(lastMessage.content, county)
+        const searchResults = await searchDocuments(lastMessage.content, 'washtenaw')
+        
         if (searchResults && searchResults.length > 0) {
             const countyDocs = searchResults.filter((d) => d.docType === 'county')
             const stateDocs = searchResults.filter((d) => d.docType === 'state')
@@ -332,7 +321,7 @@ export async function POST(req) {
             })
             
             let contextParts = []
-            if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
             if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map((d) => `"${d.text}"`).join('\n'))
             if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map((d) => `"${d.text}"`).join('\n'))
             
@@ -350,9 +339,9 @@ export async function POST(req) {
     }
 
     const selectedSystemPrompt = PROMPTS[mode] || PROMPTS.chat
-    let promptText = `${selectedSystemPrompt}\n\nJURISDICTION: ${county}\n\nOFFICIAL CONTEXT:\n${context || 'No specific text context found.'}\n\nUSER INPUT:\n${lastMessage.content}`
+    let promptText = `${selectedSystemPrompt}\n\nJURISDICTION: Washtenaw County, Michigan\n\nOFFICIAL CONTEXT:\n${context || 'No specific text context found.'}\n\nUSER INPUT:\n${lastMessage.content}`
 
-    // --- EXECUTE REQUEST ---
+    // --- BUILD REQUEST ---
     const reqContent = {
       role: 'user',
       parts: [{ text: promptText }]
@@ -369,7 +358,7 @@ export async function POST(req) {
       reqContent.parts.push({ text: 'Analyze this image based on the mode objectives.' })
     }
 
-    // Timeout Safety
+    // --- EXECUTE ---
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000)
 
@@ -416,11 +405,6 @@ export async function POST(req) {
     } catch (apiError) {
       clearTimeout(timeoutId)
       console.error('❌ Vertex AI API Error:', apiError)
-      console.error('Error details:', {
-        message: apiError.message,
-        stack: apiError.stack,
-        name: apiError.name
-      })
       
       return NextResponse.json(
         { error: 'AI service temporarily unavailable. Please try again.' },
@@ -430,11 +414,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('❌ Chat API Error:', error)
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    })
     
     return NextResponse.json(
       { error: 'Service error. Please try again.' },
