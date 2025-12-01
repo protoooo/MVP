@@ -1244,7 +1244,6 @@ export default function Page() {
 
       if (!currentSession) {
         alert('Session expired. Please sign in again.')
-        setCheckoutLoading(null)
         return
       }
 
@@ -1265,7 +1264,6 @@ export default function Page() {
         const errorData = await res.json()
         console.error('❌ API Error:', errorData)
         alert(errorData.error || 'Checkout failed. Please try again.')
-        setCheckoutLoading(null)
         return
       }
 
@@ -1278,11 +1276,12 @@ export default function Page() {
       } else {
         console.error('❌ No URL returned')
         alert('System busy. Please try again.')
-        setCheckoutLoading(null)
       }
     } catch (error) {
       console.error('❌ Checkout error:', error)
       alert('Connection error. Please check your internet and try again.')
+    } finally {
+      // Ensure loading state is cleared even if errors occur
       setCheckoutLoading(null)
     }
   }
@@ -1469,18 +1468,7 @@ export default function Page() {
         className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex"
         style={{ height: '100dvh' }}
       >
-        {/* Subscription Warning Banner */}
-        {session && !isLoading && !hasActiveSubscription && (
-          <div className="fixed top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center text-sm font-medium z-50">
-            ⚠️ Active subscription required. 
-            <button 
-              onClick={() => setShowPricingModal(true)} 
-              className="underline font-bold ml-2"
-            >
-              Subscribe now
-            </button>
-          </div>
-        )}
+        {/* Removed the Subscription Warning Banner red bar entirely */}
 
         {session && sidebarOpen && (
           <div
