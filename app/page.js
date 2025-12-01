@@ -264,7 +264,7 @@ const Icons = {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1.5}
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
       />
       <path
         strokeLinecap="round"
@@ -882,84 +882,70 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
       className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
-      <div
-        className="bg-[#121212] border border-[#2C2C2C] rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] animate-pop-in"
+      {/* 
+          1. Removed the outer bg container that held the header/footer. 
+          2. The Card itself is now the "modal content".
+          3. Added onClick stopPropagation to the card so clicking inside doesn't close it.
+      */}
+      <div 
+        className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button positioned inside the card */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-[#888] hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
         >
           <Icons.X />
         </button>
 
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Choose your protection level.
-          </h2>
-          <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
+        <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
+          protocolLM
+        </h3>
+        
+        <div className="flex items-baseline text-white">
+          <span className="text-6xl font-bold tracking-tight font-mono">
+            $86
+          </span>
+          <span className="ml-2 text-[#555] text-xs font-bold uppercase">
+            /month
+          </span>
         </div>
 
-        <div className="flex justify-center">
-          {/* Single Plan */}
-          <div className="bg-[#1C1C1C] border-2 border-[#3ECF8E] rounded-2xl p-8 flex flex-col relative w-full shadow-[0_0_30px_-10px_rgba(62,207,142,0.3)]">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3ECF8E] text-black px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
-              Don&apos;t Get 86&apos;d
-            </div>
-            <h3 className="text-xs font-bold text-[#3ECF8E] uppercase tracking-widest mb-2">
-              protocolLM
-            </h3>
-            <div className="flex items-baseline text-white">
-              <span className="text-6xl font-bold tracking-tight font-mono">
-                $86
-              </span>
-              <span className="ml-2 text-[#555] text-xs font-bold uppercase">
-                /month
-              </span>
-            </div>
-            <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">
-              Complete compliance protection for Washtenaw County restaurants.
-            </p>
-            <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-              <li className="flex items-start gap-3 text-sm font-medium text-white">
-                <Icons.Check color="text-[#3ECF8E]" />
-                Unlimited Text Queries
-              </li>
-              <li className="flex items-start gap-3 text-sm font-medium text-white">
-                <Icons.Check color="text-[#3ECF8E]" />
-                Unlimited Image Analysis
-              </li>
-              <li className="flex items-start gap-3 text-sm font-medium text-white">
-                <Icons.Check color="text-[#3ECF8E]" />
-                Full Washtenaw County Database
-              </li>
-              <li className="flex items-start gap-3 text-sm font-medium text-white">
-                <Icons.Check color="text-[#3ECF8E]" />
-                Mock Audit Workflow
-              </li>
-              <li className="flex items-start gap-3 text-sm font-medium text-white">
-                <Icons.Check color="text-[#3ECF8E]" />
-                Training Materials & SOP Generators
-              </li>
-            </ul>
-            <button
-              onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
-              disabled={loading !== null}
-              className="w-full bg-[#3ECF8E] hover:bg-[#2eb87a] text-black font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg"
-            >
-              {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
-            </button>
-          </div>
-        </div>
+        <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">
+          Complete compliance protection for Washtenaw County restaurants and food service establishments — <span className="italic text-[#3E7BFA]">Don&apos;t get 86&apos;d by the health inspector.</span>
+        </p>
 
-        <div className="mt-8 text-center max-w-md mx-auto opacity-60">
-          <p className="text-[10px] text-[#3ECF8E] uppercase tracking-widest font-bold mb-2">
-            7-Day Free Trial • $86/month • Cancel Anytime
-          </p>
-          <p className="text-sm text-[#666] font-serif italic">
-            &quot;Don&apos;t get 86&apos;d by the health inspector.&quot;
-          </p>
-        </div>
+        <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
+          <li className="flex items-start gap-3 text-sm font-medium text-white">
+            <Icons.Check color="text-[#3E7BFA]" />
+            Unlimited Text Queries
+          </li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white">
+            <Icons.Check color="text-[#3E7BFA]" />
+            Unlimited Image Analysis
+          </li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white">
+            <Icons.Check color="text-[#3E7BFA]" />
+            Full Washtenaw County Database
+          </li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white">
+            <Icons.Check color="text-[#3E7BFA]" />
+            Mock Audit Workflow
+          </li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white">
+            <Icons.Check color="text-[#3E7BFA]" />
+            Training Materials & SOP Generators
+          </li>
+        </ul>
+
+        <button
+          onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
+          disabled={loading !== null}
+          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg"
+        >
+          {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
+        </button>
       </div>
     </div>
   )
@@ -1533,7 +1519,7 @@ export default function Page() {
           {!session ? (
             // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
             <div className="flex flex-col h-full w-full">
-                {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
+                {/* Header - Changed to Flexbox to prevent overlaps */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-sm md:text-base text-white">
                         protocolLM v.1
