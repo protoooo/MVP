@@ -875,13 +875,19 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // PRICING MODAL
 // ==========================================
-const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
+const PricingModal = ({ isOpen, onClose, handleCheckout, loading, setLoading }) => {
+  // ✅ FIX: Clear loading state when modal closes
+  const handleClose = () => {
+    if (setLoading) setLoading(null)
+    onClose()
+  }
+
   if (!isOpen) return null
 
   return (
     <div
       className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-      onClick={onClose}
+      onClick={handleClose}
     >
       {/* 
           1. Removed the outer bg container that held the header/footer. 
@@ -894,7 +900,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
       >
         {/* Close Button positioned inside the card */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
         >
           <Icons.X />
@@ -943,7 +949,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
         <button
           onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
           disabled={loading !== null}
-          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg"
+          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
@@ -1021,9 +1027,10 @@ export default function Page() {
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
             console.log('🔍 Checking subscription...')
             
+            // ✅ FIX: Explicit column selection to avoid ambiguous column errors
             const { data: activeSub, error: subError } = await supabase
               .from('subscriptions')
-              .select('status, current_period_end, plan')
+              .select('status, current_period_end, plan, stripe_subscription_id')
               .eq('user_id', currentSession.user.id)
               .in('status', ['active', 'trialing'])
               .maybeSingle()
@@ -1037,6 +1044,14 @@ export default function Page() {
               setHasActiveSubscription(false)
               setShowPricingModal(true)
             } else {
+              // ✅ FIX: Handle missing current_period_end
+              if (!activeSub.current_period_end) {
+                console.error('❌ Subscription missing expiration date:', activeSub)
+                setHasActiveSubscription(false)
+                setShowPricingModal(true)
+                return
+              }
+
               // Verify not expired
               const periodEnd = new Date(activeSub.current_period_end)
               if (periodEnd < new Date()) {
@@ -1203,14 +1218,19 @@ export default function Page() {
 
   // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN
   const handleCheckout = async (priceId, planName) => {
+    console.log('🛒 Checkout initiated:', { priceId, planName })
+    
     setCheckoutLoading(planName)
+    
     if (!session) {
+      console.log('❌ No session, showing auth modal')
       setShowPricingModal(false)
       setAuthModalMessage('Create an account to subscribe')
       setShowAuthModal(true)
       setCheckoutLoading(null)
       return
     }
+
     try {
       // Get fresh session token
       const {
@@ -1223,31 +1243,41 @@ export default function Page() {
         return
       }
 
+      console.log('📡 Sending request to /api/create-checkout-session...')
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentSession.access_token}`,
+          'Authorization': `Bearer ${currentSession.access_token}`,
         },
         body: JSON.stringify({ priceId }),
       })
-      const data = await res.json()
+
+      console.log('📡 Response status:', res.status)
 
       if (!res.ok) {
-        alert(data.error || 'Checkout failed. Please try again.')
+        const errorData = await res.json()
+        console.error('❌ API Error:', errorData)
+        alert(errorData.error || 'Checkout failed. Please try again.')
         setCheckoutLoading(null)
         return
       }
 
+      const data = await res.json()
+      console.log('✅ Checkout session created:', data)
+
       if (data.url) {
+        console.log('🔗 Redirecting to Stripe:', data.url)
         window.location.href = data.url
       } else {
+        console.error('❌ No URL returned')
         alert('System busy. Please try again.')
         setCheckoutLoading(null)
       }
     } catch (error) {
-      console.error(error)
-      alert('Connection error.')
+      console.error('❌ Checkout error:', error)
+      alert('Connection error. Please check your internet and try again.')
       setCheckoutLoading(null)
     }
   }
@@ -1427,6 +1457,7 @@ export default function Page() {
         onClose={() => setShowPricingModal(false)}
         handleCheckout={handleCheckout}
         loading={checkoutLoading}
+        setLoading={setCheckoutLoading}
       />
 
       <div
@@ -1434,7 +1465,7 @@ export default function Page() {
         style={{ height: '100dvh' }}
       >
         {/* Subscription Warning Banner */}
-        {session && !hasActiveSubscription && (
+        {session && !isLoading && !hasActiveSubscription && (
           <div className="fixed top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center text-sm font-medium z-50">
             ⚠️ Active subscription required. 
             <button 
