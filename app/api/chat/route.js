@@ -5,7 +5,6 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// ✅ FIX: Force dynamic to prevent caching issues with Auth
 export const dynamic = 'force-dynamic'
 
 // --- UTILITIES ---
@@ -38,7 +37,7 @@ function validateMessages(messages) {
   }))
 }
 
-// --- FULL SYSTEM PROMPTS (RESTORED) ---
+// --- FULL SYSTEM PROMPTS ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
   OBJECTIVE: Help operators understand codes and fix violations.
@@ -171,9 +170,8 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     
-    // ✅ CRITICAL FIX: Use stable GA model
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash', // STABLE GA MODEL (not -001 or -exp)
+      model: 'gemini-2.0-flash',
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
@@ -200,7 +198,6 @@ export async function POST(req) {
       }
     )
 
-    // ✅ FIX: Use getUser for strictly server-side auth validation
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -227,33 +224,39 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Please accept terms', requiresTerms: true }, { status: 403 })
     }
 
-    // ✅ CRITICAL: Strict Subscription Check
+    // ✅ SECURITY FIX: Strict Subscription Check
     console.log('🔍 Checking subscription status...')
     
     const { data: activeSub, error: subError } = await supabase
       .from('subscriptions')
-      .select('status, current_period_end, plan')
+      .select('status, current_period_end, plan, stripe_subscription_id')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing'])
       .maybeSingle()
 
-    if (subError) {
-      console.error('❌ Subscription query error:', subError)
-      return NextResponse.json({ 
-        error: 'Subscription check failed', 
-        requiresSubscription: true 
-      }, { status: 402 })
-    }
-
-    if (!activeSub) {
-      console.log('❌ No active subscription found for user:', user.email)
+    // ✅ CRITICAL FIX: Treat ANY error or missing subscription as "no access"
+    if (subError || !activeSub) {
+      console.log('❌ Subscription validation failed:', {
+        user: user.email,
+        hasError: !!subError,
+        hasSubscription: !!activeSub,
+        errorMessage: subError?.message
+      })
       return NextResponse.json({ 
         error: 'Active subscription required', 
         requiresSubscription: true 
       }, { status: 402 })
     }
 
-    // Check Expiration
+    // ✅ SECURITY: Validate subscription hasn't expired
+    if (!activeSub.current_period_end) {
+      console.error('❌ Subscription missing expiration date:', activeSub)
+      return NextResponse.json({ 
+        error: 'Invalid subscription data', 
+        requiresSubscription: true 
+      }, { status: 402 })
+    }
+
     const periodEnd = new Date(activeSub.current_period_end)
     const now = new Date()
     
@@ -263,7 +266,7 @@ export async function POST(req) {
         expiredOn: periodEnd.toISOString()
       })
       
-      // Mark as expired
+      // Mark as expired BEFORE returning error
       await supabase
         .from('subscriptions')
         .update({ 
@@ -271,9 +274,20 @@ export async function POST(req) {
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
+        .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
       
       return NextResponse.json({ 
         error: 'Subscription expired', 
+        requiresSubscription: true 
+      }, { status: 402 })
+    }
+
+    // ✅ SECURITY: Verify status is explicitly valid
+    const VALID_STATUSES = ['active', 'trialing']
+    if (!VALID_STATUSES.includes(activeSub.status)) {
+      console.log('❌ Invalid subscription status:', activeSub.status)
+      return NextResponse.json({ 
+        error: 'Invalid subscription status', 
         requiresSubscription: true 
       }, { status: 402 })
     }
