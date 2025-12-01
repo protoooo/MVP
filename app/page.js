@@ -72,6 +72,21 @@ const GlobalStyles = () => (
       }
     }
 
+    /* Pop-In Animation for Pricing Card */
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    .animate-pop-in {
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
     @keyframes slideUpFade {
       0% {
         opacity: 0;
@@ -249,7 +264,7 @@ const Icons = {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={1.5}
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37.996.608 2.296.07 2.572-1.065z"
       />
       <path
         strokeLinecap="round"
@@ -864,11 +879,11 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-[#121212] border border-[#2C2C2C] rounded-3xl w-full max-w-5xl p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh]"
+        className="bg-[#121212] border border-[#2C2C2C] rounded-3xl w-full max-w-lg p-6 md:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] animate-pop-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -878,8 +893,8 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
           <Icons.X />
         </button>
 
-        <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
             Choose your protection level.
           </h2>
           <p className="text-[#888] text-sm">No hidden fees. Cancel anytime.</p>
@@ -887,7 +902,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
 
         <div className="flex justify-center">
           {/* Single Plan */}
-          <div className="bg-[#1C1C1C] border-2 border-[#3ECF8E] rounded-2xl p-8 flex flex-col relative max-w-md w-full shadow-[0_0_30px_-10px_rgba(62,207,142,0.3)]">
+          <div className="bg-[#1C1C1C] border-2 border-[#3ECF8E] rounded-2xl p-8 flex flex-col relative w-full shadow-[0_0_30px_-10px_rgba(62,207,142,0.3)]">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#3ECF8E] text-black px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm">
               Don&apos;t Get 86&apos;d
             </div>
@@ -937,7 +952,7 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading }) => {
           </div>
         </div>
 
-        <div className="mt-10 text-center max-w-md mx-auto opacity-60">
+        <div className="mt-8 text-center max-w-md mx-auto opacity-60">
           <p className="text-[10px] text-[#3ECF8E] uppercase tracking-widest font-bold mb-2">
             7-Day Free Trial • $86/month • Cancel Anytime
           </p>
@@ -1518,7 +1533,7 @@ export default function Page() {
           {!session ? (
             // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
             <div className="flex flex-col h-full w-full">
-                {/* Header - Changed to Flexbox to prevent overlaps */}
+                {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-sm md:text-base text-white">
                         protocolLM v.1
@@ -1527,21 +1542,21 @@ export default function Page() {
                     <div className="flex items-center gap-2 md:gap-6">
                          <button
                             onClick={() => setShowAuthModal(true)}
-                            className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap"
+                            className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap"
                         >
                             Start Free Trial
                         </button>
 
                         <button
                             onClick={() => setShowPricingModal(true)}
-                            className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-colors hidden sm:block"
+                            className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-transform active:scale-95 hidden sm:block"
                         >
                             Pricing
                         </button>
 
                         <button
                             onClick={() => setShowAuthModal(true)}
-                            className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-colors whitespace-nowrap"
+                            className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-transform active:scale-95 whitespace-nowrap"
                         >
                             Sign In
                         </button>
