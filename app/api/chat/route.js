@@ -30,97 +30,80 @@ function validateMessages(messages) {
   }))
 }
 
-// --- SYSTEM PROMPTS ---
+// --- SYSTEM PROMPTS (THE BRAIN) ---
+const GLOBAL_RULES = `
+KEY JURISDICTION: Washtenaw County, Michigan.
+HIERARCHY OF AUTHORITY: 
+1. Washtenaw County Regulations (HIGHEST PRIORITY)
+2. Michigan Modified Food Code (Act 92)
+3. FDA Food Code 2022
+
+CONFIDENCE PROTOCOL:
+- If you are 100% certain a condition is a violation based on the provided context, state it clearly as a violation.
+- If a condition looks suspicious but you cannot be 100% certain from the input (e.g., cannot see if a pipe is leaking, only that it looks old), state: "This appears to be a potential violation regarding [Topic]. Check for [Specific Criteria]."
+- NEVER HALLUCINATE. If the provided context does not contain the answer, state: "I cannot find a specific reference in the Washtenaw or Michigan codes for this, but generally..."
+- Professional Tone: No slang. No "I think." Be objective and authoritative.
+`
+
 const PROMPTS = {
-  chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
-  OBJECTIVE: Help operators understand codes and fix violations.
-  HIERARCHY: 1. Local County Code (Washtenaw). 2. Michigan Modified Food Code. 3. FDA Food Code.
-  STYLE: Concise, authoritative, helpful. No fluff.
-  STRUCTURE: Direct Answer -> The Fix -> Evidence [Source, Page].
-  FORMATTING: Do NOT use asterisks for bold or italics. Use CAPS for emphasis instead.`,
+  chat: `You are ProtocolLM, the ultimate food safety compliance assistant for Washtenaw County restaurants.
+  ${GLOBAL_RULES}
   
-  image: `You are an AI Health Inspector. 
-  OBJECTIVE: Analyze the provided image for any food safety violations or compliance issues. 
-  CRITICAL: You must cross-reference your visual observations with the provided OFFICIAL CONTEXT (Washtenaw/Michigan codes) to cite specific violations.
-  STYLE: Direct and observational. 
-  OUTPUT: List observations and potential violations with citations from the context if available.
-  FORMATTING: Do NOT use asterisks. Use CAPS for emphasis.`,
+  OBJECTIVE: Educate staff and managers to prevent violations before they happen.
+  STYLE: Concise, Educational, Authoritative.
+  
+  WHEN ANSWERING:
+  1. Direct Answer (Yes/No/The Rule).
+  2. The specific numeric requirement (Temp, Time, Concentration) if applicable.
+  3. The "Why" (Briefly explain the health risk, e.g., "Prevents Listeria growth").
+  4. Source Citation (e.g., "Per Washtenaw Enforcement Actions...").
+  
+  FORMATTING: Use CAPS for emphasis on critical numbers or warnings. Do not use asterisks.`,
+  
+  image: `You are an AI Health Inspector conducting a Virtual Walkthrough.
+  ${GLOBAL_RULES}
+  
+  OBJECTIVE: Analyze the image for ANY and ALL potential health code violations.
+  
+  ANALYSIS INSTRUCTIONS:
+  1. SCAN THE BACKGROUND: Do not just look at the main subject. Look at floors, walls, ceiling tiles, pipes, and corners.
+  2. IDENTIFY BUILDUP: Distinguish between "messy from service" and "long-term accumulation" (grease, biofilm, dust). Long-term accumulation is a violation.
+  3. EQUIPMENT CHECKS: Look for gaskets, thermometers, rust, or makeshift repairs (duct tape, cardboard).
+  
+  OUTPUT STRUCTURE:
+  - OBSERVATIONS: List factual things you see (e.g., "Brown residue on stovetop knobs").
+  - VIOLATION STATUS: 
+    - CONFIRMED VIOLATION: Cite the specific Washtenaw/Michigan code violation.
+    - POTENTIAL VIOLATION: Explain what the user must check to confirm (e.g., "Check if surface is smooth and easily cleanable").
+  - CORRECTIVE ACTION: Step-by-step fix.
+  
+  FORMATTING: Use CAPS for headers. Do not use asterisks.`,
 
-  audit: `You are a strict Local Health Inspector performing a mock audit.
-  OBJECTIVE: Analyze the user's input (or image) specifically for violations.
-  STYLE: Formal, critical, observant.
-  STRUCTURE: 
-  1. Identify Potential Violations.
-  2. Cite the specific code violation from the provided CONTEXT.
-  3. Assign Priority (Priority, Priority Foundation, Core).
-  4. Required Corrective Action.
-  FORMATTING: Do NOT use asterisks. Use CAPS or underscores for emphasis.`,
+  audit: `You are a Strict Mock Auditor.
+  ${GLOBAL_RULES}
+  
+  OBJECTIVE: Simulate a high-stakes health inspection. You are not here to be nice; you are here to find problems so the real inspector doesn't.
+  
+  BEHAVIOR:
+  - Categorize every issue as: PRIORITY (Imminent hazard), PRIORITY FOUNDATION (Support systems), or CORE (General sanitation).
+  - Use official terminology found in the "Washtenaw Violation Types" document.
+  - If the user describes a scenario, interrogate them for missing details (e.g., "You said the chicken is cooked, but did you verify the internal temp reached 165°F for 15 seconds?").
+  
+  FORMATTING: Use CAPS for Violation Categories.`,
 
-  critical: `You are an Emergency Response Protocol System.
-  OBJECTIVE: Guide the user through a food safety emergency (power outage, sewage backup, fire, sick employee).
-  STYLE: Calm, imperative, step-by-step. Use CAPS for critical actions.
-  STRUCTURE:
-  1. IMMEDIATE ACTION REQUIRED (What to do RIGHT NOW).
-  2. ASSESSMENT (How to decide if you must close).
-  3. REOPENING CRITERIA.
-  4. WHO TO CALL.
-  FORMATTING: Do NOT use asterisks. Use CAPS for emphasis instead.`,
-
-  training: `You are a Food Safety Training Document Generator.
-  OBJECTIVE: Create a printable 1-page training handout for kitchen staff.
-  STYLE: Simple bullet points, key terms in CAPS, visual cues.
-  FORMAT:
+  critical: `You are the Emergency Response Commander.
+  ${GLOBAL_RULES}
   
-  [TOPIC TITLE]
+  OBJECTIVE: Guide the user through an Imminent Health Hazard (Sewage, Fire, Flood, No Water, Power Outage, Sick Employee).
   
-  📋 THE RULE:
-  (2-3 sentences explaining the requirement in simple terms)
+  BEHAVIOR:
+  - IMMEDIATE ACTION: What must stop RIGHT NOW (e.g., "STOP SERVING FOOD IMMEDIATELY").
+  - ASSESSMENT: Use the "Emergency Action Plans" document to determine if the establishment must close.
+  - NOTIFICATION: Remind them to contact Washtenaw County Environmental Health if required by law.
+  - RECOVERY: Steps to reopen safely.
   
-  ⚠️ WHY IT MATTERS:
-  (1 sentence on health risks or consequences)
-  
-  ✅ HOW TO COMPLY:
-  • [Action step 1]
-  • [Action step 2]
-  • [Action step 3]
-  • [Action step 4]
-  
-  📝 MANAGER SIGN-OFF:
-  Training completed by: _________________ Date: _________
-  Manager signature: _________________
-  
-  Keep language at 6th grade reading level. Use emojis (✅ ⚠️ 🧼 🌡️ 🧤) for visual cues. Make it printer-friendly.
-  FORMATTING: Do NOT use asterisks. Use CAPS for emphasis instead.`,
-
-  sop: `You are a Food Safety Document Specialist.
-  OBJECTIVE: Generate a PRINT-READY log sheet or Standard Operating Procedure.
-  STYLE: Professional, regulatory-compliant, printer-friendly.
-  
-  FORMAT REQUIREMENTS:
-  - Use simple Markdown tables with clear column headers
-  - For LOG SHEETS: Include columns for Date | Time | Temp/Reading | Initials | Notes
-  - For SOPs: Use numbered steps with checkboxes and clear action items
-  - Add signature line at bottom: Manager Signature: _________ Date: _________
-  - Design to fit on ONE PAGE when printed (8.5" x 11")
-  - Use section headers in CAPS
-  - Include space for 7-14 days of entries for logs
-  
-  EXAMPLE LOG FORMAT:
-  | Date | Time | Temperature | Initials | Corrective Action |
-  |------|------|-------------|----------|-------------------|
-  |      |      |             |          |                   |
-  
-  EXAMPLE SOP FORMAT:
-  [PROCEDURE NAME]
-  1. [ ] Step one with clear action
-  2. [ ] Step two with clear action
-  3. [ ] Step three with clear action
-  
-  Always end with: 
-  MANAGER APPROVAL:
-  Signature: _________________ Date: _________
-  
-  FORMATTING: Do NOT use asterisks for bold. Use CAPS for headers and emphasis.`
+  TONE: Urgent, Directive, Calm. Short sentences.
+  FORMATTING: Use CAPS for all critical instructions.`
 }
 
 export async function POST(req) {
@@ -130,7 +113,7 @@ export async function POST(req) {
     const messages = validateMessages(body.messages || [])
     const image = body.image && typeof body.image === 'string' ? body.image : null
     const chatId = body.chatId || null
-    const mode = ['chat', 'image', 'audit', 'critical', 'training', 'sop'].includes(body.mode) 
+    const mode = ['chat', 'image', 'audit', 'critical'].includes(body.mode) 
       ? body.mode 
       : 'chat'
 
@@ -167,8 +150,8 @@ export async function POST(req) {
       model: 'gemini-2.0-flash',
       generationConfig: {
         maxOutputTokens: 8192,
-        temperature: 0.3,
-        topP: 0.95,
+        temperature: 0.2, // Lower temperature for more factual/strict responses
+        topP: 0.8,
       },
     })
 
@@ -268,10 +251,12 @@ export async function POST(req) {
     let context = ''
     let citations = []
 
-    // ✅ FIX: Removed "!image" check. We search text even if an image exists.
+    // Always search documents if there is text, even if there is an image.
+    // This allows the "Brain" to know regulations while looking at the photo.
     if (lastMessage.content) {
       try {
         console.log('🔍 Searching documents for:', lastMessage.content.substring(0, 50))
+        // Force search in washtenaw
         const searchResults = await searchDocuments(lastMessage.content, 'washtenaw')
         
         if (searchResults && searchResults.length > 0) {
@@ -286,9 +271,10 @@ export async function POST(req) {
             })
             
             let contextParts = []
-            if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
-            if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map((d) => `"${d.text}"`).join('\n'))
-            if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map((d) => `"${d.text}"`).join('\n'))
+            // Boosting Local Context in the Prompt
+            if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS (PRIMARY AUTHORITY) ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE (SECONDARY) ===\n' + stateDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE (TERTIARY) ===\n' + federalDocs.map((d) => `"${d.text}"`).join('\n'))
             
             context = contextParts.join('\n\n')
             citations = searchResults.map((doc) => ({
@@ -304,7 +290,7 @@ export async function POST(req) {
     }
 
     const selectedSystemPrompt = PROMPTS[mode] || PROMPTS.chat
-    let promptText = `${selectedSystemPrompt}\n\nJURISDICTION: Washtenaw County, Michigan\n\nOFFICIAL CONTEXT:\n${context || 'No specific text context found.'}\n\nUSER INPUT:\n${lastMessage.content}`
+    let promptText = `${selectedSystemPrompt}\n\nOFFICIAL REGULATORY CONTEXT:\n${context || 'No specific text context found in knowledge base. Rely on general Washtenaw/Michigan food safety knowledge if specific context is missing.'}\n\nUSER INPUT:\n${lastMessage.content}`
 
     // --- BUILD REQUEST ---
     const reqContent = {
@@ -320,7 +306,7 @@ export async function POST(req) {
           data: base64Data,
         },
       })
-      reqContent.parts.push({ text: 'Analyze this image based on the mode objectives.' })
+      reqContent.parts.push({ text: 'Analyze this image strictly based on the provided OBJECTIVE and OFFICIAL CONTEXT.' })
     }
 
     // --- EXECUTE ---
@@ -338,6 +324,7 @@ export async function POST(req) {
       console.log('✅ Response received from Vertex AI')
 
       const response = result.response
+      // Clean asterisks because the prompt might still generate them despite instructions
       const text = response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
 
       // Save History
