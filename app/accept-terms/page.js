@@ -1,6 +1,4 @@
 // app/accept-terms/page.js
-// COMPLETE REWRITE - FIXES INFINITE LOOP
-
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
@@ -13,9 +11,6 @@ export default function AcceptTermsPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  // ============================================
-  // STEP 1: Verify user is authenticated
-  // ============================================
   useEffect(() => {
     async function checkAuth() {
       const { data: { user: currentUser } } = await supabase.auth.getUser()
@@ -28,7 +23,6 @@ export default function AcceptTermsPage() {
       
       setUser(currentUser)
       
-      // Check if terms already accepted
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('accepted_terms, accepted_privacy')
@@ -36,17 +30,14 @@ export default function AcceptTermsPage() {
         .single()
       
       if (profile?.accepted_terms && profile?.accepted_privacy) {
-        console.log('✅ Terms already accepted, redirecting')
-        router.push('/')
+        console.log('✅ Terms already accepted, redirecting to pricing')
+        router.push('/?showPricing=true')
       }
     }
     
     checkAuth()
   }, [])
 
-  // ============================================
-  // STEP 2: Handle Accept
-  // ============================================
   const handleAgree = async () => {
     if (!user) {
       setError('Not authenticated')
@@ -59,8 +50,6 @@ export default function AcceptTermsPage() {
     try {
       console.log('📝 Updating terms acceptance for user:', user.id)
       
-      // CRITICAL FIX: Use service role key for guaranteed update
-      // This bypasses RLS restrictions on profile update
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({ 
@@ -77,23 +66,10 @@ export default function AcceptTermsPage() {
         return
       }
 
-      console.log('✅ Terms accepted successfully')
+      console.log('✅ Terms accepted, redirecting to pricing')
       
-      // CRITICAL: Force session refresh before redirect
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        setError('Session expired. Please sign in again.')
-        setLoading(false)
-        return
-      }
-
-      // Small delay to ensure DB propagation
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Redirect to pricing page for subscription
-      console.log('✅ Redirecting to pricing')
-      window.location.href = '/pricing'
+      // ✅ FIX: Redirect to home with pricing modal trigger
+      window.location.href = '/?showPricing=true'
       
     } catch (err) {
       console.error('❌ Exception:', err)
@@ -102,9 +78,6 @@ export default function AcceptTermsPage() {
     }
   }
 
-  // ============================================
-  // STEP 3: Handle Decline
-  // ============================================
   const handleDecline = async () => {
     await supabase.auth.signOut()
     router.push('/')
@@ -120,9 +93,8 @@ export default function AcceptTermsPage() {
 
   return (
     <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4 font-sans">
-      <div className="max-w-md w-full bg-[#1C1C1C] border border-[#333] rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+      <div className="max-w-md w-full bg-[#1C1C1C] border border-[#333] rounded-2xl p-8 shadow-2xl">
         
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">Update Required</h1>
           <p className="text-[#A1A1AA] text-sm leading-relaxed">
@@ -130,14 +102,12 @@ export default function AcceptTermsPage() {
           </p>
         </div>
 
-        {/* Error Display */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Links */}
         <div className="space-y-3 mb-8">
           <a 
             href="/terms" 
@@ -162,7 +132,6 @@ export default function AcceptTermsPage() {
           </a>
         </div>
 
-        {/* Actions */}
         <div className="space-y-3">
           <button
             onClick={handleAgree}
@@ -185,14 +154,6 @@ export default function AcceptTermsPage() {
             Decline and Sign Out
           </button>
         </div>
-
-        {/* Debug Info (Remove in production) */}
-        <div className="mt-6 p-3 bg-[#0A0A0A] rounded-lg border border-[#2E2E2E]">
-          <p className="text-xs text-[#666] font-mono">
-            User ID: {user.id.substring(0, 8)}...
-          </p>
-        </div>
-
       </div>
     </div>
   )
