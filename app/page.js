@@ -6,23 +6,31 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA (Cleaned Up)
+// DOCUMENT SOURCES DATA (Complete List)
 // ==========================================
 const SOURCE_DOCUMENTS = [
+  'Washtenaw Violation Types',
   'Washtenaw Enforcement Actions',
-  'Sanitizing Protocols',
-  'FDA Food Code 2022',
+  'Washtenaw Inspection Report Types',
+  'Washtenaw Food Service Inspection Program',
+  'Washtenaw 3-Compartment Sink Guide',
   'Michigan Modified Food Code',
-  'Emergency Action Plans',
+  'FDA Food Code 2022',
+  'Emergency Action Plans (Retail Food)',
   'Norovirus Cleaning Guidelines',
   'Fats, Oils, & Grease (FOG) Protocol',
   'Cross-Contamination Prevention',
   'Consumer Advisory Guidelines',
   'Allergen Awareness Standards',
-  'Time & Temp Control (TCS)',
+  'Food Cooling Protocols',
   'Food Labeling Guide',
   'Date Marking Guide',
   'USDA Safe Minimum Temps',
+  'Internal Cooking Temperatures',
+  'Foodborne Illness Response Guide',
+  'Michigan Food Law (Act 92)',
+  'MI Admin & Enforcement Procedures',
+  'New Business Info Packet',
 ]
 
 // ==========================================
@@ -33,7 +41,6 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
-      /* FIX: Use dynamic viewport height for mobile browsers */
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -410,7 +417,7 @@ const Icons = {
 }
 
 // ==========================================
-// SOURCE TICKER COMPONENT (Fixed Width & Location)
+// SOURCE TICKER COMPONENT
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -423,13 +430,13 @@ const SourceTicker = () => {
   }, [])
 
   return (
-    <div className="flex justify-center mt-2"> {/* Reduced top margin to sit close to input */}
+    <div className="flex justify-center mt-2">
       <div className="flex items-center gap-3 px-4 py-1.5 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
-        {/* REMOVED BOOKMARK ICON */}
-        <div className="w-[280px] md:w-[500px] text-center overflow-hidden h-4 relative">
+        {/* TIGHTENED WIDTH from 500px to 340px for tighter look */}
+        <div className="w-[260px] md:w-[340px] text-center overflow-hidden h-4 relative">
           <div
             key={index}
-            className="absolute inset-0 flex items-center justify-center text-[10px] text-[#525252] font-medium tracking-wider animate-source-ticker uppercase"
+            className="absolute inset-0 flex items-center justify-center text-[10px] md:text-xs text-[#525252] font-medium tracking-wider animate-source-ticker uppercase"
           >
             {SOURCE_DOCUMENTS[index]}
           </div>
@@ -933,7 +940,8 @@ export default function Page() {
           // 1. If NO Active Subscription -> Stop here, Show Pricing, Don't Check Terms yet
           if (!activeSub || !activeSub.current_period_end) {
             setHasActiveSubscription(false)
-            setShowPricingModal(true)
+            // ✅ FIXED: ONLY SHOW PRICING IF LOGGED IN
+            if (currentSession) setShowPricingModal(true)
             setIsLoading(false) // Stop loading screen to show pricing
             return
           }
@@ -951,7 +959,7 @@ export default function Page() {
               .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
 
             setHasActiveSubscription(false)
-            setShowPricingModal(true)
+            if (currentSession) setShowPricingModal(true)
             setIsLoading(false)
             return
           }
@@ -1522,9 +1530,11 @@ export default function Page() {
             <div className="flex flex-col h-full w-full">
                 {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
-                    <div className="font-semibold tracking-tight text-sm md:text-base text-white">
+                    <div className="font-semibold tracking-tight text-lg md:text-xl text-white">
                         protocol<span className="text-[#3E7BFA]">LM</span>
-                        <span className="hidden md:inline text-[#525252] ml-3 font-normal">|&nbsp;&nbsp;Trained on Washtenaw, MI & FDA Regs</span>
+                        <span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">
+                          Trained on Washtenaw, MI & FDA Regs
+                        </span>
                     </div>
                     
                     <div className="flex items-center gap-2 md:gap-6">
