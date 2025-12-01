@@ -732,9 +732,10 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // ✅ FIX 404: Use window.location.origin so the link is always correct
+  // ✅ FIX: Use env var to match Supabase whitelist
   const getRedirectUrl = () => {
-    return `${window.location.origin}/auth/callback`
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
+    return `${baseUrl}/auth/callback`
   }
 
   const handleEmailAuth = async (e) => {
@@ -876,6 +877,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // PRICING MODAL
 // ==========================================
 const PricingModal = ({ isOpen, onClose, handleCheckout, loading, setLoading }) => {
+  // ✅ FIX: Clear loading state when modal closes
   const handleClose = () => {
     if (setLoading) setLoading(null)
     onClose()
@@ -888,10 +890,16 @@ const PricingModal = ({ isOpen, onClose, handleCheckout, loading, setLoading }) 
       className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={handleClose}
     >
+      {/* 
+          1. Removed the outer bg container that held the header/footer. 
+          2. The Card itself is now the "modal content".
+          3. Added onClick stopPropagation to the card so clicking inside doesn't close it.
+      */}
       <div 
         className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button positioned inside the card */}
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
@@ -981,6 +989,8 @@ export default function Page() {
   const inputRef = useRef(null)
   const userMenuRef = useRef(null)
   
+  // FIX: LAZY INITIALIZATION OF SUPABASE CLIENT
+  // This prevents creating a new connection on every render
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
@@ -1014,9 +1024,11 @@ export default function Page() {
             .single()
           setProfile(userProfile)
           
+          // After loading profile:
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
             console.log('🔍 Checking subscription...')
             
+            // ✅ FIX: Explicit column selection to avoid ambiguous column errors
             const { data: activeSub, error: subError } = await supabase
               .from('subscriptions')
               .select('status, current_period_end, plan, stripe_subscription_id')
@@ -1033,6 +1045,7 @@ export default function Page() {
               setHasActiveSubscription(false)
               setShowPricingModal(true)
             } else {
+              // ✅ FIX: Handle missing current_period_end
               if (!activeSub.current_period_end) {
                 console.error('❌ Subscription missing expiration date:', activeSub)
                 setHasActiveSubscription(false)
@@ -1040,10 +1053,12 @@ export default function Page() {
                 return
               }
 
+              // Verify not expired
               const periodEnd = new Date(activeSub.current_period_end)
               if (periodEnd < new Date()) {
                 console.log('❌ Subscription expired:', periodEnd.toISOString())
                 
+                // ✅ ADD THIS: Mark as expired in database
                 await supabase
                   .from('subscriptions')
                   .update({ 
@@ -1092,6 +1107,7 @@ export default function Page() {
           .single()
         setProfile(userProfile)
         
+        // Check subscription again on auth change
         if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
             const { data: activeSub, error: subError } = await supabase
               .from('subscriptions')
@@ -1123,7 +1139,7 @@ export default function Page() {
       subscription.unsubscribe()
       clearTimeout(timer)
     }
-  }, []) 
+  }, []) // Empty dependency array is correct now that supabase is stable
 
   const loadChatHistory = async () => {
     const { data: chats } = await supabase
@@ -1212,6 +1228,7 @@ export default function Page() {
     }
   }
 
+  // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN
   const handleCheckout = async (priceId, planName) => {
     console.log('🛒 Checkout initiated:', { priceId, planName })
     
@@ -1227,6 +1244,7 @@ export default function Page() {
     }
 
     try {
+      // Get fresh session token
       const {
         data: { session: currentSession },
       } = await supabase.auth.getSession()
@@ -1286,6 +1304,7 @@ export default function Page() {
       return
     }
 
+    // ✅ CRITICAL: Block if no active subscription
     if (!hasActiveSubscription) {
       console.log('❌ Blocked: No active subscription')
       setShowPricingModal(true)
@@ -1311,6 +1330,7 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
 
+    // placeholder assistant msg
     setMessages((p) => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
@@ -1352,12 +1372,14 @@ export default function Page() {
       }
 
       if (res.status === 402) {
+        // Subscription required
         setShowPricingModal(true)
         setMessages((p) => p.slice(0, -2))
         return
       }
 
       if (res.status === 403) {
+        // Terms not accepted
         router.push('/accept-terms')
         setMessages((p) => p.slice(0, -2))
         return
@@ -1382,6 +1404,7 @@ export default function Page() {
     }
   }
 
+  // ENHANCED SECURITY IMAGE HANDLER
   const handleImage = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -1392,15 +1415,17 @@ export default function Page() {
       return
     }
 
+    // SECURITY: Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
       alert('Image must be under 10MB')
-      e.target.value = '' 
+      e.target.value = '' // Reset file input
       return
     }
 
+    // SECURITY: Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Only image files are allowed')
-      e.target.value = '' 
+      e.target.value = '' // Reset file input
       return
     }
 
@@ -1411,7 +1436,7 @@ export default function Page() {
     } catch (error) {
       console.error('Image compression error:', error)
       alert('Failed to process image. Please try a different file.')
-      e.target.value = '' 
+      e.target.value = '' // Reset file input
     }
   }
 
@@ -1451,6 +1476,7 @@ export default function Page() {
         className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex"
         style={{ height: '100dvh' }}
       >
+        {/* Subscription Warning Banner */}
         {session && !isLoading && !hasActiveSubscription && (
           <div className="fixed top-0 left-0 right-0 bg-red-600 text-white px-4 py-2 text-center text-sm font-medium z-50">
             ⚠️ Active subscription required. 
@@ -1470,6 +1496,7 @@ export default function Page() {
           />
         )}
 
+        {/* Sidebar (only when logged in) */}
         {session && (
           <aside
             className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
@@ -1559,7 +1586,9 @@ export default function Page() {
           </aside>
         )}
 
+        {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
+          {/* Mobile header only when logged in */}
           {session && (
             <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
               <button
@@ -1579,7 +1608,9 @@ export default function Page() {
           )}
 
           {!session ? (
+            // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
             <div className="flex flex-col h-full w-full">
+                {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-sm md:text-base text-white">
                         protocolLM v.1
@@ -1609,7 +1640,9 @@ export default function Page() {
                     </div>
                 </header>
 
+                {/* Main Content Centered */}
                 <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
+                    {/* INPUT BOX - Adjusted spacing for mobile */}
                     <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0">
                         <InputBox
                         input={input}
@@ -1626,6 +1659,7 @@ export default function Page() {
                         />
                     </div>
 
+                    {/* SUBTITLE - Responsive text size */}
                     <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-4 md:mt-6 font-medium text-center px-4">
                         Trained on{' '}
                         <span className="text-white font-semibold">
@@ -1634,10 +1668,12 @@ export default function Page() {
                         &amp; FDA Regulations
                     </p>
 
+                    {/* SOURCE TICKER - Hidden on small mobile */}
                     <div className="hidden sm:block">
                         <SourceTicker />
                     </div>
 
+                    {/* FOOTER LINKS - Responsive positioning */}
                     <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
                         <Link
                         href="/privacy"
@@ -1655,6 +1691,7 @@ export default function Page() {
                 </div>
             </div>
           ) : (
+            // LOGGED-IN VIEW
             <>
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
