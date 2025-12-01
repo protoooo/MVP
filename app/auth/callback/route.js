@@ -10,19 +10,10 @@ export async function GET(request) {
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
   
-  // ✅ CRITICAL: Use env var consistently
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  // ✅ CRITICAL: Use env var, NOT requestUrl.origin
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org'
   
-  if (!baseUrl) {
-    console.error('❌ CRITICAL: NEXT_PUBLIC_BASE_URL not set!')
-    return NextResponse.redirect(`${requestUrl.origin}/?error=config`)
-  }
-
-  console.log('🔄 Auth callback received:', {
-    hasCode: !!code,
-    hasError: !!error,
-    baseUrl
-  })
+  console.log('🔄 Auth callback:', { hasCode: !!code, hasError: !!error, baseUrl })
 
   // Handle OAuth errors
   if (error) {
@@ -67,7 +58,7 @@ export async function GET(request) {
       return NextResponse.redirect(`${baseUrl}/?error=auth_failed`)
     }
 
-    console.log('✅ Session established for:', data.user?.email)
+    console.log('✅ Session established:', data.user?.email)
 
     // Check if user needs to accept terms
     if (data.user) {
@@ -78,12 +69,12 @@ export async function GET(request) {
         .single()
 
       if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-        console.log('⚠️ User needs to accept terms')
+        console.log('⚠️ Redirecting to terms acceptance')
         return NextResponse.redirect(`${baseUrl}/accept-terms`)
       }
     }
   }
 
-  // ✅ Always use baseUrl, never requestUrl.origin
+  // ✅ Always redirect to baseUrl
   return NextResponse.redirect(`${baseUrl}${next}`)
 }
