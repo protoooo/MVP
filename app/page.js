@@ -409,7 +409,7 @@ const Icons = {
 }
 
 // ==========================================
-// SOURCE TICKER COMPONENT (Improved Styling)
+// SOURCE TICKER COMPONENT (Updated)
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -422,14 +422,14 @@ const SourceTicker = () => {
   }, [])
 
   return (
-    <div className="flex justify-center mt-4">
-      <div className="flex items-center gap-3 px-5 py-2 rounded-full border border-[#444] bg-[#161616]/80 backdrop-blur-sm">
-        <span className="text-[#3E7BFA]"><Icons.Book /></span>
-        {/* INCREASED WIDTH AND FONT SIZE */}
-        <div className="w-[280px] md:w-[400px] text-center overflow-hidden h-5 relative">
+    <div className="flex justify-center mt-2">
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/20 bg-[#161616]/80 backdrop-blur-sm">
+        {/* REMOVED BOOKMARK ICON COMPLETELY */}
+        {/* FIXED WIDTH AND CENTERED TEXT */}
+        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
-            className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-[#EDEDED] font-medium tracking-wider animate-source-ticker uppercase"
+            className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-[#EDEDED] font-medium tracking-wide animate-source-ticker uppercase"
           >
             {SOURCE_DOCUMENTS[index]}
           </div>
@@ -440,7 +440,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT
+// INPUT COMPONENT (Cleaned Up)
 // ==========================================
 const InputBox = ({
   input,
@@ -454,11 +454,11 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session
+  session // PASSED SESSION PROP
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    // ONLY OPEN FILE PICKER IF LOGGED IN
+    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
     if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
@@ -471,7 +471,7 @@ const InputBox = ({
       case 'image':
         return '#F5A623'
       case 'audit':
-        return '#3ECF8E' // Green
+        return '#3ECF8E' // Green for Audit
       case 'critical':
         return '#EF4444'
       default:
@@ -511,7 +511,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit */}
+          {/* Audit (Green) */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -554,7 +554,7 @@ const InputBox = ({
         </div>
       )}
 
-      {/* DYNAMIC BORDER COLOR FORM (Thicker Border: border-2) */}
+      {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
         className="relative flex items-end w-full bg-[#161616] border-2 rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
@@ -629,9 +629,6 @@ const InputBox = ({
           )}
         </button>
       </form>
-      
-      {/* TICKER MOVED BELOW INPUT BOX */}
-      {!session && <SourceTicker />}
     </div>
   )
 }
@@ -1573,7 +1570,7 @@ export default function Page() {
                         />
                     </div>
 
-                    {/* TICKER MOVED BELOW INPUT - WITH WHITE TEXT/BORDER & WIDER */}
+                    {/* TICKER MOVED BELOW INPUT - REMOVED EXTRA "TRAINED ON" TEXT */}
                     {!session && <SourceTicker />}
 
                     {/* FOOTER LINKS - Responsive positioning */}
