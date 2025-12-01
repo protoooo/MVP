@@ -9,19 +9,20 @@ import { compressImage } from '@/lib/imageCompression'
 // DOCUMENT SOURCES DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  'FDA Food Code Regulations',
+  'Washtenaw County Enforcement Procedures',
   'Michigan Modified Food Code',
-  'County Enforcement Procedures',
-  'USDA Safe Minimum Internal Temps',
-  'Michigan Food Law (Act 92)',
-  'Emergency Action Plans',
+  'FDA Food Code Regulations',
+  'Emergency Action Plans (Retail Food)',
   'Norovirus Cleaning Guidelines',
-  'FOG (Fats, Oils, & Grease) Protocol',
+  'Foodborne Illness Response Guide',
+  'Fats, Oils, & Grease (FOG) Protocol',
+  'Allergen Awareness Standards',
+  'Time & Temperature Control Safety',
   'Cross-Contamination Prevention',
   'Consumer Advisory Guidelines',
-  'Allergen Awareness Standards',
-  'Food Cooling & Holding Criteria',
-  'Food Date Marking Guide',
+  'Michigan Food Law (Act 92)',
+  'USDA Safe Minimum Internal Temps',
+  'Food Labeling & Date Marking',
 ]
 
 // ==========================================
@@ -32,6 +33,7 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
+      /* FIX: Use dynamic viewport height for mobile browsers */
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -381,6 +383,40 @@ const Icons = {
       />
     </svg>
   ),
+  AcademicCap: () => (
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path d="M12 14l9-5-9-5-9 5 9 5z" />
+      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+      />
+    </svg>
+  ),
+  Table: () => (
+    <svg
+      width="20"
+      height="20"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+      />
+    </svg>
+  ),
 
   // Pricing Icons
   Check: ({ color = 'text-[#EDEDED]' }) => (
@@ -469,7 +505,7 @@ const InputBox = ({
       case 'image':
         return '#F5A623'
       case 'audit':
-        return '#FDD901'
+        return '#3ECF8E' // Green for Audit
       case 'critical':
         return '#EF4444'
       default:
@@ -482,17 +518,14 @@ const InputBox = ({
   return (
     // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
-      <div className="relative flex justify-start md:justify-center w-full mb-3 md:mb-4">
+      <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* Left fade */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
-
-        {/* Scrollable container */}
-        <div className="flex items-center gap-2 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
+        {/* CENTERED BUTTON ROW - No Scrolls, No Arrows */}
+        <div className="flex items-center justify-center gap-2 md:gap-3 flex-wrap w-full">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'chat'
                 ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -504,7 +537,7 @@ const InputBox = ({
           {/* Image */}
           <button
             onClick={() => handleModeClick('image')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'image' || selectedImage
                 ? 'text-[#F5A623] bg-[#F5A623]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -513,12 +546,12 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit */}
+          {/* Audit (Now Green) */}
           <button
             onClick={() => handleModeClick('audit')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'audit'
-                ? 'text-[#FDD901] bg-[#FDD901]/10'
+                ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
             }`}
           >
@@ -528,7 +561,7 @@ const InputBox = ({
           {/* Urgent */}
           <button
             onClick={() => handleModeClick('critical')}
-            className={`relative group flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'critical'
                 ? 'text-[#EF4444] bg-[#EF4444]/10'
                 : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
@@ -536,25 +569,6 @@ const InputBox = ({
           >
             <Icons.Alert /> <span>Urgent</span>
           </button>
-        </div>
-
-        {/* Right fade + CLEAN ARROW (No Text) */}
-        <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-3">
-            <svg
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="#3E7BFA"
-                className="animate-pulse drop-shadow-md"
-            >
-                <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M9 5l7 7-7 7"
-                />
-            </svg>
         </div>
       </div>
 
@@ -614,7 +628,7 @@ const InputBox = ({
               : activeMode === 'image'
               ? 'Upload an image...'
               : activeMode === 'audit'
-              ? 'Describe area...'
+              ? 'Describe the area to audit...'
               : 'Describe the emergency...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
@@ -635,7 +649,8 @@ const InputBox = ({
               !input.trim() && !selectedImage
                 ? '#525252'
                 : activeMode === 'chat' ||
-                  activeMode === 'critical'
+                  activeMode === 'critical' ||
+                  activeMode === 'audit'
                 ? 'white'
                 : 'black',
             cursor:
@@ -1190,6 +1205,7 @@ export default function Page() {
       if (!res.ok) {
         const errorData = await res.json()
         console.error('❌ API Error:', errorData)
+        // THROW ERROR TO BE CAUGHT BELOW
         throw new Error(errorData.error || 'API Error')
       }
 
@@ -1210,6 +1226,7 @@ export default function Page() {
       console.error('❌ Checkout error:', error)
       alert(`Checkout failed: ${error.message}. Please try again or contact support.`)
     } finally {
+      // ✅ CRITICAL: Always reset loading state
       setCheckoutLoading(null)
     }
   }
