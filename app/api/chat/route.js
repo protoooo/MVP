@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// ✅ FIX: Force dynamic to prevent caching issues with Auth
 export const dynamic = 'force-dynamic'
 
 // --- UTILITIES ---
@@ -37,7 +38,7 @@ function validateMessages(messages) {
   }))
 }
 
-// --- PROMPTS (unchanged) ---
+// --- FULL SYSTEM PROMPTS (RESTORED) ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
   OBJECTIVE: Help operators understand codes and fix violations.
@@ -141,6 +142,8 @@ export async function POST(req) {
       ? body.mode 
       : 'chat'
 
+    console.log('📝 Chat API Request:', { mode, county, hasImage: !!image, messageCount: messages.length })
+
     // --- VERTEX AI SETUP ---
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
     const location = 'us-central1'
@@ -168,15 +171,17 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     
-    // ✅ FIX: Use the correct stable model name
+    // ✅ CRITICAL FIX: Use stable GA model
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp', // STABLE MODEL
+      model: 'gemini-2.0-flash', // STABLE GA MODEL (not -001 or -exp)
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
         topP: 0.95,
       },
     })
+
+    console.log('✅ Vertex AI initialized with gemini-2.0-flash')
 
     // --- AUTHENTICATION & SUBSCRIPTION CHECK ---
     const cookieStore = cookies()
@@ -195,6 +200,7 @@ export async function POST(req) {
       }
     )
 
+    // ✅ FIX: Use getUser for strictly server-side auth validation
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -204,7 +210,7 @@ export async function POST(req) {
 
     console.log('✅ User authenticated:', user.email)
 
-    // ✅ FIX: Check Terms Acceptance FIRST
+    // Check Terms
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('accepted_terms, accepted_privacy')
@@ -218,13 +224,10 @@ export async function POST(req) {
 
     if (!profile.accepted_terms || !profile.accepted_privacy) {
       console.log('⚠️ Terms not accepted')
-      return NextResponse.json({ 
-        error: 'Please accept terms', 
-        requiresTerms: true 
-      }, { status: 403 })
+      return NextResponse.json({ error: 'Please accept terms', requiresTerms: true }, { status: 403 })
     }
 
-    // ✅ CRITICAL FIX: Strict Subscription Validation
+    // ✅ CRITICAL: Strict Subscription Check
     console.log('🔍 Checking subscription status...')
     
     const { data: activeSub, error: subError } = await supabase
@@ -243,21 +246,24 @@ export async function POST(req) {
     }
 
     if (!activeSub) {
-      console.log('❌ No active subscription found')
+      console.log('❌ No active subscription found for user:', user.email)
       return NextResponse.json({ 
         error: 'Active subscription required', 
         requiresSubscription: true 
       }, { status: 402 })
     }
 
-    // Check if subscription expired
+    // Check Expiration
     const periodEnd = new Date(activeSub.current_period_end)
     const now = new Date()
     
     if (periodEnd < now) {
-      console.log('❌ Subscription expired:', periodEnd.toISOString())
+      console.log('❌ Subscription expired:', {
+        user: user.email,
+        expiredOn: periodEnd.toISOString()
+      })
       
-      // Mark as expired in database
+      // Mark as expired
       await supabase
         .from('subscriptions')
         .update({ 
@@ -272,18 +278,21 @@ export async function POST(req) {
       }, { status: 402 })
     }
 
-    console.log('✅ Valid subscription:', {
+    console.log('✅ Valid subscription verified:', {
+      user: user.email,
       plan: activeSub.plan,
       status: activeSub.status,
-      expires: periodEnd.toISOString()
+      expires: periodEnd.toLocaleDateString()
     })
 
     // Check Rate Limits
     const limitCheck = await checkRateLimit(user.id)
     if (!limitCheck.success) {
+      console.log('⚠️ Rate limit exceeded:', limitCheck.message)
       return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
     }
     if (image && limitCheck.currentImages >= limitCheck.imageLimit) {
+      console.log('⚠️ Image limit exceeded')
       return NextResponse.json({ error: 'Image limit reached', limitReached: true }, { status: 429 })
     }
 
@@ -295,11 +304,18 @@ export async function POST(req) {
     // RAG (Search Documents) if not image mode
     if (lastMessage.content && !image) {
       try {
+        console.log('🔍 Searching documents for:', lastMessage.content.substring(0, 50))
         const searchResults = await searchDocuments(lastMessage.content, county)
         if (searchResults && searchResults.length > 0) {
             const countyDocs = searchResults.filter((d) => d.docType === 'county')
             const stateDocs = searchResults.filter((d) => d.docType === 'state')
             const federalDocs = searchResults.filter((d) => d.docType === 'federal')
+            
+            console.log('📚 Search results:', {
+              county: countyDocs.length,
+              state: stateDocs.length,
+              federal: federalDocs.length
+            })
             
             let contextParts = []
             if (countyDocs.length > 0) contextParts.push('=== LOCAL COUNTY REGULATIONS ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
@@ -311,6 +327,8 @@ export async function POST(req) {
                 document: doc.source.replace('.pdf', ''),
                 pages: [doc.page],
             }))
+        } else {
+          console.log('⚠️ No search results found')
         }
       } catch (err) {
         console.error('❌ Search error:', err)
@@ -343,41 +361,58 @@ export async function POST(req) {
 
     console.log('🚀 Sending request to Vertex AI...')
     
-    const result = await generativeModel.generateContent({
-        contents: [reqContent]
-    })
-    clearTimeout(timeoutId)
-
-    console.log('✅ Response received from Vertex AI')
-
-    const response = result.response
-    const text = response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
-
-    // Save History
-    if (chatId) {
-      await supabase.from('messages').insert({
-        chat_id: chatId,
-        role: 'user',
-        content: lastMessage.content,
-        image: image || null,
+    try {
+      const result = await generativeModel.generateContent({
+          contents: [reqContent]
       })
-      await supabase.from('messages').insert({
-        chat_id: chatId,
-        role: 'assistant',
-        content: text,
+      clearTimeout(timeoutId)
+
+      console.log('✅ Response received from Vertex AI')
+
+      const response = result.response
+      const text = response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
+
+      // Save History
+      if (chatId) {
+        await supabase.from('messages').insert({
+          chat_id: chatId,
+          role: 'user',
+          content: lastMessage.content,
+          image: image || null,
+        })
+        await supabase.from('messages').insert({
+          chat_id: chatId,
+          role: 'assistant',
+          content: text,
+        })
+      }
+
+      // Increment Usage
+      await supabase.rpc('increment_usage', {
+        user_id: user.id,
+        is_image: !!image,
       })
+
+      console.log('✅ Request completed successfully')
+
+      return NextResponse.json({
+        message: text,
+        citations: citations,
+      })
+    } catch (apiError) {
+      clearTimeout(timeoutId)
+      console.error('❌ Vertex AI API Error:', apiError)
+      console.error('Error details:', {
+        message: apiError.message,
+        stack: apiError.stack,
+        name: apiError.name
+      })
+      
+      return NextResponse.json(
+        { error: 'AI service temporarily unavailable. Please try again.' },
+        { status: 503 }
+      )
     }
-
-    // Increment Usage
-    await supabase.rpc('increment_usage', {
-      user_id: user.id,
-      is_image: !!image,
-    })
-
-    return NextResponse.json({
-      message: text,
-      citations: citations,
-    })
 
   } catch (error) {
     console.error('❌ Chat API Error:', error)
