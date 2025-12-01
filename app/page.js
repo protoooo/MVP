@@ -34,7 +34,9 @@ const GlobalStyles = () => (
       background-color: #121212 !important;
       overscroll-behavior: none;
       height: 100dvh;
-      width: 100vw;
+      /* FIX: Changed 100vw to 100% to prevent horizontal cutoff */
+      width: 100%; 
+      max-width: 100dvw;
       overflow: hidden;
     }
     .loader {
@@ -46,96 +48,32 @@ const GlobalStyles = () => (
       animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      16.67% {
-        background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      33.33% {
-        background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      50% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%,
-          calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%;
-      }
-      66.67% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0;
-      }
-      83.33% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%;
-      }
-      100% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
+      0% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      16.67% { background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      33.33% { background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      50% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%, calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%; }
+      66.67% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0; }
+      83.33% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%; }
+      100% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
     }
-
-    /* Pop-In Animation for Pricing Card */
     @keyframes popIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(10px);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
-    .animate-pop-in {
-      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
+    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes slideUpFade {
-      0% {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-      10% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      90% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
+      0% { opacity: 0; transform: translateY(5px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-5px); }
     }
-    .animate-source-ticker {
-      animation: slideUpFade 3s ease-in-out forwards;
-    }
-
-    /* Custom Scrollbar for Chat */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    /* Hide Scrollbar for Mode Bar */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 )
 
@@ -452,7 +390,7 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session
+  session // PASSED SESSION PROP
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
@@ -482,8 +420,8 @@ const InputBox = ({
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* Mobile: Scrollable with padding-right (pr-10) to see last item */}
-        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center pr-10 md:pr-0">
+        {/* Mobile: Scrollable, Removed Blue Arrow */}
+        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
@@ -531,25 +469,6 @@ const InputBox = ({
           >
             <Icons.Alert /> <span>Urgent</span>
           </button>
-        </div>
-
-        {/* Blue Arrow for Mobile Scrolling Hint */}
-        <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-3">
-          <svg
-            width="20"
-            height="20"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="#3E7BFA"
-            className="animate-pulse drop-shadow-md"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
         </div>
       </div>
 
@@ -645,6 +564,9 @@ const InputBox = ({
           )}
         </button>
       </form>
+      
+      {/* TICKER MOVED BELOW INPUT BOX (NO DUPLICATES) */}
+      {!session && <SourceTicker />}
     </div>
   )
 }
@@ -659,6 +581,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
+  // ✅ FIX: Use env var to match Supabase whitelist
   const getRedirectUrl = () => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
     return `${baseUrl}/auth/callback`
@@ -802,6 +725,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
+// ✅ ADDED: onSignOut prop to prevent entrapment
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   return (
     <div
@@ -811,7 +735,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* CLOSE (Sign Out) BUTTON */}
+        {/* ✅ REPLACED: "Sign Out" text with standard "X" Button */}
         <button
           onClick={onSignOut}
           className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
@@ -1183,7 +1107,6 @@ export default function Page() {
       if (!res.ok) {
         const errorData = await res.json()
         console.error('❌ API Error:', errorData)
-        // THROW ERROR TO BE CAUGHT BELOW
         throw new Error(errorData.error || 'API Error')
       }
 
