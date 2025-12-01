@@ -424,8 +424,6 @@ const SourceTicker = () => {
   return (
     <div className="flex justify-center mt-2">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/20 bg-[#161616]/80 backdrop-blur-sm">
-        {/* REMOVED BOOKMARK ICON */}
-        {/* FIXED WIDTH TO 310px TO REDUCE GAP */}
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
@@ -454,11 +452,10 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session // PASSED SESSION PROP
+  session
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
     if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
@@ -471,7 +468,7 @@ const InputBox = ({
       case 'image':
         return '#F5A623'
       case 'audit':
-        return '#3ECF8E' // Green for Audit
+        return '#3ECF8E'
       case 'critical':
         return '#EF4444'
       default:
@@ -482,15 +479,11 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
-      <div className="relative flex justify-start md:justify-center w-full mb-3 md:mb-4">
+      <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* Left fade (MOBILE ONLY) */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
-
-        {/* Scrollable container (MOBILE) / Centered (DESKTOP) */}
-        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center">
+        {/* Mobile: Scrollable with padding-right (pr-10) to see last item */}
+        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center pr-10 md:pr-0">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
@@ -515,7 +508,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit (Green) */}
+          {/* Audit */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -540,23 +533,23 @@ const InputBox = ({
           </button>
         </div>
 
-        {/* Right fade + CLEAN ARROW (MOBILE ONLY) */}
+        {/* Blue Arrow for Mobile Scrolling Hint */}
         <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-3">
-            <svg
-                width="20"
-                height="20"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="#3E7BFA"
-                className="animate-pulse drop-shadow-md"
-            >
-                <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M9 5l7 7-7 7"
-                />
-            </svg>
+          <svg
+            width="20"
+            height="20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="#3E7BFA"
+            className="animate-pulse drop-shadow-md"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
         </div>
       </div>
 
@@ -652,8 +645,6 @@ const InputBox = ({
           )}
         </button>
       </form>
-      
-      {/* REMOVED SOURCE TICKER FROM HERE - IT IS NOW ONLY IN THE MAIN PAGE COMPONENT */}
     </div>
   )
 }
@@ -668,7 +659,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // ✅ FIX: Use env var to match Supabase whitelist
   const getRedirectUrl = () => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
     return `${baseUrl}/auth/callback`
@@ -812,7 +802,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
-// ✅ ADDED: onSignOut prop to prevent entrapment
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   return (
     <div
@@ -822,8 +811,14 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Removed Close Button - Forced Interaction */}
-        
+        {/* CLOSE (Sign Out) BUTTON */}
+        <button
+          onClick={onSignOut}
+          className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
+        >
+          <Icons.X />
+        </button>
+
         <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
           protocolLM
         </h3>
@@ -867,17 +862,9 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <button
           onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
           disabled={loading !== null}
-          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
-        </button>
-
-        {/* ✅ ADDED: Sign Out Button to escape the trap */}
-        <button
-          onClick={onSignOut}
-          className="w-full text-center text-xs text-[#525252] hover:text-[#A1A1AA] transition-colors py-2 uppercase tracking-wider font-medium"
-        >
-          Sign Out / Use Different Account
         </button>
       </div>
     </div>
