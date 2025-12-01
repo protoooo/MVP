@@ -32,7 +32,6 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
-      /* FIX: Use dynamic viewport height for mobile browsers */
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -1145,9 +1144,16 @@ export default function Page() {
   const handleCheckout = async (priceId, planName) => {
     console.log('🛒 Checkout initiated:', { priceId, planName })
     
+    // IMPORTANT: Add safety timeout for button
+    const checkoutTimeout = setTimeout(() => {
+      setCheckoutLoading(null)
+      alert("Connection timeout. Please try again. If this persists, Supabase might be experiencing issues.")
+    }, 15000) // 15 seconds max
+
     setCheckoutLoading(planName)
     
     if (!session) {
+      clearTimeout(checkoutTimeout)
       console.log('❌ No session, showing auth modal')
       setShowPricingModal(false)
       setAuthModalMessage('Create an account to subscribe')
@@ -1163,6 +1169,7 @@ export default function Page() {
       } = await supabase.auth.getSession()
 
       if (!currentSession) {
+        clearTimeout(checkoutTimeout)
         alert('Session expired. Please sign in again.')
         return
       }
@@ -1183,7 +1190,6 @@ export default function Page() {
       if (!res.ok) {
         const errorData = await res.json()
         console.error('❌ API Error:', errorData)
-        // THROW ERROR TO BE CAUGHT BELOW
         throw new Error(errorData.error || 'API Error')
       }
 
@@ -1192,16 +1198,18 @@ export default function Page() {
 
       if (data.url) {
         console.log('🔗 Redirecting to Stripe:', data.url)
+        // Clear timeout before redirecting so alert doesn't fire
+        clearTimeout(checkoutTimeout)
         window.location.href = data.url
       } else {
         console.error('❌ No URL returned')
         throw new Error('No checkout URL returned')
       }
     } catch (error) {
+      clearTimeout(checkoutTimeout)
       console.error('❌ Checkout error:', error)
       alert(`Checkout failed: ${error.message}. Please try again or contact support.`)
     } finally {
-      // ✅ CRITICAL: Always reset loading state
       setCheckoutLoading(null)
     }
   }
