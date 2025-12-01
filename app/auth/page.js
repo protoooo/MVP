@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase-browser' // ✅ FIXED: Correct import path
+import { createClient } from '@/lib/supabase-browser' // ✅ FIXED: Points to correct file
 import { useRouter } from 'next/navigation'
 
 export default function Auth() {
@@ -8,7 +8,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const supabase = createClient() // ✅ FIXED: Initialize client
+  const supabase = createClient() // ✅ FIXED: Initialized correctly
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -34,7 +34,7 @@ export default function Auth() {
     <div style={{
       height: '100vh',
       width: '100vw',
-      backgroundColor: '#121212', // ✅ FIXED: Dark mode background
+      backgroundColor: '#121212',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -43,7 +43,7 @@ export default function Auth() {
       color: 'white'
     }}>
       <div style={{
-        backgroundColor: '#1C1C1C', // ✅ FIXED: Dark mode card
+        backgroundColor: '#1C1C1C',
         padding: '40px',
         borderRadius: '24px',
         width: '100%',
@@ -74,7 +74,7 @@ export default function Auth() {
               borderRadius: '12px',
               marginBottom: '16px',
               color: 'white',
-              backgroundColor: '#0A0A0A', // ✅ FIXED: Dark input
+              backgroundColor: '#0A0A0A',
               boxSizing: 'border-box',
               outline: 'none'
             }}
@@ -87,7 +87,7 @@ export default function Auth() {
               width: '100%',
               padding: '12px',
               fontSize: '14px',
-              backgroundColor: '#3E7BFA', // ✅ FIXED: Brand color
+              backgroundColor: '#3E7BFA',
               color: 'white',
               border: 'none',
               borderRadius: '12px',
