@@ -32,7 +32,6 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
-      /* FIX: Use dynamic viewport height for mobile browsers */
       height: 100dvh;
       width: 100vw;
       overflow: hidden;
@@ -475,7 +474,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (Fixed Arrow Centering)
+// INPUT COMPONENT
 // ==========================================
 const InputBox = ({
   input,
@@ -964,7 +963,6 @@ export default function Page() {
   const userMenuRef = useRef(null)
   
   // FIX: LAZY INITIALIZATION OF SUPABASE CLIENT
-  // This prevents creating a new connection on every render
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
@@ -991,6 +989,45 @@ export default function Page() {
         setSession(currentSession)
 
         if (currentSession) {
+          // =========================================================
+          // CHECK SUBSCRIPTION FIRST (Stop loading if none)
+          // =========================================================
+          const { data: activeSub } = await supabase
+            .from('subscriptions')
+            .select('status, current_period_end, plan, stripe_subscription_id')
+            .eq('user_id', currentSession.user.id)
+            .in('status', ['active', 'trialing'])
+            .maybeSingle()
+
+          // 1. If NO Active Subscription -> Stop here, Show Pricing, Don't Check Terms yet
+          if (!activeSub || !activeSub.current_period_end) {
+            setHasActiveSubscription(false)
+            setShowPricingModal(true)
+            setIsLoading(false) // Stop loading screen to show pricing
+            return
+          }
+
+          // 2. If Expired -> Stop here
+          const periodEnd = new Date(activeSub.current_period_end)
+          if (periodEnd < new Date()) {
+            await supabase
+              .from('subscriptions')
+              .update({ 
+                status: 'expired', 
+                updated_at: new Date().toISOString() 
+              })
+              .eq('user_id', currentSession.user.id)
+              .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
+
+            setHasActiveSubscription(false)
+            setShowPricingModal(true)
+            setIsLoading(false)
+            return
+          }
+
+          // =========================================================
+          // IF VALID SUB -> NOW CHECK TERMS
+          // =========================================================
           const { data: userProfile } = await supabase
             .from('user_profiles')
             .select('*')
@@ -999,41 +1036,10 @@ export default function Page() {
           setProfile(userProfile)
           
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            
-            const { data: activeSub } = await supabase
-                .from('subscriptions')
-                .select('status, current_period_end, plan, stripe_subscription_id')
-                .eq('user_id', currentSession.user.id)
-                .in('status', ['active', 'trialing'])
-                .maybeSingle()
-
-            if (!activeSub || !activeSub.current_period_end) {
-                setHasActiveSubscription(false)
-                // SHOW PRICING "MODAL" (Which is now full screen if !hasActiveSubscription)
-                setShowPricingModal(true)
-                // STOP LOADING HERE SO WE RENDER THE PRICING UI
-                setIsLoading(false)
-                return
-            }
-
-            const periodEnd = new Date(activeSub.current_period_end)
-            if (periodEnd < new Date()) {
-                await supabase
-                .from('subscriptions')
-                .update({ 
-                    status: 'expired', 
-                    updated_at: new Date().toISOString() 
-                })
-                .eq('user_id', currentSession.user.id)
-                .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
-
-                setHasActiveSubscription(false)
-                setShowPricingModal(true)
-            } else {
-                setHasActiveSubscription(true)
-                setShowPricingModal(false) // Ensure it's off
-                loadChatHistory()
-            }
+            // EVERYTHING GOOD -> Load Chat
+            setHasActiveSubscription(true)
+            setShowPricingModal(false) 
+            loadChatHistory()
           } else {
             console.log('⚠️ Terms not accepted, redirecting...')
             router.push('/accept-terms')
@@ -1052,30 +1058,34 @@ export default function Page() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
-        // Simple re-check logic or rely on init mostly, but kept for robust state changes
-        const { data: userProfile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        setProfile(userProfile)
-        
-        if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            const { data: activeSub } = await supabase
-                .from('subscriptions')
-                .select('status, current_period_end, plan, stripe_subscription_id')
-                .eq('user_id', session.user.id)
-                .in('status', ['active', 'trialing'])
-                .maybeSingle()
+        // MATCHING LOGIC FOR AUTH STATE CHANGE
+        const { data: activeSub } = await supabase
+            .from('subscriptions')
+            .select('status, current_period_end, plan, stripe_subscription_id')
+            .eq('user_id', session.user.id)
+            .in('status', ['active', 'trialing'])
+            .maybeSingle()
 
-            if (activeSub && activeSub.current_period_end && new Date(activeSub.current_period_end) >= new Date()) {
-                setHasActiveSubscription(true)
-                setShowPricingModal(false)
-                loadChatHistory()
+        if (activeSub && activeSub.current_period_end && new Date(activeSub.current_period_end) >= new Date()) {
+            setHasActiveSubscription(true)
+            setShowPricingModal(false)
+            
+            // Only check terms if sub is valid
+            const { data: userProfile } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            setProfile(userProfile)
+
+            if (!userProfile?.accepted_terms) {
+                router.push('/accept-terms')
             } else {
-                setHasActiveSubscription(false)
-                setShowPricingModal(true)
+                loadChatHistory()
             }
+        } else {
+            setHasActiveSubscription(false)
+            setShowPricingModal(true)
         }
       } else {
         setProfile(null)
