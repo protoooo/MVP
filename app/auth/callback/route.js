@@ -5,7 +5,10 @@ import { NextResponse } from 'next/server'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const origin = requestUrl.origin
+  
+  // ✅ CRITICAL FIX: Use the actual public domain, not the internal container URL
+  // If the env var is missing, fall back to the requested origin (for localhost dev)
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || requestUrl.origin
 
   if (code) {
     const cookieStore = cookies()
@@ -31,6 +34,6 @@ export async function GET(request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Redirect to home page after sign in
-  return NextResponse.redirect(origin)
+  // Redirect to the home page using the correct public domain
+  return NextResponse.redirect(baseUrl)
 }
