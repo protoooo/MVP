@@ -424,6 +424,8 @@ const SourceTicker = () => {
   return (
     <div className="flex justify-center mt-2">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/20 bg-[#161616]/80 backdrop-blur-sm">
+        {/* REMOVED BOOKMARK ICON */}
+        {/* FIXED WIDTH TO 310px TO REDUCE GAP */}
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
@@ -651,8 +653,7 @@ const InputBox = ({
         </button>
       </form>
       
-      {/* TICKER MOVED BELOW INPUT BOX (NO DUPLICATES) */}
-      {!session && <SourceTicker />}
+      {/* REMOVED SOURCE TICKER FROM HERE - IT IS NOW ONLY IN THE MAIN PAGE COMPONENT */}
     </div>
   )
 }
