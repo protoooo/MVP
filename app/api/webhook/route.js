@@ -14,8 +14,8 @@ const supabase = createClient(
 // SECURITY: Track processed events to prevent replay attacks
 const processedEvents = new Set()
 
-// SECURITY FIX: Reduced from 5 minutes to 2 minutes for better security
-const MAX_EVENT_AGE_MS = 2 * 60 * 1000
+// ✅ SECURITY FIX: Increased from 2 minutes to 5 minutes for webhook reliability
+const MAX_EVENT_AGE_MS = 5 * 60 * 1000
 
 function isEventProcessed(eventId) {
   return processedEvents.has(eventId)
@@ -23,7 +23,6 @@ function isEventProcessed(eventId) {
 
 function markEventProcessed(eventId) {
   processedEvents.add(eventId)
-  // Clean up old events after 1 hour to prevent memory leak
   setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
 }
 
@@ -61,11 +60,9 @@ export async function POST(req) {
   console.log(`🔔 Processing webhook: ${event.type} [${event.id}]`)
 
   try {
-    // Mark event as being processed (prevents concurrent processing)
     markEventProcessed(event.id)
 
     switch (event.type) {
-      // ===== NEW SUBSCRIPTION / TRIAL START =====
       case 'checkout.session.completed': {
         const session = event.data.object
         const userId = session.metadata?.userId || session.client_reference_id
@@ -81,7 +78,6 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing subscriptionId' }, { status: 400 })
         }
 
-        // SECURITY: Check if subscription already exists (prevents duplicate creation)
         const { data: existingSub } = await supabase
           .from('subscriptions')
           .select('id, status')
@@ -93,22 +89,17 @@ export async function POST(req) {
           return NextResponse.json({ received: true })
         }
 
-        // SECURITY: Fetch subscription details directly from Stripe (don't trust webhook data alone)
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         
-        // SECURITY: Verify subscription belongs to correct customer
         if (subscription.customer !== session.customer) {
           console.error('❌ Customer mismatch detected!')
           return NextResponse.json({ error: 'Security violation' }, { status: 403 })
         }
 
         const priceId = subscription.items.data[0].price.id
-
-        // ✅ UPDATE: Explicitly map your new single plan
-        // This ensures the database records "protocollm" as the plan name
         const PROTOCOLLM_PRICE_ID = 'price_1SZKB5DlSrKA3nbAxLhESpzV'
         
-        let planName = 'pro' // Fallback
+        let planName = 'pro'
         if (priceId === PROTOCOLLM_PRICE_ID) {
             planName = 'protocollm'
         }
@@ -119,7 +110,6 @@ export async function POST(req) {
           trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null
         })
 
-        // Insert into subscriptions table
         const { error: subInsertError } = await supabase.from('subscriptions').insert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
@@ -139,11 +129,10 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Update user profile (legacy field for backward compatibility ONLY)
         await supabase
           .from('user_profiles')
           .update({ 
-            is_subscribed: true, // LEGACY ONLY
+            is_subscribed: true,
             subscription_id: subscriptionId,
             customer_id: session.customer,
             updated_at: new Date().toISOString()
@@ -154,7 +143,6 @@ export async function POST(req) {
         break
       }
 
-      // ===== SUBSCRIPTION UPDATED =====
       case 'customer.subscription.updated': {
         const subscription = event.data.object
 
@@ -164,7 +152,6 @@ export async function POST(req) {
           cancelAtPeriodEnd: subscription.cancel_at_period_end
         })
 
-        // SECURITY: Verify subscription exists before updating
         const { data: existingSub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -192,7 +179,6 @@ export async function POST(req) {
           console.error('❌ Failed to update subscription:', updateError)
         }
 
-        // If subscription is no longer active/trialing, revoke access
         if (!['active', 'trialing'].includes(subscription.status)) {
           await supabase
             .from('user_profiles')
@@ -206,7 +192,6 @@ export async function POST(req) {
         break
       }
 
-      // ===== SUBSCRIPTION DELETED =====
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
 
@@ -239,7 +224,6 @@ export async function POST(req) {
         break
       }
 
-      // ===== PAYMENT FAILED =====
       case 'invoice.payment_failed': {
         const invoice = event.data.object
         const subscriptionId = invoice.subscription
@@ -262,7 +246,6 @@ export async function POST(req) {
               })
               .eq('stripe_subscription_id', subscriptionId)
 
-            // REVOKE ACCESS immediately for past_due
             await supabase
               .from('user_profiles')
               .update({ 
@@ -276,12 +259,10 @@ export async function POST(req) {
         break
       }
 
-      // ===== MONTHLY PAYMENT SUCCESS - RESET USAGE =====
       case 'invoice.paid': {
         const invoice = event.data.object
         const subscriptionId = invoice.subscription
 
-        // Only reset on recurring payments
         if (invoice.billing_reason === 'subscription_cycle') {
           console.log(`🔄 Monthly billing cycle - Resetting usage:`, subscriptionId)
 
@@ -292,7 +273,6 @@ export async function POST(req) {
             .maybeSingle()
 
           if (sub) {
-            // Reset usage counters
             await supabase
               .from('user_profiles')
               .update({
@@ -303,7 +283,6 @@ export async function POST(req) {
               })
               .eq('id', sub.user_id)
 
-            // Ensure subscription is active
             await supabase
               .from('subscriptions')
               .update({
