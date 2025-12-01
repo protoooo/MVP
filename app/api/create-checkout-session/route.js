@@ -3,84 +3,65 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+// Force this route to never cache (Critical for Auth)
+export const dynamic = 'force-dynamic'
 
-// ✅ SECURITY: Only allow your specific Price ID
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const ALLOWED_PRICE_ID = 'price_1SZKB5DlSrKA3nbAxLhESpzV'
 
 export async function POST(request) {
   try {
-    // 1. Get the Price ID from the frontend
+    // 1. Parse Body
     const body = await request.json()
     const { priceId } = body
 
-    // 2. Validate it matches your specific plan
+    // 2. Validate Price ID
     if (priceId !== ALLOWED_PRICE_ID) {
-      console.error(`❌ Invalid Price ID Attempted: ${priceId}`)
       return NextResponse.json(
         { error: 'Invalid subscription plan selected.' },
         { status: 400 }
       )
     }
 
-    // 3. Authenticate User using @supabase/ssr
+    // 3. Authenticate User (Using getUser for stricter security)
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
+          getAll() { return cookieStore.getAll() },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
+             try {
+               cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+             } catch {}
           },
         },
       }
     )
     
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'You must be logged in to subscribe.' },
         { status: 401 }
       )
     }
 
-    // 4. Create Stripe Checkout Session
+    // 4. Create Stripe Session
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: session.user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      // 7-Day Free Trial logic
+      customer_email: user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 7,
-        metadata: {
-          userId: session.user.id,
-        },
+        metadata: { userId: user.id },
       },
-      // Redirect back to home page on success or cancel
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
-      metadata: {
-        userId: session.user.id,
-      },
+      metadata: { userId: user.id },
     })
 
     return NextResponse.json({ url: checkoutSession.url })
@@ -88,7 +69,7 @@ export async function POST(request) {
   } catch (error) {
     console.error('Stripe Checkout Error:', error)
     return NextResponse.json(
-      { error: 'Unable to create checkout session.' },
+      { error: 'Unable to connect to payment processor.' },
       { status: 500 }
     )
   }
