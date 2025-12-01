@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import SessionGuard from '@/components/SessionGuard'
 
 // ==========================================
 // DOCUMENT SOURCES DATA
