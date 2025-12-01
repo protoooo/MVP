@@ -46,96 +46,34 @@ const GlobalStyles = () => (
       animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      16.67% {
-        background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      33.33% {
-        background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      50% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%,
-          calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%;
-      }
-      66.67% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0;
-      }
-      83.33% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%;
-      }
-      100% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
+      0% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      16.67% { background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      33.33% { background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      50% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%, calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%; }
+      66.67% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0; }
+      83.33% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%; }
+      100% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
     }
-
-    /* Pop-In Animation for Pricing Card */
     @keyframes popIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(10px);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
-    .animate-pop-in {
-      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
+    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
     @keyframes slideUpFade {
-      0% {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-      10% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      90% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
+      0% { opacity: 0; transform: translateY(5px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-5px); }
     }
-    .animate-source-ticker {
-      animation: slideUpFade 3s ease-in-out forwards;
-    }
+    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
 
-    /* Custom Scrollbar for Chat */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    /* Hide Scrollbar for Mode Bar */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 )
 
@@ -424,8 +362,6 @@ const SourceTicker = () => {
   return (
     <div className="flex justify-center mt-2">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/20 bg-[#161616]/80 backdrop-blur-sm">
-        {/* REMOVED BOOKMARK ICON COMPLETELY */}
-        {/* FIXED WIDTH AND CENTERED TEXT */}
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
@@ -440,7 +376,7 @@ const SourceTicker = () => {
 }
 
 // ==========================================
-// INPUT COMPONENT (Cleaned Up)
+// INPUT COMPONENT
 // ==========================================
 const InputBox = ({
   input,
@@ -482,18 +418,19 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
+    // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* CENTERED BUTTON ROW */}
-        <div className="flex items-center justify-center gap-2 md:gap-3 flex-wrap w-full">
+        {/* CENTERED BUTTON ROW - Improved Spacing for Mobile */}
+        <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-wrap w-full">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
-            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'chat'
                 ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
             }`}
           >
             <Icons.MessageSquare /> <span>Chat</span>
@@ -502,22 +439,22 @@ const InputBox = ({
           {/* Image */}
           <button
             onClick={() => handleModeClick('image')}
-            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'image' || selectedImage
                 ? 'text-[#F5A623] bg-[#F5A623]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
             }`}
           >
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit (Green) */}
+          {/* Audit (Now Green) */}
           <button
             onClick={() => handleModeClick('audit')}
-            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'audit'
                 ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
             }`}
           >
             <Icons.ClipboardCheck /> <span>Audit</span>
@@ -526,10 +463,10 @@ const InputBox = ({
           {/* Urgent */}
           <button
             onClick={() => handleModeClick('critical')}
-            className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
+            className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'critical'
                 ? 'text-[#EF4444] bg-[#EF4444]/10'
-                : 'text-[#525252] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
             }`}
           >
             <Icons.Alert /> <span>Urgent</span>
@@ -629,6 +566,9 @@ const InputBox = ({
           )}
         </button>
       </form>
+      
+      {/* TICKER MOVED BELOW INPUT BOX */}
+      {!session && <SourceTicker />}
     </div>
   )
 }
@@ -1570,7 +1510,7 @@ export default function Page() {
                         />
                     </div>
 
-                    {/* TICKER MOVED BELOW INPUT - REMOVED EXTRA "TRAINED ON" TEXT */}
+                    {/* TICKER MOVED BELOW INPUT */}
                     {!session && <SourceTicker />}
 
                     {/* FOOTER LINKS - Responsive positioning */}
@@ -1621,48 +1561,3 @@ export default function Page() {
                           {msg.image && (
                             <img
                               src={msg.image}
-                              alt="Upload"
-                              className="rounded-2xl mb-3 max-h-60 object-contain border border-white/10"
-                            />
-                          )}
-
-                          {msg.role === 'assistant' &&
-                          msg.content === '' &&
-                          isSending &&
-                          idx === messages.length - 1 ? (
-                            <div className="loader my-1" />
-                          ) : (
-                            <div className="text-[16px] leading-7 whitespace-pre-wrap">
-                              {msg.content}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0 z-20">
-                <InputBox
-                  input={input}
-                  setInput={setInput}
-                  handleSend={handleSend}
-                  handleImage={handleImage}
-                  isSending={isSending}
-                  fileInputRef={fileInputRef}
-                  selectedImage={selectedImage}
-                  setSelectedImage={setSelectedImage}
-                  inputRef={inputRef}
-                  activeMode={activeMode}
-                  setActiveMode={setActiveMode}
-                  session={session}
-                />
-              </div>
-            </>
-          )}
-        </main>
-      </div>
-    </>
-  )
-}
