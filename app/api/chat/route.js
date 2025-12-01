@@ -30,80 +30,80 @@ function validateMessages(messages) {
   }))
 }
 
-// --- SYSTEM PROMPTS (THE BRAIN) ---
+// --- SYSTEM PROMPTS (THE BRAIN LOGIC) ---
+// NOTE: No specific violation examples are hard-coded here. 
+// All rules must be retrieved from the Vector Database (The "Brain").
+
 const GLOBAL_RULES = `
-KEY JURISDICTION: Washtenaw County, Michigan.
-HIERARCHY OF AUTHORITY: 
-1. Washtenaw County Regulations (HIGHEST PRIORITY)
+PRIMARY JURISDICTION: Washtenaw County, Michigan.
+HIERARCHY OF TRUTH: 
+1. Washtenaw County Regulations (HIGHEST PRIORITY - Overrides all others)
 2. Michigan Modified Food Code (Act 92)
 3. FDA Food Code 2022
 
-CONFIDENCE PROTOCOL:
-- If you are 100% certain a condition is a violation based on the provided context, state it clearly as a violation.
-- If a condition looks suspicious but you cannot be 100% certain from the input (e.g., cannot see if a pipe is leaking, only that it looks old), state: "This appears to be a potential violation regarding [Topic]. Check for [Specific Criteria]."
-- NEVER HALLUCINATE. If the provided context does not contain the answer, state: "I cannot find a specific reference in the Washtenaw or Michigan codes for this, but generally..."
-- Professional Tone: No slang. No "I think." Be objective and authoritative.
+INSTRUCTIONS:
+- You are NOT a generic AI. You are a specialized Compliance Engine for Washtenaw County.
+- Do not use general internet knowledge if it contradicts the provided OFFICIAL CONTEXT.
+- If the Context provided mentions specific Washtenaw enforcement procedures (e.g., specific fines, color-coded tags), USE THEM.
+- If you are unsure based on the Context, admit it. Do not guess.
 `
 
 const PROMPTS = {
-  chat: `You are ProtocolLM, the ultimate food safety compliance assistant for Washtenaw County restaurants.
+  chat: `You are ProtocolLM, the Washtenaw County Food Safety Expert.
   ${GLOBAL_RULES}
   
-  OBJECTIVE: Educate staff and managers to prevent violations before they happen.
-  STYLE: Concise, Educational, Authoritative.
+  OBJECTIVE: Answer compliance questions strictly based on the retrieved regulations.
+  STYLE: Direct, Professional, Localized.
   
-  WHEN ANSWERING:
-  1. Direct Answer (Yes/No/The Rule).
-  2. The specific numeric requirement (Temp, Time, Concentration) if applicable.
-  3. The "Why" (Briefly explain the health risk, e.g., "Prevents Listeria growth").
-  4. Source Citation (e.g., "Per Washtenaw Enforcement Actions...").
+  RESPONSE STRUCTURE:
+  1. The Answer (Yes/No/It depends).
+  2. The Rule (Cite the specific code or regulation from the Context).
+  3. The Action (What the manager needs to do to be compliant).
   
-  FORMATTING: Use CAPS for emphasis on critical numbers or warnings. Do not use asterisks.`,
+  FORMATTING: Use CAPS for critical values (temps, times). No asterisks.`,
   
-  image: `You are an AI Health Inspector conducting a Virtual Walkthrough.
+  image: `You are an AI Health Inspector performing a visual audit.
   ${GLOBAL_RULES}
   
-  OBJECTIVE: Analyze the image for ANY and ALL potential health code violations.
+  OBJECTIVE: Analyze the image for compliance with Washtenaw/Michigan codes.
   
-  ANALYSIS INSTRUCTIONS:
-  1. SCAN THE BACKGROUND: Do not just look at the main subject. Look at floors, walls, ceiling tiles, pipes, and corners.
-  2. IDENTIFY BUILDUP: Distinguish between "messy from service" and "long-term accumulation" (grease, biofilm, dust). Long-term accumulation is a violation.
-  3. EQUIPMENT CHECKS: Look for gaskets, thermometers, rust, or makeshift repairs (duct tape, cardboard).
+  ANALYSIS PROTOCOL:
+  1. DETECT: Scan the entire image (foreground and background) for sanitary defects, structural issues, or unsafe food handling.
+  2. CROSS-REFERENCE: Compare what you see against the text in the OFFICIAL CONTEXT provided below.
+  3. JUDGE: Determine if the observed condition violates the specific codes found in the Context.
   
-  OUTPUT STRUCTURE:
-  - OBSERVATIONS: List factual things you see (e.g., "Brown residue on stovetop knobs").
-  - VIOLATION STATUS: 
-    - CONFIRMED VIOLATION: Cite the specific Washtenaw/Michigan code violation.
-    - POTENTIAL VIOLATION: Explain what the user must check to confirm (e.g., "Check if surface is smooth and easily cleanable").
-  - CORRECTIVE ACTION: Step-by-step fix.
+  OUTPUT:
+  - OBSERVATIONS: Factual list of what is seen.
+  - VIOLATION STATUS: "Confirmed Violation" (if code matches), "Potential Violation" (if unclear), or "Compliant".
+  - CITATION: Quote the Washtenaw/Michigan code section from the Context that applies.
+  - FIX: Immediate corrective action.
   
-  FORMATTING: Use CAPS for headers. Do not use asterisks.`,
+  FORMATTING: Use CAPS for headers. No asterisks.`,
 
-  audit: `You are a Strict Mock Auditor.
+  audit: `You are a Strict Mock Auditor for Washtenaw County.
   ${GLOBAL_RULES}
   
-  OBJECTIVE: Simulate a high-stakes health inspection. You are not here to be nice; you are here to find problems so the real inspector doesn't.
+  OBJECTIVE: Grill the user to find hidden violations.
   
   BEHAVIOR:
-  - Categorize every issue as: PRIORITY (Imminent hazard), PRIORITY FOUNDATION (Support systems), or CORE (General sanitation).
-  - Use official terminology found in the "Washtenaw Violation Types" document.
-  - If the user describes a scenario, interrogate them for missing details (e.g., "You said the chicken is cooked, but did you verify the internal temp reached 165°F for 15 seconds?").
+  - Act like a skepticism health inspector.
+  - If the user gives a vague answer, demand proof (e.g., "Do you have the temperature logs to prove that?").
+  - Classify every issue found using the official Washtenaw Violation Types (Priority, Priority Foundation, Core).
   
-  FORMATTING: Use CAPS for Violation Categories.`,
+  FORMATTING: Use CAPS for priority levels.`,
 
-  critical: `You are the Emergency Response Commander.
+  critical: `You are the Emergency Response System.
   ${GLOBAL_RULES}
   
-  OBJECTIVE: Guide the user through an Imminent Health Hazard (Sewage, Fire, Flood, No Water, Power Outage, Sick Employee).
+  OBJECTIVE: Manage Imminent Health Hazards (Sewage, Fire, Flood, Power Outage).
   
   BEHAVIOR:
-  - IMMEDIATE ACTION: What must stop RIGHT NOW (e.g., "STOP SERVING FOOD IMMEDIATELY").
-  - ASSESSMENT: Use the "Emergency Action Plans" document to determine if the establishment must close.
-  - NOTIFICATION: Remind them to contact Washtenaw County Environmental Health if required by law.
-  - RECOVERY: Steps to reopen safely.
+  - Prioritize PUBLIC SAFETY above all else.
+  - If the condition meets the criteria for immediate closure (as defined in the Washtenaw Emergency Action Plans), tell them to CLOSE immediately.
+  - Provide the exact steps required to reopen based on the County documents.
   
-  TONE: Urgent, Directive, Calm. Short sentences.
-  FORMATTING: Use CAPS for all critical instructions.`
+  TONE: Urgent, Directive.
+  FORMATTING: Use CAPS for immediate actions (e.g., STOP SERVICE).`
 }
 
 export async function POST(req) {
@@ -150,12 +150,10 @@ export async function POST(req) {
       model: 'gemini-2.0-flash',
       generationConfig: {
         maxOutputTokens: 8192,
-        temperature: 0.2, // Lower temperature for more factual/strict responses
+        temperature: 0.2, // Low temp = High precision, less creativity
         topP: 0.8,
       },
     })
-
-    console.log('✅ Vertex AI initialized with gemini-2.0-flash')
 
     // --- AUTHENTICATION & SUBSCRIPTION CHECK ---
     const cookieStore = cookies()
@@ -177,11 +175,8 @@ export async function POST(req) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
-      console.log('❌ Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    console.log('✅ User authenticated:', user.email)
 
     // Check Terms
     const { data: profile, error: profileError } = await supabase
@@ -190,19 +185,11 @@ export async function POST(req) {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile) {
-      console.error('❌ Profile not found:', profileError)
-      return NextResponse.json({ error: 'Account error' }, { status: 500 })
-    }
-
-    if (!profile.accepted_terms || !profile.accepted_privacy) {
-      console.log('⚠️ Terms not accepted')
+    if (profileError || !profile || !profile.accepted_terms || !profile.accepted_privacy) {
       return NextResponse.json({ error: 'Please accept terms', requiresTerms: true }, { status: 403 })
     }
 
-    // ✅ STRICT SUBSCRIPTION CHECK
-    console.log('🔍 Checking subscription status...')
-    
+    // Strict Subscription Check
     const { data: activeSub, error: subError } = await supabase
       .from('subscriptions')
       .select('status, current_period_end, plan, stripe_subscription_id')
@@ -211,33 +198,20 @@ export async function POST(req) {
       .maybeSingle()
 
     if (subError || !activeSub) {
-      console.log('❌ Subscription validation failed')
-      return NextResponse.json({ 
-        error: 'Active subscription required', 
-        requiresSubscription: true 
-      }, { status: 402 })
+      return NextResponse.json({ error: 'Active subscription required', requiresSubscription: true }, { status: 402 })
     }
 
-    // Validate subscription hasn't expired
     if (!activeSub.current_period_end) {
       return NextResponse.json({ error: 'Invalid subscription data', requiresSubscription: true }, { status: 402 })
     }
 
     const periodEnd = new Date(activeSub.current_period_end)
-    const now = new Date()
-    
-    if (periodEnd < now) {
-      console.log('❌ Subscription expired:', periodEnd.toISOString())
-      await supabase
-        .from('subscriptions')
-        .update({ status: 'expired', updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
-      
+    if (periodEnd < new Date()) {
+      await supabase.from('subscriptions').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('user_id', user.id).eq('stripe_subscription_id', activeSub.stripe_subscription_id)
       return NextResponse.json({ error: 'Subscription expired', requiresSubscription: true }, { status: 402 })
     }
 
-    // Check Rate Limits
+    // Rate Limits
     const limitCheck = await checkRateLimit(user.id)
     if (!limitCheck.success) {
       return NextResponse.json({ error: limitCheck.message, limitReached: true }, { status: 429 })
@@ -246,17 +220,17 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Image limit reached', limitReached: true }, { status: 429 })
     }
 
-    // --- RAG SEARCH ---
+    // --- RAG SEARCH (THE BRAIN LOOKUP) ---
     const lastMessage = messages[messages.length - 1]
     let context = ''
     let citations = []
 
-    // Always search documents if there is text, even if there is an image.
-    // This allows the "Brain" to know regulations while looking at the photo.
+    // Always search context if there is text, allowing the Brain to work on image + text prompts
     if (lastMessage.content) {
       try {
-        console.log('🔍 Searching documents for:', lastMessage.content.substring(0, 50))
-        // Force search in washtenaw
+        console.log('🔍 Accessing Knowledge Base for:', lastMessage.content.substring(0, 50))
+        
+        // This function searches your 6,746 document chunks in Supabase
         const searchResults = await searchDocuments(lastMessage.content, 'washtenaw')
         
         if (searchResults && searchResults.length > 0) {
@@ -264,17 +238,17 @@ export async function POST(req) {
             const stateDocs = searchResults.filter((d) => d.docType === 'state')
             const federalDocs = searchResults.filter((d) => d.docType === 'federal')
             
-            console.log('📚 Search results:', {
-              county: countyDocs.length,
-              state: stateDocs.length,
-              federal: federalDocs.length
+            console.log('📚 Documents Retrieved:', {
+              washtenaw: countyDocs.length,
+              michigan: stateDocs.length,
+              fda: federalDocs.length
             })
             
+            // Organize context by Authority Level for the AI
             let contextParts = []
-            // Boosting Local Context in the Prompt
-            if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS (PRIMARY AUTHORITY) ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
-            if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE (SECONDARY) ===\n' + stateDocs.map((d) => `"${d.text}"`).join('\n'))
-            if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE (TERTIARY) ===\n' + federalDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS (HIGHEST AUTHORITY) ===\n' + countyDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE (SECONDARY AUTHORITY) ===\n' + stateDocs.map((d) => `"${d.text}"`).join('\n'))
+            if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE (TERTIARY AUTHORITY) ===\n' + federalDocs.map((d) => `"${d.text}"`).join('\n'))
             
             context = contextParts.join('\n\n')
             citations = searchResults.map((doc) => ({
@@ -282,15 +256,16 @@ export async function POST(req) {
                 pages: [doc.page],
             }))
         } else {
-          console.log('⚠️ No search results found')
+          console.log('⚠️ No relevant documents found in Knowledge Base')
         }
       } catch (err) {
         console.error('❌ Search error:', err)
       }
     }
 
+    // Inject the dynamic context into the prompt
     const selectedSystemPrompt = PROMPTS[mode] || PROMPTS.chat
-    let promptText = `${selectedSystemPrompt}\n\nOFFICIAL REGULATORY CONTEXT:\n${context || 'No specific text context found in knowledge base. Rely on general Washtenaw/Michigan food safety knowledge if specific context is missing.'}\n\nUSER INPUT:\n${lastMessage.content}`
+    let promptText = `${selectedSystemPrompt}\n\nOFFICIAL REGULATORY CONTEXT (RETRIEVED FROM DATABASE):\n${context || 'No specific text found in Knowledge Base. Proceed with caution and state that you are using general knowledge if necessary.'}\n\nUSER INPUT:\n${lastMessage.content}`
 
     // --- BUILD REQUEST ---
     const reqContent = {
@@ -313,18 +288,13 @@ export async function POST(req) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000)
 
-    console.log('🚀 Sending request to Vertex AI...')
-    
     try {
       const result = await generativeModel.generateContent({
           contents: [reqContent]
       })
       clearTimeout(timeoutId)
 
-      console.log('✅ Response received from Vertex AI')
-
       const response = result.response
-      // Clean asterisks because the prompt might still generate them despite instructions
       const text = response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
 
       // Save History
@@ -348,8 +318,6 @@ export async function POST(req) {
         is_image: !!image,
       })
 
-      console.log('✅ Request completed successfully')
-
       return NextResponse.json({
         message: text,
         citations: citations,
@@ -357,7 +325,6 @@ export async function POST(req) {
     } catch (apiError) {
       clearTimeout(timeoutId)
       console.error('❌ Vertex AI API Error:', apiError)
-      
       return NextResponse.json(
         { error: 'AI service temporarily unavailable. Please try again.' },
         { status: 503 }
