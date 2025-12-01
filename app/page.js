@@ -1024,7 +1024,6 @@ export default function Page() {
             .single()
           setProfile(userProfile)
           
-          // After loading profile:
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
             // Check for pricing modal trigger in URL
             const urlParams = new URLSearchParams(window.location.search)
@@ -1033,55 +1032,35 @@ export default function Page() {
               window.history.replaceState({}, '', '/')
             }
             
-            const { data: activeSub, error: subError } = await supabase
-              .from('subscriptions')
-              .select('status, current_period_end, plan, stripe_subscription_id')
-              .eq('user_id', currentSession.user.id)
-              .in('status', ['active', 'trialing'])
-              .maybeSingle()
-            
-            // CRITICAL FIX: If NO subscription found, show pricing immediately
-            if (subError || !activeSub) {
-              console.log('❌ No subscription found, showing pricing')
-              setHasActiveSubscription(false)
-              setShowPricingModal(true)
-              setIsLoading(false)
-              return // Stop here, don't load chat history
+            const { data: activeSub } = await supabase
+                .from('subscriptions')
+                .select('status, current_period_end, plan, stripe_subscription_id')
+                .eq('user_id', currentSession.user.id)
+                .in('status', ['active', 'trialing'])
+                .maybeSingle()
+
+            if (!activeSub || !activeSub.current_period_end) {
+                setHasActiveSubscription(false)
+                setShowPricingModal(true)
+                return
             }
 
-            // ✅ FIX: Handle missing current_period_end
-            if (!activeSub.current_period_end) {
-            console.error('❌ Subscription missing expiration date:', activeSub)
-            setHasActiveSubscription(false)
-            setShowPricingModal(true)
-            return
-            }
-
-            // Verify not expired
             const periodEnd = new Date(activeSub.current_period_end)
             if (periodEnd < new Date()) {
-            console.log('❌ Subscription expired:', periodEnd.toISOString())
-            
-            // ✅ ADD THIS: Mark as expired in database
-            await supabase
+                await supabase
                 .from('subscriptions')
                 .update({ 
-                status: 'expired',
-                updated_at: new Date().toISOString()
+                    status: 'expired', 
+                    updated_at: new Date().toISOString() 
                 })
                 .eq('user_id', currentSession.user.id)
                 .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
-            
-            setHasActiveSubscription(false)
-            setShowPricingModal(true)
+
+                setHasActiveSubscription(false)
+                setShowPricingModal(true)
             } else {
-            console.log('✅ Active subscription verified:', {
-                plan: activeSub.plan,
-                status: activeSub.status,
-                expires: periodEnd.toLocaleDateString()
-            })
-            setHasActiveSubscription(true)
-            loadChatHistory()
+                setHasActiveSubscription(true)
+                loadChatHistory()
             }
           } else {
             console.log('⚠️ Terms not accepted, redirecting...')
@@ -1110,25 +1089,36 @@ export default function Page() {
           .single()
         setProfile(userProfile)
         
-        // Check subscription again on auth change
         if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            const { data: activeSub, error: subError } = await supabase
-              .from('subscriptions')
-              .select('status, current_period_end, plan')
-              .eq('user_id', session.user.id)
-              .in('status', ['active', 'trialing'])
-              .maybeSingle()
+            const { data: activeSub } = await supabase
+                .from('subscriptions')
+                .select('status, current_period_end, plan, stripe_subscription_id')
+                .eq('user_id', session.user.id)
+                .in('status', ['active', 'trialing'])
+                .maybeSingle()
 
-            if (!subError && activeSub) {
-                const periodEnd = new Date(activeSub.current_period_end)
-                if (periodEnd >= new Date()) {
-                    setHasActiveSubscription(true)
-                    loadChatHistory()
-                } else {
-                    setHasActiveSubscription(false)
-                }
-            } else {
+            if (!activeSub || !activeSub.current_period_end) {
                 setHasActiveSubscription(false)
+                setShowPricingModal(true)
+                return
+            }
+
+            const periodEnd = new Date(activeSub.current_period_end)
+            if (periodEnd < new Date()) {
+                await supabase
+                .from('subscriptions')
+                .update({ 
+                    status: 'expired', 
+                    updated_at: new Date().toISOString() 
+                })
+                .eq('user_id', session.user.id)
+                .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
+
+                setHasActiveSubscription(false)
+                setShowPricingModal(true)
+            } else {
+                setHasActiveSubscription(true)
+                loadChatHistory()
             }
         }
       } else {
@@ -1142,7 +1132,7 @@ export default function Page() {
       subscription.unsubscribe()
       clearTimeout(timer)
     }
-  }, []) // Empty dependency array is correct now that supabase is stable
+  }, [])
 
   const loadChatHistory = async () => {
     const { data: chats } = await supabase
