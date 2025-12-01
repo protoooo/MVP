@@ -9,20 +9,28 @@ import { compressImage } from '@/lib/imageCompression'
 // DOCUMENT SOURCES DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
+  'Washtenaw Violation Types',
   'Washtenaw Enforcement Actions',
-  'Sanitizing Protocols',
-  'FDA Food Code 2022',
+  'Washtenaw Inspection Report Types',
+  'Washtenaw Food Service Inspection Program',
+  'Washtenaw 3-Compartment Sink Guide',
   'Michigan Modified Food Code',
-  'Emergency Action Plans',
+  'FDA Food Code 2022',
+  'Emergency Action Plans (Retail Food)',
   'Norovirus Cleaning Guidelines',
   'Fats, Oils, & Grease (FOG) Protocol',
   'Cross-Contamination Prevention',
   'Consumer Advisory Guidelines',
   'Allergen Awareness Standards',
-  'Time & Temp Control (TCS)',
+  'Food Cooling Protocols',
   'Food Labeling Guide',
   'Date Marking Guide',
   'USDA Safe Minimum Temps',
+  'Internal Cooking Temperatures',
+  'Foodborne Illness Response Guide',
+  'Michigan Food Law (Act 92)',
+  'MI Admin & Enforcement Procedures',
+  'New Business Info Packet',
 ]
 
 // ==========================================
@@ -409,7 +417,7 @@ const Icons = {
 }
 
 // ==========================================
-// SOURCE TICKER COMPONENT (Updated)
+// SOURCE TICKER COMPONENT (One instance only)
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -424,8 +432,6 @@ const SourceTicker = () => {
   return (
     <div className="flex justify-center mt-2">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/20 bg-[#161616]/80 backdrop-blur-sm">
-        {/* REMOVED BOOKMARK ICON */}
-        {/* FIXED WIDTH TO PREVENT SHIFTING */}
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
@@ -454,11 +460,10 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session // PASSED SESSION PROP
+  session
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
     if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
@@ -482,11 +487,9 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* CENTERED BUTTON ROW */}
         <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-wrap w-full">
           {/* Chat */}
           <button
@@ -631,8 +634,7 @@ const InputBox = ({
         </button>
       </form>
       
-      {/* TICKER MOVED BELOW INPUT BOX (NO DUPLICATES) */}
-      {!session && <SourceTicker />}
+      {/* SOURCE TICKER REMOVED FROM HERE - IT IS NOW ONLY IN THE PAGE COMPONENT */}
     </div>
   )
 }
@@ -647,7 +649,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // ✅ FIX: Use env var to match Supabase whitelist
   const getRedirectUrl = () => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
     return `${baseUrl}/auth/callback`
@@ -791,7 +792,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
-// ✅ ADDED: onSignOut prop to prevent entrapment
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   return (
     <div
@@ -801,8 +801,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Removed Close Button - Forced Interaction */}
-        
         <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
           protocolLM
         </h3>
@@ -851,7 +849,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
 
-        {/* ✅ ADDED: Sign Out Button to escape the trap */}
         <button
           onClick={onSignOut}
           className="w-full text-center text-xs text-[#525252] hover:text-[#A1A1AA] transition-colors py-2 uppercase tracking-wider font-medium"
@@ -893,12 +890,10 @@ export default function Page() {
   const inputRef = useRef(null)
   const userMenuRef = useRef(null)
   
-  // FIX: LAZY INITIALIZATION OF SUPABASE CLIENT
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   useEffect(() => {
-    // 1. Check for redirection from Pricing page
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       if (params.get('auth')) {
@@ -920,9 +915,6 @@ export default function Page() {
         setSession(currentSession)
 
         if (currentSession) {
-          // =========================================================
-          // CHECK SUBSCRIPTION FIRST (Stop loading if none)
-          // =========================================================
           const { data: activeSub } = await supabase
             .from('subscriptions')
             .select('status, current_period_end, plan, stripe_subscription_id')
@@ -930,16 +922,13 @@ export default function Page() {
             .in('status', ['active', 'trialing'])
             .maybeSingle()
 
-          // 1. If NO Active Subscription -> Stop here, Show Pricing, Don't Check Terms yet
           if (!activeSub || !activeSub.current_period_end) {
             setHasActiveSubscription(false)
-            // ✅ FIXED: ONLY SHOW PRICING IF LOGGED IN
             if (currentSession) setShowPricingModal(true)
-            setIsLoading(false) // Stop loading screen to show pricing
+            setIsLoading(false)
             return
           }
 
-          // 2. If Expired -> Stop here
           const periodEnd = new Date(activeSub.current_period_end)
           if (periodEnd < new Date()) {
             await supabase
@@ -957,9 +946,6 @@ export default function Page() {
             return
           }
 
-          // =========================================================
-          // IF VALID SUB -> NOW CHECK TERMS
-          // =========================================================
           const { data: userProfile } = await supabase
             .from('user_profiles')
             .select('*')
@@ -968,7 +954,6 @@ export default function Page() {
           setProfile(userProfile)
           
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            // EVERYTHING GOOD -> Load Chat
             setHasActiveSubscription(true)
             setShowPricingModal(false) 
             loadChatHistory()
@@ -985,7 +970,6 @@ export default function Page() {
     }
     init()
 
-    // SAFETY VALVE: Force load if DB hangs
     const safetyTimer = setTimeout(() => {
         setIsLoading(false)
     }, 2000)
@@ -995,7 +979,6 @@ export default function Page() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
-        // MATCHING LOGIC FOR AUTH STATE CHANGE
         const { data: activeSub } = await supabase
             .from('subscriptions')
             .select('status, current_period_end, plan, stripe_subscription_id')
@@ -1007,7 +990,6 @@ export default function Page() {
             setHasActiveSubscription(true)
             setShowPricingModal(false)
             
-            // Only check terms if sub is valid
             const { data: userProfile } = await supabase
               .from('user_profiles')
               .select('*')
@@ -1125,21 +1107,18 @@ export default function Page() {
     }
   }
 
-  // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN AND DEBUG LOGGING
   const handleCheckout = async (priceId, planName) => {
     console.log('🛒 Checkout initiated:', { priceId, planName })
     
-    // IMPORTANT: Add safety timeout for button
     const checkoutTimeout = setTimeout(() => {
       setCheckoutLoading(null)
       alert("Connection timeout. Please try again. If this persists, Supabase might be experiencing issues.")
-    }, 15000) // 15 seconds max
+    }, 15000)
 
     setCheckoutLoading(planName)
     
     if (!session) {
       clearTimeout(checkoutTimeout)
-      console.log('❌ No session, showing auth modal')
       setShowPricingModal(false)
       setAuthModalMessage('Create an account to subscribe')
       setShowAuthModal(true)
@@ -1148,7 +1127,6 @@ export default function Page() {
     }
 
     try {
-      // Get fresh session token
       const {
         data: { session: currentSession },
       } = await supabase.auth.getSession()
@@ -1159,8 +1137,6 @@ export default function Page() {
         return
       }
 
-      console.log('📡 Sending request to /api/create-checkout-session...')
-
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
@@ -1170,33 +1146,23 @@ export default function Page() {
         body: JSON.stringify({ priceId }),
       })
 
-      console.log('📡 Response status:', res.status)
-
       if (!res.ok) {
         const errorData = await res.json()
-        console.error('❌ API Error:', errorData)
-        // THROW ERROR TO BE CAUGHT BELOW
         throw new Error(errorData.error || 'API Error')
       }
 
       const data = await res.json()
-      console.log('✅ Checkout session created:', data)
 
       if (data.url) {
-        console.log('🔗 Redirecting to Stripe:', data.url)
-        // Clear timeout before redirecting so alert doesn't fire
         clearTimeout(checkoutTimeout)
         window.location.href = data.url
       } else {
-        console.error('❌ No URL returned')
         throw new Error('No checkout URL returned')
       }
     } catch (error) {
       clearTimeout(checkoutTimeout)
-      console.error('❌ Checkout error:', error)
       alert(`Checkout failed: ${error.message}. Please try again or contact support.`)
     } finally {
-      // ✅ CRITICAL: Always reset loading state
       setCheckoutLoading(null)
     }
   }
@@ -1211,9 +1177,7 @@ export default function Page() {
       return
     }
 
-    // ✅ CRITICAL: Block if no active subscription
     if (!hasActiveSubscription) {
-      console.log('❌ Blocked: No active subscription')
       setShowPricingModal(true)
       return
     }
@@ -1232,8 +1196,6 @@ export default function Page() {
     const img = selectedImage
     setSelectedImage(null)
     setIsSending(true)
-
-    // placeholder assistant msg
     setMessages((p) => [...p, { role: 'assistant', content: '' }])
 
     let activeChatId = currentChatId
@@ -1275,14 +1237,12 @@ export default function Page() {
       }
 
       if (res.status === 402) {
-        // Subscription required
         setShowPricingModal(true)
         setMessages((p) => p.slice(0, -2))
         return
       }
 
       if (res.status === 403) {
-        // Terms not accepted
         router.push('/accept-terms')
         setMessages((p) => p.slice(0, -2))
         return
@@ -1307,31 +1267,24 @@ export default function Page() {
     }
   }
 
-  // ENHANCED SECURITY IMAGE HANDLER
   const handleImage = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     if (!session) {
       setAuthModalMessage('Image analysis requires an account')
       setShowAuthModal(true)
       return
     }
-
-    // SECURITY: Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
       alert('Image must be under 10MB')
-      e.target.value = '' // Reset file input
+      e.target.value = '' 
       return
     }
-
-    // SECURITY: Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Only image files are allowed')
-      e.target.value = '' // Reset file input
+      e.target.value = ''
       return
     }
-
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
@@ -1339,7 +1292,7 @@ export default function Page() {
     } catch (error) {
       console.error('Image compression error:', error)
       alert('Failed to process image. Please try a different file.')
-      e.target.value = '' // Reset file input
+      e.target.value = ''
     }
   }
 
@@ -1359,12 +1312,6 @@ export default function Page() {
       </div>
     )
 
-  // ==========================================
-  // CRITICAL RENDER LOGIC
-  // ==========================================
-  
-  // 1. If logged in BUT no active subscription, show Full Screen Pricing immediately.
-  //    This prevents them from ever seeing the chat UI.
   if (session && !hasActiveSubscription) {
     return (
       <>
@@ -1378,7 +1325,6 @@ export default function Page() {
     )
   }
 
-  // 2. Normal Render Logic
   return (
     <>
       <GlobalStyles />
@@ -1387,7 +1333,6 @@ export default function Page() {
         onClose={() => setShowAuthModal(false)}
         message={authModalMessage}
       />
-      {/* Fallback Pricing Modal (Just in case logic slips, though line 533 catches it) */}
       {showPricingModal && (
         <FullScreenPricing
           handleCheckout={handleCheckout}
@@ -1407,7 +1352,6 @@ export default function Page() {
           />
         )}
 
-        {/* Sidebar (only when logged in) */}
         {session && (
           <aside
             className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
@@ -1499,7 +1443,6 @@ export default function Page() {
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
-          {/* Mobile header only when logged in */}
           {session && (
             <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
               <button
@@ -1519,9 +1462,7 @@ export default function Page() {
           )}
 
           {!session ? (
-            // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
             <div className="flex flex-col h-full w-full">
-                {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-lg md:text-xl text-white">
                         protocol<span className="text-[#3E7BFA]">LM</span>
@@ -1554,9 +1495,7 @@ export default function Page() {
                     </div>
                 </header>
 
-                {/* Main Content Centered */}
                 <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
-                    {/* INPUT BOX - Adjusted spacing for mobile */}
                     <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0">
                         <InputBox
                         input={input}
@@ -1574,10 +1513,9 @@ export default function Page() {
                         />
                     </div>
 
-                    {/* TICKER MOVED BELOW INPUT - NO DUPLICATES, CLEANED STYLING */}
+                    {/* SINGLE TICKER INSTANCE - ONLY IF LOGGED OUT */}
                     {!session && <SourceTicker />}
 
-                    {/* FOOTER LINKS - Responsive positioning */}
                     <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
                         <Link
                         href="/privacy"
@@ -1595,7 +1533,6 @@ export default function Page() {
                 </div>
             </div>
           ) : (
-            // LOGGED-IN VIEW
             <>
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
