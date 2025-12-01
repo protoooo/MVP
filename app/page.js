@@ -875,10 +875,16 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
-const FullScreenPricing = ({ handleCheckout, loading }) => {
+// ✅ ADDED: onSignOut prop to prevent entrapment
+const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   return (
-    <div className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col">
+    <div
+      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300"
+    >
+      <div 
+        className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Removed Close Button - Forced Interaction */}
         
         <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
@@ -924,9 +930,17 @@ const FullScreenPricing = ({ handleCheckout, loading }) => {
         <button
           onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
           disabled={loading !== null}
-          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-3"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
+        </button>
+
+        {/* ✅ ADDED: Sign Out Button to escape the trap */}
+        <button
+          onClick={onSignOut}
+          className="w-full text-center text-xs text-[#525252] hover:text-[#A1A1AA] transition-colors py-2 uppercase tracking-wider font-medium"
+        >
+          Sign Out / Use Different Account
         </button>
       </div>
     </div>
@@ -1433,7 +1447,8 @@ export default function Page() {
         <GlobalStyles />
         <FullScreenPricing 
            handleCheckout={handleCheckout} 
-           loading={checkoutLoading} 
+           loading={checkoutLoading}
+           onSignOut={handleSignOut}
         />
       </>
     )
@@ -1453,6 +1468,7 @@ export default function Page() {
         <FullScreenPricing
           handleCheckout={handleCheckout}
           loading={checkoutLoading}
+          onSignOut={handleSignOut}
         />
       )}
 
