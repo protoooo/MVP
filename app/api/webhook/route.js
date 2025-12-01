@@ -104,14 +104,14 @@ export async function POST(req) {
 
         const priceId = subscription.items.data[0].price.id
 
-        // SECURITY: Validate price ID against environment config
-        const validPriceIds = {
-          [process.env.STRIPE_STARTER_PRICE_ID]: 'starter',
-          [process.env.STRIPE_PRO_PRICE_ID]: 'pro',
-          [process.env.STRIPE_ENTERPRISE_PRICE_ID]: 'enterprise'
+        // ✅ UPDATE: Explicitly map your new single plan
+        // This ensures the database records "protocollm" as the plan name
+        const PROTOCOLLM_PRICE_ID = 'price_1SZKB5DlSrKA3nbAxLhESpzV'
+        
+        let planName = 'pro' // Fallback
+        if (priceId === PROTOCOLLM_PRICE_ID) {
+            planName = 'protocollm'
         }
-
-        const planName = validPriceIds[priceId] || 'pro'
 
         console.log(`✅ Creating subscription for user ${userId}:`, {
           plan: planName,
