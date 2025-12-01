@@ -1,3 +1,4 @@
+// app/auth/callback/route.js
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -5,10 +6,29 @@ import { NextResponse } from 'next/server'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') || '/'
+  const error = requestUrl.searchParams.get('error')
+  const errorDescription = requestUrl.searchParams.get('error_description')
   
-  // ✅ CRITICAL FIX: Use the actual public domain, not the internal container URL
-  // If the env var is missing, fall back to the requested origin (for localhost dev)
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || requestUrl.origin
+  // ✅ CRITICAL: Use env var consistently
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  
+  if (!baseUrl) {
+    console.error('❌ CRITICAL: NEXT_PUBLIC_BASE_URL not set!')
+    return NextResponse.redirect(`${requestUrl.origin}/?error=config`)
+  }
+
+  console.log('🔄 Auth callback received:', {
+    hasCode: !!code,
+    hasError: !!error,
+    baseUrl
+  })
+
+  // Handle OAuth errors
+  if (error) {
+    console.error('❌ OAuth error:', error, errorDescription)
+    return NextResponse.redirect(`${baseUrl}/?error=${error}`)
+  }
 
   if (code) {
     const cookieStore = cookies()
@@ -22,18 +42,48 @@ export async function GET(request) {
             return cookieStore.get(name)?.value
           },
           set(name, value, options) {
-            cookieStore.set({ name, value, ...options })
+            try {
+              cookieStore.set({ name, value, ...options })
+            } catch (error) {
+              console.error('Cookie set error:', error)
+            }
           },
           remove(name, options) {
-            cookieStore.delete({ name, ...options })
+            try {
+              cookieStore.delete({ name, ...options })
+            } catch (error) {
+              console.error('Cookie remove error:', error)
+            }
           },
         },
       }
     )
     
-    await supabase.auth.exchangeCodeForSession(code)
+    // Exchange code for session
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (exchangeError) {
+      console.error('❌ Session exchange failed:', exchangeError)
+      return NextResponse.redirect(`${baseUrl}/?error=auth_failed`)
+    }
+
+    console.log('✅ Session established for:', data.user?.email)
+
+    // Check if user needs to accept terms
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('accepted_terms, accepted_privacy')
+        .eq('id', data.user.id)
+        .single()
+
+      if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+        console.log('⚠️ User needs to accept terms')
+        return NextResponse.redirect(`${baseUrl}/accept-terms`)
+      }
+    }
   }
 
-  // Redirect to the home page using the correct public domain
-  return NextResponse.redirect(baseUrl)
+  // ✅ Always use baseUrl, never requestUrl.origin
+  return NextResponse.redirect(`${baseUrl}${next}`)
 }
