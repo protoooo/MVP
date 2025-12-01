@@ -1561,3 +1561,48 @@ export default function Page() {
                           {msg.image && (
                             <img
                               src={msg.image}
+                              alt="Upload"
+                              className="rounded-2xl mb-3 max-h-60 object-contain border border-white/10"
+                            />
+                          )}
+
+                          {msg.role === 'assistant' &&
+                          msg.content === '' &&
+                          isSending &&
+                          idx === messages.length - 1 ? (
+                            <div className="loader my-1" />
+                          ) : (
+                            <div className="text-[16px] leading-7 whitespace-pre-wrap">
+                              {msg.content}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0 z-20">
+                <InputBox
+                  input={input}
+                  setInput={setInput}
+                  handleSend={handleSend}
+                  handleImage={handleImage}
+                  isSending={isSending}
+                  fileInputRef={fileInputRef}
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  inputRef={inputRef}
+                  activeMode={activeMode}
+                  setActiveMode={setActiveMode}
+                  session={session}
+                />
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </>
+  )
+}
