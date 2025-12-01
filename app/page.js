@@ -6,31 +6,23 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA (Complete List)
+// DOCUMENT SOURCES DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  'Washtenaw Violation Types',
   'Washtenaw Enforcement Actions',
-  'Washtenaw Inspection Report Types',
-  'Washtenaw Food Service Inspection Program',
-  'Washtenaw 3-Compartment Sink Guide',
-  'Michigan Modified Food Code',
+  'Sanitizing Protocols',
   'FDA Food Code 2022',
-  'Emergency Action Plans (Retail Food)',
+  'Michigan Modified Food Code',
+  'Emergency Action Plans',
   'Norovirus Cleaning Guidelines',
   'Fats, Oils, & Grease (FOG) Protocol',
   'Cross-Contamination Prevention',
   'Consumer Advisory Guidelines',
   'Allergen Awareness Standards',
-  'Food Cooling Protocols',
+  'Time & Temp Control (TCS)',
   'Food Labeling Guide',
   'Date Marking Guide',
   'USDA Safe Minimum Temps',
-  'Internal Cooking Temperatures',
-  'Foodborne Illness Response Guide',
-  'Michigan Food Law (Act 92)',
-  'MI Admin & Enforcement Procedures',
-  'New Business Info Packet',
 ]
 
 // ==========================================
@@ -417,7 +409,7 @@ const Icons = {
 }
 
 // ==========================================
-// SOURCE TICKER COMPONENT
+// SOURCE TICKER COMPONENT (Improved Styling)
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -430,13 +422,14 @@ const SourceTicker = () => {
   }, [])
 
   return (
-    <div className="flex justify-center mt-2">
-      <div className="flex items-center gap-3 px-4 py-1.5 rounded-full border border-[#2E2E2E] bg-[#161616]/50 backdrop-blur-sm">
-        {/* TIGHTENED WIDTH from 500px to 340px for tighter look */}
-        <div className="w-[260px] md:w-[340px] text-center overflow-hidden h-4 relative">
+    <div className="flex justify-center mt-4">
+      <div className="flex items-center gap-3 px-5 py-2 rounded-full border border-[#444] bg-[#161616]/80 backdrop-blur-sm">
+        <span className="text-[#3E7BFA]"><Icons.Book /></span>
+        {/* INCREASED WIDTH AND FONT SIZE */}
+        <div className="w-[280px] md:w-[400px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
-            className="absolute inset-0 flex items-center justify-center text-[10px] md:text-xs text-[#525252] font-medium tracking-wider animate-source-ticker uppercase"
+            className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-[#EDEDED] font-medium tracking-wider animate-source-ticker uppercase"
           >
             {SOURCE_DOCUMENTS[index]}
           </div>
@@ -461,11 +454,11 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session // PASSED SESSION PROP
+  session
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
+    // ONLY OPEN FILE PICKER IF LOGGED IN
     if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
@@ -478,7 +471,7 @@ const InputBox = ({
       case 'image':
         return '#F5A623'
       case 'audit':
-        return '#3ECF8E' // Green for Audit
+        return '#3ECF8E' // Green
       case 'critical':
         return '#EF4444'
       default:
@@ -489,11 +482,10 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* CENTERED BUTTON ROW - No Scrolls, No Arrows */}
+        {/* CENTERED BUTTON ROW */}
         <div className="flex items-center justify-center gap-2 md:gap-3 flex-wrap w-full">
           {/* Chat */}
           <button
@@ -519,7 +511,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit (Now Green) */}
+          {/* Audit */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -562,10 +554,10 @@ const InputBox = ({
         </div>
       )}
 
-      {/* DYNAMIC BORDER COLOR FORM */}
+      {/* DYNAMIC BORDER COLOR FORM (Thicker Border: border-2) */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#161616] border rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
+        className="relative flex items-end w-full bg-[#161616] border-2 rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
         style={{
           borderColor: `${activeColor}4D`,
           '--active-color': activeColor,
@@ -638,7 +630,7 @@ const InputBox = ({
         </button>
       </form>
       
-      {/* TICKER MOVED INSIDE INPUT BOX AREA (Only if !session to keep chat clean) */}
+      {/* TICKER MOVED BELOW INPUT BOX */}
       {!session && <SourceTicker />}
     </div>
   )
@@ -1533,7 +1525,7 @@ export default function Page() {
                     <div className="font-semibold tracking-tight text-lg md:text-xl text-white">
                         protocol<span className="text-[#3E7BFA]">LM</span>
                         <span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">
-                          Trained on Washtenaw, MI & FDA Regs
+                          Trained on Washtenaw County Food Safety Protocols
                         </span>
                     </div>
                     
@@ -1581,17 +1573,8 @@ export default function Page() {
                         />
                     </div>
 
-                    {/* TICKER MOVED BELOW INPUT */}
+                    {/* TICKER MOVED BELOW INPUT - WITH WHITE TEXT/BORDER & WIDER */}
                     {!session && <SourceTicker />}
-
-                    {/* SUBTITLE - Responsive text size */}
-                    <p className="text-[#A1A1AA] text-sm md:text-lg lg:text-xl mt-6 font-medium text-center px-4">
-                        Trained on{' '}
-                        <span className="text-white font-semibold">
-                        Washtenaw, Michigan
-                        </span>{' '}
-                        &amp; FDA Regulations
-                    </p>
 
                     {/* FOOTER LINKS - Responsive positioning */}
                     <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6">
