@@ -32,6 +32,10 @@ const GlobalStyles = () => (
     body {
       background-color: #121212 !important;
       overscroll-behavior: none;
+      /* FIX: Use dynamic viewport height for mobile browsers */
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
     }
     .loader {
       height: 20px;
@@ -515,17 +519,14 @@ const InputBox = ({
   const activeColor = getActiveColor()
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-0 md:pb-0">
-      {/* SCROLLABLE MODE BAR */}
-      {/* FIX: Moved margin-bottom (mb-3) to this PARENT wrapper. 
-          This ensures the relative parent height matches the button height exactly,
-          so absolute positioning (top-0 bottom-0) centers the arrow correctly. */}
+    // FIX: Added padding-bottom (pb-6) and z-index to handle mobile safe areas
+    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="relative flex justify-start md:justify-center w-full mb-3 md:mb-4">
         
         {/* Left fade */}
         <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#121212] to-transparent pointer-events-none z-10 md:hidden" />
 
-        {/* Scrollable container (No margin here anymore) */}
+        {/* Scrollable container */}
         <div className="flex items-center gap-2 px-2 md:px-1 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full">
           {/* Chat */}
           <button
@@ -601,7 +602,6 @@ const InputBox = ({
         </div>
 
         {/* Right fade + CLEAN ARROW (No Text) */}
-        {/* Adjusted gradient to be stronger so the arrow pops more clearly */}
         <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-[#121212] via-[#121212] to-transparent pointer-events-none z-10 md:hidden flex items-center justify-center pl-3">
             <svg
                 width="20"
@@ -671,7 +671,6 @@ const InputBox = ({
               handleSend(e)
             }
           }}
-          // SHORTENED PLACEHOLDERS TO FIT MOBILE BOX
           placeholder={
             activeMode === 'chat'
               ? 'Ask anything...'
@@ -874,39 +873,14 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 }
 
 // ==========================================
-// PRICING MODAL
+// FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
-const PricingModal = ({ isOpen, onClose, handleCheckout, loading, setLoading }) => {
-  // ✅ FIX: Clear loading state when modal closes
-  const handleClose = () => {
-    if (setLoading) setLoading(null)
-    onClose()
-  }
-
-  if (!isOpen) return null
-
+const FullScreenPricing = ({ handleCheckout, loading }) => {
   return (
-    <div
-      className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-      onClick={handleClose}
-    >
-      {/* 
-          1. Removed the outer bg container that held the header/footer. 
-          2. The Card itself is now the "modal content".
-          3. Added onClick stopPropagation to the card so clicking inside doesn't close it.
-      */}
-      <div 
-        className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button positioned inside the card */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
-        >
-          <Icons.X />
-        </button>
-
+    <div className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col">
+        {/* Removed Close Button - Forced Interaction */}
+        
         <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
           protocolLM
         </h3>
@@ -1025,12 +999,6 @@ export default function Page() {
           setProfile(userProfile)
           
           if (userProfile?.accepted_terms && userProfile?.accepted_privacy) {
-            // Check for pricing modal trigger in URL
-            const urlParams = new URLSearchParams(window.location.search)
-            if (urlParams.get('showPricing') === 'true') {
-              setShowPricingModal(true)
-              window.history.replaceState({}, '', '/')
-            }
             
             const { data: activeSub } = await supabase
                 .from('subscriptions')
@@ -1041,7 +1009,10 @@ export default function Page() {
 
             if (!activeSub || !activeSub.current_period_end) {
                 setHasActiveSubscription(false)
+                // SHOW PRICING "MODAL" (Which is now full screen if !hasActiveSubscription)
                 setShowPricingModal(true)
+                // STOP LOADING HERE SO WE RENDER THE PRICING UI
+                setIsLoading(false)
                 return
             }
 
@@ -1060,6 +1031,7 @@ export default function Page() {
                 setShowPricingModal(true)
             } else {
                 setHasActiveSubscription(true)
+                setShowPricingModal(false) // Ensure it's off
                 loadChatHistory()
             }
           } else {
@@ -1075,13 +1047,12 @@ export default function Page() {
     }
     init()
 
-    const timer = setTimeout(() => setIsLoading(false), 2000)
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
+        // Simple re-check logic or rely on init mostly, but kept for robust state changes
         const { data: userProfile } = await supabase
           .from('user_profiles')
           .select('*')
@@ -1097,40 +1068,25 @@ export default function Page() {
                 .in('status', ['active', 'trialing'])
                 .maybeSingle()
 
-            if (!activeSub || !activeSub.current_period_end) {
-                setHasActiveSubscription(false)
-                setShowPricingModal(true)
-                return
-            }
-
-            const periodEnd = new Date(activeSub.current_period_end)
-            if (periodEnd < new Date()) {
-                await supabase
-                .from('subscriptions')
-                .update({ 
-                    status: 'expired', 
-                    updated_at: new Date().toISOString() 
-                })
-                .eq('user_id', session.user.id)
-                .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
-
-                setHasActiveSubscription(false)
-                setShowPricingModal(true)
-            } else {
+            if (activeSub && activeSub.current_period_end && new Date(activeSub.current_period_end) >= new Date()) {
                 setHasActiveSubscription(true)
+                setShowPricingModal(false)
                 loadChatHistory()
+            } else {
+                setHasActiveSubscription(false)
+                setShowPricingModal(true)
             }
         }
       } else {
         setProfile(null)
         setChatHistory([])
         setHasActiveSubscription(false)
+        setShowPricingModal(false)
       }
     })
 
     return () => {
       subscription.unsubscribe()
-      clearTimeout(timer)
     }
   }, [])
 
@@ -1221,7 +1177,7 @@ export default function Page() {
     }
   }
 
-  // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN
+  // UPDATED HANDLECHECKOUT WITH ACCESS TOKEN AND DEBUG LOGGING
   const handleCheckout = async (priceId, planName) => {
     console.log('🛒 Checkout initiated:', { priceId, planName })
     
@@ -1263,8 +1219,8 @@ export default function Page() {
       if (!res.ok) {
         const errorData = await res.json()
         console.error('❌ API Error:', errorData)
-        alert(errorData.error || 'Checkout failed. Please try again.')
-        return
+        // THROW ERROR TO BE CAUGHT BELOW
+        throw new Error(errorData.error || 'API Error')
       }
 
       const data = await res.json()
@@ -1275,13 +1231,13 @@ export default function Page() {
         window.location.href = data.url
       } else {
         console.error('❌ No URL returned')
-        alert('System busy. Please try again.')
+        throw new Error('No checkout URL returned')
       }
     } catch (error) {
       console.error('❌ Checkout error:', error)
-      alert('Connection error. Please check your internet and try again.')
+      alert(`Checkout failed: ${error.message}. Please try again or contact support.`)
     } finally {
-      // Ensure loading state is cleared even if errors occur
+      // ✅ CRITICAL: Always reset loading state
       setCheckoutLoading(null)
     }
   }
@@ -1448,6 +1404,25 @@ export default function Page() {
       </div>
     )
 
+  // ==========================================
+  // CRITICAL RENDER LOGIC
+  // ==========================================
+  
+  // 1. If logged in BUT no active subscription, show Full Screen Pricing immediately.
+  //    This prevents them from ever seeing the chat UI.
+  if (session && !hasActiveSubscription) {
+    return (
+      <>
+        <GlobalStyles />
+        <FullScreenPricing 
+           handleCheckout={handleCheckout} 
+           loading={checkoutLoading} 
+        />
+      </>
+    )
+  }
+
+  // 2. Normal Render Logic
   return (
     <>
       <GlobalStyles />
@@ -1456,20 +1431,18 @@ export default function Page() {
         onClose={() => setShowAuthModal(false)}
         message={authModalMessage}
       />
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        handleCheckout={handleCheckout}
-        loading={checkoutLoading}
-        setLoading={setCheckoutLoading}
-      />
+      {/* Fallback Pricing Modal (Just in case logic slips, though line 533 catches it) */}
+      {showPricingModal && (
+        <FullScreenPricing
+          handleCheckout={handleCheckout}
+          loading={checkoutLoading}
+        />
+      )}
 
       <div
         className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex"
         style={{ height: '100dvh' }}
       >
-        {/* Removed the Subscription Warning Banner red bar entirely */}
-
         {session && sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/60 z-40 lg:hidden"
@@ -1724,7 +1697,7 @@ export default function Page() {
                 )}
               </div>
 
-              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0">
+              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0 z-20">
                 <InputBox
                   input={input}
                   setInput={setInput}
