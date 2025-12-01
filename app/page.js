@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import SessionGuard from '@/components/SessionGuard'
 
 // ==========================================
 // DOCUMENT SOURCES DATA
@@ -1519,7 +1520,7 @@ export default function Page() {
           {!session ? (
             // LOGGED-OUT VIEW (Fixed for Mobile & Button formatting)
             <div className="flex flex-col h-full w-full">
-                {/* Header - Changed to Flexbox to prevent overlaps */}
+                {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-sm md:text-base text-white">
                         protocolLM v.1
