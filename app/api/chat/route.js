@@ -168,7 +168,6 @@ export async function POST(req) {
       )
     }
     
-    // FIXED: Removed TypeScript type annotation
     let vertexConfig = { project: projectId, location: location }
 
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
@@ -196,8 +195,9 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     
+    // ✅ CRITICAL FIX: Updated to Gemini 2.0 Flash (stable, faster, not deprecated)
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-001',
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
@@ -205,7 +205,7 @@ export async function POST(req) {
       },
     })
 
-    console.log('✅ Vertex AI model initialized')
+    console.log('✅ Vertex AI model initialized (gemini-2.0-flash-001)')
 
     // --- SUPABASE AUTH CHECK ---
     const cookieStore = cookies()
@@ -420,8 +420,33 @@ ${lastMessage.content}`
 
     console.log('🚀 Calling Vertex AI...')
 
-    // Generate content
-    const result = await generativeModel.generateContent(request)
+    // ✅ CRITICAL FIX: Add timeout protection to prevent infinite loading
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+      console.error('⏱️ API request timed out after 60 seconds')
+    }, 60000) // 60 second timeout
+
+    let result
+    try {
+      result = await generativeModel.generateContent(request)
+      clearTimeout(timeoutId)
+      console.log('✅ Response received from Vertex AI')
+    } catch (error) {
+      clearTimeout(timeoutId)
+      
+      if (error.name === 'AbortError') {
+        console.error('❌ Request timed out')
+        return NextResponse.json(
+          { error: 'Request timed out. Please try again with a shorter message or simpler image.' },
+          { status: 504 }
+        )
+      }
+      
+      // Re-throw other errors to be caught by outer try-catch
+      throw error
+    }
+
     const response = result.response
     const text = response.candidates[0].content.parts[0].text
 
