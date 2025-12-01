@@ -197,7 +197,7 @@ export async function POST(req) {
     
     // ✅ CRITICAL FIX: Updated to Gemini 2.0 Flash (stable, faster, not deprecated)
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash-001',
+      model: 'gemini-2.0-flash',
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
