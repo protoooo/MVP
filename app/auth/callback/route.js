@@ -8,6 +8,10 @@ export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
 
+  // ✅ FIX: Force the redirect to use your real domain
+  // This ignores the internal '0.0.0.0' server address
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org'
+
   if (code) {
     const cookieStore = cookies()
     const supabase = createServerClient(
@@ -25,8 +29,6 @@ export async function GET(request) {
               )
             } catch {
               // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
             }
           },
         },
@@ -40,6 +42,6 @@ export async function GET(request) {
     }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin)
+  // Redirect explicitly to https://protocollm.org
+  return NextResponse.redirect(baseUrl)
 }
