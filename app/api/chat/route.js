@@ -5,7 +5,6 @@ import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// ✅ FIX: Force dynamic to prevent caching issues with Auth
 export const dynamic = 'force-dynamic'
 
 // --- UTILITIES ---
@@ -38,7 +37,7 @@ function validateMessages(messages) {
   }))
 }
 
-// --- FULL SYSTEM PROMPTS (RESTORED) ---
+// --- PROMPTS (unchanged) ---
 const PROMPTS = {
   chat: `You are ProtocolLM, an expert food safety compliance assistant for Michigan restaurants.
   OBJECTIVE: Help operators understand codes and fix violations.
@@ -147,6 +146,7 @@ export async function POST(req) {
     const location = 'us-central1'
     
     if (!projectId) {
+      console.error('❌ Missing GOOGLE_CLOUD_PROJECT_ID')
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
     }
     
@@ -162,13 +162,15 @@ export async function POST(req) {
           },
         }
       } catch (e) {
-        console.error('Credential error', e)
+        console.error('❌ Credential parse error', e)
       }
     }
     
     const vertex_ai = new VertexAI(vertexConfig)
+    
+    // ✅ FIX: Use the correct stable model name
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash-001',
+      model: 'gemini-2.0-flash-exp', // STABLE MODEL
       generationConfig: {
         maxOutputTokens: 8192,
         temperature: 0.3,
@@ -193,40 +195,88 @@ export async function POST(req) {
       }
     )
 
-    // ✅ FIX: Use getUser for strictly server-side auth validation
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      console.log('❌ Unauthorized request')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check Terms
-    const { data: profile } = await supabase
+    console.log('✅ User authenticated:', user.email)
+
+    // ✅ FIX: Check Terms Acceptance FIRST
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('accepted_terms, accepted_privacy')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-      return NextResponse.json({ error: 'Please accept terms', requiresTerms: true }, { status: 403 })
+    if (profileError || !profile) {
+      console.error('❌ Profile not found:', profileError)
+      return NextResponse.json({ error: 'Account error' }, { status: 500 })
     }
 
-    // ✅ CRITICAL: Subscription Check
+    if (!profile.accepted_terms || !profile.accepted_privacy) {
+      console.log('⚠️ Terms not accepted')
+      return NextResponse.json({ 
+        error: 'Please accept terms', 
+        requiresTerms: true 
+      }, { status: 403 })
+    }
+
+    // ✅ CRITICAL FIX: Strict Subscription Validation
+    console.log('🔍 Checking subscription status...')
+    
     const { data: activeSub, error: subError } = await supabase
       .from('subscriptions')
-      .select('status, current_period_end')
+      .select('status, current_period_end, plan')
       .eq('user_id', user.id)
       .in('status', ['active', 'trialing'])
       .maybeSingle()
 
-    if (subError || !activeSub) {
-      return NextResponse.json({ error: 'Active subscription required', requiresSubscription: true }, { status: 402 })
+    if (subError) {
+      console.error('❌ Subscription query error:', subError)
+      return NextResponse.json({ 
+        error: 'Subscription check failed', 
+        requiresSubscription: true 
+      }, { status: 402 })
     }
 
-    // Check Expiration
-    if (new Date(activeSub.current_period_end) < new Date()) {
-      return NextResponse.json({ error: 'Subscription expired', requiresSubscription: true }, { status: 402 })
+    if (!activeSub) {
+      console.log('❌ No active subscription found')
+      return NextResponse.json({ 
+        error: 'Active subscription required', 
+        requiresSubscription: true 
+      }, { status: 402 })
     }
+
+    // Check if subscription expired
+    const periodEnd = new Date(activeSub.current_period_end)
+    const now = new Date()
+    
+    if (periodEnd < now) {
+      console.log('❌ Subscription expired:', periodEnd.toISOString())
+      
+      // Mark as expired in database
+      await supabase
+        .from('subscriptions')
+        .update({ 
+          status: 'expired',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+      
+      return NextResponse.json({ 
+        error: 'Subscription expired', 
+        requiresSubscription: true 
+      }, { status: 402 })
+    }
+
+    console.log('✅ Valid subscription:', {
+      plan: activeSub.plan,
+      status: activeSub.status,
+      expires: periodEnd.toISOString()
+    })
 
     // Check Rate Limits
     const limitCheck = await checkRateLimit(user.id)
@@ -263,7 +313,7 @@ export async function POST(req) {
             }))
         }
       } catch (err) {
-        console.error('Search error:', err)
+        console.error('❌ Search error:', err)
       }
     }
 
@@ -291,10 +341,14 @@ export async function POST(req) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000)
 
+    console.log('🚀 Sending request to Vertex AI...')
+    
     const result = await generativeModel.generateContent({
         contents: [reqContent]
     })
     clearTimeout(timeoutId)
+
+    console.log('✅ Response received from Vertex AI')
 
     const response = result.response
     const text = response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
@@ -327,6 +381,12 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('❌ Chat API Error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
     return NextResponse.json(
       { error: 'Service error. Please try again.' },
       { status: 500 }
