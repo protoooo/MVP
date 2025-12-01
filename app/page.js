@@ -1056,6 +1056,17 @@ export default function Page() {
               const periodEnd = new Date(activeSub.current_period_end)
               if (periodEnd < new Date()) {
                 console.log('❌ Subscription expired:', periodEnd.toISOString())
+                
+                // ✅ ADD THIS: Mark as expired in database
+                await supabase
+                  .from('subscriptions')
+                  .update({ 
+                    status: 'expired',
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('user_id', currentSession.user.id)
+                  .eq('stripe_subscription_id', activeSub.stripe_subscription_id)
+                
                 setHasActiveSubscription(false)
                 setShowPricingModal(true)
               } else {
