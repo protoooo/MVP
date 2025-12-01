@@ -6,23 +6,33 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// DOCUMENT SOURCES DATA
+// DOCUMENT SOURCES DATA (Mapped to your Files)
 // ==========================================
 const SOURCE_DOCUMENTS = [
-  'Washtenaw County Enforcement Procedures',
-  'Michigan Modified Food Code',
-  'FDA Food Code Regulations',
-  'Emergency Action Plans (Retail Food)',
-  'Norovirus Cleaning Guidelines',
-  'Foodborne Illness Response Guide',
-  'Fats, Oils, & Grease (FOG) Protocol',
-  'Allergen Awareness Standards',
-  'Time & Temperature Control Safety',
+  'Washtenaw 3-Compartment Sink Guide',
+  'Consumer Advisory Standards',
+  'Cooling Foods Protocol',
   'Cross-Contamination Prevention',
-  'Consumer Advisory Guidelines',
+  'Washtenaw Enforcement Actions',
+  'FDA Food Code 2022',
+  'Fats, Oils, & Grease (FOG) Protocol',
+  'Allergen Awareness Info',
+  'Food Service Inspection Program',
+  'Foodborne Illness Response Guide',
+  'Safe Food Temperatures',
+  'Inspection Report Types',
+  'Internal Cooking Temperatures',
+  'Michigan Modified Food Code',
+  'Norovirus Cleaning Guide',
+  'Admin & Enforcement Procedures',
+  'Cooking Temp Summary Chart',
+  'USDA Safe Minimum Temps',
+  'Washtenaw Violation Types',
+  'Date Marking Guide',
+  'Food Labeling Guide',
   'Michigan Food Law (Act 92)',
-  'USDA Safe Minimum Internal Temps',
-  'Food Labeling & Date Marking',
+  'New Business Info Packet',
+  'Emergency Action Plans'
 ]
 
 // ==========================================
@@ -383,40 +393,6 @@ const Icons = {
       />
     </svg>
   ),
-  AcademicCap: () => (
-    <svg
-      width="20"
-      height="20"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path d="M12 14l9-5-9-5-9 5 9 5z" />
-      <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-      />
-    </svg>
-  ),
-  Table: () => (
-    <svg
-      width="20"
-      height="20"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-      />
-    </svg>
-  ),
 
   // Pricing Icons
   Check: ({ color = 'text-[#EDEDED]' }) => (
@@ -462,7 +438,8 @@ const SourceTicker = () => {
         <span className="text-[#3E7BFA]">
           <Icons.Book />
         </span>
-        <div className="w-[280px] md:w-[320px] text-center overflow-hidden h-5 relative">
+        {/* INCREASED WIDTH TO 500PX FOR LONG TITLES */}
+        <div className="w-[320px] md:w-[500px] text-center overflow-hidden h-5 relative">
           <div
             key={index}
             className="absolute inset-0 flex items-center justify-center text-xs text-[#A1A1AA] font-medium tracking-wide animate-source-ticker uppercase"
@@ -628,7 +605,7 @@ const InputBox = ({
               : activeMode === 'image'
               ? 'Upload an image...'
               : activeMode === 'audit'
-              ? 'Describe the area to audit...'
+              ? 'Describe area...'
               : 'Describe the emergency...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
@@ -649,8 +626,7 @@ const InputBox = ({
               !input.trim() && !selectedImage
                 ? '#525252'
                 : activeMode === 'chat' ||
-                  activeMode === 'critical' ||
-                  activeMode === 'audit'
+                  activeMode === 'critical'
                 ? 'white'
                 : 'black',
             cursor:
