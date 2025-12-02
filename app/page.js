@@ -6,31 +6,33 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 
 // ==========================================
-// CONFIG DATA
+// CONFIG & DATA
 // ==========================================
 const SOURCE_DOCUMENTS = [
   'Washtenaw Enforcement Actions', 'Sanitizing Protocols', 'FDA Food Code 2022',
   'Michigan Modified Food Code', 'Emergency Action Plans', 'Norovirus Cleaning Guidelines',
   'Fats, Oils, & Grease (FOG) Protocol', 'Cross-Contamination Prevention',
   'Consumer Advisory Guidelines', 'Allergen Awareness Standards', 'Time & Temp Control (TCS)',
-  'Food Labeling Guide', 'Date Marking Guide', 'USDA Safe Minimum Temps',
+  'Food Labeling Guide', 'Date Marking Guide', 'USDA Safe Minimum Temps'
 ]
 
 // ==========================================
-// GLOBAL STYLES (Enterprise Dark Theme)
+// STYLES (Vercel/Supabase Aesthetic)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #18181B !important;
-      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 32px 32px;
+      background-color: #0A0A0A !important;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
+      color: #EDEDED;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .loader {
       height: 20px; aspect-ratio: 2.5;
@@ -47,14 +49,9 @@ const GlobalStyles = () => (
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
-    @keyframes popIn { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+    @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    @keyframes slideUpFade {
-      0% { opacity: 0; transform: translateY(5px); }
-      10% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-5px); }
-    }
+    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -66,10 +63,10 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (Compressed)
+// ICONS (Compressed for Cleanliness)
 // ==========================================
 const Icons = {
-  Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>,
+  Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
   Send: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{transform:'rotate(45deg)'}}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
@@ -95,13 +92,12 @@ const SourceTicker = () => {
     const interval = setInterval(() => setIndex(p => (p + 1) % SOURCE_DOCUMENTS.length), 3000)
     return () => clearInterval(interval)
   }, [])
-
   return (
     <div className="flex justify-center mt-3">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-lg">
         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-3 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-          <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-gray-200 font-mono tracking-wide animate-source-ticker uppercase truncate">
+          <div key={index} className="absolute inset-0 flex items-center justify-start text-xs md:text-sm text-gray-200 font-mono tracking-wide animate-source-ticker uppercase truncate">
             {SOURCE_DOCUMENTS[index]}
           </div>
         </div>
@@ -113,7 +109,6 @@ const SourceTicker = () => {
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const handleModeClick = (mode) => { setActiveMode(mode); if (mode === 'image' && session) fileInputRef.current?.click() }
   
-  // UPDATED: Google Blue (#4285F4)
   const getActiveColor = () => {
     switch (activeMode) {
       case 'chat': return '#4285F4'; case 'image': return '#F5A623'; case 'audit': return '#3ECF8E';
@@ -197,8 +192,8 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   const [billingInterval, setBillingInterval] = useState('month')
   return (
-    <div className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-500">
-      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-[0_0_60px_-15px_rgba(0,0,0,0.7)] animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
+      <div className="relative w-full max-w-md bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onSignOut} className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors"><Icons.X /></button>
         <h3 className="text-xs font-bold text-[#4285F4] uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
         
@@ -220,7 +215,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> <span className="text-[#4285F4]">Location License</span> (Unlimited Users)</li>
         </ul>
 
-        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 'protocollm')} disabled={loading !== null} className="w-full bg-[#4285F4] hover:bg-[#3367D6] text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-[0_0_30px_-10px_rgba(66,133,244,0.6)] hover:shadow-[0_0_40px_-5px_rgba(66,133,244,0.8)] disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 'protocollm')} disabled={loading !== null} className="w-full bg-[#4285F4] hover:bg-[#3367D6] text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
       </div>
     </div>
   )
@@ -272,7 +267,6 @@ export default function Page() {
         if (currentSession) {
           const { data: activeSub } = await supabase.from('subscriptions').select('status, current_period_end, plan, stripe_subscription_id').eq('user_id', currentSession.user.id).in('status', ['active', 'trialing']).maybeSingle()
           
-          // Bypass for admin
           if (currentSession.user.email === 'austinrnorthrop@gmail.com') {
             setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); setIsLoading(false); return
           }
@@ -345,7 +339,7 @@ export default function Page() {
     if (!hasActiveSubscription) { setShowPricingModal(true); return }
     let finalInput = input
     if (activeMode === 'audit') finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
-
+    
     const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }])
     let activeChatId = currentChatId
     try {
@@ -396,11 +390,11 @@ export default function Page() {
           {!session ? (
             <div className="flex flex-col h-full w-full">
               <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
-                <div className="font-semibold tracking-tight text-lg md:text-xl text-white">protocol<span className="text-[#3E7BFA]">LM</span><span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">Trained on Washtenaw County Food Safety Protocols</span></div>
+                <div className="font-semibold tracking-tight text-lg md:text-xl text-white">protocol<span className="text-[#4285F4]">LM</span><span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">Trained on Washtenaw County Food Safety Protocols</span></div>
                 <div className="flex items-center gap-2 md:gap-6">
-                  <button onClick={() => setShowAuthModal(true)} className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap">Start Free Trial</button>
+                  <button onClick={() => setShowAuthModal(true)} className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap">Start Free Trial</button>
                   <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-transform active:scale-95 hidden sm:block">Pricing</button>
-                  <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-transform active:scale-95 whitespace-nowrap">Sign In</button>
+                  <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-[#4285F4] hover:text-[#3367D6] transition-transform active:scale-95 whitespace-nowrap">Sign In</button>
                 </div>
               </header>
               <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
