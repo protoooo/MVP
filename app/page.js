@@ -97,7 +97,7 @@ const SourceTicker = () => {
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-sm">
         <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse mr-3"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-          <div key={index} className="absolute inset-0 flex items-center justify-start text-xs md:text-sm text-gray-400 font-mono tracking-wide animate-source-ticker uppercase truncate">
+          <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-gray-400 font-mono tracking-wide animate-source-ticker uppercase truncate">
             {SOURCE_DOCUMENTS[index]}
           </div>
         </div>
@@ -109,7 +109,6 @@ const SourceTicker = () => {
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const handleModeClick = (mode) => { setActiveMode(mode); if (mode === 'image' && session) fileInputRef.current?.click() }
   
-  // Perplexity style: Modes are subtle toggles, not brightly colored
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
@@ -211,11 +210,11 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <div className="flex justify-center mb-8">
           <div className="bg-black/40 p-1 rounded-full flex relative border border-white/10">
             <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span></button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-white text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span></button>
           </div>
         </div>
         
-        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans">{billingInterval === 'month' ? '$200' : '$2,000'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
+        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$200' : '$2,000'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
         <p className="text-sm text-white/60 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
@@ -409,7 +408,7 @@ export default function Page() {
                 </div>
               </header>
               <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
-                <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0">
+                <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0 mx-auto">
                   <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
                 </div>
                 {!session && <SourceTicker />}
