@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 
 // ✅ IMPORT HELPERS
 import { searchDocuments } from '@/lib/searchDocs'
-import { checkRateLimit, incrementUsage } from '@/lib/rateLimit' // Added incrementUsage
+import { checkRateLimit, incrementUsage } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -120,8 +120,10 @@ export async function POST(req) {
     }
     
     const vertex_ai = new VertexAI(vertexConfig)
+    
+    // ✅ UPDATED: Using Gemini 2.0 Flash (Excellent for Text & Vision)
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: image ? 'gemini-1.5-flash-001' : 'gemini-1.5-pro-001', // Use Flash for images (faster), Pro for text (smarter)
+      model: 'gemini-2.0-flash', 
       generationConfig: { maxOutputTokens: 8192, temperature: 0.2, topP: 0.8 },
     })
 
@@ -142,7 +144,6 @@ export async function POST(req) {
     if (!profile?.accepted_terms) return NextResponse.json({ error: 'Please accept terms', errorType: 'TERMS_REQUIRED' }, { status: 403 })
 
     // --- ADMIN BYPASS LOGIC (CRITICAL) ---
-    // We check admin email here so Admins don't get blocked by the subscription check
     const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
     
     if (!isAdmin) {
@@ -160,7 +161,7 @@ export async function POST(req) {
 
     // --- RATE LIMIT CHECK ---
     const usageType = image ? 'image' : 'text'
-    const limitCheck = await checkRateLimit(user.id, usageType) // ✅ Passing type to your library
+    const limitCheck = await checkRateLimit(user.id, usageType) 
     
     if (!limitCheck.success) {
       return NextResponse.json({ error: limitCheck.message, errorType: 'RATE_LIMIT' }, { status: 429 })
@@ -210,7 +211,7 @@ export async function POST(req) {
       ])
     }
 
-    // ✅ FIXED: Using imported library function instead of RPC
+    // ✅ USAGE INCREMENT
     await incrementUsage(user.id, usageType)
 
     return NextResponse.json({ message: text })
