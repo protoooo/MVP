@@ -67,10 +67,10 @@ const GlobalStyles = () => (
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
-  Send: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{transform:'rotate(45deg)'}}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{transform:'rotate(45deg)'}}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
+  Plus: () => <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
   Trash: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>,
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
@@ -116,7 +116,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     if (mode === 'image' && session) fileInputRef.current?.click() 
   }
   
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) { if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false) }
     document.addEventListener('mousedown', handleClickOutside)
@@ -126,7 +125,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-xl inline-flex items-center gap-2 border border-white/10">
+        <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-xl inline-flex items-center gap-2 border border-white/10 animate-pop-in">
           <span className="text-xs text-white font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
           <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-[#525252] hover:text-white"><Icons.X /></button>
         </div>
@@ -134,65 +133,59 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
 
       <form 
         onSubmit={handleSend} 
-        className="relative flex items-end w-full bg-[#18181B] border rounded-[20px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none focus-within:border-white/20" 
-        style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+        className="relative flex items-end w-full p-2 bg-[#18181B] border border-white/10 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:border-white/20" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
-        {/* Plus Button & Menu Container */}
-        <div className="relative p-1.5" ref={menuRef}>
+        {/* Plus Button Container */}
+        <div className="relative flex-shrink-0" ref={menuRef}>
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-white hover:bg-[#333]'}`}
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5'}`}
             >
                 <Icons.Plus />
             </button>
 
-            {/* Sophisticated Pop-up Menu */}
             {showMenu && (
-                <div className="absolute bottom-full left-0 mb-3 w-[180px] bg-[#1C1C1C] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50">
-                    <div className="p-1.5 space-y-0.5">
-                        <button 
-                            type="button"
-                            onClick={() => handleModeClick('chat')} 
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'chat' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
-                        >
-                            <Icons.MessageSquare />
-                            <span>Chat</span>
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => handleModeClick('image')} 
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'image' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
-                        >
-                            <Icons.Camera />
-                            <span>Image</span>
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => handleModeClick('audit')} 
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'audit' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
-                        >
-                            <Icons.ClipboardCheck />
-                            <span>Audit</span>
-                        </button>
+                <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-[#1C1C1C] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
+                    <div className="space-y-0.5">
+                        {['chat', 'image', 'audit'].map(m => (
+                            <button 
+                                key={m}
+                                type="button"
+                                onClick={() => handleModeClick(m)} 
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-white text-black' : 'text-[#A1A1AA] hover:bg-[#2A2A2A] hover:text-white'}`}
+                            >
+                                {m === 'chat' && <Icons.MessageSquare />}
+                                {m === 'image' && <Icons.Camera />}
+                                {m === 'audit' && <Icons.ClipboardCheck />}
+                                <span className="capitalize">{m}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
             )}
         </div>
 
-        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
-          placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-          className="flex-1 max-h=[200px] min-h-[52px] py-[14px] px-2 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[16px] leading-6" rows={1} style={{ height: 'auto', overflowY: 'hidden' }}
+        <textarea 
+            ref={inputRef} 
+            value={input} 
+            onChange={(e) => setInput(e.target.value)} 
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
+            placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
+            className="flex-1 max-h=[200px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
+            rows={1} 
+            style={{ height: 'auto', overflowY: 'hidden' }}
         />
+
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`p-2 m-1.5 rounded-lg border transition-all flex items-center justify-center shrink-0
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0
             ${(!input.trim() && !selectedImage) 
-              ? 'bg-[#27272A] border-transparent text-[#525252] cursor-not-allowed' 
-              : 'bg-white text-black border-transparent hover:bg-gray-200 cursor-pointer'
+              ? 'bg-[#27272A] text-[#525252] cursor-not-allowed border border-white/5' 
+              : 'bg-white text-black hover:bg-gray-200 cursor-pointer border border-transparent'
             }`}
         >
           {isSending ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Icons.Send />}
