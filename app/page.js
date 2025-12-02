@@ -251,11 +251,11 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <div className="flex justify-center mb-8">
           <div className="bg-black/40 p-1 rounded-full flex relative border border-white/10">
             <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-white text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span></button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-white text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $200</span></button>
           </div>
         </div>
         
-        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$200' : '$2,000'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
+        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$100' : '$1,000'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
         <p className="text-sm text-white/60 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
@@ -266,7 +266,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> <span className="text-white">Location License</span> (Unlimited Users)</li>
         </ul>
 
-        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 'protocollm')} disabled={loading !== null} className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZtiLDlSrKA3nbAo1g5HVL2' : 'price_1SZtjQDlSrKA3nbACDnIbEIj', 'protocollm')} disabled={loading !== null} className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
       </div>
     </div>
   )
