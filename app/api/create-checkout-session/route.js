@@ -7,49 +7,36 @@ export const dynamic = 'force-dynamic'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
+// ✅ FIXED: Matches your Railway Environment Variables exactly
 const ALLOWED_PRICES = [
-  process.env.STRIPE_MONTHLY_PRICE_ID,
-  process.env.STRIPE_ANNUAL_PRICE_ID,
+  process.env.STRIPE_PRICE_ID_MONTHLY,
+  process.env.STRIPE_PRICE_ID_ANNUAL,
 ]
 
-// ✅ SECURITY FIX: CSRF Token Validation
 function validateCSRF(request) {
   const headersList = headers()
   const origin = headersList.get('origin')
   const referer = headersList.get('referer')
   const allowedOrigin = process.env.NEXT_PUBLIC_BASE_URL
   
-  // Verify request comes from our own domain
-  if (origin && origin !== allowedOrigin) {
-    return false
-  }
-  
-  if (referer && !referer.startsWith(allowedOrigin)) {
-    return false
-  }
-  
+  if (origin && origin !== allowedOrigin) return false
+  if (referer && !referer.startsWith(allowedOrigin)) return false
   return true
 }
 
 export async function POST(request) {
   try {
-    // ✅ CSRF Check
     if (!validateCSRF(request)) {
-      console.error('❌ CSRF validation failed')
-      return NextResponse.json(
-        { error: 'Invalid request origin' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
     const body = await request.json()
     const { priceId } = body
 
+    // Validate Price ID matches Railway variables
     if (!ALLOWED_PRICES.includes(priceId)) {
-      return NextResponse.json(
-        { error: 'Invalid subscription plan' },
-        { status: 400 }
-      )
+      console.error(`❌ Mismatch! Received: ${priceId}. Expected one of:`, ALLOWED_PRICES)
+      return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
     }
 
     const cookieStore = cookies()
@@ -60,26 +47,16 @@ export async function POST(request) {
         cookies: {
           getAll() { return cookieStore.getAll() },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => 
-                cookieStore.set(name, value, options)
-              )
-            } catch {}
+            try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch {}
           },
         },
       }
     )
     
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // ✅ Rate limit checkout attempts (prevent abuse)
+    // Check strict rate limit for checkouts (prevent spam)
     const recentCheckouts = await supabase
       .from('checkout_attempts')
       .select('created_at')
@@ -87,13 +64,9 @@ export async function POST(request) {
       .gte('created_at', new Date(Date.now() - 60000).toISOString())
     
     if (recentCheckouts.data && recentCheckouts.data.length >= 5) {
-      return NextResponse.json(
-        { error: 'Too many checkout attempts. Please wait.' },
-        { status: 429 }
-      )
+      return NextResponse.json({ error: 'Too many checkout attempts. Please wait.' }, { status: 429 })
     }
 
-    // Log checkout attempt
     await supabase.from('checkout_attempts').insert({
       user_id: user.id,
       price_id: priceId,
@@ -109,24 +82,16 @@ export async function POST(request) {
         trial_period_days: 7,
         metadata: { userId: user.id },
       },
-      tax_id_collection: { 
-        enabled: true 
-      },
+      tax_id_collection: { enabled: true },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
-      metadata: { 
-        userId: user.id,
-        timestamp: Date.now().toString()
-      },
+      metadata: { userId: user.id, timestamp: Date.now().toString() },
     })
 
     return NextResponse.json({ url: checkoutSession.url })
 
   } catch (error) {
     console.error('❌ Checkout error:', error)
-    return NextResponse.json(
-      { error: 'Payment system error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Payment system error' }, { status: 500 })
   }
 }
