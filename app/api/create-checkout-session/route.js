@@ -7,7 +7,12 @@ import Stripe from 'stripe'
 export const dynamic = 'force-dynamic'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-const ALLOWED_PRICE_ID = 'price_1SZKB5DlSrKA3nbAxLhESpzV'
+
+// Update to your NEW Price IDs
+const ALLOWED_PRICES = [
+  'price_1SZi73DlSrKA3nbAzpQSbn5F', // Monthly ($200)
+  'price_1SZi9UDlSrKA3nbANUVnhH2D', // Annual ($2000)
+]
 
 export async function POST(request) {
   try {
@@ -16,7 +21,7 @@ export async function POST(request) {
     const { priceId } = body
 
     // 2. Validate Price ID
-    if (priceId !== ALLOWED_PRICE_ID) {
+    if (!ALLOWED_PRICES.includes(priceId)) {
       return NextResponse.json(
         { error: 'Invalid subscription plan selected.' },
         { status: 400 }
@@ -58,6 +63,10 @@ export async function POST(request) {
       subscription_data: {
         trial_period_days: 7,
         metadata: { userId: user.id },
+      },
+      // ✅ Enables Business Name & Tax ID collection fields on Stripe Checkout
+      tax_id_collection: { 
+        enabled: true 
       },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
