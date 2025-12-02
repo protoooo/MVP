@@ -15,10 +15,34 @@ const processedEvents = new Set()
 const MAX_EVENT_AGE_MS = 60 * 1000
 
 function isEventProcessed(eventId) { return processedEvents.has(eventId) }
-function markEventProcessed(eventId) { processedEvents.add(eventId); setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000) }
-function isEventTooOld(eventTimestamp) { return Date.now() - (eventTimestamp * 1000) > MAX_EVENT_AGE_MS }
+function markEventProcessed(eventId) { 
+  processedEvents.add(eventId)
+  setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
+}
+function isEventTooOld(eventTimestamp) { 
+  return Date.now() - (eventTimestamp * 1000) > MAX_EVENT_AGE_MS 
+}
+
+// ✅ SECURITY FIX: Validate webhook origin
+function validateWebhookOrigin(req) {
+  const headersList = headers()
+  const stripeSignature = headersList.get('stripe-signature')
+  
+  // Stripe webhooks MUST have this header
+  if (!stripeSignature) {
+    console.error('❌ Missing Stripe signature header')
+    return false
+  }
+  
+  return true
+}
 
 export async function POST(req) {
+  // ✅ Origin validation
+  if (!validateWebhookOrigin(req)) {
+    return NextResponse.json({ error: 'Invalid webhook source' }, { status: 403 })
+  }
+
   const body = await req.text()
   const signature = headers().get('stripe-signature')
   let event
@@ -30,8 +54,15 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  if (isEventProcessed(event.id)) return NextResponse.json({ received: true })
-  if (isEventTooOld(event.created)) return NextResponse.json({ error: 'Event expired' }, { status: 400 })
+  if (isEventProcessed(event.id)) {
+    console.log(`⚠️ Duplicate event ignored: ${event.id}`)
+    return NextResponse.json({ received: true })
+  }
+  
+  if (isEventTooOld(event.created)) {
+    console.log(`⚠️ Stale event ignored: ${event.id}`)
+    return NextResponse.json({ error: 'Event expired' }, { status: 400 })
+  }
 
   console.log(`🔔 Processing webhook: ${event.type} [${event.id}]`)
   markEventProcessed(event.id)
@@ -43,18 +74,20 @@ export async function POST(req) {
         const userId = session.metadata?.userId || session.client_reference_id
         const subscriptionId = session.subscription
 
-        if (!userId || !subscriptionId) return NextResponse.json({ error: 'Missing data' }, { status: 400 })
+        if (!userId || !subscriptionId) {
+          console.error('❌ Missing userId or subscriptionId')
+          return NextResponse.json({ error: 'Missing data' }, { status: 400 })
+        }
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
         
-        // ✅ FIXED: Matches Railway
         const MONTHLY_ID = process.env.STRIPE_PRICE_ID_MONTHLY
         const ANNUAL_ID = process.env.STRIPE_PRICE_ID_ANNUAL
         
         let planName = 'pro'
         if (priceId === MONTHLY_ID || priceId === ANNUAL_ID) {
-            planName = 'protocollm'
+          planName = 'protocollm'
         }
 
         const { error: subInsertError } = await supabase.from('subscriptions').insert({
@@ -72,30 +105,35 @@ export async function POST(req) {
         })
         
         if (!subInsertError) {
-             await supabase.from('user_profiles').update({ is_subscribed: true }).eq('id', userId)
+          await supabase.from('user_profiles').update({ is_subscribed: true }).eq('id', userId)
         }
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object
-        const { error } = await supabase.from('subscriptions').update({
-            status: subscription.status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          }).eq('stripe_subscription_id', subscription.id)
+        await supabase.from('subscriptions').update({
+          status: subscription.status,
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        }).eq('stripe_subscription_id', subscription.id)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
-        await supabase.from('subscriptions').update({ status: 'canceled' }).eq('stripe_subscription_id', subscription.id)
+        await supabase.from('subscriptions').update({ 
+          status: 'canceled',
+          updated_at: new Date().toISOString()
+        }).eq('stripe_subscription_id', subscription.id)
         break
       }
     }
+    
     return NextResponse.json({ received: true })
+    
   } catch (error) {
-    console.error('❌ Webhook error:', error)
+    console.error('❌ Webhook processing error:', error)
     return NextResponse.json({ error: 'Webhook failed' }, { status: 500 })
   }
 }
