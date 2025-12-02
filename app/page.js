@@ -53,6 +53,15 @@ const GlobalStyles = () => (
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
+    
+    /* Subtle Glow Animation for Plus Button */
+    @keyframes subtleGlow {
+      0% { border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+      50% { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
+      100% { border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+    }
+    .animate-subtle-glow { animation: subtleGlow 3s ease-in-out infinite; }
+    
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
@@ -137,13 +146,13 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
-        {/* Plus Button Container - Added mb-0.5 for alignment */}
+        {/* Plus Button Container */}
         <div className="relative flex-shrink-0 mb-0.5" ref={menuRef}>
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                /* Added active:scale-90 for squishy feel */
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5'}`}
+                /* Added animate-subtle-glow here */
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5 ' + (!showMenu ? 'animate-subtle-glow' : '')}`}
             >
                 <Icons.Plus />
             </button>
@@ -175,15 +184,15 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-            className="flex-1 max-h=[200px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
+            /* Added appearance-none and explicit inline styles to kill blue border */
+            className="flex-1 max-h=[200px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
             rows={1} 
-            style={{ height: 'auto', overflowY: 'hidden' }}
+            style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
 
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          /* Added active:scale-90 and mb-0.5 for squish and alignment */
           className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0 mb-0.5 active:scale-90
             ${(!input.trim() && !selectedImage) 
               ? 'bg-[#27272A] text-[#525252] cursor-not-allowed border border-white/5' 
