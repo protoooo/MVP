@@ -12,28 +12,15 @@ const supabase = createClient(
 )
 
 const processedEvents = new Set()
-
-// ✅ SECURITY FIX: Reduced from 5 minutes to 60 seconds
 const MAX_EVENT_AGE_MS = 60 * 1000
 
-function isEventProcessed(eventId) {
-  return processedEvents.has(eventId)
-}
-
-function markEventProcessed(eventId) {
-  processedEvents.add(eventId)
-  setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
-}
-
-function isEventTooOld(eventTimestamp) {
-  const eventAge = Date.now() - (eventTimestamp * 1000)
-  return eventAge > MAX_EVENT_AGE_MS
-}
+function isEventProcessed(eventId) { return processedEvents.has(eventId) }
+function markEventProcessed(eventId) { processedEvents.add(eventId); setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000) }
+function isEventTooOld(eventTimestamp) { return Date.now() - (eventTimestamp * 1000) > MAX_EVENT_AGE_MS }
 
 export async function POST(req) {
   const body = await req.text()
   const signature = headers().get('stripe-signature')
-
   let event
 
   try {
@@ -43,68 +30,32 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  if (isEventProcessed(event.id)) {
-    console.warn(`⚠️ Duplicate event detected: ${event.id}`)
-    return NextResponse.json({ error: 'Event already processed' }, { status: 200 })
-  }
-
-  if (isEventTooOld(event.created)) {
-    console.warn(`⚠️ Event too old: ${event.id}`)
-    return NextResponse.json({ error: 'Event expired' }, { status: 400 })
-  }
+  if (isEventProcessed(event.id)) return NextResponse.json({ received: true })
+  if (isEventTooOld(event.created)) return NextResponse.json({ error: 'Event expired' }, { status: 400 })
 
   console.log(`🔔 Processing webhook: ${event.type} [${event.id}]`)
+  markEventProcessed(event.id)
 
   try {
-    markEventProcessed(event.id)
-
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
         const userId = session.metadata?.userId || session.client_reference_id
         const subscriptionId = session.subscription
 
-        if (!userId) {
-          console.error('❌ No userId in session metadata')
-          return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
-        }
-
-        if (!subscriptionId) {
-          console.error('❌ No subscriptionId in checkout session')
-          return NextResponse.json({ error: 'Missing subscriptionId' }, { status: 400 })
-        }
-
-        const { data: existingSub } = await supabase
-          .from('subscriptions')
-          .select('id, status')
-          .eq('stripe_subscription_id', subscriptionId)
-          .maybeSingle()
-
-        if (existingSub) {
-          console.log('⚠️ Subscription already exists:', subscriptionId)
-          return NextResponse.json({ received: true })
-        }
+        if (!userId || !subscriptionId) return NextResponse.json({ error: 'Missing data' }, { status: 400 })
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-        
-        if (subscription.customer !== session.customer) {
-          console.error('❌ Customer mismatch detected!')
-          return NextResponse.json({ error: 'Security violation' }, { status: 403 })
-        }
-
         const priceId = subscription.items.data[0].price.id
-        const PROTOCOLLM_PRICE_ID = process.env.STRIPE_MONTHLY_PRICE_ID
+        
+        // ✅ FIXED: Matches Railway
+        const MONTHLY_ID = process.env.STRIPE_PRICE_ID_MONTHLY
+        const ANNUAL_ID = process.env.STRIPE_PRICE_ID_ANNUAL
         
         let planName = 'pro'
-        if (priceId === PROTOCOLLM_PRICE_ID || priceId === process.env.STRIPE_ANNUAL_PRICE_ID) {
+        if (priceId === MONTHLY_ID || priceId === ANNUAL_ID) {
             planName = 'protocollm'
         }
-
-        console.log(`✅ Creating subscription for user ${userId}:`, {
-          plan: planName,
-          status: subscription.status,
-          trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null
-        })
 
         const { error: subInsertError } = await supabase.from('subscriptions').insert({
           user_id: userId,
@@ -119,191 +70,32 @@ export async function POST(req) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-
-        if (subInsertError) {
-          console.error('❌ Failed to insert subscription:', subInsertError)
-          return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        
+        if (!subInsertError) {
+             await supabase.from('user_profiles').update({ is_subscribed: true }).eq('id', userId)
         }
-
-        await supabase
-          .from('user_profiles')
-          .update({ 
-            is_subscribed: true,
-            subscription_id: subscriptionId,
-            customer_id: session.customer,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', userId)
-
-        console.log('✅ Subscription created successfully')
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object
-
-        console.log(`🔄 Subscription updated:`, {
-          id: subscription.id,
-          status: subscription.status,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end
-        })
-
-        const { data: existingSub } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .maybeSingle()
-
-        if (!existingSub) {
-          console.warn('⚠️ Subscription update for non-existent subscription:', subscription.id)
-          return NextResponse.json({ received: true })
-        }
-
-        const { error: updateError } = await supabase
-          .from('subscriptions')
-          .update({
+        const { error } = await supabase.from('subscriptions').update({
             status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-            cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString()
-          })
-          .eq('stripe_subscription_id', subscription.id)
-
-        if (updateError) {
-          console.error('❌ Failed to update subscription:', updateError)
-        }
-
-        if (!['active', 'trialing'].includes(subscription.status)) {
-          await supabase
-            .from('user_profiles')
-            .update({ 
-              is_subscribed: false,
-              updated_at: new Date().toISOString() 
-            })
-            .eq('id', existingSub.user_id)
-        }
-
+          }).eq('stripe_subscription_id', subscription.id)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
-
-        console.log(`🗑️ Subscription canceled:`, subscription.id)
-
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .maybeSingle()
-
-        if (sub) {
-          await supabase
-            .from('subscriptions')
-            .update({
-              status: 'canceled',
-              updated_at: new Date().toISOString()
-            })
-            .eq('stripe_subscription_id', subscription.id)
-
-          await supabase
-            .from('user_profiles')
-            .update({ 
-              is_subscribed: false,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', sub.user_id)
-        }
-
+        await supabase.from('subscriptions').update({ status: 'canceled' }).eq('stripe_subscription_id', subscription.id)
         break
       }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object
-        const subscriptionId = invoice.subscription
-
-        console.log(`❌ Payment failed for subscription:`, subscriptionId)
-
-        if (subscriptionId) {
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_subscription_id', subscriptionId)
-            .maybeSingle()
-
-          if (sub) {
-            await supabase
-              .from('subscriptions')
-              .update({
-                status: 'past_due',
-                updated_at: new Date().toISOString()
-              })
-              .eq('stripe_subscription_id', subscriptionId)
-
-            await supabase
-              .from('user_profiles')
-              .update({ 
-                is_subscribed: false,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', sub.user_id)
-          }
-        }
-
-        break
-      }
-
-      case 'invoice.paid': {
-        const invoice = event.data.object
-        const subscriptionId = invoice.subscription
-
-        if (invoice.billing_reason === 'subscription_cycle') {
-          console.log(`🔄 Monthly billing cycle - Resetting usage:`, subscriptionId)
-
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_subscription_id', subscriptionId)
-            .maybeSingle()
-
-          if (sub) {
-            await supabase
-              .from('user_profiles')
-              .update({
-                requests_used: 0,
-                images_used: 0,
-                is_subscribed: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', sub.user_id)
-
-            await supabase
-              .from('subscriptions')
-              .update({
-                status: 'active',
-                updated_at: new Date().toISOString()
-              })
-              .eq('stripe_subscription_id', subscriptionId)
-
-            console.log(`✅ Usage reset for user:`, sub.user_id)
-          }
-        }
-        break
-      }
-
-      default:
-        console.log(`ℹ️ Unhandled event type: ${event.type}`)
     }
-
     return NextResponse.json({ received: true })
-
   } catch (error) {
-    console.error('❌ Webhook processing error:', error)
-    return NextResponse.json({ 
-      error: 'Webhook processing failed',
-      details: error.message 
-    }, { status: 500 })
+    console.error('❌ Webhook error:', error)
+    return NextResponse.json({ error: 'Webhook failed' }, { status: 500 })
   }
 }
