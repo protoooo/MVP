@@ -12,10 +12,7 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p $PORT",
     "lint": "next lint",
-    "build-embeddings": "node scripts/build-embeddings.js",
-    "upload-embeddings": "node scripts/upload-to-supabase.js",
-    "check-docs": "node scripts/check-documents.js",
-    "test-search": "node scripts/test-search.js",
+    "ingest": "node scripts/ingest-documents.js",
     "test": "echo 'No tests yet' && exit 0"
   },
   "dependencies": {
