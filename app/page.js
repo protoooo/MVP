@@ -31,10 +31,8 @@ const SOURCE_DOCUMENTS = [
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #0A0A0A !important;
-      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 32px 32px;
+      /* UPDATED: Dark Grey Background (Google AI Studio vibe) */
+      background-color: #18181B !important;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -50,19 +48,21 @@ const GlobalStyles = () => (
       animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
-      16.67% { background-position: calc(0*100%/3) 0, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
-      33.33% { background-position: calc(0*100%/3) 100%, calc(1*100%/3) 0, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
-      50% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 100%, calc(2*100%/3) 0, calc(3*100%/3) 50% }
-      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 100%, calc(3*100%/3) 0 }
-      83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
-      100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
+      0% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      16.67% { background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      33.33% { background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      50% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%, calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%; }
+      66.67% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0; }
+      83.33% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%; }
+      100% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
     }
+    /* Pop-In Animation for Pricing Card */
     @keyframes popIn {
       0% { opacity: 0; transform: scale(0.95); }
       100% { opacity: 1; transform: scale(1); }
     }
-    .animate-pop-in { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
     @keyframes slideUpFade {
       0% { opacity: 0; transform: translateY(5px); }
       10% { opacity: 1; transform: translateY(0); }
@@ -70,10 +70,14 @@ const GlobalStyles = () => (
       100% { opacity: 0; transform: translateY(-5px); }
     }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
+
+    /* Custom Scrollbar for Chat */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* Hide Scrollbar for Mode Bar */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
@@ -83,7 +87,6 @@ const GlobalStyles = () => (
 // ICONS
 // ==========================================
 const Icons = {
-  // UI Icons
   Menu: () => (
     <svg
       width="24"
@@ -367,7 +370,7 @@ const SourceTicker = () => {
         {/* LIVE INDICATOR DOT */}
         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-3 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-          {/* FIXED ALIGNMENT: Changed justify-start to justify-center */}
+          {/* FIXED ALIGNMENT: Justify Center */}
           <div
             key={index}
             className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-gray-200 font-mono tracking-wide animate-source-ticker uppercase truncate"
@@ -395,7 +398,7 @@ const InputBox = ({
   inputRef,
   activeMode,
   setActiveMode,
-  session // PASSED SESSION PROP
+  session
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
@@ -404,18 +407,17 @@ const InputBox = ({
     }
   }
 
+  // Updated Blue Color to #4285F4 (Google Blue)
   const getActiveColor = () => {
     switch (activeMode) {
       case 'chat':
-        return '#3E7BFA'
+        return '#4285F4'
       case 'image':
         return '#F5A623'
       case 'audit':
         return '#3ECF8E' // Green for Audit
-      case 'critical':
-        return '#EF4444'
       default:
-        return '#3E7BFA'
+        return '#4285F4'
     }
   }
 
@@ -425,15 +427,15 @@ const InputBox = ({
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
         
-        {/* Mobile: Scrollable, Removed Blue Arrow */}
-        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center justify-center">
+        {/* 3 MODES ONLY - CENTERED - NO URGENT */}
+        <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-wrap w-full">
           {/* Chat */}
           <button
             onClick={() => handleModeClick('chat')}
             className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'chat'
-                ? 'text-[#3E7BFA] bg-[#3E7BFA]/10'
-                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                ? 'text-[#4285F4] bg-[#4285F4]/10'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'
             }`}
           >
             <Icons.MessageSquare /> <span>Chat</span>
@@ -445,7 +447,7 @@ const InputBox = ({
             className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'image' || selectedImage
                 ? 'text-[#F5A623] bg-[#F5A623]/10'
-                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'
             }`}
           >
             <Icons.Camera /> <span>Image</span>
@@ -457,28 +459,16 @@ const InputBox = ({
             className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
               activeMode === 'audit'
                 ? 'text-[#3ECF8E] bg-[#3ECF8E]/10'
-                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
+                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'
             }`}
           >
             <Icons.ClipboardCheck /> <span>Audit</span>
-          </button>
-
-          {/* Urgent */}
-          <button
-            onClick={() => handleModeClick('critical')}
-            className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
-              activeMode === 'critical'
-                ? 'text-[#EF4444] bg-[#EF4444]/10'
-                : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#1C1C1C]'
-            }`}
-          >
-            <Icons.Alert /> <span>Urgent</span>
           </button>
         </div>
       </div>
 
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-[#1C1C1C] rounded-2xl inline-flex items-center gap-2 border border-[#F5A623]/30">
+        <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-2xl inline-flex items-center gap-2 border border-[#F5A623]/30">
           <span className="text-xs text-[#F5A623] font-medium flex items-center gap-1">
             <Icons.Camera /> Analyzing Image
           </span>
@@ -497,7 +487,7 @@ const InputBox = ({
       {/* DYNAMIC BORDER COLOR FORM */}
       <form
         onSubmit={handleSend}
-        className="relative flex items-end w-full bg-[#161616] border-2 rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
+        className="relative flex items-end w-full bg-[#18181B] border-2 rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none"
         style={{
           borderColor: `${activeColor}4D`,
           '--active-color': activeColor,
@@ -532,9 +522,7 @@ const InputBox = ({
               ? 'Ask anything...'
               : activeMode === 'image'
               ? 'Upload an image...'
-              : activeMode === 'audit'
-              ? 'Describe area to audit...'
-              : 'Describe the emergency...'
+              : 'Describe area to audit...'
           }
           className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6"
           rows={1}
@@ -547,14 +535,13 @@ const InputBox = ({
           className="p-2 md:p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center"
           style={{
             backgroundColor:
-              !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+              !input.trim() && !selectedImage ? '#27272A' : activeColor,
             borderColor:
-              !input.trim() && !selectedImage ? '#2E2E2E' : activeColor,
+              !input.trim() && !selectedImage ? '#27272A' : activeColor,
             color:
               !input.trim() && !selectedImage
                 ? '#525252'
                 : activeMode === 'chat' ||
-                  activeMode === 'critical' ||
                   activeMode === 'audit'
                 ? 'white'
                 : 'black',
@@ -570,8 +557,7 @@ const InputBox = ({
         </button>
       </form>
       
-      {/* TICKER MOVED BELOW INPUT BOX (NO DUPLICATES) */}
-      {!session && <SourceTicker />}
+      {/* NO SOURCE TICKER HERE - MOVED TO PAGE */}
     </div>
   )
 }
@@ -735,7 +721,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-500"
     >
       <div 
         className="relative w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-[0_0_60px_-15px_rgba(0,0,0,0.7)] animate-pop-in flex flex-col"
@@ -744,70 +730,66 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         {/* CLOSE (Sign Out) BUTTON */}
         <button
           onClick={onSignOut}
-          className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
+          className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors"
         >
           <Icons.X />
         </button>
 
-        <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
+        <h3 className="text-xs font-bold text-[#4285F4] uppercase tracking-[0.2em] mb-4 mt-2 text-center">
           protocolLM
         </h3>
         
         {/* BILLING TOGGLE */}
-        <div className="flex justify-center mb-6 mt-2">
-          <div className="bg-[#2E2E2E] p-1 rounded-full flex relative">
+        <div className="flex justify-center mb-8">
+          <div className="bg-black/40 p-1 rounded-full flex relative border border-white/10">
             <button
               onClick={() => setBillingInterval('month')}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                billingInterval === 'month' ? 'bg-[#3E7BFA] text-white shadow-md' : 'text-[#A1A1AA] hover:text-white'
+              className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
+                billingInterval === 'month' ? 'bg-[#4285F4] text-white shadow-lg' : 'text-white/50 hover:text-white'
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingInterval('year')}
-              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                billingInterval === 'year' ? 'bg-[#3E7BFA] text-white shadow-md' : 'text-[#A1A1AA] hover:text-white'
+              className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
+                billingInterval === 'year' ? 'bg-[#4285F4] text-white shadow-lg' : 'text-white/50 hover:text-white'
               }`}
             >
-              Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 rounded font-bold">SAVE $400</span>
+              Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span>
             </button>
           </div>
         </div>
 
         <div className="flex items-baseline text-white justify-center mb-2">
-          <span className="text-6xl font-bold tracking-tight font-mono">
+          <span className="text-6xl font-bold tracking-tighter font-sans">
             {billingInterval === 'month' ? '$200' : '$2,000'}
           </span>
-          <span className="ml-2 text-[#555] text-xs font-bold uppercase">
+          <span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">
             /{billingInterval === 'month' ? 'month' : 'year'}
           </span>
         </div>
 
-        <p className="text-sm text-[#A1A1AA] text-center mb-6 leading-relaxed px-2">
-          Complete compliance protection for Washtenaw County restaurants and food service establishments — <span className="italic text-[#3E7BFA]">Don&apos;t get 86&apos;d by the health inspector.</span>
+        <p className="text-sm text-white/60 text-center mb-8 leading-relaxed px-4">
+          Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.
+          <br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span>
         </p>
 
-        <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
-          <li className="flex items-start gap-3 text-sm font-medium text-white">
-            <Icons.Check color="text-[#3E7BFA]" />
-            Unlimited Text Queries
+        <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90">
+            <Icons.Check color="text-[#4285F4]" /> Unlimited Compliance Queries
           </li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white">
-            <Icons.Check color="text-[#3E7BFA]" />
-            Unlimited Image Analysis
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90">
+            <Icons.Check color="text-[#4285F4]" /> AI Visual Inspections (Image Mode)
           </li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white">
-            <Icons.Check color="text-[#3E7BFA]" />
-            Full Washtenaw County Database
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90">
+            <Icons.Check color="text-[#4285F4]" /> Full Washtenaw & FDA Database
           </li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white">
-            <Icons.Check color="text-[#3E7BFA]" />
-            Mock Audit Workflow
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90">
+            <Icons.Check color="text-[#4285F4]" /> Mock Audit Workflow
           </li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white">
-            <Icons.Check color="text-[#3E7BFA]" />
-            Location License (Unlimited Users)
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90">
+            <Icons.Check color="text-[#4285F4]" /> <span className="text-[#4285F4]">Location License</span> (Unlimited Users)
           </li>
         </ul>
 
@@ -817,7 +799,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
             'protocollm'
           )}
           disabled={loading !== null}
-          className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#4285F4] hover:bg-[#3367D6] text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-[0_0_30px_-10px_rgba(66,133,244,0.6)] hover:shadow-[0_0_40px_-5px_rgba(66,133,244,0.8)] disabled:opacity-50 disabled:cursor-not-allowed border border-white/10"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
@@ -893,6 +875,15 @@ export default function Page() {
             .in('status', ['active', 'trialing'])
             .maybeSingle()
 
+          // ✅ HARDCODED BYPASS FOR YOUR EMAIL
+          if (currentSession.user.email === 'austinrnorthrop@gmail.com') {
+             setHasActiveSubscription(true)
+             setShowPricingModal(false)
+             loadChatHistory()
+             setIsLoading(false)
+             return
+          }
+
           // 1. If NO Active Subscription -> Stop here, Show Pricing, Don't Check Terms yet
           if (!activeSub || !activeSub.current_period_end) {
             setHasActiveSubscription(false)
@@ -965,6 +956,14 @@ export default function Page() {
             .eq('user_id', session.user.id)
             .in('status', ['active', 'trialing'])
             .maybeSingle()
+        
+        // ✅ HARDCODED BYPASS FOR YOUR EMAIL (Auth Change)
+        if (session.user.email === 'austinrnorthrop@gmail.com') {
+             setHasActiveSubscription(true)
+             setShowPricingModal(false)
+             loadChatHistory()
+             return
+        }
 
         if (activeSub && activeSub.current_period_end && new Date(activeSub.current_period_end) >= new Date()) {
             setHasActiveSubscription(true)
@@ -1185,8 +1184,6 @@ export default function Page() {
 
     if (activeMode === 'audit') {
       finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
-    } else if (activeMode === 'critical') {
-      finalInput = `[CRITICAL EMERGENCY MODE] The user is reporting a food safety emergency. Provide immediate, step-by-step corrective actions based on Imminent Health Hazard protocols. Be concise and authoritative. Input: ${input}`
     } 
 
     const newMsg = { role: 'user', content: input, image: selectedImage }
@@ -1487,7 +1484,7 @@ export default function Page() {
                 {/* Header - Changed to Flexbox to prevent overlaps & added 'squishy' buttons */}
                 <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
                     <div className="font-semibold tracking-tight text-lg md:text-xl text-white">
-                        protocol<span className="text-[#3E7BFA]">LM</span>
+                        protocol<span className="text-[#4285F4]">LM</span>
                         <span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">
                           Trained on Washtenaw County Food Safety Protocols
                         </span>
@@ -1496,7 +1493,7 @@ export default function Page() {
                     <div className="flex items-center gap-2 md:gap-6">
                          <button
                             onClick={() => setShowAuthModal(true)}
-                            className="bg-[#3E7BFA] hover:bg-[#3469d4] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap"
+                            className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap"
                         >
                             Start Free Trial
                         </button>
@@ -1510,7 +1507,7 @@ export default function Page() {
 
                         <button
                             onClick={() => setShowAuthModal(true)}
-                            className="text-xs md:text-sm font-medium text-[#3E7BFA] hover:text-[#3469d4] transition-transform active:scale-95 whitespace-nowrap"
+                            className="text-xs md:text-sm font-medium text-[#4285F4] hover:text-[#3367D6] transition-transform active:scale-95 whitespace-nowrap"
                         >
                             Sign In
                         </button>
@@ -1598,38 +1595,3 @@ export default function Page() {
                           isSending &&
                           idx === messages.length - 1 ? (
                             <div className="loader my-1" />
-                          ) : (
-                            <div className="text-[16px] leading-7 whitespace-pre-wrap">
-                              {msg.content}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0 z-20">
-                <InputBox
-                  input={input}
-                  setInput={setInput}
-                  handleSend={handleSend}
-                  handleImage={handleImage}
-                  isSending={isSending}
-                  fileInputRef={fileInputRef}
-                  selectedImage={selectedImage}
-                  setSelectedImage={setSelectedImage}
-                  inputRef={inputRef}
-                  activeMode={activeMode}
-                  setActiveMode={setActiveMode}
-                  session={session}
-                />
-              </div>
-            </>
-          )}
-        </main>
-      </div>
-    </>
-  )
-}
