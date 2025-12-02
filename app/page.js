@@ -8,6 +8,12 @@ import { compressImage } from '@/lib/imageCompression'
 // ==========================================
 // CONFIG & DATA
 // ==========================================
+
+// ENV VARS - Pulled from Railway
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
+
 const SOURCE_DOCUMENTS = [
   'Washtenaw Enforcement Actions', 'Sanitizing Protocols', 'FDA Food Code 2022',
   'Michigan Modified Food Code', 'Emergency Action Plans', 'Norovirus Cleaning Guidelines',
@@ -54,7 +60,6 @@ const GlobalStyles = () => (
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
     
-    /* Subtle Glow Animation for Plus Button */
     @keyframes subtleGlow {
       0% { border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
       50% { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
@@ -151,7 +156,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                /* Added animate-subtle-glow here */
                 className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5 ' + (!showMenu ? 'animate-subtle-glow' : '')}`}
             >
                 <Icons.Plus />
@@ -184,7 +188,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-            /* Added appearance-none and explicit inline styles to kill blue border */
             className="flex-1 max-h=[200px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
@@ -266,7 +269,13 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> <span className="text-white">Location License</span> (Unlimited Users)</li>
         </ul>
 
-        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZtiLDlSrKA3nbAo1g5HVL2' : 'price_1SZtjQDlSrKA3nbACDnIbEIj', 'protocollm')} disabled={loading !== null} className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+        <button 
+          onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} 
+          disabled={loading !== null} 
+          className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10"
+        >
+          {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
+        </button>
       </div>
     </div>
   )
@@ -318,7 +327,7 @@ export default function Page() {
         if (currentSession) {
           const { data: activeSub } = await supabase.from('subscriptions').select('status, current_period_end, plan, stripe_subscription_id').eq('user_id', currentSession.user.id).in('status', ['active', 'trialing']).maybeSingle()
           
-          if (currentSession.user.email === 'austinrnorthrop@gmail.com') {
+          if (currentSession.user.email === ADMIN_EMAIL) {
             setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); setIsLoading(false); return
           }
 
@@ -347,7 +356,7 @@ export default function Page() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       if (session) {
-        if (session.user.email === 'austinrnorthrop@gmail.com') {
+        if (session.user.email === ADMIN_EMAIL) {
             setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); return
         }
         const { data: activeSub } = await supabase.from('subscriptions').select('status, current_period_end, plan, stripe_subscription_id').eq('user_id', session.user.id).in('status', ['active', 'trialing']).maybeSingle()
@@ -372,8 +381,13 @@ export default function Page() {
   const handleSignOut = async (e) => { if (e && e.preventDefault) e.preventDefault(); setSession(null); setProfile(null); setMessages([]); setChatHistory([]); setShowUserMenu(false); try { await supabase.auth.signOut() } catch (error) { console.error(error) } finally { router.refresh(); window.location.href = '/' } }
   
   const handleCheckout = async (priceId, planName) => {
-    console.log('🛒 Checkout:', { priceId, planName }); const checkoutTimeout = setTimeout(() => { setCheckoutLoading(null); alert("Connection timeout. Please try again.") }, 15000); setCheckoutLoading(planName)
+    console.log('🛒 Checkout:', { priceId, planName }); 
+    const checkoutTimeout = setTimeout(() => { setCheckoutLoading(null); alert("Connection timeout. Please try again.") }, 15000); 
+    setCheckoutLoading(planName)
+    
+    if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing. Please check configuration.'); setCheckoutLoading(null); return }
     if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); return }
+    
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       if (!currentSession) { clearTimeout(checkoutTimeout); alert('Session expired.'); return }
