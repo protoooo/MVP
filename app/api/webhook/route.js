@@ -11,11 +11,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// SECURITY: Track processed events to prevent replay attacks
 const processedEvents = new Set()
 
-// ✅ SECURITY FIX: Increased from 2 minutes to 5 minutes for webhook reliability
-const MAX_EVENT_AGE_MS = 5 * 60 * 1000
+// ✅ SECURITY FIX: Reduced from 5 minutes to 60 seconds
+const MAX_EVENT_AGE_MS = 60 * 1000
 
 function isEventProcessed(eventId) {
   return processedEvents.has(eventId)
@@ -37,7 +36,6 @@ export async function POST(req) {
 
   let event
 
-  // SECURITY: Verify webhook signature
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
@@ -45,13 +43,11 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  // SECURITY: Prevent replay attacks
   if (isEventProcessed(event.id)) {
     console.warn(`⚠️ Duplicate event detected: ${event.id}`)
     return NextResponse.json({ error: 'Event already processed' }, { status: 200 })
   }
 
-  // SECURITY: Reject old events (prevents timing attacks)
   if (isEventTooOld(event.created)) {
     console.warn(`⚠️ Event too old: ${event.id}`)
     return NextResponse.json({ error: 'Event expired' }, { status: 400 })
@@ -97,10 +93,10 @@ export async function POST(req) {
         }
 
         const priceId = subscription.items.data[0].price.id
-        const PROTOCOLLM_PRICE_ID = 'price_1SZKB5DlSrKA3nbAxLhESpzV'
+        const PROTOCOLLM_PRICE_ID = process.env.STRIPE_MONTHLY_PRICE_ID
         
         let planName = 'pro'
-        if (priceId === PROTOCOLLM_PRICE_ID) {
+        if (priceId === PROTOCOLLM_PRICE_ID || priceId === process.env.STRIPE_ANNUAL_PRICE_ID) {
             planName = 'protocollm'
         }
 
