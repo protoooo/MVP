@@ -70,7 +70,9 @@ export async function POST(request) {
     }
 
     const vertex_ai = new VertexAI(vertexConfig)
-    const embeddingModel = vertex_ai.getGenerativeModel({ 
+    
+    // ✅ FIX: Use preview.getGenerativeModel for embeddings
+    const embeddingModel = vertex_ai.preview.getGenerativeModel({ 
       model: "text-embedding-004" 
     })
 
@@ -125,21 +127,30 @@ export async function POST(request) {
         for (let j = 0; j < batch.length; j++) {
           const chunkText = batch[j]
           
-          // Generate embedding
-          const result = await embeddingModel.embedContent(chunkText)
-          const embedding = result.embedding?.values
-
-          if (embedding) {
-            records.push({
-              content: chunkText,
-              embedding: embedding,
-              metadata: {
-                source: filename,
-                page: Math.floor((i + j) / 3) + 1,
-                county: 'washtenaw',
-                chunk_index: i + j
+          // ✅ FIX: Proper embedding generation
+          try {
+            const result = await embeddingModel.embedContent({
+              content: {
+                role: 'user',
+                parts: [{ text: chunkText }]
               }
             })
+            const embedding = result.embedding?.values
+
+            if (embedding) {
+              records.push({
+                content: chunkText,
+                embedding: embedding,
+                metadata: {
+                  source: filename,
+                  page: Math.floor((i + j) / 3) + 1,
+                  county: 'washtenaw',
+                  chunk_index: i + j
+                }
+              })
+            }
+          } catch (embedError) {
+            console.error('Embedding error:', embedError)
           }
         }
 
