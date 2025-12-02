@@ -17,14 +17,14 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES (Vercel/Supabase Aesthetic)
+// STYLES (Perplexity/Monochrome Aesthetic)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
       background-color: #0A0A0A !important;
-      background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
       background-size: 40px 40px;
       overscroll-behavior: none;
       height: 100dvh;
@@ -63,7 +63,7 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (Compressed for Cleanliness)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -80,7 +80,7 @@ const Icons = {
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ClipboardCheck: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>,
   Alert: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>,
-  Check: ({ color = 'text-[#EDEDED]' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
+  Check: ({ color = 'text-white' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
 }
 
 // ==========================================
@@ -94,10 +94,10 @@ const SourceTicker = () => {
   }, [])
   return (
     <div className="flex justify-center mt-3">
-      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-lg">
-        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-3 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-sm">
+        <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse mr-3"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-          <div key={index} className="absolute inset-0 flex items-center justify-start text-xs md:text-sm text-gray-200 font-mono tracking-wide animate-source-ticker uppercase truncate">
+          <div key={index} className="absolute inset-0 flex items-center justify-start text-xs md:text-sm text-gray-400 font-mono tracking-wide animate-source-ticker uppercase truncate">
             {SOURCE_DOCUMENTS[index]}
           </div>
         </div>
@@ -109,46 +109,57 @@ const SourceTicker = () => {
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const handleModeClick = (mode) => { setActiveMode(mode); if (mode === 'image' && session) fileInputRef.current?.click() }
   
-  const getActiveColor = () => {
-    switch (activeMode) {
-      case 'chat': return '#4285F4'; case 'image': return '#F5A623'; case 'audit': return '#3ECF8E';
-      default: return '#4285F4'
-    }
-  }
-  const activeColor = getActiveColor()
-
+  // Perplexity style: Modes are subtle toggles, not brightly colored
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       <div className="flex flex-col items-center w-full mb-3 md:mb-4">
-        <div className="flex items-center gap-1.5 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center justify-center">
-          <button onClick={() => handleModeClick('chat')} className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'chat' ? 'text-[#4285F4] bg-[#4285F4]/10' : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'}`}>
-            <Icons.MessageSquare /> <span>Chat</span>
-          </button>
-          <button onClick={() => handleModeClick('image')} className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'image' || selectedImage ? 'text-[#F5A623] bg-[#F5A623]/10' : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'}`}>
-            <Icons.Camera /> <span>Image</span>
-          </button>
-          <button onClick={() => handleModeClick('audit')} className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${activeMode === 'audit' ? 'text-[#3ECF8E] bg-[#3ECF8E]/10' : 'text-[#A3A3A3] hover:text-[#EDEDED] hover:bg-[#27272A]'}`}>
-            <Icons.ClipboardCheck /> <span>Audit</span>
-          </button>
+        <div className="flex items-center gap-2 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center justify-center">
+          {['chat', 'image', 'audit'].map((mode) => (
+             <button 
+                key={mode}
+                onClick={() => handleModeClick(mode)} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 border ${
+                  activeMode === mode 
+                  ? 'text-white border-white/20 bg-white/5' 
+                  : 'text-[#A3A3A3] border-transparent hover:text-white hover:bg-[#27272A]'
+                }`}
+              >
+              {mode === 'chat' && <Icons.MessageSquare />}
+              {mode === 'image' && <Icons.Camera />}
+              {mode === 'audit' && <Icons.ClipboardCheck />}
+              <span className="capitalize">{mode}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-2xl inline-flex items-center gap-2 border border-[#F5A623]/30">
-          <span className="text-xs text-[#F5A623] font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
+        <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-xl inline-flex items-center gap-2 border border-white/10">
+          <span className="text-xs text-white font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
           <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-[#525252] hover:text-white"><Icons.X /></button>
         </div>
       )}
 
-      <form onSubmit={handleSend} className="relative flex items-end w-full bg-[#18181B] border-2 rounded-[26px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none" style={{ borderColor: `${activeColor}4D`, '--active-color': activeColor }}>
-        <style jsx>{`form:focus-within { border-color: var(--active-color) !important; }`}</style>
+      <form 
+        onSubmit={handleSend} 
+        className="relative flex items-end w-full bg-[#18181B] border rounded-[20px] shadow-sm transition-all duration-300 focus-within:ring-0 focus-within:outline-none focus-within:border-white/20" 
+        style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+      >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
           placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-          className="flex-1 max-h=[200px] min-h-[50px] py-[13px] px-3 md:px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[15px] leading-6" rows={1} style={{ height: 'auto', overflowY: 'hidden' }}
+          className="flex-1 max-h=[200px] min-h-[52px] py-[14px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[16px] leading-6" rows={1} style={{ height: 'auto', overflowY: 'hidden' }}
         />
-        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className="p-2 md:p-2.5 m-1.5 rounded-full border transition-all flex items-center justify-center" style={{ backgroundColor: !input.trim() && !selectedImage ? '#27272A' : activeColor, borderColor: !input.trim() && !selectedImage ? '#27272A' : activeColor, color: !input.trim() && !selectedImage ? '#525252' : 'white', cursor: !input.trim() && !selectedImage ? 'not-allowed' : 'pointer' }}>
-          {isSending ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Icons.Send />}
+        <button 
+          type="submit" 
+          disabled={(!input.trim() && !selectedImage) || isSending} 
+          className={`p-2 m-1.5 rounded-lg border transition-all flex items-center justify-center
+            ${(!input.trim() && !selectedImage) 
+              ? 'bg-[#27272A] border-transparent text-[#525252] cursor-not-allowed' 
+              : 'bg-white text-black border-transparent hover:bg-gray-200 cursor-pointer'
+            }`}
+        >
+          {isSending ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Icons.Send />}
         </button>
       </form>
     </div>
@@ -169,7 +180,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-[#181818] border border-[#2E2E2E] rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-[#121212] border border-white/10 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div><h2 className="text-xl font-semibold text-white mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-[#888888]">Sign in to continue your session</p></div>
           <button onClick={onClose} className="text-[#888888] hover:text-white transition-colors"><Icons.X /></button>
@@ -178,10 +189,10 @@ const AuthModal = ({ isOpen, onClose, message }) => {
           {googleLoading ? <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>}
           Continue with Google
         </button>
-        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#2E2E2E]" /></div><div className="relative flex justify-center text-xs"><span className="bg-[#181818] px-3 text-[#888888]">OR</span></div></div>
+        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#2E2E2E]" /></div><div className="relative flex justify-center text-xs"><span className="bg-[#121212] px-3 text-[#888888]">OR</span></div></div>
         <form onSubmit={handleEmailAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-[#0A0A0A] border border-[#2E2E2E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#666666] focus:outline-none focus:border-[#3E7BFA] transition-all" />
-          <button type="submit" disabled={loading || googleLoading} className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-[#0A0A0A] border border-[#2E2E2E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#666666] focus:outline-none focus:border-white transition-all" />
+          <button type="submit" disabled={loading || googleLoading} className="w-full bg-white hover:bg-gray-200 text-black font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
         </form>
         {statusMessage && <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>{statusMessage}</div>}
       </div>
@@ -195,12 +206,12 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
     <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
       <div className="relative w-full max-w-md bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onSignOut} className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors"><Icons.X /></button>
-        <h3 className="text-xs font-bold text-[#4285F4] uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
+        <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
         
         <div className="flex justify-center mb-8">
           <div className="bg-black/40 p-1 rounded-full flex relative border border-white/10">
-            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-[#4285F4] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-[#4285F4] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span></button>
+            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Monthly</button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $400</span></button>
           </div>
         </div>
         
@@ -208,14 +219,14 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <p className="text-sm text-white/60 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> Unlimited Compliance Queries</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> AI Visual Inspections (Image Mode)</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> Full Washtenaw & FDA Database</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> Mock Audit Workflow</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-[#4285F4]" /> <span className="text-[#4285F4]">Location License</span> (Unlimited Users)</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Unlimited Compliance Queries</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> AI Visual Inspections (Image Mode)</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Full Washtenaw & FDA Database</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Mock Audit Workflow</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> <span className="text-white">Location License</span> (Unlimited Users)</li>
         </ul>
 
-        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 'protocollm')} disabled={loading !== null} className="w-full bg-[#4285F4] hover:bg-[#3367D6] text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+        <button onClick={() => handleCheckout(billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 'protocollm')} disabled={loading !== null} className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
       </div>
     </div>
   )
@@ -364,7 +375,7 @@ export default function Page() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
   useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus() }, [messages.length, isSending])
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#121212] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-[#3E7BFA] border-t-transparent rounded-full animate-spin" /></div>
+  if (isLoading) return <div className="fixed inset-0 bg-[#0A0A0A] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>
   if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>
 
   return (
@@ -372,29 +383,29 @@ export default function Page() {
       <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
-      <div className="fixed inset-0 w-full bg-[#121212] text-white overflow-hidden font-sans flex" style={{ height: '100dvh' }}>
+      <div className="fixed inset-0 w-full bg-[#0A0A0A] text-white overflow-hidden font-sans flex" style={{ height: '100dvh' }}>
         {session && sidebarOpen && <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         {session && (
-          <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#121212] border-r border-[#2E2E2E] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-            <div className="p-3"><button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-[#2E2E2E] hover:bg-[#1C1C1C] rounded-full transition-colors group"><span className="flex items-center gap-2"><Icons.Plus /> New chat</span></button></div>
-            <div className="flex-1 overflow-y-auto px-2"><div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div><div className="space-y-1">{chatHistory.map((chat) => (<button key={chat.id} onClick={() => loadChat(chat.id)} className={`group w-full text-left px-3 py-2 text-sm rounded-2xl truncate transition-colors flex items-center justify-between ${currentChatId === chat.id ? 'bg-[#1C1C1C] text-white border border-[#333]' : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111] border border-transparent'}`}><div className="flex items-center gap-2 overflow-hidden"><Icons.ChatBubble /><span className="truncate">{chat.title || 'New Chat'}</span></div><div onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 p-1 text-[#525252] hover:text-red-400 transition-all"><Icons.Trash /></div></button>))}</div></div>
-            {session && (<div className="p-3 border-t border-[#1C1C1C]"><div className="relative" ref={userMenuRef}><button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-2xl transition-colors text-left border border-transparent hover:border-[#2E2E2E]"><div className="w-8 h-8 rounded-full bg-[#3E7BFA] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-900/20">{session.user.email[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="text-sm font-medium text-white truncate">{session.user.email}</div></div></button>{showUserMenu && (<div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-[#2E2E2E] rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-[#2E2E2E] mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}</div></div>)}
+          <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-[#0A0A0A] border-r border-white/10 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+            <div className="p-3"><button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-[#EDEDED] bg-transparent border border-white/10 hover:bg-[#1C1C1C] rounded-full transition-colors group"><span className="flex items-center gap-2"><Icons.Plus /> New chat</span></button></div>
+            <div className="flex-1 overflow-y-auto px-2"><div className="text-xs text-[#525252] font-medium px-2 py-4 uppercase tracking-wider">Recent</div><div className="space-y-1">{chatHistory.map((chat) => (<button key={chat.id} onClick={() => loadChat(chat.id)} className={`group w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center justify-between ${currentChatId === chat.id ? 'bg-[#1C1C1C] text-white border border-transparent' : 'text-[#888] hover:text-[#EDEDED] hover:bg-[#111] border border-transparent'}`}><div className="flex items-center gap-2 overflow-hidden"><Icons.ChatBubble /><span className="truncate">{chat.title || 'New Chat'}</span></div><div onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 p-1 text-[#525252] hover:text-red-400 transition-all"><Icons.Trash /></div></button>))}</div></div>
+            {session && (<div className="p-3 border-t border-white/10"><div className="relative" ref={userMenuRef}><button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-[#1C1C1C] rounded-lg transition-colors text-left border border-transparent hover:border-white/10"><div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-xs font-bold text-black">{session.user.email[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="text-sm font-medium text-white truncate">{session.user.email}</div></div></button>{showUserMenu && (<div className="absolute bottom-full left-0 w-full mb-2 bg-[#1C1C1C] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-[#A1A1AA] hover:text-white hover:bg-[#262626] flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-white/10 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-[#262626] flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}</div></div>)}
           </aside>
         )}
-        <main className="flex-1 flex flex-col relative min-w-0 bg-[#121212]">
+        <main className="flex-1 flex flex-col relative min-w-0 bg-[#0A0A0A]">
           {session && (
-            <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#121212] border-b border-[#1C1C1C] text-white">
+            <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-[#0A0A0A] border-b border-white/10 text-white">
               <button onClick={() => setSidebarOpen(true)} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Menu /></button><span className="font-semibold text-sm">protocolLM v.1</span><button onClick={handleNewChat} className="p-1 text-[#A1A1AA] hover:text-white"><Icons.Plus /></button>
             </div>
           )}
           {!session ? (
             <div className="flex flex-col h-full w-full">
               <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
-                <div className="font-semibold tracking-tight text-lg md:text-xl text-white">protocol<span className="text-[#4285F4]">LM</span><span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">Trained on Washtenaw County Food Safety Protocols</span></div>
-                <div className="flex items-center gap-2 md:gap-6">
-                  <button onClick={() => setShowAuthModal(true)} className="bg-[#4285F4] hover:bg-[#3367D6] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg shadow-blue-900/20 whitespace-nowrap">Start Free Trial</button>
+                <div className="font-semibold tracking-tight text-lg md:text-xl text-white">protocol<span className="text-white/60">LM</span><span className="hidden md:inline text-white ml-3 font-normal text-sm md:text-base border-l border-white pl-3">Trained on Washtenaw County Food Safety Protocols</span></div>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <button onClick={() => setShowAuthModal(true)} className="bg-[#EDEDED] hover:bg-white text-black px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-sm whitespace-nowrap">Start Free Trial</button>
                   <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium text-[#A1A1AA] hover:text-white transition-transform active:scale-95 hidden sm:block">Pricing</button>
-                  <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-[#4285F4] hover:text-[#3367D6] transition-transform active:scale-95 whitespace-nowrap">Sign In</button>
+                  <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-white hover:text-gray-300 transition-transform active:scale-95 whitespace-nowrap border border-white/20 px-4 py-2 rounded-full">Sign In</button>
                 </div>
               </header>
               <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
@@ -409,13 +420,13 @@ export default function Page() {
             <>
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-4 text-center"><h1 className="text-2xl font-semibold text-white mb-2">What can I help with?</h1></div>
+                  <div className="h-full flex flex-col items-center justify-center p-4 text-center"><h1 className="text-3xl font-medium text-white/90 mb-2">What do you want to know?</h1></div>
                 ) : (
                   <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] ${msg.role === 'user' ? 'text-white px-2' : 'text-[#EDEDED] px-2'}`}>
-                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-2xl mb-3 max-h-60 object-contain border border-white/10" />}
+                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/10" />}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
                         </div>
                       </div>
@@ -423,7 +434,7 @@ export default function Page() {
                   </div>
                 )}
               </div>
-              <div className="w-full bg-[#121212] pt-2 pb-6 shrink-0 z-20">
+              <div className="w-full bg-[#0A0A0A] pt-2 pb-6 shrink-0 z-20">
                 <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
               </div>
             </>
