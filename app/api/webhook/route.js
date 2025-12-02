@@ -82,8 +82,8 @@ export async function POST(req) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
         
-        const MONTHLY_ID = process.env.STRIPE_PRICE_ID_MONTHLY
-        const ANNUAL_ID = process.env.STRIPE_PRICE_ID_ANNUAL
+        const MONTHLY_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+        const ANNUAL_ID = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
         
         let planName = 'pro'
         if (priceId === MONTHLY_ID || priceId === ANNUAL_ID) {
