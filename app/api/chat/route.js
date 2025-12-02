@@ -1,11 +1,15 @@
 import { VertexAI } from '@google-cloud/vertexai'
 import { NextResponse } from 'next/server'
-import { searchDocuments } from '@/lib/searchDocs'
-import { checkRateLimit } from '@/lib/rateLimit'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// ✅ IMPORT HELPERS
+import { searchDocuments } from '@/lib/searchDocs'
+import { checkRateLimit, incrementUsage } from '@/lib/rateLimit' // Added incrementUsage
+
 export const dynamic = 'force-dynamic'
+
+// --- 1. HELPER FUNCTIONS ---
 
 function sanitizeString(input, maxLength = 5000) {
   if (typeof input !== 'string') return ''
@@ -28,6 +32,8 @@ function validateMessages(messages) {
     image: msg.image || null
   }))
 }
+
+// --- 2. INTELLIGENCE CONFIG (PROMPTS & RULES) ---
 
 const GLOBAL_RULES = `
 PRIMARY JURISDICTION: Washtenaw County, Michigan.
@@ -84,6 +90,8 @@ const PROMPTS = {
   - Provide reopening steps`
 }
 
+// --- 3. MAIN ROUTE HANDLER ---
+
 export async function POST(req) {
   try {
     const body = await req.json()
@@ -91,18 +99,13 @@ export async function POST(req) {
     const messages = validateMessages(body.messages || [])
     const image = body.image && typeof body.image === 'string' ? body.image : null
     const chatId = body.chatId || null
-    const mode = ['chat', 'image', 'audit', 'critical'].includes(body.mode) 
-      ? body.mode 
-      : 'chat'
+    const mode = ['chat', 'image', 'audit', 'critical'].includes(body.mode) ? body.mode : 'chat'
 
+    // --- GOOGLE VERTEX SETUP ---
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
-    const location = 'us-central1'
+    if (!projectId) return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
     
-    if (!projectId) {
-      return NextResponse.json({ error: 'Configuration error' }, { status: 500 })
-    }
-    
-    let vertexConfig = { project: projectId, location: location }
+    let vertexConfig = { project: projectId, location: 'us-central1' }
     if (process.env.GOOGLE_CREDENTIALS_JSON) {
       try {
         const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
@@ -113,196 +116,108 @@ export async function POST(req) {
             private_key: privateKey,
           },
         }
-      } catch (e) {
-        console.error('❌ Credential parse error', e)
-      }
+      } catch (e) { console.error('❌ Credential parse error', e) }
     }
     
     const vertex_ai = new VertexAI(vertexConfig)
     const generativeModel = vertex_ai.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: {
-        maxOutputTokens: 8192,
-        temperature: 0.2,
-        topP: 0.8,
-      },
+      model: image ? 'gemini-1.5-flash-001' : 'gemini-1.5-pro-001', // Use Flash for images (faster), Pro for text (smarter)
+      generationConfig: { maxOutputTokens: 8192, temperature: 0.2, topP: 0.8 },
     })
 
+    // --- SUPABASE SETUP ---
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll() },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => 
-                cookieStore.set(name, value, options)
-              )
-            } catch {}
-          },
-        },
-      }
+      { cookies: { getAll() { return cookieStore.getAll() }, setAll() {} } }
     )
 
+    // --- AUTH CHECK ---
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Please sign in to continue', errorType: 'AUTH_REQUIRED' }, { status: 401 })
+
+    // --- TERMS CHECK ---
+    const { data: profile } = await supabase.from('user_profiles').select('accepted_terms, accepted_privacy').eq('id', user.id).single()
+    if (!profile?.accepted_terms) return NextResponse.json({ error: 'Please accept terms', errorType: 'TERMS_REQUIRED' }, { status: 403 })
+
+    // --- ADMIN BYPASS LOGIC (CRITICAL) ---
+    // We check admin email here so Admins don't get blocked by the subscription check
+    const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
     
-    if (authError || !user) {
-      return NextResponse.json({ 
-        error: 'Please sign in to continue',
-        errorType: 'AUTH_REQUIRED'
-      }, { status: 401 })
+    if (!isAdmin) {
+      const { data: activeSub } = await supabase
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .maybeSingle()
+
+      if (!activeSub || new Date(activeSub.current_period_end) < new Date()) {
+        return NextResponse.json({ error: 'Subscription required', errorType: 'SUBSCRIPTION_REQUIRED' }, { status: 402 })
+      }
     }
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('accepted_terms, accepted_privacy')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-      return NextResponse.json({ 
-        error: 'Please accept terms',
-        errorType: 'TERMS_REQUIRED',
-        requiresTerms: true 
-      }, { status: 403 })
-    }
-
-    const { data: activeSub } = await supabase
-      .from('subscriptions')
-      .select('status, current_period_end')
-      .eq('user_id', user.id)
-      .in('status', ['active', 'trialing'])
-      .maybeSingle()
-
-    if (!activeSub || new Date(activeSub.current_period_end) < new Date()) {
-      return NextResponse.json({ 
-        error: 'Subscription required',
-        errorType: 'SUBSCRIPTION_REQUIRED',
-        requiresSubscription: true 
-      }, { status: 402 })
-    }
-
-    const limitCheck = await checkRateLimit(user.id)
+    // --- RATE LIMIT CHECK ---
+    const usageType = image ? 'image' : 'text'
+    const limitCheck = await checkRateLimit(user.id, usageType) // ✅ Passing type to your library
+    
     if (!limitCheck.success) {
-      return NextResponse.json({ 
-        error: limitCheck.message,
-        errorType: 'RATE_LIMIT',
-        limitReached: true 
-      }, { status: 429 })
+      return NextResponse.json({ error: limitCheck.message, errorType: 'RATE_LIMIT' }, { status: 429 })
     }
 
+    // --- SEARCH & CONTEXT (RAG) ---
     const lastMessage = messages[messages.length - 1]
     let context = ''
 
-    if (lastMessage.content) {
+    if (lastMessage.content && !image) {
       try {
         const searchResults = await searchDocuments(lastMessage.content, 'washtenaw')
-        
         if (searchResults && searchResults.length > 0) {
           const countyDocs = searchResults.filter(d => d.docType === 'county')
           const stateDocs = searchResults.filter(d => d.docType === 'state')
           const federalDocs = searchResults.filter(d => d.docType === 'federal')
           
           let contextParts = []
-          if (countyDocs.length > 0) {
-            contextParts.push('=== WASHTENAW COUNTY REGULATIONS ===\n' + 
-              countyDocs.map(d => `"${d.text}"`).join('\n'))
-          }
-          if (stateDocs.length > 0) {
-            contextParts.push('=== MICHIGAN STATE CODE ===\n' + 
-              stateDocs.map(d => `"${d.text}"`).join('\n'))
-          }
-          if (federalDocs.length > 0) {
-            contextParts.push('=== FDA GUIDANCE ===\n' + 
-              federalDocs.map(d => `"${d.text}"`).join('\n'))
-          }
+          if (countyDocs.length > 0) contextParts.push('=== WASHTENAW COUNTY REGULATIONS ===\n' + countyDocs.map(d => `"${d.text}"`).join('\n'))
+          if (stateDocs.length > 0) contextParts.push('=== MICHIGAN STATE CODE ===\n' + stateDocs.map(d => `"${d.text}"`).join('\n'))
+          if (federalDocs.length > 0) contextParts.push('=== FDA GUIDANCE ===\n' + federalDocs.map(d => `"${d.text}"`).join('\n'))
           
           context = contextParts.join('\n\n')
         }
-      } catch (err) {
-        console.error('❌ Search error:', err)
-      }
+      } catch (err) { console.error('❌ Search error (Non-fatal):', err) }
     }
 
+    // --- GENERATE CONTENT ---
     const selectedPrompt = PROMPTS[mode] || PROMPTS.chat
     let promptText = `${selectedPrompt}\n\nOFFICIAL CONTEXT:\n${context || 'No specific documents found.'}\n\nUSER INPUT:\n${lastMessage.content}`
 
-    const reqContent = {
-      role: 'user',
-      parts: [{ text: promptText }]
-    }
+    const reqContent = { role: 'user', parts: [{ text: promptText }] }
 
     if (image) {
       const base64Data = image.split(',')[1]
-      reqContent.parts.push({
-        inlineData: {
-          mimeType: 'image/jpeg',
-          data: base64Data,
-        },
-      })
+      reqContent.parts.push({ inlineData: { mimeType: 'image/jpeg', data: base64Data } })
     }
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000)
+    const result = await generativeModel.generateContent({ contents: [reqContent] })
+    const text = result.response.candidates[0].content.parts[0].text.replace(/\*\*/g, '').replace(/\*/g, '')
 
-    try {
-      const result = await generativeModel.generateContent({
-        contents: [reqContent]
-      })
-      clearTimeout(timeoutId)
-
-      const text = result.response.candidates[0].content.parts[0].text
-        .replace(/\*\*/g, '')
-        .replace(/\*/g, '')
-
-      if (chatId) {
-        await supabase.from('messages').insert([
-          {
-            chat_id: chatId,
-            role: 'user',
-            content: lastMessage.content,
-            image: image || null,
-          },
-          {
-            chat_id: chatId,
-            role: 'assistant',
-            content: text,
-          }
-        ])
-      }
-
-      await supabase.rpc('increment_usage', {
-        user_id: user.id,
-        is_image: !!image,
-      })
-
-      return NextResponse.json({ message: text })
-
-    } catch (apiError) {
-      clearTimeout(timeoutId)
-      console.error('❌ Vertex AI error:', apiError)
-      
-      // ✅ SECURITY FIX: Specific error messages
-      if (apiError.message?.includes('timeout')) {
-        return NextResponse.json({ 
-          error: 'Request timeout. Please try again.',
-          errorType: 'TIMEOUT'
-        }, { status: 504 })
-      }
-      
-      return NextResponse.json({ 
-        error: 'AI service temporarily unavailable',
-        errorType: 'AI_ERROR'
-      }, { status: 503 })
+    // --- SAVE & INCREMENT ---
+    if (chatId) {
+      await supabase.from('messages').insert([
+        { chat_id: chatId, role: 'user', content: lastMessage.content, image: image ? 'image_stored' : null },
+        { chat_id: chatId, role: 'assistant', content: text }
+      ])
     }
+
+    // ✅ FIXED: Using imported library function instead of RPC
+    await incrementUsage(user.id, usageType)
+
+    return NextResponse.json({ message: text })
 
   } catch (error) {
     console.error('❌ Chat API error:', error)
-    return NextResponse.json({ 
-      error: 'Service error',
-      errorType: 'SERVER_ERROR'
-    }, { status: 500 })
+    if (error.message?.includes('timeout')) return NextResponse.json({ error: 'Request timeout. Please try again.', errorType: 'TIMEOUT' }, { status: 504 })
+    return NextResponse.json({ error: 'AI service temporarily unavailable', errorType: 'AI_ERROR' }, { status: 503 })
   }
 }
