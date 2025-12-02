@@ -47,96 +47,32 @@ const GlobalStyles = () => (
       animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      16.67% {
-        background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      33.33% {
-        background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
-      50% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%,
-          calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%;
-      }
-      66.67% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0;
-      }
-      83.33% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%;
-      }
-      100% {
-        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
-          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
-      }
+      0% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      16.67% { background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      33.33% { background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      50% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%, calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%; }
+      66.67% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0; }
+      83.33% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%; }
+      100% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
     }
-
-    /* Pop-In Animation for Pricing Card */
     @keyframes popIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9) translateY(10px);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
+      0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
-    .animate-pop-in {
-      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
+    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes slideUpFade {
-      0% {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-      10% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      90% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-5px);
-      }
+      0% { opacity: 0; transform: translateY(5px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-5px); }
     }
-    .animate-source-ticker {
-      animation: slideUpFade 3s ease-in-out forwards;
-    }
-
-    /* Custom Scrollbar for Chat */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #333;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    /* Hide Scrollbar for Mode Bar */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 )
 
@@ -457,7 +393,6 @@ const InputBox = ({
 }) => {
   const handleModeClick = (mode) => {
     setActiveMode(mode)
-    // ONLY ALLOW IMAGE CLICK IF SESSION EXISTS
     if (mode === 'image' && session) {
       fileInputRef.current?.click()
     }
@@ -470,7 +405,7 @@ const InputBox = ({
       case 'image':
         return '#F5A623'
       case 'audit':
-        return '#3ECF8E' // Green for Audit
+        return '#3ECF8E'
       case 'critical':
         return '#EF4444'
       default:
@@ -510,7 +445,7 @@ const InputBox = ({
             <Icons.Camera /> <span>Image</span>
           </button>
 
-          {/* Audit (Green) */}
+          {/* Audit */}
           <button
             onClick={() => handleModeClick('audit')}
             className={`relative group flex items-center gap-1.5 px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 shrink-0 ${
@@ -629,7 +564,8 @@ const InputBox = ({
         </button>
       </form>
       
-      {/* TICKER IS REMOVED FROM HERE TO PREVENT DUPLICATION */}
+      {/* TICKER MOVED BELOW INPUT BOX (NO DUPLICATES) */}
+      {!session && <SourceTicker />}
     </div>
   )
 }
@@ -644,7 +580,6 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
-  // ✅ FIX: Use env var to match Supabase whitelist
   const getRedirectUrl = () => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
     return `${baseUrl}/auth/callback`
@@ -788,8 +723,9 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 // ==========================================
 // FULL SCREEN PRICING (Formerly Modal)
 // ==========================================
-// ✅ ADDED: onSignOut prop to prevent entrapment
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
+  const [billingInterval, setBillingInterval] = useState('month')
+
   return (
     <div
       className="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300"
@@ -798,7 +734,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         className="relative w-full max-w-md bg-[#1C1C1C] border-2 border-[#3E7BFA] rounded-3xl p-8 shadow-[0_0_40px_-10px_rgba(62,123,250,0.5)] animate-pop-in flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ✅ REPLACED: "Sign Out" text with standard "X" Button in Top Right */}
+        {/* CLOSE (Sign Out) BUTTON */}
         <button
           onClick={onSignOut}
           className="absolute top-4 right-4 text-[#888] hover:text-white transition-colors"
@@ -809,18 +745,40 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <h3 className="text-xs font-bold text-[#3E7BFA] uppercase tracking-widest mb-2 mt-2">
           protocolLM
         </h3>
+
+        {/* BILLING TOGGLE */}
+        <div className="flex justify-center mb-6 mt-2">
+          <div className="bg-[#2E2E2E] p-1 rounded-full flex relative">
+            <button
+              onClick={() => setBillingInterval('month')}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                billingInterval === 'month' ? 'bg-[#3E7BFA] text-white shadow-md' : 'text-[#A1A1AA] hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('year')}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
+                billingInterval === 'year' ? 'bg-[#3E7BFA] text-white shadow-md' : 'text-[#A1A1AA] hover:text-white'
+              }`}
+            >
+              Annual <span className="bg-[#22C55E] text-black text-[9px] px-1.5 rounded font-bold">SAVE $400</span>
+            </button>
+          </div>
+        </div>
         
-        <div className="flex items-baseline text-white">
-          <span className="text-6xl font-bold tracking-tight font-mono">
-            $86
+        <div className="flex items-baseline text-white justify-center mb-2">
+          <span className="text-5xl font-bold tracking-tight font-mono">
+            {billingInterval === 'month' ? '$200' : '$2,000'}
           </span>
           <span className="ml-2 text-[#555] text-xs font-bold uppercase">
-            /month
+            /{billingInterval === 'month' ? 'month' : 'year'}
           </span>
         </div>
 
-        <p className="text-sm text-[#A1A1AA] mt-4 mb-6 leading-relaxed">
-          Complete compliance protection for Washtenaw County restaurants and food service establishments — <span className="italic text-[#3E7BFA]">Don&apos;t get 86&apos;d by the health inspector.</span>
+        <p className="text-sm text-[#A1A1AA] text-center mb-6 leading-relaxed px-2">
+          Complete compliance protection for Washtenaw County restaurants. <span className="italic text-[#3E7BFA]">Protect your license. Avoid fines.</span>
         </p>
 
         <ul className="space-y-3 mb-8 flex-1 border-t border-[#2C2C2C] pt-4">
@@ -842,12 +800,15 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           </li>
           <li className="flex items-start gap-3 text-sm font-medium text-white">
             <Icons.Check color="text-[#3E7BFA]" />
-            Training Materials & SOP Generators
+            Location License (Unlimited Users)
           </li>
         </ul>
 
         <button
-          onClick={() => handleCheckout('price_1SZKB5DlSrKA3nbAxLhESpzV', 'protocollm')}
+          onClick={() => handleCheckout(
+            billingInterval === 'month' ? 'price_1SZi73DlSrKA3nbAzpQSbn5F' : 'price_1SZi9UDlSrKA3nbANUVnhH2D', 
+            'protocollm'
+          )}
           disabled={loading !== null}
           className="w-full bg-[#3E7BFA] hover:bg-[#3469d4] text-white font-bold py-4 rounded-full text-sm uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
