@@ -107,31 +107,24 @@ const SourceTicker = () => {
 }
 
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
-  const handleModeClick = (mode) => { setActiveMode(mode); if (mode === 'image' && session) fileInputRef.current?.click() }
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef(null)
+
+  const handleModeClick = (mode) => { 
+    setActiveMode(mode)
+    setShowMenu(false)
+    if (mode === 'image' && session) fileInputRef.current?.click() 
+  }
   
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) { if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false) }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
-      <div className="flex flex-col items-center w-full mb-3 md:mb-4">
-        <div className="flex items-center gap-2 px-2 md:px-0 overflow-x-auto no-scrollbar pb-1 scroll-smooth w-full md:justify-center justify-center">
-          {['chat', 'image', 'audit'].map((mode) => (
-             <button 
-                key={mode}
-                onClick={() => handleModeClick(mode)} 
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition-all duration-300 border ${
-                  activeMode === mode 
-                  ? 'text-white border-white/20 bg-white/5' 
-                  : 'text-[#A3A3A3] border-transparent hover:text-white hover:bg-[#27272A]'
-                }`}
-              >
-              {mode === 'chat' && <Icons.MessageSquare />}
-              {mode === 'image' && <Icons.Camera />}
-              {mode === 'audit' && <Icons.ClipboardCheck />}
-              <span className="capitalize">{mode}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {selectedImage && (
         <div className="mb-2 mx-1 p-2 bg-[#27272A] rounded-xl inline-flex items-center gap-2 border border-white/10">
           <span className="text-xs text-white font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
@@ -145,14 +138,58 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         style={{ borderColor: 'rgba(255,255,255,0.1)' }}
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
+        
+        {/* Plus Button & Menu Container */}
+        <div className="relative p-1.5" ref={menuRef}>
+            <button 
+                type="button"
+                onClick={() => setShowMenu(!showMenu)}
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-white hover:bg-[#333]'}`}
+            >
+                <Icons.Plus />
+            </button>
+
+            {/* Sophisticated Pop-up Menu */}
+            {showMenu && (
+                <div className="absolute bottom-full left-0 mb-3 w-[180px] bg-[#1C1C1C] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50">
+                    <div className="p-1.5 space-y-0.5">
+                        <button 
+                            type="button"
+                            onClick={() => handleModeClick('chat')} 
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'chat' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
+                        >
+                            <Icons.MessageSquare />
+                            <span>Chat</span>
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => handleModeClick('image')} 
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'image' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
+                        >
+                            <Icons.Camera />
+                            <span>Image</span>
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => handleModeClick('audit')} 
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${activeMode === 'audit' ? 'bg-white text-black' : 'text-[#EDEDED] hover:bg-[#2A2A2A]'}`}
+                        >
+                            <Icons.ClipboardCheck />
+                            <span>Audit</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+
         <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
           placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-          className="flex-1 max-h=[200px] min-h-[52px] py-[14px] px-4 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[16px] leading-6" rows={1} style={{ height: 'auto', overflowY: 'hidden' }}
+          className="flex-1 max-h=[200px] min-h-[52px] py-[14px] px-2 bg-transparent border-none focus:ring-0 outline-none focus:outline-none resize-none text-white placeholder-[#525252] text-sm md:text-[16px] leading-6" rows={1} style={{ height: 'auto', overflowY: 'hidden' }}
         />
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`p-2 m-1.5 rounded-lg border transition-all flex items-center justify-center
+          className={`p-2 m-1.5 rounded-lg border transition-all flex items-center justify-center shrink-0
             ${(!input.trim() && !selectedImage) 
               ? 'bg-[#27272A] border-transparent text-[#525252] cursor-not-allowed' 
               : 'bg-white text-black border-transparent hover:bg-gray-200 cursor-pointer'
