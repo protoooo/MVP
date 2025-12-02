@@ -1,34 +1,57 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-// Force this route to never cache (Critical for Auth)
 export const dynamic = 'force-dynamic'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Update to your NEW Price IDs
 const ALLOWED_PRICES = [
-  'price_1SZi73DlSrKA3nbAzpQSbn5F', // Monthly ($200)
-  'price_1SZi9UDlSrKA3nbANUVnhH2D', // Annual ($2000)
+  process.env.STRIPE_MONTHLY_PRICE_ID,
+  process.env.STRIPE_ANNUAL_PRICE_ID,
 ]
+
+// ✅ SECURITY FIX: CSRF Token Validation
+function validateCSRF(request) {
+  const headersList = headers()
+  const origin = headersList.get('origin')
+  const referer = headersList.get('referer')
+  const allowedOrigin = process.env.NEXT_PUBLIC_BASE_URL
+  
+  // Verify request comes from our own domain
+  if (origin && origin !== allowedOrigin) {
+    return false
+  }
+  
+  if (referer && !referer.startsWith(allowedOrigin)) {
+    return false
+  }
+  
+  return true
+}
 
 export async function POST(request) {
   try {
-    // 1. Parse Body
+    // ✅ CSRF Check
+    if (!validateCSRF(request)) {
+      console.error('❌ CSRF validation failed')
+      return NextResponse.json(
+        { error: 'Invalid request origin' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { priceId } = body
 
-    // 2. Validate Price ID
     if (!ALLOWED_PRICES.includes(priceId)) {
       return NextResponse.json(
-        { error: 'Invalid subscription plan selected.' },
+        { error: 'Invalid subscription plan' },
         { status: 400 }
       )
     }
 
-    // 3. Authenticate User (Using getUser for stricter security)
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -37,9 +60,11 @@ export async function POST(request) {
         cookies: {
           getAll() { return cookieStore.getAll() },
           setAll(cookiesToSet) {
-             try {
-               cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-             } catch {}
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => 
+                cookieStore.set(name, value, options)
+              )
+            } catch {}
           },
         },
       }
@@ -49,12 +74,32 @@ export async function POST(request) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'You must be logged in to subscribe.' },
+        { error: 'Authentication required' },
         { status: 401 }
       )
     }
 
-    // 4. Create Stripe Session
+    // ✅ Rate limit checkout attempts (prevent abuse)
+    const recentCheckouts = await supabase
+      .from('checkout_attempts')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', new Date(Date.now() - 60000).toISOString())
+    
+    if (recentCheckouts.data && recentCheckouts.data.length >= 5) {
+      return NextResponse.json(
+        { error: 'Too many checkout attempts. Please wait.' },
+        { status: 429 }
+      )
+    }
+
+    // Log checkout attempt
+    await supabase.from('checkout_attempts').insert({
+      user_id: user.id,
+      price_id: priceId,
+      created_at: new Date().toISOString()
+    })
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -64,21 +109,23 @@ export async function POST(request) {
         trial_period_days: 7,
         metadata: { userId: user.id },
       },
-      // ✅ Enables Business Name & Tax ID collection fields on Stripe Checkout
       tax_id_collection: { 
         enabled: true 
       },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
-      metadata: { userId: user.id },
+      metadata: { 
+        userId: user.id,
+        timestamp: Date.now().toString()
+      },
     })
 
     return NextResponse.json({ url: checkoutSession.url })
 
   } catch (error) {
-    console.error('Stripe Checkout Error:', error)
+    console.error('❌ Checkout error:', error)
     return NextResponse.json(
-      { error: 'Unable to connect to payment processor.' },
+      { error: 'Payment system error' },
       { status: 500 }
     )
   }
