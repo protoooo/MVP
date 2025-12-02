@@ -10,12 +10,15 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // ==========================================
-// CONFIGURATION
+// CONFIGURATION - RATE LIMIT FRIENDLY
 // ==========================================
 const WASHTENAW_DOCS_PATH = path.join(__dirname, '../public/documents/washtenaw')
-const CHUNK_SIZE = 800 // characters per chunk
+const CHUNK_SIZE = 800
 const CHUNK_OVERLAP = 100
-const BATCH_SIZE = 10 // embeddings per batch
+const BATCH_SIZE = 5 // Reduced for safety
+const DELAY_BETWEEN_BATCHES = 2000 // 2 seconds between batches
+const DELAY_BETWEEN_EMBEDDINGS = 500 // 0.5 seconds between embeddings
+const MAX_RETRIES = 3
 
 // ==========================================
 // INITIALIZE CLIENTS
@@ -49,6 +52,10 @@ const embeddingModel = vertex_ai.getGenerativeModel({ model: "text-embedding-004
 // ==========================================
 // HELPER FUNCTIONS
 // ==========================================
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 function chunkText(text, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP) {
   const chunks = []
   let start = 0
@@ -73,13 +80,82 @@ async function extractTextFromPDF(filePath) {
   }
 }
 
-async function generateEmbedding(text) {
-  try {
-    const result = await embeddingModel.embedContent(text)
-    return result.embedding?.values || null
-  } catch (error) {
-    console.error(`   ❌ Embedding error: ${error.message}`)
-    return null
+async function generateEmbeddingWithRetry(text, retries = MAX_RETRIES) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const result = await embeddingModel.embedContent({
+        content: {
+          role: 'user',
+          parts: [{ text }]
+        }
+      })
+      
+      const embedding = result.embedding?.values
+      
+      if (embedding && Array.isArray(embedding) && embedding.length > 0) {
+        return embedding
+      } else {
+        throw new Error('Invalid embedding format')
+      }
+    } catch (error) {
+      if (attempt === retries) {
+        console.error(`   ❌ Embedding failed after ${retries} attempts:`, error.message)
+        return null
+      }
+      
+      // Exponential backoff
+      const waitTime = Math.pow(2, attempt) * 1000
+      console.log(`   ⏳ Retry ${attempt}/${retries} after ${waitTime}ms...`)
+      await sleep(waitTime)
+    }
+  }
+  return null
+}
+
+// ==========================================
+// PROGRESS TRACKER
+// ==========================================
+class ProgressTracker {
+  constructor(totalFiles) {
+    this.totalFiles = totalFiles
+    this.currentFile = 0
+    this.totalChunks = 0
+    this.successfulInserts = 0
+    this.failedChunks = 0
+  }
+
+  startFile(filename, chunkCount) {
+    this.currentFile++
+    console.log(`\n[${this.currentFile}/${this.totalFiles}] 📄 Processing: ${filename}`)
+    console.log(`   ✂️ ${chunkCount} chunks to process`)
+  }
+
+  logProgress(current, total) {
+    const percent = Math.round((current / total) * 100)
+    process.stdout.write(`\r   Progress: ${current}/${total} (${percent}%) `)
+  }
+
+  recordSuccess(count) {
+    this.successfulInserts += count
+    this.totalChunks += count
+  }
+
+  recordFailure(count) {
+    this.failedChunks += count
+    this.totalChunks += count
+  }
+
+  summary() {
+    console.log('\n' + '='.repeat(60))
+    console.log('✅ INGESTION COMPLETE')
+    console.log('='.repeat(60))
+    console.log(`📊 Summary:`)
+    console.log(`   Files Processed: ${this.totalFiles}`)
+    console.log(`   Total Chunks: ${this.totalChunks}`)
+    console.log(`   Successful: ${this.successfulInserts}`)
+    console.log(`   Failed: ${this.failedChunks}`)
+    console.log(`   Success Rate: ${Math.round((this.successfulInserts / this.totalChunks) * 100)}%`)
+    console.log('='.repeat(60))
   }
 }
 
@@ -87,11 +163,16 @@ async function generateEmbedding(text) {
 // MAIN INGESTION LOGIC
 // ==========================================
 async function ingestDocuments() {
-  console.log('🚀 Starting Document Ingestion for Washtenaw County...\n')
+  console.log('🚀 Starting Rate-Limited Document Ingestion\n')
+  console.log('⚙️ Configuration:')
+  console.log(`   Batch Size: ${BATCH_SIZE}`)
+  console.log(`   Delay Between Batches: ${DELAY_BETWEEN_BATCHES}ms`)
+  console.log(`   Delay Between Embeddings: ${DELAY_BETWEEN_EMBEDDINGS}ms`)
+  console.log(`   Max Retries: ${MAX_RETRIES}`)
 
-  // Check if directory exists
+  // Check directory
   if (!fs.existsSync(WASHTENAW_DOCS_PATH)) {
-    console.error(`❌ Directory not found: ${WASHTENAW_DOCS_PATH}`)
+    console.error(`\n❌ Directory not found: ${WASHTENAW_DOCS_PATH}`)
     console.error('Make sure your documents are in: /public/documents/washtenaw/')
     process.exit(1)
   }
@@ -104,19 +185,25 @@ async function ingestDocuments() {
     process.exit(1)
   }
 
-  console.log(`📚 Found ${pdfFiles.length} PDF files\n`)
+  console.log(`\n📚 Found ${pdfFiles.length} PDF files`)
+  
+  // Prompt for confirmation
+  console.log('\nEstimated processing time:')
+  const estimatedMinutes = Math.ceil((pdfFiles.length * 50 * DELAY_BETWEEN_EMBEDDINGS) / 60000)
+  console.log(`   ~${estimatedMinutes} minutes (depending on document size)`)
+  console.log('\nPress Ctrl+C to cancel, or wait 5 seconds to continue...\n')
+  
+  await sleep(5000)
 
-  let totalChunks = 0
-  let successfulInserts = 0
+  const progress = new ProgressTracker(pdfFiles.length)
 
   for (const filename of pdfFiles) {
     const filePath = path.join(WASHTENAW_DOCS_PATH, filename)
-    console.log(`\n📄 Processing: ${filename}`)
 
     // Extract text
     const text = await extractTextFromPDF(filePath)
-    if (!text) {
-      console.log('   ⚠️ Skipped (no text extracted)')
+    if (!text || text.trim().length < 50) {
+      console.log(`\n⚠️ Skipping ${filename} (insufficient text)`)
       continue
     }
 
@@ -127,16 +214,17 @@ async function ingestDocuments() {
       .trim()
     
     const chunks = chunkText(cleanText)
-    console.log(`   ✂️ Split into ${chunks.length} chunks`)
+    progress.startFile(filename, chunks.length)
 
-    // Process in batches
+    // Process chunks with rate limiting
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
       const batch = chunks.slice(i, i + BATCH_SIZE)
       const records = []
 
+      // Generate embeddings for batch with delays
       for (let j = 0; j < batch.length; j++) {
         const chunkText = batch[j]
-        const embedding = await generateEmbedding(chunkText)
+        const embedding = await generateEmbeddingWithRetry(chunkText)
 
         if (embedding) {
           records.push({
@@ -151,34 +239,47 @@ async function ingestDocuments() {
           })
         }
 
-        // Progress indicator
-        process.stdout.write('.')
+        // Delay between embedding requests
+        if (j < batch.length - 1) {
+          await sleep(DELAY_BETWEEN_EMBEDDINGS)
+        }
+
+        progress.logProgress(i + j + 1, chunks.length)
       }
 
-      // Insert batch
+      // Insert batch to Supabase
       if (records.length > 0) {
         const { error } = await supabase.from('documents').insert(records)
         
         if (error) {
           console.error(`\n   ❌ Insert error: ${error.message}`)
+          progress.recordFailure(records.length)
         } else {
-          successfulInserts += records.length
-          totalChunks += records.length
+          progress.recordSuccess(records.length)
         }
+      }
+
+      // Delay between batches
+      if (i + BATCH_SIZE < chunks.length) {
+        await sleep(DELAY_BETWEEN_BATCHES)
       }
     }
 
     console.log(`\n   ✅ ${filename} complete`)
   }
 
-  console.log('\n' + '='.repeat(50))
-  console.log(`✅ Ingestion Complete!`)
-  console.log(`   Total Chunks: ${totalChunks}`)
-  console.log(`   Successfully Inserted: ${successfulInserts}`)
-  console.log('='.repeat(50))
+  progress.summary()
 }
 
 // ==========================================
-// RUN
+// RUN WITH ERROR HANDLING
 // ==========================================
-ingestDocuments().catch(console.error)
+ingestDocuments()
+  .then(() => {
+    console.log('\n✨ All done! You can now close this terminal.')
+    process.exit(0)
+  })
+  .catch(error => {
+    console.error('\n❌ Fatal error:', error)
+    process.exit(1)
+  })
