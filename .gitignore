@@ -29,8 +29,8 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Vercel
-.vercel
+# Railway
+.railway
 
 # Typescript
 *.tsbuildinfo
@@ -45,3 +45,10 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# ✅ SECURITY: Never commit credentials
+google-credentials.json
+service-account-key.json
+*.key
+*.pem
+*.p12
