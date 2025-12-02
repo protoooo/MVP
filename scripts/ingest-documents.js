@@ -15,9 +15,9 @@ const __dirname = path.dirname(__filename)
 const WASHTENAW_DOCS_PATH = path.join(__dirname, '../public/documents/washtenaw')
 const CHUNK_SIZE = 800
 const CHUNK_OVERLAP = 100
-const BATCH_SIZE = 5 // Reduced for safety
-const DELAY_BETWEEN_BATCHES = 2000 // 2 seconds between batches
-const DELAY_BETWEEN_EMBEDDINGS = 500 // 0.5 seconds between embeddings
+const BATCH_SIZE = 3 // Reduced even more for stability
+const DELAY_BETWEEN_BATCHES = 3000 // 3 seconds between batches
+const DELAY_BETWEEN_EMBEDDINGS = 1000 // 1 second between embeddings
 const MAX_RETRIES = 3
 
 // ==========================================
@@ -47,7 +47,6 @@ if (process.env.GOOGLE_CREDENTIALS_JSON) {
 }
 
 const vertex_ai = new VertexAI(vertexConfig)
-const embeddingModel = vertex_ai.getGenerativeModel({ model: "text-embedding-004" })
 
 // ==========================================
 // HELPER FUNCTIONS
@@ -83,10 +82,15 @@ async function extractTextFromPDF(filePath) {
 async function generateEmbeddingWithRetry(text, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const result = await embeddingModel.embedContent({
+      // Use the generativeModel approach (matches your API code)
+      const model = vertex_ai.getGenerativeModel({ 
+        model: "text-embedding-004"
+      })
+      
+      const result = await model.embedContent({
         content: {
           role: 'user',
-          parts: [{ text }]
+          parts: [{ text: text }]
         }
       })
       
@@ -98,14 +102,16 @@ async function generateEmbeddingWithRetry(text, retries = MAX_RETRIES) {
         throw new Error('Invalid embedding format')
       }
     } catch (error) {
+      console.error(`   ⚠️ Attempt ${attempt} failed: ${error.message}`)
+      
       if (attempt === retries) {
-        console.error(`   ❌ Embedding failed after ${retries} attempts:`, error.message)
+        console.error(`   ❌ Embedding failed after ${retries} attempts`)
         return null
       }
       
       // Exponential backoff
       const waitTime = Math.pow(2, attempt) * 1000
-      console.log(`   ⏳ Retry ${attempt}/${retries} after ${waitTime}ms...`)
+      console.log(`   ⏳ Waiting ${waitTime}ms before retry ${attempt + 1}...`)
       await sleep(waitTime)
     }
   }
@@ -132,7 +138,7 @@ class ProgressTracker {
 
   logProgress(current, total) {
     const percent = Math.round((current / total) * 100)
-    process.stdout.write(`\r   Progress: ${current}/${total} (${percent}%) `)
+    process.stdout.write(`\r   Progress: ${current}/${total} (${percent}%)`)
   }
 
   recordSuccess(count) {
@@ -150,11 +156,13 @@ class ProgressTracker {
     console.log('✅ INGESTION COMPLETE')
     console.log('='.repeat(60))
     console.log(`📊 Summary:`)
-    console.log(`   Files Processed: ${this.totalFiles}`)
+    console.log(`   Files Processed: ${this.currentFile}`)
     console.log(`   Total Chunks: ${this.totalChunks}`)
     console.log(`   Successful: ${this.successfulInserts}`)
     console.log(`   Failed: ${this.failedChunks}`)
-    console.log(`   Success Rate: ${Math.round((this.successfulInserts / this.totalChunks) * 100)}%`)
+    if (this.totalChunks > 0) {
+      console.log(`   Success Rate: ${Math.round((this.successfulInserts / this.totalChunks) * 100)}%`)
+    }
     console.log('='.repeat(60))
   }
 }
@@ -257,6 +265,8 @@ async function ingestDocuments() {
         } else {
           progress.recordSuccess(records.length)
         }
+      } else {
+        progress.recordFailure(batch.length)
       }
 
       // Delay between batches
