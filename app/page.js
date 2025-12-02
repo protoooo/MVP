@@ -137,12 +137,13 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
-        {/* Plus Button Container */}
-        <div className="relative flex-shrink-0" ref={menuRef}>
+        {/* Plus Button Container - Added mb-0.5 for alignment */}
+        <div className="relative flex-shrink-0 mb-0.5" ref={menuRef}>
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5'}`}
+                /* Added active:scale-90 for squishy feel */
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5'}`}
             >
                 <Icons.Plus />
             </button>
@@ -182,7 +183,8 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0
+          /* Added active:scale-90 and mb-0.5 for squish and alignment */
+          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0 mb-0.5 active:scale-90
             ${(!input.trim() && !selectedImage) 
               ? 'bg-[#27272A] text-[#525252] cursor-not-allowed border border-white/5' 
               : 'bg-white text-black hover:bg-gray-200 cursor-pointer border border-transparent'
