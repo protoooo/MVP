@@ -39,6 +39,9 @@ const GlobalStyles = () => (
       color: #18181B;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
+    
+    .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .squishy-press:active { transform: scale(0.92); }
 
     /* 3D FLIP ANIMATIONS */
     .perspective-1000 { perspective: 1000px; }
@@ -46,15 +49,15 @@ const GlobalStyles = () => (
     .backface-hidden { backface-visibility: hidden; }
     .rotate-y-180 { transform: rotateY(180deg); }
 
-    .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .squishy-press:active { transform: scale(0.92); }
-
     /* SCROLLBARS */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
     
+    .card-scroll::-webkit-scrollbar { display: none; }
+    .card-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
     /* LOADING */
     .loader {
       height: 20px; aspect-ratio: 2.5;
@@ -93,15 +96,13 @@ const Icons = {
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  
-  // FLIP ICON
   Refresh: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
 }
 
 // ==========================================
-// FLIP CARD COMPONENT
+// FLIP CARD COMPONENT (Updated Layout)
 // ==========================================
-const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClass, items, actionText, onAction }) => {
+const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClass, items, actionText, onAction, btnBg }) => {
   const [isFlipped, setIsFlipped] = useState(false)
 
   return (
@@ -112,26 +113,24 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
       <div className={`relative w-full h-full transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
         
         {/* FRONT SIDE */}
-        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-xl overflow-hidden bg-white border ${borderClass} flex flex-col`}>
-            {/* TOP 2/3 - FULL IMAGE */}
-            <div className="h-[65%] w-full relative">
+        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-lg overflow-hidden bg-white border ${borderClass} flex flex-col`}>
+            {/* TOP 50% - IMAGE (CONTAINED & PADDED) */}
+            <div className="h-[50%] w-full relative bg-white flex items-center justify-center p-8">
                 <img 
                   src={imageSrc} 
                   alt={title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="w-full h-full object-contain drop-shadow-md"
                 />
-                {/* Subtle overlay for depth */}
-                <div className="absolute inset-0 bg-black/5"></div>
             </div>
 
-            {/* BOTTOM 1/3 - HEADER INFO */}
-            <div className={`flex-1 p-8 flex flex-col justify-center ${colorClass} bg-opacity-10`}>
-                <h2 className={`text-2xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>{title}</h2>
-                <p className={`${textClass} text-xs font-bold tracking-widest uppercase mb-4`}>{subtitle}</p>
+            {/* BOTTOM 50% - CONTENT */}
+            <div className={`flex-1 px-8 py-6 flex flex-col ${colorClass} bg-opacity-5`}>
+                <h2 className={`text-3xl font-bold text-slate-900 mb-3 tracking-tight ${outfit.className}`}>{title}</h2>
+                <p className={`${textClass} text-xs font-bold tracking-widest uppercase mb-2`}>{subtitle}</p>
                 
-                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-auto">
+                <div className="mt-auto flex items-center gap-2 text-xs text-slate-400 font-medium bg-slate-50 w-fit px-3 py-2 rounded-full">
                     <Icons.Refresh />
-                    <span>Tap to see details</span>
+                    <span>Tap card to see details</span>
                 </div>
             </div>
         </div>
@@ -142,28 +141,28 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
             <div className="mb-6 flex justify-between items-start">
                 <div>
                     <h3 className="text-xl font-bold text-slate-900 mb-1">{title}</h3>
-                    <p className="text-slate-400 text-xs uppercase tracking-wide">Capabilities</p>
+                    <p className="text-slate-400 text-xs uppercase tracking-wide">Core Capabilities</p>
                 </div>
                 <button className="text-slate-300 hover:text-slate-600"><Icons.X /></button>
             </div>
 
             {/* Scrollable Features */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4">
                 {items.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <div className={`w-1.5 h-1.5 rounded-full ${textClass.replace('text-', 'bg-')} mt-1.5 shrink-0`}></div>
+                    <div key={i} className="flex gap-3 items-start">
+                        <div className={`w-1.5 h-1.5 rounded-full ${btnBg} mt-2 shrink-0`}></div>
                         <p className="text-sm text-slate-600 leading-relaxed">{item}</p>
                     </div>
                 ))}
             </div>
 
-            {/* ACTION BUTTON */}
+            {/* ACTION BUTTON - SOLID COLOR */}
             <button 
                 onClick={(e) => {
-                    e.stopPropagation(); // Prevent flipping back
+                    e.stopPropagation(); 
                     onAction();
                 }}
-                className={`w-full mt-6 py-4 rounded-2xl ${textClass.replace('text-', 'bg-')} text-white font-bold text-sm uppercase tracking-widest shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-3`}
+                className={`w-full mt-auto py-4 rounded-2xl ${btnBg} text-white font-bold text-sm uppercase tracking-widest shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-3`}
             >
                 {actionText} <Icons.ArrowUp />
             </button>
@@ -184,9 +183,9 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-12 mb-4 opacity-50 hover:opacity-100 transition-opacity duration-300">
+    <div className="flex justify-center mt-12 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
-        <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-3 animate-pulse"></div>
+        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
             {SOURCE_DOCUMENTS[index]}
@@ -213,6 +212,10 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // DYNAMIC THEME BASED ON MODE
+  const accentColor = activeMode === 'image' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-purple-600 hover:bg-purple-700';
+  const lightAccent = activeMode === 'image' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600';
+
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
@@ -232,7 +235,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
             >
                 <Icons.Plus />
             </button>
@@ -262,7 +265,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             value={input} 
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
-            placeholder={activeMode === 'chat' ? 'Ask a compliance question...' : activeMode === 'image' ? 'Upload photo for inspection...' : 'Enter audit parameters...'}
+            placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'}
             className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
@@ -271,10 +274,10 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1
+          className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1 transition-all
             ${(!input.trim() && !selectedImage) 
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-              : 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-md'
+              : `${accentColor} text-white cursor-pointer shadow-md`
             }`}
         >
           {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
@@ -581,11 +584,12 @@ export default function Page() {
                      {/* Card 1 - Visual Inspection (Creamsicle) */}
                      <FlipCard 
                         title="Visual Inspection"
-                        subtitle="Priority (P) Violation Detection"
+                        subtitle="Instant Violation Detection"
                         imageSrc="/inspection.jpg"
                         colorClass="text-orange-600"
                         borderClass="border-orange-100 bg-orange-50/50"
                         textClass="text-orange-500"
+                        btnBg="bg-orange-600"
                         items={[
                            "Identify Priority (P) vs. Core violations instantly.",
                            "Detect improper storage (Raw above Ready-to-Eat).",
@@ -596,14 +600,15 @@ export default function Page() {
                         onAction={() => triggerMode('image')}
                      />
 
-                     {/* Card 2 - Regulatory Consult (Lavender) */}
+                     {/* Card 2 - Regulatory Consultation (Lavender) */}
                      <FlipCard 
-                        title="Regulatory Consult"
-                        subtitle="Michigan Modified Food Code"
+                        title="Regulatory Consultation"
+                        subtitle="Washtenaw Enforcement & State Code"
                         imageSrc="/consult.jpg"
                         colorClass="text-purple-600"
                         borderClass="border-purple-100 bg-purple-50/50"
                         textClass="text-purple-500"
+                        btnBg="bg-purple-600"
                         items={[
                            "Clarify Washtenaw-specific enforcement protocols.",
                            "Generate SOPs for cooling, reheating, and sanitizing.",
@@ -614,18 +619,6 @@ export default function Page() {
                         onAction={() => triggerMode('chat')}
                      />
                   </div>
-
-                  <div className="flex justify-center mt-12 mb-8 opacity-60 hover:opacity-100 transition-opacity duration-300">
-                    <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
-                        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
-                            {SOURCE_DOCUMENTS[0]} 
-                        </div>
-                        </div>
-                    </div>
-                  </div>
-
 
                   <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-8 z-10 mt-auto">
                      <div className="flex gap-4">
