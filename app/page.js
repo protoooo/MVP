@@ -23,7 +23,7 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES (Perplexity/Monochrome Aesthetic)
+// STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -60,7 +60,6 @@ const GlobalStyles = () => (
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
     
-    /* THE SQUISHY BOUNCE ANIMATION */
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.85); }
 
@@ -74,11 +73,10 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (UPDATED WITH VERCEL ARROW)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
-  // ✅ NEW ARROW ICON (Vercel Style)
   ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
@@ -118,7 +116,6 @@ const SourceTicker = () => {
   )
 }
 
-// ✅ UPDATED INPUT BOX - Chunky, Squishy, and Centered
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
@@ -264,7 +261,8 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Unlimited Compliance Queries</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> AI Visual Inspections (Image Mode)</li>
+          {/* ✅ REMOVED "AI" FROM HERE */}
+          <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Visual Inspections (Image Mode)</li>
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Full Washtenaw & FDA Database</li>
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Mock Audit Workflow</li>
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> <span className="text-white">Location License</span> (Unlimited Users)</li>
