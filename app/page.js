@@ -4,10 +4,6 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit } from 'next/font/google'
-
-// Initialize font
-const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
 // CONFIG & DATA
@@ -26,7 +22,7 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES
+// STYLES (CLEAN LIGHT THEME)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -50,8 +46,10 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
     
-    .card-scroll::-webkit-scrollbar { display: none; }
-    .card-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Clean hidden scroll for cards */
+    .card-scroll::-webkit-scrollbar { width: 4px; }
+    .card-scroll::-webkit-scrollbar-track { background: transparent; }
+    .card-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
 
     /* LOADING */
     .loader {
@@ -489,8 +487,8 @@ export default function Page() {
             {!session ? (
                <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
                   
-                  <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000">
-                     <h1 className={`text-sm md:text-base font-bold tracking-[0.2em] text-slate-500 uppercase whitespace-nowrap ${outfit.className}`}>
+                  <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000 pt-16">
+                     <h1 className={`text-[11px] md:text-sm font-bold tracking-[0.2em] text-slate-400 uppercase whitespace-nowrap ${outfit.className}`}>
                         Trained on Washtenaw County Food Safety Protocols
                      </h1>
                   </div>
@@ -498,20 +496,19 @@ export default function Page() {
                   <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
                      
                      {/* Card 1 - Visual Inspection (Creamsicle) */}
-                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[550px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* TOP 50% - IMAGE AREA */}
-                        <div className="h-[50%] w-full relative overflow-hidden bg-orange-100/50">
-                           {/* Placeholder Image - You can replace src with local '/inspection.jpg' */}
+                        {/* TOP 45% - IMAGE AREA */}
+                        <div className="h-[45%] w-full relative overflow-hidden bg-orange-100/50">
                            <img 
-                              src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&w=800&q=80" 
+                              src="/inspection.jpg" 
                               alt="Commercial Kitchen Inspection"
                               className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-orange-50/90 via-transparent to-transparent"></div>
                         </div>
 
-                        {/* BOTTOM 50% - CONTENT AREA */}
+                        {/* BOTTOM 55% - CONTENT AREA */}
                         <div className="flex-1 flex flex-col relative">
                            
                            {/* Header */}
@@ -522,52 +519,55 @@ export default function Page() {
 
                            {/* Scrollable Content */}
                            <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
-                              <p className="text-slate-500 text-sm leading-relaxed mb-4">
-                                 Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
+                              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                                 Identify potential health code violations in seconds. Upload a photo of any area in your facility for instant analysis.
                               </p>
                               <div className="space-y-3 border-t border-orange-200/50 pt-4">
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Identify Priority (P) vs. Core violations instantly.</p>
+                                    <p className="text-xs text-slate-500 font-medium">Real-time Priority (P) item detection.</p>
                                  </div>
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Detect improper storage (Raw above Ready-to-Eat).</p>
+                                    <p className="text-xs text-slate-500">Check storage hierarchy (Raw over RTE).</p>
                                  </div>
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Audit food contact surfaces for biofilm & degradation.</p>
+                                    <p className="text-xs text-slate-500">Validate sanitation & equipment conditions.</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Pre-audit line checks for GMs.</p>
                                  </div>
                               </div>
-                              <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
+                              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
                            </div>
 
                            {/* Footer Action */}
-                           <button 
+                           <div 
                               onClick={() => triggerMode('image')}
                               className="px-8 py-5 border-t border-orange-100 bg-white/80 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-orange-600 tracking-widest uppercase group mt-auto"
                            >
                               <span>Start Scan</span> 
                               <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
-                           </button>
+                           </div>
                         </div>
                      </div>
 
                      {/* Card 2 - Regulatory Consult (Lavender) */}
-                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[550px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* TOP 50% - IMAGE AREA */}
-                        <div className="h-[50%] w-full relative overflow-hidden bg-purple-100/50">
-                           {/* Placeholder Image - You can replace src with local '/consult.jpg' */}
+                        {/* TOP 45% - IMAGE AREA */}
+                        <div className="h-[45%] w-full relative overflow-hidden bg-purple-100/50">
                            <img 
-                              src="https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80" 
+                              src="/consult.jpg" 
                               alt="Food Safety Regulations"
                               className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
                            />
                            <div className="absolute inset-0 bg-gradient-to-t from-purple-50/90 via-transparent to-transparent"></div>
                         </div>
 
-                        {/* BOTTOM 50% - CONTENT AREA */}
+                        {/* BOTTOM 55% - CONTENT AREA */}
                         <div className="flex-1 flex flex-col relative">
                            
                            {/* Header */}
@@ -578,49 +578,41 @@ export default function Page() {
 
                            {/* Scrollable Content */}
                            <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
-                              <p className="text-slate-500 text-sm leading-relaxed mb-4">
-                                 Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
+                              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                                 Instant answers from the official Michigan Modified Food Code and Washtenaw County enforcement documents.
                               </p>
                               <div className="space-y-3 border-t border-purple-200/50 pt-4">
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Clarify Washtenaw-specific enforcement protocols.</p>
+                                    <p className="text-xs text-slate-500 font-medium">Clarify specific enforcement actions.</p>
                                  </div>
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Generate SOPs for cooling, reheating, and sanitizing.</p>
+                                    <p className="text-xs text-slate-500">Generate cooling/reheating SOPs.</p>
                                  </div>
                                  <div className="flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Access emergency action plans (Power outage, etc).</p>
+                                    <p className="text-xs text-slate-500">Access Emergency Action Plans instantly.</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Draft staff memos for procedure changes.</p>
                                  </div>
                               </div>
-                              <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
+                              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
                            </div>
 
                            {/* Footer Action */}
-                           <button 
+                           <div 
                               onClick={() => triggerMode('chat')}
                               className="px-8 py-5 border-t border-purple-100 bg-white/80 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-purple-600 tracking-widest uppercase group mt-auto"
                            >
                               <span>Search Database</span> 
                               <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
-                           </button>
+                           </div>
                         </div>
                      </div>
                   </div>
-
-                  <div className="flex justify-center mt-12 mb-8 opacity-60 hover:opacity-100 transition-opacity duration-300">
-                    <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
-                        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
-                        <div className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
-                            {SOURCE_DOCUMENTS[0]} 
-                        </div>
-                        </div>
-                    </div>
-                  </div>
-
 
                   <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-8 z-10 mt-auto">
                      <div className="flex gap-4">
