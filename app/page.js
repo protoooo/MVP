@@ -60,13 +60,10 @@ const GlobalStyles = () => (
     @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
     .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
     
-    @keyframes subtleGlow {
-      0% { border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-      50% { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
-      100% { border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-    }
-    .animate-subtle-glow { animation: subtleGlow 3s ease-in-out infinite; }
-    
+    /* THE SQUISHY BOUNCE ANIMATION */
+    .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .squishy-press:active { transform: scale(0.85); }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
@@ -77,14 +74,15 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS
+// ICONS (UPDATED WITH VERCEL ARROW)
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
-  Send: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{transform:'rotate(45deg)'}}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  // ✅ NEW ARROW ICON (Vercel Style)
+  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
+  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
   Trash: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>,
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
@@ -120,6 +118,7 @@ const SourceTicker = () => {
   )
 }
 
+// ✅ UPDATED INPUT BOX - Chunky, Squishy, and Centered
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
@@ -145,18 +144,19 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
 
+      {/* Chunky rounded container */}
       <form 
         onSubmit={handleSend} 
         className="relative flex items-end w-full p-2 bg-[#18181B] border border-white/10 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:border-white/20" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
-        {/* Plus Button Container */}
-        <div className="relative flex-shrink-0 mb-0.5" ref={menuRef}>
+        {/* SQUISHY PLUS BUTTON */}
+        <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}>
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 active:scale-90 ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5 ' + (!showMenu ? 'animate-subtle-glow' : '')}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press ${showMenu ? 'bg-white text-black rotate-45' : 'bg-[#27272A] text-[#EDEDED] hover:bg-[#333] hover:text-white border border-white/5'}`}
             >
                 <Icons.Plus />
             </button>
@@ -188,21 +188,22 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask anything...' : activeMode === 'image' ? 'Upload an image...' : 'Describe area to audit...'}
-            className="flex-1 max-h=[200px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
+            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-white placeholder-[#525252] text-[15px] leading-6" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
 
+        {/* SQUISHY SEND BUTTON */}
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 flex-shrink-0 mb-0.5 active:scale-90
+          className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1
             ${(!input.trim() && !selectedImage) 
               ? 'bg-[#27272A] text-[#525252] cursor-not-allowed border border-white/5' 
-              : 'bg-white text-black hover:bg-gray-200 cursor-pointer border border-transparent'
+              : 'bg-white text-black hover:bg-gray-200 cursor-pointer border border-transparent shadow-lg'
             }`}
         >
-          {isSending ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Icons.Send />}
+          {isSending ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
         </button>
       </form>
     </div>
