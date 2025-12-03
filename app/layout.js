@@ -119,10 +119,16 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
-        <meta name="theme-color" content="#0f172a" />
-        <meta name="description" content="AI-powered food safety compliance assistant for Michigan restaurants" />
-        <meta property="og:title" content="protocolLM - AI Food Safety Compliance" />
-        <meta property="og:description" content="AI-powered compliance guidance for restaurant operators" />
+        {/* ✅ Updated Theme Color for Light Mode */}
+        <meta name="theme-color" content="#FAFAFA" />
+        
+        {/* ✅ Updated Title & Description (No "AI" mentions) */}
+        <title>ProtocolLM | Washtenaw County Food Safety Compliance</title>
+        <meta name="description" content="Instant food safety compliance analysis for Washtenaw County restaurants. Identify Priority (P) violations before inspection." />
+        
+        {/* Open Graph / Social Sharing */}
+        <meta property="og:title" content="ProtocolLM | Food Safety Intelligence" />
+        <meta property="og:description" content="Protect your license. Identify Priority (P) violations instantly with Washtenaw County enforcement standards." />
         <meta property="og:type" content="website" />
       </head>
       <body className={inter.className}>
