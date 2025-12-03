@@ -486,3 +486,153 @@ export default function Page() {
                          <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-xs font-bold">{session.user.email[0].toUpperCase()}</button>
                          {showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/10 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-white/10 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-white/10 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}
                       </div>
+                   </div>
+                )}
+             </div>
+          </header>
+
+          <main className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0 overflow-y-auto">
+            
+            {/* LOGGED OUT: LANDING PAGE */}
+            {!session ? (
+               <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
+                  
+                  <div className="text-center px-4 max-w-[800px] mb-12 animate-in fade-in zoom-in duration-1000">
+                     <h1 className={`text-lg md:text-2xl font-bold tracking-widest text-white/90 drop-shadow-2xl uppercase whitespace-nowrap ${outfit.className}`}>
+                        Trained on Washtenaw County Food Safety Protocols
+                     </h1>
+                  </div>
+
+                  <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
+                     {/* Card 1 - Visual Inspection */}
+                     <button onClick={() => triggerMode('image')} className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden hover:border-emerald-500/30">
+                        
+                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
+                           <h2 className={`text-3xl font-bold text-white mb-2 tracking-tight ${outfit.className}`}>Visual Inspection</h2>
+                           <p className="text-emerald-400 text-xs font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
+                        </div>
+
+                        <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
+                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                              Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
+                           </p>
+                           <div className="space-y-4 border-t border-white/10 pt-6">
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Identify Priority (P) vs. Core violations instantly.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Detect improper storage (Raw above Ready-to-Eat).</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Audit food contact surfaces for biofilm & degradation.</p>
+                              </div>
+                               <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Validate sink setup & handwashing compliance.</p>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm">
+                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
+                               <span>Start Scan</span> 
+                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </div>
+                     </button>
+
+                     {/* Card 2 - Regulatory Consult */}
+                     <button onClick={() => triggerMode('chat')} className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden hover:border-blue-500/30">
+                        
+                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
+                           <h2 className={`text-3xl font-bold text-white mb-2 tracking-tight ${outfit.className}`}>Regulatory Consult</h2>
+                           <p className="text-blue-400 text-xs font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
+                        </div>
+
+                         <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
+                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                              Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
+                           </p>
+                           <div className="space-y-4 border-t border-white/10 pt-6">
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Clarify Washtenaw-specific enforcement protocols.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Generate SOPs for cooling, reheating, and sanitizing.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Access emergency action plans (Power outage, etc).</p>
+                              </div>
+                               <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Instant citations for staff training and correction.</p>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm">
+                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
+                               <span>Search Database</span> 
+                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
+                        </div>
+                     </button>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10 mt-auto">
+                     <div className="flex gap-4">
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                     </div>
+                     <span className="hidden md:inline text-white/20">|</span>
+                     <span className="text-white/40 hover:text-white transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                  </div>
+               </div>
+            ) : (
+               // LOGGED IN: CHAT INTERFACE
+               <>
+                  <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
+                    {messages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center p-4 text-center text-white">
+                        <div className="mb-6 p-4 rounded-full bg-white/5 text-white/50">
+                          {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
+                        </div>
+                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
+                          {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
+                        </h1>
+                        <p className="text-white/50 text-sm max-w-sm">
+                          {activeMode === 'image' 
+                            ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
+                            : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
+                        {messages.map((msg, idx) => (
+                          <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-white text-black px-4 py-3 rounded-2xl shadow-sm' : 'text-gray-300 px-2'}`}>
+                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/10" />}
+                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-full bg-[#050505]/80 backdrop-blur-md pt-2 pb-6 shrink-0 z-20 border-t border-white/5">
+                    <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+                  </div>
+               </>
+            )}
+          </main>
+        </div>
+      </div>
+    </>
+  )
+}
