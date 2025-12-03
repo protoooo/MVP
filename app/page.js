@@ -27,7 +27,7 @@ const SOURCE_DOCUMENTS = [
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA !important; /* Slightly off-white for reduced eye strain */
+      background-color: #FAFAFA !important;
       background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
       background-size: 24px 24px;
       overscroll-behavior: none;
@@ -50,7 +50,7 @@ const GlobalStyles = () => (
       16.67% { background-position: calc(0*100%/3) 0, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       33.33% { background-position: calc(0*100%/3) 100%, calc(1*100%/3) 0, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       50% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 100%, calc(2*100%/3) 0, calc(3*100%/3) 50% }
-      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 100%, calc(3*100%/3) 0 }
+      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
@@ -73,7 +73,7 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (Thin, Technical, Professional)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -88,13 +88,11 @@ const Icons = {
   Book: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  ClipboardCheck: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>,
-  Alert: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  // PROFESSIONAL ICONS (No circles, thin lines)
-  Shield: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24" className="text-slate-700"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
-  Map: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24" className="text-slate-700"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/></svg>,
-  Zap: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24" className="text-slate-700"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
+  
+  // NEW MODE ICONS
+  Inspect: () => <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
+  Consult: () => <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
@@ -145,12 +143,14 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
 
+      {/* Chunky Light Container */}
       <form 
         onSubmit={handleSend} 
         className="relative flex items-end w-full p-2 bg-white border border-gray-200 rounded-[32px] shadow-xl transition-all duration-300 focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
+        {/* Squishy Plus Button */}
         <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}>
             <button 
                 type="button"
@@ -163,7 +163,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             {showMenu && (
                 <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
                     <div className="space-y-0.5">
-                        {['chat', 'image', 'audit'].map(m => (
+                        {['chat', 'image'].map(m => (
                             <button 
                                 key={m}
                                 type="button"
@@ -172,8 +172,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
                             >
                                 {m === 'chat' && <Icons.MessageSquare />}
                                 {m === 'image' && <Icons.Camera />}
-                                {m === 'audit' && <Icons.ClipboardCheck />}
-                                <span className="capitalize">{m}</span>
+                                <span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span>
                             </button>
                         ))}
                     </div>
@@ -192,6 +191,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
 
+        {/* Squishy Send Button */}
         <button 
           type="submit" 
           disabled={(!input.trim() && !selectedImage) || isSending} 
@@ -207,27 +207,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     </div>
   )
 }
-
-// ✅ PROFESSIONAL TRUST GRID (No "Emoji" Circles)
-const TrustGrid = () => (
-  <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Shield /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Risk Mitigation</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Identify Priority (P) violations before inspections occur. Minimize liability exposure.</p>
-    </div>
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Map /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Local Jurisdiction</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Engineered specifically for Washtenaw County & Michigan Modified Food Code enforcement.</p>
-    </div>
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Zap /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Rapid Assessment</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Instant visual analysis of equipment conditions and facility sanitation compliance.</p>
-    </div>
-  </div>
-)
 
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
@@ -423,7 +402,7 @@ export default function Page() {
     if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return }
     if (!hasActiveSubscription) { setShowPricingModal(true); return }
     let finalInput = input
-    if (activeMode === 'audit') finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
+    // Removed Audit logic here since it's removed from UI
     
     const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }])
     let activeChatId = currentChatId
@@ -444,6 +423,21 @@ export default function Page() {
     try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image') } catch (error) { alert('Image error'); console.error(error) }
   }
   const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
+
+  // ✅ NEW CARD TRIGGER LOGIC
+  const triggerMode = (mode) => {
+    if (!session) {
+      setAuthModalMessage('Sign in to use this tool');
+      setShowAuthModal(true);
+      return;
+    }
+    setActiveMode(mode);
+    if (mode === 'image') {
+      fileInputRef.current?.click();
+    } else {
+      inputRef.current?.focus();
+    }
+  }
 
   useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
@@ -483,12 +477,47 @@ export default function Page() {
                 </div>
               </header>
               <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
-                <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0 mx-auto">
-                  <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+                
+                {/* ✅ THE DUAL MODE LANDING PAGE */}
+                <div className="w-full max-w-4xl px-4 grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                  
+                  {/* Card 1: Visual Inspection */}
+                  <button 
+                    onClick={() => triggerMode('image')} 
+                    className="group relative bg-white border border-gray-200 rounded-3xl p-8 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 text-left flex flex-col items-start h-full"
+                  >
+                    <div className="mb-6 p-4 rounded-2xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 transition-colors">
+                      <Icons.Inspect />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Visual Inspection</h2>
+                    <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                      Upload a photo of your kitchen, line, or equipment. Our system identifies Priority (P) violations instantly using Washtenaw enforcement standards.
+                    </p>
+                    <div className="mt-auto flex items-center text-sm font-bold text-emerald-600 tracking-wide uppercase">
+                      Start Scan <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                  </button>
+
+                  {/* Card 2: Regulatory Consult */}
+                  <button 
+                    onClick={() => triggerMode('chat')} 
+                    className="group relative bg-white border border-gray-200 rounded-3xl p-8 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 text-left flex flex-col items-start h-full"
+                  >
+                    <div className="mb-6 p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                      <Icons.Consult />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Regulatory Consult</h2>
+                    <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                      Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant, cited answers for compliance questions.
+                    </p>
+                    <div className="mt-auto flex items-center text-sm font-bold text-blue-600 tracking-wide uppercase">
+                      Search Database <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                  </button>
+
                 </div>
-                {!session && <SourceTicker />}
-                {!session && <TrustGrid />}
-                <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-slate-400 absolute md:fixed bottom-4 md:bottom-6">
+
+                <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 absolute md:fixed bottom-4 md:bottom-6">
                   <div className="flex gap-4">
                     <Link href="/privacy" className="hover:text-black transition-colors">Privacy Policy</Link>
                     <Link href="/terms" className="hover:text-black transition-colors">Terms of Service</Link>
@@ -502,7 +531,19 @@ export default function Page() {
             <>
               <div className="flex-1 overflow-y-auto" ref={scrollRef}>
                 {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-4 text-center"><h1 className="text-3xl font-medium text-slate-900 mb-2">What do you want to know?</h1></div>
+                  <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                    <div className="mb-6 p-4 rounded-full bg-slate-50">
+                      {activeMode === 'image' ? <Icons.Inspect /> : <Icons.Consult />}
+                    </div>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                      {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
+                    </h1>
+                    <p className="text-slate-500 text-sm max-w-sm">
+                      {activeMode === 'image' 
+                        ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
+                        : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
+                    </p>
+                  </div>
                 ) : (
                   <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                     {messages.map((msg, idx) => (
