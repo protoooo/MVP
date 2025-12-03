@@ -9,7 +9,7 @@ import { compressImage } from '@/lib/imageCompression'
 // CONFIG & DATA
 // ==========================================
 
-// ENV VARS - Pulled from Railway
+// ENV VARS - Pulled from Railway Variables
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
@@ -254,11 +254,11 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         <div className="flex justify-center mb-8">
           <div className="bg-black/40 p-1 rounded-full flex relative border border-white/10">
             <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-white text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $200</span></button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-lg' : 'text-white/50 hover:text-white'}`}>Annual <span className="bg-white text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
           </div>
         </div>
         
-        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$100' : '$1,000'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
+        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-white/40 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
         <p className="text-sm text-white/60 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
