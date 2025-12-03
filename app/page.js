@@ -57,6 +57,14 @@ const GlobalStyles = () => (
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
+    /* THE PREMIUM GLASS EFFECT */
+    .crystal-card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
@@ -79,7 +87,7 @@ const Icons = {
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  Book: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
+  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ClipboardCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
@@ -90,7 +98,7 @@ const Icons = {
 }
 
 // ==========================================
-// APPLE-STYLE HERO CAROUSEL (Clean Typography Only)
+// APPLE-STYLE HERO CAROUSEL
 // ==========================================
 const HERO_SLIDES = [
   {
@@ -300,14 +308,13 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
-  // HERO SLIDES STATE (For cycling the background colors)
+  // HERO SLIDES STATE
   const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
-    // Cycle slides every 4.5 seconds for a relaxed feel
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)
-    }, 4500)
+    }, 4000)
     return () => clearInterval(timer)
   }, [])
 
@@ -426,7 +433,6 @@ export default function Page() {
   }
   const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
 
-  // ✅ CARD TRIGGER LOGIC (Kept from previous steps)
   const triggerMode = (mode) => {
     if (!session) {
       setAuthModalMessage('Sign in to use this tool');
@@ -455,40 +461,34 @@ export default function Page() {
       {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-white/30">
         
-        {/* =====================================
-            1. FULL SCREEN IMMERSIVE BACKGROUND
-            ===================================== */}
-        {!session ? (
+        {/* 
+          ===========================================================
+          1. GLOBAL BACKGROUND LAYER (Solves the "Stuck Color" Issue)
+          ===========================================================
+          This layer sits at z-0 and covers the entire viewport.
+          It handles the gradient transitions behind everything.
+        */}
+        {!session && (
            <div className="fixed inset-0 z-0">
               {HERO_SLIDES.map((slide, index) => (
                 <div
                   key={index}
-                  className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-[2000ms] ease-in-out ${
+                  className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
                     index === currentSlide ? 'opacity-100' : 'opacity-0'
                   } ${slide.color}`}
-                >
-                  {/* THE HERO CONTENT: MOVED UP VIA PADDING-TOP */}
-                  <div className="text-center px-4 max-w-4xl -mt-[35vh] md:-mt-[40vh] animate-in fade-in zoom-in duration-1000">
-                     {/* ✅ REMOVED ICON FROM HERE */}
-                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4 text-white drop-shadow-sm">
-                        {slide.title}
-                     </h1>
-                     <p className="text-xl md:text-2xl font-medium text-white/90 max-w-2xl mx-auto">
-                        {slide.subtitle}
-                     </p>
-                  </div>
-                </div>
+                />
               ))}
-              {/* Gradient overlay for text readability */}
-              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/10 pointer-events-none"></div>
+              {/* Gradient Overlay to ensure text readability */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none"></div>
            </div>
-        ) : (
-           // Logged In Background (Clean White)
-           <div className="fixed inset-0 bg-white z-0" />
         )}
 
+        {/* Logged In Background */}
+        {session && <div className="fixed inset-0 bg-white z-0" />}
+
+
         {/* =====================================
-            2. FLOATING CONTENT LAYER
+            2. CONTENT LAYER
             ===================================== */}
         <div className="relative z-10 flex flex-col h-[100dvh]">
           
@@ -522,23 +522,69 @@ export default function Page() {
 
           <main className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0 overflow-y-auto">
             
-            {/* LOGGED OUT: ACTION CARDS */}
+            {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
-               <div className="w-full max-w-4xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 mt-auto mb-[15vh] z-20">
-                  {/* Card 1: GLASSMORPHISM APPLIED */}
-                  <button onClick={() => triggerMode('image')} className="group relative bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl p-8 hover:scale-[1.02] transition-all duration-300 text-left flex flex-col items-start h-full shadow-2xl">
-                    <div className="mb-6 p-4 rounded-2xl bg-emerald-50/80 text-emerald-600"><Icons.Inspect /></div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Visual Inspection</h2>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6">Identify Priority (P) violations instantly with Washtenaw enforcement standards.</p>
-                    <div className="mt-auto flex items-center text-sm font-bold text-emerald-600 tracking-wide uppercase">Start Scan <span className="ml-2">→</span></div>
-                  </button>
-                  {/* Card 2: GLASSMORPHISM APPLIED */}
-                  <button onClick={() => triggerMode('chat')} className="group relative bg-white/90 backdrop-blur-xl border border-white/20 rounded-3xl p-8 hover:scale-[1.02] transition-all duration-300 text-left flex flex-col items-start h-full shadow-2xl">
-                    <div className="mb-6 p-4 rounded-2xl bg-blue-50/80 text-blue-600"><Icons.Consult /></div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Regulatory Consult</h2>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6">Search the official Michigan Modified Food Code. Get instant answers.</p>
-                    <div className="mt-auto flex items-center text-sm font-bold text-blue-600 tracking-wide uppercase">Search Database <span className="ml-2">→</span></div>
-                  </button>
+               <div className="w-full h-full flex flex-col items-center">
+                  
+                  {/* 1. THE BIG TEXT (Centered Upper Third) */}
+                  <div className="flex-1 flex items-center justify-center pb-12"> 
+                     {HERO_SLIDES.map((slide, index) => (
+                        <div
+                           key={index}
+                           className={`absolute text-center px-4 max-w-4xl transition-opacity duration-[2000ms] ease-in-out ${
+                              index === currentSlide ? 'opacity-100' : 'opacity-0'
+                           }`}
+                        >
+                           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-white drop-shadow-md">
+                              {slide.title}
+                           </h1>
+                           <p className="text-xl md:text-3xl font-medium text-white/90 max-w-2xl mx-auto">
+                              {slide.subtitle}
+                           </p>
+                        </div>
+                     ))}
+                  </div>
+
+                  {/* 2. THE CARDS (Crystal Glass Style) */}
+                  <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-10 mb-[15vh] z-20">
+                     {/* Card 1 */}
+                     <button onClick={() => triggerMode('image')} className="crystal-card group relative rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full">
+                        <div className="mb-6 p-4 rounded-2xl bg-emerald-50/50 text-emerald-600 border border-emerald-100/50">
+                           <Icons.Inspect />
+                        </div>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-3">Visual Inspection</h2>
+                        <p className="text-slate-600 text-lg leading-relaxed mb-8">
+                           Identify Priority (P) violations instantly with Washtenaw enforcement standards.
+                        </p>
+                        <div className="mt-auto flex items-center text-sm font-bold text-emerald-700 tracking-widest uppercase">
+                           Start Scan <span className="ml-2 text-lg">→</span>
+                        </div>
+                     </button>
+
+                     {/* Card 2 */}
+                     <button onClick={() => triggerMode('chat')} className="crystal-card group relative rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full">
+                        <div className="mb-6 p-4 rounded-2xl bg-blue-50/50 text-blue-600 border border-blue-100/50">
+                           <Icons.Consult />
+                        </div>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-3">Regulatory Consult</h2>
+                        <p className="text-slate-600 text-lg leading-relaxed mb-8">
+                           Search the official Michigan Modified Food Code. Get instant answers.
+                        </p>
+                        <div className="mt-auto flex items-center text-sm font-bold text-blue-700 tracking-widest uppercase">
+                           Search Database <span className="ml-2 text-lg">→</span>
+                        </div>
+                     </button>
+                  </div>
+
+                  {/* 3. FOOTER */}
+                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/60 pb-8 z-10">
+                     <div className="flex gap-4">
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                     </div>
+                     <span className="hidden md:inline text-white/30">|</span>
+                     <span className="text-white/60 hover:text-white transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                  </div>
                </div>
             ) : (
                // LOGGED IN: CHAT INTERFACE
@@ -577,17 +623,6 @@ export default function Page() {
                </>
             )}
 
-            {/* FOOTER */}
-            {!session && (
-               <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/60 pb-6 z-10">
-                  <div className="flex gap-4">
-                    <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                    <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                  </div>
-                  <span className="hidden md:inline text-white/30">|</span>
-                  <span className="text-white/60 hover:text-white transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
-               </div>
-            )}
           </main>
         </div>
       </div>
