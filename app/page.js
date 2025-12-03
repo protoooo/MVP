@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { Outfit } from 'next/font/google' // ✅ NEW PREMIUM FONT
+
+// Initialize the font
+const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
 // CONFIG & DATA
@@ -22,18 +26,17 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES (FLUID DARK MODE)
+// STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #050505;
+      background-color: #020408; /* Deep dark base */
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     
     /* FLUID BACKGROUND ANIMATIONS */
@@ -49,18 +52,19 @@ const GlobalStyles = () => (
     .animation-delay-2000 { animation-delay: 2s; }
     .animation-delay-4000 { animation-delay: 4s; }
     
-    /* GLASS CARDS */
+    /* PREMIUM GLASS CARDS */
     .glass-panel {
       background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
     
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
-    /* LOADING DOTS */
+    /* LOADING */
     .loader {
       height: 20px; aspect-ratio: 2.5;
       --_g: no-repeat radial-gradient(farthest-side, #ffffff 90%, #0000);
@@ -76,12 +80,8 @@ const GlobalStyles = () => (
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
-
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    
-    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
-    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
 
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -93,7 +93,7 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (Light for Dark Mode)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -110,27 +110,24 @@ const Icons = {
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ClipboardCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
   Alert: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>,
-  Check: ({ color = 'text-white' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
+  Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
   Inspect: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
   Consult: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
-// FLUID BACKGROUND COMPONENT
+// FLUID BACKGROUND (STATIC FIXED LAYER)
 // ==========================================
 const FluidBackground = () => (
-  <div className="fixed inset-0 z-0 overflow-hidden bg-black">
-    {/* Blob 1 - Blue/Purple */}
-    <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-purple-800 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob"></div>
+  <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
+    {/* Blob 1 - Emerald Green (Top Left) */}
+    <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
     
-    {/* Blob 2 - Cyan/Teal */}
-    <div className="absolute top-[10%] right-[-10%] w-[60vw] h-[60vw] bg-cyan-700 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
+    {/* Blob 2 - Royal Blue (Bottom Right) */}
+    <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
     
-    {/* Blob 3 - Deep Blue */}
-    <div className="absolute bottom-[-20%] left-[20%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-4000"></div>
-    
-    {/* Noise Overlay (Optional texture) */}
-    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
+    {/* Noise Overlay (Texture) */}
+    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
   </div>
 )
 
@@ -159,7 +156,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
 
-      {/* DARK GLASS CONTAINER */}
       <form 
         onSubmit={handleSend} 
         className="relative flex items-end w-full p-2 glass-panel rounded-[32px] shadow-2xl transition-all duration-300" 
@@ -322,6 +318,20 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
+  const triggerMode = (mode) => {
+    if (!session) {
+      setAuthModalMessage('Sign in to use this tool');
+      setShowAuthModal(true);
+      return;
+    }
+    setActiveMode(mode);
+    if (mode === 'image') {
+      fileInputRef.current?.click();
+    } else {
+      inputRef.current?.focus();
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
@@ -437,25 +447,11 @@ export default function Page() {
   }
   const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
 
-  const triggerMode = (mode) => {
-    if (!session) {
-      setAuthModalMessage('Sign in to use this tool');
-      setShowAuthModal(true);
-      return;
-    }
-    setActiveMode(mode);
-    if (mode === 'image') {
-      fileInputRef.current?.click();
-    } else {
-      inputRef.current?.focus();
-    }
-  }
-
   useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
   useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus() }, [messages.length, isSending])
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#050505] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>
+  if (isLoading) return <div className="fixed inset-0 bg-[#020408] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>
   if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>
 
   return (
@@ -466,21 +462,21 @@ export default function Page() {
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-white/30">
         
         {/* =====================================
-            1. FLUID BACKGROUND LAYER
+            1. FLUID BACKGROUND LAYER (STATIC)
             ===================================== */}
         {!session && <FluidBackground />}
         {session && <div className="fixed inset-0 bg-[#050505] z-0" />}
 
         {/* =====================================
-            2. CONTENT LAYER
+            2. CONTENT LAYER (SCROLLABLE)
             ===================================== */}
         <div className="relative z-10 flex flex-col h-[100dvh]">
           
           {/* HEADER */}
-          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-white`}>
-             <div className="font-bold tracking-tight text-lg md:text-xl">
+          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-white pt-safe`}>
+             <div className={`font-bold tracking-tight text-lg md:text-xl ${outfit.className}`}>
                protocol<span className="text-white/60">LM</span>
-               <span className="hidden md:inline ml-3 font-normal text-sm md:text-base border-l border-white/20 pl-3 text-white/60">
+               <span className="hidden md:inline ml-3 font-normal text-sm md:text-base border-l border-white/20 pl-3 text-white/60 font-sans">
                  Trained on Washtenaw County Food Safety Protocols
                </span>
              </div>
@@ -504,14 +500,14 @@ export default function Page() {
              </div>
           </header>
 
-          <main className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0 overflow-y-auto">
+          <main className="flex-1 flex flex-col items-center justify-start px-4 w-full pb-20 md:pb-0 overflow-y-auto">
             
             {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
-               <div className="w-full h-full flex flex-col items-center justify-center">
+               <div className="w-full h-full flex flex-col items-center pt-[15vh]">
                   
                   <div className="text-center px-4 max-w-4xl mb-16 animate-in fade-in zoom-in duration-1000">
-                     <h1 className="text-5xl md:text-8xl font-bold tracking-tighter mb-6 text-white drop-shadow-2xl">
+                     <h1 className={`text-5xl md:text-8xl font-bold tracking-tighter mb-6 text-white drop-shadow-2xl ${outfit.className}`}>
                         Food Safety Intelligence.
                      </h1>
                      <p className="text-xl md:text-2xl font-medium text-white/70 max-w-2xl mx-auto">
@@ -521,11 +517,11 @@ export default function Page() {
 
                   <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 mb-[15vh] z-20">
                      {/* Card 1 */}
-                     <button onClick={() => triggerMode('image')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full shadow-2xl hover:border-emerald-500/50">
+                     <button onClick={() => triggerMode('image')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full hover:border-emerald-500/50">
                         <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                            <Icons.Camera />
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-3">Visual Inspection</h2>
+                        <h2 className={`text-3xl font-bold text-white mb-3 ${outfit.className}`}>Visual Inspection</h2>
                         <p className="text-white/60 text-lg leading-relaxed mb-8">
                            Identify Priority (P) violations instantly with Washtenaw enforcement standards.
                         </p>
@@ -535,11 +531,11 @@ export default function Page() {
                      </button>
 
                      {/* Card 2 */}
-                     <button onClick={() => triggerMode('chat')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full shadow-2xl hover:border-blue-500/50">
+                     <button onClick={() => triggerMode('chat')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full hover:border-blue-500/50">
                         <div className="mb-6 p-4 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
                            <Icons.Book />
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-3">Regulatory Consult</h2>
+                        <h2 className={`text-3xl font-bold text-white mb-3 ${outfit.className}`}>Regulatory Consult</h2>
                         <p className="text-white/60 text-lg leading-relaxed mb-8">
                            Search the official Michigan Modified Food Code. Get instant answers.
                         </p>
@@ -549,7 +545,7 @@ export default function Page() {
                      </button>
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10 absolute bottom-0">
+                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10">
                      <div className="flex gap-4">
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
@@ -559,7 +555,7 @@ export default function Page() {
                   </div>
                </div>
             ) : (
-               // LOGGED IN: CHAT INTERFACE (Dark Mode Version)
+               // LOGGED IN: CHAT INTERFACE
                <>
                   <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
                     {messages.length === 0 ? (
@@ -567,7 +563,7 @@ export default function Page() {
                         <div className="mb-6 p-4 rounded-full bg-white/5 text-white/50">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
-                        <h1 className="text-2xl font-bold mb-2">
+                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
                         <p className="text-white/50 text-sm max-w-sm">
@@ -600,3 +596,19 @@ export default function Page() {
     </>
   )
 }
+
+// ==========================================
+// FLUID BACKGROUND COMPONENT (Green & Blue)
+// ==========================================
+const FluidBackground = () => (
+  <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
+    {/* Blob 1 - Emerald Green (Top Left) */}
+    <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
+    
+    {/* Blob 2 - Royal Blue (Bottom Right) */}
+    <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
+    
+    {/* Noise Overlay (Texture) */}
+    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
+  </div>
+)
