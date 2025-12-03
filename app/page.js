@@ -100,7 +100,7 @@ const Icons = {
 }
 
 // ==========================================
-// FLIP CARD COMPONENT (UPDATED 65/35 RATIO)
+// FLIP CARD COMPONENT (UPDATED IMAGE FIT)
 // ==========================================
 const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, shadowClass, textClass, items, actionText, onAction, btnBg, bgTint }) => {
   const [isFlipped, setIsFlipped] = useState(false)
@@ -115,12 +115,12 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, shadowCl
         {/* FRONT SIDE */}
         <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] overflow-hidden bg-white border ${borderClass} ${shadowClass} flex flex-col`}>
             
-            {/* TOP 65% - IMAGE (COVER FILL) */}
+            {/* TOP 65% - IMAGE (UPDATED: Contain & Padding) */}
             <div className={`h-[65%] w-full relative border-b-2 border-slate-100 ${bgTint}`}>
                 <img 
                   src={imageSrc} 
                   alt={title}
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  className="absolute inset-0 w-full h-full object-contain object-center p-6"
                 />
             </div>
 
