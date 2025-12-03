@@ -406,4 +406,123 @@ export default function Page() {
     setCheckoutLoading(planName)
     
     if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing. Please check configuration.'); setCheckoutLoading(null); return }
-    if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); re
+    if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); return }
+    
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      if (!currentSession) { clearTimeout(checkoutTimeout); alert('Session expired.'); return }
+      const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` }, body: JSON.stringify({ priceId }) })
+      if (!res.ok) throw new Error((await res.json()).error || 'API Error')
+      const data = await res.json()
+      if (data.url) { clearTimeout(checkoutTimeout); window.location.href = data.url } else throw new Error('No URL returned')
+    } catch (error) { clearTimeout(checkoutTimeout); alert(`Checkout failed: ${error.message}`) } finally { setCheckoutLoading(null) }
+  }
+
+  const handleSend = async (e) => {
+    if (e) e.preventDefault(); if ((!input.trim() && !selectedImage) || isSending) return
+    if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return }
+    if (!hasActiveSubscription) { setShowPricingModal(true); return }
+    let finalInput = input
+    if (activeMode === 'audit') finalInput = `[MOCK AUDIT MODE] Perform a strict mock health inspection audit based on this input: ${input}`
+    
+    const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }])
+    let activeChatId = currentChatId
+    try {
+      if (!activeChatId) { const { data: newChat } = await supabase.from('chats').insert({ user_id: session.user.id, title: input.slice(0, 30) + '...' }).select().single(); if (newChat) { activeChatId = newChat.id; setCurrentChatId(newChat.id); loadChatHistory() } }
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg, content: finalInput }], image: img, chatId: activeChatId, mode: activeMode }) })
+      if (res.status === 401) { setAuthModalMessage('Sign in to continue'); setShowAuthModal(true); setMessages((p) => p.slice(0, -2)); return }
+      if (res.status === 402) { setShowPricingModal(true); setMessages((p) => p.slice(0, -2)); return }
+      if (res.status === 403) { router.push('/accept-terms'); setMessages((p) => p.slice(0, -2)); return }
+      const data = await res.json()
+      setMessages((p) => { const u = [...p]; u[u.length - 1].content = data.message || (data.error ? `Error: ${data.error}` : 'Error.'); return u })
+    } catch (err) { setMessages((p) => { const u = [...p]; u[u.length - 1].content = 'Network error.'; return u }) } finally { setIsSending(false) }
+  }
+
+  const handleImage = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return; if (!session) { setAuthModalMessage('Login required'); setShowAuthModal(true); return }
+    if (file.size > 10 * 1024 * 1024) { alert('Image too large'); return }; if (!file.type.startsWith('image/')) { alert('Images only'); return }
+    try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image') } catch (error) { alert('Image error'); console.error(error) }
+  }
+  const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
+
+  useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
+  useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus() }, [messages.length, isSending])
+
+  if (isLoading) return <div className="fixed inset-0 bg-white text-black flex items-center justify-center"><div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" /></div>
+  if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>
+
+  return (
+    <>
+      <GlobalStyles />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
+      {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
+      <div className="fixed inset-0 w-full bg-white text-slate-900 overflow-hidden font-sans flex" style={{ height: '100dvh' }}>
+        {session && sidebarOpen && <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+        {session && (
+          <aside className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-slate-50 border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
+            <div className="p-3"><button onClick={handleNewChat} className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-full transition-colors group shadow-sm"><span className="flex items-center gap-2"><Icons.Plus /> New chat</span></button></div>
+            <div className="flex-1 overflow-y-auto px-2"><div className="text-xs text-slate-400 font-medium px-2 py-4 uppercase tracking-wider">Recent</div><div className="space-y-1">{chatHistory.map((chat) => (<button key={chat.id} onClick={() => loadChat(chat.id)} className={`group w-full text-left px-3 py-2 text-sm rounded-lg truncate transition-colors flex items-center justify-between ${currentChatId === chat.id ? 'bg-white text-black border border-slate-200 shadow-sm' : 'text-slate-600 hover:text-black hover:bg-slate-100 border border-transparent'}`}><div className="flex items-center gap-2 overflow-hidden"><Icons.ChatBubble /><span className="truncate">{chat.title || 'New Chat'}</span></div><div onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all"><Icons.Trash /></div></button>))}</div></div>
+            {session && (<div className="p-3 border-t border-slate-200"><div className="relative" ref={userMenuRef}><button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-3 w-full px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors text-left border border-transparent hover:border-slate-200"><div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-xs font-bold text-white">{session.user.email[0].toUpperCase()}</div><div className="flex-1 min-w-0"><div className="text-sm font-medium text-slate-900 truncate">{session.user.email}</div></div></button>{showUserMenu && (<div className="absolute bottom-full left-0 w-full mb-2 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-black hover:bg-slate-50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-100 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-slate-50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}</div></div>)}
+          </aside>
+        )}
+        <main className="flex-1 flex flex-col relative min-w-0 bg-white/50">
+          {session && (
+            <div className="lg:hidden sticky top-0 z-10 flex items-center justify-between p-3 bg-white/80 backdrop-blur-md border-b border-slate-200 text-slate-900">
+              <button onClick={() => setSidebarOpen(true)} className="p-1 text-slate-500 hover:text-black"><Icons.Menu /></button><span className="font-semibold text-sm">protocolLM v.1</span><button onClick={handleNewChat} className="p-1 text-slate-500 hover:text-black"><Icons.Plus /></button>
+            </div>
+          )}
+          {!session ? (
+            <div className="flex flex-col h-full w-full">
+              <header className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 z-20 shrink-0">
+                <div className="font-bold tracking-tight text-lg md:text-xl text-slate-900">protocol<span className="text-slate-400">LM</span><span className="hidden md:inline text-slate-500 ml-3 font-normal text-sm md:text-base border-l border-slate-300 pl-3">Trained on Washtenaw County Food Safety Protocols</span></div>
+                <div className="flex items-center gap-2 md:gap-4">
+                  <button onClick={() => setShowAuthModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-sm whitespace-nowrap">Start Free Trial</button>
+                  <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium text-slate-500 hover:text-black transition-transform active:scale-95 hidden sm:block">Pricing</button>
+                  <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-slate-900 hover:text-slate-600 transition-transform active:scale-95 whitespace-nowrap border border-slate-200 px-4 py-2 rounded-full">Sign In</button>
+                </div>
+              </header>
+              <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
+                <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0 mx-auto">
+                  <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+                </div>
+                {!session && <SourceTicker />}
+                {!session && <TrustGrid />}
+                <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-slate-400 absolute md:fixed bottom-4 md:bottom-6">
+                  <div className="flex gap-4">
+                    <Link href="/privacy" className="hover:text-black transition-colors">Privacy Policy</Link>
+                    <Link href="/terms" className="hover:text-black transition-colors">Terms of Service</Link>
+                  </div>
+                  <span className="hidden md:inline text-slate-300">|</span>
+                  <span className="text-slate-400 hover:text-slate-600 transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto" ref={scrollRef}>
+                {messages.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-4 text-center"><h1 className="text-3xl font-medium text-slate-900 mb-2">What do you want to know?</h1></div>
+                ) : (
+                  <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
+                    {messages.map((msg, idx) => (
+                      <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-sm' : 'text-slate-800 px-2'}`}>
+                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-slate-200" />}
+                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="w-full bg-white/50 backdrop-blur-sm pt-2 pb-6 shrink-0 z-20">
+                <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </>
+  )
+}
