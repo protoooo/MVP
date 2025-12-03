@@ -9,7 +9,7 @@ import pdfParse from 'pdf-parse'
 const INGEST_SECRET = process.env.INGEST_SECRET_KEY
 const CHUNK_SIZE = 800
 const CHUNK_OVERLAP = 100
-const BATCH_SIZE = 5 // Reduced for stability
+const BATCH_SIZE = 5
 
 function chunkText(text, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP) {
   const chunks = []
@@ -60,11 +60,6 @@ export async function POST(request) {
     }
 
     const vertex_ai = new VertexAI(vertexConfig)
-    
-    // ✅ FIX: Use the correct API path for embeddings
-    const model = vertex_ai.preview.getGenerativeModel({
-      model: 'text-embedding-004'
-    })
 
     // Get documents
     const docsPath = path.join(process.cwd(), 'public', 'documents', 'washtenaw')
@@ -114,15 +109,19 @@ export async function POST(request) {
             const chunkText = batch[j]
             
             try {
-              // ✅ FIX: Correct embedding API call
-              const embeddingResult = await model.embedContent({
+              // ✅ FIX: Correct embedding call
+              const model = vertex_ai.getGenerativeModel({
+                model: 'text-embedding-004'
+              })
+              
+              const result = await model.embedContent({
                 content: {
                   role: 'user',
                   parts: [{ text: chunkText }]
                 }
               })
               
-              const embedding = embeddingResult.embedding?.values
+              const embedding = result.embedding?.values
 
               if (embedding && Array.isArray(embedding) && embedding.length > 0) {
                 records.push({
@@ -137,7 +136,7 @@ export async function POST(request) {
                 })
               }
             } catch (embedError) {
-              // Silently skip failed embeddings
+              console.error('Embed error:', embedError)
               continue
             }
           }
