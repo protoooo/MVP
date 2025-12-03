@@ -13,8 +13,16 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
+const SOURCE_DOCUMENTS = [
+  'Washtenaw Enforcement Actions', 'Sanitizing Protocols', 'FDA Food Code 2022',
+  'Michigan Modified Food Code', 'Emergency Action Plans', 'Norovirus Cleaning Guidelines',
+  'Fats, Oils, & Grease (FOG) Protocol', 'Cross-Contamination Prevention',
+  'Consumer Advisory Guidelines', 'Allergen Awareness Standards', 'Time & Temp Control (TCS)',
+  'Food Labeling Guide', 'Date Marking Guide', 'USDA Safe Minimum Temps'
+]
+
 // ==========================================
-// STYLES (SUPABASE / DRIBBBLE LIGHT THEME)
+// STYLES (CLEAN LIGHT THEME)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -39,7 +47,7 @@ const GlobalStyles = () => (
       transition: all 0.2s ease-in-out;
     }
     .tech-card:hover {
-      border-color: #CBD5E1;
+      border-color: #94A3B8;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
       transform: translateY(-2px);
     }
@@ -75,6 +83,9 @@ const GlobalStyles = () => (
     }
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    
+    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
+    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
   `}</style>
 )
 
@@ -95,8 +106,32 @@ const Icons = {
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  Inspect: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
-  Consult: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
+  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
+  Map: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>,
+  Zap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>,
+}
+
+// ==========================================
+// COMPONENTS
+// ==========================================
+const SourceTicker = () => {
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setIndex(p => (p + 1) % SOURCE_DOCUMENTS.length), 3000)
+    return () => clearInterval(interval)
+  }, [])
+  return (
+    <div className="flex justify-center mt-6 mb-8">
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-3"></div>
+        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
+          <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
+            {SOURCE_DOCUMENTS[index]}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
@@ -471,33 +506,66 @@ export default function Page() {
                      </p>
                   </div>
 
+                  {/* SCROLLABLE SOURCE TICKER (Moved here for better flow) */}
+                  <SourceTicker />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full z-20 mb-16">
                      {/* Card 1 - Visual Inspection */}
                      <button onClick={() => triggerMode('image')} className="group relative tech-card rounded-2xl p-8 text-left flex flex-col items-start h-full hover:border-emerald-500/50">
-                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                        
+                        {/* CARD HEADER */}
+                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 w-full flex items-center justify-between">
                            <Icons.Camera />
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/60">Mode 01</span>
                         </div>
                         <h2 className="text-2xl font-bold text-slate-900 mb-2">Visual Inspection</h2>
                         <p className="text-emerald-600 text-xs font-bold tracking-widest uppercase mb-4">Priority (P) Violation Detection</p>
-                        <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                           Identify potential Priority (P) and Core items based on visual standards. Upload photos of equipment, storage, or sanitation stations.
-                        </p>
-                        <div className="mt-auto flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
+                        
+                        {/* SCROLLABLE LIST INSIDE CARD */}
+                        <div className="flex-1 w-full overflow-y-auto card-scroll max-h-[180px] pr-2">
+                           <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                              Identify potential Priority (P) and Core items based on visual standards. Upload photos of:
+                           </p>
+                           <ul className="space-y-3 border-t border-slate-100 pt-4">
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Equipment sanitation & grease buildup.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Cross-contamination in walk-in coolers.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Handwashing sink accessibility.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Date marking & labeling compliance.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Physical facility condition (floors/walls).</li>
+                           </ul>
+                        </div>
+
+                        <div className="mt-6 flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
                            Start Scan <span className="ml-auto group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                      </button>
 
                      {/* Card 2 - Regulatory Consult */}
                      <button onClick={() => triggerMode('chat')} className="group relative tech-card rounded-2xl p-8 text-left flex flex-col items-start h-full hover:border-blue-500/50">
-                        <div className="mb-6 p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                        
+                        {/* CARD HEADER */}
+                        <div className="mb-6 p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 w-full flex items-center justify-between">
                            <Icons.Book />
+                           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600/60">Mode 02</span>
                         </div>
                         <h2 className="text-2xl font-bold text-slate-900 mb-2">Regulatory Consult</h2>
                         <p className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-4">Michigan Modified Food Code</p>
-                        <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                           Search Washtenaw County & State food safety documents. Get instant answers backed by official protocols and enforcement guidelines.
-                        </p>
-                        <div className="mt-auto flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
+                        
+                        {/* SCROLLABLE LIST INSIDE CARD */}
+                        <div className="flex-1 w-full overflow-y-auto card-scroll max-h-[180px] pr-2">
+                           <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                              Get instant answers backed by official protocols and enforcement guidelines. Ask about:
+                           </p>
+                           <ul className="space-y-3 border-t border-slate-100 pt-4">
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Correct cooling & reheating temperatures.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Employee health policy (Norovirus/Vomiting).</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Washtenaw County enforcement actions.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Creating SOPs for your staff.</li>
+                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Emergency action plans (Power/Water loss).</li>
+                           </ul>
+                        </div>
+
+                        <div className="mt-6 flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
                            Search Database <span className="ml-auto group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                      </button>
