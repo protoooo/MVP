@@ -199,7 +199,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask a compliance question...' : activeMode === 'image' ? 'Upload photo for inspection...' : 'Enter audit parameters...'}
-            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6" 
+            className="flex-1 max-h-[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
@@ -220,7 +220,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   )
 }
 
-// ✅ ADDING TRUSTGRID BACK IN (It was missing in the "Clean Supabase" version)
 const TrustGrid = () => (
   <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
     <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
@@ -543,6 +542,7 @@ export default function Page() {
                   </div>
                </div>
             </div>
+          </div>
           ) : (
             <>
               <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
