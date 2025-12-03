@@ -83,14 +83,11 @@ const GlobalStyles = () => (
     }
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    
-    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
-    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
   `}</style>
 )
 
 // ==========================================
-// ICONS (Dark Grey / Technical)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -102,10 +99,15 @@ const Icons = {
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
+  Book: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  ClipboardCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
+  Alert: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
+  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
+  Map: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>,
+  Zap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>,
 }
 
 // ==========================================
@@ -217,6 +219,27 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     </div>
   )
 }
+
+// ✅ ADDING TRUSTGRID BACK IN (It was missing in the "Clean Supabase" version)
+const TrustGrid = () => (
+  <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
+      <div className="mb-4"><Icons.Shield /></div>
+      <h3 className="text-slate-900 font-bold mb-2 text-sm">Risk Mitigation</h3>
+      <p className="text-slate-500 text-xs leading-relaxed">Identify Priority (P) violations before inspections occur. Minimize liability exposure.</p>
+    </div>
+    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
+      <div className="mb-4"><Icons.Map /></div>
+      <h3 className="text-slate-900 font-bold mb-2 text-sm">Local Jurisdiction</h3>
+      <p className="text-slate-500 text-xs leading-relaxed">Engineered specifically for Washtenaw County & Michigan Modified Food Code enforcement.</p>
+    </div>
+    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
+      <div className="mb-4"><Icons.Zap /></div>
+      <h3 className="text-slate-900 font-bold mb-2 text-sm">Rapid Assessment</h3>
+      <p className="text-slate-500 text-xs leading-relaxed">Instant visual analysis of equipment conditions and facility sanitation compliance.</p>
+    </div>
+  </div>
+)
 
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
@@ -503,73 +526,14 @@ export default function Page() {
                      </p>
                   </div>
 
-                  {/* SCROLLABLE SOURCE TICKER (Moved here for better flow) */}
+                  {/* SCROLLABLE SOURCE TICKER */}
                   <SourceTicker />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full z-20 mb-16">
-                     {/* Card 1 - Visual Inspection */}
-                     <button onClick={() => triggerMode('image')} className="group relative tech-card rounded-2xl p-8 text-left flex flex-col items-start h-full hover:border-emerald-500/50">
-                        
-                        {/* CARD HEADER */}
-                        <div className="mb-6 p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 w-full flex items-center justify-between">
-                           <Icons.Camera />
-                           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/60">Mode 01</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Visual Inspection</h2>
-                        <p className="text-emerald-600 text-xs font-bold tracking-widest uppercase mb-4">Priority (P) Violation Detection</p>
-                        
-                        {/* SCROLLABLE LIST INSIDE CARD */}
-                        <div className="flex-1 w-full overflow-y-auto card-scroll max-h-[180px] pr-2">
-                           <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                              Identify potential Priority (P) and Core items based on visual standards. Upload photos of:
-                           </p>
-                           <ul className="space-y-3 border-t border-slate-100 pt-4">
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Equipment sanitation & grease buildup.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Cross-contamination in storage areas.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Handwashing sink accessibility.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Date marking & labeling compliance.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-emerald-500">•</span> Physical facility condition (floors/walls).</li>
-                           </ul>
-                        </div>
-
-                        <div className="mt-6 flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
-                           Start Scan <span className="ml-auto group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                     </button>
-
-                     {/* Card 2 - Regulatory Consult */}
-                     <button onClick={() => triggerMode('chat')} className="group relative tech-card rounded-2xl p-8 text-left flex flex-col items-start h-full hover:border-blue-500/50">
-                        
-                        {/* CARD HEADER */}
-                        <div className="mb-6 p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 w-full flex items-center justify-between">
-                           <Icons.Book />
-                           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600/60">Mode 02</span>
-                        </div>
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2">Regulatory Consult</h2>
-                        <p className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-4">Michigan Modified Food Code</p>
-                        
-                        {/* SCROLLABLE LIST INSIDE CARD */}
-                        <div className="flex-1 w-full overflow-y-auto card-scroll max-h-[180px] pr-2">
-                           <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                              Get instant answers backed by official protocols and enforcement guidelines. Ask about:
-                           </p>
-                           <ul className="space-y-3 border-t border-slate-100 pt-4">
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Correct cooling & reheating temperatures.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Employee health policy (Norovirus/Vomiting).</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Washtenaw County enforcement actions.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Creating SOPs for your staff.</li>
-                              <li className="text-xs text-slate-500 flex gap-2"><span className="text-blue-500">•</span> Emergency action plans (Power/Water loss).</li>
-                           </ul>
-                        </div>
-
-                        <div className="mt-6 flex items-center text-xs font-bold text-slate-900 tracking-widest uppercase border-t border-slate-100 pt-4 w-full">
-                           Search Database <span className="ml-auto group-hover:translate-x-1 transition-transform">→</span>
-                        </div>
-                     </button>
-                  </div>
+                  {/* TRUST GRID (REPLACING CARDS FOR CLEAN LOOK) */}
+                  <TrustGrid />
 
                   {/* Footer */}
-                  <div className="flex flex-col md:flex-row items-center gap-6 text-xs text-slate-400 pb-8">
+                  <div className="flex flex-col md:flex-row items-center gap-6 text-xs text-slate-400 pb-8 mt-12">
                      <div className="flex gap-6">
                         <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
