@@ -100,9 +100,9 @@ const Icons = {
 }
 
 // ==========================================
-// FLIP CARD COMPONENT (UPDATED)
+// FLIP CARD COMPONENT (PERFECT FIT UPDATE)
 // ==========================================
-const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClass, items, actionText, onAction, btnBg }) => {
+const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, shadowClass, textClass, items, actionText, onAction, btnBg, bgTint }) => {
   const [isFlipped, setIsFlipped] = useState(false)
 
   return (
@@ -113,23 +113,24 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
       <div className={`relative w-full h-full transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
         
         {/* FRONT SIDE */}
-        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-lg overflow-hidden bg-white border border-slate-200 flex flex-col`}>
+        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] overflow-hidden bg-white border ${borderClass} ${shadowClass} flex flex-col`}>
             
-            {/* TOP 60% - IMAGE (Cover Fit) */}
-            <div className="h-[60%] w-full relative border-b border-slate-100">
+            {/* TOP 60% - IMAGE (CONTAINED & PADDED) */}
+            {/* This ensures the WHOLE image is visible and not cut off */}
+            <div className={`h-[60%] w-full relative border-b ${borderClass} ${bgTint} flex items-center justify-center p-6`}>
                 <img 
                   src={imageSrc} 
                   alt={title}
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  className="w-full h-full object-contain drop-shadow-sm"
                 />
             </div>
 
-            {/* BOTTOM 40% - TEXT INFO (Centered) */}
-            <div className={`flex-1 px-8 flex flex-col justify-center ${colorClass} bg-opacity-5`}>
+            {/* BOTTOM 40% - TEXT INFO */}
+            <div className={`flex-1 px-8 flex flex-col justify-center ${bgTint}`}>
                 <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>{title}</h2>
                 <p className={`${textClass} text-xs font-bold tracking-widest uppercase`}>{subtitle}</p>
                 
-                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-6 bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-6 bg-white w-fit px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">
                     <Icons.Refresh />
                     <span>Tap card for details</span>
                 </div>
@@ -137,7 +138,7 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
         </div>
 
         {/* BACK SIDE */}
-        <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-[32px] shadow-xl overflow-hidden bg-white border ${borderClass} flex flex-col p-8`}>
+        <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-[32px] overflow-hidden bg-white border ${borderClass} ${shadowClass} flex flex-col p-8`}>
             
             <div className="mb-6 flex justify-between items-start">
                 <div>
@@ -184,7 +185,7 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-8 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
+    <div className="flex justify-center mt-12 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
@@ -571,7 +572,7 @@ export default function Page() {
             
             {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
-               <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
+               <div className="w-full h-full flex flex-col items-center justify-center pb-[15vh]">
                   
                   <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000 pt-16">
                      <h1 className={`text-[11px] md:text-sm font-bold tracking-[0.2em] text-slate-400 uppercase whitespace-nowrap ${outfit.className}`}>
@@ -587,9 +588,11 @@ export default function Page() {
                         subtitle="Priority (P) Violation Detection"
                         imageSrc="/inspection.jpg"
                         colorClass="text-orange-600"
-                        borderClass="border-orange-100 bg-orange-50/50"
+                        borderClass="border-orange-200"
+                        shadowClass="shadow-[0_8px_30px_rgb(251,146,60,0.1)]"
                         textClass="text-orange-500"
                         btnBg="bg-orange-600"
+                        bgTint="bg-orange-50/30"
                         items={[
                            "Identify Priority (P) vs. Core violations instantly.",
                            "Detect improper storage (Raw above Ready-to-Eat).",
@@ -603,12 +606,14 @@ export default function Page() {
                      {/* Card 2 - Regulatory Consultation (Lavender) */}
                      <FlipCard 
                         title="Regulatory Consultation"
-                        subtitle="Michigan Modified Food Code"
+                        subtitle="Washtenaw Enforcement & State Code"
                         imageSrc="/consult.jpg"
                         colorClass="text-purple-600"
-                        borderClass="border-purple-100 bg-purple-50/50"
+                        borderClass="border-purple-200"
+                        shadowClass="shadow-[0_8px_30px_rgb(168,85,247,0.1)]"
                         textClass="text-purple-500"
                         btnBg="bg-purple-600"
+                        bgTint="bg-purple-50/30"
                         items={[
                            "Clarify Washtenaw-specific enforcement protocols.",
                            "Generate SOPs for cooling, reheating, and sanitizing.",
@@ -620,9 +625,9 @@ export default function Page() {
                      />
                   </div>
 
-                  {/* FOOTER - PINNED TO BOTTOM */}
-                  <div className="fixed bottom-4 left-0 right-0 flex justify-center z-30">
-                    <div className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-full px-6 py-3 shadow-sm flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-400">
+                  {/* FOOTER - PINNED TO BOTTOM WITH GLASS BLUR */}
+                  <div className="fixed bottom-0 left-0 right-0 flex justify-center z-30 p-4 bg-white/80 backdrop-blur-lg border-t border-slate-100">
+                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-400">
                         <div className="flex gap-4">
                             <Link href="/privacy" className="hover:text-slate-900 transition-colors font-medium">Privacy Policy</Link>
                             <Link href="/terms" className="hover:text-slate-900 transition-colors font-medium">Terms of Service</Link>
