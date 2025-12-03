@@ -18,7 +18,7 @@ export default function TermsOfService() {
           
           <div className="mb-12 text-center md:text-left border-b border-[#2C2C2C] pb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Terms of Service</h1>
-            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: November 30, 2024</p>
+            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: December 2, 2024</p>
           </div>
 
           <div className="space-y-6">
@@ -39,7 +39,7 @@ export default function TermsOfService() {
               <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm mb-6">
                 <li>Access to food safety regulations and official county documentation</li>
                 <li>Automated interpretation of compliance requirements via Chat</li>
-                <li>Image analysis for equipment and facility compliance</li>
+                <li>Visual image analysis for equipment and facility compliance</li>
                 <li>Mock Audit workflows</li>
                 <li>Staff Memo generation</li>
                 <li>County-specific guidance (currently Washtenaw County)</li>
@@ -58,7 +58,7 @@ export default function TermsOfService() {
             <section className="bg-[#1C1C1C] p-8 rounded-lg border border-[#F59E0B]">
               <h2 className="text-xl font-bold mb-4 text-white">3. Automated Content Disclaimer</h2>
               <p className="text-[#A1A1AA] text-sm mb-4">
-                Our Service uses Google's Gemini API and machine learning models to analyze documents 
+                Our Service uses advanced software models to analyze documents 
                 and generate responses. You acknowledge and agree that:
               </p>
               <ul className="list-disc pl-5 text-[#A1A1AA] space-y-3 text-sm">
@@ -110,11 +110,14 @@ export default function TermsOfService() {
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.2 Subscription Plan</h3>
                 <div className="bg-[#232323] border border-[#3ECF8E] p-6 rounded-md max-w-md">
                   <p className="text-white font-bold mb-2">protocolLM</p>
-                  <p className="text-[#3ECF8E] font-mono text-lg mb-4">$86/month</p>
-                  <p className="text-[#888] text-xs mb-4 italic">&quot;Don&apos;t get 86&apos;d&quot;</p>
+                  <div className="mb-4">
+                    <span className="text-[#3ECF8E] font-mono text-lg">$50/month</span>
+                    <span className="text-[#888] text-sm ml-2">(or $500/year)</span>
+                  </div>
+                  <p className="text-[#888] text-xs mb-4 italic">&quot;Cheaper than a single violation fine.&quot;</p>
                   <ul className="text-[#BBB] space-y-1 text-sm list-disc pl-4">
                     <li>Unlimited text queries</li>
-                    <li>Unlimited image analysis</li>
+                    <li>Visual image analysis</li>
                     <li>Full compliance database</li>
                     <li>Mock audit workflow</li>
                     <li>Training materials & SOP generators</li>
@@ -125,7 +128,7 @@ export default function TermsOfService() {
               <div className="space-y-4 mb-8">
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide font-mono border-b border-[#333] pb-2 mb-4">5.3 Payment Terms</h3>
                 <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
-                  <li>All subscriptions are billed monthly in advance.</li>
+                  <li>All subscriptions are billed monthly or annually in advance.</li>
                   <li>Payments are processed securely through Stripe.</li>
                   <li>You authorize us to charge your payment method for recurring subscription fees.</li>
                   <li>Failed payments may result in immediate service suspension.</li>
@@ -181,7 +184,7 @@ export default function TermsOfService() {
                   <h3 className="text-white font-bold mb-2 text-sm">7.3 NO LIABILITY FOR AUTOMATED ERRORS</h3>
                   <p className="text-[#FECACA] text-sm leading-relaxed">
                     WE SHALL NOT BE LIABLE FOR INACCURATE, INCOMPLETE, OR MISLEADING INFORMATION 
-                    PROVIDED BY THE AI, INCLUDING HALLUCINATIONS OR FAILED IMAGE ANALYSIS.
+                    PROVIDED BY THE SOFTWARE, INCLUDING HALLUCINATIONS OR FAILED VISUAL ANALYSIS.
                   </p>
                 </div>
               </div>
