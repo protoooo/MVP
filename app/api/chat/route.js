@@ -69,7 +69,7 @@ export async function POST(req) {
     
     // Use the Flash model for speed and multimodal
     const model = vertex_ai.getGenerativeModel({ 
-      model: 'gemini-1.5-flash-001', 
+      model: 'gemini-2.0-flash', 
       generationConfig: GENERATION_CONFIG 
     })
 
