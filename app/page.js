@@ -80,12 +80,11 @@ const GlobalStyles = () => (
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    /* Custom Scrollbar for Cards */
+    .card-scroll::-webkit-scrollbar { width: 4px; }
+    .card-scroll::-webkit-scrollbar-track { background: transparent; }
+    .card-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+    .card-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
   `}</style>
 )
 
@@ -102,16 +101,13 @@ const Icons = {
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  Inspect: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
-  Consult: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
-// FLUID BACKGROUND
+// FLUID BACKGROUND (STATIC)
 // ==========================================
 const FluidBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
@@ -464,11 +460,8 @@ export default function Page() {
           
           {/* HEADER */}
           <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-white pt-safe`}>
-             <div className="font-bold tracking-tight text-lg md:text-xl font-sans">
+             <div className="font-bold tracking-tight text-2xl md:text-3xl font-sans">
                protocol<span className="text-white/60">LM</span>
-               <span className="hidden md:inline ml-3 font-normal text-sm md:text-base border-l border-white/20 pl-3 text-white/60 font-sans">
-                 Trained on Washtenaw County Food Safety Protocols
-               </span>
              </div>
              <div className="flex items-center gap-2 md:gap-4">
                 {!session && (
@@ -490,52 +483,105 @@ export default function Page() {
              </div>
           </header>
 
-          <main className="flex-1 flex flex-col items-center justify-start px-4 w-full pb-20 md:pb-0 overflow-y-auto">
+          <main className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0 overflow-y-auto">
             
             {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
-               <div className="w-full h-full flex flex-col items-center pt-[15vh]">
+               <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
                   
-                  <div className="text-center px-4 max-w-4xl mb-16 animate-in fade-in zoom-in duration-1000">
-                     <h1 className="text-5xl md:text-8xl font-bold tracking-tighter mb-6 text-white drop-shadow-2xl font-sans">
-                        Food Safety Intelligence.
+                  <div className="text-center px-4 max-w-4xl mb-12 animate-in fade-in zoom-in duration-1000">
+                     <h1 className="text-2xl md:text-4xl font-medium tracking-wide text-white/90 drop-shadow-2xl font-sans uppercase">
+                        Trained on Washtenaw County Food Safety Protocols
                      </h1>
-                     <p className="text-xl md:text-2xl font-medium text-white/70 max-w-2xl mx-auto">
-                        Visual inspection & regulatory consulting for Washtenaw County restaurants.
-                     </p>
                   </div>
 
-                  <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 mb-[15vh] z-20">
+                  <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
                      {/* Card 1 */}
-                     <button onClick={() => triggerMode('image')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full hover:border-emerald-500/50">
-                        <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                           <Icons.Camera />
+                     <button onClick={() => triggerMode('image')} className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden hover:border-emerald-500/50">
+                        {/* Fixed Header Section */}
+                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
+                           <h2 className="text-3xl font-bold text-white mb-2 font-sans tracking-tight">Visual Inspection</h2>
+                           <p className="text-emerald-400 text-xs font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-3 font-sans">Visual Inspection</h2>
-                        <p className="text-white/60 text-lg leading-relaxed mb-8">
-                           Identify Priority (P) violations instantly with Washtenaw enforcement standards.
-                        </p>
-                        <div className="mt-auto flex items-center text-sm font-bold text-emerald-400 tracking-widest uppercase">
-                           Start Scan <span className="ml-2 text-lg group-hover:translate-x-1 transition-transform">→</span>
+
+                        {/* Scrollable Content Area */}
+                        <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
+                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                              Upload a photo of your kitchen, line, or equipment. Our system instantly identifies violations using Washtenaw enforcement standards.
+                           </p>
+                           <div className="space-y-4 border-t border-white/10 pt-6">
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Detects grease accumulation on non-food contact surfaces.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Identifies cross-contamination risks in storage areas.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Checks for proper date marking and labeling protocols.</p>
+                              </div>
+                               <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Validates sink setups (Handwashing vs. Prep vs. Warewashing).</p>
+                              </div>
+                           </div>
+                           {/* Scroll Hint Gradient */}
+                           <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+                        </div>
+
+                        {/* Fixed Footer */}
+                        <div className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm">
+                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
+                               <span>Start Scan</span> 
+                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
                         </div>
                      </button>
 
                      {/* Card 2 */}
-                     <button onClick={() => triggerMode('chat')} className="group relative glass-panel rounded-[32px] p-10 hover:scale-[1.02] transition-all duration-500 text-left flex flex-col items-start h-full hover:border-blue-500/50">
-                        <div className="mb-6 p-4 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                           <Icons.Book />
+                     <button onClick={() => triggerMode('chat')} className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden hover:border-blue-500/50">
+                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
+                           <h2 className="text-3xl font-bold text-white mb-2 font-sans tracking-tight">Regulatory Consult</h2>
+                           <p className="text-blue-400 text-xs font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-3 font-sans">Regulatory Consult</h2>
-                        <p className="text-white/60 text-lg leading-relaxed mb-8">
-                           Search the official Michigan Modified Food Code. Get instant answers.
-                        </p>
-                        <div className="mt-auto flex items-center text-sm font-bold text-blue-400 tracking-widest uppercase">
-                           Search Database <span className="ml-2 text-lg group-hover:translate-x-1 transition-transform">→</span>
+
+                         <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
+                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                              Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
+                           </p>
+                           <div className="space-y-4 border-t border-white/10 pt-6">
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Ask about specific cooling time/temperature parameters.</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Verify employee health exclusion guidelines (Norovirus, etc).</p>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Clarify enforcement actions for repeated violations.</p>
+                              </div>
+                               <div className="flex items-start gap-3">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-white/50">Generate staff memos regarding new procedure changes.</p>
+                              </div>
+                           </div>
+                            <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+                        </div>
+
+                        <div className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm">
+                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
+                               <span>Search Database</span> 
+                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                            </div>
                         </div>
                      </button>
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10">
+                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10 mt-auto">
                      <div className="flex gap-4">
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
