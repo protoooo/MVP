@@ -39,19 +39,6 @@ const GlobalStyles = () => (
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Techy Cards */
-    .tech-card {
-      background: #FFFFFF;
-      border: 1px solid #E2E8F0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      transition: all 0.2s ease-in-out;
-    }
-    .tech-card:hover {
-      border-color: #94A3B8;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-      transform: translateY(-2px);
-    }
-
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
@@ -108,6 +95,7 @@ const Icons = {
   Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
   Map: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>,
   Zap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>,
+  ArrowRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
 }
 
 // ==========================================
@@ -120,8 +108,8 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-6 mb-8">
-      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
+    <div className="flex justify-center mt-12 mb-8 opacity-70">
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-gray-200 bg-white/50 backdrop-blur-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-3"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
@@ -220,22 +208,40 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   )
 }
 
-const TrustGrid = () => (
-  <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Shield /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Risk Mitigation</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Identify Priority (P) violations before inspections occur. Minimize liability exposure.</p>
+const FeatureCards = ({ onAction }) => (
+  <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Visual Inspection Card */}
+    <div 
+      onClick={() => onAction('image')}
+      className="bg-white border border-gray-200 p-8 rounded-3xl flex flex-col items-start text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+    >
+      <div className="mb-6 p-3 bg-green-50 rounded-2xl text-emerald-600">
+        <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <h3 className="text-slate-900 font-bold text-xl mb-3">Visual Inspection</h3>
+      <p className="text-slate-500 text-sm leading-relaxed mb-8">
+        Identify Priority (P) violations instantly with Washtenaw enforcement standards.
+      </p>
+      <div className="mt-auto flex items-center text-xs font-bold text-emerald-600 tracking-widest uppercase group-hover:gap-2 transition-all">
+        Start Scan <span className="ml-1"><Icons.ArrowRight /></span>
+      </div>
     </div>
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Map /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Local Jurisdiction</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Engineered specifically for Washtenaw County & Michigan Modified Food Code enforcement.</p>
-    </div>
-    <div className="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-start text-left hover:border-slate-300 transition-colors">
-      <div className="mb-4"><Icons.Zap /></div>
-      <h3 className="text-slate-900 font-bold mb-2 text-sm">Rapid Assessment</h3>
-      <p className="text-slate-500 text-xs leading-relaxed">Instant visual analysis of equipment conditions and facility sanitation compliance.</p>
+
+    {/* Regulatory Consult Card */}
+    <div 
+      onClick={() => onAction('chat')}
+      className="bg-white border border-gray-200 p-8 rounded-3xl flex flex-col items-start text-left hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+    >
+      <div className="mb-6 p-3 bg-blue-50 rounded-2xl text-blue-600">
+        <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </div>
+      <h3 className="text-slate-900 font-bold text-xl mb-3">Regulatory Consult</h3>
+      <p className="text-slate-500 text-sm leading-relaxed mb-8">
+        Search the official Michigan Modified Food Code. Get instant answers.
+      </p>
+      <div className="mt-auto flex items-center text-xs font-bold text-blue-600 tracking-widest uppercase group-hover:gap-2 transition-all">
+        Search Database <span className="ml-1"><Icons.ArrowRight /></span>
+      </div>
     </div>
   </div>
 )
@@ -516,20 +522,20 @@ export default function Page() {
                 {/* LANDING CONTENT */}
                 <div className="w-full max-w-5xl px-4 flex flex-col items-center">
                   
-                  <div className="text-center mb-12 animate-in fade-in zoom-in duration-1000">
-                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-3">
-                        Trained on Washtenaw County Food Safety Protocols
+                  <div className="text-center mb-10 animate-in fade-in zoom-in duration-1000">
+                     <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4">
+                        Regulatory Intelligence.
                      </h1>
-                     <p className="text-slate-500 text-lg">
-                        Visual inspection & regulatory consulting.
+                     <p className="text-slate-500 text-lg md:text-xl">
+                        Michigan Modified Food Code on demand.
                      </p>
                   </div>
 
+                  {/* FEATURE CARDS (Replaces TrustGrid) */}
+                  <FeatureCards onAction={() => setShowAuthModal(true)} />
+
                   {/* SCROLLABLE SOURCE TICKER */}
                   <SourceTicker />
-
-                  {/* TRUST GRID (REPLACING CARDS FOR CLEAN LOOK) */}
-                  <TrustGrid />
 
                   {/* Footer */}
                   <div className="flex flex-col md:flex-row items-center gap-6 text-xs text-slate-400 pb-8 mt-12">
