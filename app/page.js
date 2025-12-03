@@ -4,10 +4,6 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit } from 'next/font/google' // ✅ NEW PREMIUM FONT
-
-// Initialize the font
-const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
 // CONFIG & DATA
@@ -31,12 +27,13 @@ const SOURCE_DOCUMENTS = [
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #020408; /* Deep dark base */
+      background-color: #020408;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
     /* FLUID BACKGROUND ANIMATIONS */
@@ -108,25 +105,18 @@ const Icons = {
   Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  ClipboardCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
-  Alert: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
   Inspect: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
   Consult: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
-// FLUID BACKGROUND (STATIC FIXED LAYER)
+// FLUID BACKGROUND
 // ==========================================
 const FluidBackground = () => (
   <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
-    {/* Blob 1 - Emerald Green (Top Left) */}
     <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
-    
-    {/* Blob 2 - Royal Blue (Bottom Right) */}
     <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
-    
-    {/* Noise Overlay (Texture) */}
     <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
   </div>
 )
@@ -474,7 +464,7 @@ export default function Page() {
           
           {/* HEADER */}
           <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-white pt-safe`}>
-             <div className={`font-bold tracking-tight text-lg md:text-xl ${outfit.className}`}>
+             <div className="font-bold tracking-tight text-lg md:text-xl font-sans">
                protocol<span className="text-white/60">LM</span>
                <span className="hidden md:inline ml-3 font-normal text-sm md:text-base border-l border-white/20 pl-3 text-white/60 font-sans">
                  Trained on Washtenaw County Food Safety Protocols
@@ -507,7 +497,7 @@ export default function Page() {
                <div className="w-full h-full flex flex-col items-center pt-[15vh]">
                   
                   <div className="text-center px-4 max-w-4xl mb-16 animate-in fade-in zoom-in duration-1000">
-                     <h1 className={`text-5xl md:text-8xl font-bold tracking-tighter mb-6 text-white drop-shadow-2xl ${outfit.className}`}>
+                     <h1 className="text-5xl md:text-8xl font-bold tracking-tighter mb-6 text-white drop-shadow-2xl font-sans">
                         Food Safety Intelligence.
                      </h1>
                      <p className="text-xl md:text-2xl font-medium text-white/70 max-w-2xl mx-auto">
@@ -521,7 +511,7 @@ export default function Page() {
                         <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                            <Icons.Camera />
                         </div>
-                        <h2 className={`text-3xl font-bold text-white mb-3 ${outfit.className}`}>Visual Inspection</h2>
+                        <h2 className="text-3xl font-bold text-white mb-3 font-sans">Visual Inspection</h2>
                         <p className="text-white/60 text-lg leading-relaxed mb-8">
                            Identify Priority (P) violations instantly with Washtenaw enforcement standards.
                         </p>
@@ -535,7 +525,7 @@ export default function Page() {
                         <div className="mb-6 p-4 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
                            <Icons.Book />
                         </div>
-                        <h2 className={`text-3xl font-bold text-white mb-3 ${outfit.className}`}>Regulatory Consult</h2>
+                        <h2 className="text-3xl font-bold text-white mb-3 font-sans">Regulatory Consult</h2>
                         <p className="text-white/60 text-lg leading-relaxed mb-8">
                            Search the official Michigan Modified Food Code. Get instant answers.
                         </p>
@@ -563,7 +553,7 @@ export default function Page() {
                         <div className="mb-6 p-4 rounded-full bg-white/5 text-white/50">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
-                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
+                        <h1 className="text-2xl font-bold mb-2 font-sans">
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
                         <p className="text-white/50 text-sm max-w-sm">
@@ -596,19 +586,3 @@ export default function Page() {
     </>
   )
 }
-
-// ==========================================
-// FLUID BACKGROUND COMPONENT (Green & Blue)
-// ==========================================
-const FluidBackground = () => (
-  <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
-    {/* Blob 1 - Emerald Green (Top Left) */}
-    <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
-    
-    {/* Blob 2 - Royal Blue (Bottom Right) */}
-    <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
-    
-    {/* Noise Overlay (Texture) */}
-    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
-  </div>
-)
