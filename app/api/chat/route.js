@@ -65,7 +65,7 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     const model = vertex_ai.getGenerativeModel({ 
-      model: 'gemini-1.5-flash-001', 
+      model: 'gemini-2.5-flash', 
       generationConfig: GENERATION_CONFIG 
     })
 
