@@ -91,6 +91,10 @@ const Icons = {
   ClipboardCheck: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>,
   Alert: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>,
   Check: ({ color = 'text-white' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
+  // NEW ICONS FOR TRUST SECTION
+  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>,
+  Map: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>,
+  Zap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>,
 }
 
 // ==========================================
@@ -103,7 +107,7 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-3">
+    <div className="flex justify-center mt-3 mb-8">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-md shadow-sm">
         <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse mr-3"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
@@ -207,6 +211,27 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   )
 }
 
+// ✅ NEW TRUST GRID COMPONENT
+const TrustGrid = () => (
+  <div className="w-full max-w-4xl mx-auto px-4 mt-8 md:mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="bg-[#18181B] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center hover:border-white/10 transition-colors">
+      <div className="bg-white/5 p-3 rounded-full mb-4 text-[#3ECF8E]"><Icons.Shield /></div>
+      <h3 className="text-white font-semibold mb-2">Avoid Fines</h3>
+      <p className="text-[#888] text-sm leading-relaxed">Catch Priority (P) violations before the inspector does. Save $200+ per incident.</p>
+    </div>
+    <div className="bg-[#18181B] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center hover:border-white/10 transition-colors">
+      <div className="bg-white/5 p-3 rounded-full mb-4 text-[#3ECF8E]"><Icons.Map /></div>
+      <h3 className="text-white font-semibold mb-2">Washtenaw Specific</h3>
+      <p className="text-[#888] text-sm leading-relaxed">Trained on local County enforcement docs, not just generic FDA codes.</p>
+    </div>
+    <div className="bg-[#18181B] border border-white/5 p-6 rounded-2xl flex flex-col items-center text-center hover:border-white/10 transition-colors">
+      <div className="bg-white/5 p-3 rounded-full mb-4 text-[#3ECF8E]"><Icons.Zap /></div>
+      <h3 className="text-white font-semibold mb-2">Instant Audit</h3>
+      <p className="text-[#888] text-sm leading-relaxed">Snap a photo of your line, sink, or prep area. Get a compliance check in 3 seconds.</p>
+    </div>
+  </div>
+)
+
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -261,7 +286,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Unlimited Compliance Queries</li>
-          {/* ✅ REMOVED "AI" FROM HERE */}
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Visual Inspections (Image Mode)</li>
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Full Washtenaw & FDA Database</li>
           <li className="flex items-start gap-3 text-sm font-medium text-white/90"><Icons.Check color="text-white" /> Mock Audit Workflow</li>
@@ -463,37 +487,4 @@ export default function Page() {
               </header>
               <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
                 <div className="w-full max-w-2xl mt-4 md:mt-0 px-2 md:px-0 mx-auto">
-                  <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
-                </div>
-                {!session && <SourceTicker />}
-                <div className="flex gap-3 md:gap-4 mt-8 md:mt-12 text-[10px] md:text-xs text-[#525252] absolute md:fixed bottom-4 md:bottom-6"><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-                {messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-4 text-center"><h1 className="text-3xl font-medium text-white/90 mb-2">What do you want to know?</h1></div>
-                ) : (
-                  <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
-                    {messages.map((msg, idx) => (
-                      <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ${msg.role === 'user' ? 'text-white px-2' : 'text-[#EDEDED] px-2'}`}>
-                          {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/10" />}
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="w-full bg-[#0A0A0A] pt-2 pb-6 shrink-0 z-20">
-                <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
-              </div>
-            </>
-          )}
-        </main>
-      </div>
-    </>
-  )
-}
+                  <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode}
