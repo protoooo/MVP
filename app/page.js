@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { Outfit } from 'next/font/google'
+
+const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
 // CONFIG & DATA
@@ -22,7 +25,7 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES (CLEAN LIGHT THEME)
+// STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -36,7 +39,13 @@ const GlobalStyles = () => (
       color: #18181B;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    
+
+    /* 3D FLIP ANIMATIONS */
+    .perspective-1000 { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
@@ -46,11 +55,6 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
     
-    /* Clean hidden scroll for cards */
-    .card-scroll::-webkit-scrollbar { width: 4px; }
-    .card-scroll::-webkit-scrollbar-track { background: transparent; }
-    .card-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
-
     /* LOADING */
     .loader {
       height: 20px; aspect-ratio: 2.5;
@@ -89,6 +93,85 @@ const Icons = {
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
+  
+  // FLIP ICON
+  Refresh: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+}
+
+// ==========================================
+// FLIP CARD COMPONENT
+// ==========================================
+const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClass, items, actionText, onAction }) => {
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  return (
+    <div 
+      className="group perspective-1000 w-full h-[550px] cursor-pointer"
+      onClick={() => setIsFlipped(!isFlipped)}
+    >
+      <div className={`relative w-full h-full transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+        
+        {/* FRONT SIDE */}
+        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-xl overflow-hidden bg-white border ${borderClass} flex flex-col`}>
+            {/* TOP 2/3 - FULL IMAGE */}
+            <div className="h-[65%] w-full relative">
+                <img 
+                  src={imageSrc} 
+                  alt={title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {/* Subtle overlay for depth */}
+                <div className="absolute inset-0 bg-black/5"></div>
+            </div>
+
+            {/* BOTTOM 1/3 - HEADER INFO */}
+            <div className={`flex-1 p-8 flex flex-col justify-center ${colorClass} bg-opacity-10`}>
+                <h2 className={`text-2xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>{title}</h2>
+                <p className={`${textClass} text-xs font-bold tracking-widest uppercase mb-4`}>{subtitle}</p>
+                
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-auto">
+                    <Icons.Refresh />
+                    <span>Tap to see details</span>
+                </div>
+            </div>
+        </div>
+
+        {/* BACK SIDE */}
+        <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-[32px] shadow-xl overflow-hidden bg-white border ${borderClass} flex flex-col p-8`}>
+            
+            <div className="mb-6 flex justify-between items-start">
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-1">{title}</h3>
+                    <p className="text-slate-400 text-xs uppercase tracking-wide">Capabilities</p>
+                </div>
+                <button className="text-slate-300 hover:text-slate-600"><Icons.X /></button>
+            </div>
+
+            {/* Scrollable Features */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                {items.map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div className={`w-1.5 h-1.5 rounded-full ${textClass.replace('text-', 'bg-')} mt-1.5 shrink-0`}></div>
+                        <p className="text-sm text-slate-600 leading-relaxed">{item}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* ACTION BUTTON */}
+            <button 
+                onClick={(e) => {
+                    e.stopPropagation(); // Prevent flipping back
+                    onAction();
+                }}
+                className={`w-full mt-6 py-4 rounded-2xl ${textClass.replace('text-', 'bg-')} text-white font-bold text-sm uppercase tracking-widest shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-3`}
+            >
+                {actionText} <Icons.ArrowUp />
+            </button>
+        </div>
+
+      </div>
+    </div>
+  )
 }
 
 // ==========================================
@@ -101,9 +184,9 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-8 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
+    <div className="flex justify-center mt-12 mb-4 opacity-50 hover:opacity-100 transition-opacity duration-300">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
-        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
+        <div className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-3 animate-pulse"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
             {SOURCE_DOCUMENTS[index]}
@@ -458,7 +541,7 @@ export default function Page() {
           
           {/* HEADER */}
           <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe`}>
-             <div className={`font-bold tracking-tight text-xl md:text-2xl font-sans`}>
+             <div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>
                protocol<span className="bg-gradient-to-r from-orange-500 to-purple-600 bg-clip-text text-transparent">LM</span>
              </div>
              <div className="flex items-center gap-2 md:gap-4">
@@ -487,8 +570,8 @@ export default function Page() {
             {!session ? (
                <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
                   
-                  <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000">
-                     <h1 className={`text-sm md:text-base font-bold tracking-[0.2em] text-slate-500 uppercase whitespace-nowrap font-sans`}>
+                  <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000 pt-16">
+                     <h1 className={`text-[11px] md:text-sm font-bold tracking-[0.2em] text-slate-400 uppercase whitespace-nowrap ${outfit.className}`}>
                         Trained on Washtenaw County Food Safety Protocols
                      </h1>
                   </div>
@@ -496,125 +579,53 @@ export default function Page() {
                   <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
                      
                      {/* Card 1 - Visual Inspection (Creamsicle) */}
-                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
-                        
-                        {/* TOP 50% - IMAGE AREA */}
-                        <div className="h-[50%] w-full relative overflow-hidden bg-orange-100/50">
-                           {/* Placeholder Image - You can replace src with local '/inspection.jpg' */}
-                           <img 
-                              src="/inspection.jpg" 
-                              alt="Commercial Kitchen Inspection"
-                              className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-orange-50/90 via-transparent to-transparent"></div>
-                        </div>
-
-                        {/* BOTTOM 50% - CONTENT AREA */}
-                        <div className="flex-1 flex flex-col relative">
-                           
-                           {/* Header */}
-                           <div className="px-8 pt-6 pb-2">
-                              <h2 className={`text-2xl font-bold text-slate-900 mb-1 tracking-tight font-sans`}>Visual Inspection</h2>
-                              <p className="text-orange-600 text-[10px] font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
-                           </div>
-
-                           {/* Scrollable Content */}
-                           <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
-                              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                                 Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
-                              </p>
-                              <div className="space-y-3 border-t border-orange-200/50 pt-4">
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Identify Priority (P) vs. Core violations instantly.</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Detect improper storage (Raw above Ready-to-Eat).</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Audit food contact surfaces for biofilm & degradation.</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Validate sink setup & handwashing compliance.</p>
-                                 </div>
-                              </div>
-                              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
-                           </div>
-
-                           {/* Footer Action */}
-                           <button 
-                              onClick={() => triggerMode('image')}
-                              className="px-8 py-5 border-t border-orange-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-orange-600 tracking-widest uppercase group mt-auto"
-                           >
-                              <span>Start Scan</span> 
-                              <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
-                           </button>
-                        </div>
-                     </div>
+                     <FlipCard 
+                        title="Visual Inspection"
+                        subtitle="Priority (P) Violation Detection"
+                        imageSrc="/inspection.jpg"
+                        colorClass="text-orange-600"
+                        borderClass="border-orange-100 bg-orange-50/50"
+                        textClass="text-orange-500"
+                        items={[
+                           "Identify Priority (P) vs. Core violations instantly.",
+                           "Detect improper storage (Raw above Ready-to-Eat).",
+                           "Audit food contact surfaces for biofilm & degradation.",
+                           "Validate sink setup & handwashing compliance."
+                        ]}
+                        actionText="Start Scan"
+                        onAction={() => triggerMode('image')}
+                     />
 
                      {/* Card 2 - Regulatory Consult (Lavender) */}
-                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
-                        
-                        {/* TOP 50% - IMAGE AREA */}
-                        <div className="h-[50%] w-full relative overflow-hidden bg-purple-100/50">
-                           {/* Placeholder Image - You can replace src with local '/consult.jpg' */}
-                           <img 
-                              src="/consult.jpg" 
-                              alt="Food Safety Regulations"
-                              className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-purple-50/90 via-transparent to-transparent"></div>
-                        </div>
-
-                        {/* BOTTOM 50% - CONTENT AREA */}
-                        <div className="flex-1 flex flex-col relative">
-                           
-                           {/* Header */}
-                           <div className="px-8 pt-6 pb-2">
-                              <h2 className={`text-2xl font-bold text-slate-900 mb-1 tracking-tight font-sans`}>Regulatory Consult</h2>
-                              <p className="text-purple-600 text-[10px] font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
-                           </div>
-
-                           {/* Scrollable Content */}
-                           <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
-                              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                                 Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
-                              </p>
-                              <div className="space-y-3 border-t border-purple-200/50 pt-4">
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Clarify Washtenaw-specific enforcement protocols.</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Generate SOPs for cooling, reheating, and sanitizing.</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Access emergency action plans (Power outage, etc).</p>
-                                 </div>
-                                 <div className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                    <p className="text-xs text-slate-500">Instant citations for staff training and correction.</p>
-                                 </div>
-                              </div>
-                              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
-                           </div>
-
-                           {/* Footer Action */}
-                           <button 
-                              onClick={() => triggerMode('chat')}
-                              className="px-8 py-5 border-t border-purple-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-purple-600 tracking-widest uppercase group mt-auto"
-                           >
-                              <span>Search Database</span> 
-                              <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
-                           </button>
-                        </div>
-                     </div>
+                     <FlipCard 
+                        title="Regulatory Consult"
+                        subtitle="Michigan Modified Food Code"
+                        imageSrc="/consult.jpg"
+                        colorClass="text-purple-600"
+                        borderClass="border-purple-100 bg-purple-50/50"
+                        textClass="text-purple-500"
+                        items={[
+                           "Clarify Washtenaw-specific enforcement protocols.",
+                           "Generate SOPs for cooling, reheating, and sanitizing.",
+                           "Access emergency action plans (Power outage, etc).",
+                           "Instant citations for staff training and correction."
+                        ]}
+                        actionText="Search Database"
+                        onAction={() => triggerMode('chat')}
+                     />
                   </div>
+
+                  <div className="flex justify-center mt-12 mb-8 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
+                        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
+                        <div className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
+                            {SOURCE_DOCUMENTS[0]} 
+                        </div>
+                        </div>
+                    </div>
+                  </div>
+
 
                   <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-8 z-10 mt-auto">
                      <div className="flex gap-4">
@@ -634,7 +645,7 @@ export default function Page() {
                         <div className="mb-6 p-4 rounded-full bg-slate-50 text-slate-400">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
-                        <h1 className={`text-2xl font-bold mb-2 font-sans`}>
+                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
                         <p className="text-slate-500 text-sm max-w-sm">
