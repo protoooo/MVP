@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// ✅ IMPORT HELPERS
 import { searchDocuments } from '@/lib/searchDocs'
 import { checkRateLimit, incrementUsage } from '@/lib/rateLimit'
 
@@ -22,7 +21,7 @@ function sanitizeString(input, maxLength = 5000) {
 
 function validateMessages(messages) {
   if (!Array.isArray(messages)) return []
-  const valid = messages.slice(-6).map(msg => ({ // Keep last 6 context
+  const valid = messages.slice(-6).map(msg => ({ 
     role: msg.role === 'user' ? 'user' : 'assistant',
     content: sanitizeString(msg.content, 5000),
     image: msg.image || null
@@ -34,7 +33,7 @@ function validateMessages(messages) {
 
 const GENERATION_CONFIG = {
   maxOutputTokens: 2048,
-  temperature: 0.1, // Very low temp for strict adherence to rules
+  temperature: 0.1, 
   topP: 0.8,
 }
 
@@ -66,7 +65,7 @@ export async function POST(req) {
     
     const vertex_ai = new VertexAI(vertexConfig)
     const model = vertex_ai.getGenerativeModel({ 
-      model: 'gemini-2.5-flash', 
+      model: 'gemini-1.5-flash-001', 
       generationConfig: GENERATION_CONFIG 
     })
 
@@ -97,7 +96,7 @@ export async function POST(req) {
     let context = ''
     let searchTerms = ''
 
-    // STEP A: "See" the image to get search terms
+    // STEP A: "See" the image
     if (image) {
         try {
             const visionPrompt = {
@@ -122,19 +121,19 @@ export async function POST(req) {
             const searchResults = await searchDocuments(searchTerms, 'washtenaw')
             
             if (searchResults && searchResults.length > 0) {
-                // Sorting Logic: Washtenaw > State > Federal
+                // Sorting Logic
                 const washtenaw = searchResults.filter(d => d.metadata?.source?.toLowerCase().includes('washtenaw'))
                 const state = searchResults.filter(d => d.metadata?.source?.toLowerCase().includes('michigan') || d.metadata?.source?.toLowerCase().includes('act'))
                 const federal = searchResults.filter(d => !d.metadata?.source?.toLowerCase().includes('washtenaw') && !d.metadata?.source?.toLowerCase().includes('michigan'))
                 
                 context = `
 === PRIORITY 1: WASHTENAW COUNTY REGULATIONS ===
-${washtenaw.map(d => `SOURCE: ${d.metadata?.source} (Page ${d.metadata?.page})\nTEXT: "${d.content}"`).join('\n\n')}
+${washtenaw.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
-=== PRIORITY 2: MICHIGAN STATE CODE ===
+=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE ===
 ${state.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
-=== PRIORITY 3: FDA / USDA FEDERAL CODE ===
+=== PRIORITY 3: REGULATORY FRAMEWORK (ADOPTED STANDARDS) ===
 ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 `
             }
@@ -143,25 +142,24 @@ ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.conten
 
     // STEP C: Final Generation
     
+    // 🔥 REBRANDING STRATEGY IN SYSTEM PROMPT 🔥
     const SYSTEM_PROMPT = `
 You are ProtocolLM, the Official Compliance Engine for Washtenaw County, MI.
 
-STRICT HIERARCHY OF AUTHORITY:
+STRICT CITATION RULES:
 1. Washtenaw County Regulations (Cite these FIRST)
 2. Michigan Modified Food Code (Cite these SECOND)
-3. FDA Food Code 2022 (Cite these THIRD)
-4. USDA Guidelines (Last resort)
+3. If you find a rule in the "Regulatory Framework" section (FDA), CITE IT AS: "Michigan Modified Food Code (Adopting FDA Standards)".
+4. DO NOT cite "FDA" or "USDA" directly. Always frame it as the Michigan/Washtenaw adopted standard.
 
 FORMATTING RULES:
-- DO NOT use markdown bolding (asterisks).
-- DO NOT use italics or markdown symbols.
-- Use plain text.
-- Use Numbering (1. 2. 3.) or CAPITALIZATION for emphasis.
+- Clean text only. NO asterisks (*), NO markdown bolding.
+- Use numbered lists or capitalization for structure.
 
 RESPONSE STRUCTURE:
 1. OBSERVATION: Technical description of the issue.
 2. VIOLATION STATUS: "CRITICAL" or "NON-CRITICAL" or "COMPLIANT".
-3. CITATION: The exact code section from the provided context. If context is missing, state "General Sanitation Principles (FDA)".
+3. CITATION: The exact code section. Example: "Michigan Modified Food Code Section 4-601.11".
 4. CORRECTIVE ACTION: Specific steps to resolve the issue.
 
 TONE: Professional, Direct, Auditor-Style.
@@ -171,7 +169,7 @@ TONE: Professional, Direct, Auditor-Style.
 ${SYSTEM_PROMPT}
 
 === OFFICIAL CONTEXT ===
-${context || "No specific local regulations found. Referencing standard FDA guidelines."}
+${context || "No specific local regulations found. Referencing Standard Regulatory Framework."}
 
 === USER QUERY/IMAGE ANALYSIS ===
 ${messages[messages.length - 1].content}
