@@ -26,7 +26,7 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES (CLEAN LIGHT THEME)
+// STYLES
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
@@ -103,8 +103,8 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-8 mb-4">
-      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm">
+    <div className="flex justify-center mt-8 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
           <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
@@ -498,93 +498,115 @@ export default function Page() {
                   <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
                      
                      {/* Card 1 - Visual Inspection (Creamsicle) */}
-                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[420px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* Header */}
-                        <div className="p-10 pb-4 shrink-0">
-                           <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>Visual Inspection</h2>
-                           <p className="text-orange-600 text-xs font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
+                        {/* TOP 50% - IMAGE AREA */}
+                        <div className="h-[50%] w-full relative overflow-hidden bg-orange-100/50">
+                           {/* Placeholder Image - You can replace src with local '/inspection.jpg' */}
+                           <img 
+                              src="https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&w=800&q=80" 
+                              alt="Commercial Kitchen Inspection"
+                              className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-t from-orange-50/90 via-transparent to-transparent"></div>
                         </div>
 
-                        {/* Scrollable Content */}
-                        <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
-                           <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                              Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
-                           </p>
-                           <div className="space-y-4 border-t border-orange-200/50 pt-6">
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Identify Priority (P) vs. Core violations instantly.</p>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Detect improper storage (Raw above Ready-to-Eat).</p>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Audit food contact surfaces for biofilm & degradation.</p>
-                              </div>
-                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Validate sink setup & handwashing compliance.</p>
-                              </div>
+                        {/* BOTTOM 50% - CONTENT AREA */}
+                        <div className="flex-1 flex flex-col relative">
+                           
+                           {/* Header */}
+                           <div className="px-8 pt-6 pb-2">
+                              <h2 className={`text-2xl font-bold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>Visual Inspection</h2>
+                              <p className="text-orange-600 text-[10px] font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
                            </div>
-                           <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
-                        </div>
 
-                        {/* Footer Action */}
-                        <button 
-                            onClick={() => triggerMode('image')}
-                            className="p-6 border-t border-orange-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-sm font-bold text-orange-600 tracking-widest uppercase group"
-                        >
-                            <span>Start Scan</span> 
-                            <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
-                        </button>
+                           {/* Scrollable Content */}
+                           <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
+                              <p className="text-slate-500 text-sm leading-relaxed mb-4">
+                                 Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
+                              </p>
+                              <div className="space-y-3 border-t border-orange-200/50 pt-4">
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Identify Priority (P) vs. Core violations instantly.</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Detect improper storage (Raw above Ready-to-Eat).</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Audit food contact surfaces for biofilm & degradation.</p>
+                                 </div>
+                              </div>
+                              <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
+                           </div>
+
+                           {/* Footer Action */}
+                           <button 
+                              onClick={() => triggerMode('image')}
+                              className="px-8 py-5 border-t border-orange-100 bg-white/80 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-orange-600 tracking-widest uppercase group mt-auto"
+                           >
+                              <span>Start Scan</span> 
+                              <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+                           </button>
+                        </div>
                      </div>
 
                      {/* Card 2 - Regulatory Consult (Lavender) */}
-                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[420px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[480px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* Header */}
-                        <div className="p-10 pb-4 shrink-0">
-                           <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>Regulatory Consult</h2>
-                           <p className="text-purple-600 text-xs font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
+                        {/* TOP 50% - IMAGE AREA */}
+                        <div className="h-[50%] w-full relative overflow-hidden bg-purple-100/50">
+                           {/* Placeholder Image - You can replace src with local '/consult.jpg' */}
+                           <img 
+                              src="https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=800&q=80" 
+                              alt="Food Safety Regulations"
+                              className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                           />
+                           <div className="absolute inset-0 bg-gradient-to-t from-purple-50/90 via-transparent to-transparent"></div>
                         </div>
 
-                         {/* Scrollable Content */}
-                         <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
-                           <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                              Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
-                           </p>
-                           <div className="space-y-4 border-t border-purple-200/50 pt-6">
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Clarify Washtenaw-specific enforcement protocols.</p>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Generate SOPs for cooling, reheating, and sanitizing.</p>
-                              </div>
-                              <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Access emergency action plans (Power outage, etc).</p>
-                              </div>
-                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-slate-500">Instant citations for staff training and correction.</p>
-                              </div>
+                        {/* BOTTOM 50% - CONTENT AREA */}
+                        <div className="flex-1 flex flex-col relative">
+                           
+                           {/* Header */}
+                           <div className="px-8 pt-6 pb-2">
+                              <h2 className={`text-2xl font-bold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>Regulatory Consult</h2>
+                              <p className="text-purple-600 text-[10px] font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
                            </div>
-                            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
-                        </div>
 
-                        {/* Footer Action */}
-                        <button 
-                            onClick={() => triggerMode('chat')}
-                            className="p-6 border-t border-purple-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-sm font-bold text-purple-600 tracking-widest uppercase group"
-                        >
-                            <span>Search Database</span> 
-                            <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
-                        </button>
+                           {/* Scrollable Content */}
+                           <div className="px-8 pb-4 flex-1 overflow-y-auto card-scroll relative">
+                              <p className="text-slate-500 text-sm leading-relaxed mb-4">
+                                 Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
+                              </p>
+                              <div className="space-y-3 border-t border-purple-200/50 pt-4">
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Clarify Washtenaw-specific enforcement protocols.</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Generate SOPs for cooling, reheating, and sanitizing.</p>
+                                 </div>
+                                 <div className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                    <p className="text-xs text-slate-500">Access emergency action plans (Power outage, etc).</p>
+                                 </div>
+                              </div>
+                              <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
+                           </div>
+
+                           {/* Footer Action */}
+                           <button 
+                              onClick={() => triggerMode('chat')}
+                              className="px-8 py-5 border-t border-purple-100 bg-white/80 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-xs font-bold text-purple-600 tracking-widest uppercase group mt-auto"
+                           >
+                              <span>Search Database</span> 
+                              <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
+                           </button>
+                        </div>
                      </div>
                   </div>
 
