@@ -32,7 +32,7 @@ function validateMessages(messages) {
 // --- 2. INTELLIGENCE CONFIG ---
 
 const GENERATION_CONFIG = {
-  // ✅ INCREASED LIMIT to prevent cut-off answers
+  // ✅ MAX TOKENS INCREASED (Prevents cutoff)
   maxOutputTokens: 8192, 
   temperature: 0.1, 
   topP: 0.8,
@@ -115,7 +115,7 @@ export async function POST(req) {
 
     if (searchTerms) {
         try {
-            // ✅ We append "Washtenaw Violation Types" to ensure we get the enforcement docs if relevant
+            // ✅ We append "Washtenaw Violation Types" to ensure we catch those specific definition docs
             const searchResults = await searchDocuments(`${searchTerms} Washtenaw Violation Types Enforcement`, 'washtenaw')
             
             if (searchResults && searchResults.length > 0) {
@@ -140,10 +140,10 @@ export async function POST(req) {
                 })
                 
                 context = `
-=== PRIORITY 1: WASHTENAW COUNTY ENFORCEMENT & VIOLATION TYPES ===
+=== PRIORITY 1: WASHTENAW COUNTY DEFINITIONS & ENFORCEMENT ===
 ${washtenaw.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
-=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE (THE RULES) ===
+=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE (THE REGULATIONS) ===
 ${state.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
 === PRIORITY 3: FEDERAL STANDARDS ===
@@ -155,26 +155,25 @@ ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.conten
 
     // --- FINAL GENERATION ---
     
-    // ✅ MODERNIZED PROMPT: Uses Priority (P), Pf, and Core
+    // 🔥 UPDATED PROMPT: Uses exact Washtenaw P/Pf/Core logic 🔥
     const SYSTEM_PROMPT = `
 You are ProtocolLM, acting as an Official Health Inspector for Washtenaw County, MI.
 
 YOUR AUTHORITY:
-1. **Washtenaw County Enforcement Policies**: Use these to determine the SEVERITY and CONSEQUENCES.
+1. **Washtenaw County Enforcement Policies**: Use these to determine the SEVERITY (P/Pf/Core) and TIMELINE.
 2. **Michigan Modified Food Code**: Use this to cite the specific RULE (Section numbers).
 
-MODERN TERMINOLOGY (MANDATORY):
-Do not use "Critical" or "Non-Critical" unless quoting an older document. Use the modern Michigan/FDA terms:
-- **Priority Item (P)**: Direct connection to foodborne illness (e.g., cooking temps, cross-contamination).
-- **Priority Foundation Item (Pf)**: Supports Priority items (e.g., soap at sink, calibrated thermometer).
-- **Core Item (C)**: General sanitation/maintenance (e.g., dirty floors, repair issues).
+STRICT CLASSIFICATION RULES (Based on Washtenaw Violation Types PDF):
+- **Priority Item (P)**: High Risk. Direct connection to foodborne illness (e.g., cooking temps, cross-contamination, handwashing). *Formerly "Critical".*
+- **Priority Foundation Item (Pf)**: Supports Priority items (e.g., soap at sink, calibrated thermometer, no sanitizer test strips). *Formerly "Critical" or "Non-Critical".*
+- **Core Item (C)**: General sanitation/maintenance (e.g., dirty floors, repair issues, dirty stove exterior). *Formerly "Non-Critical".*
 
 RESPONSE STRUCTURE:
 1. OBSERVATION: Professional technical description.
 2. VIOLATION TYPE: "Priority Item (P)", "Priority Foundation Item (Pf)", or "Core Item (C)".
 3. ENFORCEMENT AUTHORITY: "Washtenaw County Health Department".
 4. CITATION: "Michigan Modified Food Code § [Number]". (Use the exact section number. If the number isn't in the snippet, use your internal knowledge of the 2017/2022 Food Code).
-5. CORRECTIVE ACTION: Detailed steps to fix it.
+5. REQUIRED CORRECTION: "Immediate" (for P/Pf) or "90 Days" (for Core), followed by the specific fix action.
 
 TONE: Strict, Professional, Educational.
 `
@@ -198,6 +197,7 @@ ${messages[messages.length - 1].content}
     const result = await model.generateContent({ contents: [reqContent] })
     let text = result.response.candidates[0].content.parts[0].text
 
+    // Clean formatting
     text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`/g, '')
 
     if (chatId) {
