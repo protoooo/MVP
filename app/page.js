@@ -100,7 +100,7 @@ const Icons = {
 }
 
 // ==========================================
-// FLIP CARD COMPONENT (PERFECT FIT UPDATE)
+// FLIP CARD COMPONENT (UPDATED 65/35 RATIO)
 // ==========================================
 const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, shadowClass, textClass, items, actionText, onAction, btnBg, bgTint }) => {
   const [isFlipped, setIsFlipped] = useState(false)
@@ -115,17 +115,16 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, shadowCl
         {/* FRONT SIDE */}
         <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] overflow-hidden bg-white border ${borderClass} ${shadowClass} flex flex-col`}>
             
-            {/* TOP 60% - IMAGE (CONTAINED & PADDED) */}
-            {/* This ensures the WHOLE image is visible and not cut off */}
-            <div className={`h-[60%] w-full relative border-b ${borderClass} ${bgTint} flex items-center justify-center p-6`}>
+            {/* TOP 65% - IMAGE (COVER FILL) */}
+            <div className={`h-[65%] w-full relative border-b-2 border-slate-100 ${bgTint}`}>
                 <img 
                   src={imageSrc} 
                   alt={title}
-                  className="w-full h-full object-contain drop-shadow-sm"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                 />
             </div>
 
-            {/* BOTTOM 40% - TEXT INFO */}
+            {/* BOTTOM 35% - TEXT INFO */}
             <div className={`flex-1 px-8 flex flex-col justify-center ${bgTint}`}>
                 <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>{title}</h2>
                 <p className={`${textClass} text-xs font-bold tracking-widest uppercase`}>{subtitle}</p>
@@ -572,7 +571,7 @@ export default function Page() {
             
             {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
-               <div className="w-full h-full flex flex-col items-center justify-center pb-[15vh]">
+               <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
                   
                   <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000 pt-16">
                      <h1 className={`text-[11px] md:text-sm font-bold tracking-[0.2em] text-slate-400 uppercase whitespace-nowrap ${outfit.className}`}>
@@ -606,7 +605,7 @@ export default function Page() {
                      {/* Card 2 - Regulatory Consultation (Lavender) */}
                      <FlipCard 
                         title="Regulatory Consultation"
-                        subtitle="Washtenaw Enforcement & State Code"
+                        subtitle="Michigan Modified Food Code"
                         imageSrc="/consult.jpg"
                         colorClass="text-purple-600"
                         borderClass="border-purple-200"
