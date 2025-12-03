@@ -16,23 +16,24 @@
     "test": "echo 'No tests yet' && exit 0"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
+    "@google/generative-ai": "^0.17.1",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.86.0",
+    "dotenv": "^16.6.1",
+    "google-auth-library": "^10.5.0",
+    "lucide-react": "^0.263.1",
+    "next": "14.2.5",
+    "pdf-parse": "^1.1.4",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.5",
-    "lucide-react": "^0.263.1",
-    "pdf-parse": "^1.1.1",
-    "@google/generative-ai": "^0.17.1",
-    "@google-cloud/vertexai": "^1.7.0",
-    "dotenv": "^16.4.5",
-    "@supabase/supabase-js": "^2.39.0",
-    "@supabase/ssr": "^0.5.2",
     "stripe": "^14.10.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
     "eslint": "^8",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4"
   }
 }
