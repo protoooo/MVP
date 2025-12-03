@@ -27,9 +27,7 @@ const SOURCE_DOCUMENTS = [
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA !important;
-      background-image: radial-gradient(#E2E8F0 1px, transparent 1px);
-      background-size: 24px 24px;
+      background-color: #FFFFFF !important;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -39,6 +37,12 @@ const GlobalStyles = () => (
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     
+    /* Apple-style Smooth Fades */
+    .fade-enter { opacity: 0; transform: scale(0.98); }
+    .fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 1000ms ease-in-out, transform 1000ms ease-out; }
+    .fade-exit { opacity: 1; transform: scale(1); }
+    .fade-exit-active { opacity: 0; transform: scale(1.02); transition: opacity 1000ms ease-in-out, transform 1000ms ease-in; }
+
     .loader {
       height: 20px; aspect-ratio: 2.5;
       --_g: no-repeat radial-gradient(farthest-side, #334155 90%, #0000);
@@ -50,15 +54,10 @@ const GlobalStyles = () => (
       16.67% { background-position: calc(0*100%/3) 0, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       33.33% { background-position: calc(0*100%/3) 100%, calc(1*100%/3) 0, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       50% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 100%, calc(2*100%/3) 0, calc(3*100%/3) 50% }
-      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
+      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 100%, calc(3*100%/3) 0 }
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
-    @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
-    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    
-    @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(5px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-5px); } }
-    .animate-source-ticker { animation: slideUpFade 3s ease-in-out forwards; }
     
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
@@ -88,15 +87,71 @@ const Icons = {
   Book: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
   Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  ClipboardCheck: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  
-  // NEW MODE ICONS
   Inspect: () => <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
   Consult: () => <svg width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
-// COMPONENTS
+// NEW: APPLE-STYLE HERO CAROUSEL
+// ==========================================
+const HERO_SLIDES = [
+  {
+    color: "bg-[#0F766E]", // Deep Teal
+    textColor: "text-white",
+    icon: <Icons.ClipboardCheck />,
+    title: "Instant Compliance.",
+    subtitle: "Backed by Washtenaw County standards."
+  },
+  {
+    color: "bg-[#B45309]", // Deep Amber/Orange
+    textColor: "text-white",
+    icon: <Icons.Alert />,
+    title: "Risk Mitigation.",
+    subtitle: "Identify Priority (P) items before inspection."
+  },
+  {
+    color: "bg-[#1E3A8A]", // Deep Royal Blue
+    textColor: "text-white",
+    icon: <Icons.Book />,
+    title: "Regulatory Intelligence.",
+    subtitle: "Michigan Modified Food Code on demand."
+  }
+]
+
+const HeroSection = () => {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length)
+    }, 4000) // Change slide every 4 seconds
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className={`w-full h-[60vh] md:h-[65vh] flex items-center justify-center transition-colors duration-[1500ms] ease-in-out ${HERO_SLIDES[currentSlide].color} relative overflow-hidden`}>
+      <div className="text-center px-4 max-w-2xl mx-auto z-10 transition-all duration-1000 ease-in-out transform">
+        <div className={`flex justify-center mb-6 text-white/90 transform scale-150 transition-all duration-1000`}>
+          {HERO_SLIDES[currentSlide].icon}
+        </div>
+        <h1 className={`text-5xl md:text-7xl font-bold tracking-tight mb-4 ${HERO_SLIDES[currentSlide].textColor} transition-opacity duration-1000`}>
+          {HERO_SLIDES[currentSlide].title}
+        </h1>
+        <p className={`text-xl md:text-2xl font-medium opacity-90 ${HERO_SLIDES[currentSlide].textColor} transition-opacity duration-1000`}>
+          {HERO_SLIDES[currentSlide].subtitle}
+        </p>
+      </div>
+      
+      {/* Subtle bottom gradient to blend into the white tool area */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+    </div>
+  )
+}
+
+// ==========================================
+// COMPONENT: SOURCE TICKER
 // ==========================================
 const SourceTicker = () => {
   const [index, setIndex] = useState(0)
@@ -105,7 +160,7 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-3 mb-8">
+    <div className="flex justify-center mt-6 mb-8">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-gray-200 bg-white shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-3"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
@@ -402,7 +457,6 @@ export default function Page() {
     if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return }
     if (!hasActiveSubscription) { setShowPricingModal(true); return }
     let finalInput = input
-    // Removed Audit logic here since it's removed from UI
     
     const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }])
     let activeChatId = currentChatId
@@ -424,7 +478,7 @@ export default function Page() {
   }
   const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
 
-  // ✅ NEW CARD TRIGGER LOGIC
+  // ✅ CARD TRIGGER LOGIC (Kept from previous steps)
   const triggerMode = (mode) => {
     if (!session) {
       setAuthModalMessage('Sign in to use this tool');
@@ -476,10 +530,13 @@ export default function Page() {
                   <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium text-slate-900 hover:text-slate-600 transition-transform active:scale-95 whitespace-nowrap border border-slate-200 px-4 py-2 rounded-full">Sign In</button>
                 </div>
               </header>
-              <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0">
+              <div className="flex-1 flex flex-col items-center justify-center px-4 w-full pb-20 md:pb-0 overflow-y-auto">
                 
-                {/* ✅ THE DUAL MODE LANDING PAGE */}
-                <div className="w-full max-w-4xl px-4 grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {/* ✅ APPLE-STYLE HERO CAROUSEL */}
+                <HeroSection />
+
+                {/* ✅ THE DUAL MODE CARDS */}
+                <div className="w-full max-w-4xl px-4 grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 -mt-16 z-20 relative">
                   
                   {/* Card 1: Visual Inspection */}
                   <button 
@@ -501,7 +558,7 @@ export default function Page() {
                   {/* Card 2: Regulatory Consult */}
                   <button 
                     onClick={() => triggerMode('chat')} 
-                    className="group relative bg-white border border-gray-200 rounded-3xl p-8 hover:border-emerald-500/50 hover:shadow-2xl transition-all duration-300 text-left flex flex-col items-start h-full"
+                    className="group relative bg-white border border-gray-200 rounded-3xl p-8 hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300 text-left flex flex-col items-start h-full"
                   >
                     <div className="mb-6 p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
                       <Icons.Consult />
@@ -517,7 +574,7 @@ export default function Page() {
 
                 </div>
 
-                <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 absolute md:fixed bottom-4 md:bottom-6">
+                <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-6">
                   <div className="flex gap-4">
                     <Link href="/privacy" className="hover:text-black transition-colors">Privacy Policy</Link>
                     <Link href="/terms" className="hover:text-black transition-colors">Terms of Service</Link>
