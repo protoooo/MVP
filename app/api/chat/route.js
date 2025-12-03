@@ -121,19 +121,36 @@ export async function POST(req) {
             const searchResults = await searchDocuments(searchTerms, 'washtenaw')
             
             if (searchResults && searchResults.length > 0) {
-                // Sorting Logic
-                const washtenaw = searchResults.filter(d => d.metadata?.source?.toLowerCase().includes('washtenaw'))
-                const state = searchResults.filter(d => d.metadata?.source?.toLowerCase().includes('michigan') || d.metadata?.source?.toLowerCase().includes('act'))
-                const federal = searchResults.filter(d => !d.metadata?.source?.toLowerCase().includes('washtenaw') && !d.metadata?.source?.toLowerCase().includes('michigan'))
+                
+                // ✅ SMARTER SORTING
+                const washtenaw = []
+                const state = []
+                const federal = []
+
+                searchResults.forEach(d => {
+                    const src = (d.metadata?.source || '').toLowerCase()
+                    const text = (d.content || '').toLowerCase()
+
+                    if (src.includes('washtenaw') || text.includes('washtenaw')) {
+                        washtenaw.push(d)
+                    } else if (
+                        src.includes('michigan') || src.includes('mi_') || src.includes('act') || src.includes('state') ||
+                        text.includes('michigan') || text.includes('department of agriculture') || text.includes('mdard')
+                    ) {
+                        state.push(d)
+                    } else {
+                        federal.push(d)
+                    }
+                })
                 
                 context = `
-=== PRIORITY 1: WASHTENAW COUNTY REGULATIONS ===
+=== PRIORITY 1: LOCAL ORDINANCES (WASHTENAW) ===
 ${washtenaw.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
-=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE ===
+=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE (PRIMARY ENFORCEMENT) ===
 ${state.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 
-=== PRIORITY 3: REGULATORY FRAMEWORK (ADOPTED STANDARDS) ===
+=== PRIORITY 3: REGULATORY STANDARDS ===
 ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
 `
             }
@@ -142,15 +159,18 @@ ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.conten
 
     // STEP C: Final Generation
     
-    // 🔥 REBRANDING STRATEGY IN SYSTEM PROMPT 🔥
+    // 🔥 REALISTIC INSPECTOR LOGIC 🔥
     const SYSTEM_PROMPT = `
-You are ProtocolLM, the Official Compliance Engine for Washtenaw County, MI.
+You are ProtocolLM, acting as an Official Health Inspector for Washtenaw County, MI.
 
-STRICT CITATION RULES:
-1. Washtenaw County Regulations (Cite these FIRST)
-2. Michigan Modified Food Code (Cite these SECOND)
-3. If you find a rule in the "Regulatory Framework" section (FDA), CITE IT AS: "Michigan Modified Food Code (Adopting FDA Standards)".
-4. DO NOT cite "FDA" or "USDA" directly. Always frame it as the Michigan/Washtenaw adopted standard.
+YOUR AUTHORITY:
+Washtenaw County adopts and enforces the **Michigan Modified Food Code (Act 92)**.
+Unless a specific local "Washtenaw Ordinance" overrides it, YOUR PRIMARY CITATION SOURCE IS THE MICHIGAN MODIFIED FOOD CODE.
+
+CITATION RULES:
+1. If the rule comes from the "Michigan Modified Food Code" or "Act 92", cite it as such.
+2. If the rule comes from Federal docs (FDA), cite it as: "Michigan Modified Food Code (Adopting FDA Standards)".
+3. DO NOT cite "FDA" directly. We are in Washtenaw County; we cite the State Code.
 
 FORMATTING RULES:
 - Clean text only. NO asterisks (*), NO markdown bolding.
@@ -159,17 +179,18 @@ FORMATTING RULES:
 RESPONSE STRUCTURE:
 1. OBSERVATION: Technical description of the issue.
 2. VIOLATION STATUS: "CRITICAL" or "NON-CRITICAL" or "COMPLIANT".
-3. CITATION: The exact code section. Example: "Michigan Modified Food Code Section 4-601.11".
-4. CORRECTIVE ACTION: Specific steps to resolve the issue.
+3. ENFORCEMENT AUTHORITY: "Washtenaw County Health Department"
+4. CITATION: The specific code section (e.g., "Michigan Modified Food Code § 4-601.11").
+5. CORRECTIVE ACTION: Required steps to achieve compliance.
 
-TONE: Professional, Direct, Auditor-Style.
+TONE: Professional, Regulatory, Enforcing.
 `
 
     const finalPrompt = `
 ${SYSTEM_PROMPT}
 
 === OFFICIAL CONTEXT ===
-${context || "No specific local regulations found. Referencing Standard Regulatory Framework."}
+${context || "No specific local regulations found. Referencing Michigan Modified Food Code Standards."}
 
 === USER QUERY/IMAGE ANALYSIS ===
 ${messages[messages.length - 1].content}
@@ -184,7 +205,7 @@ ${messages[messages.length - 1].content}
     const result = await model.generateContent({ contents: [reqContent] })
     let text = result.response.candidates[0].content.parts[0].text
 
-    // ✅ CLEANUP: Strip asterisks and markdown symbols
+    // ✅ CLEANUP
     text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`/g, '')
 
     // --- SAVE & RETURN ---
