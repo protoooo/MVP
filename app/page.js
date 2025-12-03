@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { Outfit } from 'next/font/google'
+
+// Initialize font
+const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
 // CONFIG & DATA
@@ -22,49 +26,37 @@ const SOURCE_DOCUMENTS = [
 ]
 
 // ==========================================
-// STYLES
+// STYLES (CLEAN LIGHT THEME)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #020408;
+      background-color: #FAFAFA;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
+      color: #18181B;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    /* FLUID BACKGROUND ANIMATIONS */
-    @keyframes blob {
-      0% { transform: translate(0px, 0px) scale(1); }
-      33% { transform: translate(30px, -50px) scale(1.1); }
-      66% { transform: translate(-20px, 20px) scale(0.9); }
-      100% { transform: translate(0px, 0px) scale(1); }
-    }
-    .animate-blob {
-      animation: blob 10s infinite;
-    }
-    .animation-delay-2000 { animation-delay: 2s; }
-    .animation-delay-4000 { animation-delay: 4s; }
-    
-    /* MATTE GLASS CARDS */
-    .glass-panel {
-      background: rgba(20, 20, 25, 0.6);
-      backdrop-filter: blur(40px) saturate(150%);
-      -webkit-backdrop-filter: blur(40px) saturate(150%);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
     }
     
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
+    /* SCROLLBARS */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
+    
+    .card-scroll::-webkit-scrollbar { display: none; }
+    .card-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
     /* LOADING */
     .loader {
       height: 20px; aspect-ratio: 2.5;
-      --_g: no-repeat radial-gradient(farthest-side, #ffffff 90%, #0000);
+      --_g: no-repeat radial-gradient(farthest-side, #18181B 90%, #0000);
       background: var(--_g), var(--_g), var(--_g), var(--_g);
       background-size: 20% 50%; animation: l43 1s infinite linear;
     }
@@ -73,16 +65,12 @@ const GlobalStyles = () => (
       16.67% { background-position: calc(0*100%/3) 0, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       33.33% { background-position: calc(0*100%/3) 100%, calc(1*100%/3) 0, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
       50% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 100%, calc(2*100%/3) 0, calc(3*100%/3) 50% }
-      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 0 }
+      66.67% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 100%, calc(3*100%/3) 0 }
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-    /* Hidden Scrollbar for Cards */
-    .card-scroll::-webkit-scrollbar { display: none; }
-    .card-scroll { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 )
 
@@ -90,33 +78,43 @@ const GlobalStyles = () => (
 // ICONS
 // ==========================================
 const Icons = {
-  Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
-  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
-  SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
-  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
-  Trash: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>,
-  Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
-  MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
-  Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
+  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
+  SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
+  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
+  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
+  Trash: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>,
+  Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
+  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
+  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
+  MessageSquare: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>,
+  Camera: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  Inspect: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/></svg>,
-  Consult: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>,
 }
 
 // ==========================================
-// FLUID BACKGROUND
+// COMPONENT: SOURCE TICKER
 // ==========================================
-const FluidBackground = () => (
-  <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
-    <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
-    <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
-    <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
-  </div>
-)
+const SourceTicker = () => {
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    const interval = setInterval(() => setIndex(p => (p + 1) % SOURCE_DOCUMENTS.length), 3000)
+    return () => clearInterval(interval)
+  }, [])
+  return (
+    <div className="flex justify-center mt-8 mb-4">
+      <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm">
+        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
+        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
+          <div key={index} className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
+            {SOURCE_DOCUMENTS[index]}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const [showMenu, setShowMenu] = useState(false)
@@ -137,15 +135,15 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 glass-panel rounded-xl inline-flex items-center gap-2 shadow-sm animate-pop-in">
-          <span className="text-xs text-white font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
-          <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-white/50 hover:text-white"><Icons.X /></button>
+        <div className="mb-2 mx-1 p-2 bg-white rounded-xl inline-flex items-center gap-2 border border-slate-200 shadow-sm animate-pop-in">
+          <span className="text-xs text-slate-900 font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
+          <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-400 hover:text-slate-900"><Icons.X /></button>
         </div>
       )}
 
       <form 
         onSubmit={handleSend} 
-        className="relative flex items-end w-full p-2 glass-panel rounded-[32px] shadow-2xl transition-all duration-300" 
+        className="relative flex items-end w-full p-2 bg-white border border-slate-200 rounded-[32px] shadow-xl transition-all duration-300 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
@@ -153,20 +151,20 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press ${showMenu ? 'bg-white text-black rotate-45' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
             >
                 <Icons.Plus />
             </button>
 
             {showMenu && (
-                <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-[#111] border border-white/10 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
+                <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
                     <div className="space-y-0.5">
                         {['chat', 'image'].map(m => (
                             <button 
                                 key={m}
                                 type="button"
                                 onClick={() => handleModeClick(m)} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-white text-black' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
                             >
                                 {m === 'chat' && <Icons.MessageSquare />}
                                 {m === 'image' && <Icons.Camera />}
@@ -184,7 +182,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask a compliance question...' : activeMode === 'image' ? 'Upload photo for inspection...' : 'Enter audit parameters...'}
-            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-white placeholder-white/40 text-[15px] leading-6" 
+            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
@@ -194,11 +192,11 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           disabled={(!input.trim() && !selectedImage) || isSending} 
           className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1
             ${(!input.trim() && !selectedImage) 
-              ? 'bg-white/5 text-white/30 cursor-not-allowed' 
-              : 'bg-white text-black hover:bg-gray-200 cursor-pointer shadow-lg'
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+              : 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-md'
             }`}
         >
-          {isSending ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
+          {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
         </button>
       </form>
     </div>
@@ -218,22 +216,22 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[999] bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
-          <div><h2 className="text-xl font-bold text-white mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-gray-400">Sign in to continue your session</p></div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors"><Icons.X /></button>
+          <div><h2 className="text-xl font-bold text-slate-900 mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-slate-500">Sign in to continue your session</p></div>
+          <button onClick={onClose} className="text-slate-400 hover:text-black transition-colors"><Icons.X /></button>
         </div>
-        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-gray-200 text-black border border-transparent font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4">
-          {googleLoading ? <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>}
+        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4">
+          {googleLoading ? <div className="w-5 h-5 border-2 border-slate-400 border-t-black rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>}
           Continue with Google
         </button>
-        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10" /></div><div className="relative flex justify-center text-xs"><span className="bg-[#111] px-3 text-gray-500">OR</span></div></div>
+        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div><div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-slate-400">OR</span></div></div>
         <form onSubmit={handleEmailAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-all" />
-          <button type="submit" disabled={loading || googleLoading} className="w-full bg-white hover:bg-gray-200 text-black font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 transition-all" />
+          <button type="submit" disabled={loading || googleLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
         </form>
-        {statusMessage && <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>{statusMessage}</div>}
+        {statusMessage && <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'}`}>{statusMessage}</div>}
       </div>
     </div>
   )
@@ -242,33 +240,33 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   const [billingInterval, setBillingInterval] = useState('month')
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-      <div className="relative w-full max-w-md bg-[#111] border border-white/10 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onSignOut} className="absolute top-5 right-5 text-gray-500 hover:text-white transition-colors"><Icons.X /></button>
-        <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
+    <div className="fixed inset-0 z-[1000] bg-white/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
+      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-400 hover:text-black transition-colors"><Icons.X /></button>
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
         
         <div className="flex justify-center mb-8">
-          <div className="bg-black/50 p-1 rounded-full flex relative border border-white/10">
-            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white'}`}>Annual <span className="bg-emerald-500 text-black text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
+          <div className="bg-slate-100 p-1 rounded-full flex relative border border-slate-200">
+            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
           </div>
         </div>
         
-        <div className="flex items-baseline text-white justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-gray-400 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
-        <p className="text-sm text-gray-400 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-white font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
+        <div className="flex items-baseline text-slate-900 justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-gray-400 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
+        <p className="text-sm text-gray-500 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-slate-900 font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
-        <ul className="space-y-4 mb-8 flex-1 border-t border-white/10 pt-6">
-          <li className="flex items-start gap-3 text-sm font-medium text-gray-300"><Icons.Check color="text-white" /> Unlimited Compliance Queries</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-gray-300"><Icons.Check color="text-white" /> Visual Inspections (Image Mode)</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-gray-300"><Icons.Check color="text-white" /> Full Washtenaw & FDA Database</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-gray-300"><Icons.Check color="text-white" /> Mock Audit Workflow</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-gray-300"><Icons.Check color="text-white" /> <span className="text-white font-bold">Location License</span> (Unlimited Users)</li>
+        <ul className="space-y-4 mb-8 flex-1 border-t border-slate-100 pt-6">
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> Unlimited Compliance Queries</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> Visual Inspections (Image Mode)</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> Full Washtenaw & FDA Database</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> Mock Audit Workflow</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> <span className="text-slate-900 font-bold">Location License</span> (Unlimited Users)</li>
         </ul>
 
         <button 
           onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} 
           disabled={loading !== null} 
-          className="w-full bg-white hover:bg-gray-200 text-black font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
@@ -438,7 +436,7 @@ export default function Page() {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
   useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus() }, [messages.length, isSending])
 
-  if (isLoading) return <div className="fixed inset-0 bg-[#020408] text-white flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" /></div>
+  if (isLoading) return <div className="fixed inset-0 bg-white text-black flex items-center justify-center"><div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" /></div>
   if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>
 
   return (
@@ -446,18 +444,14 @@ export default function Page() {
       <GlobalStyles />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
-      <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-white/30">
+      <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50">
         
         {/* =====================================
-            1. FLUID BACKGROUND LAYER (STATIC)
+            1. BACKGROUND LAYER (STATIC)
             ===================================== */}
-        {!session && <div className="fixed inset-0 z-0 overflow-hidden bg-[#020408]">
-            <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] bg-blue-900 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-2000"></div>
-            <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`}}></div>
-        </div>}
+        {!session && <div className="fixed inset-0 z-0 bg-[#FAFAFA]"></div>}
         
-        {session && <div className="fixed inset-0 bg-[#050505] z-0" />}
+        {session && <div className="fixed inset-0 bg-[#FAFAFA] z-0" />}
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
@@ -465,24 +459,24 @@ export default function Page() {
         <div className="relative z-10 flex flex-col h-[100dvh]">
           
           {/* HEADER */}
-          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-white pt-safe`}>
-             <div className={`font-bold tracking-tight text-xl md:text-2xl font-sans`}>
-               protocol<span className="bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent">LM</span>
+          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe`}>
+             <div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>
+               protocol<span className="bg-gradient-to-r from-orange-500 to-purple-600 bg-clip-text text-transparent">LM</span>
              </div>
              <div className="flex items-center gap-2 md:gap-4">
                 {!session && (
                   <>
-                    <button onClick={() => setShowAuthModal(true)} className="bg-white hover:bg-gray-200 text-black px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg whitespace-nowrap">Start Free Trial</button>
-                    <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium hover:text-white/80 transition-transform active:scale-95 hidden sm:block">Pricing</button>
-                    <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-white/30 px-4 py-2 rounded-full hover:bg-white/10 transition-transform active:scale-95">Sign In</button>
+                    <button onClick={() => setShowAuthModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg whitespace-nowrap">Start Free Trial</button>
+                    <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium hover:text-slate-600 transition-transform active:scale-95 hidden sm:block">Pricing</button>
+                    <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 transition-transform active:scale-95">Sign In</button>
                   </>
                 )}
                 {session && (
                    <div className="flex items-center gap-3">
-                      <button onClick={handleNewChat} className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"><Icons.Plus /></button>
+                      <button onClick={handleNewChat} className="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors"><Icons.Plus /></button>
                       <div className="relative" ref={userMenuRef}>
-                         <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center text-xs font-bold">{session.user.email[0].toUpperCase()}</button>
-                         {showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-gray-400 hover:text-white hover:bg-white/10 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-white/10 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-white/10 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}
+                         <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">{session.user.email[0].toUpperCase()}</button>
+                         {showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-black hover:bg-slate-50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-100 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-slate-50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}
                       </div>
                    </div>
                 )}
@@ -495,115 +489,124 @@ export default function Page() {
             {!session ? (
                <div className="w-full h-full flex flex-col items-center justify-center pb-[10vh]">
                   
-                  <div className="text-center px-4 max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000">
-                     <h1 className="text-lg md:text-xl font-bold tracking-widest text-white/90 drop-shadow-2xl uppercase font-sans">
+                  <div className="text-center px-4 w-full max-w-[600px] mb-12 animate-in fade-in zoom-in duration-1000">
+                     <h1 className={`text-sm md:text-base font-bold tracking-[0.2em] text-slate-500 uppercase whitespace-nowrap ${outfit.className}`}>
                         Trained on Washtenaw County Food Safety Protocols
                      </h1>
                   </div>
 
                   <div className="w-full max-w-5xl px-4 grid grid-cols-1 md:grid-cols-2 gap-8 z-20">
-                     {/* Card 1 - Visual Inspection */}
-                     <div className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     
+                     {/* Card 1 - Visual Inspection (Creamsicle) */}
+                     <div className="group relative bg-orange-50/50 border border-orange-100 rounded-[32px] h-[420px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* Fixed Header */}
-                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
-                           <h2 className="text-3xl font-bold text-white mb-2 font-sans tracking-tight">Visual Inspection</h2>
-                           <p className="text-emerald-400 text-xs font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
+                        {/* Header */}
+                        <div className="p-10 pb-4 shrink-0">
+                           <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>Visual Inspection</h2>
+                           <p className="text-orange-600 text-xs font-bold tracking-widest uppercase">Priority (P) Violation Detection</p>
                         </div>
 
                         {/* Scrollable Content */}
                         <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
-                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                           <p className="text-slate-600 text-lg leading-relaxed mb-6">
                               Upload a photo of your kitchen or equipment. Instantly identify violations using Michigan Modified Food Code standards.
                            </p>
-                           <div className="space-y-4 border-t border-white/10 pt-6">
+                           <div className="space-y-4 border-t border-orange-200/50 pt-6">
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Identify Priority (P) vs. Core violations instantly.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Identify Priority (P) vs. Core violations instantly.</p>
                               </div>
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Detect improper storage (Raw above Ready-to-Eat).</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Detect improper storage (Raw above Ready-to-Eat).</p>
                               </div>
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Audit food contact surfaces for biofilm & degradation.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Audit food contact surfaces for biofilm & degradation.</p>
                               </div>
                                <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Validate sink setup & handwashing compliance.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Validate sink setup & handwashing compliance.</p>
                               </div>
                            </div>
-                           <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+                           <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-orange-50/90 to-transparent pointer-events-none"></div>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer Action */}
                         <button 
                             onClick={() => triggerMode('image')}
-                            className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm cursor-pointer hover:bg-emerald-500/20 transition-colors group"
+                            className="p-6 border-t border-orange-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-sm font-bold text-orange-600 tracking-widest uppercase group"
                         >
-                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
-                               <span>Start Scan</span> 
-                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
-                            </div>
+                            <span>Start Scan</span> 
+                            <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                         </button>
                      </div>
 
-                     {/* Card 2 - Regulatory Consult */}
-                     <div className="group relative glass-panel rounded-[32px] h-[420px] w-full hover:scale-[1.02] transition-all duration-500 text-left flex flex-col overflow-hidden">
+                     {/* Card 2 - Regulatory Consult (Lavender) */}
+                     <div className="group relative bg-purple-50/50 border border-purple-100 rounded-[32px] h-[420px] w-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 text-left flex flex-col overflow-hidden">
                         
-                        {/* Fixed Header */}
-                        <div className="p-10 pb-4 shrink-0 bg-gradient-to-b from-white/5 to-transparent">
-                           <h2 className="text-3xl font-bold text-white mb-2 font-sans tracking-tight">Regulatory Consult</h2>
-                           <p className="text-blue-400 text-xs font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
+                        {/* Header */}
+                        <div className="p-10 pb-4 shrink-0">
+                           <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>Regulatory Consult</h2>
+                           <p className="text-purple-600 text-xs font-bold tracking-widest uppercase">Michigan Modified Food Code</p>
                         </div>
 
                          {/* Scrollable Content */}
                          <div className="px-10 pb-10 pt-2 flex-1 overflow-y-auto card-scroll relative">
-                           <p className="text-white/70 text-lg leading-relaxed mb-6">
+                           <p className="text-slate-600 text-lg leading-relaxed mb-6">
                               Search the official Michigan Modified Food Code and Washtenaw County policies. Get instant answers cited from the law.
                            </p>
-                           <div className="space-y-4 border-t border-white/10 pt-6">
+                           <div className="space-y-4 border-t border-purple-200/50 pt-6">
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Clarify Washtenaw-specific enforcement protocols.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Clarify Washtenaw-specific enforcement protocols.</p>
                               </div>
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Generate SOPs for cooling, reheating, and sanitizing.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Generate SOPs for cooling, reheating, and sanitizing.</p>
                               </div>
                               <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Access emergency action plans (Power outage, etc).</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Access emergency action plans (Power outage, etc).</p>
                               </div>
                                <div className="flex items-start gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0"></div>
-                                 <p className="text-sm text-white/50">Instant citations for staff training and correction.</p>
+                                 <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 shrink-0"></div>
+                                 <p className="text-sm text-slate-500">Instant citations for staff training and correction.</p>
                               </div>
                            </div>
-                            <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+                            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-purple-50/90 to-transparent pointer-events-none"></div>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer Action */}
                         <button 
                             onClick={() => triggerMode('chat')}
-                            className="p-6 border-t border-white/5 bg-white/5 backdrop-blur-sm cursor-pointer hover:bg-blue-500/20 transition-colors group"
+                            className="p-6 border-t border-purple-100 bg-white/50 hover:bg-white transition-colors cursor-pointer flex items-center justify-between text-sm font-bold text-purple-600 tracking-widest uppercase group"
                         >
-                            <div className="flex items-center justify-between text-sm font-bold text-white tracking-widest uppercase">
-                               <span>Search Database</span> 
-                               <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
-                            </div>
+                            <span>Search Database</span> 
+                            <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
                         </button>
                      </div>
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-white/40 pb-8 z-10 mt-auto">
+                  <div className="flex justify-center mt-12 mb-8 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
+                        <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
+                        <div className="absolute inset-0 flex items-center justify-center text-xs md:text-sm text-slate-500 font-medium tracking-wide animate-source-ticker uppercase truncate">
+                            {SOURCE_DOCUMENTS[0]} 
+                        </div>
+                        </div>
+                    </div>
+                  </div>
+
+
+                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-8 z-10 mt-auto">
                      <div className="flex gap-4">
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
                      </div>
-                     <span className="hidden md:inline text-white/20">|</span>
-                     <span className="text-white/40 hover:text-white transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                     <span className="hidden md:inline text-slate-300">|</span>
+                     <span className="text-slate-400 hover:text-slate-600 transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
                   </div>
                </div>
             ) : (
@@ -611,14 +614,14 @@ export default function Page() {
                <>
                   <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
                     {messages.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center p-4 text-center text-white">
-                        <div className="mb-6 p-4 rounded-full bg-white/5 text-white/50">
+                      <div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900">
+                        <div className="mb-6 p-4 rounded-full bg-slate-50 text-slate-400">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
-                        <h1 className="text-2xl font-bold mb-2 font-sans">
+                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
-                        <p className="text-white/50 text-sm max-w-sm">
+                        <p className="text-slate-500 text-sm max-w-sm">
                           {activeMode === 'image' 
                             ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
                             : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
@@ -628,8 +631,8 @@ export default function Page() {
                       <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                         {messages.map((msg, idx) => (
                           <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-white text-black px-4 py-3 rounded-2xl shadow-sm' : 'text-gray-300 px-2'}`}>
-                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/10" />}
+                            <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-sm' : 'text-slate-800 px-2'}`}>
+                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-slate-200" />}
                               {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
                             </div>
                           </div>
@@ -637,7 +640,7 @@ export default function Page() {
                       </div>
                     )}
                   </div>
-                  <div className="w-full bg-[#050505]/80 backdrop-blur-md pt-2 pb-6 shrink-0 z-20 border-t border-white/5">
+                  <div className="w-full bg-white/80 backdrop-blur-md pt-2 pb-6 shrink-0 z-20 border-t border-slate-100">
                     <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
                   </div>
                </>
