@@ -9,28 +9,29 @@ import 'dotenv/config'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// ==========================================
-// CONFIGURATION
-// ==========================================
+// --- CONFIGURATION ---
 const WASHTENAW_DOCS_PATH = path.join(__dirname, '../public/documents/washtenaw')
 const CHUNK_SIZE = 800
 const CHUNK_OVERLAP = 100
-const BATCH_SIZE = 3
-const DELAY_BETWEEN_BATCHES = 3000
-const DELAY_BETWEEN_EMBEDDINGS = 1000
+const BATCH_SIZE = 3 
+const DELAY_BETWEEN_BATCHES = 2000
 const MAX_RETRIES = 3
 
-// ==========================================
-// INITIALIZE CLIENTS
-// ==========================================
+// --- INIT ---
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("❌ Missing Supabase Environment Variables.")
+  process.exit(1)
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
 const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
-let vertexConfig = { project: projectId, location: 'us-central1' }
+const vertexConfig = { project: projectId, location: 'us-central1' }
 
+// Handle Google Credentials
 if (process.env.GOOGLE_CREDENTIALS_JSON) {
   try {
     const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
@@ -42,31 +43,14 @@ if (process.env.GOOGLE_CREDENTIALS_JSON) {
       },
     }
   } catch (e) {
-    console.error('❌ Failed to parse credentials:', e.message)
+    console.error('❌ Failed to parse Google credentials:', e.message)
   }
 }
 
 const vertex_ai = new VertexAI(vertexConfig)
 
-// ==========================================
-// HELPER FUNCTIONS
-// ==========================================
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-function chunkText(text, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP) {
-  const chunks = []
-  let start = 0
-  
-  while (start < text.length) {
-    const end = Math.min(start + chunkSize, text.length)
-    chunks.push(text.slice(start, end))
-    start += chunkSize - overlap
-  }
-  
-  return chunks
-}
+// --- HELPERS ---
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function extractTextFromPDF(filePath) {
   try {
@@ -74,211 +58,112 @@ async function extractTextFromPDF(filePath) {
     const data = await pdfParse(dataBuffer)
     return data.text
   } catch (error) {
-    console.error(`   ❌ PDF parse error: ${error.message}`)
+    console.error(`❌ Error reading PDF: ${error.message}`)
+    return ''
+  }
+}
+
+function chunkText(text) {
+  if (!text) return []
+  const chunks = []
+  let start = 0
+  while (start < text.length) {
+    const end = Math.min(start + CHUNK_SIZE, text.length)
+    chunks.push(text.slice(start, end))
+    start += CHUNK_SIZE - CHUNK_OVERLAP
+  }
+  return chunks
+}
+
+async function getEmbedding(text) {
+  try {
+    // Note: Using 'preview' namespace which is often required for newer models
+    const model = vertex_ai.preview.getGenerativeModel({ model: 'text-embedding-004' })
+    const result = await model.embedContent({
+      content: { role: 'user', parts: [{ text }] }
+    })
+    return result.embedding?.values || null
+  } catch (error) {
+    console.error(`   ⚠️ Embedding Error: ${error.message}`)
     return null
   }
 }
 
-async function generateEmbeddingWithRetry(text, retries = MAX_RETRIES) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      // ✅ FIX: Use preview.getGenerativeModel (matches your working API)
-      const model = vertex_ai.preview.getGenerativeModel({
-        model: 'text-embedding-004'
-      })
-      
-      const result = await model.embedContent({
-        content: {
-          role: 'user',
-          parts: [{ text: text }]
-        }
-      })
-      
-      const embedding = result.embedding?.values
-      
-      if (embedding && Array.isArray(embedding) && embedding.length > 0) {
-        return embedding
-      } else {
-        throw new Error('Invalid embedding format')
-      }
-    } catch (error) {
-      console.error(`   ⚠️ Attempt ${attempt} failed: ${error.message}`)
-      
-      if (attempt === retries) {
-        console.error(`   ❌ Embedding failed after ${retries} attempts`)
-        return null
-      }
-      
-      const waitTime = Math.pow(2, attempt) * 1000
-      console.log(`   ⏳ Waiting ${waitTime}ms before retry ${attempt + 1}...`)
-      await sleep(waitTime)
-    }
-  }
-  return null
-}
-
-// ==========================================
-// PROGRESS TRACKER
-// ==========================================
-class ProgressTracker {
-  constructor(totalFiles) {
-    this.totalFiles = totalFiles
-    this.currentFile = 0
-    this.totalChunks = 0
-    this.successfulInserts = 0
-    this.failedChunks = 0
-  }
-
-  startFile(filename, chunkCount) {
-    this.currentFile++
-    console.log(`\n[${this.currentFile}/${this.totalFiles}] 📄 Processing: ${filename}`)
-    console.log(`   ✂️ ${chunkCount} chunks to process`)
-  }
-
-  logProgress(current, total) {
-    const percent = Math.round((current / total) * 100)
-    process.stdout.write(`\r   Progress: ${current}/${total} (${percent}%)`)
-  }
-
-  recordSuccess(count) {
-    this.successfulInserts += count
-    this.totalChunks += count
-  }
-
-  recordFailure(count) {
-    this.failedChunks += count
-    this.totalChunks += count
-  }
-
-  summary() {
-    console.log('\n' + '='.repeat(60))
-    console.log('✅ INGESTION COMPLETE')
-    console.log('='.repeat(60))
-    console.log(`📊 Summary:`)
-    console.log(`   Files Processed: ${this.currentFile}`)
-    console.log(`   Total Chunks: ${this.totalChunks}`)
-    console.log(`   Successful: ${this.successfulInserts}`)
-    console.log(`   Failed: ${this.failedChunks}`)
-    if (this.totalChunks > 0) {
-      console.log(`   Success Rate: ${Math.round((this.successfulInserts / this.totalChunks) * 100)}%`)
-    }
-    console.log('='.repeat(60))
-  }
-}
-
-// ==========================================
-// MAIN INGESTION LOGIC
-// ==========================================
-async function ingestDocuments() {
-  console.log('🚀 Starting Rate-Limited Document Ingestion\n')
-  console.log('⚙️ Configuration:')
-  console.log(`   Batch Size: ${BATCH_SIZE}`)
-  console.log(`   Delay Between Batches: ${DELAY_BETWEEN_BATCHES}ms`)
-  console.log(`   Delay Between Embeddings: ${DELAY_BETWEEN_EMBEDDINGS}ms`)
-  console.log(`   Max Retries: ${MAX_RETRIES}`)
-
-  if (!fs.existsSync(WASHTENAW_DOCS_PATH)) {
-    console.error(`\n❌ Directory not found: ${WASHTENAW_DOCS_PATH}`)
-    console.error('Make sure your documents are in: /public/documents/washtenaw/')
-    process.exit(1)
-  }
-
-  const files = fs.readdirSync(WASHTENAW_DOCS_PATH)
-  const pdfFiles = files.filter(f => f.toLowerCase().endsWith('.pdf'))
-
-  if (pdfFiles.length === 0) {
-    console.error('❌ No PDF files found in Washtenaw directory')
-    process.exit(1)
-  }
-
-  console.log(`\n📚 Found ${pdfFiles.length} PDF files`)
-  console.log('\nEstimated processing time:')
-  const estimatedMinutes = Math.ceil((pdfFiles.length * 50 * DELAY_BETWEEN_EMBEDDINGS) / 60000)
-  console.log(`   ~${estimatedMinutes} minutes (depending on document size)`)
-  console.log('\nPress Ctrl+C to cancel, or wait 5 seconds to continue...\n')
+// --- MAIN SCRIPT ---
+async function run() {
+  console.log('\n🚀 Starting Local Ingestion...')
   
-  await sleep(5000)
+  // 1. Check Files
+  if (!fs.existsSync(WASHTENAW_DOCS_PATH)) {
+    console.error(`❌ Folder not found: ${WASHTENAW_DOCS_PATH}`)
+    return
+  }
+  
+  const files = fs.readdirSync(WASHTENAW_DOCS_PATH).filter(f => f.toLowerCase().endsWith('.pdf'))
+  console.log(`📚 Found ${files.length} PDFs to process.`)
 
-  const progress = new ProgressTracker(pdfFiles.length)
-
-  for (const filename of pdfFiles) {
-    const filePath = path.join(WASHTENAW_DOCS_PATH, filename)
-
-    const text = await extractTextFromPDF(filePath)
-    if (!text || text.trim().length < 50) {
-      console.log(`\n⚠️ Skipping ${filename} (insufficient text)`)
+  // 2. Process Files
+  for (const file of files) {
+    console.log(`\n📄 Processing: ${file}`)
+    const filePath = path.join(WASHTENAW_DOCS_PATH, file)
+    
+    // Extract
+    let text = await extractTextFromPDF(filePath)
+    
+    // Clean
+    text = text.replace(/\s+/g, ' ').trim()
+    
+    if (text.length < 50) {
+      console.warn(`   ⚠️ WARNING: Text is empty or too short. Is this a scanned image PDF?`)
+      console.warn(`   ⚠️ SKIPPING ${file}`)
       continue
     }
 
-    const cleanText = text
-      .replace(/\s+/g, ' ')
-      .replace(/[^\x20-\x7E\n]/g, '')
-      .trim()
-    
-    const chunks = chunkText(cleanText)
-    progress.startFile(filename, chunks.length)
+    // Chunk
+    const chunks = chunkText(text)
+    console.log(`   ✂️ Generated ${chunks.length} chunks.`)
 
+    // Embed & Upload in Batches
+    let successCount = 0
+    
     for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
       const batch = chunks.slice(i, i + BATCH_SIZE)
-      const records = []
-
-      for (let j = 0; j < batch.length; j++) {
-        const chunkText = batch[j]
-        const embedding = await generateEmbeddingWithRetry(chunkText)
-
-        if (embedding) {
-          records.push({
-            content: chunkText,
-            embedding: embedding,
-            metadata: {
-              source: filename,
-              page: Math.floor((i + j) / 3) + 1,
-              county: 'washtenaw',
-              chunk_index: i + j
-            }
-          })
-        }
-
-        if (j < batch.length - 1) {
-          await sleep(DELAY_BETWEEN_EMBEDDINGS)
-        }
-
-        progress.logProgress(i + j + 1, chunks.length)
-      }
-
-      if (records.length > 0) {
-        const { error } = await supabase.from('documents').insert(records)
+      
+      const records = await Promise.all(batch.map(async (chunk, idx) => {
+        const embedding = await getEmbedding(chunk)
+        if (!embedding) return null
         
-        if (error) {
-          console.error(`\n   ❌ Insert error: ${error.message}`)
-          progress.recordFailure(records.length)
-        } else {
-          progress.recordSuccess(records.length)
+        return {
+          content: chunk,
+          embedding: embedding,
+          metadata: {
+            source: file,
+            county: 'washtenaw',
+            chunk_index: i + idx
+          }
         }
-      } else {
-        progress.recordFailure(batch.length)
-      }
+      }))
 
-      if (i + BATCH_SIZE < chunks.length) {
-        await sleep(DELAY_BETWEEN_BATCHES)
+      // Filter out failed embeddings
+      const validRecords = records.filter(r => r !== null)
+
+      if (validRecords.length > 0) {
+        const { error } = await supabase.from('documents').insert(validRecords)
+        if (error) {
+          console.error(`   ❌ Supabase Insert Error: ${error.message}`)
+        } else {
+          successCount += validRecords.length
+          process.stdout.write('.') // specific visual feedback
+        }
       }
+      
+      // Rate limiting
+      await sleep(DELAY_BETWEEN_BATCHES)
     }
-
-    console.log(`\n   ✅ ${filename} complete`)
+    console.log(`\n   ✅ Finished ${file}: ${successCount}/${chunks.length} chunks inserted.`)
   }
-
-  progress.summary()
+  
+  console.log('\n✨ Ingestion Complete!')
 }
 
-// ==========================================
-// RUN
-// ==========================================
-ingestDocuments()
-  .then(() => {
-    console.log('\n✨ All done! You can now close this terminal.')
-    process.exit(0)
-  })
-  .catch(error => {
-    console.error('\n❌ Fatal error:', error)
-    process.exit(1)
-  })
+run()
