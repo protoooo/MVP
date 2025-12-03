@@ -22,7 +22,7 @@ export default function PrivacyPolicy() {
           {/* Header */}
           <div className="mb-12 text-center md:text-left border-b border-[#2C2C2C] pb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Privacy Policy</h1>
-            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: November 30, 2024</p>
+            <p className="text-[#888] font-bold text-xs uppercase tracking-widest font-mono">Last updated: December 2, 2024</p>
           </div>
 
           <div className="space-y-6">
@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
               <p className="text-[#A1A1AA] text-sm leading-relaxed">
                 protocolLM (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use 
-                our compliance service powered by Google&apos;s Gemini API.
+                our compliance software and services.
               </p>
             </section>
 
@@ -92,7 +92,7 @@ export default function PrivacyPolicy() {
               <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm leading-relaxed">
                 <li>
                   <span className="text-white font-medium">Service Delivery:</span> To provide real-time compliance 
-                  guidance specific to Michigan health codes and county regulations using automated analysis.
+                  guidance specific to Michigan health codes and county regulations using automated software analysis.
                 </li>
                 <li>
                   <span className="text-white font-medium">Payment Processing:</span> To process subscription payments, manage 
@@ -100,7 +100,7 @@ export default function PrivacyPolicy() {
                 </li>
                 <li>
                   <span className="text-white font-medium">Service Improvement:</span> To analyze usage patterns and improve 
-                  model accuracy using non-identifiable aggregate data only.
+                  software accuracy using non-identifiable aggregate data only.
                 </li>
                 <li>
                   <span className="text-white font-medium">Communication:</span> To send transactional emails (password resets, 
@@ -125,22 +125,22 @@ export default function PrivacyPolicy() {
                 <div>
                   <h3 className="text-white font-bold mb-2 text-sm">3.1 Third-Party Processing</h3>
                   <p className="text-[#A1A1AA] text-sm mb-3 leading-relaxed">
-                    Our Service uses Google Vertex AI (including Google&apos;s Gemini API) to process your queries and analyze uploaded images. When you use 
+                    Our Service uses enterprise-grade cloud processing providers (including Google Cloud Services) to process your queries and analyze uploaded images. When you use 
                     our Service:
                   </p>
                   <ul className="list-disc pl-5 text-[#A1A1AA] space-y-2 text-sm">
-                    <li>Your text queries and uploaded images are sent to Google&apos;s Cloud services for automated processing</li>
-                    <li>Google processes this data according to their Cloud Data Processing Addendum</li>
-                    <li>Processing occurs on Google Cloud servers located in the United States</li>
+                    <li>Your text queries and uploaded images are sent to secure cloud servers for automated processing</li>
+                    <li>The provider processes this data according to their Cloud Data Processing Addendum</li>
+                    <li>Processing occurs on servers located in the United States</li>
                     <li>Data is transmitted using industry-standard encryption (TLS 1.3)</li>
                   </ul>
                 </div>
 
                 <div>
-                  <h3 className="text-white font-bold mb-2 text-sm">3.2 Model Improvement</h3>
+                  <h3 className="text-white font-bold mb-2 text-sm">3.2 Service Improvement</h3>
                   <div className="bg-[#065F46]/20 border-l-2 border-[#10B981] p-4 rounded-r-md mb-3">
                     <p className="text-[#6EE7B7] text-sm font-medium">
-                      ✓ We do NOT use your individual queries, images, or business data to train our underlying models.
+                      ✓ We do NOT use your individual queries, images, or business data to train public third-party models.
                     </p>
                   </div>
                   <p className="text-[#A1A1AA] text-sm mb-2">
@@ -165,9 +165,9 @@ export default function PrivacyPolicy() {
                 </div>
 
                 <div>
-                  <h3 className="text-white font-bold mb-2 text-sm">3.4 Google Cloud Data Processing</h3>
+                  <h3 className="text-white font-bold mb-2 text-sm">3.4 Cloud Data Processing</h3>
                   <p className="text-[#A1A1AA] text-sm">
-                    Google&apos;s handling of data sent to Vertex AI is governed by their Business Data Protection Terms.
+                    Our cloud provider's handling of data is governed by their Business Data Protection Terms.
                     <br />
                     <a 
                       href="https://cloud.google.com/terms/data-processing-addendum" 
@@ -175,7 +175,7 @@ export default function PrivacyPolicy() {
                       rel="noopener noreferrer"
                       className="text-[#3ECF8E] hover:text-white font-medium transition-colors mt-2 inline-block"
                     >
-                      View Google Cloud Data Processing Addendum →
+                      View Data Processing Addendum →
                     </a>
                   </p>
                 </div>
@@ -205,13 +205,13 @@ export default function PrivacyPolicy() {
                 
                 {/* Google Card */}
                 <div className="bg-[#232323] border border-[#333] p-5 rounded-md hover:border-[#3ECF8E]/50 transition-colors group">
-                  <h3 className="font-bold text-white mb-2 text-sm">Google Vertex AI</h3>
+                  <h3 className="font-bold text-white mb-2 text-sm">Cloud Processing (Google)</h3>
                   <p className="text-[#888] text-xs mb-3 leading-relaxed">
                     <span className="text-white font-medium">Purpose:</span> Automated processing for queries and image analysis.
                   </p>
                   <p className="text-[#888] text-xs mb-4 leading-relaxed">
                     <span className="text-white font-medium">Data Processed:</span> Text queries, uploaded images. 
-                    Data is NOT used to train Google&apos;s models per our enterprise agreement.
+                    Data is processed securely on US-based servers.
                   </p>
                   <a href="https://cloud.google.com/terms/cloud-privacy-notice" className="text-[#3ECF8E] text-[10px] font-bold uppercase tracking-wider hover:text-white transition-colors group-hover:underline" target="_blank" rel="noopener">Cloud Policy →</a>
                 </div>
