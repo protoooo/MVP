@@ -100,7 +100,7 @@ const Icons = {
 }
 
 // ==========================================
-// FLIP CARD COMPONENT (Updated Layout)
+// FLIP CARD COMPONENT (UPDATED)
 // ==========================================
 const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClass, items, actionText, onAction, btnBg }) => {
   const [isFlipped, setIsFlipped] = useState(false)
@@ -113,24 +113,25 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
       <div className={`relative w-full h-full transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
         
         {/* FRONT SIDE */}
-        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-lg overflow-hidden bg-white border ${borderClass} flex flex-col`}>
-            {/* TOP 50% - IMAGE (CONTAINED & PADDED) */}
-            <div className="h-[50%] w-full relative bg-white flex items-center justify-center p-8">
+        <div className={`absolute inset-0 w-full h-full backface-hidden rounded-[32px] shadow-lg overflow-hidden bg-white border border-slate-200 flex flex-col`}>
+            
+            {/* TOP 60% - IMAGE (Cover Fit) */}
+            <div className="h-[60%] w-full relative border-b border-slate-100">
                 <img 
                   src={imageSrc} 
                   alt={title}
-                  className="w-full h-full object-contain drop-shadow-md"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                 />
             </div>
 
-            {/* BOTTOM 50% - CONTENT */}
-            <div className={`flex-1 px-8 py-6 flex flex-col ${colorClass} bg-opacity-5`}>
-                <h2 className={`text-3xl font-bold text-slate-900 mb-3 tracking-tight ${outfit.className}`}>{title}</h2>
-                <p className={`${textClass} text-xs font-bold tracking-widest uppercase mb-2`}>{subtitle}</p>
+            {/* BOTTOM 40% - TEXT INFO (Centered) */}
+            <div className={`flex-1 px-8 flex flex-col justify-center ${colorClass} bg-opacity-5`}>
+                <h2 className={`text-3xl font-bold text-slate-900 mb-2 tracking-tight ${outfit.className}`}>{title}</h2>
+                <p className={`${textClass} text-xs font-bold tracking-widest uppercase`}>{subtitle}</p>
                 
-                <div className="mt-auto flex items-center gap-2 text-xs text-slate-400 font-medium bg-slate-50 w-fit px-3 py-2 rounded-full">
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-6 bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100">
                     <Icons.Refresh />
-                    <span>Tap card to see details</span>
+                    <span>Tap card for details</span>
                 </div>
             </div>
         </div>
@@ -147,11 +148,11 @@ const FlipCard = ({ title, subtitle, imageSrc, colorClass, borderClass, textClas
             </div>
 
             {/* Scrollable Features */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 pb-4">
+            <div className="flex-1 overflow-y-auto space-y-5 pr-2 pb-4">
                 {items.map((item, i) => (
                     <div key={i} className="flex gap-3 items-start">
-                        <div className={`w-1.5 h-1.5 rounded-full ${btnBg} mt-2 shrink-0`}></div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{item}</p>
+                        <div className={`w-1.5 h-1.5 rounded-full ${textClass.replace('text-', 'bg-')} mt-2 shrink-0`}></div>
+                        <p className="text-sm text-slate-600 leading-relaxed font-medium">{item}</p>
                     </div>
                 ))}
             </div>
@@ -183,7 +184,7 @@ const SourceTicker = () => {
     return () => clearInterval(interval)
   }, [])
   return (
-    <div className="flex justify-center mt-12 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
+    <div className="flex justify-center mt-8 mb-4 opacity-60 hover:opacity-100 transition-opacity duration-300">
       <div className="flex items-center justify-center px-4 py-2 rounded-full border border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-3 animate-pulse"></div>
         <div className="w-[260px] md:w-[310px] text-center overflow-hidden h-5 relative">
@@ -214,8 +215,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
 
   // DYNAMIC THEME BASED ON MODE
   const accentColor = activeMode === 'image' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-purple-600 hover:bg-purple-700';
-  const lightAccent = activeMode === 'image' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600';
-
+  
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
@@ -584,7 +584,7 @@ export default function Page() {
                      {/* Card 1 - Visual Inspection (Creamsicle) */}
                      <FlipCard 
                         title="Visual Inspection"
-                        subtitle="Instant Violation Detection"
+                        subtitle="Priority (P) Violation Detection"
                         imageSrc="/inspection.jpg"
                         colorClass="text-orange-600"
                         borderClass="border-orange-100 bg-orange-50/50"
@@ -603,7 +603,7 @@ export default function Page() {
                      {/* Card 2 - Regulatory Consultation (Lavender) */}
                      <FlipCard 
                         title="Regulatory Consultation"
-                        subtitle="Washtenaw Enforcement & State Code"
+                        subtitle="Michigan Modified Food Code"
                         imageSrc="/consult.jpg"
                         colorClass="text-purple-600"
                         borderClass="border-purple-100 bg-purple-50/50"
@@ -620,13 +620,16 @@ export default function Page() {
                      />
                   </div>
 
-                  <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4 text-[10px] md:text-xs text-slate-400 pb-8 z-10 mt-auto">
-                     <div className="flex gap-4">
-                        <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
-                     </div>
-                     <span className="hidden md:inline text-slate-300">|</span>
-                     <span className="text-slate-400 hover:text-slate-600 transition-colors">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                  {/* FOOTER - PINNED TO BOTTOM */}
+                  <div className="fixed bottom-4 left-0 right-0 flex justify-center z-30">
+                    <div className="bg-white/80 backdrop-blur-md border border-slate-200 rounded-full px-6 py-3 shadow-sm flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-400">
+                        <div className="flex gap-4">
+                            <Link href="/privacy" className="hover:text-slate-900 transition-colors font-medium">Privacy Policy</Link>
+                            <Link href="/terms" className="hover:text-slate-900 transition-colors font-medium">Terms of Service</Link>
+                        </div>
+                        <span className="hidden md:inline text-slate-300">|</span>
+                        <span className="text-slate-400">Built in Washtenaw County. Contact: austinrnorthrop@gmail.com</span>
+                    </div>
                   </div>
                </div>
             ) : (
