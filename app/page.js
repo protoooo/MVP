@@ -10,6 +10,14 @@ import ThreeBackground from './ThreeBackground'
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
+// CONFIG & DATA
+// ==========================================
+
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
+const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
+
+// ==========================================
 // DOCUMENT MAPPING (Pretty Names)
 // ==========================================
 const DOC_MAPPING = {
@@ -94,11 +102,17 @@ const Icons = {
 const KnowledgeTicker = () => {
   return (
     <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative">
-      {/* Fade Edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#FAFAFA] to-transparent z-10"></div>
-      <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#FAFAFA] to-transparent z-10"></div>
-      
-      <div className="flex w-full animate-scroll hover:pause">
+      {/* 
+         FIX: Replaced solid 'bg-gradient' with 'mask-image' 
+         This creates a true transparency fade so the blue background shows through 
+      */}
+      <div 
+        className="flex w-full animate-scroll hover:pause"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
+        }}
+      >
         {/* Double the list for infinite loop */}
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
@@ -137,6 +151,7 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
+           {/* Liquid Glass Effect - Very Transparent */}
            <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
@@ -165,6 +180,7 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
+           {/* Liquid Glass Effect */}
            <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
