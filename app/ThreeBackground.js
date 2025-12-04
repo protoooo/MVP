@@ -23,7 +23,8 @@ export default function ThreeBackground() {
 
         // --- SCENE SETUP ---
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f2f5);
+        // We set a color here, but the renderer alpha:true allows CSS to show through if needed
+        scene.background = new THREE.Color(0xf0f2f5); 
 
         // CAMERA
         const aspect = window.innerWidth / window.innerHeight;
@@ -36,9 +37,8 @@ export default function ThreeBackground() {
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        
-        // --- FIX IS HERE: Use PCFSoftShadowMap instead of SoftShadowMap ---
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // FIX: Use PCFSoftShadowMap instead of the deprecated SoftShadowMap
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
         
         const currentMount = mountRef.current;
         currentMount.appendChild(renderer.domElement);
@@ -246,7 +246,8 @@ export default function ThreeBackground() {
                 left: 0, 
                 width: '100vw', 
                 height: '100vh', 
-                zIndex: -1 
+                zIndex: -1,             // Sits behind content
+                pointerEvents: 'none'   // Clicks pass through
             }} 
         />
     );
