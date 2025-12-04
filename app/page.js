@@ -76,14 +76,13 @@ const Icons = {
   Upload: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   ChatBubble: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  // Updated Book & Camera for Clean Vercel Look
   Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
 }
 
 // ==========================================
-// NEW NARRATIVE JOURNEY (LIQUID GLASS + VERCEL ICONS)
+// NEW NARRATIVE JOURNEY (TRANSPARENT GLASS)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
@@ -91,11 +90,13 @@ const NarrativeJourney = ({ onAction }) => {
       
       {/* Title Section */}
       <div className="text-center mb-12 md:mb-16 space-y-4">
-        <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight drop-shadow-sm">
+        {/* Updated Font & Styling */}
+        <h2 className={`text-4xl md:text-6xl font-bold text-slate-900 tracking-tight drop-shadow-sm ${outfit.className}`}>
           Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-600">protocol.</span>
         </h2>
-        <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium leading-relaxed px-4">
-          Two powerful modes. One compliance platform.<br className="hidden md:block"/> Select a workflow to begin.
+        {/* Updated Subheader: Black, Visible, Shortened */}
+        <p className="text-lg md:text-xl text-black font-medium leading-relaxed px-4">
+          Two powerful modes. One compliance platform.
         </p>
       </div>
 
@@ -103,20 +104,19 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect - Subtle White Glow */}
-           <div className="absolute inset-0 bg-white/60 backdrop-blur-xl rounded-[2rem] border border-white/50 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-white/80" />
+           {/* Liquid Glass Effect - MORE TRANSPARENT (bg-white/30) */}
+           <div className="absolute inset-0 bg-white/30 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-white/60" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              {/* Minimalist Icon: No background, just a ring */}
-              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-900 mb-6 group-hover:border-orange-500/50 group-hover:text-orange-600 transition-colors bg-white/50">
+              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-900 mb-6 group-hover:border-orange-500/50 group-hover:text-orange-600 transition-colors bg-white/40">
                 <Icons.Camera />
               </div>
 
               <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Visual Inspection</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Detection Mode</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Detection Mode</p>
               
-              <p className="text-slate-600 text-lg leading-relaxed mb-10 flex-1 font-medium">
+              <p className="text-slate-800 text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
               </p>
 
@@ -131,20 +131,19 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/60 backdrop-blur-xl rounded-[2rem] border border-white/50 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-white/80" />
+           {/* Liquid Glass Effect - MORE TRANSPARENT (bg-white/30) */}
+           <div className="absolute inset-0 bg-white/30 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-white/60" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              {/* Minimalist Icon: No background, just a ring */}
-              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-900 mb-6 group-hover:border-purple-500/50 group-hover:text-purple-600 transition-colors bg-white/50">
+              <div className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-900 mb-6 group-hover:border-purple-500/50 group-hover:text-purple-600 transition-colors bg-white/40">
                 <Icons.Book />
               </div>
 
               <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Regulatory Consultant</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Chat Mode</p>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">Chat Mode</p>
               
-              <p className="text-slate-600 text-lg leading-relaxed mb-10 flex-1 font-medium">
+              <p className="text-slate-800 text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
               </p>
 
@@ -289,21 +288,21 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   const [billingInterval, setBillingInterval] = useState('month')
   return (
-    <div className="fixed inset-0 z-[1000] bg-white/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-      {/* UPDATED: Glassmorphism Pricing Card */}
-      <div className="relative w-full max-w-md bg-white/60 backdrop-blur-2xl border border-white/50 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-400 hover:text-black transition-colors"><Icons.X /></button>
+    <div className="fixed inset-0 z-[1000] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-500">
+      {/* UPDATED: Glassmorphism Pricing Card (Matches Homepage) */}
+      <div className="relative w-full max-w-md bg-white/70 backdrop-blur-2xl border border-white/50 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-500 hover:text-black transition-colors"><Icons.X /></button>
         <h3 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
         
         <div className="flex justify-center mb-8">
-          <div className="bg-slate-100/50 p-1 rounded-full flex relative border border-slate-200">
+          <div className="bg-slate-200/50 p-1 rounded-full flex relative border border-slate-300/50">
             <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button>
             <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
           </div>
         </div>
         
         <div className="flex items-baseline text-slate-900 justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-gray-400 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
-        <p className="text-sm text-gray-500 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-slate-900 font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
+        <p className="text-sm text-gray-600 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-slate-900 font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-slate-200/50 pt-6">
           <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-orange-500" /> Unlimited Compliance Queries</li>
