@@ -29,7 +29,7 @@ const GlobalStyles = () => (
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
-      color: #000; /* FORCE BLACK TEXT DEFAULT */
+      color: #000000;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
@@ -65,7 +65,7 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS (Minimalist Vercel Style)
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -90,11 +90,9 @@ const NarrativeJourney = ({ onAction }) => {
       
       {/* Title Section */}
       <div className="text-center mb-12 md:mb-16 space-y-4">
-        {/* Updated Font & Styling: ALL BLACK */}
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
-          Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600">protocol.</span>
+          Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600">protocol.</span>
         </h2>
-        {/* Updated Subheader: Black */}
         <p className="text-lg md:text-xl text-black font-semibold leading-relaxed px-4">
           Two powerful modes. One compliance platform.
         </p>
@@ -104,12 +102,9 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+           <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
-           {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              
               <div className="w-full flex justify-between items-start mb-6">
                  <div>
                     <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
@@ -119,11 +114,9 @@ const NarrativeJourney = ({ onAction }) => {
                     <Icons.Camera />
                  </div>
               </div>
-              
               <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
               </p>
-
               <button 
                 onClick={() => onAction('image')}
                 className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
@@ -135,12 +128,9 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+           <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
-           {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              
               <div className="w-full flex justify-between items-start mb-6">
                  <div>
                     <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
@@ -150,11 +140,9 @@ const NarrativeJourney = ({ onAction }) => {
                     <Icons.Book />
                  </div>
               </div>
-              
               <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
               </p>
-
               <button 
                 onClick={() => onAction('chat')}
                 className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
@@ -185,7 +173,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const accentColor = activeMode === 'image' ? 'bg-black hover:bg-slate-800' : 'bg-black hover:bg-slate-800';
+  const accentColor = 'bg-black hover:bg-slate-800';
   
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
@@ -196,7 +184,6 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
 
-      {/* UPDATED: High-End Glass Input */}
       <form 
         onSubmit={handleSend} 
         className="relative flex items-end w-full p-2 bg-white/60 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/80 focus-within:ring-2 focus-within:ring-black/10 focus-within:border-black/20" 
@@ -297,7 +284,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   const [billingInterval, setBillingInterval] = useState('month')
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-500">
-      {/* UPDATED: Glassmorphism Pricing Card (Matches Homepage) */}
       <div className="relative w-full max-w-md bg-white/70 backdrop-blur-2xl border border-white/50 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-500 hover:text-black transition-colors"><Icons.X /></button>
         <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
