@@ -1,131 +1,227 @@
-'use client'
-import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-export default function ThreeBackground() {
-  const containerRef = useRef(null)
+export function initThreeBackground(containerElement) {
+    // --- CONFIGURATION ---
+    const COLORS = {
+        floor: 0xf5f6fa,
+        wall: 0xdcdde1,
+        accentOrange: 0xff9f43,
+        accentBlue: 0x54a0ff,
+        chefWhite: 0xffffff,
+        staffBlue: 0x2e86de,
+        metal: 0xa4b0be,
+        table: 0xffffff,
+    };
 
-  useEffect(() => {
-    if (!containerRef.current) return
+    // --- SCENE SETUP ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f2f5); // Match CSS background
 
-    // 1. SETUP
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff) 
+    // ISOMETRIC CAMERA
+    const aspect = window.innerWidth / window.innerHeight;
+    const d = 35;
+    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+    camera.position.set(40, 40, 40);
+    camera.lookAt(scene.position);
 
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    containerRef.current.appendChild(renderer.domElement)
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.SoftShadowMap;
+    
+    // Attach to the specific container instead of document.body
+    containerElement.appendChild(renderer.domElement);
 
-    // 2. SHADER CONFIG
-    const uniforms = {
-      u_time: { value: 0.0 },
-      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    // --- LIGHTING ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    dirLight.position.set(50, 80, 30);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    // Increase shadow camera box so shadows don't clip when people walk far
+    dirLight.shadow.camera.left = -60;
+    dirLight.shadow.camera.right = 60;
+    dirLight.shadow.camera.top = 60;
+    dirLight.shadow.camera.bottom = -60;
+    scene.add(dirLight);
+
+    // --- BUILDER HELPERS ---
+    function createBox(w, h, d, color, x, y, z) {
+        const geo = new THREE.BoxGeometry(w, h, d);
+        const mat = new THREE.MeshStandardMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y + h/2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+        return mesh;
     }
 
-    const vertexShader = `
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        gl_Position = vec4(position, 1.0);
-      }
-    `
+    function createCylinder(r, h, color, x, y, z) {
+        const geo = new THREE.CylinderGeometry(r, r, h, 32);
+        const mat = new THREE.MeshStandardMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x, y + h/2, z);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        scene.add(mesh);
+        return mesh;
+    }
 
-    // GLOSSY RIBBON SHADER (Spearmint & Matte Blue)
-    const fragmentShader = `
-      uniform float u_time;
-      uniform vec2 u_resolution;
-      varying vec2 vUv;
+    // --- LEVEL GENERATION ---
+    // Floor
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(100, 100),
+        new THREE.MeshStandardMaterial({ color: COLORS.floor })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
-      // NEW PALETTE: Lighter, Spearmint, Matte
-      // 1. Matte Mid Blue (Base)
-      const vec3 c1 = vec3(0.25, 0.45, 0.65); 
-      // 2. Soft Teal (Mid)
-      const vec3 c2 = vec3(0.35, 0.75, 0.70); 
-      // 3. Spearmint (Highlight)
-      const vec3 c3 = vec3(0.50, 0.90, 0.75); 
-      // 4. Ice White (Peak)
-      const vec3 c4 = vec3(0.92, 0.98, 0.98); 
+    // Kitchen Walls & Counters
+    createBox(2, 8, 40, COLORS.wall, -20, 0, -10);
+    createBox(40, 8, 2, COLORS.wall, 0, 0, -30);
+    createBox(15, 3, 4, COLORS.metal, -10, 0, -25);
+    createBox(4, 3, 15, COLORS.metal, -18, 0, -15);
+    createBox(15, 3, 4, COLORS.metal, -5, 0, -10);
+    createCylinder(2, 4, COLORS.metal, -10, 8, -25);
+    createCylinder(2, 4, COLORS.metal, -5, 8, -10);
 
-      void main() {
-        vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-        
-        // --- WARP LOGIC ---
-        vec2 p = uv;
-        // FASTER SPEED (0.2 -> 0.25)
-        float t = u_time * 0.25; 
+    // Pipes
+    const path = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-15, 12, -25),
+        new THREE.Vector3(-5, 10, -10),
+        new THREE.Vector3(5, 8, 0),
+        new THREE.Vector3(15, 6, 15),
+        new THREE.Vector3(25, 4, 15)
+    ]);
+    const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(path, 20, 1, 8, false),
+        new THREE.MeshStandardMaterial({ color: COLORS.accentOrange })
+    );
+    tube.castShadow = true;
+    scene.add(tube);
 
-        for(float i = 1.0; i < 4.0; i++){
-            p.x += 0.35 / i * sin(i * 3.0 * p.y + t);
-            p.y += 0.35 / i * cos(i * 3.0 * p.x + t);
+    // Dining
+    const tables = [];
+    function createDiningSet(x, z) {
+        tables.push({x, z});
+        createCylinder(3, 2.5, COLORS.table, x, 0, z);
+        createBox(1.5, 1.5, 1.5, COLORS.accentBlue, x - 2.5, 0, z);
+        createBox(1.5, 1.5, 1.5, COLORS.accentBlue, x + 2.5, 0, z);
+        createBox(1.5, 1.5, 1.5, COLORS.accentBlue, x, 0, z - 2.5);
+        createBox(1.5, 1.5, 1.5, COLORS.accentBlue, x, 0, z + 2.5);
+    }
+    createDiningSet(10, 0);
+    createDiningSet(20, 10);
+    createDiningSet(10, 20);
+    createDiningSet(25, -5);
+    createBox(1, 4, 20, COLORS.accentOrange, 0, 0, 10);
+
+    // --- AGENTS ---
+    const agents = [];
+    function createPerson(role, x, z) {
+        const group = new THREE.Group();
+        group.position.set(x, 0, z);
+
+        const color = role === 'chef' ? COLORS.chefWhite : COLORS.staffBlue;
+        const body = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.8, 2, 4, 8),
+            new THREE.MeshStandardMaterial({ color: color })
+        );
+        body.position.y = 2;
+        body.castShadow = true;
+        group.add(body);
+
+        const head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.7, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0xffccaa })
+        );
+        head.position.y = 4;
+        head.castShadow = true;
+        group.add(head);
+
+        if (role === 'chef') {
+            // Note: Helper adds to scene, we must remove and add to group manually
+            // or just build it manually here. Manual is cleaner:
+            const hat = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.8, 0.8, 1, 32),
+                new THREE.MeshStandardMaterial({ color: COLORS.chefWhite })
+            );
+            hat.position.set(0, 4.8, 0);
+            hat.castShadow = true;
+            group.add(hat);
         }
 
-        // --- COLOR MIXING ---
-        float r = cos(p.x + p.y + 1.3) * 0.5 + 0.5;
-        float g = sin(p.x + p.y + 2.0) * 0.5 + 0.5;
-        float b = (sin(p.x + p.y + 1.0) + cos(p.x + 2.0)) * 0.25 + 0.5;
-
-        // Blend the palette
-        vec3 col = mix(c1, c2, smoothstep(0.0, 0.9, r));
-        col = mix(col, c3, smoothstep(0.0, 0.8, g));
-        col = mix(col, c4, smoothstep(0.0, 0.9, b));
-
-        // Add Gloss (Subtler now to reduce "weird brightness")
-        col += 0.04 * sin(uv.x * 10.0 + u_time);
-
-        // --- MASKING ---
-        // Softer mask gradient
-        float diagonal = (uv.x + uv.y) * 0.6; 
-        
-        // Widen the smoothstep range (0.1 to 0.9) to soften the edge
-        float mask = smoothstep(0.1, 0.9, diagonal);
-        
-        vec3 finalColor = mix(vec3(1.0), col, mask);
-
-        // Footer fade
-        finalColor = mix(finalColor, vec3(1.0), smoothstep(0.15, 0.0, uv.y));
-
-        gl_FragColor = vec4(finalColor, 1.0);
-      }
-    `
-
-    const geometry = new THREE.PlaneGeometry(2, 2)
-    const material = new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader,
-      fragmentShader,
-    })
-
-    const mesh = new THREE.Mesh(geometry, material)
-    scene.add(mesh)
-
-    const animate = (time) => {
-      material.uniforms.u_time.value = time * 0.001
-      renderer.render(scene, camera)
-      requestAnimationFrame(animate)
+        scene.add(group);
+        return { mesh: group, role, target: new THREE.Vector3(x, 0, z), timer: 0 };
     }
-    requestAnimationFrame(animate)
+
+    agents.push(createPerson('chef', -10, -22));
+    agents.push(createPerson('chef', -5, -12));
+    agents.push(createPerson('waiter', 5, 5));
+    agents.push(createPerson('waiter', 15, 15));
+    agents.push(createPerson('waiter', 10, -5));
+
+    // --- ANIMATION ---
+    const clock = new THREE.Clock();
+    let animationId;
+
+    function assignNewTarget(agent) {
+        if (agent.role === 'chef') {
+            agent.target.set(Math.random() * 15 - 15, 0, Math.random() * 15 - 25);
+        } else {
+            if (Math.random() > 0.5) agent.target.set(-2, 0, -5);
+            else {
+                const table = tables[Math.floor(Math.random() * tables.length)];
+                agent.target.set(table.x + (Math.random()*2-1), 0, table.z + (Math.random()*2-1));
+            }
+        }
+    }
+
+    function animate() {
+        animationId = requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+
+        agents.forEach(agent => {
+            const dist = agent.mesh.position.distanceTo(agent.target);
+            if (dist > 0.5) {
+                const dir = new THREE.Vector3().subVectors(agent.target, agent.mesh.position).normalize();
+                agent.mesh.position.add(dir.multiplyScalar(4 * delta));
+                agent.mesh.lookAt(agent.target);
+                // Bobbing logic corrected to affect Child mesh, not Group Y (which is 0)
+                // Or simply keep simple group bobbing
+                agent.mesh.position.y = Math.sin(clock.elapsedTime * 10) * 0.1; 
+            } else {
+                agent.timer -= delta;
+                if (agent.timer <= 0) {
+                    assignNewTarget(agent);
+                    agent.timer = Math.random() * 2 + 1;
+                }
+            }
+        });
+
+        renderer.render(scene, camera);
+    }
 
     const handleResize = () => {
-      renderer.setSize(window.innerWidth, window.innerHeight)
-      material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight)
-    }
-    window.addEventListener('resize', handleResize)
+        const aspect = window.innerWidth / window.innerHeight;
+        camera.left = -d * aspect;
+        camera.right = d * aspect;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    };
 
+    window.addEventListener('resize', handleResize);
+    animate();
+
+    // RETURN CLEANUP FUNCTION
     return () => {
-      window.removeEventListener('resize', handleResize)
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement)
-      }
-    }
-  }, [])
-
-  return (
-    <div 
-      ref={containerRef} 
-      className="fixed inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.9 }} 
-    />
-  )
+        window.removeEventListener('resize', handleResize);
+        cancelAnimationFrame(animationId);
+        containerElement.removeChild(renderer.domElement);
+    };
 }
