@@ -42,16 +42,6 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
     
     /* ANIMATIONS */
-    @keyframes drawPath {
-      from { stroke-dashoffset: 2500; }
-      to { stroke-dashoffset: 0; }
-    }
-    .animate-draw {
-      stroke-dasharray: 2500;
-      stroke-dashoffset: 2500;
-      animation: drawPath 3.5s ease-out forwards;
-    }
-
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
     .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
@@ -92,45 +82,97 @@ const Icons = {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY COMPONENT
+// NARRATIVE JOURNEY COMPONENT (UPDATED FOR SCROLL)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
-  return (
-    <div className="relative w-full max-w-4xl mx-auto py-12 md:py-20 px-4">
+  const containerRef = useRef(null)
+  const pathRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Handle Scroll Drawing
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current || !pathRef.current) return;
       
-      {/* SVG BACKGROUND PATH */}
-      <div className="absolute inset-0 top-16 md:top-24 pointer-events-none opacity-20 hidden md:block">
-        <svg viewBox="0 0 800 1200" className="w-full h-full" preserveAspectRatio="none">
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Calculate how much of the container has been scrolled through
+      // Start drawing when container enters viewport, finish when it leaves
+      const start = windowHeight * 0.8; // Start slightly before it hits bottom
+      const end = -containerRect.height * 0.2; // End slightly after
+      
+      const totalDist = containerRect.height + windowHeight;
+      const currentPos = windowHeight - containerRect.top;
+      
+      let percentage = currentPos / totalDist;
+      
+      // Clamp percentage between 0 and 1
+      percentage = Math.min(Math.max(percentage, 0), 1);
+      
+      // Scale it to make the drawing feel more responsive (optional tweak)
+      percentage = percentage * 1.5; 
+      if (percentage > 1) percentage = 1;
+
+      const pathLength = pathRef.current.getTotalLength();
+      
+      // Draw the line
+      pathRef.current.style.strokeDasharray = pathLength;
+      pathRef.current.style.strokeDashoffset = pathLength - (pathLength * percentage);
+    };
+
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', checkMobile);
+    checkMobile();
+    handleScroll(); // Initial check
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative w-full max-w-5xl mx-auto py-12 md:py-24 px-4">
+      
+      {/* SVG BACKGROUND PATH - SCROLL DRAWING */}
+      <div className="absolute inset-0 top-0 pointer-events-none hidden md:block" style={{ height: '110%' }}>
+        <svg viewBox="0 0 1000 1400" className="w-full h-full" preserveAspectRatio="none">
           {/* 
-            Path Logic:
-            1. Start Top Center (400,0)
-            2. Drop down center to (400,50) to clear header
-            3. Curve deep Left (x=200) behind the first image
-            4. Sweep across to deep Right (x=600) behind the second image
-            5. Curve back to Bottom Center (x=400)
+            UPDATED PATH LOGIC (Hugging Borders):
+            1. Start Top Center (500,0)
+            2. Swing wide LEFT to avoid text
+            3. Curl under Left Image (approx x=200, y=350)
+            4. Swing across to Right, avoiding text
+            5. Curl under Right Image (approx x=800, y=850)
+            6. End bottom center
           */}
           <path 
-            d="M 400 0 
-               L 400 50
-               C 400 150, 200 150, 200 400
-               C 200 650, 600 650, 600 900
-               C 600 1100, 400 1100, 400 1200"
+            ref={pathRef}
+            d="M 500 0 
+               Q 500 100 350 100
+               C 100 100, 50 350, 200 480
+               C 320 580, 680 580, 800 780
+               C 900 950, 600 1100, 500 1250"
             fill="none" 
-            stroke="black" 
+            stroke="#333333" 
             strokeWidth="3"
-            className="animate-draw"
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.1s linear' }}
           />
         </svg>
       </div>
 
-      {/* MOBILE LINE */}
+      {/* MOBILE LINE (Simplified) */}
       <div className="absolute left-8 top-12 bottom-12 w-px bg-slate-200 md:hidden pointer-events-none"></div>
 
       {/* STEP 1: LEFT SIDE (Inspection) */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 md:mb-40 items-center">
-         {/* CIRCULAR IMAGE 1 - Bigger (w-60 mobile, w-80 desktop) */}
-         <div className="order-2 md:order-1 flex justify-center md:justify-end pr-0 md:pr-12">
-            <div className="w-60 h-60 md:w-80 md:h-80 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
+      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-32 md:mb-52 items-center">
+         {/* CIRCULAR IMAGE 1 - Even Bigger (w-72 mobile, w-96 desktop) */}
+         <div className="order-2 md:order-1 flex justify-center md:justify-end pr-0 md:pr-16">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
                <img 
                  src="/inspection-circle.jpg" 
                  alt="Inspection" 
@@ -138,33 +180,33 @@ const NarrativeJourney = ({ onAction }) => {
                />
             </div>
          </div>
-         {/* Text - Added padding left on desktop to avoid center line */}
-         <div className="order-1 md:order-2 pl-12 md:pl-8 text-left">
+         {/* Text - Pushed further right to avoid line */}
+         <div className="order-1 md:order-2 pl-12 md:pl-12 text-left z-20">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Chances are, you miss things during prep.</h3>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
                It's a <span className="text-orange-600">visual blindspot</span>.
             </h2>
-            <p className="mt-4 text-slate-500 text-sm md:text-base leading-relaxed max-w-sm">
+            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-sm">
                From improper storage to dirty surfaces, our vision model detects Priority (P) violations instantly from a photo.
             </p>
          </div>
       </div>
 
       {/* STEP 2: RIGHT SIDE (Consultation) */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 md:mb-40 items-center">
-         {/* Text - Added padding right on desktop to avoid center line */}
-         <div className="order-1 md:order-1 pl-12 md:pl-0 md:pr-8 text-left md:text-right flex flex-col items-start md:items-end">
+      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-32 md:mb-52 items-center">
+         {/* Text - Pushed further left */}
+         <div className="order-1 md:order-1 pl-12 md:pl-0 md:pr-16 text-left md:text-right flex flex-col items-start md:items-end z-20">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Let me explain—</h3>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
                We <span className="text-purple-600">decode the regulations</span>.
             </h2>
-            <p className="mt-4 text-slate-500 text-sm md:text-base leading-relaxed max-w-sm">
+            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-sm">
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* CIRCULAR IMAGE 2 - Bigger (w-60 mobile, w-80 desktop) */}
-         <div className="order-2 md:order-2 flex justify-center md:justify-start pl-0 md:pl-12">
-            <div className="w-60 h-60 md:w-80 md:h-80 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
+         {/* CIRCULAR IMAGE 2 - Even Bigger (w-72 mobile, w-96 desktop) */}
+         <div className="order-2 md:order-2 flex justify-center md:justify-start pl-0 md:pl-16">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
                <img 
                  src="/consult-circle.jpg" 
                  alt="Consultation" 
@@ -176,8 +218,8 @@ const NarrativeJourney = ({ onAction }) => {
 
       {/* STEP 3: CENTER (Action) */}
       <div className="relative flex flex-col items-center text-center">
-         {/* CIRCULAR IMAGE 3 - Bigger (w-40 mobile, w-52 desktop) */}
-         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-sm overflow-hidden w-40 h-40 md:w-52 md:h-52 hover:scale-105 transition-transform duration-500">
+         {/* CIRCULAR IMAGE 3 - Bigger (w-48 mobile, w-64 desktop) */}
+         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-lg overflow-hidden w-48 h-48 md:w-64 md:h-64 hover:scale-105 transition-transform duration-500">
             <img 
                src="/team-circle.jpg" 
                alt="Team Success" 
@@ -185,7 +227,7 @@ const NarrativeJourney = ({ onAction }) => {
             />
          </div>
          
-         <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 max-w-lg">
+         <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-10 max-w-xl">
             Ready to pass your inspection? <br/>
             It becomes a <span className="text-slate-400">team venture</span>.
          </h2>
@@ -193,7 +235,7 @@ const NarrativeJourney = ({ onAction }) => {
          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md z-20">
             <button 
                onClick={() => onAction('image')}
-               className="flex-1 bg-white border-2 border-slate-100 hover:border-orange-200 hover:bg-orange-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group"
+               className="flex-1 bg-white border-2 border-slate-100 hover:border-orange-200 hover:bg-orange-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group shadow-sm"
             >
                <div className="bg-orange-100 text-orange-600 p-2 rounded-lg group-hover:scale-110 transition-transform"><Icons.Camera /></div>
                <div className="text-left">
@@ -204,7 +246,7 @@ const NarrativeJourney = ({ onAction }) => {
 
             <button 
                onClick={() => onAction('chat')}
-               className="flex-1 bg-white border-2 border-slate-100 hover:border-purple-200 hover:bg-purple-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group"
+               className="flex-1 bg-white border-2 border-slate-100 hover:border-purple-200 hover:bg-purple-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group shadow-sm"
             >
                <div className="bg-purple-100 text-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform"><Icons.Book /></div>
                <div className="text-left">
