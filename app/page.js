@@ -39,8 +39,8 @@ const GlobalStyles = () => (
     /* SCROLLBARS */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
     
     /* LOADING ANIMATION */
     .loader {
@@ -83,92 +83,82 @@ const Icons = {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY COMPONENT (NO CARDS, BIG IMAGES)
+// UPDATED NARRATIVE JOURNEY (GLASS & ANGLES)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-6xl mx-auto py-12 md:py-24 px-6">
+    <div className="w-full max-w-5xl mx-auto py-12 md:py-24 px-4 space-y-20 md:space-y-32">
       
-      {/* SECTION 1: LEFT SIDE (Inspection) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 mb-32 items-center">
-         {/* CIRCULAR IMAGE 1 - No border, Large Size, No Padding */}
-         <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
-               <img 
-                 src="/inspection-circle.jpg" 
-                 alt="Inspection" 
-                 className="w-full h-full object-cover" 
-               />
+      {/* CARD 1: INSPECTION (Glassmorphism) */}
+      <div className="relative group perspective">
+        {/* Glass Card Background with Skew */}
+        <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] -skew-y-1 shadow-2xl border border-white/40 transition-transform duration-500 group-hover:-skew-y-2" />
+        
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12 items-center z-10">
+            {/* Image Side: Tilted Card instead of Circle */}
+            <div className="order-2 md:order-1 flex justify-center md:justify-end">
+                <div className="relative w-64 h-64 md:w-80 md:h-80 bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-white/60 rotate-2 hover:rotate-0 transition-all duration-500">
+                    <img src="/inspection-circle.jpg" alt="Inspection" className="w-full h-full object-cover" />
+                </div>
             </div>
-         </div>
-         {/* Text */}
-         <div className="order-1 md:order-2 text-left">
-            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-3">Chances are, you miss things during prep.</h3>
-            <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-6">
-               It's a <span className="text-orange-600">visual</span> blindspot.
-            </h2>
-            <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-md">
-               Instantly identify Priority (P) violations from a single photo. Our vision model spots improper storage, labeling issues, and sanitary risks that the human eye often overlooks during the rush.
-            </p>
+            {/* Text Side */}
+            <div className="order-1 md:order-2">
+                <div className="inline-block px-3 py-1 bg-orange-100/80 backdrop-blur-sm rounded-full mb-4 border border-orange-200">
+                    <span className="text-xs font-bold text-orange-700 uppercase tracking-widest">Visual Detection</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-4">
+                   Blindspots, <br/><span className="text-orange-600">Revealed.</span>
+                </h2>
+                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                   Instantly identify Priority (P) violations. Our vision model spots improper storage and labeling issues that the human eye misses in the rush.
+                </p>
+            </div>
+        </div>
+      </div>
+
+      {/* CARD 2: CONSULTATION (Glassmorphism) */}
+      <div className="relative group perspective">
+         {/* Glass Card Background with Reverse Skew */}
+         <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] skew-y-1 shadow-2xl border border-white/40 transition-transform duration-500 group-hover:skew-y-2" />
+
+         <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12 items-center z-10">
+             <div className="order-1 md:text-right flex flex-col items-start md:items-end">
+                <div className="inline-block px-3 py-1 bg-purple-100/80 backdrop-blur-sm rounded-full mb-4 border border-purple-200">
+                    <span className="text-xs font-bold text-purple-700 uppercase tracking-widest">Regulatory AI</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-4">
+                   Decode the <br/><span className="text-purple-600">Regulations.</span>
+                </h2>
+                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                   Stop guessing with the FDA Food Code. Get citations specific to Washtenaw County instantly.
+                </p>
+             </div>
+             {/* Image Side: Tilted Card */}
+             <div className="order-2 flex justify-center md:justify-start">
+                <div className="relative w-64 h-64 md:w-80 md:h-80 bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-white/60 -rotate-2 hover:rotate-0 transition-all duration-500">
+                    <img src="/consult-circle.jpg" alt="Consultation" className="w-full h-full object-cover" />
+                </div>
+             </div>
          </div>
       </div>
 
-      {/* SECTION 2: RIGHT SIDE (Consultation) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 mb-32 items-center">
-         {/* Text */}
-         <div className="order-1 md:order-1 text-left md:text-right flex flex-col items-start md:items-end">
-            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-3">Let me explain—</h3>
-            <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-6">
-               We <span className="text-purple-600">decode</span> the regulations.
-            </h2>
-            <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-md text-left md:text-right">
-               Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
-            </p>
-         </div>
-         {/* CIRCULAR IMAGE 2 - No border, Large Size, No Padding */}
-         <div className="order-2 md:order-2 flex justify-center md:justify-start">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
-               <img 
-                 src="/consult-circle.jpg" 
-                 alt="Consultation" 
-                 className="w-full h-full object-cover" 
-               />
-            </div>
-         </div>
-      </div>
-
-      {/* SECTION 3: LEFT SIDE (Team) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 items-center">
-         {/* CIRCULAR IMAGE 3 - No border, Large Size, No Padding */}
-         <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
-               <img 
-                 src="/team-circle.jpg" 
-                 alt="Team Success" 
-                 className="w-full h-full object-cover" 
-               />
-            </div>
-         </div>
-         
-         {/* Text */}
-         <div className="order-1 md:order-2 text-left">
-             <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-8">
-                Ready to pass your inspection? It becomes a <span className="text-orange-500">team</span> venture.
+       {/* CTA SECTION - Floating */}
+       <div className="text-center py-12 relative z-10">
+             <h2 className="text-4xl md:text-6xl font-bold text-slate-900 mb-8 drop-shadow-sm tracking-tight">
+                Ready to pass inspection?
              </h2>
-             
              <button 
                 onClick={() => onAction('chat')}
-                className="inline-flex items-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-8 py-5 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-xl"
+                className="group relative inline-flex items-center gap-3 bg-slate-900 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-2xl hover:shadow-orange-500/20 overflow-hidden"
              >
-                Start Free Trial <Icons.ArrowUp />
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-purple-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_auto] animate-gradient" />
+                <span className="relative z-10 flex items-center gap-2">Start Free Trial <Icons.ArrowUp /></span>
              </button>
-         </div>
-      </div>
+       </div>
 
     </div>
   )
 }
-
 
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const [showMenu, setShowMenu] = useState(false)
@@ -186,21 +176,21 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // DYNAMIC THEME BASED ON MODE
   const accentColor = activeMode === 'image' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-purple-600 hover:bg-purple-700';
   
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-white rounded-xl inline-flex items-center gap-2 border border-slate-200 shadow-sm animate-pop-in">
+        <div className="mb-2 mx-1 p-2 bg-white/90 backdrop-blur-md rounded-xl inline-flex items-center gap-2 border border-white/50 shadow-sm animate-pop-in">
           <span className="text-xs text-slate-900 font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
           <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-400 hover:text-slate-900"><Icons.X /></button>
         </div>
       )}
 
+      {/* UPDATED: Glassmorphism Input Container */}
       <form 
         onSubmit={handleSend} 
-        className="relative flex items-end w-full p-2 bg-white border border-slate-200 rounded-[32px] shadow-xl transition-all duration-300 focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-100" 
+        className="relative flex items-end w-full p-2 bg-white/70 backdrop-blur-xl border border-white/40 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/90 focus-within:ring-2 focus-within:ring-white/50" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
@@ -208,20 +198,20 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-white/50 text-slate-600 hover:bg-white'}`}
             >
                 <Icons.Plus />
             </button>
 
             {showMenu && (
-                <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
+                <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
                     <div className="space-y-0.5">
                         {['chat', 'image'].map(m => (
                             <button 
                                 key={m}
                                 type="button"
                                 onClick={() => handleModeClick(m)} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white/50'}`}
                             >
                                 {m === 'chat' && <Icons.MessageSquare />}
                                 {m === 'image' && <Icons.Camera />}
@@ -239,7 +229,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'}
-            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6" 
+            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-500 text-[15px] leading-6 font-medium" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
@@ -249,7 +239,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           disabled={(!input.trim() && !selectedImage) || isSending} 
           className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1 transition-all
             ${(!input.trim() && !selectedImage) 
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+              ? 'bg-slate-100/50 text-slate-400 cursor-not-allowed' 
               : `${accentColor} text-white cursor-pointer shadow-md`
             }`}
         >
@@ -513,25 +503,25 @@ export default function Page() {
             ===================================== */}
         <div className="relative z-10 flex flex-col h-[100dvh]">
           
-          {/* HEADER */}
-          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe`}>
+          {/* HEADER (Frosted Glass) */}
+          <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe bg-white/10 backdrop-blur-sm border-b border-white/20`}>
              <div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>
                protocol<span className="bg-gradient-to-r from-orange-500 to-purple-600 bg-clip-text text-transparent">LM</span>
              </div>
              <div className="flex items-center gap-2 md:gap-4">
                 {!session && (
                   <>
-                    <button onClick={() => setShowAuthModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg whitespace-nowrap">Start Free Trial</button>
+                    <button onClick={() => setShowAuthModal(true)} className="bg-slate-900/90 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-lg whitespace-nowrap backdrop-blur-md">Start Free Trial</button>
                     <button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium hover:text-slate-600 transition-transform active:scale-95 hidden sm:block">Pricing</button>
-                    <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 transition-transform active:scale-95">Sign In</button>
+                    <button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-white/40 bg-white/30 px-4 py-2 rounded-full hover:bg-white/50 transition-transform active:scale-95 backdrop-blur-md">Sign In</button>
                   </>
                 )}
                 {session && (
                    <div className="flex items-center gap-3">
-                      <button onClick={handleNewChat} className="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors"><Icons.Plus /></button>
+                      <button onClick={handleNewChat} className="p-2 rounded-full hover:bg-white/20 text-slate-900 transition-colors"><Icons.Plus /></button>
                       <div className="relative" ref={userMenuRef}>
-                         <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">{session.user.email[0].toUpperCase()}</button>
-                         {showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-black hover:bg-slate-50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-100 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-slate-50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}
+                         <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-lg">{session.user.email[0].toUpperCase()}</button>
+                         {showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl border border-white/50 rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-black hover:bg-white/50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-200/50 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-500 hover:bg-white/50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}
                       </div>
                    </div>
                 )}
@@ -548,14 +538,14 @@ export default function Page() {
                   <NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} />
 
                   {/* FOOTER */}
-                  <div className="w-full flex justify-center py-10 border-t border-slate-100 mt-10">
-                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-400">
+                  <div className="w-full flex justify-center py-10 border-t border-white/20 mt-10">
+                    <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-500 font-medium">
                         <div className="flex gap-4">
-                            <Link href="/privacy" className="hover:text-slate-900 transition-colors font-medium">Privacy Policy</Link>
-                            <Link href="/terms" className="hover:text-slate-900 transition-colors font-medium">Terms of Service</Link>
+                            <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+                            <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
                         </div>
-                        <span className="hidden md:inline text-slate-300">|</span>
-                        <span className="text-slate-400">Built in Washtenaw County.</span>
+                        <span className="hidden md:inline text-slate-400">|</span>
+                        <span className="text-slate-500">Built in Washtenaw County.</span>
                     </div>
                   </div>
                </div>
@@ -565,13 +555,13 @@ export default function Page() {
                   <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
                     {messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900">
-                        <div className="mb-6 p-4 rounded-full bg-slate-50 text-slate-400">
+                        <div className="mb-6 p-4 rounded-full bg-white/40 backdrop-blur-md text-slate-600 shadow-sm border border-white/50">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
                         <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
-                        <p className="text-slate-500 text-sm max-w-sm">
+                        <p className="text-slate-700 text-sm max-w-sm font-medium">
                           {activeMode === 'image' 
                             ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
                             : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
@@ -581,16 +571,16 @@ export default function Page() {
                       <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                         {messages.map((msg, idx) => (
                           <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-sm' : 'text-slate-800 px-2'}`}>
-                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-slate-200" />}
-                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap">{msg.content}</div>}
+                            <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900/90 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-lg' : 'bg-white/40 backdrop-blur-md border border-white/50 text-slate-900 px-5 py-3 rounded-2xl shadow-sm'}`}>
+                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/20" />}
+                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap font-medium">{msg.content}</div>}
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
-                  <div className="w-full bg-white/80 backdrop-blur-md pt-2 pb-6 shrink-0 z-20 border-t border-slate-100">
+                  <div className="w-full pt-2 pb-6 shrink-0 z-20">
                     <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
                   </div>
                </>
