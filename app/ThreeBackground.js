@@ -10,36 +10,35 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff) // Clean White Background
+    scene.background = new THREE.Color(0xffffff) 
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-    camera.position.z = 2.5 // Zoom level
+    camera.position.z = 2.2 // Slightly closer so it feels more immersive
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     containerRef.current.appendChild(renderer.domElement)
 
-    // 2. THE GEOMETRY (High Detail Sphere)
-    // We use an Icosahedron with high detail (30) to get enough dots
-    const geometry = new THREE.IcosahedronGeometry(1, 30)
+    // 2. GEOMETRY
+    const geometry = new THREE.IcosahedronGeometry(1, 40) // Increased detail for smoother gradients
 
-    // 3. THE SHADER (The "Blooming" Math)
+    // 3. SHADER
     const uniforms = {
       u_time: { value: 0.0 },
-      // Brand Colors: Emerald (#10b981) and Blue (#3b82f6)
-      u_colorA: { value: new THREE.Color(0x10b981) },
-      u_colorB: { value: new THREE.Color(0x3b82f6) },
+      u_bloom: { value: 0.0 }, // Controls the intro animation
+      u_colorA: { value: new THREE.Color(0x10b981) }, // Emerald
+      u_colorB: { value: new THREE.Color(0x3b82f6) }, // Blue
     }
 
     const vertexShader = `
       uniform float u_time;
+      uniform float u_bloom; 
       varying vec3 vColor;
-      varying float vNoise;
       uniform vec3 u_colorA;
       uniform vec3 u_colorB;
 
-      // GLSL Simplex Noise Function
+      // Simplex Noise (Standard GLSL)
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -54,18 +53,18 @@ export default function ThreeBackground() {
         vec3 i1 = min( g.xyz, l.zxy );
         vec3 i2 = max( g.xyz, l.zxy );
         vec3 x1 = x0 - i1 + C.xxx;
-        vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
-        vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
         i = mod289(i);
         vec4 p = permute( permute( permute(
                   i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
                 + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
                 + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-        float n_ = 0.142857142857; // 1.0/7.0
+        float n_ = 0.142857142857;
         vec3  ns = n_ * D.wyz - D.xzx;
-        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
         vec4 x_ = floor(j * ns.z);
-        vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+        vec4 y_ = floor(j - 7.0 * x_ );
         vec4 x = x_ *ns.x + ns.yyyy;
         vec4 y = y_ *ns.x + ns.yyyy;
         vec4 h = 1.0 - abs(x) - abs(y);
@@ -92,21 +91,24 @@ export default function ThreeBackground() {
       }
 
       void main() {
-        // NOISE CALCULATION
-        // We add noise to the position to create the "spikes"
-        float noise = snoise(position * 2.0 + u_time * 0.5);
-        vNoise = noise;
+        // 1. SLOW NOISE
+        // Reduced frequency (1.5) for gentler waves
+        // Multiplied by u_bloom to grow the spikes from 0 to full size
+        float noise = snoise(position * 1.5 + u_time * 0.1);
+        
+        // 2. DISPLACEMENT
+        // Reduced amplitude (0.3) so it's less spiky
+        vec3 newPos = position + normal * (noise * 0.3 * u_bloom); 
 
-        // DISPLACEMENT
-        // Push the vertex out along its normal based on the noise
-        vec3 newPos = position + normal * (noise * 0.4); 
-
-        // COLORING
-        // Mix colors based on the noise value (Tips are one color, base is another)
+        // 3. COLORING
+        // Mix based on noise
         vColor = mix(u_colorA, u_colorB, noise * 0.5 + 0.5);
 
         vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
-        gl_PointSize = 2.0 * (10.0 / -mvPosition.z); // Size attenuates with distance
+        
+        // 4. POINT SIZE
+        // Scaled by u_bloom so dots start invisible and grow in
+        gl_PointSize = (2.5 * u_bloom) * (10.0 / -mvPosition.z);
         gl_Position = projectionMatrix * mvPosition;
       }
     `
@@ -114,41 +116,54 @@ export default function ThreeBackground() {
     const fragmentShader = `
       varying vec3 vColor;
       void main() {
-        // Make the points circular
+        // Soft Circular Particles
         float r = distance(gl_PointCoord, vec2(0.5));
         if (r > 0.5) discard;
+        
+        // Soften the edges of the dots
+        float alpha = 1.0 - smoothstep(0.3, 0.5, r);
 
-        gl_FragColor = vec4(vColor, 1.0);
+        gl_FragColor = vec4(vColor, alpha * 0.8); // 0.8 max opacity per dot
       }
     `
 
-    // 4. MATERIAL (Points)
     const material = new THREE.ShaderMaterial({
       uniforms,
       vertexShader,
       fragmentShader,
       transparent: true,
+      depthWrite: false, // Prevents Z-fighting for transparent particles
+      blending: THREE.AdditiveBlending // Makes it glowy/ethereal
     })
 
-    // Use Points instead of Mesh for that "Particle" look from the screenshot
     const points = new THREE.Points(geometry, material)
     scene.add(points)
 
-    // 5. ANIMATION LOOP
+    // 4. ANIMATION STATE
+    let bloomValue = 0 // Starts at 0
+    let rotationSpeed = 0
+
     const animate = (time) => {
-      // Update Uniforms
-      material.uniforms.u_time.value = time * 0.001
+      // 1. BLOOM LOGIC
+      // Slowly increase bloomValue from 0 to 1 over time
+      bloomValue = THREE.MathUtils.lerp(bloomValue, 1, 0.02)
+      material.uniforms.u_bloom.value = bloomValue
+
+      // 2. SLOW FLOAT
+      // Time moves very slowly (0.0003)
+      material.uniforms.u_time.value = time * 0.0003
       
-      // Slow rotation of the whole shape
-      points.rotation.y = time * 0.0001
-      points.rotation.z = time * 0.00005
+      // 3. GENTLE ROTATION
+      // Rotate extremely slowly
+      rotationSpeed += 0.0001
+      points.rotation.y = rotationSpeed * 0.2
+      points.rotation.z = Math.sin(time * 0.0001) * 0.1 // Gentle sway
 
       renderer.render(scene, camera)
       requestAnimationFrame(animate)
     }
     requestAnimationFrame(animate)
 
-    // 6. RESIZE
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
@@ -168,8 +183,8 @@ export default function ThreeBackground() {
     <div 
       ref={containerRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      // Faded slightly so it sits behind your content elegantly
-      style={{ opacity: 0.6 }} 
+      // Reduced opacity significantly (0.4) so it's a subtle background texture
+      style={{ opacity: 0.4 }} 
     />
   )
 }
