@@ -10,114 +10,95 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff) 
+    // Apple style clean background (very slight off-white)
+    scene.background = new THREE.Color(0xfbfbfb) 
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-    // Moved camera back to see the wider spread
-    camera.position.z = 4.5 
-
+    // Orthographic camera is best for 2D gradient backgrounds
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+    
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     containerRef.current.appendChild(renderer.domElement)
 
-    // 2. GEOMETRY
-    // Radius: 2.5 (Spread out across screen)
-    // Detail: 20 (Far fewer particles - was 60)
-    const geometry = new THREE.IcosahedronGeometry(2.5, 20) 
+    // 2. THE GEOMETRY
+    // A simple flat plane that covers the screen
+    const geometry = new THREE.PlaneGeometry(2, 2)
 
-    // 3. SHADER
+    // 3. THE SHADER
     const uniforms = {
       u_time: { value: 0.0 },
-      u_bloom: { value: 0.0 },
-      u_colorA: { value: new THREE.Color(0x059669) }, // Emerald
-      u_colorB: { value: new THREE.Color(0x2563eb) }, // Blue
+      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+      // Brand Colors (Apple Health Style)
+      u_colorA: { value: new THREE.Color(0x10b981) }, // Emerald (Safety/Compliance)
+      u_colorB: { value: new THREE.Color(0x3b82f6) }, // Blue (Hygiene/Clean)
+      u_colorC: { value: new THREE.Color(0xf43f5e) }, // Rose/Red (Alert/Heat)
     }
 
     const vertexShader = `
-      uniform float u_time;
-      uniform float u_bloom; 
-      varying vec3 vColor;
-      uniform vec3 u_colorA;
-      uniform vec3 u_colorB;
-
-      // Simplex Noise
-      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-      vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-      vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-      float snoise(vec3 v) {
-        const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-        vec3 i  = floor(v + dot(v, C.yyy) );
-        vec3 x0 = v - i + dot(i, C.xxx) ;
-        vec3 g = step(x0.yzx, x0.xyz);
-        vec3 l = 1.0 - g;
-        vec3 i1 = min( g.xyz, l.zxy );
-        vec3 i2 = max( g.xyz, l.zxy );
-        vec3 x1 = x0 - i1 + C.xxx;
-        vec3 x2 = x0 - i2 + C.yyy;
-        vec3 x3 = x0 - D.yyy;
-        i = mod289(i);
-        vec4 p = permute( permute( permute(
-                  i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-                + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
-                + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-        float n_ = 0.142857142857;
-        vec3  ns = n_ * D.wyz - D.xzx;
-        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-        vec4 x_ = floor(j * ns.z);
-        vec4 y_ = floor(j - 7.0 * x_ );
-        vec4 x = x_ *ns.x + ns.yyyy;
-        vec4 y = y_ *ns.x + ns.yyyy;
-        vec4 h = 1.0 - abs(x) - abs(y);
-        vec4 b0 = vec4( x.xy, y.xy );
-        vec4 b1 = vec4( x.zw, y.zw );
-        vec4 s0 = floor(b0)*2.0 + 1.0;
-        vec4 s1 = floor(b1)*2.0 + 1.0;
-        vec4 sh = -step(h, vec4(0.0));
-        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-        vec3 p0 = vec3(a0.xy,h.x);
-        vec3 p1 = vec3(a0.zw,h.y);
-        vec3 p2 = vec3(a1.xy,h.z);
-        vec3 p3 = vec3(a1.zw,h.w);
-        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-        p0 *= norm.x;
-        p1 *= norm.y;
-        p2 *= norm.z;
-        p3 *= norm.w;
-        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-        m = m * m;
-        return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
-                                      dot(p2,x2), dot(p3,x3) ) );
-      }
-
+      varying vec2 vUv;
       void main() {
-        // Lower frequency noise (0.8) for wider, lazier waves
-        float noise = snoise(position * 0.8 + u_time * 0.1);
-        
-        // HIGHER DISPLACEMENT (1.2)
-        // This pushes the particles much further apart, breaking the sphere shape
-        vec3 newPos = position + normal * (noise * 1.2 * u_bloom);
-
-        vColor = mix(u_colorA, u_colorB, noise * 0.5 + 0.5);
-
-        vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
-        
-        // Slightly smaller points since they are spread out (looks cleaner)
-        gl_PointSize = (5.0 * u_bloom) * (10.0 / -mvPosition.z);
-        gl_Position = projectionMatrix * mvPosition;
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
       }
     `
 
+    // THIS IS THE APPLE HEALTH MAGIC
+    // Creating soft, overlapping "Metaballs" of color
     const fragmentShader = `
-      varying vec3 vColor;
+      uniform float u_time;
+      uniform vec2 u_resolution;
+      uniform vec3 u_colorA;
+      uniform vec3 u_colorB;
+      uniform vec3 u_colorC;
+      varying vec2 vUv;
+
       void main() {
-        float r = distance(gl_PointCoord, vec2(0.5));
-        if (r > 0.5) discard;
-        float alpha = 1.0 - smoothstep(0.3, 0.5, r);
-        gl_FragColor = vec4(vColor, alpha * 0.8);
+        // Normalize coordinates to keep circles round regardless of screen shape
+        vec2 uv = vUv;
+        float aspect = u_resolution.x / u_resolution.y;
+        uv.x *= aspect;
+        
+        // Adjust center to match aspect ratio
+        vec2 center = vec2(0.5 * aspect, 0.5);
+
+        // Slow down time for a "breathing" effect
+        float t = u_time * 0.3;
+
+        // --- ORB 1: Emerald (Left/Center) ---
+        // Moves in a gentle figure-8
+        vec2 pos1 = center + vec2(sin(t)*0.3, cos(t * 0.5)*0.2);
+        float d1 = length(uv - pos1);
+        // smoothstep creates the soft "blurred" edge
+        float a1 = smoothstep(0.8, 0.0, d1); 
+
+        // --- ORB 2: Blue (Right) ---
+        // Moves in a counter-circle
+        vec2 pos2 = center + vec2(cos(t * 0.7)*0.4, sin(t * 0.8)*0.3);
+        float d2 = length(uv - pos2);
+        float a2 = smoothstep(0.9, 0.0, d2);
+
+        // --- ORB 3: Rose (Bottom/Floating) ---
+        // Bobs up and down gently
+        vec2 pos3 = center + vec2(sin(t * 0.2)*0.5, -0.2 + sin(t * 0.5)*0.2);
+        float d3 = length(uv - pos3);
+        float a3 = smoothstep(0.8, 0.0, d3);
+
+        // BLENDING
+        // Start with white
+        vec3 color = vec3(0.98, 0.98, 0.99);
+
+        // Mix in colors softly
+        // We use mix() to blend them like watercolors
+        color = mix(color, u_colorA, a1 * 0.4); // 0.4 intensity
+        color = mix(color, u_colorB, a2 * 0.4);
+        color = mix(color, u_colorC, a3 * 0.3);
+
+        // Add a tiny bit of grain/noise for texture (very subtle)
+        float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        color += noise * 0.015;
+
+        gl_FragColor = vec4(color, 1.0);
       }
     `
 
@@ -125,39 +106,23 @@ export default function ThreeBackground() {
       uniforms,
       vertexShader,
       fragmentShader,
-      transparent: true,
-      depthWrite: false,
     })
 
-    const points = new THREE.Points(geometry, material)
-    scene.add(points)
+    const mesh = new THREE.Mesh(geometry, material)
+    scene.add(mesh)
 
-    // 4. ANIMATION
-    let bloomValue = 0 
-    let rotationSpeed = 0
-
+    // 4. ANIMATION LOOP
     const animate = (time) => {
-      // Bloom 0 -> 1
-      bloomValue = THREE.MathUtils.lerp(bloomValue, 1, 0.01)
-      material.uniforms.u_bloom.value = bloomValue
-
-      // Time
-      material.uniforms.u_time.value = time * 0.0003
-      
-      // Rotate
-      rotationSpeed += 0.0001
-      points.rotation.y = rotationSpeed
-      points.rotation.z = Math.sin(time * 0.0001) * 0.05
-
+      material.uniforms.u_time.value = time * 0.001
       renderer.render(scene, camera)
       requestAnimationFrame(animate)
     }
     requestAnimationFrame(animate)
 
+    // 5. RESIZE
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
+      material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight)
     }
     window.addEventListener('resize', handleResize)
 
@@ -173,7 +138,8 @@ export default function ThreeBackground() {
     <div 
       ref={containerRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.8 }} 
+      // Keep opacity high because the shader handles the softness internally
+      style={{ opacity: 1.0 }} 
     />
   )
 }
