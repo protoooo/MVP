@@ -10,13 +10,16 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
+    // A clean, off-white background (Apple style)
+    scene.background = new THREE.Color(0xfbfbfb) 
+
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     containerRef.current.appendChild(renderer.domElement)
 
-    // 2. THE SHADER
+    // 2. SHADER CONFIG
     const uniforms = {
       u_time: { value: 0.0 },
       u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
@@ -30,52 +33,62 @@ export default function ThreeBackground() {
       }
     `
 
-    // This fragment shader creates the "Glossy Mesh"
+    // APPLE HEALTH / MODERN COMPLIANCE VIBE
+    // Soft, breathing orbs. Green (Pass), Blue (Clean), Orange (Alert).
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 vUv;
 
-      // GLOSSY COLORS:
-      // These match the Stripe screenshot (Deep Purple, Pink, Orange, Cyan)
-      const vec3 color1 = vec3(0.12, 0.12, 0.55); // Deep Blue/Purple
-      const vec3 color2 = vec3(0.90, 0.20, 0.45); // Hot Pink/Magenta
-      const vec3 color3 = vec3(0.98, 0.65, 0.10); // Bright Orange
-      const vec3 color4 = vec3(0.00, 0.80, 0.90); // Cyan/Light Blue
+      // Function to draw a soft, glowing orb
+      float orb(vec2 uv, vec2 pos, float size) {
+          float d = length(uv - pos);
+          // Smoothstep creates that "out of focus" bokeh look
+          return smoothstep(size, size - 0.5, d); 
+      }
 
       void main() {
-        // Normalize coordinates
-        vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+        // Fix aspect ratio so circles stay circles
+        vec2 uv = vUv;
+        uv.x *= u_resolution.x / u_resolution.y;
         
-        // WARPING LOGIC (The "Glossy" movement)
-        vec2 p = uv;
-        float t = u_time * 0.3; // Speed
+        // Adjust coordinate center to match aspect ratio
+        vec2 center = vec2(0.5 * (u_resolution.x / u_resolution.y), 0.5);
 
-        // We layer sine waves to create complex fluid curves
-        for(float i = 1.0; i < 5.0; i++){
-            p.x += 0.3 / i * sin(i * 3.0 * p.y + t);
-            p.y += 0.3 / i * cos(i * 3.0 * p.x + t);
-        }
+        float t = u_time * 0.5; // Slow, calm speed
 
-        // COLOR MIXING
-        // We map the warped coordinates (p) to the colors
-        float r = cos(p.x + p.y + 1.3) * 0.5 + 0.5;
-        float g = sin(p.x + p.y + 2.0) * 0.5 + 0.5;
-        float b = (sin(p.x + p.y + 1.0) + cos(p.x + 2.0)) * 0.25 + 0.5;
+        // --- ORB 1: Emerald Green (Compliance/Safety) ---
+        // Moves in a slow wide circle
+        vec2 pos1 = center + vec2(sin(t * 0.8) * 0.4, cos(t * 0.7) * 0.3);
+        float orb1 = orb(uv, pos1, 0.6);
+        vec3 col1 = vec3(0.06, 0.73, 0.50); // #10b981
 
-        // Gradient Blending
-        vec3 col = mix(color1, color2, smoothstep(0.0, 0.9, r));
-        col = mix(col, color3, smoothstep(0.0, 0.8, g));
-        col = mix(col, color4, smoothstep(0.0, 0.9, b));
+        // --- ORB 2: Clean Blue (Hygiene/Water) ---
+        // Moves in a figure-eight
+        vec2 pos2 = center + vec2(cos(t * 0.5) * 0.5, sin(t * 1.1) * 0.4);
+        float orb2 = orb(uv, pos2, 0.7);
+        vec3 col2 = vec3(0.23, 0.51, 0.96); // #3b82f6
 
-        // Add a subtle "shine" to make it look glossy
-        col += 0.05 * sin(uv.x * 10.0 + u_time);
+        // --- ORB 3: Warm Orange (Food/Activity) ---
+        // Hovers near the bottom/center
+        vec2 pos3 = center + vec2(sin(t * 0.3 + 2.0) * 0.6, cos(t * 0.4) * 0.2 - 0.2);
+        float orb3 = orb(uv, pos3, 0.65);
+        vec3 col3 = vec3(0.97, 0.55, 0.15); // #f97316
 
-        gl_FragColor = vec4(col, 1.0);
+        // BLENDING
+        // Start with white background
+        vec3 finalColor = vec3(0.98, 0.98, 0.99);
+        
+        // Add colors with additive blending (light)
+        finalColor = mix(finalColor, col1, orb1 * 0.4); // 0.4 opacity
+        finalColor = mix(finalColor, col2, orb2 * 0.3);
+        finalColor = mix(finalColor, col3, orb3 * 0.3);
+
+        gl_FragColor = vec4(finalColor, 1.0);
       }
     `
 
-    // 3. CREATE MESH
+    // 3. MESH
     const geometry = new THREE.PlaneGeometry(2, 2)
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -86,7 +99,7 @@ export default function ThreeBackground() {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    // 4. ANIMATION LOOP
+    // 4. ANIMATION
     const animate = (time) => {
       material.uniforms.u_time.value = time * 0.001
       renderer.render(scene, camera)
@@ -113,9 +126,9 @@ export default function ThreeBackground() {
     <div 
       ref={containerRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      // Opacity at 0.9 keeps colors vibrant. 
-      // If it's too bright for your text, lower this to 0.7 or 0.6
-      style={{ opacity: 0.9 }} 
+      // No blur needed here because the shader does the blur!
+      // High opacity because the shader colors are already soft.
+      style={{ opacity: 1.0 }} 
     />
   )
 }
