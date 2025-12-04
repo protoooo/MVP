@@ -83,79 +83,79 @@ const Icons = {
 }
 
 // ==========================================
-// UPDATED NARRATIVE JOURNEY (GLASS & ANGLES)
+// NEW NARRATIVE JOURNEY (LIQUID GLASS CARDS)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto py-12 md:py-24 px-4 space-y-20 md:space-y-32">
+    <div className="w-full max-w-5xl mx-auto py-16 md:py-32 px-4">
       
-      {/* CARD 1: INSPECTION (Glassmorphism) */}
-      <div className="relative group perspective">
-        {/* Glass Card Background with Skew */}
-        <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] -skew-y-1 shadow-2xl border border-white/40 transition-transform duration-500 group-hover:-skew-y-2" />
-        
-        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12 items-center z-10">
-            {/* Image Side: Tilted Card instead of Circle */}
-            <div className="order-2 md:order-1 flex justify-center md:justify-end">
-                <div className="relative w-64 h-64 md:w-80 md:h-80 bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-white/60 rotate-2 hover:rotate-0 transition-all duration-500">
-                    <img src="/inspection-circle.jpg" alt="Inspection" className="w-full h-full object-cover" />
-                </div>
-            </div>
-            {/* Text Side */}
-            <div className="order-1 md:order-2">
-                <div className="inline-block px-3 py-1 bg-orange-100/80 backdrop-blur-sm rounded-full mb-4 border border-orange-200">
-                    <span className="text-xs font-bold text-orange-700 uppercase tracking-widest">Visual Detection</span>
-                </div>
-                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-4">
-                   Blindspots, <br/><span className="text-orange-600">Revealed.</span>
-                </h2>
-                <p className="text-slate-800 text-lg leading-relaxed font-medium">
-                   Instantly identify Priority (P) violations. Our vision model spots improper storage and labeling issues that the human eye misses in the rush.
-                </p>
-            </div>
+      {/* Title Section */}
+      <div className="text-center mb-16 space-y-4">
+        <h2 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight drop-shadow-sm">
+          Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-600">protocol.</span>
+        </h2>
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium">
+          Two powerful modes. One compliance platform. Select a workflow to begin.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+
+        {/* CARD 1: VISUAL INSPECTION MODE */}
+        <div className="group relative h-full">
+           {/* Liquid Glass Effect */}
+           <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/40 to-white/10 backdrop-blur-2xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-orange-500/10 group-hover:border-white/80" />
+           
+           {/* Content */}
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-white rounded-2xl flex items-center justify-center text-orange-600 mb-6 shadow-sm border border-orange-100">
+                <div className="scale-125"><Icons.Camera /></div>
+              </div>
+
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">Visual Inspection</h3>
+              <p className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-6">Detection Mode</p>
+              
+              <p className="text-slate-700 text-lg leading-relaxed mb-10 flex-1 font-medium">
+                Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
+              </p>
+
+              <button 
+                onClick={() => onAction('image')}
+                className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm uppercase tracking-widest shadow-lg hover:bg-orange-600 hover:shadow-orange-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+              >
+                Start Inspection <Icons.ArrowUp />
+              </button>
+           </div>
         </div>
-      </div>
 
-      {/* CARD 2: CONSULTATION (Glassmorphism) */}
-      <div className="relative group perspective">
-         {/* Glass Card Background with Reverse Skew */}
-         <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] skew-y-1 shadow-2xl border border-white/40 transition-transform duration-500 group-hover:skew-y-2" />
+        {/* CARD 2: REGULATORY CONSULTANT MODE */}
+        <div className="group relative h-full">
+           {/* Liquid Glass Effect */}
+           <div className="absolute inset-0 bg-gradient-to-br from-white/80 via-white/40 to-white/10 backdrop-blur-2xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-purple-500/10 group-hover:border-white/80" />
+           
+           {/* Content */}
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-white rounded-2xl flex items-center justify-center text-purple-600 mb-6 shadow-sm border border-purple-100">
+                <div className="scale-125"><Icons.Book /></div>
+              </div>
 
-         <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 p-8 md:p-12 items-center z-10">
-             <div className="order-1 md:text-right flex flex-col items-start md:items-end">
-                <div className="inline-block px-3 py-1 bg-purple-100/80 backdrop-blur-sm rounded-full mb-4 border border-purple-200">
-                    <span className="text-xs font-bold text-purple-700 uppercase tracking-widest">Regulatory AI</span>
-                </div>
-                <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-4">
-                   Decode the <br/><span className="text-purple-600">Regulations.</span>
-                </h2>
-                <p className="text-slate-800 text-lg leading-relaxed font-medium">
-                   Stop guessing with the FDA Food Code. Get citations specific to Washtenaw County instantly.
-                </p>
-             </div>
-             {/* Image Side: Tilted Card */}
-             <div className="order-2 flex justify-center md:justify-start">
-                <div className="relative w-64 h-64 md:w-80 md:h-80 bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-white/60 -rotate-2 hover:rotate-0 transition-all duration-500">
-                    <img src="/consult-circle.jpg" alt="Consultation" className="w-full h-full object-cover" />
-                </div>
-             </div>
-         </div>
-      </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-2">Regulatory Consultant</h3>
+              <p className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-6">Chat Mode</p>
+              
+              <p className="text-slate-700 text-lg leading-relaxed mb-10 flex-1 font-medium">
+                Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
+              </p>
 
-       {/* CTA SECTION - Floating */}
-       <div className="text-center py-12 relative z-10">
-             <h2 className="text-4xl md:text-6xl font-bold text-slate-900 mb-8 drop-shadow-sm tracking-tight">
-                Ready to pass inspection?
-             </h2>
-             <button 
+              <button 
                 onClick={() => onAction('chat')}
-                className="group relative inline-flex items-center gap-3 bg-slate-900 text-white px-10 py-5 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-2xl hover:shadow-orange-500/20 overflow-hidden"
-             >
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-purple-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[length:200%_auto] animate-gradient" />
-                <span className="relative z-10 flex items-center gap-2">Start Free Trial <Icons.ArrowUp /></span>
-             </button>
-       </div>
+                className="w-full py-4 rounded-xl bg-slate-900 text-white font-bold text-sm uppercase tracking-widest shadow-lg hover:bg-purple-600 hover:shadow-purple-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+              >
+                Start Chat <Icons.ArrowUp />
+              </button>
+           </div>
+        </div>
 
+      </div>
     </div>
   )
 }
