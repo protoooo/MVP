@@ -32,24 +32,29 @@ export default function ThreeBackground() {
       }
     `
 
-    // GLOSSY RIBBON SHADER (Standard Orientation)
+    // GLOSSY RIBBON SHADER (Spearmint & Matte Blue)
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 vUv;
 
-      // PALETTE: Deep Blue, Teal, Fresh Green, Mint
-      const vec3 c1 = vec3(0.07, 0.25, 0.44); 
-      const vec3 c2 = vec3(0.15, 0.40, 0.50); 
-      const vec3 c3 = vec3(0.40, 0.75, 0.56); 
-      const vec3 c4 = vec3(0.87, 0.96, 0.91); 
+      // NEW PALETTE: Lighter, Spearmint, Matte
+      // 1. Matte Mid Blue (Base)
+      const vec3 c1 = vec3(0.25, 0.45, 0.65); 
+      // 2. Soft Teal (Mid)
+      const vec3 c2 = vec3(0.35, 0.75, 0.70); 
+      // 3. Spearmint (Highlight)
+      const vec3 c3 = vec3(0.50, 0.90, 0.75); 
+      // 4. Ice White (Peak)
+      const vec3 c4 = vec3(0.92, 0.98, 0.98); 
 
       void main() {
         vec2 uv = gl_FragCoord.xy / u_resolution.xy;
         
         // --- WARP LOGIC ---
         vec2 p = uv;
-        float t = u_time * 0.2; 
+        // FASTER SPEED (0.2 -> 0.25)
+        float t = u_time * 0.25; 
 
         for(float i = 1.0; i < 4.0; i++){
             p.x += 0.35 / i * sin(i * 3.0 * p.y + t);
@@ -61,16 +66,20 @@ export default function ThreeBackground() {
         float g = sin(p.x + p.y + 2.0) * 0.5 + 0.5;
         float b = (sin(p.x + p.y + 1.0) + cos(p.x + 2.0)) * 0.25 + 0.5;
 
+        // Blend the palette
         vec3 col = mix(c1, c2, smoothstep(0.0, 0.9, r));
         col = mix(col, c3, smoothstep(0.0, 0.8, g));
         col = mix(col, c4, smoothstep(0.0, 0.9, b));
 
-        // Add Gloss
-        col += 0.05 * sin(uv.x * 10.0 + u_time);
+        // Add Gloss (Subtler now to reduce "weird brightness")
+        col += 0.04 * sin(uv.x * 10.0 + u_time);
 
-        // --- MASKING (Diagonal fade top-left to bottom-right) ---
+        // --- MASKING ---
+        // Softer mask gradient
         float diagonal = (uv.x + uv.y) * 0.6; 
-        float mask = smoothstep(0.2, 0.8, diagonal);
+        
+        // Widen the smoothstep range (0.1 to 0.9) to soften the edge
+        float mask = smoothstep(0.1, 0.9, diagonal);
         
         vec3 finalColor = mix(vec3(1.0), col, mask);
 
