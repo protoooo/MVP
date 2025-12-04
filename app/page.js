@@ -506,7 +506,7 @@ export default function Page() {
         {/* =====================================
             1. BACKGROUND LAYER (STATIC)
             ===================================== */}
-        <div className="fixed inset-0 bg-[#FAFAFA] z-0" />
+        <ThreeBackground />
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
