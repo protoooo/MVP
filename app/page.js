@@ -36,18 +36,20 @@ const DOC_MAPPING = {
   "date_marking_guide.pdf": "Date Marking & Shelf Life Rules"
 }
 
-// Convert mapping to array for the ticker
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
-// STYLES
+// STYLES (UPDATED FIX)
 // ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
+    /* FORCE TRANSPARENCY ON ALL LAYERS */
+    html, body, #__next, main {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
     body {
-      /* CHANGED: Set to transparent so the 3D Background is visible */
-      background-color: transparent; 
-      
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -60,13 +62,11 @@ const GlobalStyles = () => (
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
-    /* SCROLLBARS */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
     
-    /* ANIMATIONS */
     @keyframes scroll {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
@@ -99,15 +99,11 @@ const Icons = {
 }
 
 // ==========================================
-// COMPONENT: KNOWLEDGE TICKER (Glassmorphism)
+// COMPONENT: KNOWLEDGE TICKER
 // ==========================================
 const KnowledgeTicker = () => {
   return (
     <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative">
-      {/* 
-         FIX: Replaced solid 'bg-gradient' with 'mask-image' 
-         This creates a true transparency fade so the blue background shows through 
-      */}
       <div 
         className="flex w-full animate-scroll hover:pause"
         style={{
@@ -115,7 +111,6 @@ const KnowledgeTicker = () => {
           WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
         }}
       >
-        {/* Double the list for infinite loop */}
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
             <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-full border border-black/5 shadow-sm">
@@ -135,8 +130,6 @@ const KnowledgeTicker = () => {
 const NarrativeJourney = ({ onAction }) => {
   return (
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4">
-      
-      {/* Title Section */}
       <div className="text-center mb-8 md:mb-10 space-y-4">
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
           Choose your protocol.
@@ -146,16 +139,11 @@ const NarrativeJourney = ({ onAction }) => {
         </p>
       </div>
 
-      {/* DOCUMENT TICKER */}
       <KnowledgeTicker />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
-
-        {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect - Very Transparent */}
            <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
-           
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               <div className="w-full flex justify-between items-start mb-6">
                  <div>
@@ -166,25 +154,17 @@ const NarrativeJourney = ({ onAction }) => {
                     <Icons.Camera />
                  </div>
               </div>
-              
               <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
               </p>
-
-              <button 
-                onClick={() => onAction('image')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
-              >
+              <button onClick={() => onAction('image')} className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3">
                 Start Inspection <Icons.ArrowUp />
               </button>
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
            <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
-           
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               <div className="w-full flex justify-between items-start mb-6">
                  <div>
@@ -195,20 +175,14 @@ const NarrativeJourney = ({ onAction }) => {
                     <Icons.Book />
                  </div>
               </div>
-              
               <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
                 Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
               </p>
-
-              <button 
-                onClick={() => onAction('chat')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
-              >
+              <button onClick={() => onAction('chat')} className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3">
                 Start Chat <Icons.ArrowUp />
               </button>
            </div>
         </div>
-
       </div>
     </div>
   )
@@ -241,31 +215,18 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         </div>
       )}
 
-      <form 
-        onSubmit={handleSend} 
-        className="relative flex items-end w-full p-2 bg-white/60 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/80 focus-within:ring-2 focus-within:ring-black/10 focus-within:border-black/20" 
-      >
+      <form onSubmit={handleSend} className="relative flex items-end w-full p-2 bg-white/60 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/80 focus-within:ring-2 focus-within:ring-black/10 focus-within:border-black/20">
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
         <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}>
-            <button 
-                type="button"
-                onClick={() => setShowMenu(!showMenu)}
-                className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press transition-colors ${showMenu ? 'bg-black text-white rotate-45' : 'bg-white/50 text-black hover:bg-white'}`}
-            >
+            <button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-full squishy-press transition-colors ${showMenu ? 'bg-black text-white rotate-45' : 'bg-white/50 text-black hover:bg-white'}`}>
                 <Icons.Plus />
             </button>
-
             {showMenu && (
                 <div className="absolute bottom-full left-0 mb-4 w-[160px] bg-white/80 backdrop-blur-xl border border-white/50 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200 z-50 p-1">
                     <div className="space-y-0.5">
                         {['chat', 'image'].map(m => (
-                            <button 
-                                key={m}
-                                type="button"
-                                onClick={() => handleModeClick(m)} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-black text-white' : 'text-black hover:bg-white/50'}`}
-                            >
+                            <button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-xl transition-colors ${activeMode === m ? 'bg-black text-white' : 'text-black hover:bg-white/50'}`}>
                                 {m === 'chat' && <Icons.MessageSquare />}
                                 {m === 'image' && <Icons.Camera />}
                                 <span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span>
@@ -276,26 +237,9 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             )}
         </div>
 
-        <textarea 
-            ref={inputRef} 
-            value={input} 
-            onChange={(e) => setInput(e.target.value)} 
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
-            placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'}
-            className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-black placeholder-slate-500 text-[15px] leading-6 font-medium" 
-            rows={1} 
-            style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
-        />
+        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className="flex-1 max-h=[200px] min-h-[44px] py-3 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-black placeholder-slate-500 text-[15px] leading-6 font-medium" rows={1} style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }} />
 
-        <button 
-          type="submit" 
-          disabled={(!input.trim() && !selectedImage) || isSending} 
-          className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1 transition-all
-            ${(!input.trim() && !selectedImage) 
-              ? 'bg-slate-200/50 text-slate-400 cursor-not-allowed' 
-              : `${accentColor} text-white cursor-pointer shadow-md`
-            }`}
-        >
+        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-full flex items-center justify-center squishy-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-200/50 text-slate-400 cursor-not-allowed' : `${accentColor} text-white cursor-pointer shadow-md`}`}>
           {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
         </button>
       </form>
@@ -341,7 +285,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   const [billingInterval, setBillingInterval] = useState('month')
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/30 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-500">
-      {/* UPDATED: Glassmorphism Pricing Card (Matches Homepage) */}
       <div className="relative w-full max-w-md bg-white/70 backdrop-blur-2xl border border-white/50 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-500 hover:text-black transition-colors"><Icons.X /></button>
         <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
@@ -364,11 +307,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
           <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> <span className="text-black font-bold">Location License</span> (Unlimited Users)</li>
         </ul>
 
-        <button 
-          onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} 
-          disabled={loading !== null} 
-          className="w-full bg-black hover:bg-slate-800 text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <button onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} disabled={loading !== null} className="w-full bg-black hover:bg-slate-800 text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
       </div>
@@ -383,7 +322,6 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [chatHistory, setChatHistory] = useState([])
   const [currentChatId, setCurrentChatId] = useState(null)
@@ -485,18 +423,14 @@ export default function Page() {
   }, [])
 
   const loadChatHistory = async () => { const { data: chats } = await supabase.from('chats').select('id, title, created_at').order('created_at', { ascending: false }); if (chats) setChatHistory(chats) }
-  const loadChat = async (chatId) => { setIsLoading(true); setCurrentChatId(chatId); setSidebarOpen(false); const { data: msgs } = await supabase.from('messages').select('*').eq('chat_id', chatId).order('created_at', { ascending: true }); if (msgs) setMessages(msgs.map((m) => ({ role: m.role, content: m.content, image: m.image }))); setIsLoading(false) }
-  const deleteChat = async (e, chatId) => { e.stopPropagation(); if (!confirm('Delete chat?')) return; setChatHistory((prev) => prev.filter((c) => c.id !== chatId)); if (currentChatId === chatId) handleNewChat(); await supabase.from('chats').delete().eq('id', chatId); loadChatHistory() }
+  const loadChat = async (chatId) => { setIsLoading(true); setCurrentChatId(chatId); const { data: msgs } = await supabase.from('messages').select('*').eq('chat_id', chatId).order('created_at', { ascending: true }); if (msgs) setMessages(msgs.map((m) => ({ role: m.role, content: m.content, image: m.image }))); setIsLoading(false) }
   const handleSignOut = async (e) => { if (e && e.preventDefault) e.preventDefault(); setSession(null); setProfile(null); setMessages([]); setChatHistory([]); setShowUserMenu(false); try { await supabase.auth.signOut() } catch (error) { console.error(error) } finally { router.refresh(); window.location.href = '/' } }
   
   const handleCheckout = async (priceId, planName) => {
-    console.log('🛒 Checkout:', { priceId, planName }); 
     const checkoutTimeout = setTimeout(() => { setCheckoutLoading(null); alert("Connection timeout. Please try again.") }, 15000); 
     setCheckoutLoading(planName)
-    
-    if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing. Please check configuration.'); setCheckoutLoading(null); return }
+    if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing.'); setCheckoutLoading(null); return }
     if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); return }
-    
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       if (!currentSession) { clearTimeout(checkoutTimeout); alert('Session expired.'); return }
@@ -512,7 +446,6 @@ export default function Page() {
     if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return }
     if (!hasActiveSubscription) { setShowPricingModal(true); return }
     let finalInput = input
-    
     const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }])
     let activeChatId = currentChatId
     try {
@@ -531,7 +464,7 @@ export default function Page() {
     if (file.size > 10 * 1024 * 1024) { alert('Image too large'); return }; if (!file.type.startsWith('image/')) { alert('Images only'); return }
     try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image') } catch (error) { alert('Image error'); console.error(error) }
   }
-  const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat') }
+  const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setActiveMode('chat') }
 
   useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
@@ -546,18 +479,8 @@ export default function Page() {
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
       {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50">
-        
-        {/* =====================================
-            1. BACKGROUND LAYER (STATIC)
-            ===================================== */}
         <ThreeBackground />
-
-        {/* =====================================
-            2. CONTENT LAYER (SCROLLABLE)
-            ===================================== */}
         <div className="relative z-10 flex flex-col h-[100dvh]">
-          
-          {/* HEADER (Frosted Glass) */}
           <header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe bg-white/10 backdrop-blur-sm border-b border-white/20`}>
              <div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>
                protocol<span className="text-black">LM</span>
@@ -583,15 +506,9 @@ export default function Page() {
           </header>
 
           <main className="flex-1 flex flex-col items-center justify-start px-4 w-full pb-20 md:pb-0 overflow-y-auto">
-            
-            {/* LOGGED OUT: LANDING PAGE */}
             {!session ? (
                <div className="w-full h-full flex flex-col items-center">
-                  
-                  {/* The Journey Component (With Images) */}
                   <NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} />
-
-                  {/* FOOTER */}
                   <div className="w-full flex justify-center py-10 border-t border-white/20 mt-10">
                     <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-500 font-medium">
                         <div className="flex gap-4">
@@ -604,12 +521,10 @@ export default function Page() {
                   </div>
                </div>
             ) : (
-               // LOGGED IN: CHAT INTERFACE
                <>
                   <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
                     {messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900">
-                        {/* UPDATED: Glass Empty State */}
                         <div className="mb-6 p-4 rounded-full bg-white/60 backdrop-blur-md text-slate-600 shadow-sm border border-white/50">
                           {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
                         </div>
@@ -617,16 +532,13 @@ export default function Page() {
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
                         <p className="text-slate-700 text-sm max-w-sm font-medium">
-                          {activeMode === 'image' 
-                            ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
-                            : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
+                          {activeMode === 'image' ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.' : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
                         </p>
                       </div>
                     ) : (
                       <div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">
                         {messages.map((msg, idx) => (
                           <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            {/* UPDATED: Glass Chat Bubbles */}
                             <div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-black/95 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-lg' : 'bg-white/60 backdrop-blur-md border border-white/50 text-slate-900 px-5 py-3 rounded-2xl shadow-sm'}`}>
                               {msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-white/20" />}
                               {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[16px] leading-7 whitespace-pre-wrap font-medium">{msg.content}</div>}
