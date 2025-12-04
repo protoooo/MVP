@@ -74,7 +74,7 @@ const GlobalStyles = () => (
 )
 
 // ==========================================
-// ICONS & ILLUSTRATIONS
+// ICONS
 // ==========================================
 const Icons = {
   Menu: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>,
@@ -91,56 +91,8 @@ const Icons = {
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
 }
 
-// Minimalist Line Art SVGs for the Landing Page
-const Illustrations = {
-  PersonThinking: () => (
-    <svg viewBox="0 0 100 120" className="w-full h-full text-slate-800" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M50 35a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" />
-      <path d="M50 35v15" />
-      <path d="M30 65c0-10 10-15 20-15s20 5 20 15v35" />
-      <path d="M30 65l-10 20" />
-      <path d="M70 65l10 20" />
-      {/* Lightbulb Idea */}
-      <path d="M50 5v-4" className="text-orange-500" />
-      <path d="M40 8l-3-3" className="text-orange-500" />
-      <path d="M60 8l3-3" className="text-orange-500" />
-    </svg>
-  ),
-  PersonWorking: () => (
-    <svg viewBox="0 0 100 120" className="w-full h-full text-slate-800" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M40 40a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-      <path d="M40 40v15" />
-      <path d="M25 65c0-8 5-10 15-10s15 2 15 10v20" />
-      <path d="M15 65h10" /> 
-      {/* Table & Laptop */}
-      <path d="M55 75h30" />
-      <path d="M70 75v25" />
-      <path d="M65 75l-5-10h15" />
-      {/* Magnifying Glass */}
-      <circle cx="80" cy="40" r="8" className="text-purple-500" />
-      <path d="M74 46l-4 4" className="text-purple-500" />
-    </svg>
-  ),
-  TeamSuccess: () => (
-    <svg viewBox="0 0 100 120" className="w-full h-full text-slate-800" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-      {/* Person 1 */}
-      <path d="M30 45a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
-      <path d="M30 45v10" />
-      <path d="M20 65c0-5 5-10 10-10s10 5 10 10v15" />
-      {/* Person 2 */}
-      <path d="M70 45a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" />
-      <path d="M70 45v10" />
-      <path d="M60 65c0-5 5-10 10-10s10 5 10 10v15" />
-      {/* High Five / Connection */}
-      <path d="M40 55l10-5l10 5" />
-      {/* Star */}
-      <path d="M50 25l2 6h6l-5 4l2 6l-5-4l-5 4l2-6l-5-4h6z" className="text-orange-500 fill-orange-50" />
-    </svg>
-  )
-}
-
 // ==========================================
-// NARRATIVE JOURNEY COMPONENT (REPLACES FLIPCARD)
+// NARRATIVE JOURNEY COMPONENT
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
@@ -149,7 +101,6 @@ const NarrativeJourney = ({ onAction }) => {
       {/* SVG BACKGROUND PATH */}
       <div className="absolute inset-0 top-16 md:top-24 pointer-events-none opacity-20 hidden md:block">
         <svg viewBox="0 0 800 1000" className="w-full h-full" preserveAspectRatio="none">
-          {/* A winding path similar to the screenshot */}
           <path 
             d="M 400 0 
                L 400 100 
@@ -171,12 +122,14 @@ const NarrativeJourney = ({ onAction }) => {
 
       {/* STEP 1: LEFT SIDE (Inspection) */}
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 md:mb-40 items-center">
-         {/* Illustration */}
+         {/* CIRCULAR IMAGE 1 */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end pr-0 md:pr-12">
-            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm z-10">
-               <div className="w-32 h-32 text-slate-800">
-                  <Illustrations.PersonWorking />
-               </div>
+            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden">
+               <img 
+                 src="/inspection-circle.jpg" 
+                 alt="Inspection" 
+                 className="w-full h-full object-cover" 
+               />
             </div>
          </div>
          {/* Text */}
@@ -203,22 +156,27 @@ const NarrativeJourney = ({ onAction }) => {
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* Illustration */}
+         {/* CIRCULAR IMAGE 2 */}
          <div className="order-2 md:order-2 flex justify-center md:justify-start pl-0 md:pl-12">
-            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm z-10">
-               <div className="w-32 h-32 text-slate-800">
-                  <Illustrations.PersonThinking />
-               </div>
+            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden">
+               <img 
+                 src="/consult-circle.jpg" 
+                 alt="Consultation" 
+                 className="w-full h-full object-cover" 
+               />
             </div>
          </div>
       </div>
 
       {/* STEP 3: CENTER (Action) */}
       <div className="relative flex flex-col items-center text-center">
-         <div className="mb-8 z-10 bg-white p-2 rounded-full">
-            <div className="w-32 h-32 md:w-40 md:h-40 text-slate-800">
-               <Illustrations.TeamSuccess />
-            </div>
+         {/* CIRCULAR IMAGE 3 */}
+         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-sm overflow-hidden w-32 h-32 md:w-40 md:h-40">
+            <img 
+               src="/team-circle.jpg" 
+               alt="Team Success" 
+               className="w-full h-full object-cover rounded-full" 
+            />
          </div>
          
          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-8 max-w-lg">
@@ -638,7 +596,7 @@ export default function Page() {
                      </h1>
                   </div>
 
-                  {/* The Journey Component (Replacing Cards) */}
+                  {/* The Journey Component (With Images) */}
                   <NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} />
 
                   {/* FOOTER */}
