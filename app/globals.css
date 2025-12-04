@@ -17,7 +17,8 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
-  background: #ffffff;
+  /* CHANGED: Set to transparent so the 3D background is visible */
+  background: transparent;
 }
 
 body {

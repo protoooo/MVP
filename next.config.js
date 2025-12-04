@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ✅ FIX: This allows Next.js to bundle the 3D libraries correctly
+  transpilePackages: ['three', 'vanta'],
+
   env: {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
   },
