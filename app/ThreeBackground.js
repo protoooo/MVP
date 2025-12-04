@@ -32,30 +32,30 @@ export default function ThreeBackground() {
       }
     `
 
-    // STRIPE GLOSSY SHADER (Updated Palette)
+    // STRIPE GLOSSY SHADER (FLIPPED Y-AXIS)
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 vUv;
 
-      // NEW PALETTE
-      // 1. Deep Blue (Anchor) #124170
-      const vec3 c1 = vec3(0.07, 0.25, 0.44); 
-      // 2. Teal / Slate (Mid-tone) #26667F
-      const vec3 c2 = vec3(0.15, 0.40, 0.50); 
-      // 3. Fresh Green (Accent) #67C090
-      const vec3 c3 = vec3(0.40, 0.75, 0.56); 
-      // 4. Mint / Ice (Highlight) #DDF4E7
-      const vec3 c4 = vec3(0.87, 0.96, 0.91); 
+      // PALETTE (Mint/Green/Blue/Deep)
+      const vec3 c1 = vec3(0.07, 0.25, 0.44); // Deep Blue
+      const vec3 c2 = vec3(0.15, 0.40, 0.50); // Teal
+      const vec3 c3 = vec3(0.40, 0.75, 0.56); // Fresh Green
+      const vec3 c4 = vec3(0.87, 0.96, 0.91); // Mint
 
       void main() {
         vec2 uv = gl_FragCoord.xy / u_resolution.xy;
         
+        // --- FLIP UPSIDE DOWN ---
+        // This puts the white space at the top (for the header)
+        // and the heavy colors at the bottom.
+        uv.y = 1.0 - uv.y; 
+
         // --- WARP LOGIC ---
         vec2 p = uv;
-        float t = u_time * 0.2; // Speed
+        float t = u_time * 0.2; 
 
-        // Layered sine waves for fluid curves
         for(float i = 1.0; i < 4.0; i++){
             p.x += 0.35 / i * sin(i * 3.0 * p.y + t);
             p.y += 0.35 / i * cos(i * 3.0 * p.x + t);
@@ -66,25 +66,23 @@ export default function ThreeBackground() {
         float g = sin(p.x + p.y + 2.0) * 0.5 + 0.5;
         float b = (sin(p.x + p.y + 1.0) + cos(p.x + 2.0)) * 0.25 + 0.5;
 
-        // Blend the palette
         vec3 col = mix(c1, c2, smoothstep(0.0, 0.9, r));
         col = mix(col, c3, smoothstep(0.0, 0.8, g));
         col = mix(col, c4, smoothstep(0.0, 0.9, b));
 
-        // Add Gloss/Shine
+        // Add Gloss
         col += 0.05 * sin(uv.x * 10.0 + u_time);
 
-        // --- MASKING (Half Screen Logic) ---
-        // Creates the diagonal fade to white
+        // --- MASKING ---
+        // Create diagonal gradient
         float diagonal = (uv.x + uv.y) * 0.6; 
         
-        // Focus color in the middle/top-right, fade to white elsewhere
         float mask = smoothstep(0.2, 0.8, diagonal);
         
-        // Blend to white
         vec3 finalColor = mix(vec3(1.0), col, mask);
 
-        // Footer fade
+        // Fade out at the "new" bottom (which is visually the top due to the flip)
+        // This ensures the header is perfectly white and readable
         finalColor = mix(finalColor, vec3(1.0), smoothstep(0.15, 0.0, uv.y));
 
         gl_FragColor = vec4(finalColor, 1.0);
@@ -102,7 +100,7 @@ export default function ThreeBackground() {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    // 4. ANIMATION LOOP
+    // 4. ANIMATION
     const animate = (time) => {
       material.uniforms.u_time.value = time * 0.001
       renderer.render(scene, camera)
