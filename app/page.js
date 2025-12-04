@@ -82,97 +82,17 @@ const Icons = {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY COMPONENT (UPDATED FOR SCROLL)
+// NARRATIVE JOURNEY COMPONENT (CLEAN LAYOUT)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
-  const containerRef = useRef(null)
-  const pathRef = useRef(null)
-  const [isMobile, setIsMobile] = useState(false)
-
-  // Handle Scroll Drawing
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current || !pathRef.current) return;
-      
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      
-      // Calculate how much of the container has been scrolled through
-      // Start drawing when container enters viewport, finish when it leaves
-      const start = windowHeight * 0.8; // Start slightly before it hits bottom
-      const end = -containerRect.height * 0.2; // End slightly after
-      
-      const totalDist = containerRect.height + windowHeight;
-      const currentPos = windowHeight - containerRect.top;
-      
-      let percentage = currentPos / totalDist;
-      
-      // Clamp percentage between 0 and 1
-      percentage = Math.min(Math.max(percentage, 0), 1);
-      
-      // Scale it to make the drawing feel more responsive (optional tweak)
-      percentage = percentage * 1.5; 
-      if (percentage > 1) percentage = 1;
-
-      const pathLength = pathRef.current.getTotalLength();
-      
-      // Draw the line
-      pathRef.current.style.strokeDasharray = pathLength;
-      pathRef.current.style.strokeDashoffset = pathLength - (pathLength * percentage);
-    };
-
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', checkMobile);
-    checkMobile();
-    handleScroll(); // Initial check
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
   return (
-    <div ref={containerRef} className="relative w-full max-w-5xl mx-auto py-12 md:py-24 px-4">
+    <div className="w-full max-w-5xl mx-auto py-8 md:py-12 px-6">
       
-      {/* SVG BACKGROUND PATH - SCROLL DRAWING */}
-      <div className="absolute inset-0 top-0 pointer-events-none hidden md:block" style={{ height: '110%' }}>
-        <svg viewBox="0 0 1000 1400" className="w-full h-full" preserveAspectRatio="none">
-          {/* 
-            UPDATED PATH LOGIC (Hugging Borders):
-            1. Start Top Center (500,0)
-            2. Swing wide LEFT to avoid text
-            3. Curl under Left Image (approx x=200, y=350)
-            4. Swing across to Right, avoiding text
-            5. Curl under Right Image (approx x=800, y=850)
-            6. End bottom center
-          */}
-          <path 
-            ref={pathRef}
-            d="M 500 0 
-               Q 500 100 350 100
-               C 100 100, 50 350, 200 480
-               C 320 580, 680 580, 800 780
-               C 900 950, 600 1100, 500 1250"
-            fill="none" 
-            stroke="#333333" 
-            strokeWidth="3"
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.1s linear' }}
-          />
-        </svg>
-      </div>
-
-      {/* MOBILE LINE (Simplified) */}
-      <div className="absolute left-8 top-12 bottom-12 w-px bg-slate-200 md:hidden pointer-events-none"></div>
-
       {/* STEP 1: LEFT SIDE (Inspection) */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-32 md:mb-52 items-center">
-         {/* CIRCULAR IMAGE 1 - Even Bigger (w-72 mobile, w-96 desktop) */}
-         <div className="order-2 md:order-1 flex justify-center md:justify-end pr-0 md:pr-16">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-24 items-center">
+         {/* CIRCULAR IMAGE 1 - Standard Size */}
+         <div className="order-2 md:order-1 flex justify-center md:justify-end">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
                <img 
                  src="/inspection-circle.jpg" 
                  alt="Inspection" 
@@ -180,33 +100,33 @@ const NarrativeJourney = ({ onAction }) => {
                />
             </div>
          </div>
-         {/* Text - Pushed further right to avoid line */}
-         <div className="order-1 md:order-2 pl-12 md:pl-12 text-left z-20">
+         {/* Text */}
+         <div className="order-1 md:order-2 text-left">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Chances are, you miss things during prep.</h3>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-               It's a <span className="text-orange-600">visual blindspot</span>.
+               It's a <span className="text-orange-600">visual</span> blindspot.
             </h2>
-            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-sm">
-               From improper storage to dirty surfaces, our vision model detects Priority (P) violations instantly from a photo.
+            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-md">
+               Instantly identify Priority (P) violations from a single photo. Our vision model spots improper storage, labeling issues, and sanitary risks that the human eye often overlooks during the rush.
             </p>
          </div>
       </div>
 
       {/* STEP 2: RIGHT SIDE (Consultation) */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 gap-12 mb-32 md:mb-52 items-center">
-         {/* Text - Pushed further left */}
-         <div className="order-1 md:order-1 pl-12 md:pl-0 md:pr-16 text-left md:text-right flex flex-col items-start md:items-end z-20">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-24 items-center">
+         {/* Text */}
+         <div className="order-1 md:order-1 text-left md:text-right flex flex-col items-start md:items-end">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Let me explain—</h3>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-               We <span className="text-purple-600">decode the regulations</span>.
+               We <span className="text-purple-600">decode</span> the regulations.
             </h2>
-            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-sm">
+            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-md">
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* CIRCULAR IMAGE 2 - Even Bigger (w-72 mobile, w-96 desktop) */}
-         <div className="order-2 md:order-2 flex justify-center md:justify-start pl-0 md:pl-16">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
+         {/* CIRCULAR IMAGE 2 - Standard Size */}
+         <div className="order-2 md:order-2 flex justify-center md:justify-start">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
                <img 
                  src="/consult-circle.jpg" 
                  alt="Consultation" 
@@ -216,44 +136,31 @@ const NarrativeJourney = ({ onAction }) => {
          </div>
       </div>
 
-      {/* STEP 3: CENTER (Action) */}
-      <div className="relative flex flex-col items-center text-center">
-         {/* CIRCULAR IMAGE 3 - Bigger (w-48 mobile, w-64 desktop) */}
-         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-lg overflow-hidden w-48 h-48 md:w-64 md:h-64 hover:scale-105 transition-transform duration-500">
-            <img 
-               src="/team-circle.jpg" 
-               alt="Team Success" 
-               className="w-full h-full object-cover rounded-full" 
-            />
+      {/* STEP 3: LEFT SIDE (Team - Matching Section 1) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
+         {/* CIRCULAR IMAGE 3 - Standard Size */}
+         <div className="order-2 md:order-1 flex justify-center md:justify-end">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
+               <img 
+                 src="/team-circle.jpg" 
+                 alt="Team Success" 
+                 className="w-full h-full object-cover" 
+               />
+            </div>
          </div>
          
-         <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-10 max-w-xl">
-            Ready to pass your inspection? <br/>
-            It becomes a <span className="text-slate-400">team venture</span>.
-         </h2>
-
-         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md z-20">
-            <button 
-               onClick={() => onAction('image')}
-               className="flex-1 bg-white border-2 border-slate-100 hover:border-orange-200 hover:bg-orange-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group shadow-sm"
-            >
-               <div className="bg-orange-100 text-orange-600 p-2 rounded-lg group-hover:scale-110 transition-transform"><Icons.Camera /></div>
-               <div className="text-left">
-                  <div className="font-bold text-sm">Visual Audit</div>
-                  <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Analyze Photo</div>
-               </div>
-            </button>
-
-            <button 
-               onClick={() => onAction('chat')}
-               className="flex-1 bg-white border-2 border-slate-100 hover:border-purple-200 hover:bg-purple-50 text-slate-900 p-4 rounded-xl flex items-center justify-center gap-3 transition-all group shadow-sm"
-            >
-               <div className="bg-purple-100 text-purple-600 p-2 rounded-lg group-hover:scale-110 transition-transform"><Icons.Book /></div>
-               <div className="text-left">
-                  <div className="font-bold text-sm">Consultant</div>
-                  <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Ask Questions</div>
-               </div>
-            </button>
+         {/* Text */}
+         <div className="order-1 md:order-2 text-left">
+             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">
+                Ready to pass your inspection? It becomes a <span className="text-orange-500">team</span> venture.
+             </h2>
+             
+             <button 
+                onClick={() => onAction('chat')}
+                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-xl"
+             >
+                Start Free Trial <Icons.ArrowUp />
+             </button>
          </div>
       </div>
 
@@ -636,14 +543,6 @@ export default function Page() {
             {!session ? (
                <div className="w-full h-full flex flex-col items-center">
                   
-                  {/* Top Intro Section */}
-                  <div className="text-center px-4 w-full max-w-[600px] mb-8 animate-in fade-in zoom-in duration-1000 pt-10 md:pt-16">
-                     <div className="mx-auto w-12 h-12 bg-gradient-to-br from-orange-400 to-purple-500 rounded-xl mb-6 shadow-lg rotate-3" />
-                     <h1 className={`text-[11px] md:text-sm font-bold tracking-[0.2em] text-slate-400 uppercase whitespace-nowrap mb-2 ${outfit.className}`}>
-                        About ProtocolLM
-                     </h1>
-                  </div>
-
                   {/* The Journey Component (With Images) */}
                   <NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} />
 
