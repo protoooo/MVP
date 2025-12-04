@@ -41,10 +41,7 @@ const GlobalStyles = () => (
     ::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #D4D4D8; }
     
-    /* ANIMATIONS */
-    @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
-    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    
+    /* LOADING ANIMATION */
     .loader {
       height: 20px; aspect-ratio: 2.5;
       --_g: no-repeat radial-gradient(farthest-side, #18181B 90%, #0000);
@@ -60,6 +57,9 @@ const GlobalStyles = () => (
       83.33% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100% }
       100% { background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50% }
     }
+    
+    @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
+    .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   `}</style>
 )
 
@@ -82,82 +82,82 @@ const Icons = {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY COMPONENT (CLEAN LAYOUT)
+// NARRATIVE JOURNEY COMPONENT (NO CARDS, BIG IMAGES)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto py-8 md:py-12 px-6">
+    <div className="w-full max-w-6xl mx-auto py-12 md:py-24 px-6">
       
-      {/* STEP 1: LEFT SIDE (Inspection) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-24 items-center">
-         {/* CIRCULAR IMAGE 1 - Added Padding & Object-Contain */}
+      {/* SECTION 1: LEFT SIDE (Inspection) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 mb-32 items-center">
+         {/* CIRCULAR IMAGE 1 - No border, Large Size, No Padding */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-10">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
                <img 
                  src="/inspection-circle.jpg" 
                  alt="Inspection" 
-                 className="w-full h-full object-contain" 
+                 className="w-full h-full object-cover" 
                />
             </div>
          </div>
          {/* Text */}
          <div className="order-1 md:order-2 text-left">
-            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Chances are, you miss things during prep.</h3>
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-3">Chances are, you miss things during prep.</h3>
+            <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-6">
                It's a <span className="text-orange-600">visual</span> blindspot.
             </h2>
-            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-md">
+            <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-md">
                Instantly identify Priority (P) violations from a single photo. Our vision model spots improper storage, labeling issues, and sanitary risks that the human eye often overlooks during the rush.
             </p>
          </div>
       </div>
 
-      {/* STEP 2: RIGHT SIDE (Consultation) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-24 items-center">
+      {/* SECTION 2: RIGHT SIDE (Consultation) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 mb-32 items-center">
          {/* Text */}
          <div className="order-1 md:order-1 text-left md:text-right flex flex-col items-start md:items-end">
-            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Let me explain—</h3>
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-3">Let me explain—</h3>
+            <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-6">
                We <span className="text-purple-600">decode</span> the regulations.
             </h2>
-            <p className="mt-6 text-slate-500 text-base md:text-lg leading-relaxed max-w-md">
+            <p className="text-slate-500 text-lg md:text-xl leading-relaxed max-w-md text-left md:text-right">
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* CIRCULAR IMAGE 2 - Added Padding & Object-Contain for Consistency */}
+         {/* CIRCULAR IMAGE 2 - No border, Large Size, No Padding */}
          <div className="order-2 md:order-2 flex justify-center md:justify-start">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-6">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
                <img 
                  src="/consult-circle.jpg" 
                  alt="Consultation" 
-                 className="w-full h-full object-contain" 
+                 className="w-full h-full object-cover" 
                />
             </div>
          </div>
       </div>
 
-      {/* STEP 3: LEFT SIDE (Team - Matching Section 1) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
-         {/* CIRCULAR IMAGE 3 - Added Padding & Object-Contain */}
+      {/* SECTION 3: LEFT SIDE (Team) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 items-center">
+         {/* CIRCULAR IMAGE 3 - No border, Large Size, No Padding */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-10">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-white rounded-full overflow-hidden hover:scale-105 transition-transform duration-500 shadow-sm">
                <img 
                  src="/team-circle.jpg" 
                  alt="Team Success" 
-                 className="w-full h-full object-contain" 
+                 className="w-full h-full object-cover" 
                />
             </div>
          </div>
          
          {/* Text */}
          <div className="order-1 md:order-2 text-left">
-             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">
+             <h2 className="text-4xl md:text-6xl font-bold text-slate-900 leading-[1.1] mb-8">
                 Ready to pass your inspection? It becomes a <span className="text-orange-500">team</span> venture.
              </h2>
              
              <button 
                 onClick={() => onAction('chat')}
-                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-xl"
+                className="inline-flex items-center gap-3 bg-slate-900 hover:bg-slate-800 text-white px-8 py-5 rounded-full font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 shadow-xl"
              >
                 Start Free Trial <Icons.ArrowUp />
              </button>
