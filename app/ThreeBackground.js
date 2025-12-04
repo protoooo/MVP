@@ -9,13 +9,13 @@ export default function ThreeBackground() {
 
   useEffect(() => {
     if (!vantaEffect) {
-      // Dynamically import Vanta to avoid Server-Side Rendering (SSR) issues
+      // Dynamic import is required for Vanta in Next.js to avoid SSR errors
       import('vanta/dist/vanta.rings.min').then((vanta) => {
         const effect = vanta.default({
           el: vantaRef.current,
-          THREE: THREE, // Pass the installed THREE instance
+          THREE: THREE, // Pass your local THREE instance
           
-          // --- VANTA CONFIGURATION ---
+          // --- CONFIGURATION ---
           mouseControls: true,
           touchControls: true,
           gyroControls: false,
@@ -25,18 +25,17 @@ export default function ThreeBackground() {
           scaleMobile: 1.00,
           
           // --- THEME COLORS ---
-          // Matches your GlobalStyles body background (#FAFAFA)
-          backgroundColor: 0xFAFAFA, 
-          // Ring Color: Steel Blue to match your brand (#4F759B)
-          // You can change this to 0x000000 for black rings if you prefer
-          color: 0x4F759B, 
+          // Background matches your app's light theme (#FAFAFA)
+          backgroundColor: 0xFAFAFA,
+          // Ring color matches your Steel Blue brand (#4F759B)
+          color: 0x4F759B,
           backgroundAlpha: 1
         })
         setVantaEffect(effect)
-      })
+      }).catch(err => console.error("Failed to load Vanta Rings:", err))
     }
 
-    // Cleanup to prevent memory leaks
+    // Cleanup function when component unmounts
     return () => {
       if (vantaEffect) vantaEffect.destroy()
     }
@@ -51,8 +50,8 @@ export default function ThreeBackground() {
         left: 0, 
         width: '100vw', 
         height: '100dvh', 
-        zIndex: -1, // Ensures it sits behind your glassmorphism content
-        pointerEvents: 'none' // Allows clicks to pass through to the UI
+        zIndex: -1, // Ensures it sits behind your content
+        pointerEvents: 'none' // Allows you to click buttons on top of it
       }} 
     />
   )
