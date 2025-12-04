@@ -10,29 +10,18 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
-    // Apple style clean background (very slight off-white)
-    scene.background = new THREE.Color(0xfbfbfb) 
+    scene.background = new THREE.Color(0xffffff) // Pure White
 
-    // Orthographic camera is best for 2D gradient backgrounds
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
-    
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     containerRef.current.appendChild(renderer.domElement)
 
-    // 2. THE GEOMETRY
-    // A simple flat plane that covers the screen
-    const geometry = new THREE.PlaneGeometry(2, 2)
-
-    // 3. THE SHADER
+    // 2. SHADER CONFIG
     const uniforms = {
       u_time: { value: 0.0 },
       u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-      // Brand Colors (Apple Health Style)
-      u_colorA: { value: new THREE.Color(0x10b981) }, // Emerald (Safety/Compliance)
-      u_colorB: { value: new THREE.Color(0x3b82f6) }, // Blue (Hygiene/Clean)
-      u_colorC: { value: new THREE.Color(0xf43f5e) }, // Rose/Red (Alert/Heat)
     }
 
     const vertexShader = `
@@ -43,65 +32,65 @@ export default function ThreeBackground() {
       }
     `
 
-    // THIS IS THE APPLE HEALTH MAGIC
-    // Creating soft, overlapping "Metaballs" of color
+    // STRIPE GLOSSY SHADER (With White Masking)
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
-      uniform vec3 u_colorA;
-      uniform vec3 u_colorB;
-      uniform vec3 u_colorC;
       varying vec2 vUv;
 
+      // STRIPE PALETTE (Deep Blue, Pink, Orange, Cyan)
+      const vec3 c1 = vec3(0.10, 0.10, 0.45); // Midnight Blue
+      const vec3 c2 = vec3(0.90, 0.15, 0.40); // Hot Pink
+      const vec3 c3 = vec3(0.98, 0.60, 0.05); // Bright Orange
+      const vec3 c4 = vec3(0.00, 0.85, 0.95); // Cyan
+
       void main() {
-        // Normalize coordinates to keep circles round regardless of screen shape
-        vec2 uv = vUv;
-        float aspect = u_resolution.x / u_resolution.y;
-        uv.x *= aspect;
+        vec2 uv = gl_FragCoord.xy / u_resolution.xy;
         
-        // Adjust center to match aspect ratio
-        vec2 center = vec2(0.5 * aspect, 0.5);
+        // --- WARP LOGIC (The "Liquid" movement) ---
+        vec2 p = uv;
+        float t = u_time * 0.2; // Speed
 
-        // Slow down time for a "breathing" effect
-        float t = u_time * 0.3;
+        // Layered sine waves for fluid curves
+        for(float i = 1.0; i < 4.0; i++){
+            p.x += 0.35 / i * sin(i * 3.0 * p.y + t);
+            p.y += 0.35 / i * cos(i * 3.0 * p.x + t);
+        }
 
-        // --- ORB 1: Emerald (Left/Center) ---
-        // Moves in a gentle figure-8
-        vec2 pos1 = center + vec2(sin(t)*0.3, cos(t * 0.5)*0.2);
-        float d1 = length(uv - pos1);
-        // smoothstep creates the soft "blurred" edge
-        float a1 = smoothstep(0.8, 0.0, d1); 
+        // --- COLOR MIXING ---
+        float r = cos(p.x + p.y + 1.3) * 0.5 + 0.5;
+        float g = sin(p.x + p.y + 2.0) * 0.5 + 0.5;
+        float b = (sin(p.x + p.y + 1.0) + cos(p.x + 2.0)) * 0.25 + 0.5;
 
-        // --- ORB 2: Blue (Right) ---
-        // Moves in a counter-circle
-        vec2 pos2 = center + vec2(cos(t * 0.7)*0.4, sin(t * 0.8)*0.3);
-        float d2 = length(uv - pos2);
-        float a2 = smoothstep(0.9, 0.0, d2);
+        vec3 col = mix(c1, c2, smoothstep(0.0, 0.9, r));
+        col = mix(col, c3, smoothstep(0.0, 0.8, g));
+        col = mix(col, c4, smoothstep(0.0, 0.9, b));
 
-        // --- ORB 3: Rose (Bottom/Floating) ---
-        // Bobs up and down gently
-        vec2 pos3 = center + vec2(sin(t * 0.2)*0.5, -0.2 + sin(t * 0.5)*0.2);
-        float d3 = length(uv - pos3);
-        float a3 = smoothstep(0.8, 0.0, d3);
+        // Add Gloss/Shine
+        col += 0.08 * sin(uv.x * 10.0 + u_time);
 
-        // BLENDING
-        // Start with white
-        vec3 color = vec3(0.98, 0.98, 0.99);
+        // --- MASKING (The "Half Screen" Logic) ---
+        // We create a diagonal gradient mask. 
+        // 1.0 = Colorful, 0.0 = White.
+        
+        // Calculate diagonal gradient (Top-Right to Bottom-Left)
+        float diagonal = (uv.x + uv.y) * 0.6; 
+        
+        // Focus color in the middle/top-right, fade to white elsewhere
+        float mask = smoothstep(0.2, 0.8, diagonal);
+        
+        // Blend the color with white based on the mask
+        vec3 finalColor = mix(vec3(1.0), col, mask);
 
-        // Mix in colors softly
-        // We use mix() to blend them like watercolors
-        color = mix(color, u_colorA, a1 * 0.4); // 0.4 intensity
-        color = mix(color, u_colorB, a2 * 0.4);
-        color = mix(color, u_colorC, a3 * 0.3);
+        // Extra fade at the very bottom so it blends into the footer
+        finalColor = mix(finalColor, vec3(1.0), smoothstep(0.2, 0.0, uv.y));
 
-        // Add a tiny bit of grain/noise for texture (very subtle)
-        float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
-        color += noise * 0.015;
-
-        gl_FragColor = vec4(color, 1.0);
+        gl_FragColor = vec4(finalColor, 1.0);
       }
     `
 
+    // 3. MESH
+    const geometry = new THREE.PlaneGeometry(2, 2)
     const material = new THREE.ShaderMaterial({
       uniforms,
       vertexShader,
@@ -138,8 +127,8 @@ export default function ThreeBackground() {
     <div 
       ref={containerRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      // Keep opacity high because the shader handles the softness internally
-      style={{ opacity: 1.0 }} 
+      // 0.8 Opacity so it's vibrant but not overwhelming
+      style={{ opacity: 0.8 }} 
     />
   )
 }
