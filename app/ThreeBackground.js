@@ -1,4 +1,4 @@
-'use client'; // This directive is required for Next.js App Router
+'use client';
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -36,9 +36,10 @@ export default function ThreeBackground() {
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.SoftShadowMap;
         
-        // Append renderer to the React Ref div
+        // --- FIX IS HERE: Use PCFSoftShadowMap instead of SoftShadowMap ---
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
         const currentMount = mountRef.current;
         currentMount.appendChild(renderer.domElement);
 
@@ -236,7 +237,6 @@ export default function ThreeBackground() {
         };
     }, []);
 
-    // The container div
     return (
         <div 
             ref={mountRef} 
