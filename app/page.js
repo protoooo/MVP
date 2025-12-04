@@ -86,15 +86,14 @@ const Icons = {
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4">
+    // UPDATED: Increased top padding (pt-20 md:pt-32) to move content down
+    <div className="w-full max-w-5xl mx-auto pt-20 md:pt-32 pb-24 px-4">
       
       {/* Title Section */}
-      <div className="text-center mb-10 md:mb-14 space-y-4">
-        {/* Updated Font & Styling: ALL BLACK */}
+      <div className="text-center mb-12 md:mb-16 space-y-4">
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
-          Choose your protocol.
+          Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600">protocol.</span>
         </h2>
-        {/* Updated Subheader: Black */}
         <p className="text-lg md:text-xl text-black font-semibold leading-relaxed px-4">
           Two powerful modes. One compliance platform.
         </p>
@@ -104,8 +103,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect - HIGH TRANSPARENCY (bg-white/5) */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+           {/* UPDATED: Liquid Glass Effect - HIGHER TRANSPARENCY (bg-white/10) */}
+           <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
@@ -135,8 +134,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect - HIGH TRANSPARENCY (bg-white/5) */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+           {/* UPDATED: Liquid Glass Effect - HIGHER TRANSPARENCY (bg-white/10) */}
+           <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
