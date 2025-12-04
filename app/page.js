@@ -86,10 +86,10 @@ const Icons = {
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto py-16 md:py-32 px-4">
+    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4">
       
       {/* Title Section */}
-      <div className="text-center mb-12 md:mb-16 space-y-4">
+      <div className="text-center mb-10 md:mb-14 space-y-4">
         {/* Updated Font & Styling: ALL BLACK */}
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
           Choose your protocol.
@@ -104,8 +104,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+           {/* Liquid Glass Effect - HIGH TRANSPARENCY (bg-white/5) */}
+           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
@@ -135,8 +135,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+           {/* Liquid Glass Effect - HIGH TRANSPARENCY (bg-white/5) */}
+           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
            {/* Content */}
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
@@ -303,8 +303,8 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
         
         <div className="flex justify-center mb-8">
           <div className="bg-slate-200/50 p-1 rounded-full flex relative border border-slate-300/50">
-            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-black'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-black'}`}>Annual <span className="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
+            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
           </div>
         </div>
         
@@ -564,11 +564,14 @@ export default function Page() {
                   <div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>
                     {messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900">
-                        {/* UPDATED: NO ICONS, DARKER TEXT */}
-                        <h1 className={`text-3xl font-bold mb-2 ${outfit.className}`}>
+                        {/* UPDATED: Glass Empty State */}
+                        <div className="mb-6 p-4 rounded-full bg-white/60 backdrop-blur-md text-slate-600 shadow-sm border border-white/50">
+                          {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
+                        </div>
+                        <h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>
                           {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
                         </h1>
-                        <p className="text-slate-600 text-sm max-w-sm font-medium">
+                        <p className="text-slate-700 text-sm max-w-sm font-medium">
                           {activeMode === 'image' 
                             ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
                             : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
