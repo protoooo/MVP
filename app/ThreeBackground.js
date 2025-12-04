@@ -10,10 +10,10 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff) 
+    scene.background = new THREE.Color(0xffffff) // White background
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-    camera.position.z = 2.2 // Slightly closer so it feels more immersive
+    camera.position.z = 2.0 // Closer camera
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -21,14 +21,16 @@ export default function ThreeBackground() {
     containerRef.current.appendChild(renderer.domElement)
 
     // 2. GEOMETRY
-    const geometry = new THREE.IcosahedronGeometry(1, 40) // Increased detail for smoother gradients
+    // Higher detail for a smoother cloud
+    const geometry = new THREE.IcosahedronGeometry(1, 60)
 
     // 3. SHADER
     const uniforms = {
       u_time: { value: 0.0 },
-      u_bloom: { value: 0.0 }, // Controls the intro animation
-      u_colorA: { value: new THREE.Color(0x10b981) }, // Emerald
-      u_colorB: { value: new THREE.Color(0x3b82f6) }, // Blue
+      u_bloom: { value: 0.0 },
+      // Colors darker to show on white background
+      u_colorA: { value: new THREE.Color(0x059669) }, // Darker Emerald
+      u_colorB: { value: new THREE.Color(0x2563eb) }, // Darker Blue
     }
 
     const vertexShader = `
@@ -38,7 +40,7 @@ export default function ThreeBackground() {
       uniform vec3 u_colorA;
       uniform vec3 u_colorB;
 
-      // Simplex Noise (Standard GLSL)
+      // Noise Function
       vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
       vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -91,24 +93,21 @@ export default function ThreeBackground() {
       }
 
       void main() {
-        // 1. SLOW NOISE
-        // Reduced frequency (1.5) for gentler waves
-        // Multiplied by u_bloom to grow the spikes from 0 to full size
-        float noise = snoise(position * 1.5 + u_time * 0.1);
+        // SLOW MOTION NOISE
+        float noise = snoise(position * 1.8 + u_time * 0.15);
         
-        // 2. DISPLACEMENT
-        // Reduced amplitude (0.3) so it's less spiky
-        vec3 newPos = position + normal * (noise * 0.3 * u_bloom); 
+        // Gentle displacement
+        vec3 newPos = position + normal * (noise * 0.4 * u_bloom);
 
-        // 3. COLORING
-        // Mix based on noise
+        // Mix colors
         vColor = mix(u_colorA, u_colorB, noise * 0.5 + 0.5);
 
         vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
         
-        // 4. POINT SIZE
-        // Scaled by u_bloom so dots start invisible and grow in
-        gl_PointSize = (2.5 * u_bloom) * (10.0 / -mvPosition.z);
+        // SIZE CALCULATION: 
+        // 4.0 = Base size (bigger so they are visible on Retina)
+        // u_bloom = Grows from 0 to 1
+        gl_PointSize = (4.0 * u_bloom) * (10.0 / -mvPosition.z);
         gl_Position = projectionMatrix * mvPosition;
       }
     `
@@ -116,48 +115,46 @@ export default function ThreeBackground() {
     const fragmentShader = `
       varying vec3 vColor;
       void main() {
-        // Soft Circular Particles
+        // Circle Shape
         float r = distance(gl_PointCoord, vec2(0.5));
         if (r > 0.5) discard;
         
-        // Soften the edges of the dots
+        // Soft edge
         float alpha = 1.0 - smoothstep(0.3, 0.5, r);
 
-        gl_FragColor = vec4(vColor, alpha * 0.8); // 0.8 max opacity per dot
+        gl_FragColor = vec4(vColor, alpha * 0.9);
       }
     `
 
+    // 4. MATERIAL
+    // FIXED: Removed AdditiveBlending so it shows up on white!
     const material = new THREE.ShaderMaterial({
       uniforms,
       vertexShader,
       fragmentShader,
       transparent: true,
-      depthWrite: false, // Prevents Z-fighting for transparent particles
-      blending: THREE.AdditiveBlending // Makes it glowy/ethereal
+      depthWrite: false,
     })
 
     const points = new THREE.Points(geometry, material)
     scene.add(points)
 
-    // 4. ANIMATION STATE
-    let bloomValue = 0 // Starts at 0
+    // 5. ANIMATION STATE
+    let bloomValue = 0 
     let rotationSpeed = 0
 
     const animate = (time) => {
-      // 1. BLOOM LOGIC
-      // Slowly increase bloomValue from 0 to 1 over time
-      bloomValue = THREE.MathUtils.lerp(bloomValue, 1, 0.02)
+      // Smooth Bloom Intro (0 -> 1)
+      bloomValue = THREE.MathUtils.lerp(bloomValue, 1, 0.015)
       material.uniforms.u_bloom.value = bloomValue
 
-      // 2. SLOW FLOAT
-      // Time moves very slowly (0.0003)
+      // Slow Float Time
       material.uniforms.u_time.value = time * 0.0003
       
-      // 3. GENTLE ROTATION
-      // Rotate extremely slowly
-      rotationSpeed += 0.0001
-      points.rotation.y = rotationSpeed * 0.2
-      points.rotation.z = Math.sin(time * 0.0001) * 0.1 // Gentle sway
+      // Gentle Rotation
+      rotationSpeed += 0.0002
+      points.rotation.y = rotationSpeed
+      points.rotation.z = Math.sin(time * 0.0002) * 0.1
 
       renderer.render(scene, camera)
       requestAnimationFrame(animate)
@@ -183,8 +180,8 @@ export default function ThreeBackground() {
     <div 
       ref={containerRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      // Reduced opacity significantly (0.4) so it's a subtle background texture
-      style={{ opacity: 0.4 }} 
+      // Visible opacity
+      style={{ opacity: 0.8 }} 
     />
   )
 }
