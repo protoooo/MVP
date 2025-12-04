@@ -90,13 +90,13 @@ const NarrativeJourney = ({ onAction }) => {
       
       {/* STEP 1: LEFT SIDE (Inspection) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mb-24 items-center">
-         {/* CIRCULAR IMAGE 1 - Standard Size */}
+         {/* CIRCULAR IMAGE 1 - Added Padding & Object-Contain */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-10">
                <img 
                  src="/inspection-circle.jpg" 
                  alt="Inspection" 
-                 className="w-full h-full object-cover" 
+                 className="w-full h-full object-contain" 
                />
             </div>
          </div>
@@ -124,13 +124,13 @@ const NarrativeJourney = ({ onAction }) => {
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* CIRCULAR IMAGE 2 - Standard Size */}
+         {/* CIRCULAR IMAGE 2 - Added Padding & Object-Contain for Consistency */}
          <div className="order-2 md:order-2 flex justify-center md:justify-start">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-6">
                <img 
                  src="/consult-circle.jpg" 
                  alt="Consultation" 
-                 className="w-full h-full object-cover" 
+                 className="w-full h-full object-contain" 
                />
             </div>
          </div>
@@ -138,13 +138,13 @@ const NarrativeJourney = ({ onAction }) => {
 
       {/* STEP 3: LEFT SIDE (Team - Matching Section 1) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
-         {/* CIRCULAR IMAGE 3 - Standard Size */}
+         {/* CIRCULAR IMAGE 3 - Added Padding & Object-Contain */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end">
-            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500">
+            <div className="w-64 h-64 md:w-96 md:h-96 bg-white border border-slate-100 rounded-full shadow-lg overflow-hidden hover:scale-105 transition-transform duration-500 flex items-center justify-center p-10">
                <img 
                  src="/team-circle.jpg" 
                  alt="Team Success" 
-                 className="w-full h-full object-cover" 
+                 className="w-full h-full object-contain" 
                />
             </div>
          </div>
