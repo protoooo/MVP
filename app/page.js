@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
+import ThreeBackground from './ThreeBackground'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
