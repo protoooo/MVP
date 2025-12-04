@@ -10,7 +10,7 @@ export default function ThreeBackground() {
 
     // 1. SETUP
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0xffffff) // Pure White
+    scene.background = new THREE.Color(0xffffff) 
 
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
@@ -32,26 +32,21 @@ export default function ThreeBackground() {
       }
     `
 
-    // STRIPE GLOSSY SHADER (FLIPPED Y-AXIS)
+    // GLOSSY RIBBON SHADER (Standard Orientation)
     const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
       varying vec2 vUv;
 
-      // PALETTE (Mint/Green/Blue/Deep)
-      const vec3 c1 = vec3(0.07, 0.25, 0.44); // Deep Blue
-      const vec3 c2 = vec3(0.15, 0.40, 0.50); // Teal
-      const vec3 c3 = vec3(0.40, 0.75, 0.56); // Fresh Green
-      const vec3 c4 = vec3(0.87, 0.96, 0.91); // Mint
+      // PALETTE: Deep Blue, Teal, Fresh Green, Mint
+      const vec3 c1 = vec3(0.07, 0.25, 0.44); 
+      const vec3 c2 = vec3(0.15, 0.40, 0.50); 
+      const vec3 c3 = vec3(0.40, 0.75, 0.56); 
+      const vec3 c4 = vec3(0.87, 0.96, 0.91); 
 
       void main() {
         vec2 uv = gl_FragCoord.xy / u_resolution.xy;
         
-        // --- FLIP UPSIDE DOWN ---
-        // This puts the white space at the top (for the header)
-        // and the heavy colors at the bottom.
-        uv.y = 1.0 - uv.y; 
-
         // --- WARP LOGIC ---
         vec2 p = uv;
         float t = u_time * 0.2; 
@@ -73,23 +68,19 @@ export default function ThreeBackground() {
         // Add Gloss
         col += 0.05 * sin(uv.x * 10.0 + u_time);
 
-        // --- MASKING ---
-        // Create diagonal gradient
+        // --- MASKING (Diagonal fade top-left to bottom-right) ---
         float diagonal = (uv.x + uv.y) * 0.6; 
-        
         float mask = smoothstep(0.2, 0.8, diagonal);
         
         vec3 finalColor = mix(vec3(1.0), col, mask);
 
-        // Fade out at the "new" bottom (which is visually the top due to the flip)
-        // This ensures the header is perfectly white and readable
+        // Footer fade
         finalColor = mix(finalColor, vec3(1.0), smoothstep(0.15, 0.0, uv.y));
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `
 
-    // 3. MESH
     const geometry = new THREE.PlaneGeometry(2, 2)
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -100,7 +91,6 @@ export default function ThreeBackground() {
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    // 4. ANIMATION
     const animate = (time) => {
       material.uniforms.u_time.value = time * 0.001
       renderer.render(scene, camera)
@@ -108,7 +98,6 @@ export default function ThreeBackground() {
     }
     requestAnimationFrame(animate)
 
-    // 5. RESIZE
     const handleResize = () => {
       renderer.setSize(window.innerWidth, window.innerHeight)
       material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight)
