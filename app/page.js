@@ -43,13 +43,13 @@ const GlobalStyles = () => (
     
     /* ANIMATIONS */
     @keyframes drawPath {
-      from { stroke-dashoffset: 2000; }
+      from { stroke-dashoffset: 2500; }
       to { stroke-dashoffset: 0; }
     }
     .animate-draw {
-      stroke-dasharray: 2000;
-      stroke-dashoffset: 2000;
-      animation: drawPath 3s ease-out forwards;
+      stroke-dasharray: 2500;
+      stroke-dashoffset: 2500;
+      animation: drawPath 3.5s ease-out forwards;
     }
 
     @keyframes popIn { 0% { opacity: 0; transform: scale(0.96); } 100% { opacity: 1; transform: scale(1); } }
@@ -100,15 +100,21 @@ const NarrativeJourney = ({ onAction }) => {
       
       {/* SVG BACKGROUND PATH */}
       <div className="absolute inset-0 top-16 md:top-24 pointer-events-none opacity-20 hidden md:block">
-        <svg viewBox="0 0 800 1000" className="w-full h-full" preserveAspectRatio="none">
+        <svg viewBox="0 0 800 1200" className="w-full h-full" preserveAspectRatio="none">
+          {/* 
+            Path Logic:
+            1. Start Top Center (400,0)
+            2. Drop down center to (400,50) to clear header
+            3. Curve deep Left (x=200) behind the first image
+            4. Sweep across to deep Right (x=600) behind the second image
+            5. Curve back to Bottom Center (x=400)
+          */}
           <path 
             d="M 400 0 
-               L 400 100 
-               C 400 200, 100 200, 100 350
-               L 100 450
-               C 100 600, 700 600, 700 750
-               L 700 850
-               C 700 950, 400 950, 400 1000"
+               L 400 50
+               C 400 150, 200 150, 200 400
+               C 200 650, 600 650, 600 900
+               C 600 1100, 400 1100, 400 1200"
             fill="none" 
             stroke="black" 
             strokeWidth="3"
@@ -117,14 +123,14 @@ const NarrativeJourney = ({ onAction }) => {
         </svg>
       </div>
 
-      {/* MOBILE LINE (Simplified) */}
+      {/* MOBILE LINE */}
       <div className="absolute left-8 top-12 bottom-12 w-px bg-slate-200 md:hidden pointer-events-none"></div>
 
       {/* STEP 1: LEFT SIDE (Inspection) */}
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 md:mb-40 items-center">
-         {/* CIRCULAR IMAGE 1 */}
+         {/* CIRCULAR IMAGE 1 - Bigger (w-60 mobile, w-80 desktop) */}
          <div className="order-2 md:order-1 flex justify-center md:justify-end pr-0 md:pr-12">
-            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden">
+            <div className="w-60 h-60 md:w-80 md:h-80 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
                <img 
                  src="/inspection-circle.jpg" 
                  alt="Inspection" 
@@ -132,8 +138,8 @@ const NarrativeJourney = ({ onAction }) => {
                />
             </div>
          </div>
-         {/* Text */}
-         <div className="order-1 md:order-2 pl-12 md:pl-0 text-left">
+         {/* Text - Added padding left on desktop to avoid center line */}
+         <div className="order-1 md:order-2 pl-12 md:pl-8 text-left">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Chances are, you miss things during prep.</h3>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
                It's a <span className="text-orange-600">visual blindspot</span>.
@@ -146,8 +152,8 @@ const NarrativeJourney = ({ onAction }) => {
 
       {/* STEP 2: RIGHT SIDE (Consultation) */}
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 mb-24 md:mb-40 items-center">
-         {/* Text */}
-         <div className="order-1 md:order-1 pl-12 md:pl-12 text-left md:text-right flex flex-col items-start md:items-end">
+         {/* Text - Added padding right on desktop to avoid center line */}
+         <div className="order-1 md:order-1 pl-12 md:pl-0 md:pr-8 text-left md:text-right flex flex-col items-start md:items-end">
             <h3 className="text-xl md:text-2xl font-medium text-slate-500 mb-2">Let me explain—</h3>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
                We <span className="text-purple-600">decode the regulations</span>.
@@ -156,9 +162,9 @@ const NarrativeJourney = ({ onAction }) => {
                Don't guess with the FDA Food Code. Ask complex enforcement questions and get citations specific to Washtenaw County.
             </p>
          </div>
-         {/* CIRCULAR IMAGE 2 */}
+         {/* CIRCULAR IMAGE 2 - Bigger (w-60 mobile, w-80 desktop) */}
          <div className="order-2 md:order-2 flex justify-center md:justify-start pl-0 md:pl-12">
-            <div className="w-48 h-48 md:w-64 md:h-64 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden">
+            <div className="w-60 h-60 md:w-80 md:h-80 bg-white border border-slate-100 rounded-full shadow-sm z-10 overflow-hidden transform transition-transform hover:scale-105 duration-700">
                <img 
                  src="/consult-circle.jpg" 
                  alt="Consultation" 
@@ -170,8 +176,8 @@ const NarrativeJourney = ({ onAction }) => {
 
       {/* STEP 3: CENTER (Action) */}
       <div className="relative flex flex-col items-center text-center">
-         {/* CIRCULAR IMAGE 3 */}
-         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-sm overflow-hidden w-32 h-32 md:w-40 md:h-40">
+         {/* CIRCULAR IMAGE 3 - Bigger (w-40 mobile, w-52 desktop) */}
+         <div className="mb-8 z-10 bg-white p-2 rounded-full border border-slate-100 shadow-sm overflow-hidden w-40 h-40 md:w-52 md:h-52 hover:scale-105 transition-transform duration-500">
             <img 
                src="/team-circle.jpg" 
                alt="Team Success" 
