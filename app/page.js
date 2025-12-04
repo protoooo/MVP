@@ -45,7 +45,9 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA;
+      /* CHANGED: Set to transparent so the 3D Background is visible */
+      background-color: transparent; 
+      
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
