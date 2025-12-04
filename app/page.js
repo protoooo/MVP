@@ -75,31 +75,30 @@ const Icons = {
   Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  Shield: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.956 11.956 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>,
   Alert: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
 }
 
 // ==========================================
-// COMPONENT: STATS TICKER (Glass Data)
+// COMPONENT: STATS TICKER
 // ==========================================
 const StatsTicker = () => (
-  <div className="flex justify-center gap-3 mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/50 shadow-sm">
+  <div className="flex justify-center gap-3 mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-4 py-2 rounded-full border border-white/50 shadow-sm">
         <span className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
-        <span className="text-[10px] font-bold text-slate-700 tracking-wide uppercase">Washtenaw Active</span>
+        <span className="text-[10px] font-bold text-slate-800 tracking-wide uppercase">Washtenaw Active</span>
     </div>
-    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/50 shadow-sm">
+    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-4 py-2 rounded-full border border-white/50 shadow-sm">
         <Icons.Alert />
-        <span className="text-[10px] font-bold text-slate-700 tracking-wide uppercase">Avg Fine: $850+</span>
+        <span className="text-[10px] font-bold text-slate-800 tracking-wide uppercase">Avg Fine: $850+</span>
     </div>
   </div>
 )
 
 // ==========================================
-// NARRATIVE JOURNEY (GLASS CARDS FOR WHITE BACKGROUND)
+// NARRATIVE JOURNEY (GLASS CARDS)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
@@ -115,15 +114,15 @@ const NarrativeJourney = ({ onAction }) => {
         </p>
       </div>
 
-      {/* NEW: Data Evidence Row */}
+      {/* STATS */}
       <StatsTicker />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full animate-slide-up" style={{ animationDelay: '0.2s' }}>
-           {/* FIX: Increased opacity to bg-white/40 so it stands out against the white 3D background */}
-           <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+           {/* Liquid Glass Effect - 20% Opacity (Matches colorful background) */}
+           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               {/* STATUS BADGE */}
@@ -137,11 +136,11 @@ const NarrativeJourney = ({ onAction }) => {
                  </div>
                  <div>
                     <h3 className="text-xl font-bold text-black tracking-tight">Visual Inspection</h3>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Detection Module</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Detection Module</p>
                  </div>
               </div>
               
-              <p className="text-slate-800 text-sm leading-relaxed mb-10 flex-1 font-medium border-l-2 border-emerald-500/30 pl-4">
+              <p className="text-slate-900 text-sm leading-relaxed mb-10 flex-1 font-medium border-l-2 border-emerald-500/30 pl-4">
                 "We missed the pests in the dry storage."<br/><br/>
                 Don't risk it. Our vision model identifies Priority (P) violations, labeling errors, and sanitary risks before the inspector does.
               </p>
@@ -157,8 +156,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full animate-slide-up" style={{ animationDelay: '0.3s' }}>
-           {/* FIX: Increased opacity to bg-white/40 */}
-           <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-[2rem] border border-white/60 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+           {/* Liquid Glass Effect */}
+           <div className="absolute inset-0 bg-white/20 backdrop-blur-xl rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               {/* STATUS BADGE */}
@@ -172,11 +171,11 @@ const NarrativeJourney = ({ onAction }) => {
                  </div>
                  <div>
                     <h3 className="text-xl font-bold text-black tracking-tight">Regulatory Consultant</h3>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Enforcement Module</p>
+                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Enforcement Module</p>
                  </div>
               </div>
               
-              <p className="text-slate-800 text-sm leading-relaxed mb-10 flex-1 font-medium border-l-2 border-blue-500/30 pl-4">
+              <p className="text-slate-900 text-sm leading-relaxed mb-10 flex-1 font-medium border-l-2 border-blue-500/30 pl-4">
                 "Can I cool soup in a 5-gallon bucket?"<br/><br/>
                 Stop guessing. Get instant citations specific to Washtenaw County. Avoid the red tag.
               </p>
@@ -224,7 +223,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
 
       <form 
         onSubmit={handleSend} 
-        className="relative flex items-end w-full p-2 bg-white/70 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/90 focus-within:ring-2 focus-within:ring-black/10 focus-within:border-black/20" 
+        className="relative flex items-end w-full p-2 bg-white/60 backdrop-blur-xl border border-white/50 rounded-[32px] shadow-2xl transition-all duration-300 focus-within:bg-white/80 focus-within:ring-2 focus-within:ring-black/10 focus-within:border-black/20" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
