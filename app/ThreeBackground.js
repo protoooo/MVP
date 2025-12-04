@@ -1,30 +1,13 @@
-'use client'
-import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
-
-export default function ThreeBackground() {
-  const containerRef = useRef(null)
-
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    // 1. SETUP
-    const scene = new THREE.Scene()
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
-    const renderer = new THREE.WebGLRenderer({ alpha: true })
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    containerRef.current.appendChild(renderer.domElement)
-
-    // 2. THE SHADER (The "Liquid" Engine)
-    // This tells the GPU exactly how to mix the colors per pixel
+// 2. THE SHADER (Stripe-inspired Liquid Gradient)
     const uniforms = {
       u_time: { value: 0.0 },
       u_resolution: { value: { x: window.innerWidth, y: window.innerHeight } },
-      // YOUR BRAND COLORS (Converted to RGB 0.0-1.0 format)
-      colorA: { value: new THREE.Vector3(0.98, 0.45, 0.08) }, // Orange
-      colorB: { value: new THREE.Vector3(0.58, 0.20, 0.92) }, // Purple
-      colorC: { value: new THREE.Vector3(0.11, 0.44, 1.00) }, // Blue Accent
+      u_mouse: { value: { x: 0.5, y: 0.5 } },
+      // Refined brand colors for premium feel
+      colorA: { value: new THREE.Vector3(0.98, 0.50, 0.15) }, // Warmer Orange
+      colorB: { value: new THREE.Vector3(0.65, 0.25, 0.95) }, // Rich Purple
+      colorC: { value: new THREE.Vector3(0.15, 0.50, 1.00) }, // Vibrant Blue
+      colorD: { value: new THREE.Vector3(0.98, 0.75, 0.85) }, // Soft Pink accent
     }
 
     const vertexShader = `
@@ -35,87 +18,72 @@ export default function ThreeBackground() {
       }
     `
 
-    // This creates the flowing "lava lamp" effect
+    // Enhanced fluid gradient with depth and sophistication
     const fragmentShader = `
       uniform float u_time;
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
       uniform vec3 colorA;
       uniform vec3 colorB;
       uniform vec3 colorC;
+      uniform vec3 colorD;
       varying vec2 vUv;
 
+      // Improved noise function for organic movement
+      float noise(vec2 p) {
+        return sin(p.x * 10.0) * sin(p.y * 10.0);
+      }
+
       void main() {
-        // Create a moving coordinate system
         vec2 uv = vUv;
+        vec2 center = vec2(0.5, 0.5);
         
-        // Warping the coordinates (This creates the fluid shape)
-        // We add sine waves to X and Y based on Time
-        float wave1 = sin(uv.x * 3.0 + u_time * 0.5);
-        float wave2 = cos(uv.y * 5.0 + u_time * 0.3);
-        float wave3 = sin((uv.x + uv.y) * 4.0 - u_time * 0.4);
+        // Create aspect ratio correction
+        float aspect = u_resolution.x / u_resolution.y;
+        vec2 correctedUV = uv;
+        correctedUV.x *= aspect;
         
-        // Combine waves to get a mixing factor (0.0 to 1.0)
-        float mixFactor = (wave1 + wave2 + wave3) / 3.0;
+        // Distance from center for radial effects
+        float dist = distance(correctedUV, center * vec2(aspect, 1.0));
         
-        // Normalize mixFactor to 0.0 - 1.0 range
-        mixFactor = mixFactor * 0.5 + 0.5;
-
-        // Mix the colors based on the warping
-        vec3 finalColor = mix(colorA, colorB, mixFactor);
+        // Multiple layered waves for complex movement
+        float time = u_time * 0.0003;
         
-        // Add the third color (Blue) in the deep valleys of the waves
-        float secondaryMix = sin(u_time * 0.2 + uv.y * 10.0);
-        finalColor = mix(finalColor, colorC, smoothstep(0.6, 1.0, secondaryMix * mixFactor));
-
-        // Soften it slightly with white (tint) so it's not too dark
-        finalColor = mix(finalColor, vec3(1.0), 0.2);
-
+        // Primary wave system
+        float wave1 = sin(correctedUV.x * 2.5 + time * 2.0 + dist * 3.0) * 0.5;
+        float wave2 = cos(correctedUV.y * 3.0 - time * 1.5 + dist * 2.0) * 0.5;
+        float wave3 = sin((correctedUV.x + correctedUV.y) * 2.0 + time * 1.8) * 0.3;
+        
+        // Secondary detail waves for texture
+        float detail1 = sin(correctedUV.x * 8.0 + time * 3.0) * 0.1;
+        float detail2 = cos(correctedUV.y * 10.0 - time * 2.5) * 0.1;
+        
+        // Combine all waves
+        float pattern = (wave1 + wave2 + wave3 + detail1 + detail2) / 2.5;
+        pattern = pattern * 0.5 + 0.5; // Normalize to 0-1
+        
+        // Create depth with distance-based fading
+        float depthFactor = smoothstep(0.0, 0.8, dist);
+        
+        // Multi-color mixing for rich gradients
+        vec3 color1 = mix(colorA, colorB, pattern);
+        vec3 color2 = mix(colorC, colorD, pattern * 0.8);
+        vec3 finalColor = mix(color1, color2, sin(time + dist * 5.0) * 0.3 + 0.5);
+        
+        // Add subtle radial gradient overlay
+        finalColor = mix(finalColor, colorB, depthFactor * 0.2);
+        
+        // Enhance with highlights
+        float highlight = smoothstep(0.6, 1.0, pattern) * 0.15;
+        finalColor += vec3(highlight);
+        
+        // Gentle vignette for depth
+        float vignette = smoothstep(1.0, 0.3, dist * 1.2);
+        finalColor *= 0.85 + vignette * 0.15;
+        
+        // Subtle color grading for premium look
+        finalColor = pow(finalColor, vec3(0.95)); // Slight gamma adjustment
+        
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `
-
-    // 3. CREATE MESH
-    const geometry = new THREE.PlaneGeometry(2, 2)
-    const material = new THREE.ShaderMaterial({
-      uniforms,
-      vertexShader,
-      fragmentShader,
-    })
-
-    const mesh = new THREE.Mesh(geometry, material)
-    scene.add(mesh)
-
-    // 4. ANIMATION LOOP
-    const animate = (time) => {
-      // Update time uniform
-      material.uniforms.u_time.value = time * 0.001 // Convert ms to seconds
-      renderer.render(scene, camera)
-      requestAnimationFrame(animate)
-    }
-
-    requestAnimationFrame(animate)
-
-    // 5. RESIZE
-    const handleResize = () => {
-      renderer.setSize(window.innerWidth, window.innerHeight)
-      material.uniforms.u_resolution.value.x = window.innerWidth
-      material.uniforms.u_resolution.value.y = window.innerHeight
-    }
-    window.addEventListener('resize', handleResize)
-
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement)
-      }
-    }
-  }, [])
-
-  return (
-    <div 
-      ref={containerRef} 
-      className="fixed inset-0 z-0 pointer-events-none"
-      // We keep a small blur to hide any digital harshness, but much less than before
-      style={{ opacity: 0.6 }} 
-    />
-  )
-}
