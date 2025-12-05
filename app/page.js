@@ -30,16 +30,11 @@ const DOC_MAPPING = {
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
-// BACKGROUND COMPONENT (PURE CSS)
+// BACKGROUND COMPONENT (CLEAN WHITE)
 // ==========================================
 const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-white overflow-hidden pointer-events-none">
-    {/* Modern Gradient Mesh - Emerald & Blue */}
-    <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100/60 rounded-full blur-[100px] animate-blob mix-blend-multiply opacity-70" />
-    <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-100/60 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply opacity-70" />
-    <div className="absolute top-[20%] left-[30%] w-[50vw] h-[50vw] bg-cyan-50/60 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply opacity-60" />
-    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
+  // Removed the gradient blobs. Just pure, clean white.
+  <div className="fixed inset-0 z-0 bg-white pointer-events-none" />
 )
 
 const Icons = {
@@ -73,16 +68,7 @@ const GlobalStyles = () => (
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
-    @keyframes blob {
-      0% { transform: translate(0px, 0px) scale(1); }
-      33% { transform: translate(30px, -50px) scale(1.1); }
-      66% { transform: translate(-20px, 20px) scale(0.9); }
-      100% { transform: translate(0px, 0px) scale(1); }
-    }
     .animate-scroll { animation: scroll 40s linear infinite; }
-    .animate-blob { animation: blob 10s infinite; }
-    .animation-delay-2000 { animation-delay: 2s; }
-    .animation-delay-4000 { animation-delay: 4s; }
     
     /* THE FOUR DOTS LOADER */
     .loader {
@@ -360,9 +346,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   )
 }
 
-// ==========================================
-// MAIN PAGE
-// ==========================================
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
@@ -532,7 +515,7 @@ export default function Page() {
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50">
         
         {/* =====================================
-            1. BACKGROUND LAYER (CSS MESH)
+            1. BACKGROUND LAYER (CLEAN WHITE)
             ===================================== */}
         <CssBackground />
 
