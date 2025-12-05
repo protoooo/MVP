@@ -151,8 +151,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect - Very Transparent */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+           {/* Liquid Glass Effect - Very Transparent (UPDATED) */}
+           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md rounded-[2rem] border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               <div className="w-full flex justify-between items-start mb-6">
@@ -180,8 +180,8 @@ const NarrativeJourney = ({ onAction }) => {
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
         <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+           {/* Liquid Glass Effect (UPDATED) */}
+           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md rounded-[2rem] border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
               <div className="w-full flex justify-between items-start mb-6">
