@@ -34,28 +34,14 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 // ==========================================
 const CssBackground = () => (
   <div className="fixed inset-0 z-0 bg-white overflow-hidden pointer-events-none">
-    {/* 
-       This creates a "Mesh Gradient" effect using blurred circles.
-       It mimics the "Duality" of your product (Emerald vs Blue).
-    */}
-    
-    {/* 1. Left Emerald/Teal Blob (Inspection) */}
+    {/* Modern Gradient Mesh - Emerald & Blue */}
     <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100/60 rounded-full blur-[100px] animate-blob mix-blend-multiply opacity-70" />
-    
-    {/* 2. Right Blue/Indigo Blob (Consultant) */}
     <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-100/60 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply opacity-70" />
-    
-    {/* 3. Center/Top Subtle Highlight (Cyan - Connects them) */}
     <div className="absolute top-[20%] left-[30%] w-[50vw] h-[50vw] bg-cyan-50/60 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply opacity-60" />
-
-    {/* Noise Overlay (Optional - adds "texture" to remove digital banding) */}
     <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
   </div>
 )
 
-// ==========================================
-// ICONS
-// ==========================================
 const Icons = {
   ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
@@ -69,9 +55,6 @@ const Icons = {
   MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
 }
 
-// ==========================================
-// STYLES & LAYOUT
-// ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
@@ -100,6 +83,26 @@ const GlobalStyles = () => (
     .animate-blob { animation: blob 10s infinite; }
     .animation-delay-2000 { animation-delay: 2s; }
     .animation-delay-4000 { animation-delay: 4s; }
+    
+    /* THE FOUR DOTS LOADER */
+    .loader {
+      height: 14px; /* Scaled to fit UI */
+      aspect-ratio: 2.5;
+      --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
+      background:var(--_g), var(--_g), var(--_g), var(--_g);
+      background-size: 20% 50%;
+      animation: l43 1s infinite linear; 
+    }
+    @keyframes l43 {
+      0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+      50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
+      66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
+      83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
+      100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
+    }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
@@ -149,7 +152,6 @@ const NarrativeJourney = ({ onAction }) => {
 
         <div className="group relative h-full min-h-[340px] flex flex-col rounded-[2.5rem] transition-all duration-500 hover:scale-[1.01] cursor-pointer" onClick={() => onAction('image')}>
            <div className="absolute inset-0 rounded-[2.5rem] border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 bg-white/30 backdrop-blur-[20px] group-hover:bg-white/40 group-hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] group-hover:border-white/60" />
-           
            <div className="relative p-8 md:p-12 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-8 gap-6">
@@ -161,12 +163,10 @@ const NarrativeJourney = ({ onAction }) => {
                       <Icons.Camera />
                    </div>
                 </div>
-                
                 <p className="text-slate-800 text-lg leading-relaxed font-medium">
                   Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
                 </p>
               </div>
-
               <div className="w-full py-4 mt-8 rounded-2xl bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 group-hover:bg-emerald-600 border border-white/10">
                 Start Inspection <Icons.ArrowUp />
               </div>
@@ -175,7 +175,6 @@ const NarrativeJourney = ({ onAction }) => {
 
         <div className="group relative h-full min-h-[340px] flex flex-col rounded-[2.5rem] transition-all duration-500 hover:scale-[1.01] cursor-pointer" onClick={() => onAction('chat')}>
            <div className="absolute inset-0 rounded-[2.5rem] border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 bg-white/30 backdrop-blur-[20px] group-hover:bg-white/40 group-hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] group-hover:border-white/60" />
-           
            <div className="relative p-8 md:p-12 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-8 gap-6">
@@ -187,12 +186,10 @@ const NarrativeJourney = ({ onAction }) => {
                       <Icons.Book />
                    </div>
                 </div>
-                
                 <p className="text-slate-800 text-lg leading-relaxed font-medium">
                   Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
                 </p>
               </div>
-
               <div className="w-full py-4 mt-8 rounded-2xl bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 group-hover:bg-blue-600 border border-white/10">
                 Start Chat <Icons.ArrowUp />
               </div>
@@ -284,7 +281,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
               : `bg-black text-white cursor-pointer shadow-md hover:bg-slate-800`
             }`}
         >
-          {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Icons.ArrowUp />}
+          {isSending ? <div className="loader" /> : <Icons.ArrowUp />}
         </button>
       </form>
     </div>
