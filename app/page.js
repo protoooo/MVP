@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
-import ThreeBackground from './ThreeBackground'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -102,10 +101,6 @@ const Icons = {
 const KnowledgeTicker = () => {
   return (
     <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative">
-      {/* 
-         FIX: Replaced solid 'bg-gradient' with 'mask-image' 
-         This creates a true transparency fade so the blue background shows through 
-      */}
       <div 
         className="flex w-full animate-scroll hover:pause"
         style={{
@@ -564,7 +559,7 @@ export default function Page() {
         {/* =====================================
             1. BACKGROUND LAYER (STATIC)
             ===================================== */}
-        <ThreeBackground />
+        {/* No Three.js background, using CSS body background */}
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
