@@ -7,7 +7,7 @@ import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
 import { motion } from 'framer-motion'
 
-// Outfit is clean, but for this vibe, it works well as a "Modern Sans"
+// Outfit font for modern, clean typography
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 // ==========================================
@@ -35,6 +35,21 @@ const DOC_MAPPING = {
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
+// ANIMATION VARIANTS (The "Drawing" Effect)
+// ==========================================
+const drawVariant = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: (i) => ({
+    pathLength: 1,
+    opacity: 1,
+    transition: {
+      pathLength: { delay: i * 0.1, type: "spring", duration: 1.5, bounce: 0 },
+      opacity: { delay: i * 0.1, duration: 0.01 }
+    }
+  })
+}
+
+// ==========================================
 // ICONS
 // ==========================================
 const Icons = {
@@ -58,55 +73,65 @@ const Icons = {
 const ConsultantIllustration = () => (
   <svg viewBox="0 0 400 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
     <motion.circle cx="300" cy="100" r="60" fill="#E7C698" opacity="0.3" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }} />
+    
+    {/* Floating Docs */}
     <motion.g animate={{ y: [0, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-      <rect x="260" y="60" width="50" height="70" rx="4" fill="white" stroke="#3A3836" strokeWidth="2.5" />
-      <line x1="270" y1="80" x2="300" y2="80" stroke="#3A3836" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="270" y1="95" x2="300" y2="95" stroke="#3A3836" strokeWidth="2.5" strokeLinecap="round" />
+      <motion.rect x="260" y="60" width="50" height="70" rx="4" fill="white" stroke="#3A3836" strokeWidth="2.5" initial="hidden" animate="visible" custom={1} variants={drawVariant} />
+      <motion.line x1="270" y1="80" x2="300" y2="80" stroke="#3A3836" strokeWidth="2.5" strokeLinecap="round" initial="hidden" animate="visible" custom={1.2} variants={drawVariant} />
+      <motion.line x1="270" y1="95" x2="300" y2="95" stroke="#3A3836" strokeWidth="2.5" strokeLinecap="round" initial="hidden" animate="visible" custom={1.4} variants={drawVariant} />
     </motion.g>
-    <motion.g animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}>
-      <rect x="300" y="90" width="40" height="50" rx="4" fill="white" stroke="#3A3836" strokeWidth="2.5" />
-      <path d="M320 105 L325 110 L335 100" stroke="#DA7756" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+    {/* Person */}
+    <motion.circle cx="140" cy="140" r="35" stroke="#3A3836" strokeWidth="3" fill="#F9F8F6" initial="hidden" animate="visible" custom={0} variants={drawVariant} />
+    <motion.path d="M140 175 Q140 260 60 280" stroke="#3A3836" strokeWidth="3" fill="none" strokeLinecap="round" initial="hidden" animate="visible" custom={0.5} variants={drawVariant} />
+    <motion.path d="M140 175 Q140 260 220 280" stroke="#3A3836" strokeWidth="3" fill="none" strokeLinecap="round" initial="hidden" animate="visible" custom={0.5} variants={drawVariant} />
+    <motion.path d="M180 230 Q220 230 240 200" stroke="#3A3836" strokeWidth="3" strokeLinecap="round" initial="hidden" animate="visible" custom={0.8} variants={drawVariant} />
+
+    {/* Tablet */}
+    <motion.g transformOrigin="240 180" initial={{ rotate: -10 }} whileHover={{ rotate: 0, scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
+      <rect x="220" y="150" width="60" height="80" rx="6" fill="white" stroke="#3A3836" strokeWidth="2.5" transform="rotate(-10 240 180)" />
+      <g transform="rotate(-10 240 180)">
+         <motion.path d="M235 170 H265 V190 H245 L235 200 V170 Z" fill="#4F8D88" stroke="#3A3836" strokeWidth="2" strokeLinejoin="round" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.5 }} />
+      </g>
     </motion.g>
-    <circle cx="140" cy="140" r="35" stroke="#3A3836" strokeWidth="3" fill="#F9F8F6" />
-    <path d="M140 175 Q140 260 60 280" stroke="#3A3836" strokeWidth="3" fill="none" strokeLinecap="round" />
-    <path d="M140 175 Q140 260 220 280" stroke="#3A3836" strokeWidth="3" fill="none" strokeLinecap="round" />
-    <path d="M180 230 Q220 230 240 200" stroke="#3A3836" strokeWidth="3" strokeLinecap="round" />
-    <g transform="rotate(-10 240 180)">
-      <rect x="220" y="150" width="60" height="80" rx="6" fill="white" stroke="#3A3836" strokeWidth="2.5" />
-      <motion.g initial={{ opacity: 0, scale: 0.8 }} whileHover={{ opacity: 1, scale: 1 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-         <path d="M235 170 H265 V190 H245 L235 200 V170 Z" fill="#4F8D88" stroke="#3A3836" strokeWidth="2" strokeLinejoin="round" />
-         <line x1="242" y1="180" x2="258" y2="180" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      </motion.g>
-    </g>
-    <motion.path d="M290 150 Q300 140 310 150" stroke="#DA7756" strokeWidth="2.5" fill="none" strokeLinecap="round" animate={{ d: ["M290 150 Q300 140 310 150", "M290 148 Q300 138 310 148", "M290 150 Q300 140 310 150"] }} transition={{ duration: 1.5, repeat: Infinity }} />
+
+    {/* Motion Lines */}
+    <motion.path d="M290 150 Q300 140 310 150" stroke="#DA7756" strokeWidth="2.5" fill="none" strokeLinecap="round" initial={{ opacity: 0 }} whileHover={{ opacity: 1, d: ["M290 150 Q300 140 310 150", "M290 145 Q300 135 310 145", "M290 150 Q300 140 310 150"] }} transition={{ duration: 1, repeat: Infinity }} />
   </svg>
 )
 
 const InspectionIllustration = () => (
   <svg viewBox="0 0 400 300" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="100" cy="250" r="80" fill="#DA7756" opacity="0.1" />
+    
+    {/* Shelf */}
     <g transform="translate(50, 60)">
-      <rect x="0" y="0" width="140" height="200" rx="4" stroke="#3A3836" strokeWidth="3" fill="none" />
-      <line x1="0" y1="50" x2="140" y2="50" stroke="#3A3836" strokeWidth="2" />
-      <line x1="0" y1="100" x2="140" y2="100" stroke="#3A3836" strokeWidth="2" />
-      <line x1="0" y1="150" x2="140" y2="150" stroke="#3A3836" strokeWidth="2" />
-      <circle cx="30" cy="35" r="10" stroke="#3A3836" strokeWidth="2" fill="#E7C698" />
-      <rect x="60" y="20" width="20" height="30" stroke="#3A3836" strokeWidth="2" />
-      <circle cx="100" cy="85" r="12" stroke="#3A3836" strokeWidth="2" />
+      <motion.rect x="0" y="0" width="140" height="200" rx="4" stroke="#3A3836" strokeWidth="3" fill="none" initial="hidden" animate="visible" custom={0} variants={drawVariant} />
+      <motion.line x1="0" y1="50" x2="140" y2="50" stroke="#3A3836" strokeWidth="2" initial="hidden" animate="visible" custom={0.5} variants={drawVariant} />
+      <motion.line x1="0" y1="100" x2="140" y2="100" stroke="#3A3836" strokeWidth="2" initial="hidden" animate="visible" custom={0.7} variants={drawVariant} />
+      
+      {/* Items */}
+      <motion.circle cx="30" cy="35" r="10" stroke="#3A3836" strokeWidth="2" fill="#E7C698" initial="hidden" animate="visible" custom={1} variants={drawVariant} />
+      <motion.rect x="60" y="20" width="20" height="30" stroke="#3A3836" strokeWidth="2" initial="hidden" animate="visible" custom={1.2} variants={drawVariant} />
+      
+      {/* Flashing Violation */}
       <motion.rect x="30" y="120" width="40" height="20" stroke="#DA7756" strokeWidth="2.5" fill="#FDF2F0" animate={{ stroke: ["#DA7756", "#3A3836", "#DA7756"] }} transition={{ duration: 2, repeat: Infinity }} />
     </g>
-    <g transform="translate(220, 100) rotate(5)">
+
+    {/* Phone */}
+    <motion.g transform="translate(220, 100) rotate(5)" whileHover={{ y: -5 }}>
       <rect x="0" y="0" width="90" height="150" rx="10" fill="white" stroke="#3A3836" strokeWidth="3" />
       <rect x="10" y="15" width="70" height="100" fill="#F2F0ED" />
-      <line x1="15" y1="40" x2="75" y2="40" stroke="#3A3836" strokeWidth="1" opacity="0.5" />
-      <line x1="15" y1="70" x2="75" y2="70" stroke="#3A3836" strokeWidth="1" opacity="0.5" />
+      
+      {/* Scanning Box */}
       <motion.rect x="20" y="55" width="30" height="15" stroke="#DA7756" strokeWidth="2" fill="none" strokeDasharray="4 2" animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} />
       <motion.circle cx="65" cy="25" r="8" fill="#DA7756" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }} />
-      <path d="M65 21 V27 M65 29 V30" stroke="white" strokeWidth="2" strokeLinecap="round" />
-    </g>
+    </motion.g>
+
+    {/* Scan Lines */}
     <motion.g opacity="0.6">
-      <line x1="220" y1="120" x2="190" y2="110" stroke="#4F8D88" strokeWidth="2" strokeDasharray="4 4" />
-      <line x1="220" y1="180" x2="190" y2="200" stroke="#4F8D88" strokeWidth="2" strokeDasharray="4 4" />
+      <motion.line x1="220" y1="120" x2="190" y2="110" stroke="#4F8D88" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 2, duration: 1 }} />
+      <motion.line x1="220" y1="180" x2="190" y2="200" stroke="#4F8D88" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 2.2, duration: 1 }} />
     </motion.g>
   </svg>
 )
@@ -125,7 +150,6 @@ const GlobalStyles = () => (
     .text-ink { color: #3A3836; }
     .text-clay { color: #DA7756; }
     .text-teal { color: #4F8D88; }
-    .text-cream { color: #E7C698; }
     
     .btn-press { transition: transform 0.1s ease; }
     .btn-press:active { transform: scale(0.96); }
@@ -187,7 +211,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-white rounded-lg border border-[#E5E0D8] inline-flex items-center gap-2 shadow-sm">
+        <div className="mb-2 mx-1 p-2 bg-white rounded-lg border border-[#E5E0D8] inline-flex items-center gap-2 shadow-sm animate-in slide-in-from-bottom-2 fade-in">
           <span className="text-xs text-[#3A3836] font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
           <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-[#6B665F] hover:text-[#DA7756]"><Icons.X /></button>
         </div>
@@ -209,7 +233,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             </button>
 
             {showMenu && (
-                <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-[#E5E0D8] rounded-lg shadow-lg overflow-hidden z-50 p-1">
+                <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-[#E5E0D8] rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in">
                     <div className="space-y-0.5">
                         {['chat', 'image'].map(m => (
                             <button 
@@ -266,7 +290,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[999] bg-[#3A3836]/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[999] bg-[#3A3836]/20 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in" onClick={onClose}>
       <div className="bg-white border border-[#E5E0D8] rounded-xl w-full max-w-md p-8 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div><h2 className="text-xl font-bold text-[#3A3836] mb-1">{message || 'Welcome'}</h2><p className="text-sm text-[#6B665F]">Sign in to continue</p></div>
@@ -299,7 +323,6 @@ export default function Page() {
   const [authModalMessage, setAuthModalMessage] = useState('')
   const [selectedImage, setSelectedImage] = useState(null)
   const [activeMode, setActiveMode] = useState('chat')
-  const [currentChatId, setCurrentChatId] = useState(null)
   
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -311,9 +334,6 @@ export default function Page() {
     const init = async () => {
       const { data: { session: s } } = await supabase.auth.getSession()
       setSession(s)
-      if (s) {
-          // Load chat history logic would go here
-      }
       setIsLoading(false)
     }
     init()
@@ -321,7 +341,7 @@ export default function Page() {
 
   const handleAction = (mode) => {
     if (!session) {
-      setAuthModalMessage('Sign up to use this tool')
+      setAuthModalMessage('Sign up to start free trial')
       setShowAuthModal(true)
       return
     }
@@ -348,7 +368,7 @@ export default function Page() {
       const data = await res.json()
       setMessages(p => { const u = [...p]; u[u.length - 1].content = data.message || 'Error'; return u })
     } catch (e) {
-      setMessages(p => { const u = [...p]; u[u.length - 1].content = 'Network error'; return u })
+      setMessages(p => { const u = [...p]; u[u.length - 1].content = 'Network error.'; return u })
     } finally {
       setIsSending(false)
     }
