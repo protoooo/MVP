@@ -18,8 +18,11 @@
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.17.1",
+    "@react-three/drei": "^9.108.3",
+    "@react-three/fiber": "^8.16.8",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.86.0",
+    "@types/three": "^0.181.0",
     "dotenv": "^16.6.1",
     "google-auth-library": "^10.5.0",
     "lucide-react": "^0.263.1",
