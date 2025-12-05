@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
-import ThreeBackground from './ThreeBackground'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -30,6 +29,33 @@ const DOC_MAPPING = {
 }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
+// ==========================================
+// BACKGROUND COMPONENT (PURE CSS)
+// ==========================================
+const CssBackground = () => (
+  <div className="fixed inset-0 z-0 bg-white overflow-hidden pointer-events-none">
+    {/* 
+       This creates a "Mesh Gradient" effect using blurred circles.
+       It mimics the "Duality" of your product (Emerald vs Blue).
+    */}
+    
+    {/* 1. Left Emerald/Teal Blob (Inspection) */}
+    <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-100/60 rounded-full blur-[100px] animate-blob mix-blend-multiply opacity-70" />
+    
+    {/* 2. Right Blue/Indigo Blob (Consultant) */}
+    <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-100/60 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply opacity-70" />
+    
+    {/* 3. Center/Top Subtle Highlight (Cyan - Connects them) */}
+    <div className="absolute top-[20%] left-[30%] w-[50vw] h-[50vw] bg-cyan-50/60 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply opacity-60" />
+
+    {/* Noise Overlay (Optional - adds "texture" to remove digital banding) */}
+    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  </div>
+)
+
+// ==========================================
+// ICONS
+// ==========================================
 const Icons = {
   ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
@@ -43,6 +69,9 @@ const Icons = {
   MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
 }
 
+// ==========================================
+// STYLES & LAYOUT
+// ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
@@ -61,7 +90,16 @@ const GlobalStyles = () => (
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
+    @keyframes blob {
+      0% { transform: translate(0px, 0px) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+      100% { transform: translate(0px, 0px) scale(1); }
+    }
     .animate-scroll { animation: scroll 40s linear infinite; }
+    .animate-blob { animation: blob 10s infinite; }
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
@@ -325,6 +363,9 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   )
 }
 
+// ==========================================
+// MAIN PAGE
+// ==========================================
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
@@ -494,9 +535,9 @@ export default function Page() {
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50">
         
         {/* =====================================
-            1. BACKGROUND LAYER (STATIC)
+            1. BACKGROUND LAYER (CSS MESH)
             ===================================== */}
-        <ThreeBackground />
+        <CssBackground />
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
