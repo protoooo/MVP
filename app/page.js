@@ -44,7 +44,8 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA;
+      /* CHANGED TO PURE WHITE TO MATCH JPG BACKGROUNDS */
+      background-color: #ffffff; 
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -152,7 +153,7 @@ const NarrativeJourney = ({ onAction }) => {
            {/* TOP 2/3: IMAGE */}
            <div className="relative h-[65%] w-full overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: UPDATED TO CAPITAL .JPG TO MATCH GITHUB */}
+             {/* IMAGE: CAPITAL .JPG */}
              <img 
                src="/visual-inspection.JPG" 
                alt="Visual Inspection Kitchen Analysis" 
@@ -189,7 +190,7 @@ const NarrativeJourney = ({ onAction }) => {
            {/* TOP 2/3: IMAGE */}
            <div className="relative h-[65%] w-full overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: KEPT AS LOWERCASE .jpg */}
+             {/* IMAGE: LOWERCASE .jpg */}
              <img 
                src="/regulatory-consultant.jpg" 
                alt="Regulatory Compliance Documents" 
