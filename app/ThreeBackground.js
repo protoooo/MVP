@@ -1,101 +1,70 @@
 'use client'
-import { useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Points, PointMaterial } from '@react-three/drei'
-import * as THREE from 'three'
+import { Canvas } from '@react-three/fiber'
+import { MeshDistortMaterial, Sphere, Float, Environment } from '@react-three/drei'
 
-function ParticleGlobe(props) {
-  const ref = useRef()
-  
-  // INCREASED DENSITY: 12,000 particles for that solid "Hyround" look
-  const particles = useMemo(() => {
-    const count = 12000 
-    const positions = new Float32Array(count * 3)
-    const colors = new Float32Array(count * 3)
-    const originalPositions = new Float32Array(count * 3)
-    
-    // VIBRANT COLORS: Electric Blue to Deep Indigo
-    const color1 = new THREE.Color('#2563eb') // Bright Blue
-    const color2 = new THREE.Color('#1e40af') // Deep Blue
-
-    for (let i = 0; i < count; i++) {
-      const phi = Math.acos(-1 + (2 * i) / count)
-      const theta = Math.sqrt(count * Math.PI) * phi
-      
-      // BIGGER RADIUS: 3.5 fills the screen
-      const r = 3.5 
-
-      const x = r * Math.cos(theta) * Math.sin(phi)
-      const y = r * Math.sin(theta) * Math.sin(phi)
-      const z = r * Math.cos(phi)
-
-      positions[i * 3] = x
-      positions[i * 3 + 1] = y
-      positions[i * 3 + 2] = z
-      
-      originalPositions[i * 3] = x
-      originalPositions[i * 3 + 1] = y
-      originalPositions[i * 3 + 2] = z
-
-      const mixedColor = color1.clone().lerp(color2, (y + r) / (2 * r))
-      colors[i * 3] = mixedColor.r
-      colors[i * 3 + 1] = mixedColor.g
-      colors[i * 3 + 2] = mixedColor.b
-    }
-    return { positions, colors, originalPositions }
-  }, [])
-
-  useFrame((state) => {
-    const { clock, pointer } = state
-    const time = clock.getElapsedTime()
-
-    // Gentle Rotation
-    ref.current.rotation.y = time * 0.05
-    
-    // Mouse Parallax
-    ref.current.rotation.x = THREE.MathUtils.lerp(ref.current.rotation.x, pointer.y * 0.05, 0.1)
-    ref.current.rotation.z = THREE.MathUtils.lerp(ref.current.rotation.z, pointer.x * 0.05, 0.1)
-
-    // "Breathing" Wave Effect
-    const positions = ref.current.geometry.attributes.position.array
-    const originals = particles.originalPositions
-    
-    for(let i = 0; i < 12000; i++) {
-        const wave = Math.sin(time * 0.5 + originals[i * 3 + 1] * 0.5) * 0.1
-        const scale = 1 + wave
-
-        positions[i * 3] = originals[i * 3] * scale
-        positions[i * 3 + 1] = originals[i * 3 + 1] * scale
-        positions[i * 3 + 2] = originals[i * 3 + 2] * scale
-    }
-    ref.current.geometry.attributes.position.needsUpdate = true
-  })
-
+function MorphingBlob({ position, color, speed, distort, scale }) {
   return (
-    <group rotation={[0, 0, Math.PI / 4]} position={[0, -1, 0]}> {/* Shifted DOWN so it sits behind cards */}
-      <Points ref={ref} positions={particles.positions} colors={particles.colors} stride={3} frustumCulled={false} {...props}>
-        <PointMaterial
-          transparent
-          vertexColors
-          size={0.025}        // BIGGER DOTS for visibility
-          sizeAttenuation={true}
-          depthWrite={false}
-          opacity={1}         // Full opacity
+    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
+      <Sphere args={[1, 64, 64]} position={position} scale={scale}>
+        <MeshDistortMaterial
+          color={color}
+          envMapIntensity={0.4}
+          clearcoat={1}          // Makes it look like polished plastic/liquid
+          clearcoatRoughness={0} // Smooth reflection
+          metalness={0.1}
+          roughness={0.2}        // Slight matte finish so it's not too shiny
+          distort={distort}      // The amount of "wobble"
+          speed={speed}          // How fast it morphs
         />
-      </Points>
-    </group>
+      </Sphere>
+    </Float>
   )
 }
 
 export default function ThreeBackground() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none">
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 50 }} // Camera further back to see the massive globe
-        dpr={[1, 2]} 
-        gl={{ antialias: true, alpha: true }}
-      >
-        <ParticleGlobe />
+      <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 8], fov: 45 }}>
+        
+        {/* 1. Lighting (Critical for the "3D" look) */}
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[10, 10, 5]} intensity={1.5} />
+        <directionalLight position={[-10, -10, -5]} intensity={1} color="#b0b0b0" />
+        
+        {/* Studio Lighting Environment for reflections */}
+        <Environment preset="city" />
+
+        {/* 2. The Fluid Shapes */}
+        <group position={[0, 0, 0]}>
+          
+          {/* Left Blob (Behind Visual Inspection) - Cool Emerald/Blue mix */}
+          <MorphingBlob 
+            position={[-2.5, 0, -2]} 
+            scale={2.2} 
+            color="#a5f3fc" // Cyan/Light Blue
+            distort={0.5} 
+            speed={2} 
+          />
+
+          {/* Right Blob (Behind Regulatory Consultant) - Deep Royal Blue */}
+          <MorphingBlob 
+            position={[2.5, -0.5, -2]} 
+            scale={2.4} 
+            color="#e0e7ff" // Very light indigo/white
+            distort={0.4} 
+            speed={1.5} 
+          />
+          
+          {/* Center Deep Accent - Adds depth in the middle */}
+          <MorphingBlob 
+            position={[0, 1, -5]} 
+            scale={1.8} 
+            color="#2563eb" // Protocol Blue
+            distort={0.6} 
+            speed={3} 
+          />
+
+        </group>
       </Canvas>
     </div>
   )
