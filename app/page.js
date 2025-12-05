@@ -30,36 +30,35 @@ const DOC_MAPPING = {
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
-// BACKGROUND COMPONENT (CLEAN WHITE)
+// ICONS
 // ==========================================
-const CssBackground = () => (
-  // Removed the gradient blobs. Just pure, clean white.
-  <div className="fixed inset-0 z-0 bg-white pointer-events-none" />
-)
-
 const Icons = {
-  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
+  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>, // Changed to Right Arrow for button
+  ArrowUpReal: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
   Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
-  Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
+  Camera: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
   File: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
 }
 
+// ==========================================
+// STYLES & LAYOUT
+// ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #ffffff;
+      background-color: #FAFAFA; /* Slightly off-white for professional feel */
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
-      color: #000000;
+      color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .btn-press { transition: transform 0.1s ease; }
@@ -72,7 +71,7 @@ const GlobalStyles = () => (
     
     /* THE FOUR DOTS LOADER */
     .loader {
-      height: 14px; /* Scaled to fit UI */
+      height: 14px;
       aspect-ratio: 2.5;
       --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
       background:var(--_g), var(--_g), var(--_g), var(--_g);
@@ -98,7 +97,8 @@ const GlobalStyles = () => (
 
 const KnowledgeTicker = () => {
   return (
-    <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative z-10">
+    // Centered the container and increased max-width for better flow
+    <div className="w-full max-w-5xl mx-auto mb-12 overflow-hidden relative z-10 flex justify-center">
       <div 
         className="flex w-full animate-scroll hover:pause"
         style={{
@@ -108,7 +108,8 @@ const KnowledgeTicker = () => {
       >
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md border border-white/60 px-3 py-1.5 rounded-full text-[10px] font-bold text-slate-700 uppercase tracking-wider shadow-sm">
+            {/* Cleaner Ticker Styling */}
+            <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                 <Icons.File />
                 <span>{item}</span>
             </div>
@@ -121,13 +122,13 @@ const KnowledgeTicker = () => {
 
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4 relative z-10">
+    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       
-      <div className="text-center mb-8 md:mb-12 space-y-4">
-        <h2 className={`text-4xl md:text-7xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
+      <div className="text-center mb-10 md:mb-16 space-y-4">
+        <h2 className={`text-4xl md:text-6xl font-bold text-slate-900 tracking-tight ${outfit.className}`}>
           Choose your protocol.
         </h2>
-        <p className="text-lg md:text-xl text-black font-medium leading-relaxed px-4">
+        <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed px-4">
           Two powerful modes. One compliance platform.
         </p>
       </div>
@@ -136,47 +137,57 @@ const NarrativeJourney = ({ onAction }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        <div className="group relative h-full min-h-[340px] flex flex-col rounded-[2.5rem] transition-all duration-500 hover:scale-[1.01] cursor-pointer" onClick={() => onAction('image')}>
-           <div className="absolute inset-0 rounded-[2.5rem] border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 bg-white/30 backdrop-blur-[20px] group-hover:bg-white/40 group-hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] group-hover:border-white/60" />
-           <div className="relative p-8 md:p-12 z-10 h-full flex flex-col justify-between text-left">
+        {/* CARD 1: VISUAL INSPECTION - Clean Enterprise Style */}
+        <div 
+            className="group relative h-full min-h-[300px] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-300 cursor-pointer overflow-hidden" 
+            onClick={() => onAction('image')}
+        >
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
-                <div className="w-full flex justify-between items-start mb-8 gap-6">
+                <div className="w-full flex justify-between items-start mb-6">
                    <div>
-                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
-                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50/50 inline-block px-3 py-1 rounded-full mt-2 border border-emerald-100">Detection Mode</p>
+                      <h3 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Visual Inspection</h3>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-md inline-block border border-emerald-100/50">Detection Mode</p>
                    </div>
-                   <div className="text-black group-hover:text-emerald-600 transition-colors pt-2">
+                   <div className="text-slate-400 group-hover:text-emerald-600 transition-colors">
                       <Icons.Camera />
                    </div>
                 </div>
-                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                
+                <p className="text-slate-600 text-base leading-7 font-normal">
                   Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
                 </p>
               </div>
-              <div className="w-full py-4 mt-8 rounded-2xl bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 group-hover:bg-emerald-600 border border-white/10">
+
+              <div className="w-full py-3 mt-8 rounded-lg border border-slate-200 text-slate-900 font-semibold text-sm uppercase tracking-wider hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group-hover:border-emerald-200 group-hover:text-emerald-700 group-hover:bg-emerald-50/50">
                 Start Inspection <Icons.ArrowUp />
               </div>
            </div>
         </div>
 
-        <div className="group relative h-full min-h-[340px] flex flex-col rounded-[2.5rem] transition-all duration-500 hover:scale-[1.01] cursor-pointer" onClick={() => onAction('chat')}>
-           <div className="absolute inset-0 rounded-[2.5rem] border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all duration-500 bg-white/30 backdrop-blur-[20px] group-hover:bg-white/40 group-hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] group-hover:border-white/60" />
-           <div className="relative p-8 md:p-12 z-10 h-full flex flex-col justify-between text-left">
+        {/* CARD 2: REGULATORY CONSULTANT - Clean Enterprise Style */}
+        <div 
+            className="group relative h-full min-h-[300px] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-300 cursor-pointer overflow-hidden" 
+            onClick={() => onAction('chat')}
+        >
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
-                <div className="w-full flex justify-between items-start mb-8 gap-6">
+                <div className="w-full flex justify-between items-start mb-6">
                    <div>
-                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
-                      <p className="text-xs font-bold text-blue-700 uppercase tracking-widest bg-blue-50/50 inline-block px-3 py-1 rounded-full mt-2 border border-blue-100">Chat Mode</p>
+                      <h3 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Regulatory Consultant</h3>
+                      <p className="text-xs font-bold text-blue-700 uppercase tracking-widest bg-blue-50 px-2.5 py-1 rounded-md inline-block border border-blue-100/50">Chat Mode</p>
                    </div>
-                   <div className="text-black group-hover:text-blue-600 transition-colors pt-2">
+                   <div className="text-slate-400 group-hover:text-blue-600 transition-colors">
                       <Icons.Book />
                    </div>
                 </div>
-                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                
+                <p className="text-slate-600 text-base leading-7 font-normal">
                   Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
                 </p>
               </div>
-              <div className="w-full py-4 mt-8 rounded-2xl bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 transition-all flex items-center justify-center gap-3 group-hover:bg-blue-600 border border-white/10">
+
+              <div className="w-full py-3 mt-8 rounded-lg border border-slate-200 text-slate-900 font-semibold text-sm uppercase tracking-wider hover:bg-slate-50 transition-all flex items-center justify-center gap-2 group-hover:border-blue-200 group-hover:text-blue-700 group-hover:bg-blue-50/50">
                 Start Chat <Icons.ArrowUp />
               </div>
            </div>
@@ -206,7 +217,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
       {selectedImage && (
-        <div className="mb-2 mx-1 p-2 bg-white/80 backdrop-blur-xl rounded-xl inline-flex items-center gap-2 border border-white/40 shadow-sm animate-pop-in">
+        <div className="mb-2 mx-1 p-2 bg-white/80 backdrop-blur-xl rounded-xl inline-flex items-center gap-2 border border-slate-200 shadow-sm animate-pop-in">
           <span className="text-xs text-black font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span>
           <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-500 hover:text-black"><Icons.X /></button>
         </div>
@@ -214,7 +225,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
 
       <form 
         onSubmit={handleSend} 
-        className="relative flex items-end w-full p-2 bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl shadow-lg focus-within:ring-2 focus-within:ring-black/10 focus-within:bg-white/90 transition-all" 
+        className="relative flex items-end w-full p-2 bg-white border border-slate-200 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-slate-100 focus-within:border-slate-300 transition-all" 
       >
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         
@@ -222,20 +233,20 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             <button 
                 type="button"
                 onClick={() => setShowMenu(!showMenu)}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-black text-white rotate-45' : 'bg-black/5 text-black hover:bg-black/10'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
             >
                 <Icons.Plus />
             </button>
 
             {showMenu && (
-                <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white/90 backdrop-blur-xl border border-white/60 rounded-xl shadow-xl overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in">
+                <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in">
                     <div className="space-y-0.5">
                         {['chat', 'image'].map(m => (
                             <button 
                                 key={m}
                                 type="button"
                                 onClick={() => handleModeClick(m)} 
-                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-black text-white' : 'text-slate-600 hover:bg-black/5'}`}
+                                className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}
                             >
                                 {m === 'chat' && <Icons.MessageSquare />}
                                 {m === 'image' && <Icons.Camera />}
@@ -253,7 +264,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
             onChange={(e) => setInput(e.target.value)} 
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }}
             placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'}
-            className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-black placeholder-slate-500 text-[15px] leading-6 font-medium" 
+            className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6 font-medium" 
             rows={1} 
             style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }}
         />
@@ -263,11 +274,11 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
           disabled={(!input.trim() && !selectedImage) || isSending} 
           className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all
             ${(!input.trim() && !selectedImage) 
-              ? 'bg-black/5 text-black/20 cursor-not-allowed' 
-              : `bg-black text-white cursor-pointer shadow-md hover:bg-slate-800`
+              ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
+              : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`
             }`}
         >
-          {isSending ? <div className="loader" /> : <Icons.ArrowUp />}
+          {isSending ? <div className="loader" /> : <Icons.ArrowUpReal />}
         </button>
       </form>
     </div>
@@ -287,20 +298,20 @@ const AuthModal = ({ isOpen, onClose, message }) => {
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[999] bg-black/10 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[999] bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
-          <div><h2 className="text-xl font-bold text-black mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-slate-500">Sign in to continue your session</p></div>
-          <button onClick={onClose} className="text-slate-400 hover:text-black transition-colors"><Icons.X /></button>
+          <div><h2 className="text-xl font-bold text-slate-900 mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-slate-500">Sign in to continue your session</p></div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors"><Icons.X /></button>
         </div>
-        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-slate-50 text-black border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4">
-          {googleLoading ? <div className="w-5 h-5 border-2 border-slate-400 border-t-black rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>}
+        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4">
+          {googleLoading ? <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>}
           Continue with Google
         </button>
-        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div><div className="relative flex justify-center text-xs"><span className="bg-white/50 px-3 text-slate-400">OR</span></div></div>
+        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div><div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-slate-400">OR</span></div></div>
         <form onSubmit={handleEmailAuth} className="space-y-4">
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-white/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-black placeholder-slate-400 focus:outline-none focus:border-black transition-all" />
-          <button type="submit" disabled={loading || googleLoading} className="w-full bg-black hover:bg-slate-800 text-white font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all" />
+          <button type="submit" disabled={loading || googleLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button>
         </form>
         {statusMessage && <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'}`}>{statusMessage}</div>}
       </div>
@@ -314,30 +325,30 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
     <div className="fixed inset-0 z-[1000] bg-white/90 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
       <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-500 hover:text-black transition-colors"><Icons.X /></button>
-        <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
         
         <div className="flex justify-center mb-8">
           <div className="bg-slate-100 p-1 rounded-full flex relative border border-slate-200">
-            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button>
-            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-black shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
+            <button onClick={() => setBillingInterval('month')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button>
+            <button onClick={() => setBillingInterval('year')} className={`px-6 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${billingInterval === 'year' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button>
           </div>
         </div>
         
-        <div className="flex items-baseline text-black justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-gray-500 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
-        <p className="text-sm text-gray-600 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-black font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
+        <div className="flex items-baseline text-slate-900 justify-center mb-2"><span className="text-6xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-slate-500 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
+        <p className="text-sm text-slate-600 text-center mb-8 leading-relaxed px-4">Enterprise-grade compliance infrastructure for Washtenaw County food service establishments.<br/><span className="text-slate-900 font-medium mt-2 block">Protect your license. Avoid fines.</span></p>
 
         <ul className="space-y-4 mb-8 flex-1 border-t border-slate-100 pt-6">
-          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> Unlimited Compliance Queries</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> Visual Inspections (Image Mode)</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> Full Washtenaw & FDA Database</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> Mock Audit Workflow</li>
-          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-black" /> <span className="text-black font-bold">Location License</span> (Unlimited Users)</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Unlimited Compliance Queries</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Visual Inspections (Image Mode)</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Full Washtenaw & FDA Database</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Mock Audit Workflow</li>
+          <li className="flex items-start gap-3 text-sm font-medium text-slate-700"><Icons.Check color="text-slate-900" /> <span className="text-slate-900 font-bold">Location License</span> (Unlimited Users)</li>
         </ul>
 
         <button 
           onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} 
           disabled={loading !== null} 
-          className="w-full bg-black hover:bg-slate-800 text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-full text-sm uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
         </button>
@@ -346,6 +357,9 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
   )
 }
 
+// ==========================================
+// MAIN PAGE
+// ==========================================
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
@@ -515,9 +529,9 @@ export default function Page() {
       <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50">
         
         {/* =====================================
-            1. BACKGROUND LAYER (CLEAN WHITE)
+            1. BACKGROUND LAYER (STATIC)
             ===================================== */}
-        <CssBackground />
+        {/* <ThreeBackground /> -- REMOVED THREE.JS */}
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
