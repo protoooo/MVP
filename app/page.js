@@ -152,9 +152,9 @@ const NarrativeJourney = ({ onAction }) => {
            {/* TOP 2/3: IMAGE */}
            <div className="relative h-[65%] w-full overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: SAVE AS 'visual-inspection.jpg' IN PUBLIC FOLDER */}
+             {/* IMAGE: CHANGED TO CAPITAL .PNG AS REQUESTED */}
              <img 
-               src="/visual-inspection.jpg" 
+               src="/visual-inspection.PNG" 
                alt="Visual Inspection Kitchen Analysis" 
                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
              />
@@ -189,7 +189,7 @@ const NarrativeJourney = ({ onAction }) => {
            {/* TOP 2/3: IMAGE */}
            <div className="relative h-[65%] w-full overflow-hidden">
              <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: SAVE AS 'regulatory-consultant.jpg' IN PUBLIC FOLDER */}
+             {/* IMAGE: KEPT AS LOWERCASE .jpg PER SCREENSHOT */}
              <img 
                src="/regulatory-consultant.jpg" 
                alt="Regulatory Compliance Documents" 
