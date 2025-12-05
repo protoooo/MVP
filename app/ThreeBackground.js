@@ -1,126 +1,104 @@
-// threebackground.js - Subtle Low-Poly Cleanliness Field
+'use client'
+import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
 
-// --- Setup Variables ---
-let scene, camera, renderer, geometry, material, mesh, container;
-let startTime = Date.now();
-const SHAPE_COUNT = 15; // Number of floating shapes
-const FOG_COLOR = 0xf0f0f0; // Very light grey/white for a sterile look
-const LIGHT_COLOR = 0xffffff; // Pure white light
+export default function ThreeBackground() {
+  const containerRef = useRef(null)
 
-// --- Initialization Function ---
-function init() {
-    // 1. Scene Setup
-    container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.zIndex = '-1'; // Ensure it's behind the main content
-    document.body.appendChild(container);
+  useEffect(() => {
+    if (!containerRef.current) return
 
-    scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(FOG_COLOR, 0.005);
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0xffffff) 
 
-    // 2. Camera Setup
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.z = 100;
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    containerRef.current.appendChild(renderer.domElement)
 
-    // 3. Renderer Setup
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(FOG_COLOR, 1); // Set clear color to match fog
-    container.appendChild(renderer.domElement);
-
-    // 4. Lighting - Soft, even lighting for a sterile feel
-    const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft overall light
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(LIGHT_COLOR, 1.5);
-    directionalLight.position.set(0, 50, 50);
-    scene.add(directionalLight);
-
-    // 5. Create Shapes (Low-Poly and Geometric)
-    for (let i = 0; i < SHAPE_COUNT; i++) {
-        createCleanShape();
+    const uniforms = {
+      u_time: { value: 0.0 },
+      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
     }
 
-    // 6. Event Listeners
-    window.addEventListener('resize', onWindowResize, false);
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
+      }
+    `
 
-    // Start animation loop
-    animate();
+    const fragmentShader = `
+      uniform float u_time;
+      uniform vec2 u_resolution;
+      varying vec2 vUv;
+
+      // PALETTE: Spearmint, Matte Blue
+      const vec3 c_mint = vec3(0.40, 0.75, 0.56); // #67C090
+      const vec3 c_blue = vec3(0.15, 0.40, 0.50); // #26667F
+      const vec3 c_navy = vec3(0.07, 0.25, 0.44); // #124170
+
+      float orb(vec2 uv, vec2 pos, float size) {
+          return smoothstep(size, size - 0.6, length(uv - pos));
+      }
+
+      void main() {
+        vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+        float aspect = u_resolution.x / u_resolution.y;
+        uv.x *= aspect;
+        vec2 center = vec2(0.5 * aspect, 0.5);
+
+        float t = u_time * 0.3;
+
+        // Orb 1: Mint (Safety)
+        vec2 pos1 = center + vec2(sin(t)*0.4, cos(t*0.8)*0.3);
+        float o1 = orb(uv, pos1, 0.9);
+
+        // Orb 2: Navy (Depth)
+        vec2 pos2 = center + vec2(cos(t*0.6)*0.5, sin(t*0.5)*0.4);
+        float o2 = orb(uv, pos2, 1.0);
+
+        // Orb 3: Blue (Link)
+        vec2 pos3 = center + vec2(sin(t*0.4+2.0)*0.6, cos(t*0.3)*0.2);
+        float o3 = orb(uv, pos3, 0.8);
+
+        // White Base
+        vec3 color = vec3(1.0);
+
+        // Subtract colors (Multiply blend for clean look)
+        color = mix(color, c_mint, o1 * 0.4);
+        color = mix(color, c_navy, o2 * 0.2);
+        color = mix(color, c_blue, o3 * 0.3);
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `
+
+    const geometry = new THREE.PlaneGeometry(2, 2)
+    const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader })
+    const mesh = new THREE.Mesh(geometry, material)
+    scene.add(mesh)
+
+    const animate = (time) => {
+      material.uniforms.u_time.value = time * 0.001
+      renderer.render(scene, camera)
+      requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+
+    const handleResize = () => {
+      renderer.setSize(window.innerWidth, window.innerHeight)
+      material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight)
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (containerRef.current) containerRef.current.removeChild(renderer.domElement)
+    }
+  }, [])
+
+  return <div ref={containerRef} className="fixed inset-0 z-0 pointer-events-none" style={{ opacity: 0.8 }} />
 }
-
-// --- Shape Creation Function ---
-function createCleanShape() {
-    // Choose a subtle geometric shape
-    const geometries = [
-        new THREE.TetrahedronGeometry(Math.random() * 5 + 3, 0), // Low-poly tetrahedron
-        new THREE.DodecahedronGeometry(Math.random() * 5 + 3, 0), // Low-poly dodecahedron
-        new THREE.BoxGeometry(Math.random() * 8 + 5, Math.random() * 8 + 5, Math.random() * 8 + 5) // Simple box
-    ];
-
-    const currentGeometry = geometries[Math.floor(Math.random() * geometries.length)];
-
-    // Material: Subtle, shiny, and slightly transparent
-    const shapeMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0xcccccc, // Light grey/silver
-        metalness: 0.1,
-        roughness: 0.8, // Slightly rough to avoid distracting reflections
-        clearcoat: 0.5,
-        clearcoatRoughness: 0.2,
-        flatShading: true, // Key for the low-poly look
-        transparent: true,
-        opacity: 0.7 + Math.random() * 0.2 // Subtle transparency
-    });
-
-    const shapeMesh = new THREE.Mesh(currentGeometry, shapeMaterial);
-
-    // Position randomly within a large space
-    shapeMesh.position.set(
-        (Math.random() - 0.5) * 400,
-        (Math.random() - 0.5) * 400,
-        (Math.random() - 0.5) * 400
-    );
-
-    // Give it a unique rotation speed for subtle variation
-    shapeMesh.userData.rotationSpeedX = (Math.random() - 0.5) * 0.002;
-    shapeMesh.userData.rotationSpeedY = (Math.random() - 0.5) * 0.002;
-    shapeMesh.userData.rotationSpeedZ = (Math.random() - 0.5) * 0.002;
-
-    scene.add(shapeMesh);
-}
-
-// --- Animation Loop ---
-function animate() {
-    requestAnimationFrame(animate);
-
-    const elapsedTime = (Date.now() - startTime) * 0.0001; // Slower time factor
-
-    scene.children.forEach(object => {
-        if (object.isMesh) {
-            // Slow, perpetual rotation
-            object.rotation.x += object.userData.rotationSpeedX || 0;
-            object.rotation.y += object.userData.rotationSpeedY || 0;
-            object.rotation.z += object.userData.rotationSpeedZ || 0;
-
-            // Subtle, wave-like movement using sine/cosine for an organic drift
-            object.position.x += Math.cos(elapsedTime * 2 + object.position.y * 0.01) * 0.01;
-            object.position.y += Math.sin(elapsedTime * 3 + object.position.z * 0.01) * 0.01;
-        }
-    });
-
-    renderer.render(scene, camera);
-}
-
-// --- Handle Window Resize ---
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-// Execute the initialization
-init();
