@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
+import ThreeBackground from './ThreeBackground' // Import the Globe
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -35,7 +36,6 @@ const DOC_MAPPING = {
   "date_marking_guide.pdf": "Date Marking & Shelf Life Rules"
 }
 
-// Convert mapping to array for the ticker
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
@@ -44,8 +44,7 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      /* CHANGED TO PURE WHITE TO MATCH JPG BACKGROUNDS */
-      background-color: #ffffff; 
+      background-color: #ffffff;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -97,11 +96,11 @@ const Icons = {
 }
 
 // ==========================================
-// COMPONENT: KNOWLEDGE TICKER (Glassmorphism)
+// COMPONENT: KNOWLEDGE TICKER
 // ==========================================
 const KnowledgeTicker = () => {
   return (
-    <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative">
+    <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative z-10">
       <div 
         className="flex w-full animate-scroll hover:pause"
         style={{
@@ -109,12 +108,11 @@ const KnowledgeTicker = () => {
           WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
         }}
       >
-        {/* Double the list for infinite loop */}
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-full border border-black/5 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm">
                 <Icons.File />
-                <span className="text-[11px] font-bold text-slate-700 tracking-wide uppercase whitespace-nowrap">{item}</span>
+                <span className="text-[11px] font-bold text-slate-800 tracking-wide uppercase whitespace-nowrap">{item}</span>
             </div>
           </div>
         ))}
@@ -124,58 +122,50 @@ const KnowledgeTicker = () => {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY
+// NARRATIVE JOURNEY (UPDATED: GLASS MODE)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4">
+    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4 relative z-10">
       
-      {/* Title Section */}
-      <div className="text-center mb-8 md:mb-10 space-y-4">
+      <div className="text-center mb-8 md:mb-12 space-y-4">
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
           Choose your protocol.
         </h2>
-        <p className="text-lg md:text-xl text-black font-semibold leading-relaxed px-4">
+        <p className="text-lg md:text-xl text-slate-700 font-medium leading-relaxed px-4">
           Two powerful modes. One compliance platform.
         </p>
       </div>
 
-      {/* DOCUMENT TICKER */}
       <KnowledgeTicker />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
-        <div className="group relative h-[550px] md:h-[600px] flex flex-col rounded-[2rem] overflow-hidden">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30 rounded-[2rem] pointer-events-none" />
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
+           {/* Frosted Glass Background */}
+           <div className="absolute inset-0 bg-white/30 backdrop-blur-xl border border-white/50 shadow-lg rounded-[2rem] group-hover:bg-white/40 group-hover:border-emerald-500/20 group-hover:shadow-2xl transition-all" />
            
-           {/* TOP 2/3: IMAGE */}
-           <div className="relative h-[65%] w-full overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: CAPITAL .JPG */}
-             <img 
-               src="/visual-inspection.JPG" 
-               alt="Visual Inspection Kitchen Analysis" 
-               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-             />
-           </div>
-
-           {/* BOTTOM 1/3: CONTENT */}
-           <div className="relative h-[35%] px-6 py-6 md:px-8 md:py-8 z-10 flex flex-col justify-between">
-              <div className="w-full flex justify-between items-start">
-                 <div>
-                    <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Detection Mode</p>
-                 </div>
-                 <div className="text-black opacity-80 group-hover:text-emerald-600 transition-colors">
-                    <Icons.Camera />
-                 </div>
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
+              <div>
+                <div className="w-full flex justify-between items-start mb-6">
+                   <div>
+                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
+                      <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest bg-emerald-100/50 inline-block px-2 py-1 rounded-md mt-2">Detection Mode</p>
+                   </div>
+                   <div className="text-black/80 p-3 bg-white/50 rounded-full group-hover:text-emerald-600 transition-colors">
+                      <Icons.Camera />
+                   </div>
+                </div>
+                
+                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                  Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
+                </p>
               </div>
-              
+
               <button 
                 onClick={() => onAction('image')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
+                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 group-hover:bg-emerald-600"
               >
                 Start Inspection <Icons.ArrowUp />
               </button>
@@ -183,36 +173,30 @@ const NarrativeJourney = ({ onAction }) => {
         </div>
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
-        <div className="group relative h-[550px] md:h-[600px] flex flex-col rounded-[2rem] overflow-hidden">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30 rounded-[2rem] pointer-events-none" />
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
+           {/* Frosted Glass Background */}
+           <div className="absolute inset-0 bg-white/30 backdrop-blur-xl border border-white/50 shadow-lg rounded-[2rem] group-hover:bg-white/40 group-hover:border-blue-500/20 group-hover:shadow-2xl transition-all" />
            
-           {/* TOP 2/3: IMAGE */}
-           <div className="relative h-[65%] w-full overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
-             {/* IMAGE: LOWERCASE .jpg */}
-             <img 
-               src="/regulatory-consultant.jpg" 
-               alt="Regulatory Compliance Documents" 
-               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-             />
-           </div>
-           
-           {/* BOTTOM 1/3: CONTENT */}
-           <div className="relative h-[35%] px-6 py-6 md:px-8 md:py-8 z-10 flex flex-col justify-between">
-              <div className="w-full flex justify-between items-start">
-                 <div>
-                    <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Chat Mode</p>
-                 </div>
-                 <div className="text-black opacity-80 group-hover:text-blue-600 transition-colors">
-                    <Icons.Book />
-                 </div>
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
+              <div>
+                <div className="w-full flex justify-between items-start mb-6">
+                   <div>
+                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
+                      <p className="text-xs font-bold text-blue-700 uppercase tracking-widest bg-blue-100/50 inline-block px-2 py-1 rounded-md mt-2">Chat Mode</p>
+                   </div>
+                   <div className="text-black/80 p-3 bg-white/50 rounded-full group-hover:text-blue-600 transition-colors">
+                      <Icons.Book />
+                   </div>
+                </div>
+                
+                <p className="text-slate-800 text-lg leading-relaxed font-medium">
+                  Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
+                </p>
               </div>
 
               <button 
                 onClick={() => onAction('chat')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
+                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 group-hover:bg-blue-600"
               >
                 Start Chat <Icons.ArrowUp />
               </button>
@@ -560,7 +544,7 @@ export default function Page() {
         {/* =====================================
             1. BACKGROUND LAYER (STATIC)
             ===================================== */}
-        {/* No Three.js background, using CSS body background */}
+        <ThreeBackground />
 
         {/* =====================================
             2. CONTENT LAYER (SCROLLABLE)
