@@ -54,7 +54,6 @@ const GlobalStyles = () => (
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
-    /* Custom Scrollbar for Chat */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
@@ -106,7 +105,7 @@ const KnowledgeTicker = () => {
       >
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-sm">
                 <Icons.File />
                 <span className="text-[11px] font-bold text-slate-800 tracking-wide uppercase whitespace-nowrap">{item}</span>
             </div>
@@ -118,7 +117,7 @@ const KnowledgeTicker = () => {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY (UPDATED: LIQUID GLASS MODE)
+// NARRATIVE JOURNEY
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
@@ -137,15 +136,18 @@ const NarrativeJourney = ({ onAction }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1: VISUAL INSPECTION MODE - LIQUID GLASS */}
-        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
-           {/* LIQUID GLASS LAYER */}
-           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
-                bg-gradient-to-br from-white/60 to-white/10 
-                backdrop-blur-[20px] 
-                group-hover:backdrop-blur-[25px] 
-                group-hover:from-white/70 group-hover:to-white/20
-                group-hover:shadow-2xl group-hover:border-emerald-500/30" 
+        {/* CARD 1: VISUAL INSPECTION MODE - ULTRA CLEAR GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.01]">
+           {/* 
+              THE GLASS LAYER: 
+              - bg-white/5 = Only 5% white (95% clear)
+              - backdrop-blur-xl = Strong blur for the "premium" feel
+              - border-white/30 = Subtle edge
+           */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 
+                bg-white/5 
+                backdrop-blur-xl
+                group-hover:bg-white/10 group-hover:border-emerald-500/30 group-hover:shadow-2xl" 
            />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
@@ -153,14 +155,14 @@ const NarrativeJourney = ({ onAction }) => {
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
-                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100/60 inline-block px-2 py-1 rounded-md mt-2 border border-emerald-200/50">Detection Mode</p>
+                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100/80 inline-block px-2 py-1 rounded-md mt-2 border border-emerald-200/50">Detection Mode</p>
                    </div>
-                   <div className="text-black/80 p-3 bg-white/60 rounded-full group-hover:text-emerald-600 transition-colors shadow-sm backdrop-blur-sm">
+                   <div className="text-black/80 p-3 bg-white/40 rounded-full group-hover:text-emerald-600 transition-colors shadow-sm backdrop-blur-sm">
                       <Icons.Camera />
                    </div>
                 </div>
                 
-                <p className="text-slate-900 text-lg leading-relaxed font-medium drop-shadow-sm">
+                <p className="text-slate-900 text-lg leading-relaxed font-semibold drop-shadow-sm">
                   Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
                 </p>
               </div>
@@ -174,15 +176,13 @@ const NarrativeJourney = ({ onAction }) => {
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT MODE - LIQUID GLASS */}
-        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
-           {/* LIQUID GLASS LAYER */}
-           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
-                bg-gradient-to-br from-white/60 to-white/10 
-                backdrop-blur-[20px] 
-                group-hover:backdrop-blur-[25px] 
-                group-hover:from-white/70 group-hover:to-white/20
-                group-hover:shadow-2xl group-hover:border-blue-500/30" 
+        {/* CARD 2: REGULATORY CONSULTANT MODE - ULTRA CLEAR GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.01]">
+           {/* GLASS LAYER */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 
+                bg-white/5 
+                backdrop-blur-xl
+                group-hover:bg-white/10 group-hover:border-blue-500/30 group-hover:shadow-2xl" 
            />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
@@ -190,14 +190,14 @@ const NarrativeJourney = ({ onAction }) => {
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
-                      <p className="text-xs font-bold text-blue-800 uppercase tracking-widest bg-blue-100/60 inline-block px-2 py-1 rounded-md mt-2 border border-blue-200/50">Chat Mode</p>
+                      <p className="text-xs font-bold text-blue-800 uppercase tracking-widest bg-blue-100/80 inline-block px-2 py-1 rounded-md mt-2 border border-blue-200/50">Chat Mode</p>
                    </div>
-                   <div className="text-black/80 p-3 bg-white/60 rounded-full group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-sm">
+                   <div className="text-black/80 p-3 bg-white/40 rounded-full group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-sm">
                       <Icons.Book />
                    </div>
                 </div>
                 
-                <p className="text-slate-900 text-lg leading-relaxed font-medium drop-shadow-sm">
+                <p className="text-slate-900 text-lg leading-relaxed font-semibold drop-shadow-sm">
                   Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
                 </p>
               </div>
