@@ -1,83 +1,90 @@
 'use client'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, PerspectiveCamera, Environment, Lightformer, Sphere } from '@react-three/drei'
+import { PerspectiveCamera, Plane } from '@react-three/drei'
 import * as THREE from 'three'
 import { useRef } from 'react'
 
-function LiquidMercury({ position, scale }) {
+function TopographyGrid() {
+  const meshRef = useRef()
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+    // 1. Rotate the landscape slowly
+    meshRef.current.rotation.z = t * 0.05
+    
+    // 2. Make it breathe (simulating data flow)
+    // We access the position attribute of the geometry directly
+    const { position } = meshRef.current.geometry.attributes
+    
+    // Simple gentle wave effect
+    // Note: In a real production app we might use a vertex shader, 
+    // but this is lighter and simpler for this specific look.
+    meshRef.current.position.z = -10 + Math.sin(t * 0.2) * 0.5
+  })
+
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-      <Sphere args={[1, 256, 256]} position={position} scale={scale}>
-        <MeshDistortMaterial
-          color="#ffffff"       // White base allows pure reflection
-          roughness={0}         // 0 = Perfect Mirror
-          metalness={1}         // 1 = Pure Metal
-          distort={0.5}         // Heavy liquid movement
-          speed={2}             // Fast fluidity
-          radius={1}
-          clearcoat={1}         // Extra glossy layer
-          clearcoatRoughness={0}
-          envMapIntensity={2}   // Make reflections bright
+    <group rotation={[-Math.PI / 2.5, 0, 0]} position={[0, 4, -10]}>
+      <Plane ref={meshRef} args={[50, 50, 64, 64]}>
+        {/* 
+           MeshStandardMaterial reacts to light. 
+           We use 'wireframe' to get that clean blueprint look.
+        */}
+        <meshStandardMaterial 
+          color="#ffffff" 
+          wireframe={true}
+          transparent={true}
+          opacity={0.3} // Keep it subtle so text is readable
+          roughness={0.5}
+          metalness={0.8}
         />
-      </Sphere>
-    </Float>
+      </Plane>
+    </group>
   )
 }
 
-function StudioEnvironment() {
-  // Chrome looks flat without things to reflect. 
-  // We build a virtual light studio around the object to create "Glossy Stripes".
+function DualityLighting() {
   return (
-    <Environment resolution={512}>
-      {/* 1. Main Highlight (Top) */}
-      <Lightformer 
-        intensity={4} 
-        rotation-x={Math.PI / 2} 
-        position={[0, 5, -9]} 
-        scale={[10, 10, 1]} 
+    <>
+      {/* 1. VISUAL INSPECTION LIGHT (Left - Emerald/Teal) */}
+      <spotLight 
+        position={[-20, 0, 10]} 
+        color="#10B981" 
+        intensity={20} 
+        angle={0.5} 
+        penumbra={1} 
+        distance={50} 
       />
-      {/* 2. Side Lights (To create edges) */}
-      <Lightformer 
-        intensity={2} 
-        rotation-y={Math.PI / 2} 
-        position={[-5, 1, -1]} 
-        scale={[20, 0.1, 1]} 
-        color="#22D3EE" // Cyan reflection
+
+      {/* 2. REGULATORY CONSULTANT LIGHT (Right - Blue/Indigo) */}
+      <spotLight 
+        position={[20, 0, 10]} 
+        color="#3B82F6" 
+        intensity={20} 
+        angle={0.5} 
+        penumbra={1} 
+        distance={50} 
       />
-      <Lightformer 
-        intensity={2} 
-        rotation-y={Math.PI / 2} 
-        position={[-5, -1, -1]} 
-        scale={[20, 0.5, 1]} 
-        color="#ffffff" // White reflection
-      />
-      {/* 3. Contrast Strips (To make it look metallic, not just white) */}
-      <Lightformer 
-        intensity={0.5} 
-        rotation-y={-Math.PI / 2} 
-        position={[10, 1, 0]} 
-        scale={[20, 1, 1]} 
-        color="black" 
-      />
-    </Environment>
+      
+      {/* 3. Base Fill Light (White - keeps lines visible) */}
+      <ambientLight intensity={0.5} color="#e2e8f0" />
+    </>
   )
 }
 
 export default function ThreeBackground() {
   return (
     <div className="fixed inset-0 z-0 bg-white pointer-events-none">
-      <Canvas dpr={[1, 2]}> {/* dpr=2 ensures sharp edges on retina screens */}
-        <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={45} />
+      <Canvas dpr={[1, 2]}> {/* High DPI for sharp lines on iPad */}
+        <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={60} />
         
-        <StudioEnvironment />
+        {/* The lights paint the colors onto the white grid */}
+        <DualityLighting />
         
-        <group position={[0, 0, -2]}>
-          {/* Main Mercury Blob */}
-          <LiquidMercury position={[3, -1, -2]} scale={2.5} />
-          
-          {/* Smaller accented blob behind */}
-          <LiquidMercury position={[-3, 2, -5]} scale={1.8} />
-        </group>
+        {/* The moving structure */}
+        <TopographyGrid />
+        
+        {/* Fog creates depth - the grid fades into the white background */}
+        <fog attach="fog" args={['#ffffff', 5, 30]} />
       </Canvas>
     </div>
   )
