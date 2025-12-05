@@ -41,7 +41,7 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #ffffff;
+      background-color: #f8fafc; /* Very light grey/blue tint for depth */
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -105,7 +105,7 @@ const KnowledgeTicker = () => {
       >
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
-            <div className="flex items-center gap-2 bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/40 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm">
                 <Icons.File />
                 <span className="text-[11px] font-bold text-slate-800 tracking-wide uppercase whitespace-nowrap">{item}</span>
             </div>
@@ -117,7 +117,7 @@ const KnowledgeTicker = () => {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY
+// NARRATIVE JOURNEY (UPDATED: FRAMER LIQUID STYLE)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
@@ -136,18 +136,15 @@ const NarrativeJourney = ({ onAction }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1: VISUAL INSPECTION MODE - ULTRA CLEAR GLASS */}
-        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.01]">
-           {/* 
-              THE GLASS LAYER: 
-              - bg-white/5 = Only 5% white (95% clear)
-              - backdrop-blur-xl = Strong blur for the "premium" feel
-              - border-white/30 = Subtle edge
-           */}
-           <div className="absolute inset-0 rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 
-                bg-white/5 
-                backdrop-blur-xl
-                group-hover:bg-white/10 group-hover:border-emerald-500/30 group-hover:shadow-2xl" 
+        {/* CARD 1: VISUAL INSPECTION MODE - LIQUID GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.015]">
+           {/* LIQUID GLASS SURFACE */}
+           {/* Note: using backdrop-blur-3xl for that thick, premium glass look */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
+                bg-white/40 
+                backdrop-blur-3xl 
+                group-hover:bg-white/50
+                group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-white/60" 
            />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
@@ -155,34 +152,35 @@ const NarrativeJourney = ({ onAction }) => {
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
-                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100/80 inline-block px-2 py-1 rounded-md mt-2 border border-emerald-200/50">Detection Mode</p>
+                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-white/50 inline-block px-3 py-1.5 rounded-lg mt-2 border border-white/50 shadow-sm backdrop-blur-md">Detection Mode</p>
                    </div>
-                   <div className="text-black/80 p-3 bg-white/40 rounded-full group-hover:text-emerald-600 transition-colors shadow-sm backdrop-blur-sm">
+                   <div className="text-black/80 p-3 bg-white/60 rounded-2xl group-hover:text-emerald-600 transition-colors shadow-sm backdrop-blur-md border border-white/50">
                       <Icons.Camera />
                    </div>
                 </div>
                 
-                <p className="text-slate-900 text-lg leading-relaxed font-semibold drop-shadow-sm">
+                <p className="text-slate-800 text-lg leading-relaxed font-medium drop-shadow-sm">
                   Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
                 </p>
               </div>
 
               <button 
                 onClick={() => onAction('image')}
-                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 group-hover:bg-emerald-700"
+                className="w-full py-4 mt-8 rounded-2xl bg-black/90 text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-black hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 backdrop-blur-xl border border-white/10"
               >
                 Start Inspection <Icons.ArrowUp />
               </button>
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT MODE - ULTRA CLEAR GLASS */}
-        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.01]">
-           {/* GLASS LAYER */}
-           <div className="absolute inset-0 rounded-[2rem] border border-white/30 shadow-xl transition-all duration-500 
-                bg-white/5 
-                backdrop-blur-xl
-                group-hover:bg-white/10 group-hover:border-blue-500/30 group-hover:shadow-2xl" 
+        {/* CARD 2: REGULATORY CONSULTANT MODE - LIQUID GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.015]">
+           {/* LIQUID GLASS SURFACE */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
+                bg-white/40 
+                backdrop-blur-3xl 
+                group-hover:bg-white/50
+                group-hover:shadow-2xl group-hover:shadow-blue-500/10 group-hover:border-white/60" 
            />
            
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
@@ -190,21 +188,21 @@ const NarrativeJourney = ({ onAction }) => {
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
-                      <p className="text-xs font-bold text-blue-800 uppercase tracking-widest bg-blue-100/80 inline-block px-2 py-1 rounded-md mt-2 border border-blue-200/50">Chat Mode</p>
+                      <p className="text-xs font-bold text-blue-800 uppercase tracking-widest bg-white/50 inline-block px-3 py-1.5 rounded-lg mt-2 border border-white/50 shadow-sm backdrop-blur-md">Chat Mode</p>
                    </div>
-                   <div className="text-black/80 p-3 bg-white/40 rounded-full group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-sm">
+                   <div className="text-black/80 p-3 bg-white/60 rounded-2xl group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-md border border-white/50">
                       <Icons.Book />
                    </div>
                 </div>
                 
-                <p className="text-slate-900 text-lg leading-relaxed font-semibold drop-shadow-sm">
+                <p className="text-slate-800 text-lg leading-relaxed font-medium drop-shadow-sm">
                   Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
                 </p>
               </div>
 
               <button 
                 onClick={() => onAction('chat')}
-                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 group-hover:bg-blue-700"
+                className="w-full py-4 mt-8 rounded-2xl bg-black/90 text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-black hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 backdrop-blur-xl border border-white/10"
               >
                 Start Chat <Icons.ArrowUp />
               </button>
