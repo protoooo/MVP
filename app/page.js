@@ -17,9 +17,6 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
-// ==========================================
-// DOCUMENT MAPPING (Pretty Names)
-// ==========================================
 const DOC_MAPPING = {
   "3compsink.pdf": "Sanitizing & Warewashing Protocols",
   "Violation Types | Washtenaw County, MI.pdf": "Washtenaw Violation Classifications",
@@ -36,7 +33,6 @@ const DOC_MAPPING = {
   "date_marking_guide.pdf": "Date Marking & Shelf Life Rules"
 }
 
-// Convert mapping to array for the ticker
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
@@ -45,7 +41,7 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA;
+      background-color: #ffffff;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
@@ -58,13 +54,12 @@ const GlobalStyles = () => (
     .squishy-press { transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .squishy-press:active { transform: scale(0.92); }
 
-    /* SCROLLBARS */
+    /* Custom Scrollbar for Chat */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
     
-    /* ANIMATIONS */
     @keyframes scroll {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
@@ -97,15 +92,11 @@ const Icons = {
 }
 
 // ==========================================
-// COMPONENT: KNOWLEDGE TICKER (Glassmorphism)
+// COMPONENT: KNOWLEDGE TICKER
 // ==========================================
 const KnowledgeTicker = () => {
   return (
-    <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative">
-      {/* 
-         FIX: Replaced solid 'bg-gradient' with 'mask-image' 
-         This creates a true transparency fade so the blue background shows through 
-      */}
+    <div className="w-full max-w-4xl mx-auto mb-10 overflow-hidden relative z-10">
       <div 
         className="flex w-full animate-scroll hover:pause"
         style={{
@@ -113,12 +104,11 @@ const KnowledgeTicker = () => {
           WebkitMaskImage: 'linear-gradient(to right, transparent, black 20%, black 80%, transparent)'
         }}
       >
-        {/* Double the list for infinite loop */}
         {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <div key={i} className="flex-shrink-0 mx-2">
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-full border border-black/5 shadow-sm">
+            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm">
                 <Icons.File />
-                <span className="text-[11px] font-bold text-slate-700 tracking-wide uppercase whitespace-nowrap">{item}</span>
+                <span className="text-[11px] font-bold text-slate-800 tracking-wide uppercase whitespace-nowrap">{item}</span>
             </div>
           </div>
         ))}
@@ -128,79 +118,93 @@ const KnowledgeTicker = () => {
 }
 
 // ==========================================
-// NARRATIVE JOURNEY
+// NARRATIVE JOURNEY (UPDATED: LIQUID GLASS MODE)
 // ==========================================
 const NarrativeJourney = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4">
+    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-12 pb-24 px-4 relative z-10">
       
-      {/* Title Section */}
-      <div className="text-center mb-8 md:mb-10 space-y-4">
+      <div className="text-center mb-8 md:mb-12 space-y-4">
         <h2 className={`text-4xl md:text-6xl font-bold text-black tracking-tight drop-shadow-sm ${outfit.className}`}>
           Choose your protocol.
         </h2>
-        <p className="text-lg md:text-xl text-black font-semibold leading-relaxed px-4">
+        <p className="text-lg md:text-xl text-slate-700 font-medium leading-relaxed px-4">
           Two powerful modes. One compliance platform.
         </p>
       </div>
 
-      {/* DOCUMENT TICKER */}
       <KnowledgeTicker />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1: VISUAL INSPECTION MODE */}
-        <div className="group relative h-full">
-           {/* Liquid Glass Effect - Very Transparent */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+        {/* CARD 1: VISUAL INSPECTION MODE - LIQUID GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
+           {/* LIQUID GLASS LAYER */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
+                bg-gradient-to-br from-white/60 to-white/10 
+                backdrop-blur-[20px] 
+                group-hover:backdrop-blur-[25px] 
+                group-hover:from-white/70 group-hover:to-white/20
+                group-hover:shadow-2xl group-hover:border-emerald-500/30" 
+           />
            
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              <div className="w-full flex justify-between items-start mb-6">
-                 <div>
-                    <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Detection Mode</p>
-                 </div>
-                 <div className="text-black opacity-80 group-hover:text-emerald-600 transition-colors">
-                    <Icons.Camera />
-                 </div>
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
+              <div>
+                <div className="w-full flex justify-between items-start mb-6">
+                   <div>
+                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
+                      <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest bg-emerald-100/60 inline-block px-2 py-1 rounded-md mt-2 border border-emerald-200/50">Detection Mode</p>
+                   </div>
+                   <div className="text-black/80 p-3 bg-white/60 rounded-full group-hover:text-emerald-600 transition-colors shadow-sm backdrop-blur-sm">
+                      <Icons.Camera />
+                   </div>
+                </div>
+                
+                <p className="text-slate-900 text-lg leading-relaxed font-medium drop-shadow-sm">
+                  Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
+                </p>
               </div>
-              
-              <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
-                Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
-              </p>
 
               <button 
                 onClick={() => onAction('image')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 group-hover:bg-emerald-700"
               >
                 Start Inspection <Icons.ArrowUp />
               </button>
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT MODE */}
-        <div className="group relative h-full">
-           {/* Liquid Glass Effect */}
-           <div className="absolute inset-0 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+        {/* CARD 2: REGULATORY CONSULTANT MODE - LIQUID GLASS */}
+        <div className="group relative h-full min-h-[320px] flex flex-col rounded-[2rem] transition-all duration-500 hover:scale-[1.02]">
+           {/* LIQUID GLASS LAYER */}
+           <div className="absolute inset-0 rounded-[2rem] border border-white/40 shadow-xl transition-all duration-500 
+                bg-gradient-to-br from-white/60 to-white/10 
+                backdrop-blur-[20px] 
+                group-hover:backdrop-blur-[25px] 
+                group-hover:from-white/70 group-hover:to-white/20
+                group-hover:shadow-2xl group-hover:border-blue-500/30" 
+           />
            
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              <div className="w-full flex justify-between items-start mb-6">
-                 <div>
-                    <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Chat Mode</p>
-                 </div>
-                 <div className="text-black opacity-80 group-hover:text-blue-600 transition-colors">
-                    <Icons.Book />
-                 </div>
+           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
+              <div>
+                <div className="w-full flex justify-between items-start mb-6">
+                   <div>
+                      <h3 className="text-3xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
+                      <p className="text-xs font-bold text-blue-800 uppercase tracking-widest bg-blue-100/60 inline-block px-2 py-1 rounded-md mt-2 border border-blue-200/50">Chat Mode</p>
+                   </div>
+                   <div className="text-black/80 p-3 bg-white/60 rounded-full group-hover:text-blue-600 transition-colors shadow-sm backdrop-blur-sm">
+                      <Icons.Book />
+                   </div>
+                </div>
+                
+                <p className="text-slate-900 text-lg leading-relaxed font-medium drop-shadow-sm">
+                  Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
+                </p>
               </div>
-              
-              <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
-                Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
-              </p>
 
               <button 
                 onClick={() => onAction('chat')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="w-full py-4 mt-8 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-900 hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 group-hover:bg-blue-700"
               >
                 Start Chat <Icons.ArrowUp />
               </button>
