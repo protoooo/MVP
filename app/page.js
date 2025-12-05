@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
-import ThreeBackground from './ThreeBackground' // Import the Globe
+import ThreeBackground from './ThreeBackground'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
@@ -36,6 +36,7 @@ const DOC_MAPPING = {
   "date_marking_guide.pdf": "Date Marking & Shelf Life Rules"
 }
 
+// Convert mapping to array for the ticker
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
