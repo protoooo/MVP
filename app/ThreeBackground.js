@@ -1,88 +1,83 @@
 'use client'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei'
+import { Float, PerspectiveCamera, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { useRef } from 'react'
 
-// A reusable component for a high-quality, matte ribbon
-function SmoothRibbon({ color, points, width, speed, materialType }) {
+function SatinRibbon({ color, points, width, speed, materialType }) {
   const ref = useRef()
   
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
-    // Elegant, slow floating. No warping.
+    // Slow, banking turn animation (like a ribbon floating in wind)
+    ref.current.rotation.x = Math.sin(t * speed * 0.5) * 0.1
     ref.current.position.y = Math.sin(t * speed) * 0.2
-    ref.current.rotation.x = Math.cos(t * speed * 0.5) * 0.05
   })
 
-  // CatmullRomCurve3 creates perfectly smooth, organic curves
   const curve = new THREE.CatmullRomCurve3(
     points.map(p => new THREE.Vector3(...p)),
-    false, // Closed?
-    'centripetal', // Curve type (smoothest)
-    0.5 // Tension
+    false,
+    'centripetal',
+    0.5
   )
 
   return (
     <Float speed={2} rotationIntensity={0.2} floatIntensity={0.2}>
       <mesh ref={ref}>
-        {/* 1024 segments ensures it looks like a vector line, not 3D geometry */}
-        <tubeGeometry args={[curve, 1024, width, 64, false]} />
-        
-        {/* MATERIAL SWITCHER */}
-        {materialType === 'clay' ? (
-          // THE "NOTION BLUE" LOOK: Soft, matte, paper-like
-          <meshStandardMaterial 
-            color={color}
-            roughness={0.7} 
-            metalness={0.0}
-          />
-        ) : (
-          // THE "MODERN CHROME" LOOK: Bead-blasted Aluminum (MacBook texture)
-          // Reflects light softly, doesn't look like a mirror
-          <meshStandardMaterial 
-            color={color}
-            roughness={0.5}
-            metalness={0.8}
-            envMapIntensity={1}
-          />
-        )}
+        {/* 
+           FLATTENED GEOMETRY
+           The 'scale' prop [1, 0.05, 1] flattens the tube into a ribbon/tape.
+           This looks much more modern/graphic design than a round pipe.
+        */}
+        <tubeGeometry args={[curve, 512, width, 16, false]} />
+        <group scale={[1, 0.05, 1]}> 
+           {/* 
+              SATIN FINISH
+              Roughness 0.4 + Metalness 0.5 = "Anodized Aluminum" or "Satin Paper"
+              No mirror reflections. Soft highlights only.
+           */}
+           <meshStandardMaterial 
+             color={color}
+             roughness={0.4} 
+             metalness={0.5}
+             envMapIntensity={2}
+             flatShading={false}
+           />
+        </group>
       </mesh>
     </Float>
   )
 }
 
-function SceneComposition() {
+function Composition() {
   return (
     <group position={[0, 0, -5]} rotation={[0, 0, -0.1]}>
       
-      {/* 1. The Matte Aluminum Backbone */}
-      <SmoothRibbon 
-        color="#F1F5F9" // Slate-100 (Very light grey/silver)
-        materialType="aluminum"
-        width={1.8}
+      {/* 1. The Satin Silver Ribbon (Background) */}
+      <SatinRibbon 
+        color="#cbd5e1" // Slate-300 (Darker silver for contrast)
+        width={2}
         speed={0.2}
         points={[
-          [-12, 0, -2],
-          [-6, 3, -1],
-          [0, -2, -2],
-          [6, 3, -1],
-          [12, 0, -2]
+          [-15, 2, -4],
+          [-7, -2, -4],
+          [0, 2, -4],
+          [7, -2, -4],
+          [15, 2, -4]
         ]}
       />
 
-      {/* 2. The Matte Blue Accent */}
-      <SmoothRibbon 
-        color="#3B82F6" // Modern Blue
-        materialType="clay"
-        width={0.8}
+      {/* 2. The Protocol Blue Ribbon (Foreground) */}
+      <SatinRibbon 
+        color="#3B82F6" // Brand Blue
+        width={1.2}
         speed={0.3}
         points={[
-          [-12, -2, 1],
-          [-5, 1, 2],
-          [2, 2, 2],
-          [9, -2, 1],
-          [15, 1, 0]
+          [-15, -1, 0],
+          [-6, 2, 1],
+          [2, -1, 1],
+          [9, 2, 1],
+          [15, -1, 0]
         ]}
       />
     </group>
@@ -91,40 +86,22 @@ function SceneComposition() {
 
 export default function ThreeBackground() {
   return (
-    <div className="fixed inset-0 z-0 bg-white pointer-events-none">
-      <Canvas dpr={[1, 2]}> {/* High DPI for crispness */}
+    // Changed bg to slate-50 (very light grey) to prove update works
+    <div className="fixed inset-0 z-0 bg-slate-50 pointer-events-none">
+      <Canvas dpr={[1, 2]}>
         <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={35} />
         
-        {/* 
-           LIGHTING IS KEY FOR MATTE LOOKS 
-           We use broad, soft lights to avoid harsh plastic highlights.
-        */}
-        <ambientLight intensity={1} />
-        <directionalLight position={[5, 10, 5]} intensity={1.5} color="#ffffff" />
-        {/* A cool blue fill light from the bottom adds the "Tech" feel without gloss */}
-        <directionalLight position={[-10, -10, 5]} intensity={0.5} color="#DBEAFE" />
+        {/* Broad, soft studio lighting (Softbox style) */}
+        <ambientLight intensity={1.5} />
+        <rectAreaLight width={20} height={20} color="#ffffff" intensity={2} position={[0, 10, 10]} lookAt={[0,0,0]} />
+        <directionalLight position={[-10, 0, 5]} intensity={1} color="#E0F2FE" />
         
-        {/* "City" environment gives the Aluminum something to reflect subtly */}
-        <Environment preset="city" />
+        <Environment preset="city" blur={1} /> 
 
-        <SceneComposition />
+        <Composition />
         
-        {/* 
-           CONTACT SHADOWS 
-           This grounds the ribbons against the back wall, adding depth 
-           without making them look 3D.
-        */}
-        <ContactShadows 
-          opacity={0.3} 
-          scale={30} 
-          blur={2} 
-          far={10} 
-          resolution={256} 
-          color="#000000" 
-        />
-        
-        {/* Soft fog to gently fade the ends */}
-        <fog attach="fog" args={['#ffffff', 5, 40]} />
+        {/* Fog matches the new Slate-50 background */}
+        <fog attach="fog" args={['#f8fafc', 5, 40]} />
       </Canvas>
     </div>
   )
