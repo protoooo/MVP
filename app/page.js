@@ -150,12 +150,24 @@ const NarrativeJourney = ({ onAction }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
         {/* CARD 1: VISUAL INSPECTION MODE */}
-        <div className="group relative h-full">
-           {/* Liquid Glass Effect - Very Transparent (UPDATED) */}
-           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md rounded-[2rem] border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30" />
+        <div className="group relative h-[550px] md:h-[600px] flex flex-col rounded-[2rem] overflow-hidden">
+           {/* Liquid Glass Effect */}
+           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-emerald-500/30 rounded-[2rem] pointer-events-none" />
            
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              <div className="w-full flex justify-between items-start mb-6">
+           {/* TOP 2/3: IMAGE */}
+           <div className="relative h-[65%] w-full overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
+             {/* IMAGE: SAVE AS 'visual-inspection.jpg' IN PUBLIC FOLDER */}
+             <img 
+               src="/visual-inspection.jpg" 
+               alt="Visual Inspection Kitchen Analysis" 
+               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             />
+           </div>
+
+           {/* BOTTOM 1/3: CONTENT */}
+           <div className="relative h-[35%] px-6 py-6 md:px-8 md:py-8 z-10 flex flex-col justify-between">
+              <div className="w-full flex justify-between items-start">
                  <div>
                     <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Visual Inspection</h3>
                     <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Detection Mode</p>
@@ -165,13 +177,9 @@ const NarrativeJourney = ({ onAction }) => {
                  </div>
               </div>
               
-              <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
-                Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies Priority (P) violations, labeling issues, and sanitary risks.
-              </p>
-
               <button 
                 onClick={() => onAction('image')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
               >
                 Start Inspection <Icons.ArrowUp />
               </button>
@@ -179,12 +187,24 @@ const NarrativeJourney = ({ onAction }) => {
         </div>
 
         {/* CARD 2: REGULATORY CONSULTANT MODE */}
-        <div className="group relative h-full">
-           {/* Liquid Glass Effect (UPDATED) */}
-           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md rounded-[2rem] border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30" />
+        <div className="group relative h-[550px] md:h-[600px] flex flex-col rounded-[2rem] overflow-hidden">
+           {/* Liquid Glass Effect */}
+           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-md border border-white/20 shadow-xl transition-all duration-500 group-hover:scale-[1.01] group-hover:shadow-2xl group-hover:border-blue-500/30 rounded-[2rem] pointer-events-none" />
            
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col items-start text-left">
-              <div className="w-full flex justify-between items-start mb-6">
+           {/* TOP 2/3: IMAGE */}
+           <div className="relative h-[65%] w-full overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10" />
+             {/* IMAGE: SAVE AS 'regulatory-consultant.jpg' IN PUBLIC FOLDER */}
+             <img 
+               src="/regulatory-consultant.jpg" 
+               alt="Regulatory Compliance Documents" 
+               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+             />
+           </div>
+           
+           {/* BOTTOM 1/3: CONTENT */}
+           <div className="relative h-[35%] px-6 py-6 md:px-8 md:py-8 z-10 flex flex-col justify-between">
+              <div className="w-full flex justify-between items-start">
                  <div>
                     <h3 className="text-2xl font-bold text-black mb-1 tracking-tight">Regulatory Consultant</h3>
                     <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Chat Mode</p>
@@ -193,14 +213,10 @@ const NarrativeJourney = ({ onAction }) => {
                     <Icons.Book />
                  </div>
               </div>
-              
-              <p className="text-black text-lg leading-relaxed mb-10 flex-1 font-medium">
-                Don't guess with the FDA Food Code. Ask complex enforcement questions ("Can I cool soup in a 5-gallon bucket?") and get citations specific to Washtenaw County.
-              </p>
 
               <button 
                 onClick={() => onAction('chat')}
-                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm uppercase tracking-widest shadow-lg hover:bg-slate-800 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
               >
                 Start Chat <Icons.ArrowUp />
               </button>
