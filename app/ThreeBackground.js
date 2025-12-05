@@ -6,41 +6,36 @@ export default function ThreeBackground() {
   const [vantaEffect, setVantaEffect] = useState(null)
 
   useEffect(() => {
-    // 1. Load Three.js (Specific version r121 is best for Vanta)
-    const loadThree = () => {
-      if (window.THREE) {
-        loadVanta()
-        return
+    // 1. Define the cleanup function early
+    let effect = null
+
+    // 2. Load the scripts in order (Three.js -> then Vanta)
+    const loadVanta = async () => {
+      // Check if Three.js is already loaded
+      if (!window.THREE) {
+        await new Promise((resolve) => {
+          const script = document.createElement('script')
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js'
+          script.async = true
+          script.onload = resolve
+          document.body.appendChild(script)
+        })
       }
-      const script = document.createElement('script')
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js'
-      script.async = true
-      script.onload = loadVanta
-      document.body.appendChild(script)
-    }
 
-    // 2. Load Vanta Rings
-    const loadVanta = () => {
-      if (window.VANTA) {
-        initVanta()
-        return
+      // Check if Vanta Rings is already loaded
+      if (!window.VANTA) {
+        await new Promise((resolve) => {
+          const script = document.createElement('script')
+          script.src = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.rings.min.js'
+          script.async = true
+          script.onload = resolve
+          document.body.appendChild(script)
+        })
       }
-      const script = document.createElement('script')
-      script.src = 'https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.rings.min.js'
-      script.async = true
-      script.onload = initVanta
-      document.body.appendChild(script)
-    }
 
-    // 3. Initialize the Effect
-    const initVanta = () => {
-      if (!vantaRef.current || window.VANTA === undefined) return
-
-      // Prevent multiple instances
-      if (vantaEffect) return
-
-      try {
-        const effect = window.VANTA.RINGS({
+      // 3. Initialize Vanta (The "Apple Health" Config)
+      if (vantaRef.current && window.VANTA) {
+        effect = window.VANTA.RINGS({
           el: vantaRef.current,
           mouseControls: true,
           touchControls: true,
@@ -50,34 +45,34 @@ export default function ThreeBackground() {
           scale: 1.00,
           scaleMobile: 1.00,
           
-          // === BRAND COLORS ===
-          // Matches your site background
-          backgroundColor: 0xfafafa, 
-          // The color of the rings (ProtocolLM Orange/Purple mix)
-          color: 0x8833ff, 
-          // Background mode (lighter = cleaner for food service)
+          // === APPLE HEALTH / PROTOCOL STYLE ===
+          backgroundColor: 0xffffff, // Pure Clean White
+          color: 0x4f46e5,           // Protocol Indigo/Purple
           backgroundAlpha: 1.0
         })
         setVantaEffect(effect)
-      } catch (error) {
-        console.error("Vanta error:", error)
       }
     }
 
-    // Start loading
-    loadThree()
+    loadVanta()
 
-    // Cleanup on unmount
+    // 4. Cleanup to prevent memory leaks
     return () => {
-      if (vantaEffect) vantaEffect.destroy()
+      if (effect) effect.destroy()
     }
-  }, []) // Empty dependency array means run once on mount
+  }, [])
 
   return (
     <div 
       ref={vantaRef} 
       className="fixed inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.6 }} // Adjust opacity if it's too busy behind text
+      // We reduce opacity slightly so the rings aren't too aggressive behind text
+      // Added transform to move Up/Left and Scale to cover edges
+      style={{ 
+        opacity: 0.4, 
+        filter: 'grayscale(20%)',
+        transform: 'translate(-10%, -15%) scale(1.2)' 
+      }} 
     />
   )
 }
