@@ -1,90 +1,109 @@
 'use client'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { PerspectiveCamera, Plane } from '@react-three/drei'
+import { Float, PerspectiveCamera, Environment } from '@react-three/drei'
 import * as THREE from 'three'
 import { useRef } from 'react'
 
-function TopographyGrid() {
-  const meshRef = useRef()
-
+function MatteRibbon({ color, points, width, speed, metallic, roughness }) {
+  const ref = useRef()
+  
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
-    // 1. Rotate the landscape slowly
-    meshRef.current.rotation.z = t * 0.05
-    
-    // 2. Make it breathe (simulating data flow)
-    // We access the position attribute of the geometry directly
-    const { position } = meshRef.current.geometry.attributes
-    
-    // Simple gentle wave effect
-    // Note: In a real production app we might use a vertex shader, 
-    // but this is lighter and simpler for this specific look.
-    meshRef.current.position.z = -10 + Math.sin(t * 0.2) * 0.5
+    // Very slow, majestic movement. No jitters.
+    ref.current.position.y = Math.sin(t * speed) * 0.3
+    ref.current.rotation.x = Math.sin(t * speed * 0.5) * 0.05
   })
 
+  // Create smooth curve from points
+  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)))
+
   return (
-    <group rotation={[-Math.PI / 2.5, 0, 0]} position={[0, 4, -10]}>
-      <Plane ref={meshRef} args={[50, 50, 64, 64]}>
+    <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2}>
+      <mesh ref={ref} position={[0, 0, 0]}>
         {/* 
-           MeshStandardMaterial reacts to light. 
-           We use 'wireframe' to get that clean blueprint look.
+           1024 Segments = Ultra Smooth (Retina quality)
+           No more "chopped" lines.
+        */}
+        <tubeGeometry args={[curve, 1024, width, 64, false]} />
+        
+        {/* 
+           THE "CLAUDE" MATERIAL: 
+           High Roughness = Matte/Clay/Brushed finish.
+           Moderate Metalness = Catches light but doesn't mirror.
         */}
         <meshStandardMaterial 
-          color="#ffffff" 
-          wireframe={true}
-          transparent={true}
-          opacity={0.3} // Keep it subtle so text is readable
-          roughness={0.5}
-          metalness={0.8}
+          color={color}
+          roughness={roughness} 
+          metalness={metallic}
+          flatShading={false}
         />
-      </Plane>
-    </group>
+      </mesh>
+    </Float>
   )
 }
 
-function DualityLighting() {
+function Composition() {
   return (
-    <>
-      {/* 1. VISUAL INSPECTION LIGHT (Left - Emerald/Teal) */}
-      <spotLight 
-        position={[-20, 0, 10]} 
-        color="#10B981" 
-        intensity={20} 
-        angle={0.5} 
-        penumbra={1} 
-        distance={50} 
+    <group position={[0, 0, -5]} rotation={[0, 0, -0.1]}>
+      
+      {/* 1. THE "MATTE CHROME" (Brushed Silver) */}
+      {/* It sits in the back, acting as the foundation */}
+      <MatteRibbon 
+        color="#E2E8F0" // Cool Silver/Slate-200
+        width={1.5}
+        speed={0.3}
+        metallic={0.6} // Semi-metallic
+        roughness={0.4} // Brushed finish, not glossy
+        points={[
+          [-15, 0, -2],
+          [-7, 3, -2],
+          [0, -2, -2],
+          [7, 3, -2],
+          [15, -1, -2]
+        ]}
       />
 
-      {/* 2. REGULATORY CONSULTANT LIGHT (Right - Blue/Indigo) */}
-      <spotLight 
-        position={[20, 0, 10]} 
-        color="#3B82F6" 
-        intensity={20} 
-        angle={0.5} 
-        penumbra={1} 
-        distance={50} 
+      {/* 2. THE "PROTOCOL BLUE" (Soft Matte Plastic) */}
+      {/* It weaves through the silver one */}
+      <MatteRibbon 
+        color="#3B82F6" // Blue-500
+        width={0.8}
+        speed={0.4}
+        metallic={0.1} // Mostly plastic/organic
+        roughness={0.7} // Very matte, soft touch
+        points={[
+          [-15, -2, 0],
+          [-6, 1, 1],
+          [2, 2, 1],
+          [8, -2, 1],
+          [15, 2, 0]
+        ]}
       />
-      
-      {/* 3. Base Fill Light (White - keeps lines visible) */}
-      <ambientLight intensity={0.5} color="#e2e8f0" />
-    </>
+    </group>
   )
 }
 
 export default function ThreeBackground() {
   return (
     <div className="fixed inset-0 z-0 bg-white pointer-events-none">
-      <Canvas dpr={[1, 2]}> {/* High DPI for sharp lines on iPad */}
-        <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={60} />
+      <Canvas dpr={[1, 2]}> {/* High DPI for iPad sharpness */}
+        <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={35} />
         
-        {/* The lights paint the colors onto the white grid */}
-        <DualityLighting />
+        {/* 
+           LIGHTING: The key to the "Matte" look.
+           We use a soft "Studio" environment map + gentle directional lights.
+        */}
+        <ambientLight intensity={1.5} />
+        <directionalLight position={[5, 10, 5]} intensity={2} color="#ffffff" />
+        <directionalLight position={[-10, 0, 5]} intensity={1} color="#E0F2FE" />
         
-        {/* The moving structure */}
-        <TopographyGrid />
+        {/* "City" preset provides nice white reflections for the matte metal */}
+        <Environment preset="city" blur={1} /> 
+
+        <Composition />
         
-        {/* Fog creates depth - the grid fades into the white background */}
-        <fog attach="fog" args={['#ffffff', 5, 30]} />
+        {/* Subtle white fog to feather the edges into the background */}
+        <fog attach="fog" args={['#ffffff', 5, 40]} />
       </Canvas>
     </div>
   )
