@@ -32,7 +32,6 @@ function validateMessages(messages) {
 // --- 2. INTELLIGENCE CONFIG ---
 
 const GENERATION_CONFIG = {
-  // ✅ MAX TOKENS INCREASED (Prevents cutoff)
   maxOutputTokens: 8192, 
   temperature: 0.1, 
   topP: 0.8,
@@ -65,6 +64,8 @@ export async function POST(req) {
     }
     
     const vertex_ai = new VertexAI(vertexConfig)
+    
+    // 🔥 UPDATED TO GEMINI 2.5 FLASH 🔥
     const model = vertex_ai.getGenerativeModel({ 
       model: 'gemini-2.5-flash', 
       generationConfig: GENERATION_CONFIG 
@@ -115,7 +116,6 @@ export async function POST(req) {
 
     if (searchTerms) {
         try {
-            // ✅ We append "Washtenaw Violation Types" to ensure we catch those specific definition docs
             const searchResults = await searchDocuments(`${searchTerms} Washtenaw Violation Types Enforcement`, 'washtenaw')
             
             if (searchResults && searchResults.length > 0) {
@@ -155,7 +155,6 @@ ${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.conten
 
     // --- FINAL GENERATION ---
     
-    // 🔥 UPDATED PROMPT: Uses exact Washtenaw P/Pf/Core logic 🔥
     const SYSTEM_PROMPT = `
 You are ProtocolLM, acting as an Official Health Inspector for Washtenaw County, MI.
 
