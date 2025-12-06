@@ -30,10 +30,16 @@ const DOC_MAPPING = {
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
+// MISSING COMPONENT FIXED HERE
+// ==========================================
+const CssBackground = () => (
+  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none" />
+)
+
+// ==========================================
 // ICONS
 // ==========================================
 const Icons = {
-  // Isometric Camera
   IsoCamera: () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 32 L24 42 L44 32" className="text-emerald-900/20" fill="currentColor" fillOpacity="0.05"/>
@@ -44,7 +50,6 @@ const Icons = {
       <path d="M24 16 L24 19" strokeOpacity="0.5" />
     </svg>
   ),
-  // Isometric Book
   IsoBook: () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10 12 L24 6 L38 12 V36 L24 30 L10 36 Z" className="text-blue-900/20" fill="currentColor" fillOpacity="0.05"/>
@@ -148,27 +153,23 @@ const NarrativeJourney = ({ onAction }) => {
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       
       <div className="text-center mb-10 md:mb-12 space-y-4">
-        {/* NEW BADGE */}
         <span className="inline-block px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2">
           Built for Washtenaw County
         </span>
-        
-        {/* NEW HEADLINE */}
-        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight ${outfit.className}`}>
+        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
           Pass your next inspection<br className="hidden md:block" /> without digging through PDFs.
         </h2>
       </div>
 
       <KnowledgeTicker />
 
-      {/* PROTOCOL HEADER */}
       <div className="text-center mb-6">
          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1: VISUAL INSPECTION */}
+        {/* CARD 1 */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-emerald-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -205,7 +206,7 @@ const NarrativeJourney = ({ onAction }) => {
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT */}
+        {/* CARD 2 */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-blue-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-blue-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -244,7 +245,6 @@ const NarrativeJourney = ({ onAction }) => {
 
       </div>
 
-      {/* HOW IT WORKS STRIP */}
       <div className="mt-24 border-t border-slate-200 pt-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div className="space-y-2">
