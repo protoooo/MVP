@@ -18,7 +18,7 @@ const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
+  <div className="fixed inset-0 z-0 bg-[#F3F4F6] pointer-events-none">
     <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
   </div>
 )
@@ -31,7 +31,8 @@ const Icons = {
   X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>,
   Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>,
   Book: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
-  SignOut: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  SignOut: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  File: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 }
 
 const GlobalStyles = () => (
@@ -42,7 +43,6 @@ const GlobalStyles = () => (
     @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
     .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
-    /* Hide scrollbar */
     ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
   `}</style>
 )
@@ -56,6 +56,50 @@ const KnowledgeTicker = () => {
         <Icons.File />
         <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
       </div>
+    </div>
+  )
+}
+
+const NarrativeJourney = ({ onAction }) => {
+  return (
+    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
+      <div className="text-center mb-10 md:mb-12 space-y-4">
+        <span className="inline-block px-3 py-1 rounded border border-slate-300 bg-white text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Washtenaw County • Food Service</span>
+        <h1 className={`text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[0.9] ${outfit.className}`}>Never fail a<br/>health inspection.</h1>
+        <p className={`text-lg text-slate-500 max-w-xl mx-auto leading-relaxed ${inter.className}`}>Instant photo analysis and code-backed answers. <br/><span className="text-slate-900 font-bold">Try it once for free. No login required.</span></p>
+      </div>
+      <KnowledgeTicker />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12 text-left">
+        <div onClick={() => onAction('image')} className="group bg-white border-2 border-slate-200 hover:border-emerald-500 rounded-xl p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer relative overflow-hidden">
+           <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">Most Popular</div>
+           <div className="mb-6 text-emerald-600 w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100"><Icons.Camera /></div>
+           <h3 className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}>Visual Inspection</h3>
+           <p className="text-sm text-slate-500 mb-8 h-10">Take a photo. We detect Priority (P) violations instantly.</p>
+           <button className="w-full py-3 bg-emerald-600 group-hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-widest rounded-lg transition-colors">Scan Kitchen (1 Free)</button>
+        </div>
+        <div onClick={() => onAction('chat')} className="group bg-white border-2 border-slate-200 hover:border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer">
+           <div className="mb-6 text-blue-600 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100"><Icons.Zap /></div>
+           <h3 className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}>Consultant Chat</h3>
+           <p className="text-sm text-slate-500 mb-8 h-10">Ask questions. Get answers grounded in Washtenaw code.</p>
+           <button className="w-full py-3 bg-white border-2 border-slate-200 group-hover:border-blue-500 text-slate-900 group-hover:text-blue-600 font-bold text-xs uppercase tracking-widest rounded-lg transition-colors">Ask Question (1 Free)</button>
+        </div>
+      </div>
+      <div className="mt-20 border-t border-slate-200 pt-8 text-center"><p className={`text-xs text-slate-400 font-bold uppercase tracking-widest mb-4 ${mono.className}`}>Database Includes</p><div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-600"><span>WASHTENAW ENFORCEMENT</span><span>•</span><span>MI MODIFIED FOOD CODE</span><span>•</span><span>FDA 2022</span></div></div>
+    </div>
+  )
+}
+
+const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
+  const [showMenu, setShowMenu] = useState(false); const menuRef = useRef(null); const handleModeClick = (mode) => { setActiveMode(mode); setShowMenu(false); if (mode === 'image' && session) fileInputRef.current?.click() }; useEffect(() => { function handleClickOutside(event) { if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
+  return (
+    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
+      {selectedImage && (<div className="mb-2 mx-1 p-2 bg-white/80 backdrop-blur-xl rounded-xl inline-flex items-center gap-2 border border-slate-200 shadow-sm animate-pop-in"><span className="text-xs text-black font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span><button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-500 hover:text-black"><Icons.X /></button></div>)}
+      <form onSubmit={handleSend} className="relative flex items-end w-full p-2 bg-white border border-slate-200 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-slate-100 focus-within:border-slate-300 transition-all">
+        <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
+        <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}><button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}><Icons.Plus /></button>{showMenu && (<div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in"><div className="space-y-0.5">{['chat', 'image'].map(m => (<button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{m === 'chat' && <Icons.MessageSquare />}{m === 'image' && <Icons.Camera />}<span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span></button>))}</div></div>)}</div>
+        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6 font-medium" rows={1} style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }} />
+        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowRight />}</button>
+      </form>
     </div>
   )
 }
@@ -121,7 +165,6 @@ export default function Page() {
 
     const newMsg = { role: 'user', content: input, image: img }; setMessages(p => [...p, newMsg]); setInput(''); setImg(null); setSending(true); setMessages(p => [...p, { role: 'assistant', content: '' }]);
     try {
-      // SENDING isDemo: !session to allow free try in API
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg }], image: img, mode, isDemo: !session }) });
       const data = await res.json(); setMessages(p => { const u = [...p]; u[u.length-1].content = data.message; return u; });
       if (!session) { setTimeout(() => { setAuthMsg('Create free account to save this report.'); setShowAuth(true); }, 5000); }
@@ -157,9 +200,8 @@ export default function Page() {
               <div className="flex-1 overflow-y-auto px-4 pb-20">
                  <div className="max-w-4xl mx-auto mt-16 text-center space-y-6">
                     <span className={`inline-block px-3 py-1 rounded border border-slate-300 bg-white text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 ${mono.className}`}>Washtenaw County • Food Service</span>
-                    {/* FIXED HEADER: One Line */}
-                    <h1 className={`text-3xl md:text-6xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
-                      Never fail a health inspection.
+                    <h1 className={`text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[0.9] ${outfit.className}`}>
+                      Never fail a<br/>health inspection.
                     </h1>
                     <p className={`text-lg text-slate-500 max-w-xl mx-auto leading-relaxed ${inter.className}`}>
                       Instant photo analysis and code-backed answers. <br/>
@@ -190,6 +232,17 @@ export default function Page() {
                               Ask Question (1 Free)
                            </button>
                         </div>
+                    </div>
+                    
+                    <div className="mt-20 border-t border-slate-200 pt-8 text-center">
+                       <p className={`text-xs text-slate-400 font-bold uppercase tracking-widest mb-4 ${mono.className}`}>Database Includes</p>
+                       <div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-600">
+                          <span>WASHTENAW ENFORCEMENT</span>
+                          <span>•</span>
+                          <span>MI MODIFIED FOOD CODE</span>
+                          <span>•</span>
+                          <span>FDA 2022</span>
+                       </div>
                     </div>
                  </div>
               </div>
