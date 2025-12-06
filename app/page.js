@@ -1,4 +1,5 @@
 'use client'
+// VERSION: FINAL_CLEAN_V3
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -15,10 +16,8 @@ const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  <div className="fixed inset-0 z-0 bg-[#F8FAFC] pointer-events-none">
+    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
   </div>
 )
 
@@ -27,8 +26,8 @@ const Icons = {
   IsoBook: () => <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 12 L24 6 L38 12 V36 L24 30 L10 36 Z" className="text-blue-900/20" fill="currentColor" fillOpacity="0.05"/><path d="M24 6 V30" /><path d="M24 30 L38 36" /><path d="M10 36 V12" /><path d="M38 36 V12" /><path d="M16 18 L24 14" strokeOpacity="0.5" /><path d="M16 22 L24 18" strokeOpacity="0.5" /><path d="M16 26 L24 22" strokeOpacity="0.5" /></svg>,
   ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
   SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
-  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
+  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12"/></svg>,
+  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v16m8-8H4"/></svg>,
   Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
@@ -42,7 +41,7 @@ const Icons = {
 
 const GlobalStyles = () => (
   <style jsx global>{`
-    body { background-color: #FAFAFA; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #F8FAFC; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .btn-press { transition: transform 0.1s ease; } .btn-press:active { transform: scale(0.96); }
     @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
     .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
@@ -75,6 +74,7 @@ const NarrativeJourney = ({ onAction }) => {
       <KnowledgeTicker />
       <div className="text-center mb-6"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
+        {/* VISUAL INSPECTION - Green Border, White Button */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-emerald-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -92,6 +92,7 @@ const NarrativeJourney = ({ onAction }) => {
               <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
            </div>
         </div>
+        {/* REGULATORY CONSULTANT - Blue Border, White Button */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -120,7 +121,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}><button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}><Icons.Plus /></button>{showMenu && (<div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in"><div className="space-y-0.5">{['chat', 'image'].map(m => (<button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{m === 'chat' && <Icons.MessageSquare />}{m === 'image' && <Icons.Camera />}<span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span></button>))}</div></div>)}</div>
         <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6 font-medium" rows={1} style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }} />
-        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUpReal />}</button>
+        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUp />}</button>
       </form>
     </div>
   )
