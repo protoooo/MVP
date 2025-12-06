@@ -8,28 +8,19 @@ import { checkRateLimit, incrementUsage } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-// --- 1. HELPER FUNCTIONS ---
-
 function sanitizeString(input, maxLength = 5000) {
   if (typeof input !== 'string') return ''
-  return input
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .trim()
-    .substring(0, maxLength)
+  return input.replace(/<script[^>]*>.*?<\/script>/gi, '').replace(/<iframe[^>]*>.*?<\/iframe>/gi, '').trim().substring(0, maxLength)
 }
 
 function validateMessages(messages) {
   if (!Array.isArray(messages)) return []
-  const valid = messages.slice(-6).map(msg => ({ 
+  return messages.slice(-6).map(msg => ({ 
     role: msg.role === 'user' ? 'user' : 'assistant',
     content: sanitizeString(msg.content, 5000),
     image: msg.image || null
   }))
-  return valid
 }
-
-// --- 2. INTELLIGENCE CONFIG ---
 
 const GENERATION_CONFIG = {
   maxOutputTokens: 8192, 
@@ -37,41 +28,15 @@ const GENERATION_CONFIG = {
   topP: 0.8,
 }
 
-// --- 3. MAIN ROUTE HANDLER ---
-
 export async function POST(req) {
   try {
     const body = await req.json()
-    
     const messages = validateMessages(body.messages || [])
     const image = body.image && typeof body.image === 'string' ? body.image : null
     const chatId = body.chatId || null
-    
-    // --- GOOGLE VERTEX SETUP ---
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
-    
-    let vertexConfig = { project: projectId, location: 'us-central1' }
-    if (process.env.GOOGLE_CREDENTIALS_JSON) {
-      try {
-        const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
-        vertexConfig.googleAuthOptions = {
-          credentials: {
-            client_email: credentials.client_email,
-            private_key: credentials.private_key?.replace(/\\n/g, '\n'),
-          },
-        }
-      } catch (e) { console.error('❌ Credential parse error', e) }
-    }
-    
-    const vertex_ai = new VertexAI(vertexConfig)
-    
-    // 🔥 UPDATED TO GEMINI 2.5 FLASH 🔥
-    const model = vertex_ai.getGenerativeModel({ 
-      model: 'gemini-2.5-flash', 
-      generationConfig: GENERATION_CONFIG 
-    })
+    const isDemo = body.isDemo || false // CHECK FOR DEMO FLAG
 
-    // --- SUPABASE & AUTH SETUP ---
+    // 1. AUTHENTICATION & GUEST HANDLING
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -80,19 +45,41 @@ export async function POST(req) {
     )
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) return NextResponse.json({ error: 'Auth required', errorType: 'AUTH_REQUIRED' }, { status: 401 })
+    
+    // ID for rate limiting: User ID OR IP Address if guest
+    const userIdentifier = user ? user.id : (req.headers.get('x-forwarded-for') || 'guest_ip')
 
-    const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
-    if (!isAdmin) {
-        const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', user.id).in('status', ['active', 'trialing']).maybeSingle()
-        if (!sub) return NextResponse.json({ error: 'Subscription required', errorType: 'SUBSCRIPTION_REQUIRED' }, { status: 402 })
+    // BLOCK if not logged in AND not a demo
+    if ((authError || !user) && !isDemo) {
+      return NextResponse.json({ error: 'Auth required' }, { status: 401 })
     }
 
-    const limitCheck = await checkRateLimit(user.id, image ? 'image' : 'text') 
-    if (!limitCheck.success) return NextResponse.json({ error: 'Rate limit exceeded', errorType: 'RATE_LIMIT' }, { status: 429 })
+    // BLOCK if logged in but no subscription (and not admin)
+    if (user) {
+        const isAdmin = user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
+        if (!isAdmin) {
+            const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', user.id).in('status', ['active', 'trialing']).maybeSingle()
+            if (!sub) return NextResponse.json({ error: 'Subscription required' }, { status: 402 })
+        }
+    }
 
-    // --- 🧠 INTELLIGENT WORKFLOW ---
+    // 2. RATE LIMITING (Crucial for guests)
+    // If it's a demo/guest, we treat them strictly in checkRateLimit logic (or rely on frontend localStorage for UX, backend for DDOS protection)
+    const limitCheck = await checkRateLimit(userIdentifier, image ? 'image' : 'text') 
+    if (!limitCheck.success) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
 
+    // --- GOOGLE VERTEX SETUP ---
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.GCLOUD_PROJECT_ID
+    let vertexConfig = { project: projectId, location: 'us-central1' }
+    if (process.env.GOOGLE_CREDENTIALS_JSON) {
+      const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
+      vertexConfig.googleAuthOptions = { credentials: { client_email: credentials.client_email, private_key: credentials.private_key?.replace(/\\n/g, '\n') } }
+    }
+    
+    const vertex_ai = new VertexAI(vertexConfig)
+    const model = vertex_ai.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: GENERATION_CONFIG })
+
+    // --- INTELLIGENCE WORKFLOW ---
     let context = ''
     let searchTerms = ''
 
@@ -101,15 +88,13 @@ export async function POST(req) {
             const visionPrompt = {
                 role: 'user',
                 parts: [
-                    { text: "Analyze this image for food safety. Identify the specific equipment, surface condition (scratches/grooves?), and food placement. Output ONLY a search query for regulations (e.g. 'cutting board scoring resurfacing requirements', 'ready to eat food in dirty sink violation')." },
+                    { text: "Analyze this image for food safety. Identify equipment, surface condition, and food placement. Output ONLY a search query for regulations." },
                     { inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } }
                 ]
             }
             const visionResult = await model.generateContent({ contents: [visionPrompt] })
             searchTerms = visionResult.response.candidates[0].content.parts[0].text.trim()
-        } catch (e) {
-            searchTerms = "general sanitation cleaning frequency"
-        }
+        } catch (e) { searchTerms = "general sanitation cleaning frequency" }
     } else {
         searchTerms = messages[messages.length - 1].content
     }
@@ -117,75 +102,24 @@ export async function POST(req) {
     if (searchTerms) {
         try {
             const searchResults = await searchDocuments(`${searchTerms} Washtenaw Violation Types Enforcement`, 'washtenaw')
-            
             if (searchResults && searchResults.length > 0) {
-                const washtenaw = []
-                const state = []
-                const federal = []
-
-                searchResults.forEach(d => {
-                    const src = (d.metadata?.source || '').toLowerCase()
-                    const text = (d.content || '').toLowerCase()
-
-                    if (src.includes('washtenaw') || text.includes('washtenaw')) {
-                        washtenaw.push(d)
-                    } else if (
-                        src.includes('michigan') || src.includes('mi_') || src.includes('act') || src.includes('state') ||
-                        text.includes('michigan') || text.includes('department of agriculture')
-                    ) {
-                        state.push(d)
-                    } else {
-                        federal.push(d)
-                    }
-                })
-                
-                context = `
-=== PRIORITY 1: WASHTENAW COUNTY DEFINITIONS & ENFORCEMENT ===
-${washtenaw.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
-
-=== PRIORITY 2: MICHIGAN MODIFIED FOOD CODE (THE REGULATIONS) ===
-${state.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
-
-=== PRIORITY 3: FEDERAL STANDARDS ===
-${federal.slice(0, 3).map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')}
-`
+                context = searchResults.map(d => `SOURCE: ${d.metadata?.source}\nTEXT: "${d.content}"`).join('\n\n')
             }
-        } catch (err) { console.error('❌ Search error:', err) }
+        } catch (err) { console.error('Search error:', err) }
     }
 
-    // --- FINAL GENERATION ---
-    
     const SYSTEM_PROMPT = `
 You are ProtocolLM, acting as an Official Health Inspector for Washtenaw County, MI.
-
-YOUR AUTHORITY:
-1. **Washtenaw County Enforcement Policies**: Use these to determine the SEVERITY (P/Pf/Core) and TIMELINE.
-2. **Michigan Modified Food Code**: Use this to cite the specific RULE (Section numbers).
-
-STRICT CLASSIFICATION RULES (Based on Washtenaw Violation Types PDF):
-- **Priority Item (P)**: High Risk. Direct connection to foodborne illness (e.g., cooking temps, cross-contamination, handwashing). *Formerly "Critical".*
-- **Priority Foundation Item (Pf)**: Supports Priority items (e.g., soap at sink, calibrated thermometer, no sanitizer test strips). *Formerly "Critical" or "Non-Critical".*
-- **Core Item (C)**: General sanitation/maintenance (e.g., dirty floors, repair issues, dirty stove exterior). *Formerly "Non-Critical".*
-
+YOUR AUTHORITY: Washtenaw County Enforcement Policies & Michigan Modified Food Code.
 RESPONSE STRUCTURE:
-1. OBSERVATION: Professional technical description.
-2. VIOLATION TYPE: "Priority Item (P)", "Priority Foundation Item (Pf)", or "Core Item (C)".
+1. OBSERVATION: Technical description.
+2. VIOLATION TYPE: Priority (P), Priority Foundation (Pf), or Core (C).
 3. ENFORCEMENT AUTHORITY: "Washtenaw County Health Department".
-4. CITATION: "Michigan Modified Food Code § [Number]". (Use the exact section number. If the number isn't in the snippet, use your internal knowledge of the 2017/2022 Food Code).
-5. REQUIRED CORRECTION: "Immediate" (for P/Pf) or "90 Days" (for Core), followed by the specific fix action.
-
-TONE: Strict, Professional, Educational.
+4. CITATION: "Michigan Modified Food Code § [Number]".
+5. REQUIRED CORRECTION: Timeline and fix.
+TONE: Strict, Professional.
 `
-
-    const finalPrompt = `
-${SYSTEM_PROMPT}
-
-=== OFFICIAL CONTEXT ===
-${context || "No specific local regulations found. Referencing Michigan Modified Food Code Standards."}
-
-=== USER QUERY/IMAGE ANALYSIS ===
-${messages[messages.length - 1].content}
-`
+    const finalPrompt = `${SYSTEM_PROMPT}\n\n=== OFFICIAL CONTEXT ===\n${context}\n\n=== QUERY ===\n${messages[messages.length - 1].content}`
 
     const reqContent = { role: 'user', parts: [{ text: finalPrompt }] }
     if (image) {
@@ -195,23 +129,22 @@ ${messages[messages.length - 1].content}
 
     const result = await model.generateContent({ contents: [reqContent] })
     let text = result.response.candidates[0].content.parts[0].text
-
-    // Clean formatting
     text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '').replace(/`/g, '')
 
-    if (chatId) {
+    // Only save history if user is logged in
+    if (user && chatId) {
       await supabase.from('messages').insert([
         { chat_id: chatId, role: 'user', content: messages[messages.length - 1].content, image: image ? 'stored' : null },
         { chat_id: chatId, role: 'assistant', content: text }
       ])
     }
 
-    await incrementUsage(user.id, image ? 'image' : 'text')
+    // Increment usage (tracks IP if guest)
+    await incrementUsage(userIdentifier, image ? 'image' : 'text')
 
     return NextResponse.json({ message: text })
 
   } catch (error) {
-    console.error('❌ API Error:', error)
     return NextResponse.json({ error: 'Service error', details: error.message }, { status: 500 })
   }
 }

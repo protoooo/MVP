@@ -14,7 +14,15 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
-// --- ICONS (Bold, Technical) ---
+const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.pdf": "Violation Classifications", "Enforcement Action.pdf": "Enforcement Guidelines", "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)", "MI_MODIFIED.pdf": "Michigan Modified Law", "Cooking_Temps.pdf": "Critical Temperatures", "Cooling Foods.pdf": "Cooling Procedures", "Cross contamination.pdf": "Cross-Contamination", "food_labeling.pdf": "Labeling Standards", "Norovirus.pdf": "Biohazard Cleanup", "Allergy Info.pdf": "Allergen Control", "Emergency_Plan.pdf": "Emergency Plans", "Date_Marking.pdf": "Date Marking Rules" }
+const TICKER_ITEMS = Object.values(DOC_MAPPING)
+
+const CssBackground = () => (
+  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
+    <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  </div>
+)
+
 const Icons = {
   Camera: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
   Zap: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
@@ -32,8 +40,25 @@ const GlobalStyles = () => (
     .tech-grid { background-size: 40px 40px; background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px); }
     .loader { width: 18px; height: 18px; border: 2px solid #e2e8f0; border-bottom-color: #000000; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
     @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
+    .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
+    /* Hide scrollbar */
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
   `}</style>
 )
+
+const KnowledgeTicker = () => {
+  const [index, setIndex] = useState(0);
+  useEffect(() => { const timer = setInterval(() => { setIndex((prev) => (prev + 1) % TICKER_ITEMS.length); }, 4000); return () => clearInterval(timer); }, []);
+  return (
+    <div className="mx-auto mb-8 h-10 w-fit overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-6">
+      <div key={index} className="flex items-center gap-3 animate-ticker-item absolute">
+        <Icons.File />
+        <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
+      </div>
+    </div>
+  )
+}
 
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState(''); const [loading, setLoading] = useState(false); const [googleLoading, setGoogleLoading] = useState(false); const [statusMessage, setStatusMessage] = useState(''); const supabase = createClient();
@@ -83,7 +108,6 @@ export default function Page() {
 
   const handleAction = (newMode) => {
     setMode(newMode);
-    // FREE TRIAL LOGIC: If no session AND already used, block.
     if (!session && usage[newMode]) { setAuthMsg('Free usage limit reached.'); setShowAuth(true); return; }
     if (newMode === 'image') fileRef.current?.click();
   }
@@ -97,9 +121,10 @@ export default function Page() {
 
     const newMsg = { role: 'user', content: input, image: img }; setMessages(p => [...p, newMsg]); setInput(''); setImg(null); setSending(true); setMessages(p => [...p, { role: 'assistant', content: '' }]);
     try {
-      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg }], image: img, mode }) });
+      // SENDING isDemo: !session to allow free try in API
+      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg }], image: img, mode, isDemo: !session }) });
       const data = await res.json(); setMessages(p => { const u = [...p]; u[u.length-1].content = data.message; return u; });
-      if (!session) { setTimeout(() => { setAuthMsg('Create free account to save this report.'); setShowAuth(true); }, 4000); }
+      if (!session) { setTimeout(() => { setAuthMsg('Create free account to save this report.'); setShowAuth(true); }, 5000); }
     } catch { setMessages(p => { const u = [...p]; u[u.length-1].content = 'Error.'; return u; }); } finally { setSending(false); }
   }
 
@@ -132,13 +157,16 @@ export default function Page() {
               <div className="flex-1 overflow-y-auto px-4 pb-20">
                  <div className="max-w-4xl mx-auto mt-16 text-center space-y-6">
                     <span className={`inline-block px-3 py-1 rounded border border-slate-300 bg-white text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 ${mono.className}`}>Washtenaw County • Food Service</span>
-                    <h1 className={`text-4xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[0.9] ${outfit.className}`}>
-                      Never fail a<br/>health inspection.
+                    {/* FIXED HEADER: One Line */}
+                    <h1 className={`text-3xl md:text-6xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
+                      Never fail a health inspection.
                     </h1>
                     <p className={`text-lg text-slate-500 max-w-xl mx-auto leading-relaxed ${inter.className}`}>
                       Instant photo analysis and code-backed answers. <br/>
                       <span className="text-slate-900 font-bold">Try it once for free. No login required.</span>
                     </p>
+
+                    <KnowledgeTicker />
 
                     {/* THE MODULES */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12 text-left">
@@ -162,17 +190,6 @@ export default function Page() {
                               Ask Question (1 Free)
                            </button>
                         </div>
-                    </div>
-                    
-                    <div className="mt-20 border-t border-slate-200 pt-8 text-center">
-                       <p className={`text-xs text-slate-400 font-bold uppercase tracking-widest mb-4 ${mono.className}`}>Database Includes</p>
-                       <div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-600">
-                          <span>WASHTENAW ENFORCEMENT</span>
-                          <span>•</span>
-                          <span>MI MODIFIED FOOD CODE</span>
-                          <span>•</span>
-                          <span>FDA 2022</span>
-                       </div>
                     </div>
                  </div>
               </div>
