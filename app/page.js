@@ -8,29 +8,44 @@ import { Outfit } from 'next/font/google'
 import { Icons } from '@/components/Icons'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
-const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.pdf": "Violation Classifications", "Enforcement Action.pdf": "Enforcement Guidelines", "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)", "MI_MODIFIED.pdf": "Michigan Modified Law", "Cooking_Temps.pdf": "Critical Temperatures", "Cooling Foods.pdf": "Cooling Procedures", "Cross contamination.pdf": "Cross-Contamination", "food_labeling.pdf": "Labeling Standards", "Norovirus.pdf": "Biohazard Cleanup", "Allergy Info.pdf": "Allergen Control", "Emergency_Plan.pdf": "Emergency Plans", "Date_Marking.pdf": "Date Marking Rules" }
+const DOC_MAPPING = {
+  "3compsink.pdf": "Sanitizing Protocols",
+  "Violation Types.pdf": "Violation Classifications",
+  "Enforcement Action.pdf": "Enforcement Guidelines",
+  "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)",
+  "MI_MODIFIED.pdf": "Michigan Modified Law",
+  "Cooking_Temps.pdf": "Critical Temperatures",
+  "Cooling Foods.pdf": "Cooling Procedures",
+  "Cross contamination.pdf": "Cross-Contamination",
+  "food_labeling.pdf": "Labeling Standards",
+  "Norovirus.pdf": "Biohazard Cleanup",
+  "Allergy Info.pdf": "Allergen Control",
+  "Emergency_Plan.pdf": "Emergency Plans",
+  "Date_Marking.pdf": "Date Marking Rules"
+}
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
+
+const CssBackground = () => (
+  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
+    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  </div>
+)
 
 const GlobalStyles = () => (
   <style jsx global>{`
-    body { background-color: #FAFAFA; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #FAFAFA; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .btn-press { transition: transform 0.1s ease; } .btn-press:active { transform: scale(0.96); }
     @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
-    .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
+    .animate-ticker-item { animation: slideUpFade 4s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
     .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
     @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
     ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
   `}</style>
-)
-
-const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
 )
 
 const KnowledgeTicker = () => {
@@ -51,7 +66,9 @@ const NarrativeJourney = ({ onAction }) => {
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       <div className="text-center mb-10 md:mb-12 space-y-4">
         <span className="inline-block px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2">Built for Washtenaw County</span>
-        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>Pass your next inspection<br className="hidden md:block" /> without digging through PDFs.</h2>
+        {/* REVERTED HEADER */}
+        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>See violations before your inspector does.</h2>
+        <p className="text-xs sm:text-sm md:text-base text-slate-500 font-medium leading-relaxed px-2 sm:px-4 max-w-xl mx-auto">Take a photo or ask a question&mdash;protocol<span className="font-semibold text-slate-900">LM</span> cross-checks it against Washtenaw County rules in seconds.</p>
       </div>
       <KnowledgeTicker />
       <div className="text-center mb-6"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3></div>
@@ -70,7 +87,10 @@ const NarrativeJourney = ({ onAction }) => {
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">Take a photo of your kitchen, we highlight violations.</p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium"><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Identifies sanitary risks</li><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li></ul>
               </div>
-              <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
+              <div className="mt-8">
+                {/* UPDATED BUTTON: White with Green Border */}
+                <button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[9px]">1 FREE</span> <Icons.ArrowUp /></button>
+              </div>
            </div>
         </div>
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
@@ -83,7 +103,10 @@ const NarrativeJourney = ({ onAction }) => {
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">Ask any question, get an answer tied to the actual code.</p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium"><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Cooling & heating curves</li><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li></ul>
               </div>
-              <div className="mt-8"><button onClick={() => onAction('chat')} className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Code Chat <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
+              <div className="mt-8">
+                {/* UPDATED BUTTON: White with Blue Border */}
+                <button onClick={() => onAction('chat')} className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">Start Code Chat <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9px]">1 FREE</span> <Icons.ArrowUp /></button>
+              </div>
            </div>
         </div>
       </div>
@@ -131,7 +154,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
 }
 
 export default function Page() {
-  const [isLoading, setIsLoading] = useState(true); const [session, setSession] = useState(null); const [profile, setProfile] = useState(null); const [sidebarOpen, setSidebarOpen] = useState(false); const [hasActiveSubscription, setHasActiveSubscription] = useState(false); const [chatHistory, setChatHistory] = useState([]); const [currentChatId, setCurrentChatId] = useState(null); const [messages, setMessages] = useState([]); const [input, setInput] = useState(''); const [isSending, setIsSending] = useState(false); const [showAuthModal, setShowAuthModal] = useState(false); const [authModalMessage, setAuthModalMessage] = useState(''); const [selectedImage, setSelectedImage] = useState(null); const [showUserMenu, setShowUserMenu] = useState(false); const [activeMode, setActiveMode] = useState('chat'); const [showPricingModal, setShowPricingModal] = useState(false); const [checkoutLoading, setCheckoutLoading] = useState(null); const [usage, setUsage] = useState({ image: false, chat: false }); // LOCAL STORAGE TRACKING
+  const [isLoading, setIsLoading] = useState(true); const [session, setSession] = useState(null); const [profile, setProfile] = useState(null); const [sidebarOpen, setSidebarOpen] = useState(false); const [hasActiveSubscription, setHasActiveSubscription] = useState(false); const [chatHistory, setChatHistory] = useState([]); const [currentChatId, setCurrentChatId] = useState(null); const [messages, setMessages] = useState([]); const [input, setInput] = useState(''); const [isSending, setIsSending] = useState(false); const [showAuthModal, setShowAuthModal] = useState(false); const [authModalMessage, setAuthModalMessage] = useState(''); const [selectedImage, setSelectedImage] = useState(null); const [showUserMenu, setShowUserMenu] = useState(false); const [activeMode, setActiveMode] = useState('chat'); const [showPricingModal, setShowPricingModal] = useState(false); const [checkoutLoading, setCheckoutLoading] = useState(null); const [usage, setUsage] = useState({ image: false, chat: false });
   const fileInputRef = useRef(null); const scrollRef = useRef(null); const inputRef = useRef(null); const userMenuRef = useRef(null); const [supabase] = useState(() => createClient()); const router = useRouter();
   
   useEffect(() => { const localUsage = localStorage.getItem('protocol_usage'); if (localUsage) setUsage(JSON.parse(localUsage)); const init = async () => { try { const { data: { session: s } } = await supabase.auth.getSession(); setSession(s); if (s) { const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', s.user.id).in('status', ['active', 'trialing']).maybeSingle(); if (s.user.email === ADMIN_EMAIL || sub) setHasActiveSubscription(true); } setIsLoading(false); } catch (e) { console.error(e) } }; init(); }, []);
