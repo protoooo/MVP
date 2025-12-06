@@ -163,10 +163,9 @@ export default function Page() {
                            </button>
                         </div>
                     </div>
-
-                    {/* Footer Authority */}
-                    <div className="mt-20 border-t border-slate-200 pt-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                       <div className={`text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 ${mono.className}`}>Database Includes</div>
+                    
+                    <div className="mt-20 border-t border-slate-200 pt-8 text-center">
+                       <p className={`text-xs text-slate-400 font-bold uppercase tracking-widest mb-4 ${mono.className}`}>Database Includes</p>
                        <div className="flex flex-wrap justify-center gap-6 text-xs font-bold text-slate-600">
                           <span>WASHTENAW ENFORCEMENT</span>
                           <span>•</span>
