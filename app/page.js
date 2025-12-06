@@ -1,55 +1,20 @@
 'use client'
-// VERSION: FINAL_CLEAN_V3
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
+import { GlobalStyles, CssBackground, Icons } from '../components/Visuals'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
 const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.pdf": "Violation Classifications", "Enforcement Action.pdf": "Enforcement Guidelines", "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)", "MI_MODIFIED.pdf": "Michigan Modified Law", "Cooking_Temps.pdf": "Critical Temperatures", "Cooling Foods.pdf": "Cooling Procedures", "Cross contamination.pdf": "Cross-Contamination", "food_labeling.pdf": "Labeling Standards", "Norovirus.pdf": "Biohazard Cleanup", "Allergy Info.pdf": "Allergen Control", "Emergency_Plan.pdf": "Emergency Plans", "Date_Marking.pdf": "Date Marking Rules" }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
-
-const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#F8FAFC] pointer-events-none">
-    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
-)
-
-const Icons = {
-  IsoCamera: () => <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M4 32 L24 42 L44 32" className="text-emerald-900/20" fill="currentColor" fillOpacity="0.05"/><path d="M4 16 L24 6 L44 16 L24 26 Z" /><path d="M4 16 V32 L24 42 V26" /><path d="M44 16 V32 L24 42" /><circle cx="24" cy="22" r="6" className="text-emerald-600" strokeWidth="2" /><path d="M24 16 L24 19" strokeOpacity="0.5" /></svg>,
-  IsoBook: () => <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M10 12 L24 6 L38 12 V36 L24 30 L10 36 Z" className="text-blue-900/20" fill="currentColor" fillOpacity="0.05"/><path d="M24 6 V30" /><path d="M24 30 L38 36" /><path d="M10 36 V12" /><path d="M38 36 V12" /><path d="M16 18 L24 14" strokeOpacity="0.5" /><path d="M16 22 L24 18" strokeOpacity="0.5" /><path d="M16 26 L24 22" strokeOpacity="0.5" /></svg>,
-  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
-  SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
-  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 4v16m8-8H4"/></svg>,
-  Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
-  Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  File: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  UserCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>,
-  Upload: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
-  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
-}
-
-const GlobalStyles = () => (
-  <style jsx global>{`
-    body { background-color: #F8FAFC; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    .btn-press { transition: transform 0.1s ease; } .btn-press:active { transform: scale(0.96); }
-    @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
-    .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
-    .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
-    @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-  `}</style>
-)
 
 const KnowledgeTicker = () => {
   const [index, setIndex] = useState(0);
@@ -74,7 +39,6 @@ const NarrativeJourney = ({ onAction }) => {
       <KnowledgeTicker />
       <div className="text-center mb-6"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
-        {/* VISUAL INSPECTION - Green Border, White Button */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-emerald-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -92,7 +56,6 @@ const NarrativeJourney = ({ onAction }) => {
               <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
            </div>
         </div>
-        {/* REGULATORY CONSULTANT - Blue Border, White Button */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -121,7 +84,7 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
         <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}><button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}><Icons.Plus /></button>{showMenu && (<div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in"><div className="space-y-0.5">{['chat', 'image'].map(m => (<button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{m === 'chat' && <Icons.MessageSquare />}{m === 'image' && <Icons.Camera />}<span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span></button>))}</div></div>)}</div>
         <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6 font-medium" rows={1} style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }} />
-        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUp />}</button>
+        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUpReal />}</button>
       </form>
     </div>
   )
