@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
 
+// Using Outfit but styling it to look more technical/clean
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
@@ -30,64 +31,68 @@ const DOC_MAPPING = {
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 // ==========================================
-// ICONS
+// 1. TECHNICAL BACKGROUND (Dot Grid)
+// ==========================================
+const TechnicalBackground = () => (
+  <div className="fixed inset-0 z-0 pointer-events-none bg-[#F8F9FA]">
+    {/* Subtle Dot Pattern for Engineering/Blueprint feel */}
+    <div className="absolute inset-0" style={{ 
+      backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)', 
+      backgroundSize: '24px 24px',
+      opacity: 0.4 
+    }}></div>
+    {/* Fade out at bottom */}
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#F8F9FA]"></div>
+  </div>
+)
+
+// ==========================================
+// 2. REFINED ICONOGRAPHY (1.5px Stroke)
 // ==========================================
 const Icons = {
-  IsoCamera: () => (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 32 L24 42 L44 32" className="text-emerald-900/20" fill="currentColor" fillOpacity="0.05"/>
-      <path d="M4 16 L24 6 L44 16 L24 26 Z" />
-      <path d="M4 16 V32 L24 42 V26" />
-      <path d="M44 16 V32 L24 42" />
-      <circle cx="24" cy="22" r="6" className="text-emerald-600" strokeWidth="2" />
-      <path d="M24 16 L24 19" strokeOpacity="0.5" />
+  Camera: () => (
+    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter" viewBox="0 0 24 24">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+      <circle cx="12" cy="13" r="4"></circle>
     </svg>
   ),
-  IsoBook: () => (
-    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 12 L24 6 L38 12 V36 L24 30 L10 36 Z" className="text-blue-900/20" fill="currentColor" fillOpacity="0.05"/>
-      <path d="M24 6 V30" />
-      <path d="M24 30 L38 36" />
-      <path d="M10 36 V12" />
-      <path d="M38 36 V12" />
-      <path d="M16 18 L24 14" strokeOpacity="0.5" />
-      <path d="M16 22 L24 18" strokeOpacity="0.5" />
-      <path d="M16 26 L24 22" strokeOpacity="0.5" />
+  Book: () => (
+    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="miter" viewBox="0 0 24 24">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
     </svg>
   ),
-  ArrowUp: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
-  ArrowUpReal: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>,
-  SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>,
-  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>,
-  Camera: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
-  Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
-  File: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
-  MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
-  UserCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>,
-  Upload: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
-  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
-  XCircle: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  CheckCircle: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  ArrowRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>,
+  Check: ({ color = 'text-slate-600' }) => <svg className={`w-4 h-4 ${color}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+  Shield: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
+  Database: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>,
+  Plus: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
+  User: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+  Settings: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>,
+  SignOut: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>,
+  MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
 }
 
+// ==========================================
+// STYLES & LAYOUT
+// ==========================================
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #FAFAFA;
-      overscroll-behavior: none;
-      height: 100dvh;
-      width: 100%;
-      max-width: 100dvw;
-      overflow: hidden;
-      color: #0f172a;
+      background-color: #F8F9FA;
+      color: #0F172A;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    .btn-press { transition: transform 0.1s ease; }
-    .btn-press:active { transform: scale(0.96); }
+    /* Clean, rectangular buttons */
+    .btn-rect {
+      border-radius: 6px; 
+      transition: all 0.2s ease;
+    }
+    .btn-rect:active { transform: translateY(1px); }
     
+    /* Vertical Ticker Animation */
     @keyframes slideUpFade {
       0% { transform: translateY(100%); opacity: 0; }
       10% { transform: translateY(0); opacity: 1; }
@@ -97,22 +102,16 @@ const GlobalStyles = () => (
     .animate-ticker-item {
       animation: slideUpFade 4s ease-in-out forwards;
     }
-    
-    .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
+
+    .loader { height: 16px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
     @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
-    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
   `}</style>
 )
 
-const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
-)
-
-const KnowledgeTicker = () => {
+// ==========================================
+// 3. COVERAGE BAR (Formerly Ticker)
+// ==========================================
+const CoverageBar = () => {
   const [index, setIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => { setIndex((prev) => (prev + 1) % TICKER_ITEMS.length); }, 4000); 
@@ -120,215 +119,155 @@ const KnowledgeTicker = () => {
   }, []);
   
   return (
-    <div className="mx-auto mb-8 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-8 min-w-[300px] w-fit">
-      <div key={index} className="flex items-center gap-3 animate-ticker-item absolute">
-        <Icons.File />
-        <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
+    <div className="w-full border-y border-slate-200 bg-white/50 backdrop-blur-sm py-2 mb-12">
+      <div className="max-w-5xl mx-auto px-4 flex items-center justify-center gap-3 text-xs font-medium text-slate-500">
+        <span className="hidden sm:inline uppercase tracking-widest font-bold text-slate-400">Database Coverage:</span>
+        <div className="h-5 overflow-hidden relative min-w-[200px]">
+          <div key={index} className="flex items-center gap-2 animate-ticker-item absolute top-0 left-0 w-full">
+            <Icons.Database />
+            <span className="font-semibold text-slate-700">{TICKER_ITEMS[index]}</span>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-const NarrativeJourney = ({ onAction }) => {
+const LandingPage = ({ onAction }) => {
   return (
-    <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
-      
-      {/* 1. HERO SECTION */}
-      <div className="text-center mb-10 md:mb-12 space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-semibold text-emerald-700 uppercase tracking-[0.18em] mb-2">
-          Washtenaw County • Food Service
-        </div>
-
-        <h1 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
-          See violations before your inspector does.
-        </h1>
-        <p className="text-xs sm:text-sm md:text-base text-slate-500 font-medium leading-relaxed px-2 sm:px-4 max-w-xl mx-auto">
-          Take a photo or ask a question&mdash;protocol<span className="font-semibold text-slate-900">LM</span> cross-checks it against Washtenaw County rules in seconds.
-        </p>
-      </div>
-
-      <KnowledgeTicker />
-      
-      <div className="text-center mb-6">
-         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Two Ways To Stay Compliant</h3>
-      </div>
-
-      {/* 2. THE CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
-
-        {/* CARD 1: VISUAL INSPECTION (HERO) */}
-        <div className="group relative h-full min-h-[380px] flex flex-col rounded-2xl bg-white border-2 border-emerald-500/70 shadow-[0_8px_30px_rgba(16,185,129,0.12)] transition-all duration-300 hover:shadow-[0_14px_40px_rgba(16,185,129,0.2)] hover:-translate-y-1 overflow-hidden">
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
-              <div>
-                <div className="w-full flex justify-between items-start mb-6">
-                   <div>
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 mb-3">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-bold tracking-[0.18em] uppercase">Recommended</span>
-                      </div>
-                      <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Visual Inspection</h3>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest">Detection Mode</p>
-                      </div>
-                   </div>
-                   <div className="text-emerald-600"><Icons.IsoCamera /></div>
-                </div>
-                
-                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Take a photo of your kitchen. We highlight violations instantly.
-                </p>
-                <ul className="space-y-2 text-sm text-slate-600 font-medium">
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Identifies sanitary risks</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li>
-                </ul>
-              </div>
-              
-              <div className="mt-8">
+    <div className="w-full">
+      {/* HERO SECTION */}
+      <div className="max-w-5xl mx-auto pt-16 md:pt-24 pb-12 px-6 md:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          
+          {/* Left: Copy */}
+          <div className="text-left space-y-6">
+             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-50 border border-emerald-100 text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+               Washtenaw County • Food Service
+             </div>
+             <h1 className={`text-4xl md:text-5xl font-bold text-slate-900 tracking-tight leading-[1.1] ${outfit.className}`}>
+               See violations before<br/> your inspector does.
+             </h1>
+             <p className="text-lg text-slate-600 font-normal leading-relaxed max-w-md">
+               Instant photo analysis and code-backed answers. Built specifically for Washtenaw County health regulations.
+             </p>
+             <div className="flex gap-4 pt-2">
                 <button 
-                    onClick={() => onAction('image')}
-                    className="w-full py-3.5 rounded-lg bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  onClick={() => onAction('image')}
+                  className="btn-rect bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 text-sm font-bold shadow-sm flex items-center gap-2"
                 >
-                    Start Image Inspection <Icons.ArrowUp />
+                  Start Inspection <Icons.ArrowRight />
                 </button>
-                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Requires a free trial account.</p>
-              </div>
-           </div>
-        </div>
-
-        {/* CARD 2: REGULATORY CONSULTANT */}
-        <div className="group relative h-full min-h-[380px] flex flex-col rounded-2xl bg-white border border-blue-100 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)] hover:-translate-y-[1px] overflow-hidden">
-           <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
-              <div>
-                <div className="w-full flex justify-between items-start mb-6">
-                   <div>
-                      <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Regulatory Consultant</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                        <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Chat Mode</p>
-                      </div>
-                   </div>
-                   <div className="text-blue-600"><Icons.IsoBook /></div>
-                </div>
-                
-                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Ask questions. Get answers tied to the actual code.
-                </p>
-                <ul className="space-y-2 text-sm text-slate-600 font-medium">
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Cooling & heating curves</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li>
-                </ul>
-              </div>
-
-              <div className="mt-8">
-                <button 
-                    onClick={() => onAction('chat')}
-                    className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                    Start Code Chat <Icons.ArrowUp />
-                </button>
-                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Answers based on local & federal code.</p>
-              </div>
-           </div>
-        </div>
-
-      </div>
-
-      {/* 3. WHAT INSPECTORS LOOK FOR */}
-      <div className="mt-24 mb-20">
-        <div className="text-center mb-10">
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Stop guessing. Know exactly what inspectors score you on.</h3>
-            <p className="text-slate-500">protocolLM checks against the same criteria used by sanitarians.</p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {['Priority (P) Violations', 'Priority Foundation (Pf)', 'Core Violations', 'Time & Temp Control', 'Cross Contamination', 'Handwashing', 'Date Marking', 'Pest Control'].map((tag, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded-lg p-3 text-center text-xs font-bold text-slate-600 shadow-sm">
-                    {tag}
-                </div>
-            ))}
-        </div>
-      </div>
-
-      {/* 4. BEFORE & AFTER */}
-      <div className="w-full max-w-4xl mx-auto mb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-red-50/50 border border-red-100 rounded-2xl p-8">
-                <h4 className="text-red-900 font-bold mb-4 flex items-center gap-2"><Icons.XCircle /> The Old Way</h4>
-                <ul className="space-y-3 text-sm text-red-800/80">
-                    <li>• Hours spent reading confusing PDFs</li>
-                    <li>• "Is this right?" anxiety before inspections</li>
-                    <li>• Relying on staff memory for complex rules</li>
-                    <li>• Unexpected violations & reinspection fees</li>
-                </ul>
-            </div>
-            <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-8">
-                <h4 className="text-emerald-900 font-bold mb-4 flex items-center gap-2"><Icons.CheckCircle /> With protocolLM</h4>
-                <ul className="space-y-3 text-sm text-emerald-800/80">
-                    <li>• 10-second answers from a photo</li>
-                    <li>• Confidence that your kitchen is compliant</li>
-                    <li>• Instant training tool for new staff</li>
-                    <li>• catch issues before the inspector walks in</li>
-                </ul>
-            </div>
-        </div>
-      </div>
-
-      {/* 5. FOR BUSY OWNERS (PAIN POINTS) */}
-      <div className="border-t border-slate-200 pt-16 pb-16">
-        <div className="text-center mb-8">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Designed for Busy Owners</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-            <div className="space-y-2 p-4">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.UserCheck /> <span>1. No Training Needed</span>
-                </div>
-                <p className="text-sm text-slate-500">You don't need tech skills. Just take a photo or ask a question.</p>
-            </div>
-            <div className="space-y-2 p-4">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.Upload /> <span>2. Instant Answers</span>
-                </div>
-                <p className="text-sm text-slate-500">Don't wait for a callback. Get the answer when you need it.</p>
-            </div>
-            <div className="space-y-2 p-4">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.Shield /> <span>3. Protect Your License</span>
-                </div>
-                <p className="text-sm text-slate-500">Avoid the fines and stress of a failed inspection.</p>
-            </div>
-        </div>
-      </div>
-
-      {/* 6. FAQ SECTION */}
-      <div className="max-w-2xl mx-auto mb-24">
-          <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Common Questions</h3>
-          <div className="space-y-4">
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                  <p className="font-bold text-sm text-slate-900">Will this help me before my inspection?</p>
-                  <p className="text-sm text-slate-500 mt-1">Yes. Use the Visual Inspection mode to scan your kitchen. It acts like a "pre-inspection" to catch visible violations.</p>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                  <p className="font-bold text-sm text-slate-900">Does this work for convenience stores and gas stations?</p>
-                  <p className="text-sm text-slate-500 mt-1">Absolutely. If you serve food in Washtenaw County, this covers your specific regulations.</p>
-              </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-4">
-                  <p className="font-bold text-sm text-slate-900">Does it replace my sanitarian?</p>
-                  <p className="text-sm text-slate-500 mt-1">No. It is a tool to help you prepare. Always follow the official guidance of your Health Department inspector.</p>
-              </div>
+             </div>
+             <p className="text-xs text-slate-400 font-medium">No credit card required for trial.</p>
           </div>
+
+          {/* Right: The Tools (Mockup Style) */}
+          <div className="relative">
+             {/* Visual Inspection Module (Hero) */}
+             <div className="bg-white rounded-lg border-l-4 border-l-emerald-500 border-y border-r border-slate-200 shadow-sm p-6 mb-4 hover:shadow-md transition-shadow cursor-default">
+                <div className="flex justify-between items-start mb-4">
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-50 rounded-md text-emerald-700"><Icons.Camera /></div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">Visual Inspection</h3>
+                        <p className="text-xs text-emerald-700 font-bold uppercase tracking-wide">Recommended</p>
+                      </div>
+                   </div>
+                </div>
+                <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                  Take a photo of your kitchen. Our vision model highlights Priority (P) violations instantly based on local code.
+                </p>
+                <div className="bg-slate-50 rounded border border-slate-100 p-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 mb-1">
+                    <Icons.Check color="text-emerald-600" /> <span>Detects 90+ violation types</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                    <Icons.Check color="text-emerald-600" /> <span>Instant audit report generation</span>
+                  </div>
+                </div>
+             </div>
+
+             {/* Regulatory Chat Module */}
+             <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 ml-8 opacity-90 hover:opacity-100 transition-opacity cursor-default">
+                <div className="flex justify-between items-start mb-3">
+                   <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 rounded-md text-blue-700"><Icons.Book /></div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-lg">Regulatory Chat</h3>
+                        <p className="text-xs text-slate-400 uppercase tracking-wide">Reference Tool</p>
+                      </div>
+                   </div>
+                </div>
+                <p className="text-slate-600 text-sm">
+                  Ask questions about enforcement. We cite Washtenaw & Michigan codes directly.
+                </p>
+             </div>
+          </div>
+
+        </div>
       </div>
 
-      {/* 7. PRICING CTA */}
-      <div className="bg-slate-900 rounded-3xl p-8 md:p-12 text-center text-white mb-16 shadow-xl">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">Small cost. Massive relief.</h2>
-        <div className="text-4xl font-bold mb-2">$50<span className="text-lg font-normal text-slate-400">/month</span></div>
-        <p className="text-slate-300 mb-8">Unlimited use. One prevented violation pays for the whole year.</p>
-        <button onClick={() => onAction('chat')} className="bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-emerald-50 transition-all">Start 7-Day Free Trial</button>
-        <p className="text-[10px] text-slate-500 mt-4">Cancel anytime.</p>
-      </div>
+      <CoverageBar />
 
+    </div>
+  )
+}
+
+// ==========================================
+// AUTH MODAL & PRICING (Clean Versions)
+// ==========================================
+
+const AuthModal = ({ isOpen, onClose, message }) => {
+  const [email, setEmail] = useState(''); const [loading, setLoading] = useState(false); const [googleLoading, setGoogleLoading] = useState(false); const [statusMessage, setStatusMessage] = useState(''); const supabase = createClient();
+  const getRedirectUrl = () => { const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin; return `${baseUrl}/auth/callback` }; const handleEmailAuth = async (e) => { e.preventDefault(); setLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getRedirectUrl() } }); if (error) setStatusMessage('Error: ' + error.message); else setStatusMessage('✓ Check your email for the login link.'); setLoading(false) }; const handleGoogleAuth = async () => { setGoogleLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: getRedirectUrl(), queryParams: { access_type: 'offline', prompt: 'consent' } } }); if (error) { setStatusMessage('Error: ' + error.message); setGoogleLoading(false) } }
+  if (!isOpen) return null; 
+  return (
+    <div className="fixed inset-0 z-[999] bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white border border-slate-200 rounded-lg w-full max-w-sm p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-bold text-slate-900">Sign in to protocolLM</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900"><Icons.X /></button>
+        </div>
+        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-medium py-2.5 px-4 rounded-md flex items-center justify-center gap-3 mb-4 text-sm transition-all">
+          {googleLoading ? <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" /> : "Continue with Google"}
+        </button>
+        <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div><div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-slate-400 uppercase tracking-wider">or email</span></div></div>
+        <form onSubmit={handleEmailAuth} className="space-y-4">
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@restaurant.com" required className="w-full bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all" />
+          <button type="submit" disabled={loading || googleLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-md text-sm transition-all">{loading ? 'Sending...' : 'Continue with Email'}</button>
+        </form>
+        <p className="text-[10px] text-slate-400 text-center mt-4">By continuing, you agree to our Terms & Privacy Policy.</p>
+        {statusMessage && <div className="mt-4 p-3 rounded-md text-xs bg-slate-50 border border-slate-200 text-slate-600">{statusMessage}</div>}
+      </div>
+    </div>
+  )
+}
+
+const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
+  const [billingInterval, setBillingInterval] = useState('month')
+  return (
+    <div className="fixed inset-0 z-[1000] bg-white/90 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-lg p-8 shadow-xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onSignOut} className="absolute top-4 right-4 text-slate-400 hover:text-black"><Icons.X /></button>
+        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Subscription</h3>
+        <div className="flex justify-center mb-6">
+          <div className="bg-slate-100 p-1 rounded-md flex border border-slate-200">
+            <button onClick={() => setBillingInterval('month')} className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${billingInterval === 'month' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Monthly</button>
+            <button onClick={() => setBillingInterval('year')} className={`px-4 py-1.5 rounded text-xs font-bold transition-all flex items-center gap-1 ${billingInterval === 'year' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>Yearly <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded font-bold">-17%</span></button>
+          </div>
+        </div>
+        <div className="text-center mb-6">
+           <span className="text-5xl font-bold text-slate-900 tracking-tight">${billingInterval === 'month' ? '50' : '500'}</span>
+           <span className="text-slate-500 text-sm font-medium">/{billingInterval === 'month' ? 'mo' : 'yr'}</span>
+        </div>
+        <ul className="space-y-3 mb-8 border-t border-slate-100 pt-6">
+          <li className="flex gap-3 text-sm text-slate-700"><Icons.Check color="text-emerald-600" /> Unlimited Queries</li>
+          <li className="flex gap-3 text-sm text-slate-700"><Icons.Check color="text-emerald-600" /> Visual Inspection Mode</li>
+          <li className="flex gap-3 text-sm text-slate-700"><Icons.Check color="text-emerald-600" /> Washtenaw County Database</li>
+        </ul>
+        <button onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} disabled={loading !== null} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-md text-sm uppercase tracking-wide shadow-sm disabled:opacity-50">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+      </div>
     </div>
   )
 }
@@ -336,51 +275,108 @@ const NarrativeJourney = ({ onAction }) => {
 const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode, session }) => {
   const [showMenu, setShowMenu] = useState(false); const menuRef = useRef(null); const handleModeClick = (mode) => { setActiveMode(mode); setShowMenu(false); if (mode === 'image' && session) fileInputRef.current?.click() }; useEffect(() => { function handleClickOutside(event) { if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, [])
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 pb-6 md:pb-0 z-20 relative">
-      {selectedImage && (<div className="mb-2 mx-1 p-2 bg-white/80 backdrop-blur-xl rounded-xl inline-flex items-center gap-2 border border-slate-200 shadow-sm animate-pop-in"><span className="text-xs text-black font-medium flex items-center gap-1"><Icons.Camera /> Analyzing Image</span><button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-500 hover:text-black"><Icons.X /></button></div>)}
-      <form onSubmit={handleSend} className="relative flex items-end w-full p-2 bg-white border border-slate-200 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-slate-100 focus-within:border-slate-300 transition-all">
+    <div className="w-full max-w-3xl mx-auto px-4 pb-6 z-20 relative">
+      {selectedImage && (<div className="mb-2 mx-1 p-2 bg-white border border-slate-200 rounded-md inline-flex items-center gap-2 shadow-sm"><span className="text-xs text-slate-700 font-bold flex items-center gap-2"><Icons.Camera /> Analyzing Image...</span><button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-400 hover:text-slate-900"><Icons.X /></button></div>)}
+      <form onSubmit={handleSend} className="relative flex items-end w-full p-1.5 bg-white border border-slate-300 rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-slate-900/10 focus-within:border-slate-400 transition-all">
         <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
-        <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}><button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-xl btn-press transition-colors ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}><Icons.Plus /></button>{showMenu && (<div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 p-1 animate-in slide-in-from-bottom-2 fade-in"><div className="space-y-0.5">{['chat', 'image'].map(m => (<button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>{m === 'chat' && <Icons.MessageSquare />}{m === 'image' && <Icons.Camera />}<span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span></button>))}</div></div>)}</div>
-        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className="flex-1 max-h=[200px] min-h-[44px] py-2.5 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none outline-none resize-none text-slate-900 placeholder-slate-400 text-[15px] leading-6 font-medium" rows={1} style={{ height: 'auto', overflowY: 'hidden', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none' }} />
-        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-xl flex items-center justify-center btn-press flex-shrink-0 mb-1 mr-1 transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : `bg-slate-900 text-white cursor-pointer shadow-md hover:bg-slate-800`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUpReal />}</button>
+        <div className="relative flex-shrink-0" ref={menuRef}>
+            <button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-9 h-9 flex items-center justify-center rounded-md transition-colors ${showMenu ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}><Icons.Plus /></button>
+            {showMenu && (
+                <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
+                    <button type="button" onClick={() => handleModeClick('chat')} className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-bold rounded-md text-left ${activeMode === 'chat' ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50'}`}><Icons.Book /> Regulatory Chat</button>
+                    <button type="button" onClick={() => handleModeClick('image')} className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-bold rounded-md text-left ${activeMode === 'image' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-500 hover:bg-slate-50'}`}><Icons.Camera /> Visual Inspection</button>
+                </div>
+            )}
+        </div>
+        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask a regulatory question...' : activeMode === 'image' ? 'Upload a photo for analysis...' : '...'} className="flex-1 max-h-[150px] min-h-[24px] py-2 px-3 bg-transparent border-none focus:ring-0 outline-none resize-none text-slate-900 placeholder-slate-400 text-sm font-medium" rows={1} style={{ height: 'auto' }} />
+        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-9 h-9 rounded-md flex items-center justify-center transition-all ${(!input.trim() && !selectedImage) ? 'bg-slate-50 text-slate-300' : `bg-slate-900 text-white hover:bg-slate-800 shadow-sm`}`}>{isSending ? <div className="loader" /> : <Icons.ArrowUp />}</button>
       </form>
-    </div>
-  )
-}
-
-const AuthModal = ({ isOpen, onClose, message }) => {
-  const [email, setEmail] = useState(''); const [loading, setLoading] = useState(false); const [googleLoading, setGoogleLoading] = useState(false); const [statusMessage, setStatusMessage] = useState(''); const supabase = createClient();
-  const getRedirectUrl = () => { const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin; return `${baseUrl}/auth/callback` }; const handleEmailAuth = async (e) => { e.preventDefault(); setLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getRedirectUrl() } }); if (error) setStatusMessage('Error: ' + error.message); else setStatusMessage('✓ Check your email for the login link.'); setLoading(false) }; const handleGoogleAuth = async () => { setGoogleLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: getRedirectUrl(), queryParams: { access_type: 'offline', prompt: 'consent' } } }); if (error) { setStatusMessage('Error: ' + error.message); setGoogleLoading(false) } }
-  if (!isOpen) return null; return (<div className="fixed inset-0 z-[999] bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}><div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}><div className="flex justify-between items-start mb-6"><div><h2 className="text-xl font-bold text-slate-900 mb-1">{message || 'Welcome to protocolLM'}</h2><p className="text-sm text-slate-500">Sign in to continue your session</p></div><button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors"><Icons.X /></button></div><button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-3 mb-4">{googleLoading ? <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" /> : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4" /><path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853" /><path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05" /><path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335" /></svg>} Continue with Google</button><div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div><div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-slate-400">OR</span></div></div><form onSubmit={handleEmailAuth} className="space-y-4"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all" /><button type="submit" disabled={loading || googleLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-full transition-colors">{loading ? 'Sending...' : 'Continue with Email'}</button></form><div className="mt-6 text-center"><p className="text-[10px] text-slate-400">By continuing, you agree to our <Link href="/terms" className="underline hover:text-slate-900">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-900">Privacy Policy</Link>.</p></div>{statusMessage && <div className={`mt-4 p-3 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-50 border-red-100 text-red-600' : 'bg-green-50 border-green-100 text-green-600'}`}>{statusMessage}</div>}</div></div>)
-}
-
-const FullScreenPricing = ({ handleCheckout, loading, onSignOut }) => {
-  const [billingInterval, setBillingInterval] = useState('month')
-  return (
-    <div className="fixed inset-0 z-[1000] bg-white/90 backdrop-blur-3xl flex items-center justify-center p-4 animate-in fade-in duration-500">
-      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-2xl p-8 shadow-2xl animate-pop-in flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onSignOut} className="absolute top-5 right-5 text-slate-500 hover:text-black transition-colors"><Icons.X /></button>
-        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 mt-2 text-center">protocolLM</h3>
-        <div className="flex justify-center mb-6"><div className="bg-slate-100 p-1 rounded-full flex relative border border-slate-200"><button onClick={() => setBillingInterval('month')} className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 ${billingInterval === 'month' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Monthly</button><button onClick={() => setBillingInterval('year')} className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 flex items-center gap-1 ${billingInterval === 'year' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}>Annual <span className="bg-emerald-100 text-emerald-700 text-[8px] px-1 py-0.5 rounded font-extrabold tracking-wide">SAVE $100</span></button></div></div>
-        <div className="flex items-baseline text-slate-900 justify-center mb-2"><span className="text-5xl font-bold tracking-tighter font-sans no-underline decoration-0" style={{ textDecoration: 'none' }}>{billingInterval === 'month' ? '$50' : '$500'}</span><span className="ml-2 text-slate-500 text-sm font-bold uppercase tracking-wide">/{billingInterval === 'month' ? 'month' : 'year'}</span></div>
-        <p className="text-xs text-slate-500 text-center mb-6 leading-relaxed px-4">Enterprise-grade compliance infrastructure for <span className="font-semibold text-slate-900">Washtenaw County</span> food service.<br/><span className="text-slate-900 font-medium mt-1 block">Protect your license.</span></p>
-        <ul className="space-y-3 mb-8 flex-1 border-t border-slate-100 pt-5"><li className="flex items-start gap-2 text-xs font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Unlimited Compliance Queries</li><li className="flex items-start gap-2 text-xs font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Visual Inspections (Image Mode)</li><li className="flex items-start gap-2 text-xs font-medium text-slate-700"><Icons.Check color="text-slate-900" /> Washtenaw & FDA Database</li></ul>
-        <button onClick={() => handleCheckout(billingInterval === 'month' ? STRIPE_PRICE_ID_MONTHLY : STRIPE_PRICE_ID_ANNUAL, 'protocollm')} disabled={loading !== null} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-full text-xs uppercase tracking-[0.15em] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
-      </div>
     </div>
   )
 }
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true); const [session, setSession] = useState(null); const [profile, setProfile] = useState(null); const [sidebarOpen, setSidebarOpen] = useState(false); const [hasActiveSubscription, setHasActiveSubscription] = useState(false); const [chatHistory, setChatHistory] = useState([]); const [currentChatId, setCurrentChatId] = useState(null); const [messages, setMessages] = useState([]); const [input, setInput] = useState(''); const [isSending, setIsSending] = useState(false); const [showAuthModal, setShowAuthModal] = useState(false); const [authModalMessage, setAuthModalMessage] = useState(''); const [selectedImage, setSelectedImage] = useState(null); const [showUserMenu, setShowUserMenu] = useState(false); const [activeMode, setActiveMode] = useState('chat'); const [showPricingModal, setShowPricingModal] = useState(false); const [checkoutLoading, setCheckoutLoading] = useState(null); const fileInputRef = useRef(null); const scrollRef = useRef(null); const inputRef = useRef(null); const userMenuRef = useRef(null); const [supabase] = useState(() => createClient()); const router = useRouter();
-  const triggerMode = (mode) => { if (!session) { setAuthModalMessage('Sign in to use this tool'); setShowAuthModal(true); return; } setActiveMode(mode); if (mode === 'image') { fileInputRef.current?.click(); } else { inputRef.current?.focus(); } };
-  useEffect(() => { if (typeof window !== 'undefined') { const params = new URLSearchParams(window.location.search); if (params.get('auth')) { setAuthModalMessage(params.get('auth') === 'signup' ? 'Create an account to subscribe' : 'Sign in to continue'); setShowAuthModal(true); window.history.replaceState({}, '', '/'); } } const init = async () => { try { const { data: { session: currentSession } } = await supabase.auth.getSession(); setSession(currentSession); if (currentSession) { const { data: activeSub } = await supabase.from('subscriptions').select('status, current_period_end, plan, stripe_subscription_id').eq('user_id', currentSession.user.id).in('status', ['active', 'trialing']).maybeSingle(); if (currentSession.user.email === ADMIN_EMAIL) { setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); setIsLoading(false); return; } if (!activeSub || !activeSub.current_period_end) { setHasActiveSubscription(false); setShowPricingModal(true); setIsLoading(false); return; } const periodEnd = new Date(activeSub.current_period_end); if (periodEnd < new Date()) { await supabase.from('subscriptions').update({ status: 'expired', updated_at: new Date().toISOString() }).eq('user_id', currentSession.user.id).eq('stripe_subscription_id', activeSub.stripe_subscription_id).select(); setHasActiveSubscription(false); setShowPricingModal(true); setIsLoading(false); return; } const { data: userProfile } = await supabase.from('user_profiles').select('*').eq('id', currentSession.user.id).single(); setProfile(userProfile); if (userProfile?.accepted_terms && userProfile?.accepted_privacy) { setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); } else { router.push('/accept-terms'); } } } catch (e) { console.error(e) } finally { setIsLoading(false) } }; init(); const safetyTimer = setTimeout(() => setIsLoading(false), 2000); const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => { setSession(session); if (session) { if (session.user.email === ADMIN_EMAIL) { setHasActiveSubscription(true); setShowPricingModal(false); loadChatHistory(); return; } const { data: activeSub } = await supabase.from('subscriptions').select('status, current_period_end, plan, stripe_subscription_id').eq('user_id', session.user.id).in('status', ['active', 'trialing']).maybeSingle(); if (activeSub && activeSub.current_period_end && new Date(activeSub.current_period_end) >= new Date()) { setHasActiveSubscription(true); setShowPricingModal(false); const { data: userProfile } = await supabase.from('user_profiles').select('*').eq('id', session.user.id).single(); setProfile(userProfile); if (!userProfile?.accepted_terms) router.push('/accept-terms'); else loadChatHistory(); } else { setHasActiveSubscription(false); setShowPricingModal(true); } } else { setProfile(null); setChatHistory([]); setHasActiveSubscription(false); setShowPricingModal(false); } }); return () => { subscription.unsubscribe(); clearTimeout(safetyTimer); } }, []);
-  const loadChatHistory = async () => { const { data: chats } = await supabase.from('chats').select('id, title, created_at').order('created_at', { ascending: false }); if (chats) setChatHistory(chats); }; const loadChat = async (chatId) => { setIsLoading(true); setCurrentChatId(chatId); setSidebarOpen(false); const { data: msgs } = await supabase.from('messages').select('*').eq('chat_id', chatId).order('created_at', { ascending: true }); if (msgs) setMessages(msgs.map((m) => ({ role: m.role, content: m.content, image: m.image }))); setIsLoading(false); }; const deleteChat = async (e, chatId) => { e.stopPropagation(); if (!confirm('Delete chat?')) return; setChatHistory((prev) => prev.filter((c) => c.id !== chatId)); if (currentChatId === chatId) handleNewChat(); await supabase.from('chats').delete().eq('id', chatId); loadChatHistory(); }; const handleSignOut = async (e) => { if (e && e.preventDefault) e.preventDefault(); setSession(null); setProfile(null); setMessages([]); setChatHistory([]); setShowUserMenu(false); try { await supabase.auth.signOut(); } catch (error) { console.error(error); } finally { router.refresh(); window.location.href = '/'; } };
-  const handleCheckout = async (priceId, planName) => { const checkoutTimeout = setTimeout(() => { setCheckoutLoading(null); alert("Connection timeout. Please try again."); }, 15000); setCheckoutLoading(planName); if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing. Please check configuration.'); setCheckoutLoading(null); return; } if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); return; } try { const { data: { session: currentSession } } = await supabase.auth.getSession(); if (!currentSession) { clearTimeout(checkoutTimeout); alert('Session expired.'); return; } const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` }, body: JSON.stringify({ priceId }) }); if (!res.ok) throw new Error((await res.json()).error || 'API Error'); const data = await res.json(); if (data.url) { clearTimeout(checkoutTimeout); window.location.href = data.url; } else throw new Error('No URL returned'); } catch (error) { clearTimeout(checkoutTimeout); alert(`Checkout failed: ${error.message}`); } finally { setCheckoutLoading(null); } };
-  const handleSend = async (e) => { if (e) e.preventDefault(); if ((!input.trim() && !selectedImage) || isSending) return; if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return; } if (!hasActiveSubscription) { setShowPricingModal(true); return; } let finalInput = input; const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }]); let activeChatId = currentChatId; try { if (!activeChatId) { const { data: newChat } = await supabase.from('chats').insert({ user_id: session.user.id, title: input.slice(0, 30) + '...' }).select().single(); if (newChat) { activeChatId = newChat.id; setCurrentChatId(newChat.id); loadChatHistory(); } } const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg, content: finalInput }], image: img, chatId: activeChatId, mode: activeMode }) }); if (res.status === 401) { setAuthModalMessage('Sign in to continue'); setShowAuthModal(true); setMessages((p) => p.slice(0, -2)); return; } if (res.status === 402) { setShowPricingModal(true); setMessages((p) => p.slice(0, -2)); return; } if (res.status === 403) { router.push('/accept-terms'); setMessages((p) => p.slice(0, -2)); return; } const data = await res.json(); setMessages((p) => { const u = [...p]; u[u.length - 1].content = data.message || (data.error ? `Error: ${data.error}` : 'Error.'); return u; }); } catch (err) { setMessages((p) => { const u = [...p]; u[u.length - 1].content = 'Network error.'; return u; }); } finally { setIsSending(false); } };
-  const handleImage = async (e) => { const file = e.target.files?.[0]; if (!file) return; if (!session) { setAuthModalMessage('Login required'); setShowAuthModal(true); return; } if (file.size > 10 * 1024 * 1024) { alert('Image too large'); return; } if (!file.type.startsWith('image/')) { alert('Images only'); return; } try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image'); } catch (error) { alert('Image error'); console.error(error); } }; const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat'); };
-  useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, []); useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages]); useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus(); }, [messages.length, isSending]);
-  if (isLoading) return <div className="fixed inset-0 bg-white text-black flex items-center justify-center"><div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" /></div>;
-  if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>;
-  return (<><GlobalStyles /><AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />{showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}<div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50"><CssBackground /><div className="relative z-10 flex flex-col h-[100dvh]"><header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe bg-white/10 backdrop-blur-sm border-b border-white/20`}><div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>protocol<span className="text-black">LM</span></div><div className="flex items-center gap-2 md:gap-4">{!session && (<><button onClick={() => setShowAuthModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-sm whitespace-nowrap">Start Free Trial</button><button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium text-slate-900 hover:text-slate-600 transition-transform active:scale-95 hidden sm:block">Pricing</button><button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-slate-200 bg-white px-4 py-2 rounded-full text-slate-900 hover:bg-slate-50 transition-transform active:scale-95">Sign In</button></>)}{session && (<div className="flex items-center gap-3"><button onClick={handleNewChat} className="p-2 rounded-full hover:bg-white text-slate-900 transition-colors border border-transparent hover:border-slate-200"><Icons.Plus /></button><div className="relative" ref={userMenuRef}><button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">{session.user.email[0].toUpperCase()}</button>{showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-100 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}</div></div>)}</div></header><main className="flex-1 flex flex-col items-center justify-start px-4 w-full pb-20 md:pb-0 overflow-y-auto">{!session ? (<div className="w-full h-full flex flex-col items-center"><NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} /><div className="w-full flex justify-center py-10 border-t border-slate-200 mt-10"><div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-500 font-medium"><div className="flex gap-4"><Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link><Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link></div><span className="hidden md:inline text-slate-300">|</span><span className="text-slate-400">Built in Washtenaw County.</span></div></div></div>) : (<><div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>{messages.length === 0 ? (<div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900"><div className="mb-6 p-4 rounded-full bg-slate-50 text-slate-400 border border-slate-100">{activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}</div><h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>{activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}</h1><p className="text-slate-500 text-sm max-w-sm font-medium">{activeMode === 'image' ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.' : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}</p></div>) : (<div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">{messages.map((msg, idx) => (<div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-sm' : 'bg-white border border-slate-200 text-slate-800 px-6 py-4 rounded-2xl shadow-sm'}`}>{msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-slate-200/20" />}{msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[15px] leading-7 whitespace-pre-wrap font-medium">{msg.content}</div>}</div></div>))}</div>)}</div><div className="w-full pt-2 pb-6 shrink-0 z-20"><InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} /></div></>)}</main></div></div></>)
+  
+  const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setActiveMode('chat'); };
+  const triggerMode = (mode) => { if (!session) { setAuthModalMessage('Sign in to access this tool'); setShowAuthModal(true); return; } setActiveMode(mode); if (mode === 'image') { fileInputRef.current?.click(); } else { inputRef.current?.focus(); } };
+  const handleSignOut = async (e) => { if (e && e.preventDefault) e.preventDefault(); await supabase.auth.signOut(); window.location.href = '/'; };
+  const handleCheckout = async (priceId, planName) => { setCheckoutLoading(planName); try { const { data: { session: currentSession } } = await supabase.auth.getSession(); if (!currentSession) throw new Error('Session expired'); const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` }, body: JSON.stringify({ priceId }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch (e) { alert('Checkout failed'); } finally { setCheckoutLoading(null); } };
+
+  const handleSend = async (e) => { if (e) e.preventDefault(); if ((!input.trim() && !selectedImage) || isSending) return; if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return; } if (!hasActiveSubscription) { setShowPricingModal(true); return; } let finalInput = input; const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }]); let activeChatId = currentChatId; try { if (!activeChatId) { const { data: newChat } = await supabase.from('chats').insert({ user_id: session.user.id, title: input.slice(0, 30) + '...' }).select().single(); if (newChat) { activeChatId = newChat.id; setCurrentChatId(newChat.id); } } const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg, content: finalInput }], image: img, chatId: activeChatId, mode: activeMode }) }); const data = await res.json(); setMessages((p) => { const u = [...p]; u[u.length - 1].content = data.message || 'Error.'; return u; }); } catch (err) { setMessages((p) => { const u = [...p]; u[u.length - 1].content = 'Network error.'; return u; }); } finally { setIsSending(false); } };
+  const handleImage = async (e) => { const file = e.target.files?.[0]; if (!file) return; try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image'); } catch (error) { console.error(error); } };
+
+  useEffect(() => { const init = async () => { const { data: { session: s } } = await supabase.auth.getSession(); setSession(s); if (s) { const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', s.user.id).in('status', ['active', 'trialing']).maybeSingle(); if (s.user.email === ADMIN_EMAIL || sub) setHasActiveSubscription(true); } setIsLoading(false); }; init(); }, []);
+
+  if (isLoading) return <div className="fixed inset-0 bg-[#FAFAFA]" />;
+
+  return (
+    <>
+      <GlobalStyles />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
+      {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}
+      
+      <div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-emerald-100 selection:text-emerald-900">
+        <TechnicalBackground />
+        
+        <div className="relative z-10 flex flex-col h-[100dvh]">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white/50 backdrop-blur-sm">
+             <div className={`font-bold text-xl ${outfit.className} text-slate-900`}>protocol<span className="text-emerald-600">LM</span></div>
+             <div className="flex gap-3">
+                {!session ? (
+                  <>
+                    <button onClick={() => setShowPricingModal(true)} className="text-xs font-bold text-slate-500 hover:text-slate-900 hidden sm:block">Pricing</button>
+                    <button onClick={() => setShowAuthModal(true)} className="btn-rect bg-slate-900 text-white text-xs font-bold px-4 py-2">Start Free Trial</button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleNewChat} className="p-2 text-slate-400 hover:text-slate-900"><Icons.Plus /></button>
+                    <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 text-xs font-bold flex items-center justify-center">{session.user.email[0].toUpperCase()}</button>
+                    {showUserMenu && (<div className="absolute top-14 right-4 w-40 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden"><button onClick={() => setShowPricingModal(true)} className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">Subscription</button><button onClick={handleSignOut} className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50">Log Out</button></div>)}
+                  </div>
+                )}
+             </div>
+          </header>
+
+          <main className="flex-1 flex flex-col px-4 pb-0 overflow-y-auto">
+             {!session ? (
+                <NarrativeJourney onAction={(mode) => { triggerMode(mode); }} />
+             ) : (
+                <>
+                  <div className="flex-1 overflow-y-auto w-full py-6" ref={scrollRef}>
+                    {messages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                        <div className={`mb-6 p-4 rounded-lg border ${activeMode === 'image' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                          {activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}
+                        </div>
+                        <h1 className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}>
+                          {activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}
+                        </h1>
+                        <p className="text-slate-500 text-sm max-w-sm">
+                          {activeMode === 'image' ? 'Upload a photo to detect Priority (P) violations.' : 'Ask questions about Washtenaw County food code.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col w-full max-w-3xl mx-auto gap-6">
+                        {messages.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] p-5 rounded-lg text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}>
+                              {msg.image && <img src={msg.image} alt="Upload" className="rounded-md mb-3 border border-white/20" />}
+                              {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader" /> : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 pb-6">
+                    <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+                  </div>
+                </>
+             )}
+          </main>
+        </div>
+      </div>
+    </>
+  )
 }
