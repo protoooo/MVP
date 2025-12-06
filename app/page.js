@@ -16,7 +16,6 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
 const CssBackground = () => (
   <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    {/* PURE WHITE/GRAY - NO BLOBS */}
     <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
   </div>
 )
@@ -44,12 +43,9 @@ const GlobalStyles = () => (
   <style jsx global>{`
     body { background-color: #FAFAFA; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     .btn-press { transition: transform 0.1s ease; } .btn-press:active { transform: scale(0.96); }
-    @keyframes slideUpFade {
-      0%, 10% { transform: translateY(100%); opacity: 0; }
-      20%, 80% { transform: translateY(0); opacity: 1; }
-      90%, 100% { transform: translateY(-100%); opacity: 0; }
-    }
-    .animate-ticker-item { animation: slideUpFade 4s cubic-bezier(0.16, 1, 0.3, 1) infinite; }
+    /* FIXED TICKER ANIMATION */
+    @keyframes fadeInSlide { 0% { opacity: 0; transform: translateY(10px); } 10%, 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
+    .animate-ticker-item { animation: fadeInSlide 4s ease-in-out infinite; }
     .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
     @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
     ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
@@ -60,7 +56,8 @@ const KnowledgeTicker = () => {
   const [index, setIndex] = useState(0);
   useEffect(() => { const timer = setInterval(() => { setIndex((prev) => (prev + 1) % TICKER_ITEMS.length); }, 4000); return () => clearInterval(timer); }, []);
   return (
-    <div className="mx-auto mb-8 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-6 w-fit">
+    // FIX: w-[320px] explicitly sets width so it never collapses
+    <div className="mx-auto mb-8 h-10 w-[320px] overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm">
       <div key={index} className="flex items-center gap-3 animate-ticker-item absolute">
         <Icons.File />
         <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
@@ -79,6 +76,8 @@ const NarrativeJourney = ({ onAction }) => {
       <KnowledgeTicker />
       <div className="text-center mb-6"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
+        
+        {/* VISUAL INSPECTION - Green Border, White Button with Green Outline */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-emerald-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -93,9 +92,11 @@ const NarrativeJourney = ({ onAction }) => {
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">Take a photo of your kitchen, we highlight violations.</p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium"><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Identifies sanitary risks</li><li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li></ul>
               </div>
-              <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free. No login required.</p></div>
+              <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
            </div>
         </div>
+
+        {/* REGULATORY CONSULTANT - Blue Border, White Button with Blue Outline */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -103,10 +104,10 @@ const NarrativeJourney = ({ onAction }) => {
                    <div><h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Regulatory Consultant</h3><div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-500"></span><p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Chat Mode</p></div></div>
                    <div className="text-blue-600"><Icons.IsoBook /></div>
                 </div>
-                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">Ask questions. Get answers tied to the actual code.</p>
+                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">Ask any question, get an answer tied to the actual code.</p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium"><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Cooling & heating curves</li><li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li></ul>
               </div>
-              <div className="mt-8"><button onClick={() => onAction('chat')} className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Code Chat <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free. No login required.</p></div>
+              <div className="mt-8"><button onClick={() => onAction('chat')} className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Code Chat <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
            </div>
         </div>
       </div>
