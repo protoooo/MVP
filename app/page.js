@@ -33,13 +33,19 @@ const TICKER_ITEMS = Object.values(DOC_MAPPING)
 // MISSING COMPONENT FIXED HERE
 // ==========================================
 const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none" />
+  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
+    {/* Subtle professional gradient mesh */}
+    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
+    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
+    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  </div>
 )
 
 // ==========================================
 // ICONS
 // ==========================================
 const Icons = {
+  // Isometric Camera
   IsoCamera: () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 32 L24 42 L44 32" className="text-emerald-900/20" fill="currentColor" fillOpacity="0.05"/>
@@ -50,6 +56,7 @@ const Icons = {
       <path d="M24 16 L24 19" strokeOpacity="0.5" />
     </svg>
   ),
+  // Isometric Book
   IsoBook: () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10 12 L24 6 L38 12 V36 L24 30 L10 36 Z" className="text-blue-900/20" fill="currentColor" fillOpacity="0.05"/>
@@ -71,7 +78,7 @@ const Icons = {
   Book: () => <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>,
   Check: ({ color = 'text-slate-800' }) => <svg className={`w-4 h-4 ${color} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>,
   File: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
-  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
   UserCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>,
   Upload: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
@@ -139,7 +146,7 @@ const KnowledgeTicker = () => {
   }, []);
   
   return (
-    <div className="mx-auto mb-8 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-8 min-w-[300px] w-fit">
+    <div className="mx-auto mb-16 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-8 min-w-[300px] w-fit">
       <div key={index} className="flex items-center gap-3 animate-ticker-item absolute">
         <Icons.File />
         <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
@@ -153,23 +160,25 @@ const NarrativeJourney = ({ onAction }) => {
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       
       <div className="text-center mb-10 md:mb-12 space-y-4">
-        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2">
-          Built for Washtenaw County
-        </span>
-        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
-          Pass your next inspection<br className="hidden md:block" /> without digging through PDFs.
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-semibold text-emerald-700 uppercase tracking-[0.18em] mb-2">
+           Washtenaw County • Food Service Only
+        </div>
+        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight ${outfit.className}`}>
+          Pass your next health inspection<br className="hidden md:block" /> without digging through PDFs.
         </h2>
+        <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed px-4">
+          Instant answers from Washtenaw County rules, Michigan Modified Food Code, and FDA Food Code.
+        </p>
+        <p className="text-[11px] sm:text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
+            Image Inspection • Code Chat • One compliance platform
+        </p>
       </div>
 
       <KnowledgeTicker />
 
-      <div className="text-center mb-6">
-         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1 */}
+        {/* CARD 1: VISUAL INSPECTION */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-emerald-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -185,12 +194,12 @@ const NarrativeJourney = ({ onAction }) => {
                 </div>
                 
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Take a picture, we highlight violations.
+                  Take a photo of your walk-in, prep table, or line. protocol<span className="font-semibold text-slate-900">LM</span> cross-checks it against Washtenaw County regulations and highlights likely <span className="font-semibold text-slate-900">Priority (P)</span>, <span className="font-semibold text-slate-900">Priority Foundation (Pf)</span>, and <span className="font-semibold text-slate-900">Core</span> violations in seconds.
                 </p>
-                <ul className="space-y-2 text-sm text-slate-600 font-medium">
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Identifies sanitary risks</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li>
+                <ul className="space-y-1.5 text-xs md:text-sm text-slate-500 font-medium">
+                    <li className="flex items-center gap-2">• See what an inspector would probably flag from a single photo</li>
+                    <li className="flex items-center gap-2">• Turn “I think it’s fine” into clear, code-backed guidance</li>
+                    <li className="flex items-center gap-2">• Use photos as quick pre-inspection checklists for your team</li>
                 </ul>
               </div>
               
@@ -199,14 +208,14 @@ const NarrativeJourney = ({ onAction }) => {
                     onClick={() => onAction('image')}
                     className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                    Start Inspection <Icons.ArrowUp />
+                    Start Image Inspection <Icons.ArrowUp />
                 </button>
-                <p className="text-[10px] text-center text-slate-400 mt-2">You’ll be asked to sign in to start your free trial.</p>
+                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Requires a free trial account. Built specifically for Washtenaw County.</p>
               </div>
            </div>
         </div>
 
-        {/* CARD 2 */}
+        {/* CARD 2: REGULATORY CONSULTANT */}
         <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-blue-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-blue-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
@@ -222,12 +231,12 @@ const NarrativeJourney = ({ onAction }) => {
                 </div>
                 
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Ask any question, get an answer tied to the actual code.
+                  Ask plain-English questions and get grounded answers that walk the actual hierarchy: <span className="font-semibold text-slate-900">Washtenaw County</span> &rarr; <span className="font-semibold text-slate-900">Michigan Modified Food Code</span> &rarr; <span className="font-semibold text-slate-900">FDA Food Code 2022</span>.
                 </p>
-                <ul className="space-y-2 text-sm text-slate-600 font-medium">
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Cooling & heating curves</li>
-                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li>
+                <ul className="space-y-1.5 text-xs md:text-sm text-slate-500 font-medium">
+                    <li className="flex items-center gap-2">• “What’s the cooling curve for large roasts?”</li>
+                    <li className="flex items-center gap-2">• “Can we use bare hands for this if we have a waiver?”</li>
+                    <li className="flex items-center gap-2">• “How should I fix this violation before the re-inspection?”</li>
                 </ul>
               </div>
 
@@ -236,35 +245,30 @@ const NarrativeJourney = ({ onAction }) => {
                     onClick={() => onAction('chat')}
                     className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                    Start Chat <Icons.ArrowUp />
+                    Start Code Chat <Icons.ArrowUp />
                 </button>
-                <p className="text-[10px] text-center text-slate-400 mt-2">You’ll be asked to sign in to start your free trial.</p>
+                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Answers are grounded in your local code, not generic internet summaries.</p>
               </div>
            </div>
         </div>
 
       </div>
 
+      {/* HOW IT WORKS STRIP */}
       <div className="mt-24 border-t border-slate-200 pt-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-            <div className="space-y-2">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.UserCheck /> <span>1. Create Account</span>
-                </div>
-                <p className="text-sm text-slate-500">Start your 7-day free trial. No commitment.</p>
+         <div className="w-full max-w-4xl mx-auto mt-10">
+          <div className="bg-white/80 border border-slate-200 rounded-2xl px-4 py-3 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-3 justify-center">
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              Replaces hours of reading
+            </span>
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500 font-medium">
+              <span>Washtenaw County Enforcement Actions</span>
+              <span className="hidden sm:inline text-slate-300">&middot;</span>
+              <span>Michigan Modified Food Code</span>
+              <span className="hidden sm:inline text-slate-300">&middot;</span>
+              <span>FDA Food Code 2022</span>
             </div>
-            <div className="space-y-2">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.Upload /> <span>2. Upload or Ask</span>
-                </div>
-                <p className="text-sm text-slate-500">Take a photo of your kitchen or ask a question.</p>
-            </div>
-            <div className="space-y-2">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
-                    <Icons.Shield /> <span>3. Fix Issues</span>
-                </div>
-                <p className="text-sm text-slate-500">Correct violations before the inspector walks in.</p>
-            </div>
+          </div>
         </div>
       </div>
 
