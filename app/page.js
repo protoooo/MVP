@@ -1,20 +1,32 @@
 'use client'
+// FORCE UPDATE: FINAL V3.1
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit } from 'next/font/google'
-import { GlobalStyles, CssBackground, Icons } from '../components/Visuals'
+import { Icons } from '@/components/Icons'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
 const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.pdf": "Violation Classifications", "Enforcement Action.pdf": "Enforcement Guidelines", "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)", "MI_MODIFIED.pdf": "Michigan Modified Law", "Cooking_Temps.pdf": "Critical Temperatures", "Cooling Foods.pdf": "Cooling Procedures", "Cross contamination.pdf": "Cross-Contamination", "food_labeling.pdf": "Labeling Standards", "Norovirus.pdf": "Biohazard Cleanup", "Allergy Info.pdf": "Allergen Control", "Emergency_Plan.pdf": "Emergency Plans", "Date_Marking.pdf": "Date Marking Rules" }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
+
+const GlobalStyles = () => (
+  <style jsx global>{`
+    body { background-color: #FAFAFA; overscroll-behavior: none; height: 100dvh; width: 100%; max-width: 100dvw; overflow: hidden; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .btn-press { transition: transform 0.1s ease; } .btn-press:active { transform: scale(0.96); }
+    @keyframes slideUpFade { 0% { transform: translateY(100%); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
+    .animate-ticker-item { animation: slideUpFade 4s ease-in-out forwards; }
+    .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
+    @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+  `}</style>
+)
 
 const KnowledgeTicker = () => {
   const [index, setIndex] = useState(0);
@@ -39,7 +51,7 @@ const NarrativeJourney = ({ onAction }) => {
       <KnowledgeTicker />
       <div className="text-center mb-6"><h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3></div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
-        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-emerald-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
+        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-emerald-500/70 shadow-[0_8px_30px_rgba(16,185,129,0.12)] transition-all duration-300 hover:shadow-[0_14px_40px_rgba(16,185,129,0.2)] hover:-translate-y-1 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-6">
@@ -56,7 +68,7 @@ const NarrativeJourney = ({ onAction }) => {
               <div className="mt-8"><button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button><p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Try once for free.</p></div>
            </div>
         </div>
-        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-lg overflow-hidden">
+        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border-2 border-blue-500 shadow-sm transition-all duration-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)] hover:-translate-y-[1px] overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-6">
