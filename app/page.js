@@ -1,4 +1,5 @@
 'use client'
+// VERSION 2.0 - CLEAN ENTERPRISE
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
@@ -12,23 +13,10 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const STRIPE_PRICE_ID_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
 const STRIPE_PRICE_ID_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
 
-const DOC_MAPPING = {
-  "3compsink.pdf": "Sanitizing Protocols",
-  "Violation Types.pdf": "Violation Classifications",
-  "Enforcement Action.pdf": "Enforcement Guidelines",
-  "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)",
-  "MI_MODIFIED.pdf": "Michigan Modified Law",
-  "Cooking_Temps.pdf": "Critical Temperatures",
-  "Cooling Foods.pdf": "Cooling Procedures",
-  "Cross contamination.pdf": "Cross-Contamination",
-  "food_labeling.pdf": "Labeling Standards",
-  "Norovirus.pdf": "Biohazard Cleanup",
-  "Allergy Info.pdf": "Allergen Control",
-  "Emergency_Plan.pdf": "Emergency Plans",
-  "Date_Marking.pdf": "Date Marking Rules"
-}
+const DOC_MAPPING = { "3compsink.pdf": "Sanitizing Protocols", "Violation Types.pdf": "Violation Classifications", "Enforcement Action.pdf": "Enforcement Guidelines", "FDA_FOOD_CODE_2022.pdf": "FDA Food Code (2022)", "MI_MODIFIED.pdf": "Michigan Modified Law", "Cooking_Temps.pdf": "Critical Temperatures", "Cooling Foods.pdf": "Cooling Procedures", "Cross contamination.pdf": "Cross-Contamination", "food_labeling.pdf": "Labeling Standards", "Norovirus.pdf": "Biohazard Cleanup", "Allergy Info.pdf": "Allergen Control", "Emergency_Plan.pdf": "Emergency Plans", "Date_Marking.pdf": "Date Marking Rules" }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
+// --- FIX: Background Component Defined Here ---
 const CssBackground = () => (
   <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
     <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
