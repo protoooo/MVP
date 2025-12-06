@@ -29,16 +29,9 @@ const DOC_MAPPING = {
 }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
-// --- FIX: Added the missing component definition ---
-const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    {/* Subtle professional gradient mesh */}
-    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
-)
-
+// ==========================================
+// ICONS
+// ==========================================
 const Icons = {
   // Isometric Camera
   IsoCamera: () => (
@@ -75,6 +68,9 @@ const Icons = {
   File: () => <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
   Settings: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   MessageSquare: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>,
+  UserCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>,
+  Upload: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
+  Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
 }
 
 // ==========================================
@@ -136,8 +132,9 @@ const KnowledgeTicker = () => {
     const timer = setInterval(() => { setIndex((prev) => (prev + 1) % TICKER_ITEMS.length); }, 4000); 
     return () => clearInterval(timer);
   }, []);
+  
   return (
-    <div className="mx-auto mb-16 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-8 min-w-[300px] w-fit">
+    <div className="mx-auto mb-8 h-10 overflow-hidden relative flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm px-8 min-w-[300px] w-fit">
       <div key={index} className="flex items-center gap-3 animate-ticker-item absolute">
         <Icons.File />
         <span className="text-xs font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">{TICKER_ITEMS[index]}</span>
@@ -151,23 +148,31 @@ const NarrativeJourney = ({ onAction }) => {
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       
       <div className="text-center mb-10 md:mb-12 space-y-4">
-        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
-          Choose your protocol.
+        {/* NEW BADGE */}
+        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2">
+          Built for Washtenaw County
+        </span>
+        
+        {/* NEW HEADLINE */}
+        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight ${outfit.className}`}>
+          Pass your next inspection<br className="hidden md:block" /> without digging through PDFs.
         </h2>
-        <p className="text-lg md:text-xl text-slate-500 font-medium leading-relaxed px-4">
-          Two powerful modes.<br className="block sm:hidden" /> One compliance platform.
-        </p>
       </div>
 
       <KnowledgeTicker />
 
+      {/* PROTOCOL HEADER */}
+      <div className="text-center mb-6">
+         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
 
-        {/* CARD 1: VISUAL INSPECTION - Green Border */}
-        <div className="group relative h-full min-h-[340px] flex flex-col rounded-xl bg-white border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-emerald-500/30 overflow-hidden">
+        {/* CARD 1: VISUAL INSPECTION */}
+        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-emerald-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
-                <div className="w-full flex justify-between items-start mb-8">
+                <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Visual Inspection</h3>
                       <div className="flex items-center gap-2">
@@ -177,26 +182,34 @@ const NarrativeJourney = ({ onAction }) => {
                    </div>
                    <div className="text-emerald-600"><Icons.Camera /></div>
                 </div>
-                <p className="text-slate-600 text-base leading-7 font-normal">
-                  Upload a photo of your kitchen, prep area, or storage. Our vision model instantly identifies <span className="font-semibold text-slate-900">Priority (P)</span>, <span className="font-semibold text-slate-900">Priority Foundation (Pf)</span>, and <span className="font-semibold text-slate-900">Core</span> violations.
+                
+                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
+                  Take a picture, we highlight violations.
                 </p>
+                <ul className="space-y-2 text-sm text-slate-600 font-medium">
+                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li>
+                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Identifies sanitary risks</li>
+                    <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li>
+                </ul>
               </div>
               
-              {/* BUTTON: White BG, Green Border */}
-              <button 
-                onClick={() => onAction('image')}
-                className="w-full py-3.5 mt-8 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Start Inspection <Icons.ArrowUp />
-              </button>
+              <div className="mt-8">
+                <button 
+                    onClick={() => onAction('image')}
+                    className="w-full py-3.5 rounded-lg bg-white border-2 border-emerald-600 text-emerald-700 font-bold text-xs uppercase tracking-widest hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                    Start Inspection <Icons.ArrowUp />
+                </button>
+                <p className="text-[10px] text-center text-slate-400 mt-2">You’ll be asked to sign in to start your free trial.</p>
+              </div>
            </div>
         </div>
 
-        {/* CARD 2: REGULATORY CONSULTANT - Blue Border */}
-        <div className="group relative h-full min-h-[340px] flex flex-col rounded-xl bg-white border border-blue-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-blue-500/30 overflow-hidden">
+        {/* CARD 2: REGULATORY CONSULTANT */}
+        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-blue-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-blue-500/30 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
-                <div className="w-full flex justify-between items-start mb-8">
+                <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Regulatory Consultant</h3>
                       <div className="flex items-center gap-2">
@@ -206,22 +219,55 @@ const NarrativeJourney = ({ onAction }) => {
                    </div>
                    <div className="text-blue-600"><Icons.Book /></div>
                 </div>
-                <p className="text-slate-600 text-base leading-7 font-normal">
-                  Navigates enforcement hierarchy: <span className="font-semibold text-slate-900">Washtenaw County</span> &rarr; <span className="font-semibold text-slate-900">Michigan Code</span> &rarr; <span className="font-semibold text-slate-900">FDA</span>. Ask specific questions like <em>"What is the required cooling curve for large beef roasts?"</em>
+                
+                <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
+                  Ask any question, get an answer tied to the actual code.
                 </p>
+                <ul className="space-y-2 text-sm text-slate-600 font-medium">
+                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li>
+                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Cooling & heating curves</li>
+                    <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li>
+                </ul>
               </div>
 
-              {/* BUTTON: White BG, Blue Border */}
-              <button 
-                onClick={() => onAction('chat')}
-                className="w-full py-3.5 mt-8 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                Start Chat <Icons.ArrowUp />
-              </button>
+              <div className="mt-8">
+                <button 
+                    onClick={() => onAction('chat')}
+                    className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                    Start Chat <Icons.ArrowUp />
+                </button>
+                <p className="text-[10px] text-center text-slate-400 mt-2">You’ll be asked to sign in to start your free trial.</p>
+              </div>
            </div>
         </div>
 
       </div>
+
+      {/* HOW IT WORKS STRIP */}
+      <div className="mt-24 border-t border-slate-200 pt-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div className="space-y-2">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.UserCheck /> <span>1. Create Account</span>
+                </div>
+                <p className="text-sm text-slate-500">Start your 7-day free trial. No commitment.</p>
+            </div>
+            <div className="space-y-2">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.Upload /> <span>2. Upload or Ask</span>
+                </div>
+                <p className="text-sm text-slate-500">Take a photo of your kitchen or ask a question.</p>
+            </div>
+            <div className="space-y-2">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.Shield /> <span>3. Fix Issues</span>
+                </div>
+                <p className="text-sm text-slate-500">Correct violations before the inspector walks in.</p>
+            </div>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -272,7 +318,7 @@ export default function Page() {
   const handleCheckout = async (priceId, planName) => { const checkoutTimeout = setTimeout(() => { setCheckoutLoading(null); alert("Connection timeout. Please try again."); }, 15000); setCheckoutLoading(planName); if (!priceId) { clearTimeout(checkoutTimeout); alert('Error: Price ID missing. Please check configuration.'); setCheckoutLoading(null); return; } if (!session) { clearTimeout(checkoutTimeout); setShowPricingModal(false); setAuthModalMessage('Create an account to subscribe'); setShowAuthModal(true); setCheckoutLoading(null); return; } try { const { data: { session: currentSession } } = await supabase.auth.getSession(); if (!currentSession) { clearTimeout(checkoutTimeout); alert('Session expired.'); return; } const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` }, body: JSON.stringify({ priceId }) }); if (!res.ok) throw new Error((await res.json()).error || 'API Error'); const data = await res.json(); if (data.url) { clearTimeout(checkoutTimeout); window.location.href = data.url; } else throw new Error('No URL returned'); } catch (error) { clearTimeout(checkoutTimeout); alert(`Checkout failed: ${error.message}`); } finally { setCheckoutLoading(null); } };
   const handleSend = async (e) => { if (e) e.preventDefault(); if ((!input.trim() && !selectedImage) || isSending) return; if (!session) { setAuthModalMessage('Start trial to chat'); setShowAuthModal(true); return; } if (!hasActiveSubscription) { setShowPricingModal(true); return; } let finalInput = input; const newMsg = { role: 'user', content: input, image: selectedImage }; setMessages((p) => [...p, newMsg]); setInput(''); const img = selectedImage; setSelectedImage(null); setIsSending(true); setMessages((p) => [...p, { role: 'assistant', content: '' }]); let activeChatId = currentChatId; try { if (!activeChatId) { const { data: newChat } = await supabase.from('chats').insert({ user_id: session.user.id, title: input.slice(0, 30) + '...' }).select().single(); if (newChat) { activeChatId = newChat.id; setCurrentChatId(newChat.id); loadChatHistory(); } } const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, { ...newMsg, content: finalInput }], image: img, chatId: activeChatId, mode: activeMode }) }); if (res.status === 401) { setAuthModalMessage('Sign in to continue'); setShowAuthModal(true); setMessages((p) => p.slice(0, -2)); return; } if (res.status === 402) { setShowPricingModal(true); setMessages((p) => p.slice(0, -2)); return; } if (res.status === 403) { router.push('/accept-terms'); setMessages((p) => p.slice(0, -2)); return; } const data = await res.json(); setMessages((p) => { const u = [...p]; u[u.length - 1].content = data.message || (data.error ? `Error: ${data.error}` : 'Error.'); return u; }); } catch (err) { setMessages((p) => { const u = [...p]; u[u.length - 1].content = 'Network error.'; return u; }); } finally { setIsSending(false); } };
   const handleImage = async (e) => { const file = e.target.files?.[0]; if (!file) return; if (!session) { setAuthModalMessage('Login required'); setShowAuthModal(true); return; } if (file.size > 10 * 1024 * 1024) { alert('Image too large'); return; } if (!file.type.startsWith('image/')) { alert('Images only'); return; } try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image'); } catch (error) { alert('Image error'); console.error(error); } }; const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setSidebarOpen(false); setActiveMode('chat'); };
-  useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside); }, []); useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages]); useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus(); }, [messages.length, isSending]);
+  useEffect(() => { function handleClickOutside(event) { if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false) } document.addEventListener('mousedown', handleClickOutside); return () => document.removeEventListener('mousedown', handleClickOutside) }, []); useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages]); useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus(); }, [messages.length, isSending]);
   if (isLoading) return <div className="fixed inset-0 bg-white text-black flex items-center justify-center"><div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" /></div>;
   if (session && !hasActiveSubscription) return <><GlobalStyles /><FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} /></>;
   return (<><GlobalStyles /><AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />{showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onSignOut={handleSignOut} />}<div className="relative min-h-screen w-full overflow-hidden font-sans selection:bg-orange-100/50"><CssBackground /><div className="relative z-10 flex flex-col h-[100dvh]"><header className={`flex items-center justify-between px-4 py-4 md:px-6 md:py-6 shrink-0 text-slate-900 pt-safe bg-white/10 backdrop-blur-sm border-b border-white/20`}><div className={`font-bold tracking-tight text-xl md:text-2xl ${outfit.className}`}>protocol<span className="text-black">LM</span></div><div className="flex items-center gap-2 md:gap-4">{!session && (<><button onClick={() => setShowAuthModal(true)} className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-widest transition-transform active:scale-95 shadow-sm whitespace-nowrap">Start Free Trial</button><button onClick={() => setShowPricingModal(true)} className="text-xs md:text-sm font-medium text-slate-900 hover:text-slate-600 transition-transform active:scale-95 hidden sm:block">Pricing</button><button onClick={() => setShowAuthModal(true)} className="text-xs md:text-sm font-medium border border-slate-200 bg-white px-4 py-2 rounded-full text-slate-900 hover:bg-slate-50 transition-transform active:scale-95">Sign In</button></>)}{session && (<div className="flex items-center gap-3"><button onClick={handleNewChat} className="p-2 rounded-full hover:bg-white text-slate-900 transition-colors border border-transparent hover:border-slate-200"><Icons.Plus /></button><div className="relative" ref={userMenuRef}><button onClick={() => setShowUserMenu(!showUserMenu)} className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold shadow-sm">{session.user.email[0].toUpperCase()}</button>{showUserMenu && (<div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200"><button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-3 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-2"><Icons.Settings /> Subscription</button><div className="h-px bg-slate-100 mx-0" /><button onClick={(e) => handleSignOut(e)} className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Icons.SignOut /> Log out</button></div>)}</div></div>)}</div></header><main className="flex-1 flex flex-col items-center justify-start px-4 w-full pb-20 md:pb-0 overflow-y-auto">{!session ? (<div className="w-full h-full flex flex-col items-center"><NarrativeJourney onAction={(mode) => { triggerMode(mode); setShowAuthModal(true); }} /><div className="w-full flex justify-center py-10 border-t border-slate-200 mt-10"><div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-[10px] md:text-xs text-slate-500 font-medium"><div className="flex gap-4"><Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link><Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link></div><span className="hidden md:inline text-slate-300">|</span><span className="text-slate-400">Built in Washtenaw County.</span></div></div></div>) : (<><div className="flex-1 overflow-y-auto w-full" ref={scrollRef}>{messages.length === 0 ? (<div className="h-full flex flex-col items-center justify-center p-4 text-center text-slate-900"><div className="mb-6 p-4 rounded-full bg-slate-50 text-slate-400 border border-slate-100">{activeMode === 'image' ? <Icons.Camera /> : <Icons.Book />}</div><h1 className={`text-2xl font-bold mb-2 ${outfit.className}`}>{activeMode === 'image' ? 'Visual Inspection Mode' : 'Regulatory Consultant Mode'}</h1><p className="text-slate-500 text-sm max-w-sm font-medium">{activeMode === 'image' ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.' : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}</p></div>) : (<div className="flex flex-col w-full max-w-3xl mx-auto py-6 px-4 gap-6">{messages.map((msg, idx) => (<div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] ${msg.role === 'user' ? 'bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-sm' : 'bg-white border border-slate-200 text-slate-800 px-6 py-4 rounded-2xl shadow-sm'}`}>{msg.image && <img src={msg.image} alt="Upload" className="rounded-xl mb-3 max-h-60 object-contain border border-slate-200/20" />}{msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <div className="loader my-1" /> : <div className="text-[15px] leading-7 whitespace-pre-wrap font-medium">{msg.content}</div>}</div></div>))}</div>)}</div><div className="w-full pt-2 pb-6 shrink-0 z-20"><InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} /></div></>)}</main></div></div></>)
