@@ -29,14 +29,9 @@ const DOC_MAPPING = {
 }
 const TICKER_ITEMS = Object.values(DOC_MAPPING)
 
-const CssBackground = () => (
-  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
-    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
-    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-  </div>
-)
-
+// ==========================================
+// ICONS
+// ==========================================
 const Icons = {
   IsoCamera: () => (
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -74,6 +69,8 @@ const Icons = {
   UserCheck: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>,
   Upload: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>,
   Shield: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+  XCircle: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  CheckCircle: () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
 }
 
 const GlobalStyles = () => (
@@ -100,30 +97,19 @@ const GlobalStyles = () => (
     .animate-ticker-item {
       animation: slideUpFade 4s ease-in-out forwards;
     }
-
-    .loader {
-      height: 14px;
-      aspect-ratio: 2.5;
-      --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
-      background:var(--_g), var(--_g), var(--_g), var(--_g);
-      background-size: 20% 50%;
-      animation: l43 1s infinite linear; 
-    }
-    @keyframes l43 {
-      0%     {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      16.67% {background-position: calc(0*100%/3) 0   ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0   ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-      50%    {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0   ,calc(3*100%/3) 50% }
-      66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0   }
-      83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%}
-      100%   {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% }
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+    
+    .loader { height: 14px; aspect-ratio: 2.5; --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000); background:var(--_g), var(--_g), var(--_g), var(--_g); background-size: 20% 50%; animation: l43 1s infinite linear; }
+    @keyframes l43 { 0% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 16.67% {background-position: calc(0*100%/3) 0 ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 33.33% {background-position: calc(0*100%/3) 100%,calc(1*100%/3) 0 ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } 50% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 100%,calc(2*100%/3) 0 ,calc(3*100%/3) 50% } 66.67% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 100%,calc(3*100%/3) 0 } 83.33% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 100%} 100% {background-position: calc(0*100%/3) 50% ,calc(1*100%/3) 50% ,calc(2*100%/3) 50% ,calc(3*100%/3) 50% } }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
   `}</style>
+)
+
+const CssBackground = () => (
+  <div className="fixed inset-0 z-0 bg-[#FAFAFA] pointer-events-none">
+    <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-emerald-50/40 rounded-full blur-[120px] mix-blend-multiply" />
+    <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-blue-50/40 rounded-full blur-[120px] mix-blend-multiply" />
+    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+  </div>
 )
 
 const KnowledgeTicker = () => {
@@ -147,29 +133,37 @@ const NarrativeJourney = ({ onAction }) => {
   return (
     <div className="w-full max-w-5xl mx-auto pt-8 md:pt-16 pb-24 px-4 relative z-10">
       
+      {/* 1. HERO SECTION */}
       <div className="text-center mb-10 md:mb-12 space-y-4">
-        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-2">
-          Built for Washtenaw County
-        </span>
-        <h2 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
-          Pass your next inspection<br className="hidden md:block" /> without digging through PDFs.
-        </h2>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-semibold text-emerald-700 uppercase tracking-[0.18em] mb-2">
+          Washtenaw County • Food Service
+        </div>
+
+        <h1 className={`text-3xl sm:text-4xl md:text-6xl font-bold text-slate-900 tracking-tight whitespace-nowrap ${outfit.className}`}>
+          See violations before your inspector does.
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-slate-500 font-medium leading-relaxed px-2 sm:px-4 max-w-xl mx-auto">
+          Take a photo or ask a question&mdash;protocol<span className="font-semibold text-slate-900">LM</span> cross-checks it against Washtenaw County rules in seconds.
+        </p>
       </div>
 
       <KnowledgeTicker />
-
+      
       <div className="text-center mb-6">
-         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Choose your protocol</h3>
+         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Two Ways To Stay Compliant</h3>
       </div>
 
+      {/* 2. THE CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2">
-        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-emerald-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:border-emerald-500/30 overflow-hidden">
+
+        {/* CARD 1: VISUAL INSPECTION (HERO) */}
+        <div className="group relative h-full min-h-[380px] flex flex-col rounded-2xl bg-white border-2 border-emerald-500/70 shadow-[0_8px_30px_rgba(16,185,129,0.12)] transition-all duration-300 hover:shadow-[0_14px_40px_rgba(16,185,129,0.2)] hover:-translate-y-1 overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 mb-3">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[10px] font-bold tracking-[0.18em] uppercase">Recommended</span>
                       </div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Visual Inspection</h3>
@@ -179,8 +173,9 @@ const NarrativeJourney = ({ onAction }) => {
                    </div>
                    <div className="text-emerald-600"><Icons.IsoCamera /></div>
                 </div>
+                
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Take a picture, we highlight violations.
+                  Take a photo of your kitchen. We highlight violations instantly.
                 </p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium">
                     <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Detects Priority (P) items</li>
@@ -188,27 +183,36 @@ const NarrativeJourney = ({ onAction }) => {
                     <li className="flex items-center gap-2"><Icons.Check color="text-emerald-600" /> Instant audit report</li>
                 </ul>
               </div>
+              
               <div className="mt-8">
-                <button onClick={() => onAction('image')} className="w-full py-3.5 rounded-lg bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Image Inspection <Icons.ArrowUp /></button>
-                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Requires a free trial account. Built specifically for Washtenaw County.</p>
+                <button 
+                    onClick={() => onAction('image')}
+                    className="w-full py-3.5 rounded-lg bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                    Start Image Inspection <Icons.ArrowUp />
+                </button>
+                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Requires a free trial account.</p>
               </div>
            </div>
         </div>
 
-        <div className="group relative h-full min-h-[360px] flex flex-col rounded-xl bg-white border border-blue-100 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)] hover:-translate-y-[1px] overflow-hidden">
+        {/* CARD 2: REGULATORY CONSULTANT */}
+        <div className="group relative h-full min-h-[380px] flex flex-col rounded-2xl bg-white border border-blue-100 shadow-[0_2px_10px_rgba(15,23,42,0.04)] transition-all duration-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.12)] hover:-translate-y-[1px] overflow-hidden">
            <div className="relative p-8 md:p-10 z-10 h-full flex flex-col justify-between text-left">
               <div>
                 <div className="w-full flex justify-between items-start mb-6">
                    <div>
                       <h3 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">Regulatory Consultant</h3>
                       <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                         <p className="text-xs font-bold text-blue-700 uppercase tracking-widest">Chat Mode</p>
                       </div>
                    </div>
                    <div className="text-blue-600"><Icons.IsoBook /></div>
                 </div>
+                
                 <p className="text-slate-600 text-base leading-relaxed font-normal mb-4">
-                  Ask any question, get an answer tied to the actual code.
+                  Ask questions. Get answers tied to the actual code.
                 </p>
                 <ul className="space-y-2 text-sm text-slate-600 font-medium">
                     <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Washtenaw-specific citations</li>
@@ -216,27 +220,113 @@ const NarrativeJourney = ({ onAction }) => {
                     <li className="flex items-center gap-2"><Icons.Check color="text-blue-600" /> Enforcement timelines</li>
                 </ul>
               </div>
+
               <div className="mt-8">
-                <button onClick={() => onAction('chat')} className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer">Start Code Chat <Icons.ArrowUp /></button>
-                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Answers are grounded in your local code, not generic internet summaries.</p>
+                <button 
+                    onClick={() => onAction('chat')}
+                    className="w-full py-3.5 rounded-lg bg-white border-2 border-blue-600 text-blue-700 font-bold text-xs uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                    Start Code Chat <Icons.ArrowUp />
+                </button>
+                <p className="text-[10px] text-center text-slate-400 mt-2 font-medium">Answers based on local & federal code.</p>
               </div>
            </div>
         </div>
+
       </div>
 
-      <div className="mt-24 border-t border-slate-200 pt-12">
-         <div className="w-full max-w-4xl mx-auto mt-10">
-          <div className="bg-white/80 border border-slate-200 rounded-2xl px-4 py-3 shadow-sm flex flex-col sm:flex-row items-center gap-2 sm:gap-3 justify-center">
-            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Replaces hours of reading</span>
-            <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500 font-medium">
-              <span>Washtenaw County Enforcement Actions</span>
-              <span className="hidden sm:inline text-slate-300">&middot;</span>
-              <span>Michigan Modified Food Code</span>
-              <span className="hidden sm:inline text-slate-300">&middot;</span>
-              <span>FDA Food Code 2022</span>
-            </div>
-          </div>
+      {/* 3. WHAT INSPECTORS LOOK FOR */}
+      <div className="mt-24 mb-20">
+        <div className="text-center mb-10">
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Stop guessing. Know exactly what inspectors score you on.</h3>
+            <p className="text-slate-500">protocolLM checks against the same criteria used by sanitarians.</p>
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {['Priority (P) Violations', 'Priority Foundation (Pf)', 'Core Violations', 'Time & Temp Control', 'Cross Contamination', 'Handwashing', 'Date Marking', 'Pest Control'].map((tag, i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-lg p-3 text-center text-xs font-bold text-slate-600 shadow-sm">
+                    {tag}
+                </div>
+            ))}
+        </div>
+      </div>
+
+      {/* 4. BEFORE & AFTER */}
+      <div className="w-full max-w-4xl mx-auto mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-red-50/50 border border-red-100 rounded-2xl p-8">
+                <h4 className="text-red-900 font-bold mb-4 flex items-center gap-2"><Icons.XCircle /> The Old Way</h4>
+                <ul className="space-y-3 text-sm text-red-800/80">
+                    <li>• Hours spent reading confusing PDFs</li>
+                    <li>• "Is this right?" anxiety before inspections</li>
+                    <li>• Relying on staff memory for complex rules</li>
+                    <li>• Unexpected violations & reinspection fees</li>
+                </ul>
+            </div>
+            <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-8">
+                <h4 className="text-emerald-900 font-bold mb-4 flex items-center gap-2"><Icons.CheckCircle /> With protocolLM</h4>
+                <ul className="space-y-3 text-sm text-emerald-800/80">
+                    <li>• 10-second answers from a photo</li>
+                    <li>• Confidence that your kitchen is compliant</li>
+                    <li>• Instant training tool for new staff</li>
+                    <li>• catch issues before the inspector walks in</li>
+                </ul>
+            </div>
+        </div>
+      </div>
+
+      {/* 5. FOR BUSY OWNERS (PAIN POINTS) */}
+      <div className="border-t border-slate-200 pt-16 pb-16">
+        <div className="text-center mb-8">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Designed for Busy Owners</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div className="space-y-2 p-4">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.UserCheck /> <span>1. No Training Needed</span>
+                </div>
+                <p className="text-sm text-slate-500">You don't need tech skills. Just take a photo or ask a question.</p>
+            </div>
+            <div className="space-y-2 p-4">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.Upload /> <span>2. Instant Answers</span>
+                </div>
+                <p className="text-sm text-slate-500">Don't wait for a callback. Get the answer when you need it.</p>
+            </div>
+            <div className="space-y-2 p-4">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-slate-900 font-bold mb-1">
+                    <Icons.Shield /> <span>3. Protect Your License</span>
+                </div>
+                <p className="text-sm text-slate-500">Avoid the fines and stress of a failed inspection.</p>
+            </div>
+        </div>
+      </div>
+
+      {/* 6. FAQ SECTION */}
+      <div className="max-w-2xl mx-auto mb-24">
+          <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Common Questions</h3>
+          <div className="space-y-4">
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <p className="font-bold text-sm text-slate-900">Will this help me before my inspection?</p>
+                  <p className="text-sm text-slate-500 mt-1">Yes. Use the Visual Inspection mode to scan your kitchen. It acts like a "pre-inspection" to catch visible violations.</p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <p className="font-bold text-sm text-slate-900">Does this work for convenience stores and gas stations?</p>
+                  <p className="text-sm text-slate-500 mt-1">Absolutely. If you serve food in Washtenaw County, this covers your specific regulations.</p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4">
+                  <p className="font-bold text-sm text-slate-900">Does it replace my sanitarian?</p>
+                  <p className="text-sm text-slate-500 mt-1">No. It is a tool to help you prepare. Always follow the official guidance of your Health Department inspector.</p>
+              </div>
+          </div>
+      </div>
+
+      {/* 7. PRICING CTA */}
+      <div className="bg-slate-900 rounded-3xl p-8 md:p-12 text-center text-white mb-16 shadow-xl">
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">Small cost. Massive relief.</h2>
+        <div className="text-4xl font-bold mb-2">$50<span className="text-lg font-normal text-slate-400">/month</span></div>
+        <p className="text-slate-300 mb-8">Unlimited use. One prevented violation pays for the whole year.</p>
+        <button onClick={() => onAction('chat')} className="bg-white text-slate-900 px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-emerald-50 transition-all">Start 7-Day Free Trial</button>
+        <p className="text-[10px] text-slate-500 mt-4">Cancel anytime.</p>
       </div>
 
     </div>
