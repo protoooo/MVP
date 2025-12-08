@@ -1,13 +1,15 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { getDeviceFingerprint } from '@/lib/deviceFingerprint'
 import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 
 // --- TYPOGRAPHY ---
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
@@ -78,7 +80,7 @@ const Icons = {
   Settings: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1z" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
   LogOut: () => (
@@ -105,15 +107,15 @@ const Icons = {
 const GlobalStyles = () => (
   <style jsx global>{`
     body {
-      background-color: #ffffff;
+      background-color: #f9fafb;
       overscroll-behavior: none;
       height: 100dvh;
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
       color: #111827;
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
-        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif;
     }
     .btn-press {
       transition: transform 0.1s ease;
@@ -122,27 +124,43 @@ const GlobalStyles = () => (
       transform: scale(0.98);
     }
     @keyframes slideUpFade {
-      0% { transform: translateY(100%); opacity: 0; }
-      10% { transform: translateY(0); opacity: 1; }
-      90% { transform: translateY(0); opacity: 1; }
-      100% { transform: translateY(-100%); opacity: 0; }
+      0% {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      10% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      90% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
     }
     .animate-ticker-item {
       animation: slideUpFade 4s ease-in-out forwards;
     }
-    .loader-upload {    
+    .loader-upload {
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      border: 1px solid #d4d4d8;
-      background: linear-gradient(to top, #000000 50%, transparent 50%);
+      border: 1px solid #d4d4d4;
+      background: linear-gradient(to top, #111827 50%, transparent 50%);
       background-size: 100% 200%;
-      background-position: 0% 0%; 
+      background-position: 0% 0%;
       animation: fillWater 1.5s ease-out forwards;
     }
     @keyframes fillWater {
-      0% { background-position: 0% 0%; }
-      100% { background-position: 0% 100%; } 
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 0% 100%;
+      }
     }
     .loader {
       height: 14px;
@@ -153,25 +171,67 @@ const GlobalStyles = () => (
       animation: l43 1s infinite linear;
     }
     @keyframes l43 {
-      0% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
-      16.67% { background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
-      33.33% { background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
-      50% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%, calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%; }
-      66.67% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0; }
-      83.33% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%; }
-      100% { background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%, calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%; }
+      0% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      16.67% {
+        background-position: calc(0 * 100% / 3) 0, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      33.33% {
+        background-position: calc(0 * 100% / 3) 100%, calc(1 * 100% / 3) 0,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
+      50% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 100%,
+          calc(2 * 100% / 3) 0, calc(3 * 100% / 3) 50%;
+      }
+      66.67% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 100%, calc(3 * 100% / 3) 0;
+      }
+      83.33% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 100%;
+      }
+      100% {
+        background-position: calc(0 * 100% / 3) 50%, calc(1 * 100% / 3) 50%,
+          calc(2 * 100% / 3) 50%, calc(3 * 100% / 3) 50%;
+      }
     }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.18); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.3); }
-    details > summary { list-style: none; }
-    details > summary::-webkit-details-marker { display: none; }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.12);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    details > summary {
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+      display: none;
+    }
     @keyframes springUp {
-      0% { opacity: 0; transform: translateY(10px) scale(0.95); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
+      0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
-    .animate-spring { animation: springUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .animate-spring {
+      animation: springUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
   `}</style>
 )
 
@@ -179,7 +239,7 @@ const NavBarTicker = () => {
   const [index, setIndex] = useState(0)
   useEffect(() => {
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % TICKER_ITEMS.length)
+      setIndex(prev => (prev + 1) % TICKER_ITEMS.length)
     }, 4000)
     return () => clearInterval(timer)
   }, [])
@@ -215,7 +275,7 @@ const FormattedMessage = ({ content }) => {
         const parts = line.split(/:(.*)/s)
         let header = parts[0]
         let body = parts[1] || ''
-        const isHeader = keywords.some((k) => header.includes(k))
+        const isHeader = keywords.some(k => header.includes(k))
         if (isHeader) {
           return (
             <div key={idx} className="text-base leading-relaxed text-slate-800">
@@ -247,15 +307,15 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
     ],
     standard: [
       { threshold: 0, label: 'Analyzing request...' },
-      { threshold: 25, label: 'Reviewing regulations...' },
+      { threshold: 25, label: 'Searching references...' },
       { threshold: 60, label: 'Formulating response...' },
     ],
     image: [
       { threshold: 0, label: 'Analyzing image...' },
       { threshold: 15, label: 'Identifying equipment...' },
-      { threshold: 30, label: 'Checking local code...' },
-      { threshold: 50, label: 'Classifying violation types...' },
-      { threshold: 70, label: 'Formulating compliance report...' },
+      { threshold: 30, label: 'Checking violation types...' },
+      { threshold: 50, label: 'Reviewing code language...' },
+      { threshold: 70, label: 'Preparing report...' },
     ],
   }
   const currentStages = stages[queryType] || stages.standard
@@ -264,10 +324,12 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
     let rafId
     const start = performance.now()
     let lastUpdate = start
-    const tick = (now) => {
+
+    const tick = now => {
       const elapsed = now - start
       const ratio = Math.min(elapsed / TOTAL_DURATION, 1)
       const target = Math.min(ratio * 100, MAX_PROGRESS)
+
       if (now - lastUpdate >= 100 || target === MAX_PROGRESS) {
         lastUpdate = now
         setProgress(target)
@@ -277,22 +339,24 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
         )
         setText(currentStage.label)
       }
+
       if (target < MAX_PROGRESS) {
         rafId = requestAnimationFrame(tick)
       }
     }
+
     rafId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafId)
   }, [queryType, TOTAL_DURATION, currentStages])
 
   return (
     <div className="flex flex-col items-start gap-3 p-2">
-      <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.16em] animate-pulse">
+      <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
         {text}
       </span>
-      <div className="w-40 h-[22px] rounded-full border border-slate-900 bg-white overflow-hidden">
+      <div className="w-40 h-[22px] rounded-full border-[1.5px] border-black bg-white overflow-hidden">
         <div
-          className="h-full bg-slate-900"
+          className="h-full bg-black"
           style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
         />
       </div>
@@ -300,80 +364,45 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   )
 }
 
-const LandingPage = ({ onAction, onSignUp }) => {
+// --- LANDING PAGE ---
+const LandingPage = ({ onAction }) => {
   return (
     <div className="w-full bg-white relative z-10 pb-24">
-      {/* SECTION 1: HERO – CLEAN GOV-STYLE */}
-      <section className="relative border-b border-slate-200 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20 flex flex-col md:flex-row items-start md:items-center gap-10">
-          <div className="flex-1">
-            <p className={`text-[11px] font-semibold tracking-[0.2em] text-slate-500 mb-4 uppercase ${inter.className}`}>
-              Washtenaw County · Food Service
-            </p>
-            <h1
-              className={`text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${inter.className}`}
-            >
-              A compliance console{" "}
-              <span className="block">for your next health inspection.</span>
-            </h1>
+      {/* SECTION 1: HERO – PLAIN, GOVERNMENT STYLE */}
+      <section className="relative border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-start justify-center">
+          <div className="mb-6">
             <p
-              className={`text-sm md:text-base text-slate-600 max-w-xl leading-relaxed mb-8 ${inter.className}`}
+              className={`text-[11px] font-semibold tracking-[0.2em] uppercase text-slate-500 ${inter.className}`}
             >
-              Upload a photo or ask a question and receive structured findings
-              based on the Michigan Modified Food Code and Washtenaw County
-              enforcement materials.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <button
-                onClick={() => onAction('chat')}
-                className="btn-press inline-flex items-center justify-center bg-slate-900 hover:bg-black text-white text-sm font-semibold py-3 px-6 rounded-lg transition-all duration-150 tracking-wide"
-              >
-                Start free demo
-              </button>
-              <button
-                onClick={onSignUp}
-                className="btn-press inline-flex items-center justify-center border border-slate-300 hover:border-slate-900 text-slate-800 text-sm font-semibold py-3 px-6 rounded-lg bg-white transition-all duration-150"
-              >
-                Create account
-              </button>
-            </div>
-
-            <p className={`mt-4 text-[11px] text-slate-500 font-medium ${inter.className}`}>
-              No installation · Works in any modern browser · 3 demo requests included
+              Washtenaw County • Food Service
             </p>
           </div>
-
-          <div className="w-full md:w-[320px] lg:w-[360px]">
-            <div className="border border-slate-200 rounded-xl p-5 bg-slate-50/60">
-              <p
-                className={`text-xs font-semibold text-slate-500 tracking-[0.18em] uppercase mb-3 ${inter.className}`}
-              >
-                Example output
-              </p>
-              <div className="bg-white border border-slate-200 rounded-lg p-4 text-xs text-slate-700 space-y-2">
-                <p className="font-semibold text-slate-900">
-                  Facility: Reach-in cooler – prep line
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-900">
-                    Potential issues:
-                  </span>{" "}
-                  Raw animal products stored above ready-to-eat food; thermometer
-                  not visible in the warmest area of the unit.
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-900">
-                    References:
-                  </span>{" "}
-                  Michigan Modified Food Code §§ 3-302.11, 4-204.112
-                </p>
-                <p className="text-slate-500">
-                  Always verify findings against your latest inspection report
-                  and county guidance.
-                </p>
-              </div>
-            </div>
+          <h1
+            className={`text-3xl md:text-[2.7rem] font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${outfit.className}`}
+          >
+            A compliance console <br className="hidden md:block" />
+            for your kitchen.
+          </h1>
+          <p
+            className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-8 ${inter.className}`}
+          >
+            Upload a photo or ask a question. protocolLM cross-checks the Michigan
+            Food Code and local Washtenaw guidance using a large-language-model
+            deployed via the OpenAI API.
+          </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <button
+              onClick={() => onAction('chat')}
+              className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3 px-7 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
+            >
+              Start free demo
+            </button>
+            <p
+              className={`text-[11px] text-slate-500 font-medium ${inter.className}`}
+            >
+              No signup • 3 complimentary queries
+            </p>
           </div>
         </div>
       </section>
@@ -381,119 +410,102 @@ const LandingPage = ({ onAction, onSignUp }) => {
       {/* SECTION 2: HOW IT WORKS */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-left mb-10">
             <h2
-              className={`text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight ${inter.className}`}
+              className={`text-xl font-semibold text-slate-900 mb-2 tracking-tight ${outfit.className}`}
             >
               How it works
             </h2>
             <p className={`text-slate-600 text-sm ${inter.className}`}>
-              Built for operators who want a clear, repeatable check before an inspection.
+              Designed to feel like a state-issued utility, not a gadget.
             </p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
               <div className="text-slate-500 mb-4">
                 <Icons.Camera />
               </div>
               <h3
-                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
               >
-                1. Capture the area
+                1. Capture
               </h3>
-              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                Use any smartphone camera to photograph storage, prep, or warewashing
-                areas. No app install is required.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                Take a photo of your cooler, prep line, or 3-comp sink using any
+                smartphone. No app install required.
               </p>
             </div>
-
-            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
               <div className="text-slate-500 mb-4">
                 <Icons.Zap />
               </div>
               <h3
-                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
               >
-                2. Automated review
+                2. Process
               </h3>
-              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                A large language model, via a third-party API, cross-checks what it
-                sees against the Michigan Food Code and Washtenaw County documents.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                The image or question is processed through a large-language-model via
+                the OpenAI API, constrained to Michigan and Washtenaw materials.
               </p>
             </div>
-
-            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
               <div className="text-slate-500 mb-4">
                 <Icons.FileText />
               </div>
               <h3
-                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
               >
-                3. Structured summary
+                3. Review
               </h3>
-              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                Receive a plain-language summary of likely violations, related sections,
-                and items to correct before your next visit.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                You receive a structured summary of likely violations, codes cited,
+                and practical next steps for staff.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: VIOLATION COSTS – NEUTRAL COLORS */}
+      {/* SECTION 3: VIOLATION COSTS – MONOCHROME */}
       <section className="py-20 px-6 bg-slate-50 border-y border-slate-200">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-left mb-10">
             <h2
-              className={`text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight ${inter.className}`}
+              className={`text-xl font-semibold text-slate-900 mb-2 tracking-tight ${outfit.className}`}
             >
-              Why operators run pre-inspection checks
+              Why this matters
             </h2>
             <p className={`text-slate-600 text-sm ${inter.className}`}>
-              Local citations add up quickly when issues repeat.
+              Typical ranges based on Michigan enforcement language.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              {
-                title: 'Re-inspection fees',
-                value: '$125 – $350',
-                desc: 'Charged per follow-up visit until items are resolved.',
-              },
-              {
-                title: 'Daily penalties',
-                value: 'Up to $1,000 / day',
-                desc: 'For continuing violations under Michigan law.',
-              },
-              {
-                title: 'Misdemeanor fines',
-                value: 'Up to $2,000',
-                desc: 'Per occurrence under Sec. 20199.',
-              },
-              {
-                title: 'Operational fallout',
-                value: '$4,000+',
-                desc: 'Lost revenue, product loss, and legal or consulting costs.',
-              },
-            ].map((card) => (
+              ['Re-inspection fees', '$125 – $350'],
+              ['Daily penalties', 'Up to $1,000 / day'],
+              ['Misdemeanor fines', 'Up to $2,000'],
+              ['Closures & outages', '$4,000+ in losses'],
+            ].map(([label, amount]) => (
               <div
-                key={card.title}
-                className="bg-white border border-slate-200 p-7 rounded-xl"
+                key={label}
+                className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between"
               >
-                <h3
-                  className={`font-semibold text-slate-900 mb-2 text-sm ${inter.className}`}
+                <p
+                  className={`text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-500 mb-3 ${inter.className}`}
                 >
-                  {card.title}
-                </h3>
+                  {label}
+                </p>
                 <p
                   className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
                 >
-                  {card.value}
+                  {amount}
                 </p>
-                <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
-                  {card.desc}
+                <p
+                  className={`text-[11px] text-slate-500 leading-relaxed ${inter.className}`}
+                >
+                  Estimates only. Your local inspector and health department have the
+                  final word.
                 </p>
               </div>
             ))}
@@ -501,15 +513,13 @@ const LandingPage = ({ onAction, onSignUp }) => {
         </div>
       </section>
 
-      <footer className="py-10 border-t border-slate-200 text-center bg-white">
+      <footer className="py-10 border-t border-slate-200 text-center">
         <p
           className={`text-slate-500 font-medium mb-4 text-xs tracking-wide ${inter.className}`}
         >
-          Designed for Washtenaw County food service establishments
+          Built for Washtenaw County food service operations
         </p>
-        <div
-          className={`flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium ${inter.className}`}
-        >
+        <div className="flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium">
           <Link href="/terms" className="hover:text-slate-900 transition-colors">
             Terms of Service
           </Link>
@@ -517,14 +527,13 @@ const LandingPage = ({ onAction, onSignUp }) => {
             Privacy Policy
           </Link>
           <Link href="/report-issue" className="hover:text-slate-900 transition-colors">
-            Report an issue
+            Report an Issue
           </Link>
         </div>
       </footer>
     </div>
   )
 }
-
 
 const InputBox = ({
   input,
@@ -542,7 +551,7 @@ const InputBox = ({
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
 
-  const handleModeClick = (mode) => {
+  const handleModeClick = mode => {
     setActiveMode(mode)
     setShowMenu(false)
     if (mode === 'image' && fileInputRef.current) {
@@ -566,7 +575,7 @@ const InputBox = ({
         <div className="mb-3 mx-1 p-3 bg-white border border-slate-200 rounded-lg inline-flex items-center gap-3 shadow-sm">
           <div className="loader-upload scale-75 shrink-0" />
           <span className="text-sm text-slate-900 font-semibold flex items-center gap-2">
-            Image uploaded — ready to send
+            Image attached — ready to send
           </span>
           <button
             onClick={() => {
@@ -603,9 +612,9 @@ const InputBox = ({
             <Icons.Plus />
           </button>
           {showMenu && (
-            <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
+            <div className="absolute bottom-full left-0 mb-2 w-[180px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
               <div className="space-y-0.5">
-                {['chat', 'image'].map((m) => (
+                {['chat', 'image'].map(m => (
                   <button
                     key={m}
                     type="button"
@@ -619,7 +628,7 @@ const InputBox = ({
                     {m === 'chat' && <Icons.File />}
                     {m === 'image' && <Icons.Camera />}
                     <span className="capitalize">
-                      {m === 'chat' ? 'Consult' : 'Inspect'}
+                      {m === 'chat' ? 'Ask a question' : 'Upload photo'}
                     </span>
                   </button>
                 ))}
@@ -630,8 +639,8 @@ const InputBox = ({
         <textarea
           ref={inputRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
               handleSend(e)
@@ -639,10 +648,10 @@ const InputBox = ({
           }}
           placeholder={
             activeMode === 'chat'
-              ? 'Ask about enforcement protocols…'
+              ? 'Ask about a code section, enforcement, or procedure…'
               : activeMode === 'image'
-              ? 'Upload a photo for instant audit…'
-              : 'Enter audit parameters…'
+              ? 'Upload a photo of your setup for an instant mock audit…'
+              : 'Enter details for review…'
           }
           className={`flex-1 max-h-[200px] min-h[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
           rows={1}
@@ -654,7 +663,7 @@ const InputBox = ({
           className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
             !input.trim() && !selectedImage
               ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-              : 'bg-slate-900 text-white hover:bg-black shadow-md transform hover:scale-105 active:scale-95'
+              : 'bg-black text-white hover:bg-slate-900 shadow-md transform hover:scale-105 active:scale-95'
           }`}
         >
           {isSending ? (
@@ -679,7 +688,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     return `${baseUrl}/auth/callback`
   }
 
-  const handleEmailAuth = async (e) => {
+  const handleEmailAuth = async e => {
     e.preventDefault()
     setLoading(true)
     setStatusMessage('')
@@ -692,7 +701,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     if (error) {
       setStatusMessage('Error: ' + error.message)
     } else {
-      setStatusMessage('✓ Check your email for the login link.')
+      setStatusMessage('A secure login link has been sent to your inbox.')
     }
     setLoading(false)
   }
@@ -706,15 +715,17 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     >
       <div
         className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-10 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h2 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${inter.className}`}>
+            <h2
+              className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
+            >
               {message || 'Sign in to protocolLM'}
             </h2>
             <p className={`text-sm text-slate-500 ${inter.className}`}>
-              Enter your work email to receive a secure sign-in link.
+              Enter any work or personal email. We&apos;ll send a one-time link.
             </p>
           </div>
           <button
@@ -726,26 +737,20 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
-              Work email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="manager@restaurant.com"
-              required
-              className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
-            />
-          </div>
-
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="work@restaurant.com"
+            required
+            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
+          />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed text-sm tracking-wide"
+            className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending login link…' : 'Send secure login link'}
+            {loading ? 'Sending link…' : 'Send secure login link'}
           </button>
         </form>
 
@@ -754,111 +759,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             className={`mt-6 p-4 rounded-lg text-sm border ${
               statusMessage.includes('Error')
                 ? 'bg-red-50 border-red-200 text-red-900'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-900'
-            }`}
-          >
-            {statusMessage}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-
-  if (!isOpen) return null
-  return (
-    <div
-      className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-10 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h2
-              className={`text-xl font-semibold text-slate-900 mb-1 ${inter.className}`}
-            >
-              {message || 'Sign in to protocolLM'}
-            </h2>
-            <p className={`text-sm text-slate-600 ${inter.className}`}>
-              Use your work email or Google account.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-900 transition-colors"
-          >
-            <Icons.X />
-          </button>
-        </div>
-        <button
-          onClick={handleGoogleAuth}
-          disabled={googleLoading || loading}
-          className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-6 shadow-sm focus:outline-none"
-        >
-          {googleLoading ? (
-            <div className="w-5 h-5 border-2 border-slate-400 border-top-slate-900 rounded-full animate-spin" />
-          ) : (
-            <>
-              {/* Proper Google "G" logo */}
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.66-2.07z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"
-                  fill="#EA4335"
-                />
-              </svg>
-              <span className="text-sm">Continue with Google</span>
-            </>
-          )}
-        </button>
-        <div className="relative my-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-4 text-slate-400 font-medium">
-              OR
-            </span>
-          </div>
-        </div>
-        <form onSubmit={handleEmailAuth} className="space-y-5">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="work@restaurant.com"
-            required
-            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
-          />
-          <button
-            type="submit"
-            disabled={loading || googleLoading}
-            className="w-full bg-slate-900 hover:bg-black text-white font-medium py-3 rounded-lg transition-colors shadow-sm"
-          >
-            {loading ? 'Sending login link…' : 'Continue with email'}
-          </button>
-        </form>
-        {statusMessage && (
-          <div
-            className={`mt-6 p-4 rounded-lg text-sm border ${
-              statusMessage.includes('Error')
-                ? 'bg-slate-50 border-slate-300 text-slate-900'
-                : 'bg-slate-50 border-slate-300 text-slate-900'
+                : 'bg-slate-50 border-slate-200 text-slate-800'
             }`}
           >
             {statusMessage}
@@ -886,27 +787,27 @@ const ExitModal = ({ isOpen, onClose, onConvert }) => {
           </div>
         </div>
         <h3
-          className={`text-2xl font-semibold text-center text-slate-900 mb-3 ${inter.className}`}
+          className={`text-2xl font-semibold text-center text-slate-900 mb-3 ${outfit.className}`}
         >
-          Leaving without a check-up?
+          Before you leave
         </h3>
         <p
-          className={`text-center text-slate-600 mb-10 leading-relaxed ${inter.className}`}
+          className={`text-center text-slate-600 mb-10 leading-relaxed text-sm ${inter.className}`}
         >
-          Get a <span className="font-semibold text-slate-900">free compliance
-          review</span> of your last inspection report before you go.
+          Get a complimentary review of your last inspection report. No billing, just
+          a one-time mock audit using your own documentation.
         </p>
         <button
           onClick={onConvert}
-          className="w-full bg-slate-900 hover:bg-black text-white font-semibold py-4 rounded-lg uppercase tracking-wide transition-colors mb-4 text-xs"
+          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg uppercase tracking-[0.16em] text-xs transition-colors mb-4"
         >
           Claim free inspection review
         </button>
         <button
           onClick={onClose}
-          className="w-full text-center text-xs text-slate-500 hover:text-slate-700 font-medium"
+          className="w-full text-center text-xs text-slate-400 hover:text-slate-600 font-medium"
         >
-          No thanks, I&apos;ll take my chances.
+          No thanks, continue without review
         </button>
       </div>
     </div>
@@ -918,7 +819,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
     <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div
         className="relative w-full max-w-sm bg-white border border-slate-200 rounded-xl p-10 shadow-2xl flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <button
           onClick={onClose}
@@ -927,13 +828,13 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
           <Icons.X />
         </button>
         <h3
-          className={`text-xs font-semibold text-slate-900 uppercase tracking-[0.2em] mb-6 mt-2 text-center ${inter.className}`}
+          className={`text-xs font-semibold text-slate-900 uppercase tracking-[0.25em] mb-6 mt-2 text-center ${outfit.className}`}
         >
-          protocolLM PRICING
+          protocolLM
         </h3>
         <div className="flex items-baseline text-slate-900 justify-center mb-2">
           <span
-            className={`text-5xl font-semibold tracking-tight ${inter.className}`}
+            className={`text-5xl font-semibold tracking-tight ${outfit.className}`}
           >
             $50
           </span>
@@ -942,22 +843,19 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
           </span>
         </div>
         <p
-          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-3 ${inter.className}`}
+          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-4 ${inter.className}`}
         >
-          One prevented Priority violation can cover several years of
-          subscription cost.
+          One prevented priority violation can offset multiple years of subscription
+          cost.
         </p>
         <button
           onClick={() =>
-            handleCheckout(
-              process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY,
-              'protocollm'
-            )
+            handleCheckout(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY, 'protocollm')
           }
           disabled={loading !== null}
-          className="w-full bg-slate-900 hover:bg-black text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading === 'protocollm' ? 'Processing…' : 'Start 7-day free trial'}
+          {loading === 'protocollm' ? 'Processing…' : 'Start 7-day trial'}
         </button>
       </div>
     </div>
@@ -977,12 +875,12 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
         </button>
         <div className="text-center mb-8">
           <h3
-            className={`text-2xl font-semibold text-slate-900 mb-2 ${inter.className}`}
+            className={`text-2xl font-semibold text-slate-900 mb-2 ${outfit.className}`}
           >
-            Get started
+            How would you like to begin?
           </h3>
-          <p className={`text-sm text-slate-600 ${inter.className}`}>
-            Choose how you want to run your first check.
+          <p className={`text-slate-600 text-sm ${inter.className}`}>
+            You can start with an image mock audit or a simple code question.
           </p>
         </div>
         <div className="space-y-4">
@@ -998,14 +896,12 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
                 Upload a photo of your 3-comp sink
               </div>
               <div className="text-xs text-slate-500">
-                Check for sanitizer concentration and setup issues.
+                Check sanitizer, setup, and common priority violations.
               </div>
             </div>
           </button>
           <button
-            onClick={() =>
-              onAction('text', 'What temp should I hold hot foods?')
-            }
+            onClick={() => onAction('text', 'What temperature should I hold hot foods?')}
             className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 font-semibold py-4 px-6 rounded-xl flex items-center gap-4 transition-colors text-left group"
           >
             <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-500 group-hover:text-slate-900 transition-colors">
@@ -1013,17 +909,17 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-900">
-                Ask a code question
+                Ask a food code question
               </div>
               <div className="text-xs text-slate-500">
-                Example: &quot;What temp should I hold hot foods?&quot;
+                For example: &quot;What temperature should I hold hot foods?&quot;
               </div>
             </div>
           </button>
         </div>
         <button
           onClick={onClose}
-          className="w-full mt-6 text-center text-xs text-slate-500 hover:text-slate-700 font-medium"
+          className="w-full mt-6 text-center text-xs text-slate-400 hover:text-slate-600 font-medium"
         >
           I&apos;ll explore on my own
         </button>
@@ -1050,16 +946,25 @@ export default function Page() {
   const [showExitModal, setShowExitModal] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
+
   const isDemoGuest = !session
+  const fingerprintRef = useRef(null)
   const creatingChatRef = useRef(false)
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
   const userMenuRef = useRef(null)
   const [supabase] = useState(() => createClient())
+  const router = useRouter()
 
   useEffect(() => {
     let mounted = true
+
+    const initFingerprint = async () => {
+      const fp = await getDeviceFingerprint()
+      if (mounted) fingerprintRef.current = fp
+    }
+    initFingerprint()
 
     const init = async () => {
       try {
@@ -1068,6 +973,7 @@ export default function Page() {
         } = await supabase.auth.getSession()
         if (!mounted) return
         setSession(s)
+
         if (s) {
           const { data: sub } = await supabase
             .from('subscriptions')
@@ -1075,6 +981,7 @@ export default function Page() {
             .eq('user_id', s.user.id)
             .in('status', ['active', 'trialing'])
             .maybeSingle()
+
           if (s.user.email === ADMIN_EMAIL || sub) {
             setHasActiveSubscription(true)
             const { data: existingChats } = await supabase
@@ -1082,9 +989,7 @@ export default function Page() {
               .select('id')
               .eq('user_id', s.user.id)
               .limit(1)
-            if (!existingChats || existingChats.length === 0) {
-              setShowOnboarding(true)
-            }
+            if (!existingChats || existingChats.length === 0) setShowOnboarding(true)
           } else {
             setHasActiveSubscription(false)
           }
@@ -1095,26 +1000,30 @@ export default function Page() {
         if (mounted) setIsLoading(false)
       }
     }
+
     init()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mounted) return
-      setSession(session)
-      if (session) {
+      setSession(newSession)
+      if (newSession) {
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('status')
-          .eq('user_id', session.user.id)
+          .eq('user_id', newSession.user.id)
           .in('status', ['active', 'trialing'])
           .maybeSingle()
-        if (session.user.email === ADMIN_EMAIL || sub) setHasActiveSubscription(true)
-        else {
+        if (newSession.user.email === ADMIN_EMAIL || sub) {
+          setHasActiveSubscription(true)
+        } else {
           setHasActiveSubscription(false)
           setShowPricingModal(true)
         }
-      } else setHasActiveSubscription(false)
+      } else {
+        setHasActiveSubscription(false)
+      }
       setIsLoading(false)
     })
 
@@ -1130,7 +1039,7 @@ export default function Page() {
   }, [supabase])
 
   useEffect(() => {
-    const handleExit = (e) => {
+    const handleExit = e => {
       if (
         e.clientY < 10 &&
         !sessionStorage.getItem('exit-shown') &&
@@ -1144,7 +1053,7 @@ export default function Page() {
     return () => document.removeEventListener('mousemove', handleExit)
   }, [session])
 
-  const triggerMode = (mode) => {
+  const triggerMode = mode => {
     setActiveMode(mode)
     if (mode === 'image') fileInputRef.current?.click()
     else inputRef.current?.focus()
@@ -1166,26 +1075,26 @@ export default function Page() {
     }
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async e => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
+
     let queryType = 'standard'
     if (currentImage) queryType = 'image'
     else if (currentInput.trim().length < 20) queryType = 'simple'
 
     const newMsg = { role: 'user', content: currentInput, image: currentImage }
-    setMessages((p) => [...p, newMsg])
-    setMessages((p) => [...p, { role: 'assistant', content: '', queryType }])
-
+    setMessages(p => [...p, newMsg, { role: 'assistant', content: '', queryType }])
     setInput('')
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
     let activeChatId = currentChatId
+
     if (session && !activeChatId && !creatingChatRef.current) {
       creatingChatRef.current = true
       const { data: newChat } = await supabase
@@ -1215,10 +1124,12 @@ export default function Page() {
           image: currentImage,
           chatId: activeChatId,
           mode: activeMode,
+          deviceFingerprint: fingerprintRef.current,
         }),
         signal: controller.signal,
       })
       clearTimeout(timeoutId)
+
       if (!res.ok) {
         if (res.status === 402) {
           setShowPricingModal(true)
@@ -1230,18 +1141,21 @@ export default function Page() {
         }
         throw new Error(`Server error: ${res.status}`)
       }
+
       const data = await res.json()
-      setMessages((p) => {
+      setMessages(p => {
         const u = [...p]
         u[u.length - 1].content = data.message || 'No response text.'
         return u
       })
     } catch (err) {
       let errorMessage = 'An error occurred.'
-      if (err.name === 'AbortError')
-        errorMessage = 'Request timed out. The system is busy, please try again.'
-      else errorMessage = err.message
-      setMessages((p) => {
+      if (err.name === 'AbortError') {
+        errorMessage = 'Request timed out. Please try again.'
+      } else {
+        errorMessage = err.message
+      }
+      setMessages(p => {
         const u = [...p]
         u[u.length - 1].content = `Error: ${errorMessage}`
         return u
@@ -1251,7 +1165,7 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e) => {
+  const handleImage = async e => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
@@ -1272,7 +1186,7 @@ export default function Page() {
     setActiveMode('chat')
   }
 
-  const handleSignOut = async (e) => {
+  const handleSignOut = async e => {
     if (e && e.preventDefault) e.preventDefault()
     try {
       await supabase.auth.signOut()
@@ -1322,7 +1236,9 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [messages])
 
   useEffect(() => {
@@ -1331,7 +1247,7 @@ export default function Page() {
     }
   }, [messages.length, isSending])
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <>
         <GlobalStyles />
@@ -1340,6 +1256,7 @@ export default function Page() {
         </div>
       </>
     )
+  }
 
   return (
     <>
@@ -1371,14 +1288,15 @@ export default function Page() {
           onAction={handleOnboardingAction}
         />
       )}
+
       <div className="relative min-h-screen w-full overflow-hidden bg-white selection:bg-slate-200 selection:text-slate-900">
         <div className="relative z-10 flex flex-col h-[100dvh]">
           <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white z-30">
             <div className="flex items-center gap-6">
               <div
-                className={`font-semibold tracking-tight text-lg ${inter.className} text-slate-900`}
+                className={`font-semibold tracking-tight text-xl ${outfit.className} text-slate-900`}
               >
-                protocolLM
+                protocol<span className="text-slate-500">LM</span>
               </div>
               <div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 h-8 overflow-hidden">
                 <NavBarTicker />
@@ -1389,36 +1307,36 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className={`text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
+                    className={`text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
                   >
                     Sign in
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className={`inline-flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-3 sm:px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] shadow-sm transition-colors ${inter.className}`}
+                    className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
                   >
                     <Icons.Check />
-                    Start free trial
+                    Start trial
                   </button>
                   <button
                     onClick={() => startDemo('chat')}
-                    className={`hidden md:inline-flex items-center gap-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 px-4 md:px-5 py-2.5 rounded-md text-xs font-medium tracking-wide transition-colors ${inter.className}`}
+                    className={`hidden md:inline-flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 px-4 md:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${inter.className}`}
                   >
-                    Try demo
+                    Demo console
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleNewChat}
-                    className="p-2 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
                   >
                     <Icons.Plus />
                   </button>
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs font-semibold"
+                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
                     >
                       {session.user.email[0].toUpperCase()}
                     </button>
@@ -1426,14 +1344,14 @@ export default function Page() {
                       <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
                         <button
                           onClick={() => setShowPricingModal(true)}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
                         >
                           <Icons.Settings /> Subscription
                         </button>
                         <div className="h-px bg-slate-100 my-1" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-800 hover:bg-slate-100 flex items-center gap-3 rounded-md transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 rounded-md transition-colors"
                         >
                           <Icons.LogOut /> Log out
                         </button>
@@ -1444,23 +1362,21 @@ export default function Page() {
               )}
             </div>
           </header>
+
           <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto bg-white">
             {!session && messages.length === 0 && !showDemo ? (
-              <LandingPage
-                onAction={(mode) => startDemo(mode)}
-                onSignUp={() => setShowAuthModal(true)}
-              />
+              <LandingPage onAction={mode => startDemo(mode)} />
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto w-full py-8" ref={scrollRef}>
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
-                        className={`text-slate-600 text-sm max-w-md leading-relaxed ${inter.className}`}
+                        className={`text-slate-500 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
                         {activeMode === 'image'
-                          ? 'Upload a photo to check for Priority (P) and Priority Foundation (Pf) violations.'
-                          : 'Ask about the Michigan Modified Food Code, Washtenaw guidance, or specific scenarios in your kitchen.'}
+                          ? 'Upload a photo to check for Priority (P) and Priority Foundation (Pf) items before your next inspection.'
+                          : 'Ask about the Michigan Modified Food Code, Washtenaw enforcement, or specific line items from your last report.'}
                       </p>
                     </div>
                   ) : (
@@ -1490,43 +1406,39 @@ export default function Page() {
                             msg.content === '' &&
                             isSending &&
                             idx === messages.length - 1 ? (
-                              <ThinkingIndicator
-                                queryType={msg.queryType || 'standard'}
-                              />
+                              <ThinkingIndicator queryType={msg.queryType || 'standard'} />
                             ) : (
                               <FormattedMessage content={msg.content} />
                             )}
                           </div>
                         </div>
                       ))}
+
                       {isDemoGuest && (
-                        <div className="mt-6 p-4 rounded-xl border border-slate-200 bg-white/90 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
+                        <div className="mt-6 p-4 rounded-xl border border-slate-200 bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
                           <div>
                             <p
                               className={`text-xs font-semibold text-slate-900 mb-1 ${inter.className}`}
                             >
-                              Liking the demo?
+                              Using the demo console
                             </p>
                             <p
                               className={`text-sm text-slate-600 max-w-xl ${inter.className}`}
                             >
-                              You&apos;re using the free 3-query demo. Unlock{' '}
-                              <span className="font-semibold text-slate-900">
-                                unlimited inspections
-                              </span>{' '}
-                              for your restaurant with a protocolLM subscription.
+                              You have a limited number of complimentary queries. To use
+                              protocolLM routinely with your team, activate a subscription.
                             </p>
                           </div>
                           <div className="flex gap-2 shrink-0">
                             <button
                               onClick={() => setShowPricingModal(true)}
-                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.16em] bg-slate-900 hover:bg-black text-white"
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] bg-black hover:bg-slate-900 text-white"
                             >
                               View pricing
                             </button>
                             <button
                               onClick={() => setShowAuthModal(true)}
-                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.12em] bg-white border border-slate-300 text-slate-800 hover:bg-slate-50"
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
                             >
                               Create account
                             </button>
@@ -1536,6 +1448,7 @@ export default function Page() {
                     </div>
                   )}
                 </div>
+
                 <div className="w-full shrink-0 z-20 bg-white border-t border-slate-100 pt-4">
                   <InputBox
                     input={input}
