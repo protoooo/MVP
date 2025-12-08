@@ -1,63 +1,79 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function SessionGuard() {
   const supabase = createClient()
   const router = useRouter()
+  const initRef = useRef(false)
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    if (typeof window === 'undefined') return
 
-      // 1. Get the token currently saved in this browser
-      const localToken = localStorage.getItem('session_token')
+    const manageSession = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
 
-      // 2. If we don't have one (fresh login), generate it and claim the session
-      if (!localToken) {
-        const newToken = Math.random().toString(36).substring(2) + Date.now().toString(36)
-        localStorage.setItem('session_token', newToken)
-        
-        await supabase
-          .from('user_sessions')
-          .upsert({ user_id: user.id, session_token: newToken, updated_at: new Date() })
-        return
-      }
+        let localToken = localStorage.getItem('session_token')
+        const now = new Date()
 
-      // 3. Check what the database thinks is the "active" token
-      const { data: dbSession, error } = await supabase
-        .from('user_sessions')
-        .select('session_token')
-        .eq('user_id', user.id)
-        .maybeSingle()
+        if (!localToken) {
+          localToken = crypto.randomUUID()
+          localStorage.setItem('session_token', localToken)
+          localStorage.setItem('token_last_check', now.toISOString())
 
-      // 4. If database has a DIFFERENT token, it means someone else logged in after us.
-      // We are now the "old" session. Kick us out.
-      if (dbSession && dbSession.session_token && dbSession.session_token !== localToken) {
-        console.log('Session mismatch. Logging out.')
-        await supabase.auth.signOut()
-        localStorage.removeItem('session_token')
-        alert('You have been logged out because this account was used on another device.')
-        window.location.href = '/'
-      } 
-      // 5. If we have a token but the DB has nothing (rare edge case), claim it.
-      else if (!dbSession) {
-         await supabase
-          .from('user_sessions')
-          .upsert({ user_id: user.id, session_token: localToken, updated_at: new Date() })
+          await supabase.from('user_sessions').upsert({
+            user_id: user.id,
+            session_token: localToken,
+            last_seen: now.toISOString(),
+            device_info: navigator.userAgent
+          }, { onConflict: 'user_id' })
+          
+          initRef.current = true
+          return
+        }
+
+        const lastCheck = localStorage.getItem('token_last_check')
+        if (!initRef.current || !lastCheck || (now - new Date(lastCheck)) > 30000) {
+          
+          const { data: dbSession } = await supabase
+            .from('user_sessions')
+            .select('session_token, updated_at')
+            .eq('user_id', user.id)
+            .single()
+
+          if (dbSession && dbSession.session_token !== localToken) {
+            const tokenAge = new Date(dbSession.updated_at)
+            const minutesSinceChange = (now - tokenAge) / 1000 / 60
+
+            if (minutesSinceChange > 5) {
+              await supabase.auth.signOut()
+              localStorage.removeItem('session_token')
+              router.push('/?error=session_conflict')
+              return
+            }
+          } else {
+             await supabase.from('user_sessions').update({ 
+               last_seen: now.toISOString() 
+             }).eq('user_id', user.id)
+          }
+
+          localStorage.setItem('token_last_check', now.toISOString())
+          initRef.current = true
+        }
+
+      } catch (error) {
+        console.error('[SessionGuard] Error:', error)
       }
     }
 
-    // Check immediately on mount
-    checkSession()
-
-    // Then check every 10 seconds
-    const interval = setInterval(checkSession, 10000)
+    manageSession()
+    const interval = setInterval(manageSession, 30000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [supabase, router])
 
   return null
 }
