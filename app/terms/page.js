@@ -1,5 +1,5 @@
 'use client'
-// Force Update: 2025-12-05
+// Force Update: 2025-12-08
 import Link from 'next/link'
 import { Outfit } from 'next/font/google'
 
@@ -7,90 +7,151 @@ const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700']
 
 export default function TermsOfService() {
   return (
-    <div className={`min-h-screen bg-[#FAFAFA] font-sans text-slate-600 selection:bg-blue-100 selection:text-blue-900 ${outfit.className}`}>
+    <div
+      className={`min-h-screen bg-[#FAFAFA] font-sans text-slate-600 selection:bg-blue-100 selection:text-blue-900 ${outfit.className}`}
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        
         <div className="mb-12 text-center md:text-left border-b border-slate-200 pb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">Terms of Service</h1>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Last updated: December 5, 2024</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
+            Terms of Service
+          </h1>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+            Last updated: December 8, 2025
+          </p>
         </div>
 
         <div className="space-y-6">
-          
           <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">1. Acceptance of Terms</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">
+              1. Acceptance of Terms
+            </h2>
             <p className="text-slate-600 text-sm leading-relaxed">
-              By accessing or using protocolLM (&quot;the Service&quot;), you agree to be bound by these Terms of Service. 
-              These Terms constitute a legally binding agreement between you and protocolLM.
+              By accessing or using protocolLM (&quot;the Service&quot;), you agree to be
+              bound by these Terms of Service. These Terms constitute a legally binding
+              agreement between you and protocolLM.
             </p>
           </section>
 
           {/* CRITICAL LIABILITY SECTION */}
           <section className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-red-700">2. Critical Disclaimers</h2>
-            
+            <h2 className="text-xl font-bold mb-4 text-red-700">
+              2. Critical Disclaimers
+            </h2>
+
             <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mb-6">
-              <p className="text-red-800 font-bold mb-2 text-xs uppercase tracking-wide">Not Legal or Health Advice</p>
+              <p className="text-red-800 font-bold mb-2 text-xs uppercase tracking-wide">
+                Not Legal or Health Advice
+              </p>
               <p className="text-red-700 text-sm leading-relaxed">
-                protocolLM is a reference tool only. It does <strong>NOT</strong> replace professional legal advice, official health 
-                department guidance, or licensed food safety consultants. You are solely responsible for verifying 
-                all information with the Washtenaw County Health Department.
+                protocolLM is a reference tool only. It does <strong>NOT</strong> replace
+                professional legal advice, official health department guidance, or
+                licensed food safety consultants. You are solely responsible for
+                verifying all information with the Washtenaw County Health Department or
+                other applicable authorities.
               </p>
             </div>
 
-            <h3 className="text-slate-900 font-bold mb-2 text-sm">2.1 Automated Analysis Limitations</h3>
+            <h3 className="text-slate-900 font-bold mb-2 text-sm">
+              2.1 Automated Analysis Limitations
+            </h3>
             <p className="text-slate-600 text-sm mb-4">
-              Our Service uses advanced software to analyze documents and generate responses. You acknowledge that:
+              Our Service uses automated software and a large language model accessed
+              through an application programming interface (&quot;API&quot;) provided by
+              OpenAI or similar vendors to analyze text and images and to generate
+              responses. You acknowledge that:
             </p>
             <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
-              <li>Automated responses may contain inaccuracies, errors, or misinterpretations of local regulations.</li>
-              <li>The Service may not reflect real-time changes to county enforcement policies.</li>
-              <li><strong>Human Review Required:</strong> Compliance decisions, equipment purchases, and operational changes should never be determined solely by software output.</li>
+              <li>
+                Automated responses may contain inaccuracies, omissions, or
+                misinterpretations of statutes, rules, or local enforcement practices.
+              </li>
+              <li>
+                The Service may not reflect real-time changes to county or state
+                policies, inspection procedures, or interpretive guidance.
+              </li>
+              <li>
+                Output is probabilistic and may differ when the same question or image is
+                submitted more than once.
+              </li>
+              <li>
+                <strong>Human Review Required:</strong> Compliance decisions, equipment
+                purchases, staffing changes, and operational adjustments must not be based
+                solely on responses generated by the Service.
+              </li>
             </ul>
           </section>
 
           <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">3. Indemnification (Hold Harmless)</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">
+              3. Indemnification (Hold Harmless)
+            </h2>
             <p className="text-slate-600 text-sm leading-relaxed mb-4">
-              You agree to defend, indemnify, and hold harmless protocolLM, its owners, and affiliates from and against any 
-              claims, liabilities, damages, judgments, awards, losses, costs, expenses, or fees (including reasonable attorneys' fees) 
-              arising out of or relating to:
+              You agree to defend, indemnify, and hold harmless protocolLM, its owners,
+              and affiliates from and against any claims, liabilities, damages,
+              judgments, awards, losses, costs, expenses, or fees (including reasonable
+              attorneys&apos; fees) arising out of or relating to:
             </p>
             <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
               <li>Your use of the Service.</li>
-              <li>Any violation of health codes, fines, closures, or legal action taken against your business.</li>
+              <li>
+                Any violation of health codes, fines, closures, or legal action taken
+                against your business.
+              </li>
               <li>Your reliance on any information provided by the Service.</li>
             </ul>
             <p className="text-slate-600 text-sm mt-4 font-bold">
-              You acknowledge that you maintain sole responsibility for your establishment's compliance with applicable laws.
+              You acknowledge that you maintain sole responsibility for your
+              establishment&apos;s compliance with applicable laws and regulations.
             </p>
           </section>
 
           <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">4. Limitation of Liability</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">
+              4. Limitation of Liability
+            </h2>
             <p className="text-slate-600 text-sm leading-relaxed">
-              TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT WILL PROTOCOLLM BE LIABLE FOR ANY INDIRECT, INCIDENTAL, 
-              SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES.
+              TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT WILL PROTOCOLLM BE
+              LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+              DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, REVENUE, GOODWILL,
+              OR BUSINESS INTERRUPTION.
             </p>
             <p className="text-slate-600 text-sm mt-3 leading-relaxed">
-              OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM THESE TERMS OR THE SERVICE SHALL NOT EXCEED 
-              THE FEES YOU PAID TO US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+              OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM THESE TERMS OR THE SERVICE
+              SHALL NOT EXCEED THE FEES YOU PAID TO US IN THE TWELVE (12) MONTHS
+              PRECEDING THE EVENT GIVING RISE TO THE CLAIM.
             </p>
           </section>
 
           <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">5. Subscription & Cancellation</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-900">
+              5. Subscription &amp; Cancellation
+            </h2>
             <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
-              <li><strong>Free Trial:</strong> 7-day access. Auto-converts to paid unless cancelled.</li>
-              <li><strong>Cancellation:</strong> You may cancel at any time via the portal to stop future billing.</li>
-              <li><strong>Refunds:</strong> No refunds for partial months or unused services.</li>
+              <li>
+                <strong>Free Trial:</strong> A time-limited trial may be offered. Unless
+                cancelled before the trial ends, your subscription will convert to a paid
+                plan.
+              </li>
+              <li>
+                <strong>Cancellation:</strong> You may cancel at any time via the
+                self-service billing portal to stop future billing cycles.
+              </li>
+              <li>
+                <strong>Refunds:</strong> We do not provide refunds for partial months or
+                unused portions of the Service.
+              </li>
             </ul>
           </section>
 
           <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
             <h2 className="text-xl font-bold mb-4 text-slate-900">6. Contact</h2>
             <p className="text-slate-500 text-sm">
-              <a href="mailto:austinrnorthrop@gmail.com" className="text-blue-600 hover:text-blue-700 font-medium">
+              For questions about these Terms, contact:
+              <br />
+              <a
+                href="mailto:austinrnorthrop@gmail.com"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
                 austinrnorthrop@gmail.com
               </a>
             </p>
@@ -98,7 +159,10 @@ export default function TermsOfService() {
         </div>
 
         <div className="mt-16 pt-8 border-t border-slate-200 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest transition-colors">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest transition-colors"
+          >
             <span>←</span> Return Home
           </Link>
         </div>
