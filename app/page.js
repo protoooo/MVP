@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
@@ -264,7 +263,7 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
     let rafId
     const start = performance.now()
     let lastUpdate = start
-    const tick = (now: number) => {
+    const tick = (now) => {
       const elapsed = now - start
       const ratio = Math.min(elapsed / TOTAL_DURATION, 1)
       const target = Math.min(ratio * 100, MAX_PROGRESS)
@@ -305,7 +304,7 @@ const LandingPage = ({ onAction, onSignUp }) => {
   return (
     <div className="w-full bg-white relative z-10 pb-24">
       {/* SECTION 1: HERO */}
-      <section className="relative h-[30rem] flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 rounded-b-3xl shadow-xl overflow-hidden">
+      <section className="relative h-[30rem] flex flex-col items_center justify-center bg-gradient-to-b from-slate-900 to-slate-800 rounded-b-3xl shadow-xl overflow-hidden">
         <div className="z-20 text-center px-4 max-w-4xl">
           <h1
             className={`text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 ${outfit.className}`}
@@ -591,7 +590,7 @@ const InputBox = ({
             <Icons.Plus />
           </button>
           {showMenu && (
-            <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
+            <div className="absolute bottom_full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
               <div className="space-y-0.5">
                 {['chat', 'image'].map((m) => (
                   <button
@@ -864,7 +863,10 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
         </p>
         <button
           onClick={() =>
-            handleCheckout(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY, 'protocollm')
+            handleCheckout(
+              process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY,
+              'protocollm'
+            )
           }
           disabled={loading !== null}
           className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -969,7 +971,6 @@ export default function Page() {
   const inputRef = useRef(null)
   const userMenuRef = useRef(null)
   const [supabase] = useState(() => createClient())
-  const router = useRouter()
 
   useEffect(() => {
     let mounted = true
@@ -1043,7 +1044,7 @@ export default function Page() {
   }, [supabase])
 
   useEffect(() => {
-    const handleExit = (e: MouseEvent) => {
+    const handleExit = (e) => {
       if (
         e.clientY < 10 &&
         !sessionStorage.getItem('exit-shown') &&
@@ -1057,18 +1058,18 @@ export default function Page() {
     return () => document.removeEventListener('mousemove', handleExit)
   }, [session])
 
-  const triggerMode = (mode: 'chat' | 'image') => {
+  const triggerMode = (mode) => {
     setActiveMode(mode)
     if (mode === 'image') fileInputRef.current?.click()
     else inputRef.current?.focus()
   }
 
-  const startDemo = (mode: 'chat' | 'image' = 'chat') => {
+  const startDemo = (mode = 'chat') => {
     setShowDemo(true)
     triggerMode(mode)
   }
 
-  const handleOnboardingAction = (type: 'image' | 'text', query = '') => {
+  const handleOnboardingAction = (type, query = '') => {
     setShowOnboarding(false)
     sessionStorage.setItem('onboarding_complete', 'true')
     if (type === 'image') {
@@ -1079,19 +1080,19 @@ export default function Page() {
     }
   }
 
-  const handleSend = async (e?: React.FormEvent) => {
+  const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
-    let queryType: 'simple' | 'standard' | 'image' = 'standard'
+    let queryType = 'standard'
     if (currentImage) queryType = 'image'
     else if (currentInput.trim().length < 20) queryType = 'simple'
 
-    const newMsg = { role: 'user' as const, content: currentInput, image: currentImage }
+    const newMsg = { role: 'user', content: currentInput, image: currentImage }
     setMessages((p) => [...p, newMsg])
-    setMessages((p) => [...p, { role: 'assistant' as const, content: '', queryType }])
+    setMessages((p) => [...p, { role: 'assistant', content: '', queryType }])
 
     setInput('')
     setSelectedImage(null)
@@ -1149,7 +1150,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response text.'
         return u
       })
-    } catch (err: any) {
+    } catch (err) {
       let errorMessage = 'An error occurred.'
       if (err.name === 'AbortError')
         errorMessage = 'Request timed out. The system is busy, please try again.'
@@ -1164,7 +1165,7 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
@@ -1185,7 +1186,7 @@ export default function Page() {
     setActiveMode('chat')
   }
 
-  const handleSignOut = async (e?: React.MouseEvent) => {
+  const handleSignOut = async (e) => {
     if (e && e.preventDefault) e.preventDefault()
     try {
       await supabase.auth.signOut()
@@ -1197,7 +1198,7 @@ export default function Page() {
     }
   }
 
-  const handleCheckout = async (priceId: string, planName: string) => {
+  const handleCheckout = async (priceId, planName) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -1228,7 +1229,7 @@ export default function Page() {
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else throw new Error('No checkout URL received')
-    } catch (error: any) {
+    } catch (error) {
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
     }
