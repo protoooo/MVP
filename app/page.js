@@ -375,7 +375,7 @@ const LandingPage = ({ onAction }) => {
           <h1
             className={`text-3xl md:text-[2.7rem] font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${outfit.className}`}
           >
-            A compliance console for your kitchen.
+            Find Violations Before The Health Inspector Does.
           </h1>
 
           <p
