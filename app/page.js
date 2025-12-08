@@ -367,151 +367,83 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
 const LandingPage = ({ onAction }) => {
   return (
     <div className="w-full bg-white relative z-10 pb-24">
-      {/* SECTION 1: HERO – PLAIN, GOVERNMENT STYLE */}
+
+      {/* HERO SECTION — CLEAN / GOVERNMENT STYLE */}
       <section className="relative border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-center justify-center text-center">
-          <div className="mb-6">
-            <p
-              className={`text-[11px] font-semibold tracking-[0.2em] uppercase text-slate-500 ${inter.className}`}
-            >
-              Washtenaw County • Food Service
-            </p>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
+
           <h1
             className={`text-3xl md:text-[2.7rem] font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${outfit.className}`}
           >
-            A compliance console <br className="hidden md:block" />
-            for your kitchen.
+            A compliance console for your kitchen.
           </h1>
+
           <p
-            className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-8 ${inter.className}`}
+            className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-10 ${inter.className}`}
           >
             Upload a photo or ask a question. protocolLM cross-checks the Michigan
-            Food Code and local Washtenaw guidance using a large-language-model
-            deployed via the OpenAI API.
+            Food Code and local Washtenaw guidance.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={() => onAction('chat')}
-              className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3 px-7 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
-            >
-              Start free demo
-            </button>
-            <p
-              className={`text-[11px] text-slate-500 font-medium ${inter.className}`}
-            >
-              No signup • 3 complimentary queries
-            </p>
-          </div>
+
+          <button
+            onClick={() => onAction('chat')}
+            className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
+          >
+            Start free demo
+          </button>
         </div>
       </section>
 
-      {/* SECTION 2: HOW IT WORKS */}
+      {/* HOW IT WORKS */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-left mb-10">
-            <h2
-              className={`text-xl font-semibold text-slate-900 mb-2 tracking-tight ${outfit.className}`}
-            >
-              How it works
-            </h2>
-            <p className={`text-slate-600 text-sm ${inter.className}`}>
-              Designed to feel like a state-issued utility, not a gadget.
-            </p>
-          </div>
+
+          <h2
+            className={`text-xl font-semibold text-slate-900 mb-14 text-center tracking-tight ${outfit.className}`}
+          >
+            How it works
+          </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* STEP 1 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4">
-                <Icons.Camera />
-              </div>
-              <h3
-                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
-              >
+              <div className="text-slate-500 mb-4"><Icons.Camera /></div>
+              <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 1. Capture
               </h3>
               <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                Take a photo of your cooler, prep line, or 3-comp sink using any
-                smartphone. No app install required.
+                Take a photo of your cooler, prep line, or 3-comp sink using any smartphone.
               </p>
             </div>
+
+            {/* STEP 2 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4">
-                <Icons.Zap />
-              </div>
-              <h3
-                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
-              >
+              <div className="text-slate-500 mb-4"><Icons.Zap /></div>
+              <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 2. Process
               </h3>
               <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                The image or question is processed through a large-language-model via
-                the OpenAI API, constrained to Michigan and Washtenaw materials.
+                Your question or image is analyzed against Michigan Food Code and Washtenaw guidance.
               </p>
             </div>
+
+            {/* STEP 3 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4">
-                <Icons.FileText />
-              </div>
-              <h3
-                className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
-              >
+              <div className="text-slate-500 mb-4"><Icons.FileText /></div>
+              <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 3. Review
               </h3>
               <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                You receive a structured summary of likely violations, codes cited,
-                and practical next steps for staff.
+                Receive a structured summary of likely violations and corrective guidance.
               </p>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: VIOLATION COSTS – MONOCHROME */}
-      <section className="py-20 px-6 bg-slate-50 border-y border-slate-200">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-left mb-10">
-            <h2
-              className={`text-xl font-semibold text-slate-900 mb-2 tracking-tight ${outfit.className}`}
-            >
-              Why this matters
-            </h2>
-            <p className={`text-slate-600 text-sm ${inter.className}`}>
-              Typical ranges based on Michigan enforcement language.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              ['Re-inspection fees', '$125 – $350'],
-              ['Daily penalties', 'Up to $1,000 / day'],
-              ['Misdemeanor fines', 'Up to $2,000'],
-              ['Closures & outages', '$4,000+ in losses'],
-            ].map(([label, amount]) => (
-              <div
-                key={label}
-                className="bg-white border border-slate-200 p-6 rounded-xl flex flex-col justify-between"
-              >
-                <p
-                  className={`text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-500 mb-3 ${inter.className}`}
-                >
-                  {label}
-                </p>
-                <p
-                  className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
-                >
-                  {amount}
-                </p>
-                <p
-                  className={`text-[11px] text-slate-500 leading-relaxed ${inter.className}`}
-                >
-                  Estimates only. Your local inspector and health department have the
-                  final word.
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      {/* FOOTER (unchanged) */}
       <footer className="py-12 border-t border-slate-200 text-center">
         <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
           Serving Washtenaw County Food Service Establishments
@@ -525,9 +457,11 @@ const LandingPage = ({ onAction }) => {
           </Link>
         </div>
       </footer>
+
     </div>
   )
 }
+
 
 const InputBox = ({
   input,
