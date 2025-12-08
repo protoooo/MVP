@@ -80,7 +80,7 @@ const Icons = {
   Settings: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51-1z" />
     </svg>
   ),
   LogOut: () => (
@@ -131,13 +131,13 @@ const GlobalStyles = () => (
     .animate-ticker-item {
       animation: slideUpFade 4s ease-in-out forwards;
     }
-    /* UPLOAD CIRCLE (Water effect, Fills ONCE then stops) */
+    /* UPLOAD CIRCLE (Water effect, grayscale) */
     .loader-upload {    
       width: 24px;
       height: 24px;
       border-radius: 50%;
       border: 1px solid #ccc;
-      background: linear-gradient(to top, #269af2 50%, transparent 50%);
+      background: linear-gradient(to top, #000000 50%, transparent 50%);
       background-size: 100% 200%;
       background-position: 0% 0%; 
       animation: fillWater 1.5s ease-out forwards;
@@ -187,7 +187,10 @@ const NavBarTicker = () => {
     return () => clearInterval(timer)
   }, [])
   return (
-    <div key={index} className="flex items-center gap-2 animate-ticker-item text-[10px] font-bold text-slate-700 uppercase tracking-wide whitespace-nowrap">
+    <div
+      key={index}
+      className="flex items-center gap-2 animate-ticker-item text-[10px] font-bold text-slate-700 uppercase tracking-wide whitespace-nowrap"
+    >
       <Icons.File />
       {TICKER_ITEMS[index]}
     </div>
@@ -195,33 +198,44 @@ const NavBarTicker = () => {
 }
 
 const FormattedMessage = ({ content }) => {
-  if (!content) return null;
-  const lines = content.split('\n');
-  const keywords = ['Violation', 'Confirmed violations', 'Possible issues', 'Likely violation', 'Potential issue', 'Remediation', 'Summary', 'Findings', 'Source'];
+  if (!content) return null
+  const lines = content.split('\n')
+  const keywords = [
+    'Violation',
+    'Confirmed violations',
+    'Possible issues',
+    'Likely violation',
+    'Potential issue',
+    'Remediation',
+    'Summary',
+    'Findings',
+    'Source',
+  ]
   return (
     <div className="space-y-2">
       {lines.map((line, idx) => {
-        if (!line.trim()) return <div key={idx} className="h-2" />;
-        const parts = line.split(/:(.*)/s); 
-        let header = parts[0];
-        let body = parts[1] || '';
-        const isHeader = keywords.some(k => header.includes(k));
+        if (!line.trim()) return <div key={idx} className="h-2" />
+        const parts = line.split(/:(.*)/s)
+        let header = parts[0]
+        let body = parts[1] || ''
+        const isHeader = keywords.some((k) => header.includes(k))
         if (isHeader) {
           return (
             <div key={idx} className="text-base leading-relaxed text-slate-700">
-              <span className="font-bold text-slate-900">{header}:</span>{body}
+              <span className="font-bold text-slate-900">{header}:</span>
+              {body}
             </div>
-          );
+          )
         }
         return (
           <div key={idx} className="text-base leading-relaxed text-slate-700">
             {line}
           </div>
-        );
+        )
       })}
     </div>
-  );
-};
+  )
+}
 
 const ThinkingIndicator = ({ queryType = 'simple' }) => {
   const [progress, setProgress] = useState(0)
@@ -230,9 +244,22 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   const MAX_PROGRESS = 95
   const TOTAL_DURATION = DURATIONS[queryType] || DURATIONS.standard
   const stages = {
-    simple: [{ threshold: 0, label: 'Processing...' }, { threshold: 50, label: 'Generating response...' }],
-    standard: [{ threshold: 0, label: 'Analyzing request...' }, { threshold: 25, label: 'Searching database...' }, { threshold: 60, label: 'Formulating response...' }],
-    image: [{ threshold: 0, label: 'Analyzing image...' }, { threshold: 15, label: 'Identifying equipment...' }, { threshold: 30, label: 'Searching Washtenaw database...' }, { threshold: 50, label: 'Checking violation types...' }, { threshold: 70, label: 'Formulating compliance report...' }]
+    simple: [
+      { threshold: 0, label: 'Processing...' },
+      { threshold: 50, label: 'Generating response...' },
+    ],
+    standard: [
+      { threshold: 0, label: 'Analyzing request...' },
+      { threshold: 25, label: 'Reviewing regulations...' },
+      { threshold: 60, label: 'Formulating response...' },
+    ],
+    image: [
+      { threshold: 0, label: 'Analyzing image...' },
+      { threshold: 15, label: 'Identifying equipment...' },
+      { threshold: 30, label: 'Checking local code...' },
+      { threshold: 50, label: 'Classifying violation types...' },
+      { threshold: 70, label: 'Formulating compliance report...' },
+    ],
   }
   const currentStages = stages[queryType] || stages.standard
 
@@ -247,44 +274,66 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
       if (now - lastUpdate >= 100 || target === MAX_PROGRESS) {
         lastUpdate = now
         setProgress(target)
-        const currentStage = currentStages.reduce((acc, stage) => (target >= stage.threshold ? stage : acc), currentStages[0])
+        const currentStage = currentStages.reduce(
+          (acc, stage) => (target >= stage.threshold ? stage : acc),
+          currentStages[0]
+        )
         setText(currentStage.label)
       }
-      if (target < MAX_PROGRESS) { rafId = requestAnimationFrame(tick) }
+      if (target < MAX_PROGRESS) {
+        rafId = requestAnimationFrame(tick)
+      }
     }
     rafId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafId)
-  }, [queryType, TOTAL_DURATION, currentStages]) // Added currentStages to dependency
+  }, [queryType, TOTAL_DURATION, currentStages])
 
   return (
     <div className="flex flex-col items-start gap-3 p-2">
-      <span className="text-xs font-bold text-slate-600 uppercase tracking-widest animate-pulse">{text}</span>
+      <span className="text-xs font-bold text-slate-600 uppercase tracking-widest animate-pulse">
+        {text}
+      </span>
       <div className="w-40 h-[22px] rounded-full border-2 border-black bg-white overflow-hidden">
-        <div className="h-full bg-black" style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }} />
+        <div
+          className="h-full bg-black"
+          style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
+        />
       </div>
     </div>
   )
 }
 
-// --- LANDING PAGE WITHOUT EXTRA UI DEPENDENCIES ---
+// --- LANDING PAGE (Black & White) ---
 const LandingPage = ({ onAction, onSignUp }) => {
   return (
     <div className="w-full bg-white relative z-10 pb-24">
-      {/* SECTION 1: HERO - SIMPLE GRADIENT */}
+      {/* SECTION 1: HERO */}
       <section className="relative h-[30rem] flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 rounded-b-3xl shadow-xl overflow-hidden">
         <div className="z-20 text-center px-4 max-w-4xl">
-          <h1 className={`text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 ${outfit.className}`}>
-            One Photo Could Save <br /> You <span className="text-emerald-400">Thousands</span>
+          <h1
+            className={`text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 ${outfit.className}`}
+          >
+            One Photo Could Save <br /> You{' '}
+            <span className="text-slate-100 underline decoration-slate-400/60">
+              Thousands
+            </span>
           </h1>
-          <p className={`text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 ${inter.className}`}>
+          <p
+            className={`text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 ${inter.className}`}
+          >
             Washtenaw County health inspectors catch everything. Now you can too.
-            Powered by Google&apos;s API for enterprise-grade accuracy.
+            Powered by OpenAI for inspection-grade accuracy.
           </p>
           <div className="flex flex-col items-center gap-6">
-            <button onClick={() => onAction('chat')} className="bg-emerald-600 hover:bg-emerald-500 text-white text-base font-bold py-4 px-10 rounded-full transition-all duration-200 uppercase tracking-wide shadow-lg hover:-translate-y-1">
+            <button
+              onClick={() => onAction('chat')}
+              className="bg-black hover:bg-slate-900 text-white text-base font-bold py-4 px-10 rounded-full transition-all duration-200 uppercase tracking-wide shadow-lg hover:-translate-y-1"
+            >
               Try Free Demo
             </button>
-            <div className="text-sm text-slate-400 font-medium">3 Free Queries • No Signup Required</div>
+            <div className="text-sm text-slate-400 font-medium">
+              3 Free Queries • No Signup Required
+            </div>
           </div>
         </div>
       </section>
@@ -293,83 +342,211 @@ const LandingPage = ({ onAction, onSignUp }) => {
       <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}>How It Works</h2>
-            <p className={`text-slate-600 ${inter.className}`}>Professional compliance in three steps</p>
+            <h2
+              className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}
+            >
+              How It Works
+            </h2>
+            <p className={`text-slate-600 ${inter.className}`}>
+              Professional compliance in three steps
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6"><Icons.Camera /></div>
-              <h3 className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}>1. Take Photo</h3>
-              <p className={`text-slate-600 leading-relaxed ${inter.className}`}>Use any smartphone camera. No app installation required.</p>
+              <div className="text-slate-400 mb-6">
+                <Icons.Camera />
+              </div>
+              <h3
+                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
+              >
+                1. Take Photo
+              </h3>
+              <p
+                className={`text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Use any smartphone camera. No app installation required.
+              </p>
             </div>
             <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6"><Icons.Zap /></div>
-              <h3 className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}>2. Automated Analysis</h3>
-              <p className={`text-slate-600 leading-relaxed ${inter.className}`}>Uses <strong>Google&apos;s API</strong> technology to cross-check against the Michigan Food Code instantly.</p>
+              <div className="text-slate-400 mb-6">
+                <Icons.Zap />
+              </div>
+              <h3
+                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
+              >
+                2. Automated Analysis
+              </h3>
+              <p
+                className={`text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Uses OpenAI to cross-check against the Michigan Food Code and
+                local guidance in seconds.
+              </p>
             </div>
             <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6"><Icons.FileText /></div>
-              <h3 className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}>3. Get Report</h3>
-              <p className={`text-slate-600 leading-relaxed ${inter.className}`}>Receive detailed violations, potential fines, and remediation steps.</p>
+              <div className="text-slate-400 mb-6">
+                <Icons.FileText />
+              </div>
+              <h3
+                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
+              >
+                3. Get Report
+              </h3>
+              <p
+                className={`text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Receive detailed violations, potential fines, and remediation
+                steps in plain language.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: ROI DATA */}
+      {/* SECTION 3: ROI DATA (Monochrome) */}
       <section className="py-24 px-6 bg-slate-50 border-y border-slate-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}>Violation Costs</h2>
-            <p className={`text-slate-600 ${inter.className}`}>Potential financial impact of citations</p>
+            <h2
+              className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}
+            >
+              Violation Costs
+            </h2>
+            <p className={`text-slate-600 ${inter.className}`}>
+              Potential financial impact of citations
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-xl">
-              <h3 className={`font-bold text-yellow-900 mb-2 ${outfit.className}`}>Re-inspection</h3>
-              <p className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}>$125 - $350</p>
-              <p className={`text-sm text-yellow-800 leading-relaxed ${inter.className}`}>Fees per visit until resolved.</p>
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
+              <h3
+                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
+              >
+                Re-inspection
+              </h3>
+              <p
+                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+              >
+                $125 - $350
+              </p>
+              <p
+                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Fees per visit until resolved.
+              </p>
             </div>
-            <div className="bg-orange-50 border border-orange-200 p-8 rounded-xl">
-              <h3 className={`font-bold text-orange-900 mb-2 ${outfit.className}`}>Daily Fines</h3>
-              <p className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}>$1,000 / day</p>
-              <p className={`text-sm text-orange-800 leading-relaxed ${inter.className}`}>For continuing violations.</p>
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
+              <h3
+                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
+              >
+                Daily Fines
+              </h3>
+              <p
+                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+              >
+                $1,000 / day
+              </p>
+              <p
+                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                For continuing violations.
+              </p>
             </div>
-            <div className="bg-red-50 border border-red-200 p-8 rounded-xl">
-              <h3 className={`font-bold text-red-900 mb-2 ${outfit.className}`}>Misdemeanor</h3>
-              <p className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}>Up to $2,000</p>
-              <p className={`text-sm text-red-800 leading-relaxed ${inter.className}`}>Sec. 20199 fines per occurrence.</p>
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
+              <h3
+                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
+              >
+                Misdemeanor
+              </h3>
+              <p
+                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+              >
+                Up to $2,000
+              </p>
+              <p
+                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Sec. 20199 fines per occurrence.
+              </p>
             </div>
-            <div className="bg-rose-50 border border-rose-200 p-8 rounded-xl">
-              <h3 className={`font-bold text-rose-900 mb-2 ${outfit.className}`}>Outbreak</h3>
-              <p className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}>$4,000+</p>
-              <p className={`text-sm text-rose-800 leading-relaxed ${inter.className}`}>Lost revenue and legal fees.</p>
+            <div className="bg-white border border-slate-200 p-8 rounded-xl">
+              <h3
+                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
+              >
+                Outbreak
+              </h3>
+              <p
+                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+              >
+                $4,000+
+              </p>
+              <p
+                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
+              >
+                Lost revenue and legal fees.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       <footer className="py-12 border-t border-slate-200 text-center">
-        <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>Serving Washtenaw County Food Service Establishments</p>
+        <p
+          className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}
+        >
+          Serving Washtenaw County Food Service Establishments
+        </p>
         <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
-          <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
-          <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
-          <Link href="/report-issue" className="hover:text-slate-900 transition-colors">Report Issue</Link>
+          <Link href="/terms" className="hover:text-slate-900 transition-colors">
+            Terms of Service
+          </Link>
+          <Link
+            href="/privacy"
+            className="hover:text-slate-900 transition-colors"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/report-issue"
+            className="hover:text-slate-900 transition-colors"
+          >
+            Report Issue
+          </Link>
         </div>
       </footer>
     </div>
   )
 }
 
-const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInputRef, selectedImage, setSelectedImage, inputRef, activeMode, setActiveMode }) => {
+const InputBox = ({
+  input,
+  setInput,
+  handleSend,
+  handleImage,
+  isSending,
+  fileInputRef,
+  selectedImage,
+  setSelectedImage,
+  inputRef,
+  activeMode,
+  setActiveMode,
+}) => {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
+
   const handleModeClick = (mode) => {
     setActiveMode(mode)
     setShowMenu(false)
-    if (mode === 'image' && fileInputRef.current) setTimeout(() => fileInputRef.current?.click(), 0)
+    if (mode === 'image' && fileInputRef.current) {
+      setTimeout(() => fileInputRef.current?.click(), 0)
+    }
   }
+
   useEffect(() => {
-    function handleClickOutside(event) { if (menuRef.current && !menuRef.current.contains(event.target)) setShowMenu(false) }
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false)
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
@@ -379,29 +556,103 @@ const InputBox = ({ input, setInput, handleSend, handleImage, isSending, fileInp
       {selectedImage && (
         <div className="mb-3 mx-1 p-3 bg-white border border-slate-200 rounded-lg inline-flex items-center gap-3 shadow-sm">
           <div className="loader-upload scale-75 shrink-0" />
-          <span className="text-sm text-slate-900 font-bold flex items-center gap-2">Image Uploaded - Ready to Send</span>
-          <button onClick={() => { setSelectedImage(null); setActiveMode('chat') }} className="text-slate-400 hover:text-slate-900 ml-2"><Icons.X /></button>
+          <span className="text-sm text-slate-900 font-bold flex items-center gap-2">
+            Image Uploaded - Ready to Send
+          </span>
+          <button
+            onClick={() => {
+              setSelectedImage(null)
+              setActiveMode('chat')
+            }}
+            className="text-slate-400 hover:text-slate-900 ml-2"
+          >
+            <Icons.X />
+          </button>
         </div>
       )}
-      <form onSubmit={handleSend} className="relative flex items-end w-full p-2 bg-white border border-slate-300 rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900 transition-all">
-        <input type="file" ref={fileInputRef} onChange={handleImage} accept="image/*" className="hidden" />
+      <form
+        onSubmit={handleSend}
+        className="relative flex items-end w-full p-2 bg-white border border-slate-300 rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900 transition-all"
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImage}
+          accept="image/*"
+          className="hidden"
+        />
         <div className="relative flex-shrink-0 mb-1 ml-1" ref={menuRef}>
-          <button type="button" onClick={() => setShowMenu(!showMenu)} className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${showMenu ? 'bg-slate-900 text-white rotate-45' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 rotate-0'}`}><Icons.Plus /></button>
+          <button
+            type="button"
+            onClick={() => setShowMenu(!showMenu)}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${
+              showMenu
+                ? 'bg-slate-900 text-white rotate-45'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 rotate-0'
+            }`}
+          >
+            <Icons.Plus />
+          </button>
           {showMenu && (
             <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
               <div className="space-y-0.5">
                 {['chat', 'image'].map((m) => (
-                  <button key={m} type="button" onClick={() => handleModeClick(m)} className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeMode === m ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    {m === 'chat' && <Icons.File />}{m === 'image' && <Icons.Camera />}<span className="capitalize">{m === 'chat' ? 'Consult' : 'Inspect'}</span>
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleModeClick(m)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeMode === m
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {m === 'chat' && <Icons.File />}
+                    {m === 'image' && <Icons.Camera />}
+                    <span className="capitalize">
+                      {m === 'chat' ? 'Consult' : 'Inspect'}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
           )}
         </div>
-        <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) } }} placeholder={activeMode === 'chat' ? 'Ask about enforcement protocols...' : activeMode === 'image' ? 'Upload photo for instant audit...' : 'Enter audit parameters...'} className={`flex-1 max-h-[200px] min-h[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`} rows={1} style={{ height: 'auto', overflowY: 'hidden' }} />
-        <button type="submit" disabled={(!input.trim() && !selectedImage) || isSending} className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${!input.trim() && !selectedImage ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-emerald-700 text-white hover:bg-emerald-800 shadow-md transform hover:scale-105 active:scale-95'}`}>
-          {isSending ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Icons.ArrowUp />}
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              handleSend(e)
+            }
+          }}
+          placeholder={
+            activeMode === 'chat'
+              ? 'Ask about enforcement protocols...'
+              : activeMode === 'image'
+              ? 'Upload photo for instant audit...'
+              : 'Enter audit parameters...'
+          }
+          className={`flex-1 max-h-[200px] min-h[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
+          rows={1}
+          style={{ height: 'auto', overflowY: 'hidden' }}
+        />
+        <button
+          type="submit"
+          disabled={(!input.trim() && !selectedImage) || isSending}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
+            !input.trim() && !selectedImage
+              ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+              : 'bg-black text-white hover:bg-slate-900 shadow-md transform hover:scale-105 active:scale-95'
+          }`}
+        >
+          {isSending ? (
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Icons.ArrowUp />
+          )}
         </button>
       </form>
     </div>
@@ -414,18 +665,121 @@ const AuthModal = ({ isOpen, onClose, message }) => {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
-  const getRedirectUrl = () => { const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin; return `${baseUrl}/auth/callback` }
-  const handleEmailAuth = async (e) => { e.preventDefault(); setLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: getRedirectUrl() } }); if (error) setStatusMessage('Error: ' + error.message); else setStatusMessage('✓ Check your email for the login link.'); setLoading(false) }
-  const handleGoogleAuth = async () => { setGoogleLoading(true); setStatusMessage(''); const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: getRedirectUrl(), queryParams: { access_type: 'offline', prompt: 'consent' } } }); if (error) { setStatusMessage('Error: ' + error.message); setGoogleLoading(false) } }
+
+  const getRedirectUrl = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin
+    return `${baseUrl}/auth/callback`
+  }
+
+  const handleEmailAuth = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setStatusMessage('')
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: getRedirectUrl() },
+    })
+    if (error) setStatusMessage('Error: ' + error.message)
+    else setStatusMessage('✓ Check your email for the login link.')
+    setLoading(false)
+  }
+
+  const handleGoogleAuth = async () => {
+    setGoogleLoading(true)
+    setStatusMessage('')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: getRedirectUrl(),
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    })
+    if (error) {
+      setStatusMessage('Error: ' + error.message)
+      setGoogleLoading(false)
+    }
+  }
+
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-10 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-start mb-8"><div><h2 className={`text-xl font-bold text-slate-900 mb-1 ${outfit.className}`}>{message || 'Welcome to protocolLM'}</h2><p className={`text-sm text-slate-500 ${inter.className}`}>Sign in to continue your session</p></div><button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors"><Icons.X /></button></div>
-        <button onClick={handleGoogleAuth} disabled={googleLoading || loading} className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-6 shadow-sm focus:outline-none">{googleLoading ? <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" /> : <><svg className="h-5 w-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" fill="#EA4335" /></svg><span>Continue with Google</span></>}</button>
-        <div className="relative my-8"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div><div className="relative flex justify-center text-xs"><span className="bg-white px-4 text-slate-400 font-medium">OR</span></div></div>
-        <form onSubmit={handleEmailAuth} className="space-y-5"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="work@restaurant.com" required className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm" /><button type="submit" disabled={loading || googleLoading} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-lg transition-colors shadow-sm">{loading ? 'Sending Login Link...' : 'Continue with Email'}</button></form>
-        {statusMessage && <div className={`mt-6 p-4 rounded-lg text-sm border ${statusMessage.includes('Error') ? 'bg-red-50 border-red-200 text-red-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900'}`}>{statusMessage}</div>}
+    <div
+      className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-10 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h2
+              className={`text-xl font-bold text-slate-900 mb-1 ${outfit.className}`}
+            >
+              {message || 'Welcome to protocolLM'}
+            </h2>
+            <p className={`text-sm text-slate-500 ${inter.className}`}>
+              Sign in to continue your session
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            <Icons.X />
+          </button>
+        </div>
+        <button
+          onClick={handleGoogleAuth}
+          disabled={googleLoading || loading}
+          className="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-6 shadow-sm focus:outline-none"
+        >
+          {googleLoading ? (
+            <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" />
+          ) : (
+            <>
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="#000000" />
+              </svg>
+              <span>Continue with Google</span>
+            </>
+          )}
+        </button>
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-4 text-slate-400 font-medium">OR</span>
+          </div>
+        </div>
+        <form onSubmit={handleEmailAuth} className="space-y-5">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="work@restaurant.com"
+            required
+            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
+          />
+          <button
+            type="submit"
+            disabled={loading || googleLoading}
+            className="w-full bg-slate-900 hover:bg-black text-white font-medium py-3 rounded-lg transition-colors shadow-sm"
+          >
+            {loading ? 'Sending Login Link...' : 'Continue with Email'}
+          </button>
+        </form>
+        {statusMessage && (
+          <div
+            className={`mt-6 p-4 rounded-lg text-sm border ${
+              statusMessage.includes('Error')
+                ? 'bg-slate-50 border-slate-300 text-slate-900'
+                : 'bg-slate-50 border-slate-300 text-slate-900'
+            }`}
+          >
+            {statusMessage}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -436,29 +790,90 @@ const ExitModal = ({ isOpen, onClose, onConvert }) => {
   return (
     <div className="fixed inset-0 z-[1001] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-xl p-10 max-w-md w-full shadow-2xl border border-slate-200 relative">
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900"><Icons.X /></button>
-        <div className="flex justify-center mb-8"><div className="bg-amber-50 p-4 rounded-full text-amber-600"><Icons.AlertTriangle /></div></div>
-        <h3 className={`text-2xl font-bold text-center text-slate-900 mb-3 ${outfit.className}`}>Wait! Don&apos;t risk a violation.</h3>
-        <p className={`text-center text-slate-600 mb-10 leading-relaxed ${inter.className}`}>Get a <span className="font-bold text-slate-900">FREE compliance audit</span> of your last inspection report before you leave.</p>
-        <button onClick={onConvert} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-4 rounded-lg uppercase tracking-wide transition-colors mb-4">Claim Free Audit</button>
-        <button onClick={onClose} className="w-full text-center text-sm text-slate-400 hover:text-slate-600 font-medium">No thanks, I&apos;ll risk the fine.</button>
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-slate-400 hover:text-slate-900"
+        >
+          <Icons.X />
+        </button>
+        <div className="flex justify-center mb-8">
+          <div className="bg-slate-100 p-4 rounded-full text-slate-700">
+            <Icons.AlertTriangle />
+          </div>
+        </div>
+        <h3
+          className={`text-2xl font-bold text-center text-slate-900 mb-3 ${outfit.className}`}
+        >
+          Wait! Don&apos;t risk a violation.
+        </h3>
+        <p
+          className={`text-center text-slate-600 mb-10 leading-relaxed ${inter.className}`}
+        >
+          Get a <span className="font-bold text-slate-900">FREE compliance audit</span>{' '}
+          of your last inspection report before you leave.
+        </p>
+        <button
+          onClick={onConvert}
+          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg uppercase tracking-wide transition-colors mb-4"
+        >
+          Claim Free Audit
+        </button>
+        <button
+          onClick={onClose}
+          className="w-full text-center text-sm text-slate-400 hover:text-slate-600 font-medium"
+        >
+          No thanks, I&apos;ll risk the fine.
+        </button>
       </div>
     </div>
   )
 }
 
 const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
-  // Hardcoded to month since no year var in some cases, but simplified UI
   return (
-    <div className="fixed inset-0 z-[1000] bg_white/95 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-xl p-10 shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"><Icons.X /></button>
-        <h3 className={`text-xs font-bold text-slate-900 uppercase tracking-widest mb-6 mt-2 text-center ${outfit.className}`}>protocolLM</h3>
+    <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div
+        className="relative w-full max-w-sm bg-white border border-slate-200 rounded-xl p-10 shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"
+        >
+          <Icons.X />
+        </button>
+        <h3
+          className={`text-xs font-bold text-slate-900 uppercase tracking-widest mb-6 mt-2 text-center ${outfit.className}`}
+        >
+          protocolLM
+        </h3>
         <div className="flex items-baseline text-slate-900 justify-center mb-2">
-          <span className={`text-5xl font-bold tracking-tighter ${outfit.className}`}>$50</span><span className="ml-2 text-slate-500 text-sm font-medium uppercase tracking-wide">/mo</span>
+          <span
+            className={`text-5xl font-bold tracking-tighter ${outfit.className}`}
+          >
+            $50
+          </span>
+          <span className="ml-2 text-slate-500 text-sm font-medium uppercase tracking-wide">
+            /mo
+          </span>
         </div>
-        <p className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-4 ${inter.className}`}><span className="block font-semibold text-slate-900 mb-1">One prevented violation pays for 40 months.</span>Average Priority Fine: $1,000</p>
-        <button onClick={() => handleCheckout(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY, 'protocollm')} disabled={loading !== null} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}</button>
+        <p
+          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-4 ${inter.className}`}
+        >
+          <span className="block font-semibold text-slate-900 mb-1">
+            One prevented violation pays for 40 months.
+          </span>
+          Average Priority Fine: $1,000
+        </p>
+        <button
+          onClick={() =>
+            handleCheckout(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY, 'protocollm')
+          }
+          disabled={loading !== null}
+          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
+        </button>
       </div>
     </div>
   )
@@ -469,17 +884,64 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
   return (
     <div className="fixed inset-0 z-[1001] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-xl p-8 max-w-lg w-full shadow-2xl border border-slate-200 relative">
-        <button onClick={onClose} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900"><Icons.X /></button>
-        <div className="text-center mb-8"><h3 className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}>Welcome to protocolLM</h3><p className={`text-slate-600 ${inter.className}`}>How would you like to start?</p></div>
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 text-slate-400 hover:text-slate-900"
+        >
+          <Icons.X />
+        </button>
+        <div className="text-center mb-8">
+          <h3
+            className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}
+          >
+            Welcome to protocolLM
+          </h3>
+          <p className={`text-slate-600 ${inter.className}`}>
+            How would you like to start?
+          </p>
+        </div>
         <div className="space-y-4">
-          <button onClick={() => onAction('image')} className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 font-semibold py-4 px-6 rounded-xl flex items-center gap-4 transition-colors text-left group">
-            <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-500 group-hover:text-emerald-700 transition-colors"><Icons.Camera /></div><div><div className="text-sm font-bold text-slate-900">Upload Photo of 3-Comp Sink</div><div className="text-xs text-slate-500">Check for sanitizer &amp; setup violations</div></div>
+          <button
+            onClick={() => onAction('image')}
+            className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 font-semibold py-4 px-6 rounded-xl flex items-center gap-4 transition-colors text-left group"
+          >
+            <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-500 group-hover:text-slate-900 transition-colors">
+              <Icons.Camera />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-900">
+                Upload Photo of 3-Comp Sink
+              </div>
+              <div className="text-xs text-slate-500">
+                Check for sanitizer &amp; setup violations
+              </div>
+            </div>
           </button>
-          <button onClick={() => onAction('text', 'What temp should I hold hot foods?')} className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 font-semibold py-4 px-6 rounded-xl flex items-center gap-4 transition-colors text-left group">
-            <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-500 group-hover:text-emerald-700 transition-colors"><Icons.FileText /></div><div><div className="text-sm font-bold text-slate-900">Ask a Question</div><div className="text-xs text-slate-500">&quot;What temp should I hold hot foods?&quot;</div></div>
+          <button
+            onClick={() =>
+              onAction('text', 'What temp should I hold hot foods?')
+            }
+            className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-800 font-semibold py-4 px-6 rounded-xl flex items-center gap-4 transition-colors text-left group"
+          >
+            <div className="bg-white p-2 rounded-lg border border-slate-200 text-slate-500 group-hover:text-slate-900 transition-colors">
+              <Icons.FileText />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-slate-900">
+                Ask a Question
+              </div>
+              <div className="text-xs text-slate-500">
+                &quot;What temp should I hold hot foods?&quot;
+              </div>
+            </div>
           </button>
         </div>
-        <button onClick={onClose} className="w-full mt-6 text-center text-sm text-slate-400 hover:text-slate-600 font-medium">I&apos;ll explore on my own</button>
+        <button
+          onClick={onClose}
+          className="w-full mt-6 text-center text-sm text-slate-400 hover:text-slate-600 font-medium"
+        >
+          I&apos;ll explore on my own
+        </button>
       </div>
     </div>
   )
@@ -515,133 +977,390 @@ export default function Page() {
 
   useEffect(() => {
     let mounted = true
-    const initFingerprint = async () => { const fp = await getDeviceFingerprint(); if (mounted) fingerprintRef.current = fp }
+
+    const initFingerprint = async () => {
+      const fp = await getDeviceFingerprint()
+      if (mounted) fingerprintRef.current = fp
+    }
     initFingerprint()
+
     const init = async () => {
       try {
-        const { data: { session: s } } = await supabase.auth.getSession()
+        const {
+          data: { session: s },
+        } = await supabase.auth.getSession()
         if (!mounted) return
         setSession(s)
         if (s) {
-          const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', s.user.id).in('status', ['active', 'trialing']).maybeSingle()
+          const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('status')
+            .eq('user_id', s.user.id)
+            .in('status', ['active', 'trialing'])
+            .maybeSingle()
           if (s.user.email === ADMIN_EMAIL || sub) {
             setHasActiveSubscription(true)
-            const { data: existingChats } = await supabase.from('chats').select('id').eq('user_id', s.user.id).limit(1)
-            if (!existingChats || existingChats.length === 0) setShowOnboarding(true)
-          } else { setHasActiveSubscription(false) }
+            const { data: existingChats } = await supabase
+              .from('chats')
+              .select('id')
+              .eq('user_id', s.user.id)
+              .limit(1)
+            if (!existingChats || existingChats.length === 0) {
+              setShowOnboarding(true)
+            }
+          } else {
+            setHasActiveSubscription(false)
+          }
         }
-      } catch (e) { console.error('Auth Init Error', e) } finally { if (mounted) setIsLoading(false) }
+      } catch (e) {
+        console.error('Auth Init Error', e)
+      } finally {
+        if (mounted) setIsLoading(false)
+      }
     }
     init()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
       setSession(session)
       if (session) {
-        const { data: sub } = await supabase.from('subscriptions').select('status').eq('user_id', session.user.id).in('status', ['active', 'trialing']).maybeSingle()
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('user_id', session.user.id)
+          .in('status', ['active', 'trialing'])
+          .maybeSingle()
         if (session.user.email === ADMIN_EMAIL || sub) setHasActiveSubscription(true)
-        else { setHasActiveSubscription(false); setShowPricingModal(true) }
+        else {
+          setHasActiveSubscription(false)
+          setShowPricingModal(true)
+        }
       } else setHasActiveSubscription(false)
       setIsLoading(false)
     })
-    const timer = setTimeout(() => { if (mounted) setIsLoading(false) }, 2000)
-    return () => { mounted = false; clearTimeout(timer); subscription.unsubscribe() }
+
+    const timer = setTimeout(() => {
+      if (mounted) setIsLoading(false)
+    }, 2000)
+
+    return () => {
+      mounted = false
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   useEffect(() => {
-    const handleExit = (e) => { if (e.clientY < 10 && !sessionStorage.getItem('exit-shown') && !session) { sessionStorage.setItem('exit-shown', 'true'); setShowExitModal(true) } }
-    document.addEventListener('mousemove', handleExit); return () => document.removeEventListener('mousemove', handleExit)
+    const handleExit = (e) => {
+      if (
+        e.clientY < 10 &&
+        !sessionStorage.getItem('exit-shown') &&
+        !session
+      ) {
+        sessionStorage.setItem('exit-shown', 'true')
+        setShowExitModal(true)
+      }
+    }
+    document.addEventListener('mousemove', handleExit)
+    return () => document.removeEventListener('mousemove', handleExit)
   }, [session])
 
-  const triggerMode = (mode) => { setActiveMode(mode); if (mode === 'image') fileInputRef.current?.click(); else inputRef.current?.focus() }
-  const startDemo = (mode = 'chat') => { setShowDemo(true); triggerMode(mode) }
-  const handleOnboardingAction = (type, query = '') => { setShowOnboarding(false); sessionStorage.setItem('onboarding_complete', 'true'); if (type === 'image') setTimeout(() => fileInputRef.current?.click(), 100); else if (type === 'text') { setInput(query); setTimeout(() => inputRef.current?.focus(), 100) } }
+  const triggerMode = (mode) => {
+    setActiveMode(mode)
+    if (mode === 'image') fileInputRef.current?.click()
+    else inputRef.current?.focus()
+  }
+
+  const startDemo = (mode = 'chat') => {
+    setShowDemo(true)
+    triggerMode(mode)
+  }
+
+  const handleOnboardingAction = (type, query = '') => {
+    setShowOnboarding(false)
+    sessionStorage.setItem('onboarding_complete', 'true')
+    if (type === 'image') {
+      setTimeout(() => fileInputRef.current?.click(), 100)
+    } else if (type === 'text') {
+      setInput(query)
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
+  }
 
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
-    const currentInput = input; const currentImage = selectedImage
+
+    const currentInput = input
+    const currentImage = selectedImage
     let queryType = 'standard'
     if (currentImage) queryType = 'image'
     else if (currentInput.trim().length < 20) queryType = 'simple'
+
     const newMsg = { role: 'user', content: currentInput, image: currentImage }
     setMessages((p) => [...p, newMsg])
     setMessages((p) => [...p, { role: 'assistant', content: '', queryType }])
-    setInput(''); setSelectedImage(null); setIsSending(true); if (fileInputRef.current) fileInputRef.current.value = ''
+
+    setInput('')
+    setSelectedImage(null)
+    setIsSending(true)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
     let activeChatId = currentChatId
     if (session && !activeChatId && !creatingChatRef.current) {
       creatingChatRef.current = true
-      const { data: newChat } = await supabase.from('chats').insert({ user_id: session.user.id, title: currentInput.slice(0, 30) + '...' }).select().single()
-      if (newChat) { activeChatId = newChat.id; setCurrentChatId(newChat.id) }
+      const { data: newChat } = await supabase
+        .from('chats')
+        .insert({
+          user_id: session.user.id,
+          title: currentInput.slice(0, 30) + '...',
+        })
+        .select()
+        .single()
+      if (newChat) {
+        activeChatId = newChat.id
+        setCurrentChatId(newChat.id)
+      }
       creatingChatRef.current = false
     }
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 45000)
+
     try {
-      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [...messages, newMsg], image: currentImage, chatId: activeChatId, mode: activeMode, deviceFingerprint: fingerprintRef.current }), signal: controller.signal })
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, newMsg],
+          image: currentImage,
+          chatId: activeChatId,
+          mode: activeMode,
+          deviceFingerprint: fingerprintRef.current,
+        }),
+        signal: controller.signal,
+      })
       clearTimeout(timeoutId)
       if (!res.ok) {
-        if (res.status === 402) { setShowPricingModal(true); throw new Error('Subscription required.') }
-        if (res.status === 429) { setShowAuthModal(true); throw new Error('Demo limit reached.') }
+        if (res.status === 402) {
+          setShowPricingModal(true)
+          throw new Error('Subscription required.')
+        }
+        if (res.status === 429) {
+          setShowAuthModal(true)
+          throw new Error('Demo limit reached.')
+        }
         throw new Error(`Server error: ${res.status}`)
       }
       const data = await res.json()
-      setMessages((p) => { const u = [...p]; u[u.length - 1].content = data.message || 'No response text.'; return u })
+      setMessages((p) => {
+        const u = [...p]
+        u[u.length - 1].content = data.message || 'No response text.'
+        return u
+      })
     } catch (err) {
       let errorMessage = 'An error occurred.'
-      if (err.name === 'AbortError') errorMessage = 'Request timed out. The system is busy, please try again.'
+      if (err.name === 'AbortError')
+        errorMessage = 'Request timed out. The system is busy, please try again.'
       else errorMessage = err.message
-      setMessages((p) => { const u = [...p]; u[u.length - 1].content = `Error: ${errorMessage}`; return u })
-    } finally { setIsSending(false) }
+      setMessages((p) => {
+        const u = [...p]
+        u[u.length - 1].content = `Error: ${errorMessage}`
+        return u
+      })
+    } finally {
+      setIsSending(false)
+    }
   }
 
-  const handleImage = async (e) => { const file = e.target.files?.[0]; if (!file) return; try { const compressed = await compressImage(file); setSelectedImage(compressed); setActiveMode('image'); setShowDemo(true) } catch (error) { console.error(error) } }
-  const handleNewChat = () => { setMessages([]); setInput(''); setSelectedImage(null); setCurrentChatId(null); setActiveMode('chat') }
-  const handleSignOut = async (e) => { if (e && e.preventDefault) e.preventDefault(); try { await supabase.auth.signOut(); localStorage.clear(); sessionStorage.clear(); window.location.href = '/' } catch (error) { window.location.href = '/' } }
+  const handleImage = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const compressed = await compressImage(file)
+      setSelectedImage(compressed)
+      setActiveMode('image')
+      setShowDemo(true)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleNewChat = () => {
+    setMessages([])
+    setInput('')
+    setSelectedImage(null)
+    setCurrentChatId(null)
+    setActiveMode('chat')
+  }
+
+  const handleSignOut = async (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    try {
+      await supabase.auth.signOut()
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.href = '/'
+    } catch (error) {
+      window.location.href = '/'
+    }
+  }
+
   const handleCheckout = async (priceId, planName) => {
-    const { data: { session: currentSession } } = await supabase.auth.getSession()
-    if (!currentSession) { setShowPricingModal(false); setAuthModalMessage('Create an account to start your 7-day free trial.'); setShowAuthModal(true); return }
-    if (!priceId) { alert('Invalid price selected'); return }
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession()
+    if (!currentSession) {
+      setShowPricingModal(false)
+      setAuthModalMessage('Create an account to start your 7-day free trial.')
+      setShowAuthModal(true)
+      return
+    }
+    if (!priceId) {
+      alert('Invalid price selected')
+      return
+    }
     setCheckoutLoading(planName)
     try {
-      const res = await fetch('/api/create-checkout-session', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${currentSession.access_token}` }, body: JSON.stringify({ priceId }) })
-      if (!res.ok) { const errorData = await res.json().catch(() => ({})); throw new Error(errorData.error || 'Checkout failed') }
-      const data = await res.json(); if (data.url) window.location.href = data.url; else throw new Error('No checkout URL received')
-    } catch (error) { alert('Failed to start checkout: ' + error.message); setCheckoutLoading(null) }
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentSession.access_token}`,
+        },
+        body: JSON.stringify({ priceId }),
+      })
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Checkout failed')
+      }
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else throw new Error('No checkout URL received')
+    } catch (error) {
+      alert('Failed to start checkout: ' + error.message)
+      setCheckoutLoading(null)
+    }
   }
 
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages])
-  useEffect(() => { if (messages.length > 0 && inputRef.current && !isSending) inputRef.current.focus() }, [messages.length, isSending])
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [messages])
 
-  if (isLoading) return <><GlobalStyles /><div className="fixed inset-0 bg-white flex items-center justify-center"><div className="loader" /></div></>
+  useEffect(() => {
+    if (messages.length > 0 && inputRef.current && !isSending) {
+      inputRef.current.focus()
+    }
+  }, [messages.length, isSending])
+
+  if (isLoading)
+    return (
+      <>
+        <GlobalStyles />
+        <div className="fixed inset-0 bg-white flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      </>
+    )
 
   return (
     <>
       <GlobalStyles />
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} message={authModalMessage} />
-      <ExitModal isOpen={showExitModal} onClose={() => setShowExitModal(false)} onConvert={() => { setShowExitModal(false); setShowAuthModal(true) }} />
-      {showPricingModal && <FullScreenPricing handleCheckout={handleCheckout} loading={checkoutLoading} onClose={() => setShowPricingModal(false)} />}
-      {showOnboarding && <OnboardingModal isOpen={showOnboarding} onClose={() => setShowOnboarding(false)} onAction={handleOnboardingAction} />}
-      <div className="relative min-h-screen w-full overflow-hidden bg-white selection:bg-emerald-100 selection:text-emerald-900">
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        message={authModalMessage}
+      />
+      <ExitModal
+        isOpen={showExitModal}
+        onClose={() => setShowExitModal(false)}
+        onConvert={() => {
+          setShowExitModal(false)
+          setShowAuthModal(true)
+        }}
+      />
+      {showPricingModal && (
+        <FullScreenPricing
+          handleCheckout={handleCheckout}
+          loading={checkoutLoading}
+          onClose={() => setShowPricingModal(false)}
+        />
+      )}
+      {showOnboarding && (
+        <OnboardingModal
+          isOpen={showOnboarding}
+          onClose={() => setShowOnboarding(false)}
+          onAction={handleOnboardingAction}
+        />
+      )}
+      <div className="relative min-h-screen w-full overflow-hidden bg-white selection:bg-slate-200 selection:text-slate-900">
         <div className="relative z-10 flex flex-col h-[100dvh]">
           <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white z-30">
-            <div className="flex items-center gap-6"><div className={`font-bold tracking-tight text-xl ${outfit.className} text-slate-900`}>protocol<span className="text-emerald-700">LM</span></div><div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 h-8 overflow-hidden"><NavBarTicker /></div></div>
+            <div className="flex items-center gap-6">
+              <div
+                className={`font-bold tracking-tight text-xl ${outfit.className} text-slate-900`}
+              >
+                protocolLM
+              </div>
+              <div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 h-8 overflow-hidden">
+                <NavBarTicker />
+              </div>
+            </div>
             <div className="flex items-center gap-4">
               {!session ? (
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowAuthModal(true)} className={`text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors ${inter.className}`}>Sign In</button>
-                  <button onClick={() => setShowPricingModal(true)} className={`inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm transition-colors ${inter.className}`}><Icons.Check />Start Free Trial</button>
-                  <button onClick={() => startDemo('chat')} className={`hidden md:inline-flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white px-4 md:px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors ${inter.className}`}>Try Free Demo</button>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className={`text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors ${inter.className}`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => setShowPricingModal(true)}
+                    className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm transition-colors ${inter.className}`}
+                  >
+                    <Icons.Check />
+                    Start Free Trial
+                  </button>
+                  <button
+                    onClick={() => startDemo('chat')}
+                    className={`hidden md:inline-flex items-center gap-1 bg-slate-900 hover:bg-black text-white px-4 md:px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors ${inter.className}`}
+                  >
+                    Try Free Demo
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <button onClick={handleNewChat} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"><Icons.Plus /></button>
+                  <button
+                    onClick={handleNewChat}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                  >
+                    <Icons.Plus />
+                  </button>
                   <div className="relative" ref={userMenuRef}>
-                    <button onClick={() => setShowUserMenu(!showUserMenu)} className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">{session.user.email[0].toUpperCase()}</button>
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                    >
+                      {session.user.email[0].toUpperCase()}
+                    </button>
                     {showUserMenu && (
                       <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
-                        <button onClick={() => setShowPricingModal(true)} className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"><Icons.Settings /> Subscription</button>
+                        <button
+                          onClick={() => setShowPricingModal(true)}
+                          className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
+                        >
+                          <Icons.Settings /> Subscription
+                        </button>
                         <div className="h-px bg-slate-100 my-1" />
-                        <button onClick={handleSignOut} className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 rounded-md transition-colors"><Icons.LogOut /> Log out</button>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full px-4 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 flex items-center gap-3 rounded-md transition-colors"
+                        >
+                          <Icons.LogOut /> Log out
+                        </button>
                       </div>
                     )}
                   </div>
@@ -650,13 +1369,112 @@ export default function Page() {
             </div>
           </header>
           <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto bg-white">
-            {!session && messages.length === 0 && !showDemo ? <LandingPage onAction={(mode) => startDemo(mode)} onSignUp={() => setShowAuthModal(true)} /> : (
+            {!session && messages.length === 0 && !showDemo ? (
+              <LandingPage
+                onAction={(mode) => startDemo(mode)}
+                onSignUp={() => setShowAuthModal(true)}
+              />
+            ) : (
               <>
                 <div className="flex-1 overflow-y-auto w-full py-8" ref={scrollRef}>
-                  {messages.length === 0 ? <div className="h-full flex flex-col items-center justify-center p-6 text-center"><p className={`text-slate-500 text-base max-w-md leading-relaxed ${inter.className}`}>{activeMode === 'image' ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.' : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}</p></div> : <div className="flex flex-col w-full max-w-4xl mx-auto py-8 px-6 gap-8">{messages.map((msg, idx) => <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[90%] px-2 ${msg.role === 'user' ? 'text-slate-900 font-medium' : 'text-slate-800'}`}>{msg.image && <img src={msg.image} alt="Upload" className="rounded-lg mb-4 max-h-80 object-contain border border-slate-200" />}{msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? <ThinkingIndicator queryType={msg.queryType || 'standard'} /> : <FormattedMessage content={msg.content} />}</div></div>)}{isDemoGuest && <div className="mt-6 p-4 rounded-xl border border-slate-200 bg-white/90 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm"><div><p className={`text-xs font-semibold text-slate-900 mb-1 ${inter.className}`}>Liking the demo?</p><p className={`text-sm text-slate-600 max-w-xl ${inter.className}`}>You&apos;re using the free 3-query demo. Unlock <span className="font-semibold text-slate-900">unlimited inspections for your restaurant</span> with a protocolLM subscription.</p></div><div className="flex gap-2 shrink-0"><button onClick={() => setShowPricingModal(true)} className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-emerald-700 hover:bg-emerald-800 text-white">View Pricing &amp; Upgrade</button><button onClick={() => setShowAuthModal(true)} className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Create Account</button></div></div>}</div>}
+                  {messages.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                      <p
+                        className={`text-slate-500 text-base max-w-md leading-relaxed ${inter.className}`}
+                      >
+                        {activeMode === 'image'
+                          ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
+                          : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col w-full max-w-4xl mx-auto py-8 px-6 gap-8">
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-full flex ${
+                            msg.role === 'user' ? 'justify-end' : 'justify-start'
+                          }`}
+                        >
+                          <div
+                            className={`max-w-[90%] px-2 ${
+                              msg.role === 'user'
+                                ? 'text-slate-900 font-medium'
+                                : 'text-slate-800'
+                            }`}
+                          >
+                            {msg.image && (
+                              <img
+                                src={msg.image}
+                                alt="Upload"
+                                className="rounded-lg mb-4 max-h-80 object-contain border border-slate-200"
+                              />
+                            )}
+                            {msg.role === 'assistant' &&
+                            msg.content === '' &&
+                            isSending &&
+                            idx === messages.length - 1 ? (
+                              <ThinkingIndicator
+                                queryType={msg.queryType || 'standard'}
+                              />
+                            ) : (
+                              <FormattedMessage content={msg.content} />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {isDemoGuest && (
+                        <div className="mt-6 p-4 rounded-xl border border-slate-200 bg-white/90 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-sm">
+                          <div>
+                            <p
+                              className={`text-xs font-semibold text-slate-900 mb-1 ${inter.className}`}
+                            >
+                              Liking the demo?
+                            </p>
+                            <p
+                              className={`text-sm text-slate-600 max-w-xl ${inter.className}`}
+                            >
+                              You&apos;re using the free 3-query demo. Unlock{' '}
+                              <span className="font-semibold text-slate-900">
+                                unlimited inspections for your restaurant
+                              </span>{' '}
+                              with a protocolLM subscription.
+                            </p>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => setShowPricingModal(true)}
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-black hover:bg-slate-900 text-white"
+                            >
+                              View Pricing &amp; Upgrade
+                            </button>
+                            <button
+                              onClick={() => setShowAuthModal(true)}
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                            >
+                              Create Account
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="w-full shrink-0 z-20 bg-white border-t border-slate-100 pt-4">
-                  <InputBox input={input} setInput={setInput} handleSend={handleSend} handleImage={handleImage} isSending={isSending} fileInputRef={fileInputRef} selectedImage={selectedImage} setSelectedImage={setSelectedImage} inputRef={inputRef} activeMode={activeMode} setActiveMode={setActiveMode} session={session} />
+                  <InputBox
+                    input={input}
+                    setInput={setInput}
+                    handleSend={handleSend}
+                    handleImage={handleImage}
+                    isSending={isSending}
+                    fileInputRef={fileInputRef}
+                    selectedImage={selectedImage}
+                    setSelectedImage={setSelectedImage}
+                    inputRef={inputRef}
+                    activeMode={activeMode}
+                    setActiveMode={setActiveMode}
+                    session={session}
+                  />
                 </div>
               </>
             )}
