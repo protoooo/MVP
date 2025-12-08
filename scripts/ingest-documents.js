@@ -1,118 +1,146 @@
-import { GoogleAuth } from 'google-auth-library'
-import { createClient } from '@supabase/supabase-js'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import pdfParse from 'pdf-parse'
-import 'dotenv/config'
+import { createClient } from '@supabase/supabase-js';
+import { GoogleAuth } from 'google-auth-library';
+import fs from 'fs';
+import path from 'path';
+import pdf from 'pdf-parse/lib/pdf-parse.js';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const WASHTENAW_DOCS_PATH = path.join(process.cwd(), 'public/documents/washtenaw')
+dotenv.config({ path: '.env.local' });
 
-// --- CONFIG ---
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID
-const LOCATION = 'us-central1'
-const MODEL_ID = 'text-embedding-004'
+// --- ENV CHECKS ---
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT_ID;
+const CREDENTIALS_JSON = process.env.GOOGLE_CREDENTIALS_JSON;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+if (!SUPABASE_URL || !SUPABASE_KEY || !PROJECT_ID || !CREDENTIALS_JSON) {
+  console.error('❌ Missing Env Vars. Check .env.local');
+  process.exit(1);
+}
 
-// --- DIRECT API HELPER ---
-async function getEmbedding(auth, text) {
-  const client = await auth.getClient()
-  const token = await client.getAccessToken()
-  
-  const url = `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL_ID}:predict`
-  
+// --- SETUP CLIENTS ---
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const auth = new GoogleAuth({
+  credentials: JSON.parse(CREDENTIALS_JSON),
+  scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
+
+async function getEmbedding(text) {
+  const client = await auth.getClient();
+  const accessToken = await client.getAccessToken();
+  const token = accessToken.token;
+
+  const url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/publishers/google/models/text-embedding-004:predict`;
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token.token}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       instances: [{ content: text }]
     })
-  })
+  });
 
   if (!response.ok) {
-    const err = await response.text()
-    throw new Error(`API Error: ${response.status} ${err}`)
+    const errText = await response.text();
+    // If rate limited, throw specific error to handle retry
+    if (response.status === 429) throw new Error('RATE_LIMIT');
+    throw new Error(`Google API Error: ${response.status} - ${errText}`);
   }
 
-  const result = await response.json()
-  // The structure for text-embedding-004 is predictions[0].embeddings.values
-  return result.predictions[0].embeddings.values
+  const data = await response.json();
+  return data.predictions[0].embeddings.values;
 }
 
-async function run() {
-  console.log('🚀 Starting "Bulletproof" Ingestion...')
-  
-  // 1. Setup Auth
-  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON)
-  const auth = new GoogleAuth({
-    credentials: {
-      client_email: credentials.client_email,
-      private_key: credentials.private_key.replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/cloud-platform']
-  })
-
-  if (!fs.existsSync(WASHTENAW_DOCS_PATH)) {
-    console.error(`❌ Folder missing: ${WASHTENAW_DOCS_PATH}`)
-    return
-  }
-
-  const files = fs.readdirSync(WASHTENAW_DOCS_PATH).filter(f => f.endsWith('.pdf'))
-  console.log(`📚 Found ${files.length} PDFs`)
-
-  for (const file of files) {
-    console.log(`\n📄 Processing: ${file}`)
-    const buffer = fs.readFileSync(path.join(WASHTENAW_DOCS_PATH, file))
-    
-    try {
-        const data = await pdfParse(buffer)
-        let text = data.text.replace(/\s+/g, ' ').trim()
-        
-        if (text.length < 50) {
-            console.log('   ⚠️ Text empty. Skipping (likely an image PDF).')
-            continue
-        }
-
-        const chunks = []
-        for (let i = 0; i < text.length; i += 800) {
-            chunks.push(text.slice(i, i + 800))
-        }
-        console.log(`   ✂️ Created ${chunks.length} chunks`)
-
-        for (let i = 0; i < chunks.length; i++) {
-            try {
-                const embedding = await getEmbedding(auth, chunks[i])
-                
-                if (embedding) {
-                    await supabase.from('documents').insert({
-                        content: chunks[i],
-                        embedding: embedding,
-                        metadata: { source: file, chunk: i }
-                    })
-                    process.stdout.write('.')
-                }
-            } catch (err) {
-                 process.stdout.write('x')
-                 // If rate limited, wait a bit
-                 if (err.message.includes('429')) await new Promise(r => setTimeout(r, 2000))
-            }
-            // Small delay to be nice to the API
-            await new Promise(r => setTimeout(r, 100))
-        }
-        console.log(' Done!')
-    } catch (e) {
-        console.error('   ❌ Error:', e.message)
+const chunkText = (text, chunkSize = 1500) => { // Increased chunk size to reduce total requests
+  const words = text.split(/\s+/);
+  const chunks = [];
+  let currentChunk = [];
+  let currentLength = 0;
+  for (const word of words) {
+    if (currentLength + word.length > chunkSize) {
+      chunks.push(currentChunk.join(' '));
+      currentChunk = [word];
+      currentLength = word.length;
+    } else {
+      currentChunk.push(word);
+      currentLength += word.length + 1;
     }
   }
+  if (currentChunk.length > 0) chunks.push(currentChunk.join(' '));
+  return chunks;
+};
+
+// Sleep function
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function run() {
+  console.log('🚀 Starting "Slow & Steady" Ingestion...');
+  
+  let docsDir = path.join(process.cwd(), 'public/documents');
+  if (!fs.existsSync(docsDir)) {
+     if (fs.existsSync(path.join(process.cwd(), 'public/washtenaw'))) {
+       docsDir = path.join(process.cwd(), 'public/washtenaw');
+     } else {
+       console.error('❌ Cannot find PDF folder');
+       process.exit(1);
+     }
+  }
+
+  const files = fs.readdirSync(docsDir).filter(f => f.toLowerCase().endsWith('.pdf'));
+  console.log(`📂 Found ${files.length} PDFs. This will take time to avoid rate limits.`);
+
+  for (const file of files) {
+    console.log(`\n📄 Processing: ${file}`);
+    const filePath = path.join(docsDir, file);
+    
+    try {
+        const dataBuffer = fs.readFileSync(filePath);
+        const data = await pdf(dataBuffer);
+        const text = data.text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+        const chunks = chunkText(text);
+        console.log(`   👉 Split into ${chunks.length} chunks`);
+
+        for (let i = 0; i < chunks.length; i++) {
+          let retries = 0;
+          let success = false;
+          
+          while (!success && retries < 5) {
+            try {
+              const embedding = await getEmbedding(chunks[i]);
+              
+              await supabase.from('documents').insert({
+                content: chunks[i],
+                metadata: { source: file, chunk_index: i },
+                embedding: embedding
+              });
+
+              process.stdout.write('█');
+              success = true;
+              
+              // ⚠️ CRITICAL: 1.5 second pause between EVERY request to satisfy Google Quota
+              await sleep(1500); 
+
+            } catch (err) {
+              if (err.message === 'RATE_LIMIT') {
+                process.stdout.write('⏳'); // Wait symbol
+                await sleep(5000 * (retries + 1)); // Exponential backoff (5s, 10s, 15s...)
+                retries++;
+              } else {
+                console.error(`\n   ❌ Error chunk ${i}:`, err.message);
+                break; // Skip chunk on fatal error
+              }
+            }
+          }
+        }
+    } catch (fileErr) {
+        console.error(`   ❌ Failed to read file:`, fileErr.message);
+    }
+  }
+  console.log('\n\n✅ Ingestion Complete!');
 }
 
-run()
+run();
