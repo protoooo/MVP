@@ -5,8 +5,6 @@ import { cookies } from 'next/headers'
 import { searchDocuments } from '@/lib/searchDocs'
 import { checkRateLimit, incrementUsage } from '@/lib/rateLimit'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
-import { trackEvent } from '@/lib/analytics'
-import { logError, logPerformance } from '@/lib/monitoring'
 
 export const dynamic = 'force-dynamic'
 
