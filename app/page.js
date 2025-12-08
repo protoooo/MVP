@@ -300,92 +300,86 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   )
 }
 
-// --- LANDING PAGE: neutral / “gov tool” vibe ---
 const LandingPage = ({ onAction, onSignUp }) => {
   return (
-    <div className="w-full bg-white relative z-10 pb-20">
-      {/* SECTION 1: HERO – no fill, simple layout */}
-      <section className="border-b border-slate-200 bg-white">
+    <div className="w-full bg-white relative z-10 pb-24">
+      {/* SECTION 1: HERO – CLEAN GOV-STYLE */}
+      <section className="relative border-b border-slate-200 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-20 flex flex-col md:flex-row items-start md:items-center gap-10">
           <div className="flex-1">
-            <p
-              className={`text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase mb-4 ${inter.className}`}
-            >
-              WASHTENAW COUNTY • FOOD SERVICE
+            <p className={`text-[11px] font-semibold tracking-[0.2em] text-slate-500 mb-4 uppercase ${inter.className}`}>
+              Washtenaw County · Food Service
             </p>
             <h1
-              className={`text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-5 ${inter.className}`}
+              className={`text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${inter.className}`}
             >
-              Spot violations
-              <br />
-              <span className="font-bold">before the inspector does.</span>
+              A compliance console{" "}
+              <span className="block">for your next health inspection.</span>
             </h1>
             <p
-              className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-6 ${inter.className}`}
+              className={`text-sm md:text-base text-slate-600 max-w-xl leading-relaxed mb-8 ${inter.className}`}
             >
-              protocolLM is a focused inspection support tool. Upload a photo or
-              ask a question and get responses grounded in the Michigan Modified
-              Food Code and local enforcement guidance, powered by OpenAI.
+              Upload a photo or ask a question and receive structured findings
+              based on the Michigan Modified Food Code and Washtenaw County
+              enforcement materials.
             </p>
-            <div className="flex flex-wrap items-center gap-3 mb-3">
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <button
                 onClick={() => onAction('chat')}
-                className="inline-flex items-center justify-center bg-slate-900 hover:bg-black text-white text-sm font-semibold py-3 px-6 rounded-md transition-all duration-150 shadow-sm"
+                className="btn-press inline-flex items-center justify-center bg-slate-900 hover:bg-black text-white text-sm font-semibold py-3 px-6 rounded-lg transition-all duration-150 tracking-wide"
               >
-                Try Free Demo
+                Start free demo
               </button>
               <button
                 onClick={onSignUp}
-                className="inline-flex items-center justify-center bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 text-sm font-medium py-3 px-5 rounded-md transition-colors"
+                className="btn-press inline-flex items-center justify-center border border-slate-300 hover:border-slate-900 text-slate-800 text-sm font-semibold py-3 px-6 rounded-lg bg-white transition-all duration-150"
               >
-                Create Account
+                Create account
               </button>
             </div>
-            <p
-              className={`text-xs text-slate-500 ${inter.className}`}
-            >
-              3 free demo queries • No card required • Not affiliated with any
-              government agency
+
+            <p className={`mt-4 text-[11px] text-slate-500 font-medium ${inter.className}`}>
+              No installation · Works in any modern browser · 3 demo requests included
             </p>
           </div>
-          <div className="w-full md:w-[280px] lg:w-[320px]">
-            <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/60">
+
+          <div className="w-full md:w-[320px] lg:w-[360px]">
+            <div className="border border-slate-200 rounded-xl p-5 bg-slate-50/60">
               <p
-                className={`text-xs font-semibold text-slate-600 mb-3 tracking-[0.14em] uppercase ${inter.className}`}
+                className={`text-xs font-semibold text-slate-500 tracking-[0.18em] uppercase mb-3 ${inter.className}`}
               >
-                QUICK FACT
+                Example output
               </p>
-              <p
-                className={`text-sm text-slate-800 mb-4 leading-relaxed ${inter.className}`}
-              >
-                A single Priority (P) violation can trigger re-inspection fees,
-                follow-up visits, and potential license action.
-              </p>
-              <div className="space-y-2 text-xs text-slate-700">
-                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
-                  <span>Re-inspection fee</span>
-                  <span className={`${mono.className} font-semibold`}>$125–$350</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
-                  <span>Daily fines</span>
-                  <span className={`${mono.className} font-semibold`}>Up to $1,000</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Misdemeanor penalties</span>
-                  <span className={`${mono.className} font-semibold`}>Up to $2,000</span>
-                </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-4 text-xs text-slate-700 space-y-2">
+                <p className="font-semibold text-slate-900">
+                  Facility: Reach-in cooler – prep line
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">
+                    Potential issues:
+                  </span>{" "}
+                  Raw animal products stored above ready-to-eat food; thermometer
+                  not visible in the warmest area of the unit.
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-900">
+                    References:
+                  </span>{" "}
+                  Michigan Modified Food Code §§ 3-302.11, 4-204.112
+                </p>
+                <p className="text-slate-500">
+                  Always verify findings against your latest inspection report
+                  and county guidance.
+                </p>
               </div>
-              <p className={`mt-4 text-[11px] text-slate-500 ${inter.className}`}>
-                Use protocolLM to review photos and questions against the same
-                standards inspectors use—before inspection day.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* SECTION 2: HOW IT WORKS */}
-      <section className="py-16 px-6 bg-white">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2
@@ -393,150 +387,144 @@ const LandingPage = ({ onAction, onSignUp }) => {
             >
               How it works
             </h2>
-            <p className={`text-sm text-slate-600 ${inter.className}`}>
-              A simple inspection assistant for busy operators
+            <p className={`text-slate-600 text-sm ${inter.className}`}>
+              Built for operators who want a clear, repeatable check before an inspection.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
-              <div className="text-slate-500 mb-5">
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+              <div className="text-slate-500 mb-4">
                 <Icons.Camera />
               </div>
-              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                1. Capture
+              <h3
+                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+              >
+                1. Capture the area
               </h3>
-              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                Use any smartphone camera to photograph prep lines, coolers, or
-                dish areas. No app install.
+              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
+                Use any smartphone camera to photograph storage, prep, or warewashing
+                areas. No app install is required.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
-              <div className="text-slate-500 mb-5">
+
+            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+              <div className="text-slate-500 mb-4">
                 <Icons.Zap />
               </div>
-              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                2. Analyze
+              <h3
+                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+              >
+                2. Automated review
               </h3>
-              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                OpenAI evaluates the image or question against the Michigan Modified
-                Food Code and related guidance.
+              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
+                A large language model, via a third-party API, cross-checks what it
+                sees against the Michigan Food Code and Washtenaw County documents.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
-              <div className="text-slate-500 mb-5">
+
+            <div className="bg-white border border-slate-200 p-7 rounded-xl hover:shadow-sm transition-shadow duration-150">
+              <div className="text-slate-500 mb-4">
                 <Icons.FileText />
               </div>
-              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                3. Review
+              <h3
+                className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}
+              >
+                3. Structured summary
               </h3>
-              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-                Receive a structured summary of likely violations, risk level, and
-                corrective steps in plain language.
+              <p className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}>
+                Receive a plain-language summary of likely violations, related sections,
+                and items to correct before your next visit.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: ROI DATA (Monochrome) */}
-      <section className="py-16 px-6 bg-slate-50 border-y border-slate-200">
+      {/* SECTION 3: VIOLATION COSTS – NEUTRAL COLORS */}
+      <section className="py-20 px-6 bg-slate-50 border-y border-slate-200">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2
               className={`text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight ${inter.className}`}
             >
-              Violation costs add up
+              Why operators run pre-inspection checks
             </h2>
-            <p className={`text-sm text-slate-600 ${inter.className}`}>
-              Examples based on common enforcement actions
+            <p className={`text-slate-600 text-sm ${inter.className}`}>
+              Local citations add up quickly when issues repeat.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white border border-slate-200 p-8 rounded-lg">
-              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                Re-inspection
-              </h3>
-              <p
-                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                title: 'Re-inspection fees',
+                value: '$125 – $350',
+                desc: 'Charged per follow-up visit until items are resolved.',
+              },
+              {
+                title: 'Daily penalties',
+                value: 'Up to $1,000 / day',
+                desc: 'For continuing violations under Michigan law.',
+              },
+              {
+                title: 'Misdemeanor fines',
+                value: 'Up to $2,000',
+                desc: 'Per occurrence under Sec. 20199.',
+              },
+              {
+                title: 'Operational fallout',
+                value: '$4,000+',
+                desc: 'Lost revenue, product loss, and legal or consulting costs.',
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="bg-white border border-slate-200 p-7 rounded-xl"
               >
-                $125–$350
-              </p>
-              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
-                Typical fee per follow-up visit until issues are resolved.
-              </p>
-            </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-lg">
-              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                Daily fines
-              </h3>
-              <p
-                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
-              >
-                Up to $1,000
-              </p>
-              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
-                For continuing violations that are not corrected promptly.
-              </p>
-            </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-lg">
-              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                Misdemeanor
-              </h3>
-              <p
-                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
-              >
-                Up to $2,000
-              </p>
-              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
-                Sec. 20199 penalties, depending on the nature of the violation.
-              </p>
-            </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-lg">
-              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
-                Outbreak impact
-              </h3>
-              <p
-                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
-              >
-                $4,000+
-              </p>
-              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
-                Lost revenue, product discard, and legal costs—not including
-                reputation damage.
-              </p>
-            </div>
+                <h3
+                  className={`font-semibold text-slate-900 mb-2 text-sm ${inter.className}`}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
+                >
+                  {card.value}
+                </p>
+                <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+                  {card.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <footer className="py-10 border-t border-slate-200 text-center">
+      <footer className="py-10 border-t border-slate-200 text-center bg-white">
         <p
-          className={`text-slate-500 font-medium mb-3 text-xs ${inter.className}`}
+          className={`text-slate-500 font-medium mb-4 text-xs tracking-wide ${inter.className}`}
         >
-          Designed for Washtenaw County food service operators. Not an official
-          government product.
+          Designed for Washtenaw County food service establishments
         </p>
-        <div className="flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium">
+        <div
+          className={`flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium ${inter.className}`}
+        >
           <Link href="/terms" className="hover:text-slate-900 transition-colors">
             Terms of Service
           </Link>
-          <Link
-            href="/privacy"
-            className="hover:text-slate-900 transition-colors"
-          >
+          <Link href="/privacy" className="hover:text-slate-900 transition-colors">
             Privacy Policy
           </Link>
-          <Link
-            href="/report-issue"
-            className="hover:text-slate-900 transition-colors"
-          >
-            Report Issue
+          <Link href="/report-issue" className="hover:text-slate-900 transition-colors">
+            Report an issue
           </Link>
         </div>
       </footer>
     </div>
   )
 }
+
 
 const InputBox = ({
   input,
@@ -683,7 +671,6 @@ const InputBox = ({
 const AuthModal = ({ isOpen, onClose, message }) => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const supabase = createClient()
 
@@ -696,30 +683,88 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     e.preventDefault()
     setLoading(true)
     setStatusMessage('')
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: getRedirectUrl() },
     })
-    if (error) setStatusMessage('Error: ' + error.message)
-    else setStatusMessage('✓ Check your email for the login link.')
+
+    if (error) {
+      setStatusMessage('Error: ' + error.message)
+    } else {
+      setStatusMessage('✓ Check your email for the login link.')
+    }
     setLoading(false)
   }
 
-  const handleGoogleAuth = async () => {
-    setGoogleLoading(true)
-    setStatusMessage('')
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: getRedirectUrl(),
-        queryParams: { access_type: 'offline', prompt: 'consent' },
-      },
-    })
-    if (error) {
-      setStatusMessage('Error: ' + error.message)
-      setGoogleLoading(false)
-    }
-  }
+  if (!isOpen) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white border border-slate-200 rounded-xl w-full max-w-md p-10 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h2 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${inter.className}`}>
+              {message || 'Sign in to protocolLM'}
+            </h2>
+            <p className={`text-sm text-slate-500 ${inter.className}`}>
+              Enter your work email to receive a secure sign-in link.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            <Icons.X />
+          </button>
+        </div>
+
+        <form onSubmit={handleEmailAuth} className="space-y-5">
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-slate-600 uppercase tracking-wide">
+              Work email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="manager@restaurant.com"
+              required
+              className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-lg transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed text-sm tracking-wide"
+          >
+            {loading ? 'Sending login link…' : 'Send secure login link'}
+          </button>
+        </form>
+
+        {statusMessage && (
+          <div
+            className={`mt-6 p-4 rounded-lg text-sm border ${
+              statusMessage.includes('Error')
+                ? 'bg-red-50 border-red-200 text-red-900'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            }`}
+          >
+            {statusMessage}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 
   if (!isOpen) return null
   return (
