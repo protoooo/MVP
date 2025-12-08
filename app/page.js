@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { getDeviceFingerprint } from '@/lib/deviceFingerprint'
 import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 
 // --- TYPOGRAPHY ---
@@ -131,7 +130,6 @@ const GlobalStyles = () => (
     .animate-ticker-item {
       animation: slideUpFade 4s ease-in-out forwards;
     }
-    /* UPLOAD CIRCLE (Water effect, grayscale) */
     .loader-upload {    
       width: 24px;
       height: 24px;
@@ -146,7 +144,6 @@ const GlobalStyles = () => (
       0% { background-position: 0% 0%; }
       100% { background-position: 0% 100%; } 
     }
-    /* FALLBACK DOTS */
     .loader {
       height: 14px;
       aspect-ratio: 2.5;
@@ -267,7 +264,7 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
     let rafId
     const start = performance.now()
     let lastUpdate = start
-    const tick = (now) => {
+    const tick = (now: number) => {
       const elapsed = now - start
       const ratio = Math.min(elapsed / TOTAL_DURATION, 1)
       const target = Math.min(ratio * 100, MAX_PROGRESS)
@@ -966,7 +963,6 @@ export default function Page() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
   const isDemoGuest = !session
-  const fingerprintRef = useRef(null)
   const creatingChatRef = useRef(false)
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -977,12 +973,6 @@ export default function Page() {
 
   useEffect(() => {
     let mounted = true
-
-    const initFingerprint = async () => {
-      const fp = await getDeviceFingerprint()
-      if (mounted) fingerprintRef.current = fp
-    }
-    initFingerprint()
 
     const init = async () => {
       try {
@@ -1053,7 +1043,7 @@ export default function Page() {
   }, [supabase])
 
   useEffect(() => {
-    const handleExit = (e) => {
+    const handleExit = (e: MouseEvent) => {
       if (
         e.clientY < 10 &&
         !sessionStorage.getItem('exit-shown') &&
@@ -1067,18 +1057,18 @@ export default function Page() {
     return () => document.removeEventListener('mousemove', handleExit)
   }, [session])
 
-  const triggerMode = (mode) => {
+  const triggerMode = (mode: 'chat' | 'image') => {
     setActiveMode(mode)
     if (mode === 'image') fileInputRef.current?.click()
     else inputRef.current?.focus()
   }
 
-  const startDemo = (mode = 'chat') => {
+  const startDemo = (mode: 'chat' | 'image' = 'chat') => {
     setShowDemo(true)
     triggerMode(mode)
   }
 
-  const handleOnboardingAction = (type, query = '') => {
+  const handleOnboardingAction = (type: 'image' | 'text', query = '') => {
     setShowOnboarding(false)
     sessionStorage.setItem('onboarding_complete', 'true')
     if (type === 'image') {
@@ -1089,19 +1079,19 @@ export default function Page() {
     }
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
-    let queryType = 'standard'
+    let queryType: 'simple' | 'standard' | 'image' = 'standard'
     if (currentImage) queryType = 'image'
     else if (currentInput.trim().length < 20) queryType = 'simple'
 
-    const newMsg = { role: 'user', content: currentInput, image: currentImage }
+    const newMsg = { role: 'user' as const, content: currentInput, image: currentImage }
     setMessages((p) => [...p, newMsg])
-    setMessages((p) => [...p, { role: 'assistant', content: '', queryType }])
+    setMessages((p) => [...p, { role: 'assistant' as const, content: '', queryType }])
 
     setInput('')
     setSelectedImage(null)
@@ -1138,7 +1128,6 @@ export default function Page() {
           image: currentImage,
           chatId: activeChatId,
           mode: activeMode,
-          deviceFingerprint: fingerprintRef.current,
         }),
         signal: controller.signal,
       })
@@ -1160,7 +1149,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response text.'
         return u
       })
-    } catch (err) {
+    } catch (err: any) {
       let errorMessage = 'An error occurred.'
       if (err.name === 'AbortError')
         errorMessage = 'Request timed out. The system is busy, please try again.'
@@ -1175,7 +1164,7 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
@@ -1196,7 +1185,7 @@ export default function Page() {
     setActiveMode('chat')
   }
 
-  const handleSignOut = async (e) => {
+  const handleSignOut = async (e?: React.MouseEvent) => {
     if (e && e.preventDefault) e.preventDefault()
     try {
       await supabase.auth.signOut()
@@ -1208,7 +1197,7 @@ export default function Page() {
     }
   }
 
-  const handleCheckout = async (priceId, planName) => {
+  const handleCheckout = async (priceId: string, planName: string) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -1239,7 +1228,7 @@ export default function Page() {
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else throw new Error('No checkout URL received')
-    } catch (error) {
+    } catch (error: any) {
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
     }
@@ -1473,7 +1462,6 @@ export default function Page() {
                     inputRef={inputRef}
                     activeMode={activeMode}
                     setActiveMode={setActiveMode}
-                    session={session}
                   />
                 </div>
               </>
