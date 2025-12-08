@@ -512,24 +512,19 @@ const LandingPage = ({ onAction }) => {
         </div>
       </section>
 
-      <footer className="py-10 border-t border-slate-200 text-center">
-        <p
-          className={`text-slate-500 font-medium mb-4 text-xs tracking-wide ${inter.className}`}
-        >
-          Built for Washtenaw County food service operations
-        </p>
-        <div className="flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium">
-          <Link href="/terms" className="hover:text-slate-900 transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="/privacy" className="hover:text-slate-900 transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="/report-issue" className="hover:text-slate-900 transition-colors">
-            Report an Issue
-          </Link>
-        </div>
-      </footer>
+      <footer className="py-12 border-t border-slate-200 text-center">
+  <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
+    Serving Washtenaw County Food Service Establishments
+  </p>
+  <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
+    <Link href="/terms" className="hover:text-slate-900 transition-colors">
+      Terms of Service
+    </Link>
+    <Link href="/privacy" className="hover:text-slate-900 transition-colors">
+      Privacy Policy
+    </Link>
+  </div>
+</footer>
     </div>
   )
 }
