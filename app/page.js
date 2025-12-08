@@ -7,7 +7,7 @@ import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 
 // --- TYPOGRAPHY ---
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
@@ -111,8 +111,9 @@ const GlobalStyles = () => (
       width: 100%;
       max-width: 100dvw;
       overflow: hidden;
-      color: #475569;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #111827;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+        'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
     .btn-press {
       transition: transform 0.1s ease;
@@ -133,7 +134,7 @@ const GlobalStyles = () => (
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      border: 1px solid #ccc;
+      border: 1px solid #d4d4d8;
       background: linear-gradient(to top, #000000 50%, transparent 50%);
       background-size: 100% 200%;
       background-position: 0% 0%; 
@@ -162,8 +163,8 @@ const GlobalStyles = () => (
     }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.18); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.3); }
     details > summary { list-style: none; }
     details > summary::-webkit-details-marker { display: none; }
     @keyframes springUp {
@@ -185,7 +186,7 @@ const NavBarTicker = () => {
   return (
     <div
       key={index}
-      className="flex items-center gap-2 animate-ticker-item text-[10px] font-bold text-slate-700 uppercase tracking-wide whitespace-nowrap"
+      className="flex items-center gap-2 animate-ticker-item text-[10px] font-semibold text-slate-700 uppercase tracking-wide whitespace-nowrap"
     >
       <Icons.File />
       {TICKER_ITEMS[index]}
@@ -217,14 +218,14 @@ const FormattedMessage = ({ content }) => {
         const isHeader = keywords.some((k) => header.includes(k))
         if (isHeader) {
           return (
-            <div key={idx} className="text-base leading-relaxed text-slate-700">
-              <span className="font-bold text-slate-900">{header}:</span>
+            <div key={idx} className="text-base leading-relaxed text-slate-800">
+              <span className="font-semibold text-slate-900">{header}:</span>
               {body}
             </div>
           )
         }
         return (
-          <div key={idx} className="text-base leading-relaxed text-slate-700">
+          <div key={idx} className="text-base leading-relaxed text-slate-800">
             {line}
           </div>
         )
@@ -286,12 +287,12 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
 
   return (
     <div className="flex flex-col items-start gap-3 p-2">
-      <span className="text-xs font-bold text-slate-600 uppercase tracking-widest animate-pulse">
+      <span className="text-xs font-semibold text-slate-700 uppercase tracking-[0.16em] animate-pulse">
         {text}
       </span>
-      <div className="w-40 h-[22px] rounded-full border-2 border-black bg-white overflow-hidden">
+      <div className="w-40 h-[22px] rounded-full border border-slate-900 bg-white overflow-hidden">
         <div
-          className="h-full bg-black"
+          className="h-full bg-slate-900"
           style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
         />
       </div>
@@ -299,100 +300,138 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   )
 }
 
-// --- LANDING PAGE (Black & White) ---
+// --- LANDING PAGE: neutral / “gov tool” vibe ---
 const LandingPage = ({ onAction, onSignUp }) => {
   return (
-    <div className="w-full bg-white relative z-10 pb-24">
-      {/* SECTION 1: HERO */}
-      <section className="relative h-[30rem] flex flex-col items_center justify-center bg-gradient-to-b from-slate-900 to-slate-800 rounded-b-3xl shadow-xl overflow-hidden">
-        <div className="z-20 text-center px-4 max-w-4xl">
-          <h1
-            className={`text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight mb-6 ${outfit.className}`}
-          >
-            One Photo Could Save <br /> You{' '}
-            <span className="text-slate-100 underline decoration-slate-400/60">
-              Thousands
-            </span>
-          </h1>
-          <p
-            className={`text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 ${inter.className}`}
-          >
-            Washtenaw County health inspectors catch everything. Now you can too.
-            Powered by OpenAI for inspection-grade accuracy.
-          </p>
-          <div className="flex flex-col items-center gap-6">
-            <button
-              onClick={() => onAction('chat')}
-              className="bg-black hover:bg-slate-900 text-white text-base font-bold py-4 px-10 rounded-full transition-all duration-200 uppercase tracking-wide shadow-lg hover:-translate-y-1"
+    <div className="w-full bg-white relative z-10 pb-20">
+      {/* SECTION 1: HERO – no fill, simple layout */}
+      <section className="border-b border-slate-200 bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20 flex flex-col md:flex-row items-start md:items-center gap-10">
+          <div className="flex-1">
+            <p
+              className={`text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase mb-4 ${inter.className}`}
             >
-              Try Free Demo
-            </button>
-            <div className="text-sm text-slate-400 font-medium">
-              3 Free Queries • No Signup Required
+              WASHTENAW COUNTY • FOOD SERVICE
+            </p>
+            <h1
+              className={`text-3xl md:text-4xl lg:text-5xl font-semibold text-slate-900 tracking-tight leading-tight mb-5 ${inter.className}`}
+            >
+              Spot violations
+              <br />
+              <span className="font-bold">before the inspector does.</span>
+            </h1>
+            <p
+              className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-6 ${inter.className}`}
+            >
+              protocolLM is a focused inspection support tool. Upload a photo or
+              ask a question and get responses grounded in the Michigan Modified
+              Food Code and local enforcement guidance, powered by OpenAI.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <button
+                onClick={() => onAction('chat')}
+                className="inline-flex items-center justify-center bg-slate-900 hover:bg-black text-white text-sm font-semibold py-3 px-6 rounded-md transition-all duration-150 shadow-sm"
+              >
+                Try Free Demo
+              </button>
+              <button
+                onClick={onSignUp}
+                className="inline-flex items-center justify-center bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 text-sm font-medium py-3 px-5 rounded-md transition-colors"
+              >
+                Create Account
+              </button>
+            </div>
+            <p
+              className={`text-xs text-slate-500 ${inter.className}`}
+            >
+              3 free demo queries • No card required • Not affiliated with any
+              government agency
+            </p>
+          </div>
+          <div className="w-full md:w-[280px] lg:w-[320px]">
+            <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/60">
+              <p
+                className={`text-xs font-semibold text-slate-600 mb-3 tracking-[0.14em] uppercase ${inter.className}`}
+              >
+                QUICK FACT
+              </p>
+              <p
+                className={`text-sm text-slate-800 mb-4 leading-relaxed ${inter.className}`}
+              >
+                A single Priority (P) violation can trigger re-inspection fees,
+                follow-up visits, and potential license action.
+              </p>
+              <div className="space-y-2 text-xs text-slate-700">
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span>Re-inspection fee</span>
+                  <span className={`${mono.className} font-semibold`}>$125–$350</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span>Daily fines</span>
+                  <span className={`${mono.className} font-semibold`}>Up to $1,000</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Misdemeanor penalties</span>
+                  <span className={`${mono.className} font-semibold`}>Up to $2,000</span>
+                </div>
+              </div>
+              <p className={`mt-4 text-[11px] text-slate-500 ${inter.className}`}>
+                Use protocolLM to review photos and questions against the same
+                standards inspectors use—before inspection day.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* SECTION 2: HOW IT WORKS */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-16 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2
-              className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}
+              className={`text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight ${inter.className}`}
             >
-              How It Works
+              How it works
             </h2>
-            <p className={`text-slate-600 ${inter.className}`}>
-              Professional compliance in three steps
+            <p className={`text-sm text-slate-600 ${inter.className}`}>
+              A simple inspection assistant for busy operators
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
+              <div className="text-slate-500 mb-5">
                 <Icons.Camera />
               </div>
-              <h3
-                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
-              >
-                1. Take Photo
+              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
+                1. Capture
               </h3>
-              <p
-                className={`text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Use any smartphone camera. No app installation required.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                Use any smartphone camera to photograph prep lines, coolers, or
+                dish areas. No app install.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6">
+            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
+              <div className="text-slate-500 mb-5">
                 <Icons.Zap />
               </div>
-              <h3
-                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
-              >
-                2. Automated Analysis
+              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
+                2. Analyze
               </h3>
-              <p
-                className={`text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Uses OpenAI to cross-check against the Michigan Food Code and
-                local guidance in seconds.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                OpenAI evaluates the image or question against the Michigan Modified
+                Food Code and related guidance.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-10 rounded-xl hover:shadow-lg transition-shadow duration-200">
-              <div className="text-slate-400 mb-6">
+            <div className="bg-white border border-slate-200 p-8 rounded-lg hover:shadow-sm transition-shadow">
+              <div className="text-slate-500 mb-5">
                 <Icons.FileText />
               </div>
-              <h3
-                className={`text-xl font-bold text-slate-900 mb-3 ${outfit.className}`}
-              >
-                3. Get Report
+              <h3 className={`text-lg font-semibold text-slate-900 mb-2 ${inter.className}`}>
+                3. Review
               </h3>
-              <p
-                className={`text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Receive detailed violations, potential fines, and remediation
-                steps in plain language.
+              <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
+                Receive a structured summary of likely violations, risk level, and
+                corrective steps in plain language.
               </p>
             </div>
           </div>
@@ -400,98 +439,84 @@ const LandingPage = ({ onAction, onSignUp }) => {
       </section>
 
       {/* SECTION 3: ROI DATA (Monochrome) */}
-      <section className="py-24 px-6 bg-slate-50 border-y border-slate-200">
+      <section className="py-16 px-6 bg-slate-50 border-y border-slate-200">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2
-              className={`text-3xl font-bold text-slate-900 mb-4 tracking-tight ${outfit.className}`}
+              className={`text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight ${inter.className}`}
             >
-              Violation Costs
+              Violation costs add up
             </h2>
-            <p className={`text-slate-600 ${inter.className}`}>
-              Potential financial impact of citations
+            <p className={`text-sm text-slate-600 ${inter.className}`}>
+              Examples based on common enforcement actions
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <h3
-                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
-              >
+            <div className="bg-white border border-slate-200 p-8 rounded-lg">
+              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
                 Re-inspection
               </h3>
               <p
-                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
               >
-                $125 - $350
+                $125–$350
               </p>
-              <p
-                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Fees per visit until resolved.
+              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+                Typical fee per follow-up visit until issues are resolved.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <h3
-                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
-              >
-                Daily Fines
+            <div className="bg-white border border-slate-200 p-8 rounded-lg">
+              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
+                Daily fines
               </h3>
               <p
-                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
               >
-                $1,000 / day
+                Up to $1,000
               </p>
-              <p
-                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                For continuing violations.
+              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+                For continuing violations that are not corrected promptly.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <h3
-                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
-              >
+            <div className="bg-white border border-slate-200 p-8 rounded-lg">
+              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
                 Misdemeanor
               </h3>
               <p
-                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
               >
                 Up to $2,000
               </p>
-              <p
-                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Sec. 20199 fines per occurrence.
+              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+                Sec. 20199 penalties, depending on the nature of the violation.
               </p>
             </div>
-            <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <h3
-                className={`font-bold text-slate-900 mb-2 ${outfit.className}`}
-              >
-                Outbreak
+            <div className="bg-white border border-slate-200 p-8 rounded-lg">
+              <h3 className={`font-semibold text-slate-900 mb-2 ${inter.className}`}>
+                Outbreak impact
               </h3>
               <p
-                className={`text-2xl font-bold text-slate-900 mb-2 ${mono.className}`}
+                className={`text-2xl font-semibold text-slate-900 mb-1 ${mono.className}`}
               >
                 $4,000+
               </p>
-              <p
-                className={`text-sm text-slate-600 leading-relaxed ${inter.className}`}
-              >
-                Lost revenue and legal fees.
+              <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+                Lost revenue, product discard, and legal costs—not including
+                reputation damage.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <footer className="py-12 border-t border-slate-200 text-center">
+      <footer className="py-10 border-t border-slate-200 text-center">
         <p
-          className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}
+          className={`text-slate-500 font-medium mb-3 text-xs ${inter.className}`}
         >
-          Serving Washtenaw County Food Service Establishments
+          Designed for Washtenaw County food service operators. Not an official
+          government product.
         </p>
-        <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
+        <div className="flex justify-center gap-6 mb-4 text-xs text-slate-500 font-medium">
           <Link href="/terms" className="hover:text-slate-900 transition-colors">
             Terms of Service
           </Link>
@@ -552,8 +577,8 @@ const InputBox = ({
       {selectedImage && (
         <div className="mb-3 mx-1 p-3 bg-white border border-slate-200 rounded-lg inline-flex items-center gap-3 shadow-sm">
           <div className="loader-upload scale-75 shrink-0" />
-          <span className="text-sm text-slate-900 font-bold flex items-center gap-2">
-            Image Uploaded - Ready to Send
+          <span className="text-sm text-slate-900 font-semibold flex items-center gap-2">
+            Image uploaded — ready to send
           </span>
           <button
             onClick={() => {
@@ -590,7 +615,7 @@ const InputBox = ({
             <Icons.Plus />
           </button>
           {showMenu && (
-            <div className="absolute bottom_full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
+            <div className="absolute bottom-full left-0 mb-2 w-[160px] bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden z-50 p-1 animate-spring origin-bottom-left">
               <div className="space-y-0.5">
                 {['chat', 'image'].map((m) => (
                   <button
@@ -600,7 +625,7 @@ const InputBox = ({
                     className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeMode === m
                         ? 'bg-slate-900 text-white'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     {m === 'chat' && <Icons.File />}
@@ -626,10 +651,10 @@ const InputBox = ({
           }}
           placeholder={
             activeMode === 'chat'
-              ? 'Ask about enforcement protocols...'
+              ? 'Ask about enforcement protocols…'
               : activeMode === 'image'
-              ? 'Upload photo for instant audit...'
-              : 'Enter audit parameters...'
+              ? 'Upload a photo for instant audit…'
+              : 'Enter audit parameters…'
           }
           className={`flex-1 max-h-[200px] min-h[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
           rows={1}
@@ -641,7 +666,7 @@ const InputBox = ({
           className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
             !input.trim() && !selectedImage
               ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-              : 'bg-black text-white hover:bg-slate-900 shadow-md transform hover:scale-105 active:scale-95'
+              : 'bg-slate-900 text-white hover:bg-black shadow-md transform hover:scale-105 active:scale-95'
           }`}
         >
           {isSending ? (
@@ -709,12 +734,12 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         <div className="flex justify-between items-start mb-8">
           <div>
             <h2
-              className={`text-xl font-bold text-slate-900 mb-1 ${outfit.className}`}
+              className={`text-xl font-semibold text-slate-900 mb-1 ${inter.className}`}
             >
-              {message || 'Welcome to protocolLM'}
+              {message || 'Sign in to protocolLM'}
             </h2>
-            <p className={`text-sm text-slate-500 ${inter.className}`}>
-              Sign in to continue your session
+            <p className={`text-sm text-slate-600 ${inter.className}`}>
+              Use your work email or Google account.
             </p>
           </div>
           <button
@@ -727,16 +752,32 @@ const AuthModal = ({ isOpen, onClose, message }) => {
         <button
           onClick={handleGoogleAuth}
           disabled={googleLoading || loading}
-          className="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-6 shadow-sm focus:outline-none"
+          className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-3 mb-6 shadow-sm focus:outline-none"
         >
           {googleLoading ? (
-            <div className="w-5 h-5 border-2 border-slate-400 border-t-slate-900 rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-slate-400 border-top-slate-900 rounded-full animate-spin" />
           ) : (
             <>
+              {/* Proper Google "G" logo */}
               <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" fill="#000000" />
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.66-2.07z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"
+                  fill="#EA4335"
+                />
               </svg>
-              <span>Continue with Google</span>
+              <span className="text-sm">Continue with Google</span>
             </>
           )}
         </button>
@@ -745,7 +786,9 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-4 text-slate-400 font-medium">OR</span>
+            <span className="bg-white px-4 text-slate-400 font-medium">
+              OR
+            </span>
           </div>
         </div>
         <form onSubmit={handleEmailAuth} className="space-y-5">
@@ -762,7 +805,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             disabled={loading || googleLoading}
             className="w-full bg-slate-900 hover:bg-black text-white font-medium py-3 rounded-lg transition-colors shadow-sm"
           >
-            {loading ? 'Sending Login Link...' : 'Continue with Email'}
+            {loading ? 'Sending login link…' : 'Continue with email'}
           </button>
         </form>
         {statusMessage && (
@@ -798,27 +841,27 @@ const ExitModal = ({ isOpen, onClose, onConvert }) => {
           </div>
         </div>
         <h3
-          className={`text-2xl font-bold text-center text-slate-900 mb-3 ${outfit.className}`}
+          className={`text-2xl font-semibold text-center text-slate-900 mb-3 ${inter.className}`}
         >
-          Wait! Don&apos;t risk a violation.
+          Leaving without a check-up?
         </h3>
         <p
           className={`text-center text-slate-600 mb-10 leading-relaxed ${inter.className}`}
         >
-          Get a <span className="font-bold text-slate-900">FREE compliance audit</span>{' '}
-          of your last inspection report before you leave.
+          Get a <span className="font-semibold text-slate-900">free compliance
+          review</span> of your last inspection report before you go.
         </p>
         <button
           onClick={onConvert}
-          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg uppercase tracking-wide transition-colors mb-4"
+          className="w-full bg-slate-900 hover:bg-black text-white font-semibold py-4 rounded-lg uppercase tracking-wide transition-colors mb-4 text-xs"
         >
-          Claim Free Audit
+          Claim free inspection review
         </button>
         <button
           onClick={onClose}
-          className="w-full text-center text-sm text-slate-400 hover:text-slate-600 font-medium"
+          className="w-full text-center text-xs text-slate-500 hover:text-slate-700 font-medium"
         >
-          No thanks, I&apos;ll risk the fine.
+          No thanks, I&apos;ll take my chances.
         </button>
       </div>
     </div>
@@ -839,27 +882,25 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
           <Icons.X />
         </button>
         <h3
-          className={`text-xs font-bold text-slate-900 uppercase tracking-widest mb-6 mt-2 text-center ${outfit.className}`}
+          className={`text-xs font-semibold text-slate-900 uppercase tracking-[0.2em] mb-6 mt-2 text-center ${inter.className}`}
         >
-          protocolLM
+          protocolLM PRICING
         </h3>
         <div className="flex items-baseline text-slate-900 justify-center mb-2">
           <span
-            className={`text-5xl font-bold tracking-tighter ${outfit.className}`}
+            className={`text-5xl font-semibold tracking-tight ${inter.className}`}
           >
             $50
           </span>
           <span className="ml-2 text-slate-500 text-sm font-medium uppercase tracking-wide">
-            /mo
+            /month
           </span>
         </div>
         <p
-          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-4 ${inter.className}`}
+          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-3 ${inter.className}`}
         >
-          <span className="block font-semibold text-slate-900 mb-1">
-            One prevented violation pays for 40 months.
-          </span>
-          Average Priority Fine: $1,000
+          One prevented Priority violation can cover several years of
+          subscription cost.
         </p>
         <button
           onClick={() =>
@@ -869,9 +910,9 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
             )
           }
           disabled={loading !== null}
-          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-900 hover:bg-black text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading === 'protocollm' ? 'Processing...' : 'Start 7-Day Free Trial'}
+          {loading === 'protocollm' ? 'Processing…' : 'Start 7-day free trial'}
         </button>
       </div>
     </div>
@@ -891,12 +932,12 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
         </button>
         <div className="text-center mb-8">
           <h3
-            className={`text-2xl font-bold text-slate-900 mb-2 ${outfit.className}`}
+            className={`text-2xl font-semibold text-slate-900 mb-2 ${inter.className}`}
           >
-            Welcome to protocolLM
+            Get started
           </h3>
-          <p className={`text-slate-600 ${inter.className}`}>
-            How would you like to start?
+          <p className={`text-sm text-slate-600 ${inter.className}`}>
+            Choose how you want to run your first check.
           </p>
         </div>
         <div className="space-y-4">
@@ -908,11 +949,11 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
               <Icons.Camera />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">
-                Upload Photo of 3-Comp Sink
+              <div className="text-sm font-semibold text-slate-900">
+                Upload a photo of your 3-comp sink
               </div>
               <div className="text-xs text-slate-500">
-                Check for sanitizer &amp; setup violations
+                Check for sanitizer concentration and setup issues.
               </div>
             </div>
           </button>
@@ -926,18 +967,18 @@ const OnboardingModal = ({ isOpen, onClose, onAction }) => {
               <Icons.FileText />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900">
-                Ask a Question
+              <div className="text-sm font-semibold text-slate-900">
+                Ask a code question
               </div>
               <div className="text-xs text-slate-500">
-                &quot;What temp should I hold hot foods?&quot;
+                Example: &quot;What temp should I hold hot foods?&quot;
               </div>
             </div>
           </button>
         </div>
         <button
           onClick={onClose}
-          className="w-full mt-6 text-center text-sm text-slate-400 hover:text-slate-600 font-medium"
+          className="w-full mt-6 text-center text-xs text-slate-500 hover:text-slate-700 font-medium"
         >
           I&apos;ll explore on my own
         </button>
@@ -1290,7 +1331,7 @@ export default function Page() {
           <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white z-30">
             <div className="flex items-center gap-6">
               <div
-                className={`font-bold tracking-tight text-xl ${outfit.className} text-slate-900`}
+                className={`font-semibold tracking-tight text-lg ${inter.className} text-slate-900`}
               >
                 protocolLM
               </div>
@@ -1303,36 +1344,36 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className={`text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors ${inter.className}`}
+                    className={`text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
                   >
-                    Sign In
+                    Sign in
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wide shadow-sm transition-colors ${inter.className}`}
+                    className={`inline-flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-3 sm:px-4 py-2.5 rounded-md text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] shadow-sm transition-colors ${inter.className}`}
                   >
                     <Icons.Check />
-                    Start Free Trial
+                    Start free trial
                   </button>
                   <button
                     onClick={() => startDemo('chat')}
-                    className={`hidden md:inline-flex items-center gap-1 bg-slate-900 hover:bg-black text-white px-4 md:px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-colors ${inter.className}`}
+                    className={`hidden md:inline-flex items-center gap-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-900 px-4 md:px-5 py-2.5 rounded-md text-xs font-medium tracking-wide transition-colors ${inter.className}`}
                   >
-                    Try Free Demo
+                    Try demo
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleNewChat}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                    className="p-2 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
                   >
                     <Icons.Plus />
                   </button>
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center text-xs font-semibold"
                     >
                       {session.user.email[0].toUpperCase()}
                     </button>
@@ -1340,14 +1381,14 @@ export default function Page() {
                       <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
                         <button
                           onClick={() => setShowPricingModal(true)}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
                         >
                           <Icons.Settings /> Subscription
                         </button>
                         <div className="h-px bg-slate-100 my-1" />
                         <button
                           onClick={handleSignOut}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 flex items-center gap-3 rounded-md transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-sm text-slate-800 hover:bg-slate-100 flex items-center gap-3 rounded-md transition-colors"
                         >
                           <Icons.LogOut /> Log out
                         </button>
@@ -1370,11 +1411,11 @@ export default function Page() {
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
-                        className={`text-slate-500 text-base max-w-md leading-relaxed ${inter.className}`}
+                        className={`text-slate-600 text-sm max-w-md leading-relaxed ${inter.className}`}
                       >
                         {activeMode === 'image'
-                          ? 'Upload a photo to detect Priority (P) and Priority Foundation (Pf) violations.'
-                          : 'Ask questions about the Michigan Modified Food Code or Washtenaw County enforcement.'}
+                          ? 'Upload a photo to check for Priority (P) and Priority Foundation (Pf) violations.'
+                          : 'Ask about the Michigan Modified Food Code, Washtenaw guidance, or specific scenarios in your kitchen.'}
                       </p>
                     </div>
                   ) : (
@@ -1426,23 +1467,23 @@ export default function Page() {
                             >
                               You&apos;re using the free 3-query demo. Unlock{' '}
                               <span className="font-semibold text-slate-900">
-                                unlimited inspections for your restaurant
+                                unlimited inspections
                               </span>{' '}
-                              with a protocolLM subscription.
+                              for your restaurant with a protocolLM subscription.
                             </p>
                           </div>
                           <div className="flex gap-2 shrink-0">
                             <button
                               onClick={() => setShowPricingModal(true)}
-                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-black hover:bg-slate-900 text-white"
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.16em] bg-slate-900 hover:bg-black text-white"
                             >
-                              View Pricing &amp; Upgrade
+                              View pricing
                             </button>
                             <button
                               onClick={() => setShowAuthModal(true)}
-                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                              className="btn-press inline-flex items-center justify-center px-4 py-2 rounded-md text-xs font-semibold uppercase tracking-[0.12em] bg-white border border-slate-300 text-slate-800 hover:bg-slate-50"
                             >
-                              Create Account
+                              Create account
                             </button>
                           </div>
                         </div>
