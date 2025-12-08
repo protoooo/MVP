@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { getDeviceFingerprint } from '@/lib/deviceFingerprint'
 import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 
 // --- TYPOGRAPHY ---
@@ -369,7 +370,7 @@ const LandingPage = ({ onAction }) => {
     <div className="w-full bg-white relative z-10 pb-24">
       {/* SECTION 1: HERO – PLAIN, GOVERNMENT STYLE */}
       <section className="relative border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-start justify-center">
+        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-center justify-center text-center">
           <div className="mb-6">
             <p
               className={`text-[11px] font-semibold tracking-[0.2em] uppercase text-slate-500 ${inter.className}`}
@@ -390,7 +391,7 @@ const LandingPage = ({ onAction }) => {
             Food Code and local Washtenaw guidance using a large-language-model
             deployed via the OpenAI API.
           </p>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => onAction('chat')}
               className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3 px-7 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
@@ -513,18 +514,18 @@ const LandingPage = ({ onAction }) => {
       </section>
 
       <footer className="py-12 border-t border-slate-200 text-center">
-  <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
-    Serving Washtenaw County Food Service Establishments
-  </p>
-  <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
-    <Link href="/terms" className="hover:text-slate-900 transition-colors">
-      Terms of Service
-    </Link>
-    <Link href="/privacy" className="hover:text-slate-900 transition-colors">
-      Privacy Policy
-    </Link>
-  </div>
-</footer>
+        <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
+          Serving Washtenaw County Food Service Establishments
+        </p>
+        <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
+          <Link href="/terms" className="hover:text-slate-900 transition-colors">
+            Terms of Service
+          </Link>
+          <Link href="/privacy" className="hover:text-slate-900 transition-colors">
+            Privacy Policy
+          </Link>
+        </div>
+      </footer>
     </div>
   )
 }
@@ -647,7 +648,7 @@ const InputBox = ({
               ? 'Upload a photo of your setup for an instant mock audit…'
               : 'Enter details for review…'
           }
-          className={`flex-1 max-h-[200px] min-h[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
+          className={`flex-1 max-h-[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
           rows={1}
           style={{ height: 'auto', overflowY: 'hidden' }}
         />
@@ -1285,75 +1286,77 @@ export default function Page() {
 
       <div className="relative min-h-screen w-full overflow-hidden bg-white selection:bg-slate-200 selection:text-slate-900">
         <div className="relative z-10 flex flex-col h-[100dvh]">
-          <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white z-30">
-            <div className="flex items-center gap-6">
-              <div
-                className={`font-semibold tracking-tight text-xl ${outfit.className} text-slate-900`}
-              >
-                protocol<span className="text-slate-500">LM</span>
-              </div>
-              <div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 h-8 overflow-hidden">
-                <NavBarTicker />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {!session ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className={`text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
-                  >
-                    Sign in
-                  </button>
-                  <button
-                    onClick={() => setShowPricingModal(true)}
-                    className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
-                  >
-                    <Icons.Check />
-                    Start trial
-                  </button>
-                  <button
-                    onClick={() => startDemo('chat')}
-                    className={`hidden md:inline-flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 px-4 md:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${inter.className}`}
-                  >
-                    Demo console
-                  </button>
+          <header className="border-b border-slate-200 bg-white z-30">
+            <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+              <div className="flex items-center gap-6">
+                <div
+                  className={`font-semibold tracking-tight text-xl ${outfit.className} text-slate-900`}
+                >
+                  protocol<span className="text-slate-500">LM</span>
                 </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleNewChat}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
-                  >
-                    <Icons.Plus />
-                  </button>
-                  <div className="relative" ref={userMenuRef}>
+                <div className="hidden lg:flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 h-8 overflow-hidden">
+                  <NavBarTicker />
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {!session ? (
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                      onClick={() => setShowAuthModal(true)}
+                      className={`text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
                     >
-                      {session.user.email[0].toUpperCase()}
+                      Sign in
                     </button>
-                    {showUserMenu && (
-                      <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
-                        <button
-                          onClick={() => setShowPricingModal(true)}
-                          className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
-                        >
-                          <Icons.Settings /> Subscription
-                        </button>
-                        <div className="h-px bg-slate-100 my-1" />
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 rounded-md transition-colors"
-                        >
-                          <Icons.LogOut /> Log out
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      onClick={() => setShowPricingModal(true)}
+                      className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
+                    >
+                      <Icons.Check />
+                      Start trial
+                    </button>
+                    <button
+                      onClick={() => startDemo('chat')}
+                      className={`hidden md:inline-flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 px-4 md:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${inter.className}`}
+                    >
+                      Demo console
+                    </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleNewChat}
+                      className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                    >
+                      <Icons.Plus />
+                    </button>
+                    <div className="relative" ref={userMenuRef}>
+                      <button
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                      >
+                        {session.user.email[0].toUpperCase()}
+                      </button>
+                      {showUserMenu && (
+                        <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-50 p-1">
+                          <button
+                            onClick={() => setShowPricingModal(true)}
+                            className="w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-3 rounded-md transition-colors"
+                          >
+                            <Icons.Settings /> Subscription
+                          </button>
+                          <div className="h-px bg-slate-100 my-1" />
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 rounded-md transition-colors"
+                          >
+                            <Icons.LogOut /> Log out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 
