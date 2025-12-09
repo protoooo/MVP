@@ -24,7 +24,6 @@ const DOC_MAPPING = {
   'Cross contamination.pdf': 'Cross Contamination',
   'food_labeling.pdf': 'Labeling Standards',
   'Norovirus.pdf': 'Biohazard Cleanup',
-  'Allergy Info.pdf': 'Allergen Control',
   'Emergency_Plan.pdf': 'Emergency Plans',
   'Date_Marking.pdf': 'Date Marking Rules',
 }
@@ -366,12 +365,11 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
 // --- LANDING PAGE ---
 const LandingPage = ({ onAction }) => {
   return (
-    <div className="w-full bg-white relative z-10 pb-24">
+    <div className="w-full bg-white relative z-10 min-h-full flex flex-col">
 
       {/* HERO SECTION — CLEAN / GOVERNMENT STYLE */}
       <section className="relative border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-
           <h1
             className={`text-3xl md:text-[2.7rem] font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${outfit.className}`}
           >
@@ -395,9 +393,8 @@ const LandingPage = ({ onAction }) => {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-white flex-1">
         <div className="max-w-6xl mx-auto">
-
           <h2
             className={`text-xl font-semibold text-slate-900 mb-14 text-center tracking-tight ${outfit.className}`}
           >
@@ -405,7 +402,6 @@ const LandingPage = ({ onAction }) => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            
             {/* STEP 1 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
               <div className="text-slate-500 mb-4"><Icons.Camera /></div>
@@ -438,13 +434,12 @@ const LandingPage = ({ onAction }) => {
                 Receive a structured summary of likely violations and corrective guidance.
               </p>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* FOOTER (unchanged) */}
-      <footer className="py-12 border-t border-slate-200 text-center">
+      {/* FOOTER — pushed to bottom */}
+      <footer className="mt-auto py-12 border-t border-slate-200 text-center">
         <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
           Serving Washtenaw County Food Service Establishments
         </p>
@@ -457,10 +452,13 @@ const LandingPage = ({ onAction }) => {
           </Link>
         </div>
       </footer>
-
     </div>
   )
 }
+
+// --- rest of file (InputBox, modals, Page component) stays the same ---
+// [KEEP EVERYTHING BELOW UNCHANGED FROM YOUR CURRENT VERSION]
+
 
 
 const InputBox = ({
