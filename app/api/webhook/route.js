@@ -1,4 +1,3 @@
-// app/api/stripe/webhook/route.js
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -12,24 +11,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Map Stripe price IDs → plans
-const PRICE_CONFIG = {
-  [process.env.STRIPE_PRICE_BUSINESS_MONTHLY]: { plan: 'business', billing: 'monthly' },
-  [process.env.STRIPE_PRICE_BUSINESS_ANNUAL]: { plan: 'business', billing: 'annual' },
-  [process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY]: { plan: 'enterprise', billing: 'monthly' },
-  [process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL]: { plan: 'enterprise', billing: 'annual' },
-}
-
-// Usage presets
-const PLAN_LIMITS = {
-  business: {
-    text_limit: 200,
-    image_limit: 40,
-  },
-  enterprise: {
-    text_limit: 1000,
-    image_limit: 200,
-  },
+// map price IDs → plan
+const PRICE_TO_PLAN = {
+  // Business
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY]: 'business',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL]: 'business',
+  // Enterprise
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_MONTHLY]: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
 const processedEvents = new Set()
@@ -46,11 +35,11 @@ function isEventTooOld(eventTimestamp) {
   return Date.now() - eventTimestamp * 1000 > MAX_EVENT_AGE_MS
 }
 
-// Validate webhook origin by requiring Stripe signature header
+// Stripe-webhook origin guard
 function validateWebhookOrigin() {
-  const headersList = headers()
-  const stripeSignature = headersList.get('stripe-signature')
-  if (!stripeSignature) {
+  const h = headers()
+  const sig = h.get('stripe-signature')
+  if (!sig) {
     console.error('❌ Missing Stripe signature header')
     return false
   }
@@ -77,7 +66,6 @@ export async function POST(req) {
     console.log(`⚠️ Duplicate event ignored: ${event.id}`)
     return NextResponse.json({ received: true })
   }
-
   if (isEventTooOld(event.created)) {
     console.log(`⚠️ Stale event ignored: ${event.id}`)
     return NextResponse.json({ error: 'Event expired' }, { status: 400 })
@@ -94,23 +82,21 @@ export async function POST(req) {
         const subscriptionId = session.subscription
 
         if (!userId || !subscriptionId) {
-          console.error('❌ Missing userId or subscriptionId on checkout.session.completed')
+          console.error('❌ Missing userId or subscriptionId')
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
-        const config = PRICE_CONFIG[priceId] || { plan: 'business', billing: 'monthly' }
-        const limits = PLAN_LIMITS[config.plan] || PLAN_LIMITS.business
+        const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        const now = new Date()
-
-        const { error: subUpsertError } = await supabase.from('subscriptions').upsert(
+        const { error: subInsertError } = await supabase.from('subscriptions').upsert(
           {
             user_id: userId,
             stripe_subscription_id: subscriptionId,
             stripe_customer_id: session.customer,
-            plan: config.plan,
+            plan: planName,
+            price_id: priceId,
             status: subscription.status,
             current_period_start: new Date(
               subscription.current_period_start * 1000
@@ -122,23 +108,19 @@ export async function POST(req) {
               ? new Date(subscription.trial_end * 1000).toISOString()
               : null,
             cancel_at_period_end: subscription.cancel_at_period_end,
-            text_limit: limits.text_limit,
-            image_limit: limits.image_limit,
-            text_used: 0,
-            image_used: 0,
-            created_at: now.toISOString(),
-            updated_at: now.toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           },
           { onConflict: 'stripe_subscription_id' }
         )
 
-        if (subUpsertError) {
-          console.error('❌ Failed to upsert subscription:', subUpsertError)
-        } else {
+        if (!subInsertError) {
           await supabase
             .from('user_profiles')
             .update({ is_subscribed: true })
             .eq('id', userId)
+        } else {
+          console.error('❌ subscriptions upsert error:', subInsertError)
         }
 
         break
@@ -147,66 +129,32 @@ export async function POST(req) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object
         const priceId = subscription.items.data[0].price.id
-        const config = PRICE_CONFIG[priceId] || { plan: 'business', billing: 'monthly' }
-        const limits = PLAN_LIMITS[config.plan] || PLAN_LIMITS.business
+        const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        const now = new Date()
-
-        const { error: updateError } = await supabase
+        await supabase
           .from('subscriptions')
           .update({
-            plan: config.plan,
             status: subscription.status,
-            current_period_start: new Date(
-              subscription.current_period_start * 1000
-            ).toISOString(),
             current_period_end: new Date(
               subscription.current_period_end * 1000
             ).toISOString(),
-            // Reset usage when Stripe tells us sub has changed (new period, upgrade, etc.)
-            text_limit: limits.text_limit,
-            image_limit: limits.image_limit,
-            text_used: 0,
-            image_used: 0,
-            updated_at: now.toISOString(),
+            price_id: priceId,
+            plan: planName,
+            updated_at: new Date().toISOString(),
           })
           .eq('stripe_subscription_id', subscription.id)
-
-        if (updateError) {
-          console.error('❌ Failed to update subscription:', updateError)
-        }
-
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
-
-        const { error: deleteError } = await supabase
+        await supabase
           .from('subscriptions')
           .update({
             status: 'canceled',
             updated_at: new Date().toISOString(),
           })
           .eq('stripe_subscription_id', subscription.id)
-
-        if (deleteError) {
-          console.error('❌ Failed to mark subscription canceled:', deleteError)
-        }
-
-        // Also drop is_subscribed flag
-        if (subscription.metadata?.userId) {
-          await supabase
-            .from('user_profiles')
-            .update({ is_subscribed: false })
-            .eq('id', subscription.metadata.userId)
-        }
-
-        break
-      }
-
-      default: {
-        // Other events can be ignored or logged
         break
       }
     }
