@@ -14,6 +14,12 @@ const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 
+// Stripe prices (Business + Enterprise, Monthly + Annual)
+const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
+const BUSINESS_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
+const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
+const ENTERPRISE_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL
+
 const DOC_MAPPING = {
   '3compsink.pdf': 'Sanitizing Protocols',
   'Violation Types.pdf': 'Violation Classifications',
@@ -771,7 +777,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
 
         <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           {/* BUSINESS PLAN */}
-          <div className="border border-slate-200 rounded-xl p-6 flex flex-col justify-between bg-white">
+          <div className="border border-slate-200 rounded-xl p-6 flex flex-col justify-between bg.white">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 mb-2">
                 Business
@@ -791,38 +797,50 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
                 mock inspections without heavy volume.
               </p>
               <ul className="space-y-2 text-sm text-slate-700">
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Unlimited chat questions about Michigan / Washtenaw code</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Up to ~200 text queries per month (typical small shop usage)</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Up to ~40 image mock audits per month</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Best for independent, single-unit locations</span>
                 </li>
               </ul>
             </div>
-            <button
-              onClick={() =>
-                handleCheckout(
-                  process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY,
-                  'business'
-                )
-              }
-              disabled={!!loading && loading !== 'business'}
-              className={`mt-6 w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
-                loading && loading !== 'business' ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading === 'business' ? 'Processing…' : 'Start Business plan'}
-            </button>
+
+            {/* Business buttons: monthly + annual */}
+            <div className="mt-6 space-y-2">
+              <button
+                onClick={() => handleCheckout(BUSINESS_MONTHLY, 'business-monthly')}
+                disabled={!!loading && loading !== 'business-monthly'}
+                className={`w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
+                  loading && loading !== 'business-monthly'
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {loading === 'business-monthly' ? 'Processing…' : 'Start Business monthly'}
+              </button>
+              <button
+                onClick={() => handleCheckout(BUSINESS_ANNUAL, 'business-annual')}
+                disabled={!!loading && loading !== 'business-annual'}
+                className={`w-full bg-white border border-dashed border-slate-400 text-slate-900 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition-colors ${
+                  loading && loading !== 'business-annual'
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {loading === 'business-annual' ? 'Processing…' : 'Start Business annual'}
+              </button>
+            </div>
           </div>
 
           {/* ENTERPRISE PLAN */}
@@ -847,38 +865,54 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
                 multiple stations or locations.
               </p>
               <ul className="space-y-2 text-sm text-slate-100">
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Higher limits suitable for multi-user teams</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Up to ~1,000 text queries per month</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Up to ~200 image mock audits per month</span>
                 </li>
-                <li className="flex items-start gap-2">
+                <li className="flex items.start gap-2">
                   <Icons.Check />
                   <span>Best for groups, franchises, or complex menus / setups</span>
                 </li>
               </ul>
             </div>
-            <button
-              onClick={() =>
-                handleCheckout(
-                  process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY,
-                  'enterprise'
-                )
-              }
-              disabled={!!loading && loading !== 'enterprise'}
-              className={`relative mt-6 w-full bg-white text-black hover:bg-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
-                loading && loading !== 'enterprise' ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading === 'enterprise' ? 'Processing…' : 'Start Enterprise plan'}
-            </button>
+
+            {/* Enterprise buttons: monthly + annual */}
+            <div className="relative mt-6 space-y-2">
+              <button
+                onClick={() => handleCheckout(ENTERPRISE_MONTHLY, 'enterprise-monthly')}
+                disabled={!!loading && loading !== 'enterprise-monthly'}
+                className={`w-full bg-white text-black hover:bg-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
+                  loading && loading !== 'enterprise-monthly'
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {loading === 'enterprise-monthly'
+                  ? 'Processing…'
+                  : 'Start Enterprise monthly'}
+              </button>
+              <button
+                onClick={() => handleCheckout(ENTERPRISE_ANNUAL, 'enterprise-annual')}
+                disabled={!!loading && loading !== 'enterprise-annual'}
+                className={`w-full bg-transparent border border-dashed border-slate-400 text-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] hover:bg-slate-900/60 transition-colors ${
+                  loading && loading !== 'enterprise-annual'
+                    ? 'opacity-60 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                {loading === 'enterprise-annual'
+                  ? 'Processing…'
+                  : 'Start Enterprise annual'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
