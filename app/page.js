@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import { getDeviceFingerprint } from '@/lib/deviceFingerprint'
 import { Outfit, Inter, JetBrains_Mono } from 'next/font/google'
 
 // --- TYPOGRAPHY ---
@@ -348,16 +349,10 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   }, [queryType, TOTAL_DURATION, currentStages])
 
   return (
-    <div className="flex flex-col items-start gap-3 p-2">
+    <div className="flex flex-col items-start gap-2 p-2">
       <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
         {text}
       </span>
-      <div className="w-40 h-[22px] rounded-full border-[1.5px] border-black bg-white overflow-hidden">
-        <div
-          className="h-full bg-black"
-          style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
-        />
-      </div>
     </div>
   )
 }
@@ -456,10 +451,7 @@ const LandingPage = ({ onAction }) => {
   )
 }
 
-// --- rest of file (InputBox, modals, Page component) stays the same ---
-// [KEEP EVERYTHING BELOW UNCHANGED FROM YOUR CURRENT VERSION]
-
-
+// --- rest of file (InputBox, modals, Page component) ---
 
 const InputBox = ({
   input,
@@ -888,7 +880,6 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
   )
 }
 
-
 const OnboardingModal = ({ isOpen, onClose, onAction }) => {
   if (!isOpen) return null
   return (
@@ -1225,7 +1216,7 @@ export default function Page() {
     }
   }
 
-    const handleCheckout = async (priceId, planName) => {
+  const handleCheckout = async (priceId, planName) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -1271,7 +1262,6 @@ export default function Page() {
     }
   }
 
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -1294,6 +1284,8 @@ export default function Page() {
       </>
     )
   }
+
+  const isDemoGuest = !session
 
   return (
     <>
