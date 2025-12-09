@@ -8,14 +8,14 @@ import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 
 export const dynamic = 'force-dynamic'
 
-// --- 1. OPENAI CONFIG ---
+// --- OPENAI CONFIG ---
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-const OPENAI_CHAT_MODEL = 'gpt-4.1-mini' // can swap later if you want
+const OPENAI_CHAT_MODEL = 'gpt-4o-mini'
 
-// --- 2. GENERATION / LIMITS ---
+// --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
   maxOutputTokens: 1200,
   temperature: 0.1,
@@ -24,11 +24,10 @@ const GENERATION_CONFIG = {
 
 const MAX_CONTEXT_LENGTH = 20000
 const MAX_IMAGE_SIZE_MB = 10
-const DEMO_LIMIT = 3
 
-const VISION_TIMEOUT = 12000
-const SEARCH_TIMEOUT = 10000
-const GENERATION_TIMEOUT = 35000
+const VISION_TIMEOUT = 10000
+const SEARCH_TIMEOUT = 8000
+const GENERATION_TIMEOUT = 25000
 
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
@@ -38,7 +37,7 @@ REQUIRED_VARS.forEach((v) => {
   if (!process.env[v]) console.error(`CRITICAL: Missing Env Var ${v}`)
 })
 
-// --- 3. HELPERS ---
+// --- HELPERS ---
 function sanitizeInput(input, maxLength = 4000) {
   if (typeof input !== 'string') return ''
   return input
@@ -80,7 +79,6 @@ function validateImage(base64String) {
   return cleanBase64
 }
 
-// --- 4. HANDLERS ---
 export async function POST(req) {
   console.log('[API STEP 1] Request Received')
   const startTime = Date.now()
@@ -219,7 +217,7 @@ export async function POST(req) {
       }
     }
 
-    // --- 3. VISION DESCRIPTION (OpenAI) ---
+    // --- VISION DESCRIPTION (OpenAI) ---
     let searchTerms = ''
     if (imageBase64) {
       console.log('[API STEP 3] Vision Start (OpenAI)')
@@ -270,7 +268,7 @@ export async function POST(req) {
       searchTerms = lastMessageText || 'food safety code'
     }
 
-    // --- 4. SEARCH CONTEXT (TEMP: may be empty while RAG is off) ---
+    // --- SEARCH CONTEXT ---
     let context = ''
     if (searchTerms) {
       console.log('[API STEP 4] DB Search Start')
@@ -293,7 +291,7 @@ Washtenaw County Michigan food service inspection violation types enforcement ac
             .join('\n\n')
           console.log('[API STEP 4] Search Success: Found', searchResults.length, 'docs')
         } else {
-          console.log('[API STEP 4] No search results found')
+          console.log('[API STEP 4] No search results - continuing without context')
         }
       } catch (err) {
         console.error('[API STEP 4] Search Exception:', err)
@@ -304,7 +302,7 @@ Washtenaw County Michigan food service inspection violation types enforcement ac
       context = context.slice(0, MAX_CONTEXT_LENGTH)
     }
 
-    // --- 5. SYSTEM PROMPT & FINAL CALL ---
+    // --- SYSTEM PROMPT & FINAL CALL ---
     const SYSTEM_PROMPT = `You are ProtocolLM, a food safety and inspection assistant focused on restaurants in Washtenaw County, Michigan.
 
 Your answers should read like concise inspection notes that a general manager can act on. You do three things:
@@ -414,52 +412,70 @@ ${searchTerms}` : ''}`
       { role: 'user', content: finalPrompt },
     ]
 
-    const generationPromise = openai.chat.completions.create({
-      model: OPENAI_CHAT_MODEL,
-      messages: messagesFinal,
-      temperature: GENERATION_CONFIG.temperature,
-      top_p: GENERATION_CONFIG.topP,
-      max_tokens: GENERATION_CONFIG.maxOutputTokens,
-    })
+    try {
+      const generationPromise = openai.chat.completions.create({
+        model: OPENAI_CHAT_MODEL,
+        messages: messagesFinal,
+        temperature: GENERATION_CONFIG.temperature,
+        top_p: GENERATION_CONFIG.topP,
+        max_tokens: GENERATION_CONFIG.maxOutputTokens,
+      })
 
-    const result = await Promise.race([
-      generationPromise,
-      timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
-    ])
+      const result = await Promise.race([
+        generationPromise,
+        timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
+      ])
 
-    let text = result?.choices?.[0]?.message?.content || ''
-    text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '')
+      let text = result?.choices?.[0]?.message?.content || ''
+      text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '')
 
-    if (!text || text.length < 10) {
-      throw new Error('Empty response from model')
+      if (!text || text.length < 10) {
+        throw new Error('Empty or invalid response from model')
+      }
+
+      console.log('[API STEP 6] Success - Response length:', text.length)
+
+      const dbTasks = []
+      if (user && chatId && lastMessageText) {
+        dbTasks.push(
+          supabase.from('messages').insert([
+            {
+              chat_id: chatId,
+              role: 'user',
+              content: lastMessageText,
+              image: imageBase64 ? 'stored' : null,
+            },
+            { chat_id: chatId, role: 'assistant', content: text },
+          ])
+        )
+      }
+      dbTasks.push(incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text'))
+      await Promise.allSettled(dbTasks)
+
+      const duration = Date.now() - startTime
+      console.log(`[API] Total duration: ${duration}ms`)
+
+      return NextResponse.json({ message: text })
+
+    } catch (genError) {
+      console.error('[API STEP 5] Generation Error:', genError)
+      
+      let errorMsg = 'Unable to generate response. Please try again.'
+      let statusCode = 500
+
+      if (genError.message.includes('TIMEOUT')) {
+        errorMsg = 'Request took too long. Please try a simpler query.'
+        statusCode = 504
+      } else if (genError.message.includes('Empty')) {
+        errorMsg = 'No response generated. Please rephrase your question.'
+        statusCode = 500
+      }
+
+      return NextResponse.json({ error: errorMsg }, { status: statusCode })
     }
 
-    console.log('[API STEP 6] Success - Response length:', text.length)
-
-    const dbTasks = []
-    if (user && chatId && lastMessageText) {
-      dbTasks.push(
-        supabase.from('messages').insert([
-          {
-            chat_id: chatId,
-            role: 'user',
-            content: lastMessageText,
-            image: imageBase64 ? 'stored' : null,
-          },
-          { chat_id: chatId, role: 'assistant', content: text },
-        ])
-      )
-    }
-    dbTasks.push(incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text'))
-    await Promise.allSettled(dbTasks)
-
-    const duration = Date.now() - startTime
-    console.log(`[API] Total duration: ${duration}ms`)
-
-    return NextResponse.json({ message: text })
   } catch (err) {
     console.error('[API] Fatal Error:', err)
-    logError('chat_api', err, {})
 
     let msg = 'System error. Please try again.'
     let statusCode = 500
