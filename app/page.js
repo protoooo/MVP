@@ -299,72 +299,41 @@ const FormattedMessage = ({ content }) => {
   )
 }
 
+/**
+ * ThinkingIndicator
+ *  - Removed progress bar
+ *  - Just cycles through short status phrases that fade/pulse
+ */
 const ThinkingIndicator = ({ queryType = 'simple' }) => {
-  const [progress, setProgress] = useState(0)
   const [text, setText] = useState('Analyzing request...')
-  const DURATIONS = { simple: 3000, standard: 8000, image: 15000 }
-  const MAX_PROGRESS = 95
-  const TOTAL_DURATION = DURATIONS[queryType] || DURATIONS.standard
-  const stages = {
-    simple: [
-      { threshold: 0, label: 'Processing...' },
-      { threshold: 50, label: 'Generating response...' },
-    ],
-    standard: [
-      { threshold: 0, label: 'Analyzing request...' },
-      { threshold: 25, label: 'Searching references...' },
-      { threshold: 60, label: 'Formulating response...' },
-    ],
+
+  const sequences = {
+    simple: ['Processing...', 'Generating response...'],
+    standard: ['Analyzing request...', 'Reviewing regulations...', 'Formulating response...'],
     image: [
-      { threshold: 0, label: 'Analyzing image...' },
-      { threshold: 15, label: 'Identifying equipment...' },
-      { threshold: 30, label: 'Checking violation types...' },
-      { threshold: 50, label: 'Reviewing code language...' },
-      { threshold: 70, label: 'Preparing report...' },
+      'Analyzing image...',
+      'Checking priority items...',
+      'Reviewing code language...',
+      'Preparing mock audit summary...',
     ],
   }
-  const currentStages = stages[queryType] || stages.standard
 
   useEffect(() => {
-    let rafId
-    const start = performance.now()
-    let lastUpdate = start
-
-    const tick = now => {
-      const elapsed = now - start
-      const ratio = Math.min(elapsed / TOTAL_DURATION, 1)
-      const target = Math.min(ratio * 100, MAX_PROGRESS)
-
-      if (now - lastUpdate >= 100 || target === MAX_PROGRESS) {
-        lastUpdate = now
-        setProgress(target)
-        const currentStage = currentStages.reduce(
-          (acc, stage) => (target >= stage.threshold ? stage : acc),
-          currentStages[0]
-        )
-        setText(currentStage.label)
-      }
-
-      if (target < MAX_PROGRESS) {
-        rafId = requestAnimationFrame(tick)
-      }
-    }
-
-    rafId = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafId)
-  }, [queryType, TOTAL_DURATION, currentStages])
+    const steps = sequences[queryType] || sequences.standard
+    let idx = 0
+    setText(steps[0])
+    const id = setInterval(() => {
+      idx = (idx + 1) % steps.length
+      setText(steps[idx])
+    }, 1400)
+    return () => clearInterval(id)
+  }, [queryType])
 
   return (
-    <div className="flex flex-col items-start gap-3 p-2">
+    <div className="flex flex-col items-start gap-1 p-2">
       <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
         {text}
       </span>
-      <div className="w-40 h-[22px] rounded-full border-[1.5px] border-black bg-white overflow-hidden">
-        <div
-          className="h-full bg-black"
-          style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
-        />
-      </div>
     </div>
   )
 }
@@ -373,8 +342,7 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
 const LandingPage = ({ onAction }) => {
   return (
     <div className="w-full bg-white relative z-10 min-h-full flex flex-col">
-
-      {/* HERO SECTION — CLEAN / GOVERNMENT STYLE */}
+      {/* HERO SECTION */}
       <section className="relative border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
           <h1
@@ -411,7 +379,9 @@ const LandingPage = ({ onAction }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* STEP 1 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4"><Icons.Camera /></div>
+              <div className="text-slate-500 mb-4">
+                <Icons.Camera />
+              </div>
               <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 1. Capture
               </h3>
@@ -422,7 +392,9 @@ const LandingPage = ({ onAction }) => {
 
             {/* STEP 2 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4"><Icons.Zap /></div>
+              <div className="text-slate-500 mb-4">
+                <Icons.Zap />
+              </div>
               <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 2. Process
               </h3>
@@ -433,7 +405,9 @@ const LandingPage = ({ onAction }) => {
 
             {/* STEP 3 */}
             <div className="bg-white border border-slate-200 p-8 rounded-xl">
-              <div className="text-slate-500 mb-4"><Icons.FileText /></div>
+              <div className="text-slate-500 mb-4">
+                <Icons.FileText />
+              </div>
               <h3 className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}>
                 3. Review
               </h3>
@@ -445,7 +419,7 @@ const LandingPage = ({ onAction }) => {
         </div>
       </section>
 
-      {/* FOOTER — pushed to bottom */}
+      {/* FOOTER */}
       <footer className="mt-auto py-12 border-t border-slate-200 text-center">
         <p className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}>
           Serving Washtenaw County Food Service Establishments
@@ -1005,7 +979,6 @@ export default function Page() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
 
-  const isDemoGuest = !session
   const fingerprintRef = useRef(null)
   const creatingChatRef = useRef(false)
   const fileInputRef = useRef(null)
@@ -1014,6 +987,9 @@ export default function Page() {
   const userMenuRef = useRef(null)
   const [supabase] = useState(() => createClient())
   const router = useRouter()
+
+  const isDemoGuest = !session
+  const canUseApp = !!session && hasActiveSubscription // ✅ Only paid (or admin) can use full app
 
   useEffect(() => {
     let mounted = true
@@ -1035,22 +1011,31 @@ export default function Page() {
         if (s) {
           const { data: sub } = await supabase
             .from('subscriptions')
-            .select('status')
+            .select('status, current_period_end')
             .eq('user_id', s.user.id)
             .in('status', ['active', 'trialing'])
             .maybeSingle()
 
-          if (s.user.email === ADMIN_EMAIL || sub) {
-            setHasActiveSubscription(true)
+          let active = false
+          if (s.user.email === ADMIN_EMAIL) {
+            active = true
+          } else if (sub) {
+            const periodEnd = new Date(sub.current_period_end)
+            if (periodEnd > new Date()) active = true
+          }
+
+          setHasActiveSubscription(active)
+
+          if (active) {
             const { data: existingChats } = await supabase
               .from('chats')
               .select('id')
               .eq('user_id', s.user.id)
               .limit(1)
             if (!existingChats || existingChats.length === 0) setShowOnboarding(true)
-          } else {
-            setHasActiveSubscription(false)
           }
+        } else {
+          setHasActiveSubscription(false)
         }
       } catch (e) {
         console.error('Auth Init Error', e)
@@ -1069,14 +1054,23 @@ export default function Page() {
       if (newSession) {
         const { data: sub } = await supabase
           .from('subscriptions')
-          .select('status')
+          .select('status, current_period_end')
           .eq('user_id', newSession.user.id)
           .in('status', ['active', 'trialing'])
           .maybeSingle()
-        if (newSession.user.email === ADMIN_EMAIL || sub) {
-          setHasActiveSubscription(true)
-        } else {
-          setHasActiveSubscription(false)
+
+        let active = false
+        if (newSession.user.email === ADMIN_EMAIL) {
+          active = true
+        } else if (sub) {
+          const periodEnd = new Date(sub.current_period_end)
+          if (periodEnd > new Date()) active = true
+        }
+
+        setHasActiveSubscription(active)
+
+        if (!active) {
+          // Logged-in but not paid → treat like guest; keep them on landing/pricing
           setShowPricingModal(true)
         }
       } else {
@@ -1098,11 +1092,7 @@ export default function Page() {
 
   useEffect(() => {
     const handleExit = e => {
-      if (
-        e.clientY < 10 &&
-        !sessionStorage.getItem('exit-shown') &&
-        !session
-      ) {
+      if (e.clientY < 10 && !sessionStorage.getItem('exit-shown') && !session) {
         sessionStorage.setItem('exit-shown', 'true')
         setShowExitModal(true)
       }
@@ -1153,7 +1143,8 @@ export default function Page() {
 
     let activeChatId = currentChatId
 
-    if (session && !activeChatId && !creatingChatRef.current) {
+    // Only create chats for paid users (or admin)
+    if (canUseApp && !activeChatId && !creatingChatRef.current) {
       creatingChatRef.current = true
       const { data: newChat } = await supabase
         .from('chats')
@@ -1190,6 +1181,7 @@ export default function Page() {
 
       if (!res.ok) {
         if (res.status === 402) {
+          // No subscription → pricing, and keep them off the real app
           setShowPricingModal(true)
           throw new Error('Subscription required.')
         }
@@ -1348,7 +1340,7 @@ export default function Page() {
           onClose={() => setShowPricingModal(false)}
         />
       )}
-      {showOnboarding && (
+      {showOnboarding && canUseApp && (
         <OnboardingModal
           isOpen={showOnboarding}
           onClose={() => setShowOnboarding(false)}
@@ -1395,12 +1387,14 @@ export default function Page() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleNewChat}
-                      className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
-                    >
-                      <Icons.Plus />
-                    </button>
+                    {canUseApp && (
+                      <button
+                        onClick={handleNewChat}
+                        className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                      >
+                        <Icons.Plus />
+                      </button>
+                    )}
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
@@ -1433,7 +1427,8 @@ export default function Page() {
           </header>
 
           <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto bg-white">
-            {!session && messages.length === 0 && !showDemo ? (
+            {/* ❗ Only show app chat if user is paid (canUseApp) OR we're in demo mode */}
+            {!canUseApp && !showDemo && messages.length === 0 ? (
               <LandingPage onAction={mode => startDemo(mode)} />
             ) : (
               <>
@@ -1518,7 +1513,7 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="w-full shrink-0 z-20 bg-white border-t border-slate-100 pt-4">
+                <div className="w-full shrink-0 z-20 bg.white border-t border-slate-100 pt-4">
                   <InputBox
                     input={input}
                     setInput={setInput}
