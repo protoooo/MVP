@@ -744,7 +744,7 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
   return (
     <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div
-        className="relative w-full max-w-sm bg-white border border-slate-200 rounded-xl p-10 shadow-2xl flex flex-col"
+        className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-2xl p-8 md:p-10 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         <button
@@ -753,40 +753,141 @@ const FullScreenPricing = ({ handleCheckout, loading, onClose }) => {
         >
           <Icons.X />
         </button>
-        <h3
-          className={`text-xs font-semibold text-slate-900 uppercase tracking-[0.25em] mb-6 mt-2 text-center ${outfit.className}`}
-        >
-          protocolLM
-        </h3>
-        <div className="flex items-baseline text-slate-900 justify-center mb-2">
-          <span
-            className={`text-5xl font-semibold tracking-tight ${outfit.className}`}
+
+        <div className="mb-8 text-center">
+          <h3
+            className={`text-xs font-semibold text-slate-900 uppercase tracking-[0.25em] mb-3 ${outfit.className}`}
           >
-            $50
-          </span>
-          <span className="ml-2 text-slate-500 text-sm font-medium uppercase tracking-wide">
-            /month
-          </span>
+            protocolLM
+          </h3>
+          <p
+            className={`text-lg md:text-xl font-semibold text-slate-900 mb-2 tracking-tight ${outfit.className}`}
+          >
+            Choose a plan that fits your operation
+          </p>
+          <p className={`text-sm text-slate-600 max-w-xl mx-auto ${inter.className}`}>
+            Both plans include full access to Michigan Modified Food Code, Washtenaw guidance,
+            and image-based mock inspections. Enterprise is built for higher volume and multi-unit teams.
+          </p>
         </div>
-        <p
-          className={`text-sm text-slate-600 text-center mb-8 leading-relaxed px-4 ${inter.className}`}
-        >
-          One prevented priority violation can offset multiple years of subscription
-          cost.
-        </p>
-        <button
-          onClick={() =>
-            handleCheckout(process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY, 'protocollm')
-          }
-          disabled={loading !== null}
-          className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-4 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading === 'protocollm' ? 'Processing…' : 'Start 7-day trial'}
-        </button>
+
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+          {/* BUSINESS PLAN */}
+          <div className="border border-slate-200 rounded-xl p-6 flex flex-col justify-between bg-white">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 mb-2">
+                Business
+              </p>
+              <div className="flex items-baseline mb-2">
+                <span
+                  className={`text-4xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}
+                >
+                  $100
+                </span>
+                <span className="ml-2 text-slate-500 text-xs font-medium uppercase tracking-wide">
+                  /month
+                </span>
+              </div>
+              <p className={`text-sm text-slate-600 mb-4 ${inter.className}`}>
+                Designed for single-location restaurants, cafés, and bakeries that want routine
+                mock inspections without heavy volume.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Unlimited chat questions about Michigan / Washtenaw code</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Up to ~200 text queries per month (typical small shop usage)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Up to ~40 image mock audits per month</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Best for independent, single-unit locations</span>
+                </li>
+              </ul>
+            </div>
+            <button
+              onClick={() =>
+                handleCheckout(
+                  process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY,
+                  'business'
+                )
+              }
+              disabled={!!loading && loading !== 'business'}
+              className={`mt-6 w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
+                loading && loading !== 'business' ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              {loading === 'business' ? 'Processing…' : 'Start Business plan'}
+            </button>
+          </div>
+
+          {/* ENTERPRISE PLAN */}
+          <div className="border border-slate-900 rounded-xl p-6 flex flex-col justify-between bg-slate-950 text-slate-50 relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(circle_at_top,_#ffffff,_transparent_60%)]" />
+            <div className="relative">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300 mb-2">
+                Enterprise
+              </p>
+              <div className="flex items-baseline mb-2">
+                <span
+                  className={`text-4xl font-semibold text-white tracking-tight ${outfit.className}`}
+                >
+                  $200
+                </span>
+                <span className="ml-2 text-slate-300 text-xs font-medium uppercase tracking-wide">
+                  /month
+                </span>
+              </div>
+              <p className={`text-sm text-slate-200 mb-4 ${inter.className}`}>
+                For high-volume operations, groups, and teams that want frequent image audits across
+                multiple stations or locations.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-100">
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Higher limits suitable for multi-user teams</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Up to ~1,000 text queries per month</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Up to ~200 image mock audits per month</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Best for groups, franchises, or complex menus / setups</span>
+                </li>
+              </ul>
+            </div>
+            <button
+              onClick={() =>
+                handleCheckout(
+                  process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY,
+                  'enterprise'
+                )
+              }
+              disabled={!!loading && loading !== 'enterprise'}
+              className={`relative mt-6 w-full bg-white text-black hover:bg-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
+                loading && loading !== 'enterprise' ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            >
+              {loading === 'enterprise' ? 'Processing…' : 'Start Enterprise plan'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+
 
 const OnboardingModal = ({ isOpen, onClose, onAction }) => {
   if (!isOpen) return null
