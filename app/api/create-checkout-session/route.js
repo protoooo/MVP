@@ -8,16 +8,19 @@ export const dynamic = 'force-dynamic'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Map all valid prices → plan/billing metadata
-const PRICE_CONFIG = {
-  [process.env.STRIPE_PRICE_BUSINESS_MONTHLY]: { plan: 'business', billing: 'monthly' },
-  [process.env.STRIPE_PRICE_BUSINESS_ANNUAL]: { plan: 'business', billing: 'annual' },
-  [process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY]: { plan: 'enterprise', billing: 'monthly' },
-  [process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL]: { plan: 'enterprise', billing: 'annual' },
-}
+const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+const BUSINESS_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
+const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_MONTHLY
+const ENTERPRISE_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_ANNUAL
 
-const ALLOWED_PRICES = Object.keys(PRICE_CONFIG).filter(Boolean)
+const ALLOWED_PRICES = [
+  BUSINESS_MONTHLY,
+  BUSINESS_ANNUAL,
+  ENTERPRISE_MONTHLY,
+  ENTERPRISE_ANNUAL,
+].filter(Boolean)
 
+// basic origin/CSRF guard
 function validateCSRF() {
   const headersList = headers()
   const origin = headersList.get('origin')
@@ -39,8 +42,11 @@ export async function POST(request) {
     const { priceId } = body
 
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
-      console.error(`❌ Invalid priceId received: ${priceId}`)
-      return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
+      console.error('❌ Invalid priceId received:', priceId)
+      return NextResponse.json(
+        { error: 'Invalid subscription plan' },
+        { status: 400 }
+      )
     }
 
     const cookieStore = cookies()
@@ -69,19 +75,21 @@ export async function POST(request) {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
-
     if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
     }
 
-    // Simple spam protection: limit rapid-fire checkout attempts
-    const recentCheckouts = await supabase
+    // Light spam guard
+    const { data: recent } = await supabase
       .from('checkout_attempts')
       .select('created_at')
       .eq('user_id', user.id)
       .gte('created_at', new Date(Date.now() - 60_000).toISOString())
 
-    if (recentCheckouts.data && recentCheckouts.data.length >= 5) {
+    if (recent && recent.length >= 5) {
       return NextResponse.json(
         { error: 'Too many checkout attempts. Please wait.' },
         { status: 429 }
@@ -100,23 +108,21 @@ export async function POST(request) {
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        // You can keep trial or remove it; leaving 7-day trial for now
         trial_period_days: 7,
         metadata: { userId: user.id },
       },
       tax_id_collection: { enabled: true },
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/?payment=cancelled`,
-      metadata: {
-        userId: user.id,
-        priceId,
-        timestamp: Date.now().toString(),
-      },
+      metadata: { userId: user.id, timestamp: Date.now().toString() },
     })
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
     console.error('❌ Checkout error:', error)
-    return NextResponse.json({ error: 'Payment system error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Payment system error' },
+      { status: 500 }
+    )
   }
 }
