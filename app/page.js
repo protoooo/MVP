@@ -349,10 +349,16 @@ const ThinkingIndicator = ({ queryType = 'simple' }) => {
   }, [queryType, TOTAL_DURATION, currentStages])
 
   return (
-    <div className="flex flex-col items-start gap-2 p-2">
+    <div className="flex flex-col items-start gap-3 p-2">
       <span className="text-xs font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
         {text}
       </span>
+      <div className="w-40 h-[22px] rounded-full border-[1.5px] border-black bg-white overflow-hidden">
+        <div
+          className="h-full bg-black"
+          style={{ width: `${progress}%`, transition: 'width 0.3s ease-out' }}
+        />
+      </div>
     </div>
   )
 }
@@ -451,7 +457,7 @@ const LandingPage = ({ onAction }) => {
   )
 }
 
-// --- rest of file (InputBox, modals, Page component) ---
+// --- INPUT / MODALS / PRICING ---
 
 const InputBox = ({
   input,
@@ -619,7 +625,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
     if (error) {
       setStatusMessage('Error: ' + error.message)
     } else {
-      setStatusMessage('A secure login link has been sent to your inbox.')
+      setStatusMessage('We’ve emailed you a protocolLM login link. Check your inbox.')
     }
     setLoading(false)
   }
@@ -640,10 +646,10 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             <h2
               className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
             >
-              {message || 'Sign in to protocolLM'}
+              {message || 'Sign in or create an account for protocolLM'}
             </h2>
             <p className={`text-sm text-slate-500 ${inter.className}`}>
-              Enter any work or personal email. We&apos;ll send a one-time link.
+              Enter your email. We&apos;ll send you a one-time login link from protocolLM.
             </p>
           </div>
           <button
@@ -668,7 +674,7 @@ const AuthModal = ({ isOpen, onClose, message }) => {
             disabled={loading}
             className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? 'Sending link…' : 'Send secure login link'}
+            {loading ? 'Sending link…' : 'Email me a login link'}
           </button>
         </form>
 
@@ -1223,7 +1229,7 @@ export default function Page() {
 
     if (!currentSession) {
       setShowPricingModal(false)
-      setAuthModalMessage('Create an account to start your free trial.')
+      setAuthModalMessage('Create an account to subscribe to protocolLM.')
       setShowAuthModal(true)
       return
     }
@@ -1285,8 +1291,6 @@ export default function Page() {
     )
   }
 
-  const isDemoGuest = !session
-
   return (
     <>
       <GlobalStyles />
@@ -1346,13 +1350,13 @@ export default function Page() {
                       className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
                     >
                       <Icons.Check />
-                      Start trial
+                      Sign up
                     </button>
                     <button
                       onClick={() => startDemo('chat')}
                       className={`hidden md:inline-flex items-center gap-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 px-4 md:px-5 py-2.5 rounded-lg text-xs font-semibold uppercase tracking-[0.16em] transition-colors ${inter.className}`}
                     >
-                      Demo console
+                      Try demo
                     </button>
                   </div>
                 ) : (
