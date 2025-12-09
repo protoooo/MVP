@@ -14,7 +14,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-const OPENAI_CHAT_MODEL = 'gpt-5.1'
+// pick a real API model – this is the main one:
+const OPENAI_CHAT_MODEL = 'gpt-4.1'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
@@ -73,10 +74,13 @@ function validateMessages(messages) {
 function validateImage(base64String) {
   if (!base64String) return null
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-  const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
+  const cleanBase64 = base64String.includes(',')
+    ? base64String.split(',')[1]
+    : base64String
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
   const sizeInBytes = (cleanBase64.length * 3) / 4
-  if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
+  if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024)
+    throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
   return cleanBase64
 }
 
@@ -105,7 +109,8 @@ export async function POST(req) {
 
     if (!lastMessageText && !body.image) {
       if (!historyText && messages.length > 0) {
-        messages[messages.length - 1].content = 'Analyze safety status based on previous image.'
+        messages[messages.length - 1].content =
+          'Analyze safety status based on previous image.'
         lastMessageText = messages[messages.length - 1].content
       }
     }
@@ -152,14 +157,19 @@ export async function POST(req) {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'guest_ip'
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'guest_ip'
     const userIdentifier = user ? user.id : body.deviceFingerprint || ip
     const isDemo = !user
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
+    // --- DEMO RATE LIMIT ---
     if (isDemo) {
-      const limitCheck = await checkRateLimit(userIdentifier, imageBase64 ? 'image' : 'text')
+      const limitCheck = await checkRateLimit(
+        userIdentifier,
+        imageBase64 ? 'image' : 'text'
+      )
       if (!limitCheck.success) {
         return NextResponse.json(
           { error: 'Demo limit reached.', code: 'DEMO_LIMIT', requiresAuth: true },
@@ -168,6 +178,7 @@ export async function POST(req) {
       }
     }
 
+    // --- SUBSCRIPTION CHECK FOR LOGGED-IN NON-ADMIN USERS ---
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -176,7 +187,10 @@ export async function POST(req) {
         .single()
 
       if (!profile?.accepted_terms) {
-        return NextResponse.json({ error: 'Terms not accepted' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'Terms not accepted' },
+          { status: 403 }
+        )
       }
 
       const { data: sub } = await supabase
@@ -186,16 +200,22 @@ export async function POST(req) {
         .maybeSingle()
 
       let hasActiveSub = false
-      if (sub && ['active', 'trialing'].includes(sub.status) && new Date(sub.current_period_end) > new Date()) {
+      if (
+        sub &&
+        ['active', 'trialing'].includes(sub.status) &&
+        new Date(sub.current_period_end) > new Date()
+      ) {
         hasActiveSub = true
       }
 
+      // short grace period after signup
       if (!hasActiveSub && profile?.created_at) {
         if (Date.now() - new Date(profile.created_at).getTime() < 600000) {
           hasActiveSub = true
         }
       }
 
+      // small grace window after checkout start
       if (!hasActiveSub) {
         const { data: recentCheckout } = await supabase
           .from('checkout_attempts')
@@ -205,7 +225,10 @@ export async function POST(req) {
           .limit(1)
           .maybeSingle()
 
-        if (recentCheckout && Date.now() - new Date(recentCheckout.created_at).getTime() < 300000) {
+        if (
+          recentCheckout &&
+          Date.now() - new Date(recentCheckout.created_at).getTime() < 300000
+        ) {
           hasActiveSub = true
         }
       }
@@ -214,6 +237,41 @@ export async function POST(req) {
         return NextResponse.json(
           { error: 'Subscription required', code: 'NO_ACTIVE_SUBSCRIPTION' },
           { status: 402 }
+        )
+      }
+    }
+
+    // --- USAGE LIMITS FOR PAID USERS (B–E) ---
+    if (user && !isAdmin && !isDemo) {
+      const isImageQuery = !!imageBase64
+
+      try {
+        await checkAndIncrementUsage(user.id, { isImage: isImageQuery })
+      } catch (err) {
+        if (err.code === 'NO_SUBSCRIPTION' || err.code === 'SUB_EXPIRED') {
+          return NextResponse.json(
+            { error: 'Subscription required or expired.', code: 'NO_ACTIVE_SUBSCRIPTION' },
+            { status: 402 }
+          )
+        }
+
+        if (err.code === 'LIMIT_REACHED') {
+          return NextResponse.json(
+            {
+              error:
+                err.kind === 'image'
+                  ? 'You’ve reached your image audit limit for this period.'
+                  : 'You’ve reached your text query limit for this period.',
+              code: 'USAGE_LIMIT',
+            },
+            { status: 429 }
+          )
+        }
+
+        console.error('[chat] Usage check failed:', err)
+        return NextResponse.json(
+          { error: 'Usage check failed. Please try again in a moment.' },
+          { status: 500 }
         )
       }
     }
@@ -260,10 +318,14 @@ export async function POST(req) {
         ])
 
         searchTerms = visionResult?.choices?.[0]?.message?.content?.trim() || ''
-        console.log('[API STEP 3] Vision Success:', searchTerms.substring(0, 100))
+        console.log(
+          '[API STEP 3] Vision Success:',
+          searchTerms.substring(0, 100)
+        )
       } catch (visionError) {
         console.error('[API STEP 3] Vision Error:', visionError.message)
-        searchTerms = lastMessageText || 'general food safety equipment cleanliness'
+        searchTerms =
+          lastMessageText || 'general food safety equipment cleanliness'
       }
     } else {
       searchTerms = lastMessageText || 'food safety code'
@@ -290,9 +352,15 @@ Washtenaw County Michigan food service inspection violation types enforcement ac
           context = searchResults
             .map((doc) => `[SOURCE: ${doc.source}]\n${doc.text}`)
             .join('\n\n')
-          console.log('[API STEP 4] Search Success: Found', searchResults.length, 'docs')
+          console.log(
+            '[API STEP 4] Search Success: Found',
+            searchResults.length,
+            'docs'
+          )
         } else {
-          console.log('[API STEP 4] No search results - continuing without context')
+          console.log(
+            '[API STEP 4] No search results - continuing without context'
+          )
         }
       } catch (err) {
         console.error('[API STEP 4] Search Exception:', err)
@@ -437,6 +505,7 @@ ${searchTerms}` : ''}`
       console.log('[API STEP 6] Success - Response length:', text.length)
 
       const dbTasks = []
+
       if (user && chatId && lastMessageText) {
         dbTasks.push(
           supabase.from('messages').insert([
@@ -450,17 +519,24 @@ ${searchTerms}` : ''}`
           ])
         )
       }
-      dbTasks.push(incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text'))
+
+      // only count per-request rate limit for demos;
+      // paid usage is already handled by checkAndIncrementUsage
+      if (isDemo) {
+        dbTasks.push(
+          incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text')
+        )
+      }
+
       await Promise.allSettled(dbTasks)
 
       const duration = Date.now() - startTime
       console.log(`[API] Total duration: ${duration}ms`)
 
       return NextResponse.json({ message: text })
-
     } catch (genError) {
       console.error('[API STEP 5] Generation Error:', genError)
-      
+
       let errorMsg = 'Unable to generate response. Please try again.'
       let statusCode = 500
 
@@ -474,7 +550,6 @@ ${searchTerms}` : ''}`
 
       return NextResponse.json({ error: errorMsg }, { status: statusCode })
     }
-
   } catch (err) {
     console.error('[API] Fatal Error:', err)
 
