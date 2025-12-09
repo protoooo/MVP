@@ -14,7 +14,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-const OPENAI_CHAT_MODEL = 'gpt-5.1-thinking'
+const OPENAI_CHAT_MODEL = 'gpt-5.1'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
