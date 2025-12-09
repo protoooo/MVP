@@ -1,8 +1,8 @@
 // =============================
-// LOAD ENVIRONMENT VARIABLES
+// LOAD ENVIRONMENT VARIABLES (ESM SAFE)
 // =============================
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: './.env.local' });   // <--- CRITICAL FIX
 
 // =============================
 // IMPORTS
@@ -17,8 +17,8 @@ import pdf from 'pdf-parse/lib/pdf-parse.js'
 // CONFIG
 // =============================
 const CHUNK_SIZE = 1500
-const BATCH_DELAY = 1000 // 1 second per chunk to avoid rate limits
-const RETRY_DELAY = 5000 // 5 seconds on 429
+const BATCH_DELAY = 1000
+const RETRY_DELAY = 5000
 const MAX_RETRIES = 5
 
 // =============================
@@ -71,7 +71,6 @@ const chunkText = (text, chunkSize = CHUNK_SIZE) => {
   }
 
   if (current.length > 0) chunks.push(current.join(' '))
-
   return chunks
 }
 
@@ -102,7 +101,6 @@ async function testSupabaseConnection() {
       .limit(1)
 
     if (error) throw error
-
     console.log('✅ Supabase Connection Successful')
     return true
   } catch (err) {
@@ -151,7 +149,8 @@ async function processDocument(file, filePath) {
   console.log(`\n📄 Processing: ${file}`)
 
   try {
-    const data = await pdf(fs.readFileSync(filePath))
+    const dataBuffer = fs.readFileSync(filePath)
+    const data = await pdf(dataBuffer)
     const text = data.text.replace(/\n/g, ' ').replace(/\s+/g, ' ')
     const chunks = chunkText(text)
     console.log(`   📊 Split into ${chunks.length} chunks`)
@@ -162,7 +161,7 @@ async function processDocument(file, filePath) {
     for (let i = 0; i < chunks.length; i++) {
       try {
         const embedding = await getEmbedding(chunks[i])
-
+        
         const { error } = await supabase.from('documents').insert({
           content: chunks[i],
           metadata: {
@@ -175,10 +174,10 @@ async function processDocument(file, filePath) {
         })
 
         if (error) throw error
-
         process.stdout.write('█')
         success++
         await sleep(BATCH_DELAY)
+
       } catch (err) {
         process.stdout.write('✗')
         failed++
@@ -201,7 +200,6 @@ async function run() {
   console.log('\n🚀 Starting OpenAI Document Ingestion\n')
   console.log('='.repeat(50))
 
-  // Test both services
   const openaiOk = await testOpenAIConnection()
   const supabaseOk = await testSupabaseConnection()
 
@@ -259,7 +257,6 @@ async function run() {
   console.log('\n✅ Ingestion Complete!\n')
 }
 
-// Run main
 run().catch(err => {
   console.error('\n💥 Fatal Error:', err.message)
   console.error(err.stack)
