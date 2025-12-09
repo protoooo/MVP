@@ -14,7 +14,18 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
+// NOTE: you can keep this on whatever model is working for you.
 const OPENAI_CHAT_MODEL = 'gpt-5.1'
+
+// Map Stripe price_ids → internal plan keys
+const PLAN_BY_PRICE_ID = {
+  // Business
+  'price_1ScHSHDlSrKA3nbA35m9RPZW': 'business', // monthly
+  'price_1ScHU8DlSrKA3nbAdep8adQI': 'business', // yearly
+  // Enterprise
+  'price_1ScHVADlSrKA3nbAzYsxtZMH': 'enterprise', // monthly
+  'price_1ScHW6DlSrKA3nbAXpWCRFxs': 'enterprise', // yearly
+}
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
@@ -76,7 +87,9 @@ function validateImage(base64String) {
   const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
   const sizeInBytes = (cleanBase64.length * 3) / 4
-  if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
+  if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+    throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
+  }
   return cleanBase64
 }
 
@@ -85,12 +98,14 @@ export async function POST(req) {
   const startTime = Date.now()
 
   try {
+    // --- Maintenance flag ---
     const serviceEnabled = await isServiceEnabled()
     if (!serviceEnabled) {
       const message = await getMaintenanceMessage()
       return NextResponse.json({ error: message, maintenance: true }, { status: 503 })
     }
 
+    // --- Basic payload size guard ---
     const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
     if (contentLength > 12 * 1024 * 1024) {
       return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
@@ -117,6 +132,7 @@ export async function POST(req) {
       return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
+    // --- Supabase client (user session) ---
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -131,7 +147,7 @@ export async function POST(req) {
       }
     )
 
-    // Feature Flag: Vision
+    // Feature Flag: Vision toggle
     if (imageBase64) {
       const { data: imageFlag } = await supabase
         .from('feature_flags')
@@ -159,7 +175,7 @@ export async function POST(req) {
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
-    // --- DEMO RATE LIMITS (IP / device fingerprint) ---
+    // --- DEMO LIMITS (by IP / device fingerprint) ---
     if (isDemo) {
       const limitCheck = await checkRateLimit(userIdentifier, imageBase64 ? 'image' : 'text')
       if (!limitCheck.success) {
@@ -170,7 +186,9 @@ export async function POST(req) {
       }
     }
 
-    // --- PAID USER REQUIREMENTS (terms + subscription + per-plan limits) ---
+    // --- SUBSCRIPTION & PLAN DETECTION ---
+    let planType = 'business' // default if somehow unknown but allowed
+
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -182,7 +200,6 @@ export async function POST(req) {
         return NextResponse.json({ error: 'Terms not accepted' }, { status: 403 })
       }
 
-      // Existing subscription / grace logic
       const { data: sub } = await supabase
         .from('subscriptions')
         .select('status, current_period_end, price_id')
@@ -190,18 +207,19 @@ export async function POST(req) {
         .maybeSingle()
 
       let hasActiveSub = false
+
       if (sub && ['active', 'trialing'].includes(sub.status) && new Date(sub.current_period_end) > new Date()) {
         hasActiveSub = true
       }
 
-      // short free window after signup (10 minutes)
+      // Short grace period right after signup (10 min)
       if (!hasActiveSub && profile?.created_at) {
         if (Date.now() - new Date(profile.created_at).getTime() < 600000) {
           hasActiveSub = true
         }
       }
 
-      // short grace after checkout attempt (5 minutes)
+      // Short grace period right after checkout (5 min)
       if (!hasActiveSub) {
         const { data: recentCheckout } = await supabase
           .from('checkout_attempts')
@@ -223,36 +241,33 @@ export async function POST(req) {
         )
       }
 
-      // NEW: enforce Business / Enterprise monthly limits
+      // If we have a subscription row, map price_id → planType
+      if (sub?.price_id && PLAN_BY_PRICE_ID[sub.price_id]) {
+        planType = PLAN_BY_PRICE_ID[sub.price_id]
+      }
+    }
+
+    // --- PAID USAGE LIMITS (per user, per plan, per month) ---
+    if (user && !isDemo && !isAdmin) {
       const isImageQuery = !!imageBase64
       try {
-        await checkAndIncrementUsage(user.id, { isImage: isImageQuery })
+        await checkAndIncrementUsage(user.id, { isImage: isImageQuery, planType })
       } catch (err) {
-        console.error('[API] usage error', err)
-
-        if (err.code === 'NO_SUBSCRIPTION' || err.code === 'SUB_EXPIRED') {
-          return NextResponse.json(
-            { error: 'Subscription required or expired.', code: 'NO_ACTIVE_SUBSCRIPTION' },
-            { status: 402 }
-          )
-        }
-
         if (err.code === 'LIMIT_REACHED') {
           return NextResponse.json(
             {
-              error: err.kind === 'image'
-                ? 'You’ve reached your image audit limit for this billing period.'
-                : 'You’ve reached your text query limit for this billing period.',
-              code: 'PLAN_LIMIT_REACHED',
+              error:
+                err.kind === 'image'
+                  ? 'You’ve reached your image audit limit for this billing period.'
+                  : 'You’ve reached your text query limit for this billing period.',
+              code: 'USAGE_LIMIT',
             },
             { status: 429 }
           )
         }
 
-        return NextResponse.json(
-          { error: 'Usage check failed.', code: 'USAGE_ERROR' },
-          { status: 500 }
-        )
+        console.error('[API] Usage check failed:', err)
+        // Fall through; we still attempt to answer rather than hard-failing
       }
     }
 
@@ -289,7 +304,7 @@ export async function POST(req) {
           model: OPENAI_CHAT_MODEL,
           messages: messagesVision,
           temperature: 0.1,
-          max_completion_tokens: 400,
+          max_tokens: 400,
         })
 
         const visionResult = await Promise.race([
@@ -457,7 +472,7 @@ ${searchTerms}` : ''}`
         messages: messagesFinal,
         temperature: GENERATION_CONFIG.temperature,
         top_p: GENERATION_CONFIG.topP,
-        max_completion_tokens: GENERATION_CONFIG.maxOutputTokens,
+        max_tokens: GENERATION_CONFIG.maxOutputTokens,
       })
 
       const result = await Promise.race([
@@ -489,8 +504,9 @@ ${searchTerms}` : ''}`
         )
       }
 
-      // Keep generic usage stats (demo + paid) by identifier
+      // This is your existing generic usage counter (per IP / device).
       dbTasks.push(incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text'))
+
       await Promise.allSettled(dbTasks)
 
       const duration = Date.now() - startTime
