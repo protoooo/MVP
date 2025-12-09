@@ -12,29 +12,41 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// ✅ Same price-ID logic as checkout
-const PRICE_MONTHLY =
-  process.env.STRIPE_PRICE_ID_MONTHLY ||
-  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+// Map Stripe price IDs → plans
+const PRICE_CONFIG = {
+  [process.env.STRIPE_PRICE_BUSINESS_MONTHLY]: { plan: 'business', billing: 'monthly' },
+  [process.env.STRIPE_PRICE_BUSINESS_ANNUAL]: { plan: 'business', billing: 'annual' },
+  [process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY]: { plan: 'enterprise', billing: 'monthly' },
+  [process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL]: { plan: 'enterprise', billing: 'annual' },
+}
 
-const PRICE_ANNUAL =
-  process.env.STRIPE_PRICE_ID_ANNUAL ||
-  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL
+// Usage presets
+const PLAN_LIMITS = {
+  business: {
+    text_limit: 200,
+    image_limit: 40,
+  },
+  enterprise: {
+    text_limit: 1000,
+    image_limit: 200,
+  },
+}
 
 const processedEvents = new Set()
 const MAX_EVENT_AGE_MS = 60 * 1000
 
-function isEventProcessed(id) {
-  return processedEvents.has(id)
+function isEventProcessed(eventId) {
+  return processedEvents.has(eventId)
 }
-function markEventProcessed(id) {
-  processedEvents.add(id)
-  setTimeout(() => processedEvents.delete(id), 60 * 60 * 1000)
+function markEventProcessed(eventId) {
+  processedEvents.add(eventId)
+  setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
 }
-function isEventTooOld(timestamp) {
-  return Date.now() - timestamp * 1000 > MAX_EVENT_AGE_MS
+function isEventTooOld(eventTimestamp) {
+  return Date.now() - eventTimestamp * 1000 > MAX_EVENT_AGE_MS
 }
 
+// Validate webhook origin by requiring Stripe signature header
 function validateWebhookOrigin() {
   const headersList = headers()
   const stripeSignature = headersList.get('stripe-signature')
@@ -47,10 +59,7 @@ function validateWebhookOrigin() {
 
 export async function POST(req) {
   if (!validateWebhookOrigin()) {
-    return NextResponse.json(
-      { error: 'Invalid webhook source' },
-      { status: 403 }
-    )
+    return NextResponse.json({ error: 'Invalid webhook source' }, { status: 403 })
   }
 
   const body = await req.text()
@@ -85,30 +94,23 @@ export async function POST(req) {
         const subscriptionId = session.subscription
 
         if (!userId || !subscriptionId) {
-          console.error('❌ Missing userId or subscriptionId')
-          return NextResponse.json(
-            { error: 'Missing data' },
-            { status: 400 }
-          )
+          console.error('❌ Missing userId or subscriptionId on checkout.session.completed')
+          return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
-        const subscription = await stripe.subscriptions.retrieve(
-          subscriptionId
-        )
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
+        const config = PRICE_CONFIG[priceId] || { plan: 'business', billing: 'monthly' }
+        const limits = PLAN_LIMITS[config.plan] || PLAN_LIMITS.business
 
-        // ✅ Map price -> plan name if you care
-        let planName = 'protocollm'
-        if (priceId === PRICE_MONTHLY) planName = 'protocollm_monthly'
-        if (priceId === PRICE_ANNUAL) planName = 'protocollm_annual'
+        const now = new Date()
 
-        const { error: subInsertError } = await supabase
-          .from('subscriptions')
-          .insert({
+        const { error: subUpsertError } = await supabase.from('subscriptions').upsert(
+          {
             user_id: userId,
             stripe_subscription_id: subscriptionId,
             stripe_customer_id: session.customer,
-            plan: planName,
+            plan: config.plan,
             status: subscription.status,
             current_period_start: new Date(
               subscription.current_period_start * 1000
@@ -120,51 +122,93 @@ export async function POST(req) {
               ? new Date(subscription.trial_end * 1000).toISOString()
               : null,
             cancel_at_period_end: subscription.cancel_at_period_end,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
+            text_limit: limits.text_limit,
+            image_limit: limits.image_limit,
+            text_used: 0,
+            image_used: 0,
+            created_at: now.toISOString(),
+            updated_at: now.toISOString(),
+          },
+          { onConflict: 'stripe_subscription_id' }
+        )
 
-        if (!subInsertError) {
+        if (subUpsertError) {
+          console.error('❌ Failed to upsert subscription:', subUpsertError)
+        } else {
           await supabase
             .from('user_profiles')
             .update({ is_subscribed: true })
             .eq('id', userId)
         }
+
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object
+        const priceId = subscription.items.data[0].price.id
+        const config = PRICE_CONFIG[priceId] || { plan: 'business', billing: 'monthly' }
+        const limits = PLAN_LIMITS[config.plan] || PLAN_LIMITS.business
 
-        await supabase
+        const now = new Date()
+
+        const { error: updateError } = await supabase
           .from('subscriptions')
           .update({
+            plan: config.plan,
             status: subscription.status,
+            current_period_start: new Date(
+              subscription.current_period_start * 1000
+            ).toISOString(),
             current_period_end: new Date(
               subscription.current_period_end * 1000
             ).toISOString(),
-            updated_at: new Date().toISOString(),
+            // Reset usage when Stripe tells us sub has changed (new period, upgrade, etc.)
+            text_limit: limits.text_limit,
+            image_limit: limits.image_limit,
+            text_used: 0,
+            image_used: 0,
+            updated_at: now.toISOString(),
           })
           .eq('stripe_subscription_id', subscription.id)
+
+        if (updateError) {
+          console.error('❌ Failed to update subscription:', updateError)
+        }
+
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
 
-        await supabase
+        const { error: deleteError } = await supabase
           .from('subscriptions')
           .update({
             status: 'canceled',
             updated_at: new Date().toISOString(),
           })
           .eq('stripe_subscription_id', subscription.id)
+
+        if (deleteError) {
+          console.error('❌ Failed to mark subscription canceled:', deleteError)
+        }
+
+        // Also drop is_subscribed flag
+        if (subscription.metadata?.userId) {
+          await supabase
+            .from('user_profiles')
+            .update({ is_subscribed: false })
+            .eq('id', subscription.metadata.userId)
+        }
+
         break
       }
 
-      default:
-        // Ignore other events but still ack
+      default: {
+        // Other events can be ignored or logged
         break
+      }
     }
 
     return NextResponse.json({ received: true })
