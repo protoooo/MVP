@@ -1225,21 +1225,25 @@ export default function Page() {
     }
   }
 
-  const handleCheckout = async (priceId, planName) => {
+    const handleCheckout = async (priceId, planName) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
+
     if (!currentSession) {
       setShowPricingModal(false)
-      setAuthModalMessage('Create an account to start your 7-day free trial.')
+      setAuthModalMessage('Create an account to start your free trial.')
       setShowAuthModal(true)
       return
     }
+
     if (!priceId) {
       alert('Invalid price selected')
       return
     }
+
     setCheckoutLoading(planName)
+
     try {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -1249,18 +1253,24 @@ export default function Page() {
         },
         body: JSON.stringify({ priceId }),
       })
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}))
         throw new Error(errorData.error || 'Checkout failed')
       }
+
       const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else throw new Error('No checkout URL received')
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL received')
+      }
     } catch (error) {
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
     }
   }
+
 
   useEffect(() => {
     if (scrollRef.current) {
