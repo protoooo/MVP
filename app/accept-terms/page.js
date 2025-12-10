@@ -16,7 +16,6 @@ export default function AcceptTermsPage() {
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       
       if (!currentUser) {
-        console.log('❌ Not authenticated, redirecting to home')
         router.push('/')
         return
       }
@@ -25,18 +24,17 @@ export default function AcceptTermsPage() {
       
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('accepted_terms, accepted_privacy')
+        .select('accepted_terms, accepted_privacy, terms_accepted_at')
         .eq('id', currentUser.id)
         .single()
       
       if (profile?.accepted_terms && profile?.accepted_privacy) {
-        console.log('✅ Terms already accepted, redirecting to pricing')
         router.push('/?showPricing=true')
       }
     }
     
     checkAuth()
-  }, [])
+  }, [supabase, router])
 
   const handleAgree = async () => {
     if (!user) {
@@ -48,31 +46,30 @@ export default function AcceptTermsPage() {
     setError(null)
 
     try {
-      console.log('📝 Updating terms acceptance for user:', user.id)
+      const now = new Date().toISOString()
       
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({ 
           accepted_terms: true,
           accepted_privacy: true,
-          updated_at: new Date().toISOString()
+          terms_accepted_at: now,
+          privacy_accepted_at: now,
+          updated_at: now
         })
         .eq('id', user.id)
 
       if (updateError) {
-        console.error('❌ Update failed:', updateError)
+        console.error('Update failed:', updateError)
         setError('Failed to update profile. Please try again.')
         setLoading(false)
         return
       }
 
-      console.log('✅ Terms accepted, redirecting to pricing')
-      
-      // ✅ FIX: Redirect to home with pricing modal trigger
       window.location.href = '/?showPricing=true'
       
     } catch (err) {
-      console.error('❌ Exception:', err)
+      console.error('Exception:', err)
       setError('An error occurred. Please try again.')
       setLoading(false)
     }
