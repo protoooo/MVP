@@ -15,8 +15,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// Use whatever model you currently have working:
-const OPENAI_CHAT_MODEL = 'gpt-5.1'
+// CRITICAL FIX: Use a valid OpenAI model
+// 'gpt-5.1' does not exist - using 'gpt-4o' instead
+const OPENAI_CHAT_MODEL = 'gpt-4o'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
@@ -241,8 +242,8 @@ export async function POST(req) {
             {
               error:
                 err.kind === 'image'
-                  ? 'You’ve reached your image audit limit for this period.'
-                  : 'You’ve reached your text query limit for this period.',
+                  ? 'You've reached your image audit limit for this period.'
+                  : 'You've reached your text query limit for this period.',
               code: 'PLAN_LIMIT_REACHED',
             },
             { status: 429 }
@@ -345,8 +346,26 @@ Washtenaw County Michigan food service inspection violation types enforcement ac
     // --- SYSTEM PROMPT & FINAL CALL ---
     const SYSTEM_PROMPT = `You are ProtocolLM, a food safety and inspection assistant focused on restaurants in Washtenaw County, Michigan.
 
-... (SYSTEM_PROMPT body unchanged – keeping your existing text) ...
-`
+Your role:
+- Provide accurate guidance on Michigan Food Code requirements
+- Reference Washtenaw County Health Department enforcement practices
+- Help identify potential violations in facility photos
+- Offer corrective action recommendations
+
+Guidelines:
+1. Base answers on provided regulatory context when available
+2. Clearly distinguish between:
+   - Code requirements (what the law says)
+   - Local enforcement practices (how it's applied)
+   - Best practices (recommended but not required)
+3. When uncertain, direct users to contact Washtenaw County Health Department
+4. For images: describe only what's visible, don't speculate
+5. Be professional but clear - use plain language
+
+Important limitations:
+- You are NOT a substitute for professional consultation
+- You cannot guarantee compliance or predict inspection outcomes
+- Users should verify critical requirements with local authorities`
 
     const finalPrompt = `${SYSTEM_PROMPT}
 
