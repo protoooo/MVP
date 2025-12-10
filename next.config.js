@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable experimental optimizations that are causing build errors
+  experimental: {
+    // Remove optimizeCss - it's causing the critters error
+  },
+  
+  // Output configuration for better Railway compatibility
+  output: 'standalone',
+  
   async headers() {
     return [
       {
@@ -37,7 +45,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval/inline
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
@@ -76,9 +84,20 @@ const nextConfig = {
   // React strict mode
   reactStrictMode: true,
   
-  // Experimental features for better performance
-  experimental: {
-    optimizeCss: true,
+  // Webpack configuration to fix module issues
+  webpack: (config, { isServer }) => {
+    // Fix for "Module not found: Can't resolve 'critters'" errors
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    
+    return config
   },
 }
 
