@@ -74,32 +74,47 @@ export async function GET(request) {
     .from('user_profiles')
     .select('accepted_terms, accepted_privacy')
     .eq('id', data.user.id)
-    .single()
+    .maybeSingle()
 
   if (!profile?.accepted_terms || !profile?.accepted_privacy) {
     console.log('⚠️ Terms not accepted, redirecting to /accept-terms')
     return NextResponse.redirect(`${baseUrl}/accept-terms`)
   }
 
-  // Check for active subscription
+  // Check for active subscription with grace period
   const { data: activeSub } = await supabase
     .from('subscriptions')
-    .select('status, current_period_end, trial_end')
+    .select('status, current_period_end, trial_end, created_at')
     .eq('user_id', data.user.id)
     .in('status', ['active', 'trialing'])
     .order('current_period_end', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  // If no subscription, show pricing
+  const now = new Date()
+  
+  // If no subscription, check if they just completed checkout (5 min grace)
   if (!activeSub) {
+    const { data: recentCheckout } = await supabase
+      .from('checkout_attempts')
+      .select('created_at')
+      .eq('user_id', data.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (recentCheckout && (now - new Date(recentCheckout.created_at)) < 300000) {
+      console.log('⏳ Recent checkout detected, allowing access during grace period')
+      return NextResponse.redirect(baseUrl)
+    }
+
     console.log('⚠️ No active subscription, redirecting to pricing')
     return NextResponse.redirect(`${baseUrl}/?showPricing=true`)
   }
 
   // Check if subscription is expired
   const periodEnd = new Date(activeSub.current_period_end)
-  if (periodEnd < new Date()) {
+  if (periodEnd < now) {
     console.log('⚠️ Subscription expired')
     return NextResponse.redirect(`${baseUrl}/?showPricing=true&expired=true`)
   }
