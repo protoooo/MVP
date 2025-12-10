@@ -63,3 +63,12 @@ yarn-error.log*
 # Sentry
 .sentryclirc
 sentry.properties
+
+# ✅ ADDED: Backup files
+*.backup
+*.bak
+*.tmp
+
+# ✅ ADDED: Local test data
+test-uploads/
+temp/
