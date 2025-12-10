@@ -9,63 +9,55 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [linkError, setLinkError] = useState('')    // fatal / link / session errors
+  const [formError, setFormError] = useState('')    // validation / update errors
   const [verifying, setVerifying] = useState(true)
 
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    const verifyToken = async () => {
+    const checkSession = async () => {
       try {
-        const params = new URLSearchParams(window.location.search)
-        const tokenHash = params.get('token_hash')
-        const type = params.get('type')
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
-        if (!tokenHash || type !== 'recovery') {
-          setError('Invalid or expired reset link. Please request a new password reset.')
-          setVerifying(false)
-          return
+        if (!session) {
+          setLinkError('Invalid or expired reset link. Please request a new password reset.')
+          // Make sure any stray session is cleared
+          await supabase.auth.signOut()
         }
-
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
-
-        if (verifyError) {
-          console.error('Token verification failed:', verifyError)
-          setError('Invalid or expired reset link. Please request a new password reset.')
-          setVerifying(false)
-          return
-        }
-
-        // Token verified and session established
-        setVerifying(false)
       } catch (err) {
-        console.error('Verification exception:', err)
-        setError('Failed to verify reset link. Please try again.')
+        console.error('Error checking session for reset:', err)
+        setLinkError('Failed to verify reset link. Please try again.')
+        try {
+          await supabase.auth.signOut()
+        } catch (e) {
+          console.error('Error signing out after verification failure:', e)
+        }
+      } finally {
         setVerifying(false)
       }
     }
 
-    verifyToken()
+    checkSession()
   }, [supabase])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
-    setError('')
+    setFormError('')
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
+      setFormError('Password must be at least 8 characters.')
       setLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      setFormError('Passwords do not match.')
       setLoading(false)
       return
     }
@@ -77,7 +69,7 @@ export default function ResetPasswordPage() {
 
       if (updateError) {
         console.error('Update password error:', updateError)
-        setError(updateError.message || 'Failed to update password.')
+        setFormError(updateError.message || 'Failed to update password.')
         setLoading(false)
         return
       }
@@ -85,14 +77,25 @@ export default function ResetPasswordPage() {
       setMessage('Password updated successfully. Redirecting to home…')
       setLoading(false)
 
+      // Optional: keep them logged in after reset (standard behavior)
       setTimeout(() => {
         router.push('/')
       }, 2000)
     } catch (err) {
       console.error('Reset password exception:', err)
-      setError('An unexpected error occurred. Please try again.')
+      setFormError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
+  }
+
+  const handleBackHome = async () => {
+    // If they bail out (or hit a link error), we don’t want them “logged in”
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Error signing out on back to home:', err)
+    }
+    router.push('/')
   }
 
   return (
@@ -105,15 +108,21 @@ export default function ResetPasswordPage() {
           Choose a new password to secure your account.
         </p>
 
-        {verifying && !error && (
+        {verifying && !linkError && (
           <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
 
-        {error && (
+        {linkError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
+            {linkError}
+          </div>
+        )}
+
+        {formError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {formError}
           </div>
         )}
 
@@ -123,8 +132,11 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Only show form if verification succeeded */}
-        {!verifying && !error && (
+        {/* Show form if:
+           - we’re done verifying
+           - and the link itself is OK
+        */}
+        {!verifying && !linkError && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
@@ -167,7 +179,7 @@ export default function ResetPasswordPage() {
         <div className="mt-6 border-t border-neutral-200 pt-4 flex justify-center">
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={handleBackHome}
             className="text-xs text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
           >
             Back to home
