@@ -16,25 +16,41 @@ export default function ResetPasswordPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const checkSession = async () => {
+    const verifyRecoveryToken = async () => {
       try {
-        // With PKCE + /auth/callback, the session should already be set via cookies
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+        const url = new URL(window.location.href)
+        const params = url.searchParams
+        const tokenHash = params.get('token_hash')
+        const type = params.get('type')
 
-        if (!session) {
+        if (!tokenHash || type !== 'recovery') {
           setError('Invalid or expired reset link. Please request a new password reset.')
+          setVerifying(false)
+          return
         }
+
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery',
+        })
+
+        if (verifyError) {
+          console.error('Token verification failed:', verifyError)
+          setError('Invalid or expired reset link. Please request a new password reset.')
+          setVerifying(false)
+          return
+        }
+
+        // Token verified, session should now be established
+        setVerifying(false)
       } catch (err) {
-        console.error('Error checking session for reset:', err)
+        console.error('Verification exception:', err)
         setError('Failed to verify reset link. Please try again.')
-      } finally {
         setVerifying(false)
       }
     }
 
-    checkSession()
+    verifyRecoveryToken()
   }, [supabase])
 
   const handleSubmit = async (e) => {
@@ -108,7 +124,7 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Only show form if we’ve finished verifying and there is no fatal error */}
+        {/* Only show the form if verification passed and there is no fatal error */}
         {!verifying && !error && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
