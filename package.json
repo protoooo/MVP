@@ -9,16 +9,9 @@
   },
   "scripts": {
     "dev": "next dev",
-    "clean": "rm -rf .next node_modules/.cache",
-    "prebuild": "npm run clean",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
-    "lint": "next lint",
-    "ingest": "node scripts/ingest-documents.js",
-    "ingest:local": "node --env-file=.env.local scripts/ingest-documents.js",
-    "test": "echo 'No tests yet' && exit 0",
-    "postbuild": "echo 'Build complete. Ready for deployment.'",
-    "health": "node -e \"fetch('http://localhost:3000/api/health').then(r=>r.json()).then(console.log).catch(console.error)\""
+    "lint": "next lint"
   },
   "dependencies": {
     "@google/generative-ai": "^0.17.1",
