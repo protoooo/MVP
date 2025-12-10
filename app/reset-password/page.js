@@ -16,7 +16,7 @@ export default function ResetPasswordPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    const verifyLink = async () => {
+    const verifyToken = async () => {
       try {
         const params = new URLSearchParams(window.location.search)
         const tokenHash = params.get('token_hash')
@@ -34,13 +34,13 @@ export default function ResetPasswordPage() {
         })
 
         if (verifyError) {
-          console.error('verifyOtp error:', verifyError)
+          console.error('Token verification failed:', verifyError)
           setError('Invalid or expired reset link. Please request a new password reset.')
           setVerifying(false)
           return
         }
 
-        // At this point Supabase has created a session for this user
+        // Token verified and session established
         setVerifying(false)
       } catch (err) {
         console.error('Verification exception:', err)
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
       }
     }
 
-    verifyLink()
+    verifyToken()
   }, [supabase])
 
   const handleSubmit = async (e) => {
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Only show form if link is valid and verified */}
+        {/* Only show form if verification succeeded */}
         {!verifying && !error && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
