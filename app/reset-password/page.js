@@ -14,20 +14,43 @@ export default function ResetPassword() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Check if user has a valid session
+    // Check if user has a valid session or if we need to verify token
     const checkSession = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type')
+      
+      // If we have a token_hash, verify it first
+      if (tokenHash && type === 'recovery') {
+        try {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery'
+          })
+          
+          if (verifyError) {
+            console.error('Token verification failed:', verifyError)
+            setError('Invalid or expired reset link. Please request a new password reset.')
+            return
+          }
+          
+          // Token verified successfully, session should be established
+          console.log('Token verified successfully')
+        } catch (err) {
+          console.error('Verification exception:', err)
+          setError('Failed to verify reset link. Please try again.')
+          return
+        }
+      }
+      
+      // Check if we have a valid session
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
         setError('Invalid or expired reset link. Please request a new password reset.')
       }
     }
-    checkSession()
     
-    // Check URL for errors
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('error') === 'link_expired') {
-      setError('This reset link has expired. Please request a new one.')
-    }
+    checkSession()
   }, [supabase])
 
   const handleSubmit = async (e) => {
