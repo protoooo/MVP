@@ -3,7 +3,8 @@ nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
 cmds = [
-  'npm ci --prefer-offline --no-audit',
+  'rm -rf node_modules/.cache .next',
+  'npm ci --prefer-offline --no-audit --legacy-peer-deps',
   'npm rebuild'
 ]
 
@@ -18,3 +19,4 @@ NODE_ENV = 'production'
 NPM_CONFIG_PRODUCTION = 'false'
 NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
+NPM_CONFIG_LOGLEVEL = 'error'
