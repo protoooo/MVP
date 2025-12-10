@@ -20,7 +20,7 @@ const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
-// Store processed events in database instead of memory
+// Database-backed idempotency
 async function isEventProcessed(eventId) {
   const { data } = await supabase
     .from('processed_webhook_events')
@@ -47,28 +47,26 @@ export async function POST(req) {
   const signature = headers().get('stripe-signature')
   
   if (!signature) {
-    logger.error('[Webhook] Missing Stripe signature')
+    logger.security('Webhook missing Stripe signature')
     return NextResponse.json({ error: 'No signature' }, { status: 401 })
   }
 
+  // Verify webhook signature
   let event
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
-    logger.error('[Webhook] Signature verification failed', { error: err.message })
+    logger.security('Webhook signature verification failed', { error: err.message })
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  // Check if already processed (database-backed idempotency)
+  // Check idempotency
   if (await isEventProcessed(event.id)) {
-    logger.info('[Webhook] Duplicate event ignored', { eventId: event.id })
-    return NextResponse.json({ received: true })
+    logger.info('Duplicate webhook event ignored', { eventId: event.id })
+    return NextResponse.json({ received: true, duplicate: true })
   }
 
-  logger.info('[Webhook] Processing event', { 
-    type: event.type, 
-    id: event.id 
-  })
+  logger.info('Processing webhook', { type: event.type, id: event.id })
 
   try {
     switch (event.type) {
@@ -78,10 +76,7 @@ export async function POST(req) {
         const subscriptionId = session.subscription
 
         if (!userId || !subscriptionId) {
-          logger.error('[Webhook] Missing data in checkout.session.completed', {
-            userId,
-            subscriptionId
-          })
+          logger.error('Missing data in checkout.session.completed', { userId, subscriptionId })
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
@@ -90,7 +85,7 @@ export async function POST(req) {
         const priceId = subscription.items.data[0].price.id
         const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        logger.info('[Webhook] Checkout completed', { 
+        logger.info('Checkout completed', { 
           userId, 
           plan: planName, 
           subscriptionId,
@@ -114,7 +109,7 @@ export async function POST(req) {
         }, { onConflict: 'stripe_subscription_id' })
 
         if (subError) {
-          logger.error('[Webhook] Failed to upsert subscription', { error: subError })
+          logger.error('Failed to upsert subscription', { error: subError.message })
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
@@ -124,7 +119,7 @@ export async function POST(req) {
           updated_at: new Date().toISOString()
         }).eq('id', userId)
 
-        logger.info('[Webhook] ✅ Subscription created successfully')
+        logger.audit('Subscription created', { userId, plan: planName, subscriptionId })
         break
       }
 
@@ -142,7 +137,7 @@ export async function POST(req) {
           updated_at: new Date().toISOString(),
         }).eq('stripe_subscription_id', subscription.id)
 
-        logger.info('[Webhook] Subscription updated', { subscriptionId: subscription.id })
+        logger.audit('Subscription updated', { subscriptionId: subscription.id, status: subscription.status })
         break
       }
 
@@ -168,26 +163,26 @@ export async function POST(req) {
           }).eq('id', sub.user_id)
         }
 
-        logger.info('[Webhook] Subscription canceled', { subscriptionId: subscription.id })
+        logger.audit('Subscription canceled', { subscriptionId: subscription.id })
         break
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object
-        logger.warn('[Webhook] Payment failed', { 
+        logger.warn('Payment failed', { 
           subscriptionId: invoice.subscription,
-          customerId: invoice.customer
+          customerId: invoice.customer,
+          attemptCount: invoice.attempt_count
         })
-        
         // TODO: Send email notification to user
         break
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object
-        logger.info('[Webhook] Payment succeeded', {
+        logger.audit('Payment succeeded', {
           subscriptionId: invoice.subscription,
-          amount: invoice.amount_paid
+          amount: invoice.amount_paid / 100 // Convert cents to dollars
         })
         break
       }
@@ -197,8 +192,9 @@ export async function POST(req) {
     await markEventProcessed(event.id, event.type)
 
     return NextResponse.json({ received: true })
+    
   } catch (error) {
-    logger.error('[Webhook] Processing error', { 
+    logger.error('Webhook processing error', { 
       error: error.message,
       eventType: event.type,
       eventId: event.id
