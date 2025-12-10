@@ -11,12 +11,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// CRITICAL FIX: Use actual Railway env var names
+// All prices map to 'business' plan now
 const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'business',
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL]: 'business',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'enterprise',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
 const processedEvents = new Set()
@@ -126,7 +124,6 @@ export async function POST(req) {
       case 'invoice.payment_failed': {
         const invoice = event.data.object
         console.warn(`⚠️ Payment failed for subscription: ${invoice.subscription}`)
-        // Optionally notify user
         break
       }
     }
