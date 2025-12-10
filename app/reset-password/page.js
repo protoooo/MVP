@@ -4,50 +4,32 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
-export default function ResetPassword() {
+export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [verifying, setVerifying] = useState(true)
+
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const params = new URLSearchParams(window.location.search)
-        const tokenHash = params.get('token_hash')
-        const type = params.get('type')
-
-        // If there is a recovery link, verify it
-        if (tokenHash && type === 'recovery') {
-          const { error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: 'recovery',
-          })
-
-          if (verifyError) {
-            console.error('Token verification failed:', verifyError)
-            setError('Invalid or expired reset link. Please request a new password reset.')
-            setVerifying(false)
-            return
-          }
-        }
-
-        // After verifyOtp, there should be a session
-        const { data: { session } } = await supabase.auth.getSession()
+        // With PKCE + /auth/callback, the session should already be set via cookies
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
         if (!session) {
           setError('Invalid or expired reset link. Please request a new password reset.')
         }
-
-        setVerifying(false)
       } catch (err) {
-        console.error('Verification exception:', err)
+        console.error('Error checking session for reset:', err)
         setError('Failed to verify reset link. Please try again.')
+      } finally {
         setVerifying(false)
       }
     }
@@ -62,13 +44,13 @@ export default function ResetPassword() {
     setError('')
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+      setError('Password must be at least 8 characters.')
       setLoading(false)
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError('Passwords do not match.')
       setLoading(false)
       return
     }
@@ -79,19 +61,20 @@ export default function ResetPassword() {
       })
 
       if (updateError) {
-        setError(updateError.message)
+        console.error('Update password error:', updateError)
+        setError(updateError.message || 'Failed to update password.')
         setLoading(false)
         return
       }
 
-      setMessage('Password updated successfully. Redirecting to home...')
+      setMessage('Password updated successfully. Redirecting to home…')
       setLoading(false)
 
       setTimeout(() => {
         router.push('/')
       }, 2000)
     } catch (err) {
-      console.error('Reset error:', err)
+      console.error('Reset password exception:', err)
       setError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
@@ -99,7 +82,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen w-full bg-neutral-50 text-neutral-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white shadow-lg p-8">
+      <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white shadow-md p-8">
         <h1 className="text-xl font-semibold mb-2 text-center">
           Reset your password
         </h1>
@@ -108,7 +91,7 @@ export default function ResetPassword() {
         </p>
 
         {verifying && !error && (
-          <div className="text-sm text-neutral-500 mb-4 text-center">
+          <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
@@ -125,30 +108,21 @@ export default function ResetPassword() {
           </div>
         )}
 
-        {/* Only show the form if we finished verifying and there is no error */}
+        {/* Only show form if we’ve finished verifying and there is no fatal error */}
         {!verifying && !error && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                 New password
               </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  required
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                required
+                className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+              />
             </div>
 
             <div>
@@ -156,7 +130,7 @@ export default function ResetPassword() {
                 Confirm password
               </label>
               <input
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter password"
@@ -177,6 +151,7 @@ export default function ResetPassword() {
 
         <div className="mt-6 border-t border-neutral-200 pt-4 flex justify-center">
           <button
+            type="button"
             onClick={() => router.push('/')}
             className="text-xs text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
           >
