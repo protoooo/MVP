@@ -1,4 +1,3 @@
-// app/accept-terms/page.js
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
@@ -29,7 +28,19 @@ export default function AcceptTermsPage() {
         .single()
       
       if (profile?.accepted_terms && profile?.accepted_privacy) {
-        router.push('/?showPricing=true')
+        // Check if they have a subscription
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status')
+          .eq('user_id', currentUser.id)
+          .in('status', ['active', 'trialing'])
+          .maybeSingle()
+        
+        if (sub) {
+          router.push('/')
+        } else {
+          router.push('/?showPricing=true')
+        }
       }
     }
     
@@ -66,7 +77,8 @@ export default function AcceptTermsPage() {
         return
       }
 
-      window.location.href = '/?showPricing=true'
+      // Always redirect to pricing after accepting terms
+      router.push('/?showPricing=true')
       
     } catch (err) {
       console.error('Exception:', err)
