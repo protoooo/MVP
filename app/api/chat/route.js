@@ -12,7 +12,7 @@ import { validateCSRF } from '@/lib/csrfProtection'
 export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const OPENAI_CHAT_MODEL = 'gpt-4o'
+const OPENAI_CHAT_MODEL = 'gpt-5.1'
 
 // Generation limits
 const GENERATION_CONFIG = {
