@@ -15,7 +15,7 @@ function getClientIp() {
 
 export async function POST(request) {
   const ip = getClientIp()
-  
+
   try {
     const body = await request.json()
     const { email, captchaToken } = body
@@ -26,14 +26,14 @@ export async function POST(request) {
 
     // Verify CAPTCHA
     const captchaResult = await verifyCaptcha(captchaToken, 'reset', ip)
-    
+
     if (!captchaResult.success) {
       logger.security('CAPTCHA failed for password reset', {
         email: email.substring(0, 3) + '***',
         ip,
-        error: captchaResult.error
+        error: captchaResult.error,
       })
-      
+
       return NextResponse.json(
         { error: 'Security verification failed. Please try again.', code: 'CAPTCHA_FAILED' },
         { status: 403 }
@@ -54,31 +54,35 @@ export async function POST(request) {
       }
     )
 
-    // Send password reset email
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+    // Send password reset email using PKCE + /auth/callback
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+      redirectTo: `${baseUrl}/auth/callback?next=/reset-password`,
     })
 
     if (error) {
-      logger.error('Password reset error', { error: error.message, email: email.substring(0, 3) + '***' })
-      
+      logger.error('Password reset error', {
+        error: error.message,
+        email: email.substring(0, 3) + '***',
+      })
+
       // Don't reveal if email exists
       return NextResponse.json({
         success: true,
-        message: 'If an account exists, you will receive a password reset email'
+        message: 'If an account exists, you will receive a password reset email',
       })
     }
 
     logger.audit('Password reset requested', {
       email: email.substring(0, 3) + '***',
-      ip
+      ip,
     })
 
     return NextResponse.json({
       success: true,
-      message: 'Check your email for password reset instructions'
+      message: 'Check your email for password reset instructions',
     })
-
   } catch (error) {
     logger.error('Password reset exception', { error: error.message, ip })
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
