@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
+import { verifyCaptcha } from '@/lib/captchaVerification'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,15 @@ const ALLOWED_PRICES = [
   ENTERPRISE_ANNUAL,
 ].filter(Boolean)
 
+function getClientIp() {
+  const headersList = headers()
+  const forwarded = headersList.get('x-forwarded-for')
+  return forwarded ? forwarded.split(',')[0].trim() : headersList.get('x-real-ip')
+}
+
 export async function POST(request) {
+  const ip = getClientIp()
+  
   try {
     // CSRF validation
     if (!validateCSRF(request)) {
@@ -31,11 +40,37 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const { priceId } = body
+    const { priceId, captchaToken } = body
+
+    // Verify CAPTCHA
+    const captchaResult = await verifyCaptcha(captchaToken, 'checkout', ip)
+    
+    if (!captchaResult.success) {
+      logger.security('CAPTCHA failed for checkout', {
+        ip,
+        error: captchaResult.error,
+        score: captchaResult.score
+      })
+      
+      return NextResponse.json(
+        { 
+          error: 'Security verification failed. Please try again.',
+          code: 'CAPTCHA_FAILED'
+        },
+        { status: 403 }
+      )
+    }
+
+    // Log CAPTCHA score for monitoring
+    logger.info('Checkout CAPTCHA verified', {
+      ip,
+      score: captchaResult.score,
+      priceId
+    })
 
     // Validate price ID
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
-      logger.security('Invalid price ID attempted', { priceId })
+      logger.security('Invalid price ID attempted', { priceId, ip })
       return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
     }
 
@@ -63,7 +98,7 @@ export async function POST(request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      logger.warn('Unauthenticated checkout attempt')
+      logger.warn('Unauthenticated checkout attempt', { ip })
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
@@ -75,7 +110,7 @@ export async function POST(request) {
       .gte('created_at', new Date(Date.now() - 60_000).toISOString())
 
     if (recent && recent.length >= 5) {
-      logger.security('Checkout rate limit exceeded', { userId: user.id, email: user.email })
+      logger.security('Checkout rate limit exceeded', { userId: user.id, email: user.email, ip })
       return NextResponse.json(
         { error: 'Too many checkout attempts. Please wait 1 minute.' },
         { status: 429 }
@@ -86,6 +121,8 @@ export async function POST(request) {
     await supabase.from('checkout_attempts').insert({
       user_id: user.id,
       price_id: priceId,
+      captcha_score: captchaResult.score,
+      ip_address: ip,
       created_at: new Date().toISOString(),
     })
 
@@ -100,6 +137,7 @@ export async function POST(request) {
         metadata: { 
           userId: user.id,
           userEmail: user.email,
+          captchaScore: captchaResult.score?.toString() || 'unknown'
         },
       },
       allow_promotion_codes: true,
@@ -112,6 +150,8 @@ export async function POST(request) {
         userId: user.id,
         userEmail: user.email,
         timestamp: Date.now().toString(),
+        captchaScore: captchaResult.score?.toString() || 'unknown',
+        ipAddress: ip || 'unknown'
       },
     })
 
@@ -119,13 +159,15 @@ export async function POST(request) {
       sessionId: checkoutSession.id,
       userId: user.id,
       email: user.email,
-      priceId
+      priceId,
+      captchaScore: captchaResult.score,
+      ip
     })
 
     return NextResponse.json({ url: checkoutSession.url })
     
   } catch (error) {
-    logger.error('Checkout error', { error: error.message })
+    logger.error('Checkout error', { error: error.message, ip })
     return NextResponse.json(
       { error: error.message || 'Payment system error' },
       { status: 500 }
