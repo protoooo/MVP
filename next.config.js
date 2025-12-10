@@ -27,27 +27,59 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval/inline
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https://api.openai.com https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join('; ')
           },
         ],
       },
     ]
   },
-  // ✅ ADDED: Better image optimization
+  
+  // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
+    dangerouslyAllowSVG: false,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  // ✅ ADDED: Compress responses
+  
+  // Compress responses
   compress: true,
-  // ✅ ADDED: Security improvements
+  
+  // Security improvements
   poweredByHeader: false,
-  // ✅ ADDED: Better error handling in production
+  
+  // Better error handling in production
   productionBrowserSourceMaps: false,
+  
+  // Optimize builds
+  swcMinify: true,
+  
+  // React strict mode
+  reactStrictMode: true,
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizeCss: true,
+  },
 }
 
 export default nextConfig
