@@ -56,9 +56,9 @@ export async function POST(request) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
-    // Send password reset email using PKCE + /auth/callback
+    // 👉 Directly send them to /reset-password (no /auth/callback here)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${baseUrl}/auth/callback?next=/reset-password`,
+      redirectTo: `${baseUrl}/reset-password`,
     })
 
     if (error) {
