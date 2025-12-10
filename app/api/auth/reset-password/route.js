@@ -49,17 +49,15 @@ export async function POST(request) {
           getAll() {
             return cookieStore.getAll()
           },
-          setAll() {},
+          setAll() {}, // we don't need to modify cookies here
         },
       }
     )
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org'
-
-    // ✅ SIMPLE OTP FLOW: send reset email that goes directly to /reset-password
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${baseUrl}/reset-password`,
-    })
+    // Send password reset email.
+    // We are now using the token_hash flow, and the email template builds
+    // the URL with {{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
       logger.error('Password reset error', {
