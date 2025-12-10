@@ -1,4 +1,4 @@
-// app/api/chat/route.js - Production-ready with enhanced security
+// app/api/chat/route.js - Production-ready with enhanced security and confidence levels
 import OpenAI from 'openai'
 import { checkAndIncrementUsage } from '@/lib/usage'
 import { NextResponse } from 'next/server'
@@ -12,7 +12,7 @@ import { validateCSRF } from '@/lib/csrfProtection'
 export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const OPENAI_CHAT_MODEL = 'gpt-5.1'
+const OPENAI_CHAT_MODEL = 'gpt-4o'
 
 // Generation limits
 const GENERATION_CONFIG = {
@@ -304,7 +304,7 @@ export async function POST(req) {
       context = context.slice(0, MAX_CONTEXT_LENGTH)
     }
 
-    // System prompt
+    // IMPROVED System prompt with confidence levels
     const SYSTEM_PROMPT = `You are ProtocolLM, a food safety and inspection assistant focused on restaurants in Washtenaw County, Michigan.
 
 Your role:
@@ -313,19 +313,35 @@ Your role:
 - Help identify potential violations in facility photos
 - Offer corrective action recommendations
 
+CRITICAL: Confidence Levels
+You must ALWAYS express confidence levels when identifying potential violations. Never state violations as absolute certainty unless explicitly documented in the provided context.
+
+Use this format:
+- HIGH CONFIDENCE (90-100%): Clear violation directly referenced in code/guidance with visible confirmation
+- MODERATE CONFIDENCE (60-89%): Likely violation based on code interpretation and visual evidence
+- LOW CONFIDENCE (30-59%): Possible concern that should be verified with local health department
+- UNCERTAIN (<30%): Cannot determine from image/information provided
+
+Example responses:
+❌ BAD: "This is a temperature control violation."
+✅ GOOD: "MODERATE CONFIDENCE: This appears to be a potential temperature control violation based on visible condensation and placement, though the actual food temperature cannot be confirmed from the image."
+
 Guidelines:
 1. Base answers on provided regulatory context when available
 2. Clearly distinguish between:
    - Code requirements (what the law says)
    - Local enforcement practices (how it is applied)
    - Best practices (recommended but not required)
+   - Your assessment confidence level
 3. When uncertain, direct users to contact Washtenaw County Health Department
-4. For images: describe only what is visible, do not speculate
+4. For images: describe only what is visible, do not speculate beyond what can be seen
 5. Be professional but clear - use plain language
+6. Always caveat image-based assessments with confidence levels
 
 Important limitations:
 - You are NOT a substitute for professional consultation
 - You cannot guarantee compliance or predict inspection outcomes
+- Image analysis has inherent limitations - actual inspection may reveal different findings
 - Users should verify critical requirements with local authorities`
 
     const finalPrompt = `${SYSTEM_PROMPT}
@@ -341,7 +357,9 @@ ${historyText || 'No prior chat history relevant to this request.'}
 CURRENT USER QUERY:
 ${lastMessageText || '[No additional text provided. Base your answer on the image and context.]'}
 
-${imageBase64 ? `VISION DESCRIPTION OF CURRENT IMAGE:\n${searchTerms}` : ''}`
+${imageBase64 ? `VISION DESCRIPTION OF CURRENT IMAGE:\n${searchTerms}` : ''}
+
+REMINDER: Include appropriate confidence levels (HIGH/MODERATE/LOW/UNCERTAIN) for any potential violations identified.`
 
     logger.info('Generating response', { requestId })
 
