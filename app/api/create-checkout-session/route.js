@@ -2,12 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { logger } from '@/lib/logger'
+import { validateCSRF } from '@/lib/csrfProtection'
 
 export const dynamic = 'force-dynamic'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Use actual Railway env var names
+// Your Stripe price IDs
 const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const BUSINESS_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
@@ -20,33 +22,24 @@ const ALLOWED_PRICES = [
   ENTERPRISE_ANNUAL,
 ].filter(Boolean)
 
-// CSRF validation
-function validateCSRF() {
-  const headersList = headers()
-  const origin = headersList.get('origin')
-  const referer = headersList.get('referer')
-  const allowedOrigin = process.env.NEXT_PUBLIC_BASE_URL
-
-  if (origin && origin !== allowedOrigin) return false
-  if (referer && !referer.startsWith(allowedOrigin)) return false
-  return true
-}
-
 export async function POST(request) {
   try {
-    if (!validateCSRF()) {
-      console.error('❌ CSRF validation failed')
+    // CSRF validation
+    if (!validateCSRF(request)) {
+      logger.security('CSRF validation failed in checkout')
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
     const body = await request.json()
     const { priceId } = body
 
+    // Validate price ID
     if (!priceId || !ALLOWED_PRICES.includes(priceId)) {
-      console.error('❌ Invalid priceId:', priceId)
+      logger.security('Invalid price ID attempted', { priceId })
       return NextResponse.json({ error: 'Invalid subscription plan' }, { status: 400 })
     }
 
+    // Get authenticated user
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -70,11 +63,11 @@ export async function POST(request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.error('❌ Authentication required')
+      logger.warn('Unauthenticated checkout attempt')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Rate limit checkout attempts (prevent abuse)
+    // Rate limit: Prevent abuse of checkout creation
     const { data: recent } = await supabase
       .from('checkout_attempts')
       .select('created_at')
@@ -82,28 +75,28 @@ export async function POST(request) {
       .gte('created_at', new Date(Date.now() - 60_000).toISOString())
 
     if (recent && recent.length >= 5) {
-      console.warn(`⚠️ Rate limit: ${user.email}`)
+      logger.security('Checkout rate limit exceeded', { userId: user.id, email: user.email })
       return NextResponse.json(
         { error: 'Too many checkout attempts. Please wait 1 minute.' },
         { status: 429 }
       )
     }
 
-    // Log attempt
+    // Log checkout attempt
     await supabase.from('checkout_attempts').insert({
       user_id: user.id,
       price_id: priceId,
       created_at: new Date().toISOString(),
     })
 
-    // CRITICAL FIX: Add trial support
+    // Create Stripe checkout session with 7-day trial
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7, // 7-day free trial
+        trial_period_days: 7,
         metadata: { 
           userId: user.id,
           userEmail: user.email,
@@ -122,11 +115,17 @@ export async function POST(request) {
       },
     })
 
-    console.log(`✅ Checkout session created: ${checkoutSession.id} for ${user.email}`)
+    logger.audit('Checkout session created', {
+      sessionId: checkoutSession.id,
+      userId: user.id,
+      email: user.email,
+      priceId
+    })
 
     return NextResponse.json({ url: checkoutSession.url })
+    
   } catch (error) {
-    console.error('❌ Checkout error:', error)
+    logger.error('Checkout error', { error: error.message })
     return NextResponse.json(
       { error: error.message || 'Payment system error' },
       { status: 500 }
