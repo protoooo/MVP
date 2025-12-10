@@ -278,7 +278,7 @@ export async function POST(req) {
           model: OPENAI_CHAT_MODEL,
           messages: messagesVision,
           temperature: 0.1,
-          max_tokens: 400,
+          // NOTE: removed max_tokens to avoid 400 "unsupported parameter" error
         })
 
         const visionResult = await Promise.race([
@@ -383,7 +383,7 @@ ${searchTerms}` : ''}`
         messages: messagesFinal,
         temperature: GENERATION_CONFIG.temperature,
         top_p: GENERATION_CONFIG.topP,
-        max_tokens: GENERATION_CONFIG.maxOutputTokens,
+        // NOTE: removed max_tokens to avoid 400 "unsupported parameter" error
       })
 
       const result = await Promise.race([
