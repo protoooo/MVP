@@ -22,7 +22,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files
+# Local env files - CRITICAL: Never commit these
 .env
 .env*.local
 .env.development.local
@@ -52,23 +52,24 @@ service-account-key.json
 *.key
 *.pem
 *.p12
+.env.production
 
 # Logs (prevent accidental commit of sensitive data)
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Sentry
 .sentryclirc
 sentry.properties
 
-# ✅ ADDED: Backup files
+# Backup files
 *.backup
 *.bak
 *.tmp
 
-# ✅ ADDED: Local test data
+# Local test data
 test-uploads/
 temp/
+
+# Stripe CLI
+.stripe/
