@@ -1,33 +1,57 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase-browser' // ✅ FIXED: Points to correct file
+import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
+import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 export default function Auth() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const router = useRouter()
-  const supabase = createClient() // ✅ FIXED: Initialized correctly
+  const supabase = createClient()
+  const { isLoaded, executeRecaptcha } = useRecaptcha()
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      // Execute reCAPTCHA
+      const captchaToken = await executeRecaptcha('login')
+      
+      if (!captchaToken) {
+        setMessage('Security verification failed. Please try again.')
+        setLoading(false)
+        return
+      }
 
-    if (error) {
-      setMessage('Error: ' + error.message)
-    } else {
-      setMessage('Check your email for the secure login link.')
+      // Send to API with captcha token
+      const response = await fetch('/api/auth/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          captchaToken
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(`Error: ${data.error || 'Failed to send login link'}`)
+        setLoading(false)
+        return
+      }
+
+      setMessage('✓ Check your email for the secure login link.')
+    } catch (error) {
+      console.error('Login error:', error)
+      setMessage('Error: An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -82,7 +106,7 @@ export default function Auth() {
           
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || !isLoaded}
             style={{
               width: '100%',
               padding: '12px',
@@ -92,11 +116,11 @@ export default function Auth() {
               border: 'none',
               borderRadius: '12px',
               fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
+              cursor: (loading || !isLoaded) ? 'not-allowed' : 'pointer',
+              opacity: (loading || !isLoaded) ? 0.7 : 1
             }}
           >
-            {loading ? 'Sending...' : 'Continue with Email'}
+            {loading ? 'Sending...' : !isLoaded ? 'Loading...' : 'Continue with Email'}
           </button>
         </form>
 
@@ -112,6 +136,8 @@ export default function Auth() {
             {message}
           </p>
         )}
+
+        <RecaptchaBadge />
 
         <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #333' }}>
           <button
