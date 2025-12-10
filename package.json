@@ -9,6 +9,8 @@
   },
   "scripts": {
     "dev": "next dev",
+    "clean": "rm -rf .next node_modules/.cache",
+    "prebuild": "npm run clean",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
