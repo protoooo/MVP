@@ -17,7 +17,7 @@ const openai = new OpenAI({
 
 // CRITICAL FIX: Use a valid OpenAI model
 // 'gpt-5.1' does not exist - using 'gpt-4o' instead
-const OPENAI_CHAT_MODEL = 'gpt-4o'
+const OPENAI_CHAT_MODEL = 'gpt-5.1'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
