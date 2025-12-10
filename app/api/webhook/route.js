@@ -11,50 +11,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// map price IDs → plan
+// CRITICAL FIX: Use actual Railway env var names
 const PRICE_TO_PLAN = {
-  // Business
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY]: 'business',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANNUAL]: 'business',
-  // Enterprise
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_MONTHLY]: 'enterprise',
-  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ENTERPRISE_ANNUAL]: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'business',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL]: 'business',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
 const processedEvents = new Set()
-const MAX_EVENT_AGE_MS = 60 * 1000
-
-function isEventProcessed(eventId) {
-  return processedEvents.has(eventId)
-}
-function markEventProcessed(eventId) {
-  processedEvents.add(eventId)
-  setTimeout(() => processedEvents.delete(eventId), 60 * 60 * 1000)
-}
-function isEventTooOld(eventTimestamp) {
-  return Date.now() - eventTimestamp * 1000 > MAX_EVENT_AGE_MS
-}
-
-// Stripe-webhook origin guard
-function validateWebhookOrigin() {
-  const h = headers()
-  const sig = h.get('stripe-signature')
-  if (!sig) {
-    console.error('❌ Missing Stripe signature header')
-    return false
-  }
-  return true
-}
 
 export async function POST(req) {
-  if (!validateWebhookOrigin()) {
-    return NextResponse.json({ error: 'Invalid webhook source' }, { status: 403 })
-  }
-
   const body = await req.text()
   const signature = headers().get('stripe-signature')
-  let event
+  
+  if (!signature) {
+    console.error('❌ Missing Stripe signature')
+    return NextResponse.json({ error: 'No signature' }, { status: 401 })
+  }
 
+  let event
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
@@ -62,66 +38,57 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  if (isEventProcessed(event.id)) {
+  // Idempotency check
+  if (processedEvents.has(event.id)) {
     console.log(`⚠️ Duplicate event ignored: ${event.id}`)
     return NextResponse.json({ received: true })
   }
-  if (isEventTooOld(event.created)) {
-    console.log(`⚠️ Stale event ignored: ${event.id}`)
-    return NextResponse.json({ error: 'Event expired' }, { status: 400 })
-  }
+  processedEvents.add(event.id)
+  setTimeout(() => processedEvents.delete(event.id), 3600000) // Clean up after 1hr
 
   console.log(`🔔 Processing webhook: ${event.type} [${event.id}]`)
-  markEventProcessed(event.id)
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
-        const userId = session.metadata?.userId || session.client_reference_id
+        const userId = session.metadata?.userId
         const subscriptionId = session.subscription
 
         if (!userId || !subscriptionId) {
-          console.error('❌ Missing userId or subscriptionId')
+          console.error('❌ Missing userId or subscriptionId in checkout.session.completed')
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
+        // Fetch full subscription details
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         const priceId = subscription.items.data[0].price.id
         const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        const { error: subInsertError } = await supabase.from('subscriptions').upsert(
-          {
-            user_id: userId,
-            stripe_subscription_id: subscriptionId,
-            stripe_customer_id: session.customer,
-            plan: planName,
-            price_id: priceId,
-            status: subscription.status,
-            current_period_start: new Date(
-              subscription.current_period_start * 1000
-            ).toISOString(),
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-            trial_end: subscription.trial_end
-              ? new Date(subscription.trial_end * 1000).toISOString()
-              : null,
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'stripe_subscription_id' }
-        )
+        console.log(`✅ Checkout completed: user=${userId}, plan=${planName}, sub=${subscriptionId}`)
 
-        if (!subInsertError) {
-          await supabase
-            .from('user_profiles')
-            .update({ is_subscribed: true })
-            .eq('id', userId)
-        } else {
-          console.error('❌ subscriptions upsert error:', subInsertError)
+        // Upsert subscription
+        const { error: subError } = await supabase.from('subscriptions').upsert({
+          user_id: userId,
+          stripe_subscription_id: subscriptionId,
+          stripe_customer_id: session.customer,
+          plan: planName,
+          price_id: priceId,
+          status: subscription.status,
+          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'stripe_subscription_id' })
+
+        if (subError) {
+          console.error('❌ Failed to upsert subscription:', subError)
+          return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
+
+        // Update user profile
+        await supabase.from('user_profiles').update({ is_subscribed: true }).eq('id', userId)
 
         break
       }
@@ -131,30 +98,35 @@ export async function POST(req) {
         const priceId = subscription.items.data[0].price.id
         const planName = PRICE_TO_PLAN[priceId] || 'business'
 
-        await supabase
-          .from('subscriptions')
-          .update({
-            status: subscription.status,
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-            price_id: priceId,
-            plan: planName,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('stripe_subscription_id', subscription.id)
+        await supabase.from('subscriptions').update({
+          status: subscription.status,
+          plan: planName,
+          price_id: priceId,
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        }).eq('stripe_subscription_id', subscription.id)
+
+        console.log(`✅ Subscription updated: ${subscription.id}`)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
-        await supabase
-          .from('subscriptions')
-          .update({
-            status: 'canceled',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('stripe_subscription_id', subscription.id)
+        
+        await supabase.from('subscriptions').update({
+          status: 'canceled',
+          updated_at: new Date().toISOString(),
+        }).eq('stripe_subscription_id', subscription.id)
+
+        console.log(`✅ Subscription canceled: ${subscription.id}`)
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object
+        console.warn(`⚠️ Payment failed for subscription: ${invoice.subscription}`)
+        // Optionally notify user
         break
       }
     }
@@ -162,6 +134,6 @@ export async function POST(req) {
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('❌ Webhook processing error:', error)
-    return NextResponse.json({ error: 'Webhook failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Processing failed' }, { status: 500 })
   }
 }
