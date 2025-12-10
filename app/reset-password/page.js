@@ -18,10 +18,16 @@ export default function ResetPassword() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        setError('Invalid or expired reset link. Please request a new one.')
+        setError('Invalid or expired reset link. Please request a new password reset.')
       }
     }
     checkSession()
+    
+    // Check URL for errors
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('error') === 'link_expired') {
+      setError('This reset link has expired. Please request a new one.')
+    }
   }, [supabase])
 
   const handleSubmit = async (e) => {
