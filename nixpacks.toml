@@ -2,7 +2,10 @@
 nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
-cmds = ['npm ci --include=dev']
+cmds = [
+  'npm ci --prefer-offline --no-audit',
+  'npm rebuild'
+]
 
 [phases.build]
 cmds = ['npm run build']
@@ -13,3 +16,5 @@ cmd = 'npm run start'
 [variables]
 NODE_ENV = 'production'
 NPM_CONFIG_PRODUCTION = 'false'
+NEXT_TELEMETRY_DISABLED = '1'
+NODE_OPTIONS = '--max-old-space-size=4096'
