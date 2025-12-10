@@ -29,10 +29,25 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
       },
     ]
   },
+  // ✅ ADDED: Better image optimization
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+  },
+  // ✅ ADDED: Compress responses
+  compress: true,
+  // ✅ ADDED: Security improvements
+  poweredByHeader: false,
+  // ✅ ADDED: Better error handling in production
+  productionBrowserSourceMaps: false,
 }
 
 export default nextConfig
