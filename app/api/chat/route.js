@@ -15,8 +15,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// Use gpt-4o instead of gpt-5.1 (which doesn't exist)
-const OPENAI_CHAT_MODEL = 'gpt-4o'
+const OPENAI_CHAT_MODEL = 'gpt-5.1'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
