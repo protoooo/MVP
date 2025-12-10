@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - Fixed to handle password reset
+// app/auth/callback/route.js - Fixed for password reset with PKCE support
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -8,7 +8,8 @@ export async function GET(request) {
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
-  const type = requestUrl.searchParams.get('type') // Check for 'recovery' type
+  const type = requestUrl.searchParams.get('type')
+  const next = requestUrl.searchParams.get('next') || '/'
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
 
@@ -16,12 +17,19 @@ export async function GET(request) {
     hasCode: !!code,
     hasError: !!error,
     type,
+    next,
     baseUrl,
   })
 
   // Handle OAuth errors
   if (error) {
     console.error('❌ OAuth error:', error, errorDescription)
+    
+    // Check if it's an expired/invalid link
+    if (error === 'access_denied' && errorDescription?.includes('expired')) {
+      return NextResponse.redirect(`${baseUrl}/?error=link_expired`)
+    }
+    
     return NextResponse.redirect(`${baseUrl}/?error=${error}`)
   }
 
@@ -57,81 +65,88 @@ export async function GET(request) {
     }
   )
 
-  // Exchange code for session
-  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+  try {
+    // Exchange code for session
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-  if (exchangeError) {
-    console.error('❌ Session exchange failed:', exchangeError)
-    return NextResponse.redirect(`${baseUrl}/?error=auth_failed`)
-  }
+    if (exchangeError) {
+      console.error('❌ Session exchange failed:', exchangeError)
+      
+      // Handle specific PKCE errors
+      if (exchangeError.message?.includes('code verifier')) {
+        return NextResponse.redirect(`${baseUrl}/?error=pkce_failed`)
+      }
+      
+      return NextResponse.redirect(`${baseUrl}/?error=auth_failed`)
+    }
 
-  if (!data.user) {
-    console.error('❌ No user in session')
-    return NextResponse.redirect(`${baseUrl}/?error=no_user`)
-  }
+    if (!data.user) {
+      console.error('❌ No user in session')
+      return NextResponse.redirect(`${baseUrl}/?error=no_user`)
+    }
 
-  console.log('✅ Session established:', data.user.email)
+    console.log('✅ Session established:', data.user.email)
 
-  // **FIX: Check if this is a password recovery flow**
-  // Check both the type parameter AND if user has recovery token
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (type === 'recovery' || session?.user?.recovery_sent_at) {
-    console.log('🔐 Password recovery detected, redirecting to reset page')
-    return NextResponse.redirect(`${baseUrl}/reset-password`)
-  }
+    // Check if this is a password recovery flow
+    // Priority: explicit type parameter > next parameter indicating reset
+    if (type === 'recovery' || next === '/reset-password' || next?.includes('reset-password')) {
+      console.log('🔐 Password recovery detected, redirecting to reset page')
+      return NextResponse.redirect(`${baseUrl}/reset-password`)
+    }
 
-  // Check if terms accepted
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('accepted_terms, accepted_privacy')
-    .eq('id', data.user.id)
-    .maybeSingle()
+    // Check if terms accepted
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('accepted_terms, accepted_privacy')
+      .eq('id', data.user.id)
+      .maybeSingle()
 
-  if (!profile?.accepted_terms || !profile?.accepted_privacy) {
-    console.log('⚠️ Terms not accepted, redirecting to /accept-terms')
-    return NextResponse.redirect(`${baseUrl}/accept-terms`)
-  }
+    if (!profile?.accepted_terms || !profile?.accepted_privacy) {
+      console.log('⚠️ Terms not accepted, redirecting to /accept-terms')
+      return NextResponse.redirect(`${baseUrl}/accept-terms`)
+    }
 
-  // Check for active subscription with grace period
-  const { data: activeSub } = await supabase
-    .from('subscriptions')
-    .select('status, current_period_end, trial_end, created_at')
-    .eq('user_id', data.user.id)
-    .in('status', ['active', 'trialing'])
-    .order('current_period_end', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const now = new Date()
-  
-  // If no subscription, check if they just completed checkout (5 min grace)
-  if (!activeSub) {
-    const { data: recentCheckout } = await supabase
-      .from('checkout_attempts')
-      .select('created_at')
+    // Check for active subscription
+    const { data: activeSub } = await supabase
+      .from('subscriptions')
+      .select('status, current_period_end')
       .eq('user_id', data.user.id)
-      .order('created_at', { ascending: false })
+      .in('status', ['active', 'trialing'])
+      .order('current_period_end', { ascending: false })
       .limit(1)
       .maybeSingle()
 
-    if (recentCheckout && (now - new Date(recentCheckout.created_at)) < 300000) {
-      console.log('⏳ Recent checkout detected, allowing access during grace period')
-      return NextResponse.redirect(baseUrl)
+    const now = new Date()
+    
+    if (!activeSub) {
+      const { data: recentCheckout } = await supabase
+        .from('checkout_attempts')
+        .select('created_at')
+        .eq('user_id', data.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (recentCheckout && (now - new Date(recentCheckout.created_at)) < 300000) {
+        console.log('⏳ Recent checkout detected, allowing access')
+        return NextResponse.redirect(baseUrl)
+      }
+
+      console.log('⚠️ No active subscription, redirecting to pricing')
+      return NextResponse.redirect(`${baseUrl}/?showPricing=true`)
     }
 
-    console.log('⚠️ No active subscription, redirecting to pricing')
-    return NextResponse.redirect(`${baseUrl}/?showPricing=true`)
-  }
+    const periodEnd = new Date(activeSub.current_period_end)
+    if (periodEnd < now) {
+      console.log('⚠️ Subscription expired')
+      return NextResponse.redirect(`${baseUrl}/?showPricing=true&expired=true`)
+    }
 
-  // Check if subscription is expired
-  const periodEnd = new Date(activeSub.current_period_end)
-  if (periodEnd < now) {
-    console.log('⚠️ Subscription expired')
-    return NextResponse.redirect(`${baseUrl}/?showPricing=true&expired=true`)
+    console.log('✅ All checks passed, redirecting to:', next)
+    return NextResponse.redirect(`${baseUrl}${next}`)
+    
+  } catch (error) {
+    console.error('❌ Callback exception:', error)
+    return NextResponse.redirect(`${baseUrl}/?error=callback_failed`)
   }
-
-  // All checks passed - redirect to app
-  console.log('✅ All checks passed, redirecting to home')
-  return NextResponse.redirect(baseUrl)
 }
