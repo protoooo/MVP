@@ -1,30 +1,26 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
-/**
- * Google reCAPTCHA v3 Component
- * Invisible captcha that runs in background
- */
 export function useRecaptcha() {
   const [isLoaded, setIsLoaded] = useState(false)
+  const widgetIdRef = useRef(null)
 
   useEffect(() => {
-    if (!RECAPTCHA_SITE_KEY) {
-      console.warn('reCAPTCHA site key not configured')
-      return
-    }
-
-    // Check if script already loaded
-    if (window.grecaptcha) {
+    if (!TURNSTILE_SITE_KEY) {
+      console.warn('Turnstile site key not configured')
       setIsLoaded(true)
       return
     }
 
-    // Load reCAPTCHA script
+    if (window.turnstile) {
+      setIsLoaded(true)
+      return
+    }
+
     const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
     script.async = true
     script.defer = true
     
@@ -33,68 +29,58 @@ export function useRecaptcha() {
     }
     
     script.onerror = () => {
-      console.error('Failed to load reCAPTCHA')
+      console.error('Failed to load Turnstile')
+      setIsLoaded(true)
     }
 
     document.head.appendChild(script)
 
     return () => {
-      // Cleanup if needed
-      const existingScript = document.querySelector(`script[src*="recaptcha"]`)
-      if (existingScript && existingScript === script) {
-        document.head.removeChild(script)
+      const existingScript = document.querySelector(`script[src*="turnstile"]`)
+      if (existingScript) {
+        document.head.removeChild(existingScript)
       }
     }
   }, [])
 
-  /**
-   * Execute reCAPTCHA and get token
-   * @param {string} action - Action name (e.g., 'login', 'signup', 'checkout')
-   * @returns {Promise<string>} - reCAPTCHA token
-   */
   const executeRecaptcha = async (action = 'submit') => {
-    if (!isLoaded || !window.grecaptcha) {
-      console.warn('reCAPTCHA not loaded yet')
-      return null
+    if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
+      console.warn('Turnstile not available')
+      return 'turnstile_unavailable'
     }
 
-    try {
-      const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
-      return token
-    } catch (error) {
-      console.error('reCAPTCHA execution failed:', error)
-      return null
-    }
+    return new Promise((resolve, reject) => {
+      try {
+        // Create invisible container
+        const container = document.createElement('div')
+        container.style.display = 'none'
+        document.body.appendChild(container)
+
+        window.turnstile.render(container, {
+          sitekey: TURNSTILE_SITE_KEY,
+          callback: (token) => {
+            document.body.removeChild(container)
+            resolve(token)
+          },
+          'error-callback': () => {
+            document.body.removeChild(container)
+            reject(new Error('Turnstile challenge failed'))
+          },
+        })
+      } catch (error) {
+        console.error('Turnstile execution error:', error)
+        reject(error)
+      }
+    })
   }
 
   return { isLoaded, executeRecaptcha }
 }
 
-/**
- * Badge component to show reCAPTCHA notice
- */
 export function RecaptchaBadge() {
   return (
     <div className="text-xs text-slate-500 text-center mt-4">
-      This site is protected by reCAPTCHA and the Google{' '}
-      <a 
-        href="https://policies.google.com/privacy" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="underline hover:text-slate-700"
-      >
-        Privacy Policy
-      </a>{' '}
-      and{' '}
-      <a 
-        href="https://policies.google.com/terms" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="underline hover:text-slate-700"
-      >
-        Terms of Service
-      </a>{' '}
-      apply.
+      This site is protected by Cloudflare Turnstile
     </div>
   )
 }
