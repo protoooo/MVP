@@ -68,6 +68,12 @@ const Icons = {
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
+  Clock: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
 }
 
 const LandingPage = ({ onShowPricing }) => (
@@ -351,6 +357,29 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   )
 }
 
+const SubscriptionPollingBanner = ({ onComplete }) => (
+  <div className="fixed top-0 left-0 right-0 z-50 bg-blue-50 border-b border-blue-200 px-4 py-3">
+    <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Icons.Clock />
+        <div>
+          <p className="text-sm font-semibold text-blue-900">
+            Activating your subscription...
+          </p>
+          <p className="text-xs text-blue-700">
+            This usually takes 5-10 seconds
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-1">
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+      </div>
+    </div>
+  </div>
+)
+
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
@@ -359,6 +388,7 @@ export default function Page() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
+  const [isPollingSubscription, setIsPollingSubscription] = useState(false)
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -369,6 +399,7 @@ export default function Page() {
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
   const userMenuRef = useRef(null)
+  const pollIntervalRef = useRef(null)
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
@@ -388,6 +419,7 @@ export default function Page() {
     }
   }, [messages])
 
+  // Initial auth and subscription check
   useEffect(() => {
     let mounted = true
     const init = async () => {
@@ -397,11 +429,6 @@ export default function Page() {
         } = await supabase.auth.getSession()
         if (!mounted) return
         setSession(s)
-
-        const payment = searchParams.get('payment')
-        if (payment === 'success') {
-          await new Promise((resolve) => setTimeout(resolve, 3000))
-        }
 
         if (s) {
           const { data: sub } = await supabase
@@ -463,6 +490,71 @@ export default function Page() {
       subscription.unsubscribe()
     }
   }, [supabase, searchParams])
+
+  // Subscription polling after payment
+  useEffect(() => {
+    if (!session) return
+    
+    const paymentStatus = searchParams.get('payment')
+    if (paymentStatus !== 'success') return
+    
+    // Only poll if we don't already have an active subscription
+    if (hasActiveSubscription) {
+      // Clean up URL
+      router.replace('/')
+      return
+    }
+    
+    setIsPollingSubscription(true)
+    let pollCount = 0
+    const maxPolls = 12 // Poll for 60 seconds (12 * 5s)
+    
+    const pollSubscription = async () => {
+      pollCount++
+      
+      try {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status, current_period_end')
+          .eq('user_id', session.user.id)
+          .in('status', ['active', 'trialing'])
+          .maybeSingle()
+        
+        if (sub) {
+          const periodEnd = new Date(sub.current_period_end)
+          if (periodEnd > new Date()) {
+            // Success!
+            clearInterval(pollIntervalRef.current)
+            setIsPollingSubscription(false)
+            setHasActiveSubscription(true)
+            setShowPricingModal(false)
+            router.replace('/')
+          }
+        } else if (pollCount >= maxPolls) {
+          // Timeout - stop polling but let user know
+          clearInterval(pollIntervalRef.current)
+          setIsPollingSubscription(false)
+          alert('Subscription activation is taking longer than expected. Please refresh the page in a moment or contact support if the issue persists.')
+        }
+      } catch (error) {
+        console.error('Subscription polling error:', error)
+        if (pollCount >= maxPolls) {
+          clearInterval(pollIntervalRef.current)
+          setIsPollingSubscription(false)
+        }
+      }
+    }
+    
+    // Start polling immediately and then every 5 seconds
+    pollSubscription()
+    pollIntervalRef.current = setInterval(pollSubscription, 5000)
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
+    }
+  }, [session, searchParams, supabase, router, hasActiveSubscription])
 
   const handleCheckout = async (priceId, planName) => {
     const {
@@ -644,6 +736,10 @@ export default function Page() {
         }
       `}</style>
 
+      {isPollingSubscription && (
+        <SubscriptionPollingBanner onComplete={() => setIsPollingSubscription(false)} />
+      )}
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
@@ -660,7 +756,7 @@ export default function Page() {
       />
 
       <div className="relative min-h-screen w-full overflow-hidden bg-white">
-        <div className="relative z-10 flex flex-col h-[100dvh]">
+        <div className={`relative z-10 flex flex-col h-[100dvh] ${isPollingSubscription ? 'pt-16' : ''}`}>
           <header className="border-b border-slate-200 bg-white z-30">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
               <div
