@@ -1,12 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable experimental optimizations that are causing build errors
-  experimental: {
-    // Remove optimizeCss - it's causing the critters error
-  },
-  
   // Output configuration for better Railway compatibility
   output: 'standalone',
+  
+  // Disable experimental features that cause build issues
+  experimental: {},
   
   async headers() {
     return [
@@ -41,20 +39,6 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://api.openai.com https://*.supabase.co wss://*.supabase.co https://api.stripe.com",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join('; ')
-          },
         ],
       },
     ]
@@ -86,7 +70,6 @@ const nextConfig = {
   
   // Webpack configuration to fix module issues
   webpack: (config, { isServer }) => {
-    // Fix for "Module not found: Can't resolve 'critters'" errors
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -96,6 +79,11 @@ const nextConfig = {
         crypto: false,
       }
     }
+    
+    // Ignore warnings about missing optional dependencies
+    config.ignoreWarnings = [
+      { module: /node_modules/ },
+    ]
     
     return config
   },
