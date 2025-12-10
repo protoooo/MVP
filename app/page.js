@@ -10,10 +10,8 @@ const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800']
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
-const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
-const BUSINESS_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
-const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
-const ENTERPRISE_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL
+const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
+const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
 const Icons = {
   Camera: () => (
@@ -254,7 +252,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-3xl bg-white border border-slate-200 rounded-2xl p-8 md:p-10 shadow-2xl">
+      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl p-8 md:p-10 shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors"
@@ -278,11 +276,12 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
             Start with a 7-day free trial. Cancel anytime.
           </p>
         </div>
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
-          <div className="border border-slate-200 rounded-xl p-6 flex flex-col justify-between bg-white">
-            <div>
+        
+        <div className="max-w-md mx-auto">
+          <div className="border border-slate-200 rounded-xl p-6 bg-white">
+            <div className="mb-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 mb-2">
-                Business
+                protocolLM Access
               </p>
               <div className="flex items-baseline mb-2">
                 <span
@@ -295,7 +294,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </span>
               </div>
               <p className={`text-sm text-slate-600 mb-4 ${inter.className}`}>
-                For single-location restaurants and small operations.
+                Full access to compliance tools and resources.
               </p>
               <ul className="space-y-2 text-sm text-slate-700">
                 <li className="flex items-start gap-2">
@@ -308,7 +307,11 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Full code access</span>
+                  <span>Full Michigan Food Code access</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Washtenaw County guidance</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -316,103 +319,29 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
               </ul>
             </div>
-            <div className="mt-6 space-y-2">
+            
+            <div className="space-y-3">
               <button
-                onClick={() => onCheckout(BUSINESS_MONTHLY, 'business-monthly')}
-                disabled={!!loading && loading !== 'business-monthly'}
+                onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+                disabled={!!loading && loading !== 'monthly'}
                 className={`w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
-                  loading && loading !== 'business-monthly'
+                  loading && loading !== 'monthly'
                     ? 'opacity-60 cursor-not-allowed'
                     : ''
                 }`}
               >
-                {loading === 'business-monthly'
-                  ? 'Processing...'
-                  : 'Start Free Trial'}
+                {loading === 'monthly' ? 'Processing...' : 'Monthly Access - Start Free Trial'}
               </button>
               <button
-                onClick={() => onCheckout(BUSINESS_ANNUAL, 'business-annual')}
-                disabled={!!loading && loading !== 'business-annual'}
+                onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+                disabled={!!loading && loading !== 'annual'}
                 className={`w-full bg-white border border-dashed border-slate-400 text-slate-900 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition-colors ${
-                  loading && loading !== 'business-annual'
+                  loading && loading !== 'annual'
                     ? 'opacity-60 cursor-not-allowed'
                     : ''
                 }`}
               >
-                {loading === 'business-annual'
-                  ? 'Processing...'
-                  : 'Annual (Save 15%)'}
-              </button>
-            </div>
-          </div>
-          <div className="border border-slate-900 rounded-xl p-6 flex flex-col justify-between bg-slate-950 text-slate-50 relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(circle_at_top,_#ffffff,_transparent_60%)]" />
-            <div className="relative">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300 mb-2">
-                Enterprise
-              </p>
-              <div className="flex items-baseline mb-2">
-                <span
-                  className={`text-4xl font-semibold text-white tracking-tight ${outfit.className}`}
-                >
-                  $200
-                </span>
-                <span className="ml-2 text-slate-300 text-xs font-medium uppercase tracking-wide">
-                  /month
-                </span>
-              </div>
-              <p className={`text-sm text-slate-200 mb-4 ${inter.className}`}>
-                For high-volume operations and multi-location teams.
-              </p>
-              <ul className="space-y-2 text-sm text-slate-100">
-                <li className="flex items-start gap-2">
-                  <Icons.Check />
-                  <span>~1,000 text queries per month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Icons.Check />
-                  <span>~200 image audits per month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Icons.Check />
-                  <span>Priority support</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Icons.Check />
-                  <span>7-day free trial</span>
-                </li>
-              </ul>
-            </div>
-            <div className="relative mt-6 space-y-2">
-              <button
-                onClick={() =>
-                  onCheckout(ENTERPRISE_MONTHLY, 'enterprise-monthly')
-                }
-                disabled={!!loading && loading !== 'enterprise-monthly'}
-                className={`w-full bg-white text-black hover:bg-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
-                  loading && loading !== 'enterprise-monthly'
-                    ? 'opacity-60 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                {loading === 'enterprise-monthly'
-                  ? 'Processing...'
-                  : 'Start Free Trial'}
-              </button>
-              <button
-                onClick={() =>
-                  onCheckout(ENTERPRISE_ANNUAL, 'enterprise-annual')
-                }
-                disabled={!!loading && loading !== 'enterprise-annual'}
-                className={`w-full bg-transparent border border-dashed border-slate-400 text-slate-100 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] hover:bg-slate-900/60 transition-colors ${
-                  loading && loading !== 'enterprise-annual'
-                    ? 'opacity-60 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                {loading === 'enterprise-annual'
-                  ? 'Processing...'
-                  : 'Annual (Save 15%)'}
+                {loading === 'annual' ? 'Processing...' : 'Yearly Access - Save 15%'}
               </button>
             </div>
           </div>
@@ -443,7 +372,6 @@ export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
-  // Close user menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -454,7 +382,6 @@ export default function Page() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -473,7 +400,6 @@ export default function Page() {
 
         const payment = searchParams.get('payment')
         if (payment === 'success') {
-          // Give webhook time to process
           await new Promise((resolve) => setTimeout(resolve, 3000))
         }
 
@@ -493,7 +419,6 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          // Only show pricing if explicitly requested or no subscription
           if (!active || searchParams.get('showPricing') === 'true') {
             setShowPricingModal(true)
           }
@@ -558,7 +483,6 @@ export default function Page() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Include auth token
           Authorization: `Bearer ${currentSession.access_token}`,
         },
         body: JSON.stringify({ priceId }),
@@ -640,7 +564,6 @@ export default function Page() {
       })
 
       if (!res.ok) {
-        // Better error handling for different status codes
         if (res.status === 402) {
           setShowPricingModal(true)
           throw new Error('Subscription required.')
