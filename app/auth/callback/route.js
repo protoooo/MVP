@@ -73,7 +73,10 @@ export async function GET(request) {
   console.log('✅ Session established:', data.user.email)
 
   // **FIX: Check if this is a password recovery flow**
-  if (type === 'recovery') {
+  // Check both the type parameter AND if user has recovery token
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (type === 'recovery' || session?.user?.recovery_sent_at) {
     console.log('🔐 Password recovery detected, redirecting to reset page')
     return NextResponse.redirect(`${baseUrl}/reset-password`)
   }
