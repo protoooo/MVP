@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Output configuration for better Railway compatibility
-  output: 'standalone',
-  
-  // Disable experimental features that cause build issues
-  experimental: {},
+  // Remove or comment out this line:
+  // output: 'standalone',
   
   async headers() {
     return [
@@ -44,7 +41,6 @@ const nextConfig = {
     ]
   },
   
-  // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
@@ -53,22 +49,12 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
-  // Compress responses
   compress: true,
-  
-  // Security improvements
   poweredByHeader: false,
-  
-  // Better error handling in production
   productionBrowserSourceMaps: false,
-  
-  // Optimize builds
   swcMinify: true,
-  
-  // React strict mode
   reactStrictMode: true,
   
-  // Webpack configuration to fix module issues
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -80,7 +66,6 @@ const nextConfig = {
       }
     }
     
-    // Ignore warnings about missing optional dependencies
     config.ignoreWarnings = [
       { module: /node_modules/ },
     ]
