@@ -15,9 +15,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-// CRITICAL FIX: Use a valid OpenAI model
-// 'gpt-5.1' does not exist - using 'gpt-4o' instead
-const OPENAI_CHAT_MODEL = 'gpt-5.1'
+// Use gpt-4o instead of gpt-5.1 (which doesn't exist)
+const OPENAI_CHAT_MODEL = 'gpt-4o'
 
 // --- GENERATION / LIMITS ---
 const GENERATION_CONFIG = {
@@ -161,7 +160,7 @@ export async function POST(req) {
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
-    // DEMO LIMITS – still IP / device based
+    // DEMO LIMITS
     if (isDemo) {
       const limitCheck = await checkRateLimit(userIdentifier, imageBase64 ? 'image' : 'text')
       if (!limitCheck.success) {
@@ -172,7 +171,7 @@ export async function POST(req) {
       }
     }
 
-    // PAID USER CHECKS (terms + subscription + plan usage)
+    // PAID USER CHECKS
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -224,7 +223,7 @@ export async function POST(req) {
         )
       }
 
-      // Enforce per-plan monthly caps (Business / Enterprise)
+      // Enforce per-plan monthly caps
       const isImageQuery = !!imageBase64
 
       try {
@@ -242,8 +241,8 @@ export async function POST(req) {
             {
               error:
                 err.kind === 'image'
-                  ? 'You've reached your image audit limit for this period.'
-                  : 'You've reached your text query limit for this period.',
+                  ? 'You have reached your image audit limit for this period.'
+                  : 'You have reached your text query limit for this period.',
               code: 'PLAN_LIMIT_REACHED',
             },
             { status: 429 }
@@ -356,10 +355,10 @@ Guidelines:
 1. Base answers on provided regulatory context when available
 2. Clearly distinguish between:
    - Code requirements (what the law says)
-   - Local enforcement practices (how it's applied)
+   - Local enforcement practices (how it is applied)
    - Best practices (recommended but not required)
 3. When uncertain, direct users to contact Washtenaw County Health Department
-4. For images: describe only what's visible, don't speculate
+4. For images: describe only what is visible, do not speculate
 5. Be professional but clear - use plain language
 
 Important limitations:
@@ -428,7 +427,6 @@ ${searchTerms}` : ''}`
         )
       }
 
-      // Still log overall usage events (for demo + paid analytics)
       dbTasks.push(incrementUsage(userIdentifier, imageBase64 ? 'image' : 'text'))
       await Promise.allSettled(dbTasks)
 
