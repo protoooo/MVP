@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter } from 'next/font/google'
+import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -170,26 +171,71 @@ const LandingPage = ({ onShowPricing }) => (
 )
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+  const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const supabase = createClient()
+  const { isLoaded, executeRecaptcha } = useRecaptcha()
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    })
-    if (error) {
-      setMessage('Error: ' + error.message)
-    } else {
-      setMessage('✓ Check your email for the login link.')
-      setTimeout(() => onSuccess?.(), 2000)
+
+    try {
+      const captchaToken = await executeRecaptcha(mode)
+      
+      if (!captchaToken) {
+        setMessage('Security verification failed. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      let endpoint = ''
+      let body = { email, captchaToken }
+
+      if (mode === 'reset') {
+        endpoint = '/api/auth/reset-password'
+      } else {
+        body.password = password
+        endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setMessage(`Error: ${data.error || 'Authentication failed'}`)
+        setLoading(false)
+        return
+      }
+
+      if (mode === 'reset') {
+        setMessage('✓ Check your email for password reset instructions.')
+        setTimeout(() => setMode('signin'), 2000)
+      } else if (mode === 'signup') {
+        setMessage('✓ Account created! Check your email to verify.')
+        setTimeout(() => setMode('signin'), 2000)
+      } else {
+        setMessage('✓ Signing in...')
+        setTimeout(() => {
+          onSuccess?.()
+          window.location.reload()
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Auth error:', error)
+      setMessage('Error: An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   if (!isOpen) return null
@@ -205,13 +251,15 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       >
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h2
-              className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
-            >
-              Sign in to continue
+            <h2 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>
+              {mode === 'signin' && 'Sign in to continue'}
+              {mode === 'signup' && 'Create your account'}
+              {mode === 'reset' && 'Reset your password'}
             </h2>
             <p className={`text-sm text-slate-500 ${inter.className}`}>
-              Enter your email to receive a login link
+              {mode === 'signin' && 'Enter your credentials'}
+              {mode === 'signup' && 'Get started with protocolLM'}
+              {mode === 'reset' && "We'll send you a reset link"}
             </p>
           </div>
           <button
@@ -221,23 +269,72 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             <Icons.X />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="work@restaurant.com"
-            required
-            className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
-          />
+
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Email address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="work@restaurant.com"
+              required
+              className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
+            />
+          </div>
+
+          {mode !== 'reset' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                  placeholder="••••••••"
+                  required
+                  className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 pr-12 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900"
+                >
+                  {showPassword ? (
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
-            type="submit"
-            disabled={loading}
+            onClick={handleSubmit}
+            disabled={loading || !isLoaded}
             className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors shadow-sm disabled:opacity-60"
           >
-            {loading ? 'Sending...' : 'Send Login Link'}
+            {loading ? 'Processing...' : !isLoaded ? 'Loading...' : (
+              mode === 'signin' ? 'Sign In' :
+              mode === 'signup' ? 'Create Account' :
+              'Send Reset Link'
+            )}
           </button>
-        </form>
+        </div>
+
         {message && (
           <div
             className={`mt-6 p-4 rounded-lg text-sm border ${
@@ -249,6 +346,51 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             {message}
           </div>
         )}
+
+        <div className="mt-6 text-center space-y-2">
+          {mode === 'signin' && (
+            <>
+              <button
+                onClick={() => setMode('reset')}
+                className="text-sm text-slate-600 hover:text-slate-900 transition-colors block w-full"
+              >
+                Forgot password?
+              </button>
+              <div className="text-sm text-slate-500">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setMode('signup')}
+                  className="text-slate-900 font-semibold hover:underline"
+                >
+                  Sign up
+                </button>
+              </div>
+            </>
+          )}
+          
+          {mode === 'signup' && (
+            <div className="text-sm text-slate-500">
+              Already have an account?{' '}
+              <button
+                onClick={() => setMode('signin')}
+                className="text-slate-900 font-semibold hover:underline"
+              >
+                Sign in
+              </button>
+            </div>
+          )}
+          
+          {mode === 'reset' && (
+            <button
+              onClick={() => setMode('signin')}
+              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Back to sign in
+            </button>
+          )}
+        </div>
+
+        <RecaptchaBadge />
       </div>
     </div>
   )
@@ -287,7 +429,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
           <div className="border border-slate-200 rounded-xl p-6 bg-white">
             <div className="mb-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 mb-2">
-                protocolLM Access
+                Unlimited Access
               </p>
               <div className="flex items-baseline mb-2">
                 <span
@@ -305,19 +447,19 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               <ul className="space-y-2 text-sm text-slate-700">
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>~200 text queries per month</span>
+                  <span>Unlimited text queries</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>~40 image audits per month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Icons.Check />
-                  <span>Full Michigan Food Code access</span>
+                  <span>Unlimited image analyses</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
                   <span>Washtenaw County guidance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icons.Check />
+                  <span>Michigan Food Code access</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -446,7 +588,10 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          if (!active || searchParams.get('showPricing') === 'true') {
+          // If user has active subscription and no pricing param, skip to chat
+          if (active && searchParams.get('showPricing') !== 'true') {
+            setShowPricingModal(false)
+          } else if (!active) {
             setShowPricingModal(true)
           }
         } else {
@@ -498,16 +643,14 @@ export default function Page() {
     const paymentStatus = searchParams.get('payment')
     if (paymentStatus !== 'success') return
     
-    // Only poll if we don't already have an active subscription
     if (hasActiveSubscription) {
-      // Clean up URL
       router.replace('/')
       return
     }
     
     setIsPollingSubscription(true)
     let pollCount = 0
-    const maxPolls = 12 // Poll for 60 seconds (12 * 5s)
+    const maxPolls = 12
     
     const pollSubscription = async () => {
       pollCount++
@@ -523,7 +666,6 @@ export default function Page() {
         if (sub) {
           const periodEnd = new Date(sub.current_period_end)
           if (periodEnd > new Date()) {
-            // Success!
             clearInterval(pollIntervalRef.current)
             setIsPollingSubscription(false)
             setHasActiveSubscription(true)
@@ -531,7 +673,6 @@ export default function Page() {
             router.replace('/')
           }
         } else if (pollCount >= maxPolls) {
-          // Timeout - stop polling but let user know
           clearInterval(pollIntervalRef.current)
           setIsPollingSubscription(false)
           alert('Subscription activation is taking longer than expected. Please refresh the page in a moment or contact support if the issue persists.')
@@ -545,7 +686,6 @@ export default function Page() {
       }
     }
     
-    // Start polling immediately and then every 5 seconds
     pollSubscription()
     pollIntervalRef.current = setInterval(pollSubscription, 5000)
     
@@ -745,7 +885,6 @@ export default function Page() {
         onClose={() => setShowAuthModal(false)}
         onSuccess={() => {
           setShowAuthModal(false)
-          setShowPricingModal(true)
         }}
       />
       <PricingModal
@@ -907,10 +1046,7 @@ export default function Page() {
                         </button>
                       </div>
                     )}
-                    <form
-                      onSubmit={handleSend}
-                      className="relative flex items-end w-full p-2 bg-white border border-slate-300 rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900 transition-all"
-                    >
+                    <div className="relative flex items-end w-full p-2 bg-white border border-slate-300 rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900 transition-all">
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -941,6 +1077,7 @@ export default function Page() {
                       />
                       <button
                         type="submit"
+                        onClick={handleSend}
                         disabled={
                           (!input.trim() && !selectedImage) || isSending
                         }
@@ -956,7 +1093,7 @@ export default function Page() {
                           <Icons.ArrowUp />
                         )}
                       </button>
-                    </form>
+                    </div>
                   </div>
                 </div>
               </>
