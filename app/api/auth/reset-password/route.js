@@ -54,9 +54,9 @@ export async function POST(request) {
       }
     )
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://protocollm.org'
 
-    // 👉 Directly send them to /reset-password (no /auth/callback here)
+    // ✅ SIMPLE OTP FLOW: send reset email that goes directly to /reset-password
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${baseUrl}/reset-password`,
     })
