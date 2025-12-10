@@ -159,17 +159,6 @@ export async function POST(req) {
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
-    // DEMO LIMITS
-    if (isDemo) {
-      const limitCheck = await checkRateLimit(userIdentifier, imageBase64 ? 'image' : 'text')
-      if (!limitCheck.success) {
-        return NextResponse.json(
-          { error: 'Demo limit reached.', code: 'DEMO_LIMIT', requiresAuth: true },
-          { status: 429 }
-        )
-      }
-    }
-
     // PAID USER CHECKS
     if (user && !isAdmin) {
       const { data: profile } = await supabase
