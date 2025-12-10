@@ -79,7 +79,13 @@ async function processPDF(file, fullPath) {
   
   try {
     const buffer = fs.readFileSync(fullPath)
-    const parsed = await pdf(buffer)
+    
+    // FIXED: Suppress font warnings with custom options
+    const parsed = await pdf(buffer, {
+      max: 0, // No page limit
+      version: 'v2.0.550' // Use stable version
+    })
+    
     const clean = parsed.text
       .replace(/\s+/g, " ")
       .replace(/[^\x20-\x7E\n]/g, "") // Remove non-printable chars
