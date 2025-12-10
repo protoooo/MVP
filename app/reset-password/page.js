@@ -9,33 +9,25 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [linkError, setLinkError] = useState('')    // fatal / link / session errors
-  const [formError, setFormError] = useState('')    // validation / update errors
+  const [linkError, setLinkError] = useState('')
+  const [formError, setFormError] = useState('')
   const [verifying, setVerifying] = useState(true)
 
-  const router = useRouter()
   const supabase = createClient()
+  const router = useRouter()
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (!session) {
-          setLinkError('Invalid or expired reset link. Please request a new password reset.')
-          // Make sure any stray session is cleared
-          await supabase.auth.signOut()
+        const { data } = await supabase.auth.getSession()
+        if (!data || !data.session) {
+          setLinkError(
+            'Invalid or expired reset link. Please request a new password reset.'
+          )
         }
       } catch (err) {
         console.error('Error checking session for reset:', err)
         setLinkError('Failed to verify reset link. Please try again.')
-        try {
-          await supabase.auth.signOut()
-        } catch (e) {
-          console.error('Error signing out after verification failure:', e)
-        }
       } finally {
         setVerifying(false)
       }
@@ -44,7 +36,7 @@ export default function ResetPasswordPage() {
     checkSession()
   }, [supabase])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
@@ -63,13 +55,11 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      })
+      const { error } = await supabase.auth.updateUser({ password })
 
-      if (updateError) {
-        console.error('Update password error:', updateError)
-        setFormError(updateError.message || 'Failed to update password.')
+      if (error) {
+        console.error('Update password error:', error)
+        setFormError(error.message || 'Failed to update password.')
         setLoading(false)
         return
       }
@@ -77,7 +67,6 @@ export default function ResetPasswordPage() {
       setMessage('Password updated successfully. Redirecting to home…')
       setLoading(false)
 
-      // Optional: keep them logged in after reset (standard behavior)
       setTimeout(() => {
         router.push('/')
       }, 2000)
@@ -86,16 +75,6 @@ export default function ResetPasswordPage() {
       setFormError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
-  }
-
-  const handleBackHome = async () => {
-    // If they bail out (or hit a link error), we don’t want them “logged in”
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      console.error('Error signing out on back to home:', err)
-    }
-    router.push('/')
   }
 
   return (
@@ -120,22 +99,19 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {formError && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {formError}
-          </div>
-        )}
-
         {message && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
             {message}
           </div>
         )}
 
-        {/* Show form if:
-           - we’re done verifying
-           - and the link itself is OK
-        */}
+        {formError && !linkError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {formError}
+          </div>
+        )}
+
+        {/* Show the form only if the link is valid and verification is done */}
         {!verifying && !linkError && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -179,7 +155,7 @@ export default function ResetPasswordPage() {
         <div className="mt-6 border-t border-neutral-200 pt-4 flex justify-center">
           <button
             type="button"
-            onClick={handleBackHome}
+            onClick={() => router.push('/')}
             className="text-xs text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
           >
             Back to home
