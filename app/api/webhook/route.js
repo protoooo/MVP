@@ -16,6 +16,8 @@ const supabase = createClient(
 const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'business',
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL]: 'business',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'enterprise',
+  [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
 // Store processed events in database instead of memory
@@ -91,7 +93,8 @@ export async function POST(req) {
         logger.info('[Webhook] Checkout completed', { 
           userId, 
           plan: planName, 
-          subscriptionId 
+          subscriptionId,
+          status: subscription.status
         })
 
         // Upsert subscription
@@ -106,6 +109,7 @@ export async function POST(req) {
           current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
           cancel_at_period_end: subscription.cancel_at_period_end,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'stripe_subscription_id' })
 
@@ -120,6 +124,7 @@ export async function POST(req) {
           updated_at: new Date().toISOString()
         }).eq('id', userId)
 
+        logger.info('[Webhook] ✅ Subscription created successfully')
         break
       }
 
