@@ -9,21 +9,23 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [linkError, setLinkError] = useState('')
-  const [formError, setFormError] = useState('')
+  const [linkError, setLinkError] = useState('')   // fatal: bad / expired link
+  const [formError, setFormError] = useState('')   // validation errors user can fix
   const [verifying, setVerifying] = useState(true)
 
-  const supabase = createClient()
   const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const { data } = await supabase.auth.getSession()
-        if (!data || !data.session) {
-          setLinkError(
-            'Invalid or expired reset link. Please request a new password reset.'
-          )
+        // With PKCE + /auth/callback, the session should already be set via cookies
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+          setLinkError('Invalid or expired reset link. Please request a new password reset.')
         }
       } catch (err) {
         console.error('Error checking session for reset:', err)
@@ -42,6 +44,7 @@ export default function ResetPasswordPage() {
     setMessage('')
     setFormError('')
 
+    // Local validation
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
       setLoading(false)
@@ -55,11 +58,13 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({ password })
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      })
 
-      if (error) {
-        console.error('Update password error:', error)
-        setFormError(error.message || 'Failed to update password.')
+      if (updateError) {
+        console.error('Update password error:', updateError)
+        setFormError(updateError.message || 'Failed to update password.')
         setLoading(false)
         return
       }
@@ -67,6 +72,7 @@ export default function ResetPasswordPage() {
       setMessage('Password updated successfully. Redirecting to home…')
       setLoading(false)
 
+      // After a successful reset, keep them logged in and send to home
       setTimeout(() => {
         router.push('/')
       }, 2000)
@@ -74,6 +80,17 @@ export default function ResetPasswordPage() {
       console.error('Reset password exception:', err)
       setFormError('An unexpected error occurred. Please try again.')
       setLoading(false)
+    }
+  }
+
+  const handleBackHome = async () => {
+    try {
+      // Make sure we’re not leaving a recovery session hanging around
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Error signing out from reset page:', err)
+    } finally {
+      router.push('/')
     }
   }
 
@@ -111,7 +128,10 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Show the form only if the link is valid and verification is done */}
+        {/* Show the form as long as:
+            - we’re done verifying AND
+            - there isn’t a fatal linkError
+        */}
         {!verifying && !linkError && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -155,7 +175,7 @@ export default function ResetPasswordPage() {
         <div className="mt-6 border-t border-neutral-200 pt-4 flex justify-center">
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={handleBackHome}
             className="text-xs text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
           >
             Back to home
