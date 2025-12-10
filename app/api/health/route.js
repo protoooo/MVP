@@ -14,7 +14,7 @@ export async function GET() {
   const startTime = Date.now()
   
   try {
-    // Check environment variables
+    // Check environment variables (don't expose values)
     checks.env = !!(
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.SUPABASE_SERVICE_ROLE_KEY &&
@@ -34,12 +34,11 @@ export async function GET() {
       }
     }
 
-    // Check OpenAI connection (lightweight)
+    // Check OpenAI connection (lightweight validation)
     if (process.env.OPENAI_API_KEY) {
       try {
         const { default: OpenAI } = await import('openai')
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-        // Just verify the client can be instantiated
         checks.openai = !!openai
       } catch (err) {
         console.error('[Health] OpenAI check failed:', err.message)
@@ -73,7 +72,8 @@ export async function GET() {
         status: healthy ? 'ok' : 'degraded', 
         checks,
         responseTime: `${duration}ms`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0'
       },
       { status: healthy ? 200 : 503 }
     )
