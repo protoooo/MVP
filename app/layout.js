@@ -1,6 +1,7 @@
 import './globals.css'
 import { Outfit } from 'next/font/google'
 import SessionGuard from '@/components/SessionGuard'
+import CookieConsent from '@/components/CookieConsent'
 
 const outfit = Outfit({ subsets: ['latin'] })
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }) {
       <body className={outfit.className}>
         <SessionGuard />
         {children}
+        <CookieConsent />
       </body>
     </html>
   )
