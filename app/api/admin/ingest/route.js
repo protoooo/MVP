@@ -5,58 +5,95 @@ import path from "path";
 import pdfParse from "pdf-parse";
 import OpenAI from "openai";
 
+export const runtime = "nodejs"; // make sure we are on Node, not edge
+
+const CHUNK_SIZE = 6000; // characters per chunk, keeps us way under the 300k-token limit
+
 export async function POST() {
   try {
+    // --- Supabase client (server-side, use service role) ---
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // --- OpenAI client ---
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     const docsPath = path.join(process.cwd(), "public/documents/washtenaw");
-    const files = fs.readdirSync(docsPath).filter(f => f.endsWith(".pdf"));
+    const files = fs.readdirSync(docsPath).filter((f) => f.endsWith(".pdf"));
+
+    console.log("Found PDFs:", files);
+
+    let totalChunks = 0;
 
     for (const file of files) {
       console.log("Processing:", file);
 
       const pdfBuffer = fs.readFileSync(path.join(docsPath, file));
       const parsed = await pdfParse(pdfBuffer);
-      const fullText = parsed.text;
+      const fullText = parsed.text || "";
 
-      // Chunk PDF text
-      const chunkSize = 2000;
-      const chunks = [];
-      for (let i = 0; i < fullText.length; i += chunkSize) {
-        chunks.push(fullText.slice(i, i + chunkSize));
+      if (!fullText.trim()) {
+        console.log("Skipping empty PDF:", file);
+        continue;
       }
 
-      // Process each chunk
-      for (let i = 0; i < chunks.length; i++) {
-        const chunkText = chunks[i];
+      let chunkIndex = 0;
 
-        const embedding = await openai.embeddings.create({
+      for (let start = 0; start < fullText.length; start += CHUNK_SIZE) {
+        const chunk = fullText.slice(start, start + CHUNK_SIZE).trim();
+        if (!chunk) continue;
+
+        // --- Create embedding for this chunk ---
+        const embedRes = await openai.embeddings.create({
           model: "text-embedding-3-small",
-          input: chunkText,
+          input: chunk,
         });
 
-        await supabase.from("documents").insert({
+        const embedding = embedRes.data[0].embedding;
+
+        // --- Store in Supabase ---
+        const { error } = await supabase.from("documents").insert({
           filename: file,
-          chunk_index: i,
-          content: chunkText,
-          embedding: embedding.data[0].embedding,
+          chunk_index: chunkIndex,
+          content: chunk,
+          embedding,
         });
+
+        if (error) {
+          console.error("Supabase insert error:", error);
+          return NextResponse.json(
+            {
+              ok: false,
+              step: "insert",
+              file,
+              chunkIndex,
+              error: error.message,
+            },
+            { status: 500 }
+          );
+        }
+
+        chunkIndex += 1;
+        totalChunks += 1;
       }
+
+      console.log(`Finished ${file}`);
     }
 
-    return NextResponse.json({ status: "complete" });
-
-  } catch (error) {
-    console.error("Ingestion failed:", error);
+    return NextResponse.json({
+      ok: true,
+      message: "Ingestion complete",
+      files: files.length,
+      chunks: totalChunks,
+    });
+  } catch (err) {
+    console.error("Ingestion error:", err);
     return NextResponse.json(
-      { error: error.message },
+      { ok: false, error: err.message || String(err) },
       { status: 500 }
     );
   }
