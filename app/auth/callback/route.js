@@ -1,3 +1,4 @@
+// app/auth/callback/route.js - Fixed to handle password reset
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -7,12 +8,14 @@ export async function GET(request) {
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
   const errorDescription = requestUrl.searchParams.get('error_description')
+  const type = requestUrl.searchParams.get('type') // Check for 'recovery' type
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
 
   console.log('🔄 Auth callback:', {
     hasCode: !!code,
     hasError: !!error,
+    type,
     baseUrl,
   })
 
@@ -68,6 +71,12 @@ export async function GET(request) {
   }
 
   console.log('✅ Session established:', data.user.email)
+
+  // **FIX: Check if this is a password recovery flow**
+  if (type === 'recovery') {
+    console.log('🔐 Password recovery detected, redirecting to reset page')
+    return NextResponse.redirect(`${baseUrl}/reset-password`)
+  }
 
   // Check if terms accepted
   const { data: profile } = await supabase
