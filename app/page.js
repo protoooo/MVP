@@ -171,7 +171,7 @@ const LandingPage = ({ onShowPricing }) => (
 )
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -179,7 +179,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
@@ -194,7 +194,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       }
 
       let endpoint = ''
-      const body: any = { email, captchaToken }
+      const body = { email, captchaToken }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
@@ -543,29 +543,31 @@ const SubscriptionPollingBanner = () => (
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'annual' | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(null) // 'monthly' | 'annual' | null
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<any[]>([])
+  const [currentChatId, setCurrentChatId] = useState(null)
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const inputRef = useRef<HTMLTextAreaElement | null>(null)
-  const userMenuRef = useRef<HTMLDivElement | null>(null)
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const fileInputRef = useRef(null)
+  const scrollRef = useRef(null)
+  const inputRef = useRef(null)
+  const userMenuRef = useRef(null)
+  const pollIntervalRef = useRef(null)
+
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false)
       }
     }
@@ -582,7 +584,7 @@ export default function Page() {
   // Initial auth and subscription check with timeout
   useEffect(() => {
     let mounted = true
-    let timeoutId: NodeJS.Timeout | null = null
+    let timeoutId = null
 
     const init = async () => {
       try {
@@ -734,7 +736,7 @@ export default function Page() {
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
-  const handleCheckout = async (priceId: string, planName: 'monthly' | 'annual') => {
+  const handleCheckout = async (priceId, planName) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -769,7 +771,7 @@ export default function Page() {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
@@ -792,7 +794,7 @@ export default function Page() {
     setCurrentChatId(null)
   }
 
-  const handleSend = async (e?: React.FormEvent) => {
+  const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
@@ -855,7 +857,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response.'
         return u
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Chat error:', err)
       setMessages((p) => {
         const u = [...p]
@@ -867,12 +869,12 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
-      setSelectedImage(compressed as any)
+      setSelectedImage(compressed)
     } catch (error) {
       console.error(error)
       alert('Failed to process image')
