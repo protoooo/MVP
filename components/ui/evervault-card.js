@@ -3,302 +3,126 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export function EvervaultCard({ text, icon, className }) {
-  // normalize the text so "Cross-check", "crosscheck", etc all work
-  const key = (text || '').toLowerCase().trim();
+export function EvervaultCard({ text, className }) {
+  const key = (text || '').toLowerCase();
 
   let visual = null;
-
   if (key === 'capture') {
-    visual = <CaptureCardVisual />;
-  } else if (key === 'cross-check' || key === 'crosscheck' || key === 'cross check') {
-    visual = <CrossCheckCardVisual />;
+    visual = <CaptureIcon />;
+  } else if (key === 'cross-check' || key === 'crosscheck') {
+    visual = <CrossCheckIcon />;
   } else if (key === 'correct') {
-    visual = <CorrectCardVisual />;
-  } else if (icon) {
-    // safety net: if someone passes an icon prop again
-    visual = <div className="ev-shell ev-icon-only">{icon}</div>;
+    visual = <CorrectIcon />;
   } else {
-    // last-resort fallback
-    visual = (
-      <div className="ev-shell">
-        <div className="ev-fallback" />
-      </div>
-    );
+    visual = <FallbackDot />;
   }
 
   return (
     <div
       className={cn(
-        'relative flex h-full w-full items-center justify-center',
+        'flex h-full w-full items-center justify-center',
         className
       )}
     >
       {visual}
-
-      {/* Local scoped styles */}
-      <style jsx>{`
-        .ev-shell {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* ~80% bigger than your original 24px icons */
-        .ev-icon {
-          width: 3rem;
-          height: 3rem;
-          color: #64748b;
-          stroke-width: 1.7;
-        }
-
-        /* if we ever use the icon prop again, size its SVG too */
-        .ev-icon-only :global(svg) {
-          width: 3rem;
-          height: 3rem;
-          color: #64748b;
-          stroke-width: 1.7;
-        }
-
-        .ev-fallback {
-          width: 1.5rem;
-          height: 1.5rem;
-          border-radius: 9999px;
-          border: 1px solid rgba(148, 163, 184, 0.4);
-        }
-
-        /* CAPTURE – subtle camera snap + flash */
-        .camera-icon {
-          animation: cameraSnap 4s ease-in-out infinite;
-        }
-
-        .camera-lens {
-          transform-origin: center;
-          animation: lensClick 4s ease-in-out infinite;
-        }
-
-        .camera-flash {
-          position: absolute;
-          inset: -18px;
-          border-radius: 9999px;
-          background: radial-gradient(
-            circle,
-            rgba(255, 255, 255, 0.55) 0%,
-            rgba(255, 255, 255, 0) 60%
-          );
-          opacity: 0;
-          pointer-events: none;
-          animation: flashBurst 4s ease-in-out infinite;
-        }
-
-        @keyframes cameraSnap {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          47% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-1px);
-          }
-          53% {
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes lensClick {
-          0%, 100% {
-            transform: scale(1);
-          }
-          47% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(0.92);
-          }
-          53% {
-            transform: scale(1);
-          }
-        }
-
-        @keyframes flashBurst {
-          0%, 100% {
-            opacity: 0;
-            transform: scale(0.8);
-          }
-          49.5% {
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.6;
-            transform: scale(1);
-          }
-          51% {
-            opacity: 0;
-            transform: scale(1.2);
-          }
-        }
-
-        /* CROSS-CHECK – scrolling review lines */
-        .doc-lines {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          overflow: hidden;
-        }
-
-        .doc-line {
-          position: absolute;
-          left: 0.9rem;
-          height: 1.5px;
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(100, 100, 100, 0.3) 30%,
-            rgba(100, 100, 100, 0.6) 50%,
-            rgba(100, 100, 100, 0.3) 70%,
-            transparent 100%
-          );
-          border-radius: 9999px;
-          animation: docScan 3s ease-in-out infinite;
-        }
-
-        .doc-line--1 {
-          top: 32%;
-          width: 60%;
-        }
-
-        .doc-line--2 {
-          top: 44%;
-          width: 50%;
-          animation-delay: 0.7s;
-        }
-
-        .doc-line--3 {
-          top: 56%;
-          width: 65%;
-          animation-delay: 1.4s;
-        }
-
-        .doc-line--4 {
-          top: 68%;
-          width: 45%;
-          animation-delay: 2.1s;
-        }
-
-        @keyframes docScan {
-          0% {
-            transform: translateX(-120%);
-            opacity: 0;
-          }
-          15% {
-            opacity: 0.5;
-          }
-          50% {
-            opacity: 1;
-          }
-          85% {
-            opacity: 0.5;
-          }
-          100% {
-            transform: translateX(180%);
-            opacity: 0;
-          }
-        }
-
-        /* CORRECT – animated checkmark draw */
-        .check-shell {
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .checkmark-icon {
-          color: #10b981;
-          stroke-width: 2;
-        }
-
-        .check-path {
-          stroke-dasharray: 24;
-          stroke-dashoffset: 24;
-          animation: checkDraw 0.6s ease-out forwards;
-        }
-
-        @keyframes checkDraw {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-      `}</style>
     </div>
   );
 }
 
-/* ----- Individual visuals ----- */
-
-function CaptureCardVisual() {
+/**
+ * Shared circle shell so all three icons look consistent
+ * and about ~80% bigger than your old 24px icons.
+ */
+function IconCircle({ children }) {
   return (
-    <div className="ev-shell">
-      <svg
-        viewBox="0 0 24 24"
-        className="ev-icon camera-icon"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="3" y="7" width="18" height="12" rx="2" />
-        <path d="M9 7l1.2-2.2A1 1 0 0 1 11.1 4h1.8a1 1 0 0 1 .9.5L15 7" />
-        <circle cx="12" cy="13" r="3.4" className="camera-lens" />
-      </svg>
-
-      <div className="camera-flash" />
-    </div>
-  );
-}
-
-function CrossCheckCardVisual() {
-  return (
-    <div className="ev-shell">
-      <svg
-        viewBox="0 0 24 24"
-        className="ev-icon"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="5" y="3.5" width="14" height="17" rx="2" />
-      </svg>
-
-      <div className="doc-lines">
-        <div className="doc-line doc-line--1" />
-        <div className="doc-line doc-line--2" />
-        <div className="doc-line doc-line--3" />
-        <div className="doc-line doc-line--4" />
+    <div className="relative flex items-center justify-center">
+      <div className="flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 w-12 h-12 md:w-14 md:h-14">
+        {children}
       </div>
     </div>
   );
 }
 
-function CorrectCardVisual() {
+/** 1. Capture – camera with a very soft pulse */
+function CaptureIcon() {
   return (
-    <div className="check-shell">
-      <svg
-        viewBox="0 0 24 24"
-        className="ev-icon checkmark-icon"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path
-          className="check-path"
-          d="M20 6L9 17l-5-5"
-        />
-      </svg>
-    </div>
+    <IconCircle>
+      <div className="relative">
+        {/* subtle pulse around the camera */}
+        <div className="absolute inset-0 rounded-full border border-slate-300/70 animate-ping opacity-60" />
+        <svg
+          viewBox="0 0 24 24"
+          className="relative w-7 h-7 text-slate-700"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="7" width="18" height="12" rx="2" />
+          <path d="M9 7l1.2-2.2A1 1 0 0 1 11.1 4h1.8a1 1 0 0 1 .9.5L15 7" />
+          <circle cx="12" cy="13" r="3.4" />
+        </svg>
+      </div>
+    </IconCircle>
+  );
+}
+
+/** 2. Cross-check – document with three “scanning” lines */
+function CrossCheckIcon() {
+  return (
+    <IconCircle>
+      <div className="relative">
+        <svg
+          viewBox="0 0 24 24"
+          className="w-7 h-7 text-slate-700"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="5" y="3.5" width="14" height="17" rx="2" />
+          <polyline points="14 3.5 14 8 19 8" />
+        </svg>
+
+        {/* three tiny lines that gently pulse, like text being reviewed */}
+        <div className="absolute inset-0 flex flex-col justify-center gap-1.5 px-3">
+          <div className="h-[2px] w-7 bg-slate-400/70 rounded-full animate-pulse" />
+          <div className="h-[2px] w-6 bg-slate-400/60 rounded-full animate-pulse delay-150" />
+          <div className="h-[2px] w-8 bg-slate-400/50 rounded-full animate-pulse delay-300" />
+        </div>
+      </div>
+    </IconCircle>
+  );
+}
+
+/** 3. Correct – green check with a soft breathing effect */
+function CorrectIcon() {
+  return (
+    <IconCircle>
+      <div className="relative">
+        {/* soft green halo */}
+        <div className="absolute inset-0 rounded-full bg-emerald-100/40 animate-pulse" />
+        <svg
+          viewBox="0 0 24 24"
+          className="relative w-7 h-7 text-emerald-600"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </div>
+    </IconCircle>
+  );
+}
+
+/** fallback if text prop doesn't match */
+function FallbackDot() {
+  return (
+    <div className="w-2 h-2 rounded-full bg-slate-300" />
   );
 }
