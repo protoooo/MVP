@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
-import { EvervaultCard } from '@/app/components/ui/evervault-card'
+import { EvervaultCard } from '@app/components/ui/evervault-card'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
