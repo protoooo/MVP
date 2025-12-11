@@ -77,7 +77,7 @@ const Icons = {
   ),
 }
 
-const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
+const LandingPage = ({ onShowPricing, theme }) => {
   const isDark = theme === 'dark'
 
   return (
@@ -93,36 +93,6 @@ const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
             >
               Washtenaw County · Food-service compliance
             </p>
-
-            {/* Center Light / Dark toggle */}
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className={`relative inline-flex items-center rounded-full text-[11px] font-medium border px-1 py-1 transition-colors ${
-                isDark
-                  ? 'border-slate-600 bg-[#020617] text-slate-200'
-                  : 'border-slate-300 bg-white text-slate-700'
-              }`}
-            >
-              <span
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  !isDark
-                    ? 'bg-slate-900 text-slate-50'
-                    : 'text-slate-400'
-                }`}
-              >
-                Light
-              </span>
-              <span
-                className={`px-3 py-1 rounded-full transition-colors ${
-                  isDark
-                    ? 'bg-slate-100/5 text-slate-50'
-                    : 'text-slate-500'
-                }`}
-              >
-                Dark
-              </span>
-            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-10 items-stretch">
@@ -175,13 +145,6 @@ const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
                     >
                       Start free demo
                     </button>
-                    <p
-                      className={`text-[11px] ${inter.className} ${
-                        isDark ? 'text-slate-400' : 'text-slate-500'
-                      }`}
-                    >
-                      No marketing. No chatbots. Just code sections and plain language.
-                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -227,7 +190,7 @@ const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
             </div>
 
             {/* Side instructional column */}
-            <div className="flex flex-col justify-between gap-6">
+            <div className="flex flex-col gap-6">
               <div
                 className={`rounded-3xl border p-6 md:p-7 lg:p-8 shadow-[0_18px_60px_rgba(15,23,42,0.14)] ${
                   isDark
@@ -252,17 +215,6 @@ const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
                   <li>• “What are the holding temps for this line?”</li>
                   <li>• ProtocolLM replies with a short answer and the exact section number.</li>
                 </ul>
-              </div>
-
-              <div
-                className={`rounded-2xl border px-5 py-4 text-[12px] ${
-                  isDark
-                    ? 'border-slate-700/80 bg-slate-900/40 text-slate-300'
-                    : 'border-slate-200 bg-slate-50 text-slate-700'
-                }`}
-              >
-                Designed to feel closer to a state-issued reference tool than a consumer app. Quiet, predictable, and
-                focused on staying in compliance.
               </div>
             </div>
           </div>
@@ -398,7 +350,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     setLoading(true)
     setMessage('')
 
-    try {
+  try {
       const captchaToken = await executeRecaptcha(mode)
 
       if (!captchaToken) {
@@ -1176,6 +1128,41 @@ export default function Page() {
                 protocol<span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
               </div>
               <div className="flex items-center gap-4">
+                {/* Theme toggle in header */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+                  }
+                  className={`
+                    hidden sm:inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium transition-colors
+                    ${
+                      isDark
+                        ? 'border-slate-700 text-slate-200 bg-slate-900/60 hover:bg-slate-900'
+                        : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
+                    }
+                  `}
+                >
+                  <span
+                    className={`px-2 py-0.5 rounded-full ${
+                      !isDark
+                        ? 'bg-slate-900 text-slate-50'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    Light
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full ${
+                      isDark
+                        ? 'bg-slate-100 text-slate-900'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    Dark
+                  </span>
+                </button>
+
                 {!session ? (
                   <div className="flex items-center gap-2">
                     <button
@@ -1254,9 +1241,6 @@ export default function Page() {
               <LandingPage
                 onShowPricing={() => setShowPricingModal(true)}
                 theme={theme}
-                onToggleTheme={() =>
-                  setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-                }
               />
             ) : (
               <>
