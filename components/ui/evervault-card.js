@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useMotionValue, useMotionTemplate, motion } from 'motion/react'
+import { useMotionValue, useMotionTemplate, motion } from 'framer-motion'
 
 // tiny Tailwind class combiner
 function cn(...classes) {
