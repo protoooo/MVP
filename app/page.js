@@ -14,23 +14,27 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// Nicely formatted document names (no .pdf, no underscores)
-const DOCUMENT_PILLS = [
-  'Washtenaw enforcement actions',
+// Nicely formatted document titles for the rotating pill
+const DOCUMENT_TITLES = [
+  'Washtenaw Consumer Advisory guidance',
+  'Cooling foods – Washtenaw County',
+  'Cross-contamination prevention guide',
+  'Enforcement actions – Washtenaw County',
   'Violation types – Washtenaw County',
-  'Inspection report types',
-  'Food service inspection program',
-  'Food allergy information',
-  'Cooling & cold holding',
-  'Cross-contamination guidance',
-  '3-comp sink procedures',
-  'Consumer advisory requirements',
-  'Date marking guide',
-  'Food labeling guide',
+  'Inspection report types – Washtenaw',
+  'Date-marking guide – Washtenaw',
+  'Food labeling guide – Washtenaw',
+  'Emergency action plan – retail establishments',
   'Internal cooking temperatures',
-  'USDA safe minimum temperatures',
-  'Michigan Modified Food Code (2022)',
-  'FDA Food Code (2022)',
+  'Minimum cooking temperature summary chart',
+  'USDA safe minimum temperature chart',
+  'Michigan Modified Food Code',
+  'Michigan Act 92 of 2000',
+  'FDA Food Code 2022',
+  'FOG (fats, oils & grease) guidance',
+  'Food allergy information – Washtenaw',
+  'Food service inspection program – Washtenaw',
+  'New food business information packet',
 ]
 
 const Icons = {
@@ -95,27 +99,31 @@ const Icons = {
     </svg>
   ),
   Sun: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="12" cy="12" r="4" />
-      <line x1="12" y1="2" x2="12" y2="5" />
-      <line x1="12" y1="19" x2="12" y2="22" />
-      <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" />
-      <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
-      <line x1="2" y1="12" x2="5" y2="12" />
-      <line x1="19" y1="12" x2="22" y2="12" />
-      <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" />
-      <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" />
+      <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5.64 5.64L4.22 4.22M19.78 19.78l-1.42-1.42M5.64 18.36 4.22 19.78M19.78 4.22l-1.42 1.42" />
     </svg>
   ),
   Moon: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79z" />
     </svg>
   ),
 }
 
 const LandingPage = ({ onShowPricing, theme }) => {
   const isDark = theme === 'dark'
+  const [docIndex, setDocIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDocIndex((prev) => (prev + 1) % DOCUMENT_TITLES.length)
+    }, 3000) // ~3 seconds per title
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const itemHeight = 20 // px, matches h-5
 
   return (
     <div
@@ -123,189 +131,218 @@ const LandingPage = ({ onShowPricing, theme }) => {
         isDark ? 'bg-black' : 'bg-white'
       }`}
     >
-      {/* Hero */}
+      {/* Single hero + how-it-works section */}
       <section
         className={`relative border-b ${
           isDark ? 'border-slate-800' : 'border-slate-200'
         }`}
       >
-        <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-          {/* small, general preheader */}
-          <p
-            className={`text-xs md:text-sm mb-3 font-medium tracking-[0.18em] uppercase ${
-              inter.className
-            } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
-          >
-            Food-safety checks for restaurants and food service
-          </p>
-
-          {/* general header, no specific county */}
-          <p
-            className={`text-lg md:text-2xl font-semibold tracking-tight leading-snug mb-4 max-w-3xl ${
-              outfit.className
-            } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
-          >
-            Take photos to cross-check food-safety regulations in your county and flag
-            likely violations before inspections.
-          </p>
-
-          {/* shorter subheader, no doc list / fallback talk */}
-          <p
-            className={`text-sm md:text-base max-w-2xl leading-relaxed mb-8 ${
-              inter.className
-            } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-          >
-            Upload a photo of your cooler, prep line, or dish area—or ask a question.
-            protocolLM compares what it sees against local, state, and federal
-            food-safety rules.
-          </p>
-
-          {/* Coverage */}
-          <div className="mb-2">
-            <p
-              className={`text-[11px] font-semibold tracking-[0.22em] uppercase mb-3 ${
-                inter.className
-              } ${isDark ? 'text-slate-500' : 'text-slate-500'}`}
-            >
-              Coverage
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          {/* Coverage + docs row */}
+          <div className="flex flex-col items-start gap-4 text-left">
+            <div className="flex flex-wrap items-center gap-3">
               <span
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium ${
+                className={`text-[11px] uppercase tracking-[0.2em] px-3 py-1 rounded-full border ${
                   isDark
-                    ? 'bg-slate-50 text-slate-900'
-                    : 'bg-slate-900 text-slate-50'
-                }`}
-              >
-                Washtenaw County · Active
-              </span>
-              <span
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border ${
-                  isDark
-                    ? 'border-slate-700 text-slate-400'
+                    ? 'border-slate-700 text-slate-300'
                     : 'border-slate-300 text-slate-600'
-                }`}
+                } ${inter.className}`}
               >
-                Wayne County · Coming 2026
+                Coverage
               </span>
-              <span
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border ${
-                  isDark
-                    ? 'border-slate-700 text-slate-400'
-                    : 'border-slate-300 text-slate-600'
-                }`}
-              >
-                Oakland County · Coming 2026
-              </span>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span
+                  className={`px-3 py-1 rounded-full font-medium ${
+                    isDark
+                      ? 'bg-slate-50 text-slate-900'
+                      : 'bg-slate-900 text-slate-50'
+                  }`}
+                >
+                  Washtenaw County · Active
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full border text-[11px] uppercase tracking-[0.14em] ${
+                    isDark
+                      ? 'border-slate-700 text-slate-300'
+                      : 'border-slate-300 text-slate-600'
+                  }`}
+                >
+                  Michigan state code
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full border border-dashed text-[11px] uppercase tracking-[0.14em] ${
+                    isDark
+                      ? 'border-slate-700 text-slate-500'
+                      : 'border-slate-300 text-slate-500'
+                  }`}
+                >
+                  Additional counties · 2026
+                </span>
+              </div>
             </div>
+
             <p
-              className={`mt-3 text-[11px] ${inter.className} ${
-                isDark ? 'text-slate-500' : 'text-slate-500'
+              className={`text-xs md:text-sm ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              } ${inter.className}`}
+            >
+              Grounded in local enforcement actions, Michigan Modified Food Code, FDA
+              Food Code 2022, and USDA safe temperature guidance.
+            </p>
+
+            {/* Rotating docs pill */}
+            <div
+              className={`inline-flex items-center gap-3 rounded-full px-3 py-1.5 text-xs ${
+                isDark
+                  ? 'bg-slate-900/80 border border-slate-700 text-slate-200'
+                  : 'bg-slate-50 border border-slate-200 text-slate-700'
               }`}
             >
-              Also grounded in Michigan Food Code and FDA Food Code.
-            </p>
+              <span
+                className={`text-[11px] uppercase tracking-[0.18em] ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                } ${inter.className}`}
+              >
+                Referencing
+              </span>
+              <div className="relative overflow-hidden h-5 min-w-[11rem]">
+                <div
+                  className="absolute inset-0 flex flex-col transition-transform duration-500 ease-out"
+                  style={{ transform: `translateY(-${docIndex * itemHeight}px)` }}
+                >
+                  {DOCUMENT_TITLES.map((title, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-5 flex items-center text-xs ${
+                        isDark ? 'text-slate-100' : 'text-slate-800'
+                      } ${inter.className}`}
+                    >
+                      {title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* No hero CTA button now – sign-up is handled in header */}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section
-        className={`py-20 px-6 flex-1 ${
-          isDark ? 'bg-black' : 'bg-white'
-        }`}
-      >
-        <div className="max-w-6xl mx-auto">
-          <h2
-            className={`text-xl font-semibold mb-14 text-center tracking-tight ${
-              outfit.className
-            } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-          >
-            How it works
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* subtle tracing animation: step 1 → 2 → 3 */}
-            <div
-              className={`how-step-card how-step-1 p-8 rounded-xl border ${
-                isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
-              }`}
+          {/* Main text + CTA */}
+          <div className="mt-10 text-left max-w-3xl">
+            <h1
+              className={`text-3xl md:text-[2.4rem] font-semibold tracking-tight leading-tight mb-4 ${
+                outfit.className
+              } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.Camera />
-              </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-              >
-                1. Capture
-              </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-              >
-                Take a photo of your cooler, prep line, dish room, or 3-comp sink using
-                any smartphone, or ask a question about specific code sections.
-              </p>
-            </div>
-
-            <div
-              className={`how-step-card how-step-2 p-8 rounded-xl border ${
-                isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
-              }`}
+              Take photos to cross-check food safety rules and spot likely violations
+              before inspection.
+            </h1>
+            <p
+              className={`text-sm md:text-base max-w-xl leading-relaxed mb-8 ${
+                inter.className
+              } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.Zap />
-              </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-              >
-                2. Cross-check
-              </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-              >
-                protocolLM compares your photo or question against local county
-                documents, state guidance, and federal food-safety standards.
-              </p>
-            </div>
-
-            <div
-              className={`how-step-card how-step-3 p-8 rounded-xl border ${
-                isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
-              }`}
+              Use protocolLM as a utility: upload a photo or ask a question and get a
+              concise, regulation-backed view of what might be out of compliance in
+              your operation.
+            </p>
+            <button
+              onClick={onShowPricing}
+              className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors btn-press"
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.FileText />
+              Sign up
+            </button>
+          </div>
+
+          {/* How it works */}
+          <div className="mt-16">
+            <h2
+              className={`text-xl font-semibold mb-8 tracking-tight ${
+                outfit.className
+              } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+            >
+              How it works
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div
+                className={`how-step-card how-step-1 p-8 rounded-xl border ${
+                  isDark
+                    ? 'bg-black border-slate-800'
+                    : 'bg-white border-slate-200'
+                }`}
+              >
+                <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <Icons.Camera />
+                </div>
+                <h3
+                  className={`text-base font-semibold mb-2 ${
+                    outfit.className
+                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                >
+                  1. Capture
+                </h3>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    inter.className
+                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                >
+                  Take a quick photo of your cooler, prep line, 3-comp sink, or
+                  temperature log using any smartphone on the floor.
+                </p>
               </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+
+              <div
+                className={`how-step-card how-step-2 p-8 rounded-xl border ${
+                  isDark
+                    ? 'bg-black border-slate-800'
+                    : 'bg-white border-slate-200'
+                }`}
               >
-                3. Correct
-              </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <Icons.Zap />
+                </div>
+                <h3
+                  className={`text-base font-semibold mb-2 ${
+                    outfit.className
+                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                >
+                  2. Cross-check
+                </h3>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    inter.className
+                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                >
+                  protocolLM cross-checks what it sees and what you ask against local
+                  county rules, Michigan code, and federal guidance.
+                </p>
+              </div>
+
+              <div
+                className={`how-step-card how-step-3 p-8 rounded-xl border ${
+                  isDark
+                    ? 'bg-black border-slate-800'
+                    : 'bg-white border-slate-200'
+                }`}
               >
-                Receive a structured summary of likely violations and practical
-                corrective actions so you can address issues before the next inspection.
-              </p>
+                <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <Icons.FileText />
+                </div>
+                <h3
+                  className={`text-base font-semibold mb-2 ${
+                    outfit.className
+                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                >
+                  3. Correct
+                </h3>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    inter.className
+                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                >
+                  Receive a structured summary of likely violations, specific code
+                  references, and practical steps to fix them before the next
+                  inspection.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -322,30 +359,20 @@ const LandingPage = ({ onShowPricing, theme }) => {
             inter.className
           } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
         >
-          Currently serving Washtenaw County food service establishments. Additional
-          southeast Michigan counties planned for 2026.
+          Currently serving Washtenaw County food-service establishments.
         </p>
         <div
           className={`flex justify-center gap-6 mb-6 text-sm font-medium ${
             isDark ? 'text-slate-400' : 'text-slate-500'
           }`}
         >
-          <Link
-            href="/terms"
-            className="hover:text-slate-900 transition-colors"
-          >
+          <Link href="/terms" className="hover:text-slate-900 transition-colors">
             Terms of Service
           </Link>
-          <Link
-            href="/privacy"
-            className="hover:text-slate-900 transition-colors"
-          >
+          <Link href="/privacy" className="hover:text-slate-900 transition-colors">
             Privacy Policy
           </Link>
-          <Link
-            href="/contact"
-            className="hover:text-slate-900 transition-colors"
-          >
+          <Link href="/contact" className="hover:text-slate-900 transition-colors">
             Contact
           </Link>
         </div>
@@ -501,7 +528,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                       strokeWidth="2"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8s-4 8-11 8-11-8-11-8z" />
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
@@ -658,11 +685,11 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Grounded in local county guidance</span>
+                  <span>Grounded in Washtenaw County guidance</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Michigan Food Code & local enforcement docs</span>
+                  <span>Michigan Food Code &amp; local enforcement docs</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -745,7 +772,6 @@ export default function Page() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [theme, setTheme] = useState('light') // light/dark toggle
-  const [docIndex, setDocIndex] = useState(0) // rotating document pill
 
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -771,14 +797,6 @@ export default function Page() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
-
-  // rotate document pill
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDocIndex((prev) => (prev + 1) % DOCUMENT_PILLS.length)
-    }, 3500)
-    return () => clearInterval(interval)
-  }, [])
 
   // Initial auth + subscription check
   useEffect(() => {
@@ -1135,7 +1153,7 @@ export default function Page() {
           8%,
           25% {
             opacity: 1;
-            border-color: rgba(148, 163, 184, 0.9); /* slate-400ish */
+            border-color: rgba(148, 163, 184, 0.9);
           }
         }
         .how-step-1::after {
@@ -1184,54 +1202,29 @@ export default function Page() {
             }`}
           >
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-              {/* Logo + rotating document pill */}
-              <div className="flex items-center gap-4">
-                <div
-                  className={`font-semibold tracking-tight text-xl ${outfit.className} ${
-                    isDark ? 'text-slate-50' : 'text-slate-900'
-                  }`}
-                >
-                  protocol
-                  <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>
-                    LM
-                  </span>
-                </div>
-                <div className="hidden md:flex items-center gap-2">
-                  <span
-                    className={`text-[10px] uppercase tracking-[0.18em] ${
-                      isDark ? 'text-slate-500' : 'text-slate-500'
-                    }`}
-                  >
-                    Documents
-                  </span>
-                  <span
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium border whitespace-nowrap transition-colors ${
-                      isDark
-                        ? 'border-slate-700 text-slate-200 bg-black'
-                        : 'border-slate-200 text-slate-700 bg-white'
-                    }`}
-                  >
-                    {DOCUMENT_PILLS[docIndex]}
-                  </span>
-                </div>
+              <div
+                className={`font-semibold tracking-tight text-xl ${outfit.className} ${
+                  isDark ? 'text-slate-50' : 'text-slate-900'
+                }`}
+              >
+                protocol<span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
               </div>
-
               <div className="flex items-center gap-4">
-                {/* Sun/moon theme toggle */}
+                {/* Theme toggle – sun / moon */}
                 <button
                   type="button"
                   onClick={() =>
                     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
                   }
                   className={`
-                    inline-flex items-center justify-center rounded-full border p-2 text-[11px] font-medium transition-colors
+                    inline-flex items-center justify-center rounded-full border w-9 h-9
+                    transition-colors
                     ${
                       isDark
-                        ? 'border-slate-700 text-slate-200 bg-black hover:bg-slate-900'
-                        : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
+                        ? 'border-slate-700 text-slate-100 bg-black hover:bg-slate-900'
+                        : 'border-slate-300 text-slate-700 bg-white hover:bg-slate-50'
                     }
                   `}
-                  aria-label="Toggle theme"
                 >
                   {isDark ? <Icons.Sun /> : <Icons.Moon />}
                 </button>
@@ -1327,8 +1320,8 @@ export default function Page() {
                       <p
                         className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about the Michigan Food Code, local enforcement, or upload a
-                        photo to check for violations.
+                        Ask about the Michigan Food Code, Washtenaw enforcement, or
+                        upload a photo to check for violations.
                       </p>
                     </div>
                   ) : (
