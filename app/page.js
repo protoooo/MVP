@@ -83,7 +83,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
   return (
     <div
       className={`w-full relative z-10 min-h-full flex flex-col ${
-        isDark ? 'bg-slate-950' : 'bg-white'
+        isDark ? 'bg-black' : 'bg-white'
       }`}
     >
       {/* Hero */}
@@ -108,11 +108,10 @@ const LandingPage = ({ onShowPricing, theme }) => {
             Upload a photo or ask a question. protocolLM cross-checks the Michigan Food
             Code and local Washtenaw guidance.
           </p>
+          {/* same button in both themes: black background, white text */}
           <button
             onClick={onShowPricing}
-            className={`bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors ${
-              isDark ? 'bg-slate-50 text-slate-900 hover:bg-white' : ''
-            }`}
+            className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
           >
             Start 7-Day Free Trial
           </button>
@@ -122,7 +121,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
       {/* How it works */}
       <section
         className={`py-20 px-6 flex-1 ${
-          isDark ? 'bg-slate-950' : 'bg-white'
+          isDark ? 'bg-black' : 'bg-white'
         }`}
       >
         <div className="max-w-6xl mx-auto">
@@ -137,7 +136,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             <div
               className={`p-8 rounded-xl border ${
                 isDark
-                  ? 'bg-slate-950 border-slate-800'
+                  ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
               }`}
             >
@@ -164,7 +163,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             <div
               className={`p-8 rounded-xl border ${
                 isDark
-                  ? 'bg-slate-950 border-slate-800'
+                  ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
               }`}
             >
@@ -191,7 +190,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             <div
               className={`p-8 rounded-xl border ${
                 isDark
-                  ? 'bg-slate-950 border-slate-800'
+                  ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
               }`}
             >
@@ -398,7 +397,6 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900"
                 >
-                  {/* eye icon */}
                   {showPassword ? (
                     <svg
                       width="20"
@@ -1027,7 +1025,7 @@ export default function Page() {
 
       <div
         className={`relative min-h-screen w-full overflow-hidden transition-colors duration-300 ${
-          isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
+          isDark ? 'bg-black text-slate-100' : 'bg-white text-slate-900'
         }`}
       >
         <div
@@ -1039,7 +1037,7 @@ export default function Page() {
           <header
             className={`border-b z-30 ${
               isDark
-                ? 'border-slate-800 bg-slate-950/90 backdrop-blur'
+                ? 'border-slate-800 bg-black/90 backdrop-blur'
                 : 'border-slate-200 bg-white/80 backdrop-blur'
             }`}
           >
@@ -1062,7 +1060,7 @@ export default function Page() {
                     hidden sm:inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium transition-colors
                     ${
                       isDark
-                        ? 'border-slate-700 text-slate-200 bg-slate-950 hover:bg-slate-900'
+                        ? 'border-slate-700 text-slate-200 bg-black hover:bg-slate-900'
                         : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
                     }
                   `}
@@ -1130,7 +1128,7 @@ export default function Page() {
                         onClick={() => setShowUserMenu(!showUserMenu)}
                         className={`w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold ${
                           isDark
-                            ? 'bg-slate-950 border-slate-700 text-slate-100'
+                            ? 'bg-black border-slate-700 text-slate-100'
                             : 'bg-slate-100 border-slate-200 text-slate-600'
                         }`}
                       >
@@ -1241,7 +1239,7 @@ export default function Page() {
                 {/* INPUT BAR */}
                 <div
                   className={`w-full shrink-0 z-20 border-t pt-4 ${
-                    isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-slate-100'
+                    isDark ? 'bg-black border-slate-800' : 'bg-white border-slate-100'
                   }`}
                 >
                   <div className="w-full max-w-4xl mx-auto px-4 pb-8">
