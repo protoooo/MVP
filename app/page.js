@@ -171,7 +171,7 @@ const LandingPage = ({ onShowPricing }) => (
 )
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState('signin')
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -179,14 +179,14 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
 
     try {
       const captchaToken = await executeRecaptcha(mode)
-      
+
       if (!captchaToken) {
         setMessage('Security verification failed. Please try again.')
         setLoading(false)
@@ -194,7 +194,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       }
 
       let endpoint = ''
-      let body = { email, captchaToken }
+      const body: any = { email, captchaToken }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
@@ -206,7 +206,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       })
 
       const data = await response.json()
@@ -307,12 +307,26 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900"
                 >
                   {showPassword ? (
-                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <svg
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -327,11 +341,15 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             disabled={loading || !isLoaded}
             className="w-full bg-black hover:bg-slate-900 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors shadow-sm disabled:opacity-60"
           >
-            {loading ? 'Processing...' : !isLoaded ? 'Loading...' : (
-              mode === 'signin' ? 'Sign In' :
-              mode === 'signup' ? 'Create Account' :
-              'Send Reset Link'
-            )}
+            {loading
+              ? 'Processing...'
+              : !isLoaded
+              ? 'Loading...'
+              : mode === 'signin'
+              ? 'Sign In'
+              : mode === 'signup'
+              ? 'Create Account'
+              : 'Send Reset Link'}
           </button>
         </div>
 
@@ -367,7 +385,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               </div>
             </>
           )}
-          
+
           {mode === 'signup' && (
             <div className="text-sm text-slate-500">
               Already have an account?{' '}
@@ -379,7 +397,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               </button>
             </div>
           )}
-          
+
           {mode === 'reset' && (
             <button
               onClick={() => setMode('signin')}
@@ -424,7 +442,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
             Start with a 7-day free trial. Cancel anytime.
           </p>
         </div>
-        
+
         <div className="max-w-md mx-auto">
           <div className="border border-slate-200 rounded-xl p-6 bg-white">
             <div className="mb-6">
@@ -467,7 +485,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
               </ul>
             </div>
-            
+
             <div className="space-y-3">
               <button
                 onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
@@ -499,7 +517,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   )
 }
 
-const SubscriptionPollingBanner = ({ onComplete }) => (
+const SubscriptionPollingBanner = () => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-blue-50 border-b border-blue-200 px-4 py-3">
     <div className="max-w-4xl mx-auto flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -525,29 +543,29 @@ const SubscriptionPollingBanner = ({ onComplete }) => (
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<any>(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(null)
+  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'annual' | null>(null)
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState(null)
-  const [messages, setMessages] = useState([])
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const fileInputRef = useRef(null)
-  const scrollRef = useRef(null)
-  const inputRef = useRef(null)
-  const userMenuRef = useRef(null)
-  const pollIntervalRef = useRef(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
     }
@@ -562,70 +580,65 @@ export default function Page() {
   }, [messages])
 
   // Initial auth and subscription check with timeout
-useEffect(() => {
-  let mounted = true
-  let timeoutId = null
+  useEffect(() => {
+    let mounted = true
+    let timeoutId: NodeJS.Timeout | null = null
 
-  const init = async () => {
-    try {
-      // Set a safety timeout - if loading takes more than 5 seconds, show the page anyway
-      timeoutId = setTimeout(() => {
-        if (mounted && isLoading) {
-          console.warn('⚠️ Auth check timeout, showing page')
+    const init = async () => {
+      try {
+        // Safety timeout - if loading takes more than 5 seconds, show the page anyway
+        timeoutId = setTimeout(() => {
+          if (mounted && isLoading) {
+            console.warn('⚠️ Auth check timeout, showing page')
+            setIsLoading(false)
+          }
+        }, 5000)
+
+        const {
+          data: { session: s },
+        } = await supabase.auth.getSession()
+
+        if (!mounted) return
+        setSession(s)
+
+        if (s) {
+          const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('status, current_period_end, trial_end')
+            .eq('user_id', s.user.id)
+            .in('status', ['active', 'trialing'])
+            .maybeSingle()
+
+          let active = false
+          if (s.user.email === ADMIN_EMAIL) {
+            active = true
+          } else if (sub) {
+            const periodEnd = new Date(sub.current_period_end)
+            if (periodEnd > new Date()) active = true
+          }
+          setHasActiveSubscription(active)
+
+          // If user has active subscription and no pricing param, skip to chat
+          if (active && searchParams.get('showPricing') !== 'true') {
+            setShowPricingModal(false)
+          } else if (!active) {
+            setShowPricingModal(true)
+          }
+        } else {
+          setHasActiveSubscription(false)
+        }
+      } catch (e) {
+        console.error('Auth Init Error', e)
+      } finally {
+        if (mounted) {
+          if (timeoutId) clearTimeout(timeoutId)
           setIsLoading(false)
         }
-      }, 5000)
-
-      const {
-        data: { session: s },
-      } = await supabase.auth.getSession()
-      
-      if (!mounted) return
-      setSession(s)
-
-      if (s) {
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status, current_period_end, trial_end')
-          .eq('user_id', s.user.id)
-          .in('status', ['active', 'trialing'])
-          .maybeSingle()
-        
-        let active = false
-        if (s.user.email === ADMIN_EMAIL) {
-          active = true
-        } else if (sub) {
-          const periodEnd = new Date(sub.current_period_end)
-          if (periodEnd > new Date()) active = true
-        }
-        setHasActiveSubscription(active)
-
-        // If user has active subscription and no pricing param, skip to chat
-        if (active && searchParams.get('showPricing') !== 'true') {
-          setShowPricingModal(false)
-        } else if (!active) {
-          setShowPricingModal(true)
-        }
-      } else {
-        setHasActiveSubscription(false)
-      }
-    } catch (e) {
-      console.error('Auth Init Error', e)
-    } finally {
-      if (mounted) {
-        clearTimeout(timeoutId)
-        setIsLoading(false)
       }
     }
-  }
-  
-  init()
 
-  return () => {
-    mounted = false
-    if (timeoutId) clearTimeout(timeoutId)
-  }
-}, [supabase, searchParams])
+    init()
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
@@ -638,6 +651,7 @@ useEffect(() => {
           .eq('user_id', newSession.user.id)
           .in('status', ['active', 'trialing'])
           .maybeSingle()
+
         let active = false
         if (newSession.user.email === ADMIN_EMAIL) {
           active = true
@@ -653,29 +667,30 @@ useEffect(() => {
 
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
-  }, [supabase, searchParams])
+  }, [supabase, searchParams, isLoading])
 
   // Subscription polling after payment
   useEffect(() => {
     if (!session) return
-    
+
     const paymentStatus = searchParams.get('payment')
     if (paymentStatus !== 'success') return
-    
+
     if (hasActiveSubscription) {
       router.replace('/')
       return
     }
-    
+
     setIsPollingSubscription(true)
     let pollCount = 0
     const maxPolls = 12
-    
+
     const pollSubscription = async () => {
       pollCount++
-      
+
       try {
         const { data: sub } = await supabase
           .from('subscriptions')
@@ -683,33 +698,35 @@ useEffect(() => {
           .eq('user_id', session.user.id)
           .in('status', ['active', 'trialing'])
           .maybeSingle()
-        
+
         if (sub) {
           const periodEnd = new Date(sub.current_period_end)
           if (periodEnd > new Date()) {
-            clearInterval(pollIntervalRef.current)
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
             setIsPollingSubscription(false)
             setHasActiveSubscription(true)
             setShowPricingModal(false)
             router.replace('/')
           }
         } else if (pollCount >= maxPolls) {
-          clearInterval(pollIntervalRef.current)
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
           setIsPollingSubscription(false)
-          alert('Subscription activation is taking longer than expected. Please refresh the page in a moment or contact support if the issue persists.')
+          alert(
+            'Subscription activation is taking longer than expected. Please refresh the page in a moment or contact support if the issue persists.'
+          )
         }
       } catch (error) {
         console.error('Subscription polling error:', error)
         if (pollCount >= maxPolls) {
-          clearInterval(pollIntervalRef.current)
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
           setIsPollingSubscription(false)
         }
       }
     }
-    
+
     pollSubscription()
     pollIntervalRef.current = setInterval(pollSubscription, 5000)
-    
+
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current)
@@ -717,7 +734,7 @@ useEffect(() => {
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
-  const handleCheckout = async (priceId, planName) => {
+  const handleCheckout = async (priceId: string, planName: 'monthly' | 'annual') => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -752,7 +769,7 @@ useEffect(() => {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
@@ -775,7 +792,7 @@ useEffect(() => {
     setCurrentChatId(null)
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
@@ -838,7 +855,7 @@ useEffect(() => {
         u[u.length - 1].content = data.message || 'No response.'
         return u
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err)
       setMessages((p) => {
         const u = [...p]
@@ -850,12 +867,12 @@ useEffect(() => {
     }
   }
 
-  const handleImage = async (e) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
-      setSelectedImage(compressed)
+      setSelectedImage(compressed as any)
     } catch (error) {
       console.error(error)
       alert('Failed to process image')
@@ -897,9 +914,7 @@ useEffect(() => {
         }
       `}</style>
 
-      {isPollingSubscription && (
-        <SubscriptionPollingBanner onComplete={() => setIsPollingSubscription(false)} />
-      )}
+      {isPollingSubscription && <SubscriptionPollingBanner />}
 
       <AuthModal
         isOpen={showAuthModal}
