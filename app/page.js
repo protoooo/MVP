@@ -216,7 +216,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="Capture" />
+                <EvervaultCard icon={Icons.Camera} />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 1. Capture
@@ -253,7 +253,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="Cross-check" />
+                <EvervaultCard icon={Icons.Document} />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 2. Cross-check
@@ -290,7 +290,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="Correct" />
+                <EvervaultCard icon={Icons.Check} />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 3. Correct
