@@ -28,14 +28,11 @@ export function EvervaultCard({ text, className }) {
   );
 }
 
-/**
- * 1. Capture – camera with snap & subtle spark lines
- * Runs at the start of a 7s cycle.
- */
+/** 1. Capture – static camera icon (slightly larger) */
 function CaptureIcon() {
   return (
     <div className="relative flex items-center justify-center w-28 h-28">
-      {/* Spark lines around camera */}
+      {/* Small static spark lines around camera */}
       <div className="absolute inset-0 pointer-events-none">
         <span className="spark spark--top" />
         <span className="spark spark--right" />
@@ -52,26 +49,18 @@ function CaptureIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <g className="camera-body">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-          <circle cx="12" cy="13" r="4" />
-        </g>
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+        <circle cx="12" cy="13" r="4" />
       </svg>
 
       <style jsx>{`
-        .camera-body {
-          animation: camera-sequence 7s ease-out infinite;
-          transform-origin: center;
-        }
-
         .spark {
           position: absolute;
-          background: #020617; /* near black / slate-950 */
+          background: #020617; /* near-black slate */
           height: 2px;
-          width: 0;
-          opacity: 0;
+          width: 1.5rem;
           border-radius: 9999px;
-          animation: spark-sequence 7s ease-out infinite;
+          opacity: 0.5;
         }
 
         .spark--top {
@@ -94,58 +83,12 @@ function CaptureIcon() {
           top: 50%;
           transform: translateY(-50%);
         }
-
-        /* 0–18% of the cycle: camera snap + sparks */
-        @keyframes camera-sequence {
-          0% {
-            transform: scale(1);
-          }
-          3% {
-            transform: scale(0.9);
-          }
-          7% {
-            transform: scale(1.08);
-          }
-          12% {
-            transform: scale(1);
-          }
-          100% {
-            transform: scale(1);
-          }
-        }
-
-        @keyframes spark-sequence {
-          0%,
-          3% {
-            width: 0;
-            opacity: 0;
-          }
-          4% {
-            width: 0;
-            opacity: 1;
-          }
-          8% {
-            width: 1.6rem;
-            opacity: 1;
-          }
-          12% {
-            opacity: 0;
-            width: 1.8rem;
-          }
-          100% {
-            width: 0;
-            opacity: 0;
-          }
-        }
       `}</style>
     </div>
   );
 }
 
-/**
- * 2. Cross-check – document with scrolling lines
- * Lines "work" in the middle portion of the 7s cycle.
- */
+/** 2. Cross-check – static document + lines */
 function CrossCheckIcon() {
   const lines = [0, 1, 2, 3, 4];
 
@@ -164,7 +107,7 @@ function CrossCheckIcon() {
         <polyline points="14 2 14 8 20 8" />
       </svg>
 
-      {/* Animated "text" lines */}
+      {/* Static "text" lines */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="relative w-10 h-14">
           {lines.map((i) => (
@@ -186,43 +129,14 @@ function CrossCheckIcon() {
           right: 0;
           height: 2px;
           border-radius: 9999px;
-          opacity: 0;
-          animation: doc-line-sequence 7s ease-in-out infinite;
-        }
-
-        /* 20–60%: lines appear, scroll slightly down, then fade out */
-        @keyframes doc-line-sequence {
-          0%,
-          18% {
-            opacity: 0;
-            transform: translateY(0);
-          }
-          22% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          40% {
-            opacity: 1;
-            transform: translateY(4px);
-          }
-          60% {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(0);
-          }
+          opacity: 0.7;
         }
       `}</style>
     </div>
   );
 }
 
-/**
- * 3. Correct – shield with highlight tracing
- * Traces toward the end of the 7s cycle.
- */
+/** 3. Correct – shield + check with static highlight stroke */
 function CorrectIcon() {
   return (
     <div className="relative flex items-center justify-center w-28 h-28">
@@ -240,7 +154,7 @@ function CorrectIcon() {
         <path d="m9 12 2 2 4-4" />
       </svg>
 
-      {/* Tracing highlight */}
+      {/* Static highlight outline */}
       <svg
         viewBox="0 0 24 24"
         className="absolute w-16 h-16"
@@ -256,47 +170,17 @@ function CorrectIcon() {
             x2="100%"
             y2="100%"
           >
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0" />
-            <stop offset="50%" stopColor="#10b981" stopOpacity="1" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#10b981" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
           </linearGradient>
         </defs>
         <path
-          className="shield-highlight"
           d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
           stroke="url(#highlight-gradient)"
-          strokeWidth="2.4"
-          strokeDasharray="80"
-          strokeDashoffset="80"
+          strokeWidth="2.2"
         />
       </svg>
-
-      <style jsx>{`
-        .shield-highlight {
-          animation: shield-highlight-sequence 7s ease-in-out infinite;
-        }
-
-        /* 60–100%: highlight traces around the shield and fades */
-        @keyframes shield-highlight-sequence {
-          0%,
-          58% {
-            stroke-dashoffset: 80;
-            opacity: 0;
-          }
-          62% {
-            opacity: 1;
-            stroke-dashoffset: 80;
-          }
-          80% {
-            opacity: 1;
-            stroke-dashoffset: 0;
-          }
-          100% {
-            opacity: 0;
-            stroke-dashoffset: -80;
-          }
-        }
-      `}</style>
     </div>
   );
 }
