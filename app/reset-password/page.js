@@ -5,58 +5,71 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-
-  // separate errors:
-  const [linkError, setLinkError] = useState('')   // problems with the email link / session
-  const [formError, setFormError] = useState('')   // problems with what the user typed
-  const [verifying, setVerifying] = useState(true)
-
   const router = useRouter()
   const supabase = createClient()
 
-  // 1) Check that we actually have a valid session from /auth/callback
+  const [verifying, setVerifying] = useState(true)
+  const [fatalError, setFatalError] = useState('')
+  const [formError, setFormError] = useState('')
+  const [message, setMessage] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  // Verify the reset link using token_hash flow
   useEffect(() => {
-    let isMounted = true
-
-    const checkSession = async () => {
+    const verifyToken = async () => {
       try {
-        const { data } = await supabase.auth.getSession()
-        const session = data?.session
+        const params = new URLSearchParams(window.location.search)
+        const tokenHash = params.get('token_hash')
+        const type = params.get('type')
 
-        if (!session && isMounted) {
-          setLinkError('Invalid or expired reset link. Please request a new password reset.')
+        if (!tokenHash || type !== 'recovery') {
+          setFatalError('Invalid or expired reset link. Please request a new password reset.')
+          setVerifying(false)
+          return
+        }
+
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery',
+        })
+
+        if (error) {
+          console.error('verifyOtp error:', error)
+          setFatalError('Invalid or expired reset link. Please request a new password reset.')
         }
       } catch (err) {
-        console.error('Error checking session for reset:', err)
-        if (isMounted) {
-          setLinkError('Failed to verify reset link. Please try again.')
-        }
+        console.error('verifyOtp exception:', err)
+        setFatalError('Failed to verify reset link. Please try again.')
       } finally {
-        if (isMounted) {
-          setVerifying(false)
-        }
+        setVerifying(false)
       }
     }
 
-    checkSession()
-
-    return () => {
-      isMounted = false
-    }
+    verifyToken()
   }, [supabase])
 
-  // 2) Submit new password
+  const handleBackHome = async () => {
+    // Make sure no recovery session lingers
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.error('signOut error (back home):', e)
+    }
+    router.push('/')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage('')
-    setFormError('')
+    if (loading) return
 
-    // basic validation
+    setLoading(true)
+    setFormError('')
+    setMessage('')
+
+    // Local validation – these should NOT be fatal
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
       setLoading(false)
@@ -70,45 +83,30 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password })
+      const { error } = await supabase.auth.updateUser({ password })
 
-      if (updateError) {
-        console.error('Update password error:', updateError)
-        setFormError(updateError.message || 'Failed to update password.')
+      if (error) {
+        console.error('updateUser error:', error)
+        setFormError(error.message || 'Failed to update password.')
         setLoading(false)
         return
       }
 
-      setMessage('Password updated successfully. Please sign in with your new password.')
-      setLoading(false)
-
-      // Important: sign the user OUT after changing the password
-      // so they are forced to log in again.
+      // Kill the recovery session so they have to sign in normally
       try {
         await supabase.auth.signOut()
       } catch (signOutErr) {
-        console.error('Error signing out after password reset:', signOutErr)
+        console.error('signOut after reset error:', signOutErr)
       }
 
-      // small delay so they see the success message, then go home / sign-in
-      setTimeout(() => {
-        router.push('/')
-      }, 2000)
+      setSuccess(true)
+      setMessage('Your password has been reset. You can now sign in with your new password.')
+      setLoading(false)
     } catch (err) {
       console.error('Reset password exception:', err)
       setFormError('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
-  }
-
-  // 3) Back to home should NOT leave them silently logged in
-  const handleBackHome = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      console.error('Error signing out on back to home:', err)
-    }
-    router.push('/')
   }
 
   return (
@@ -121,31 +119,33 @@ export default function ResetPasswordPage() {
           Choose a new password to secure your account.
         </p>
 
-        {/* verifying state */}
-        {verifying && !linkError && (
+        {verifying && !fatalError && (
           <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
 
-        {/* link-level error (bad / expired email link) */}
-        {linkError && (
+        {fatalError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {linkError}
+            {fatalError}
           </div>
         )}
 
-        {/* success message after updating */}
-        {message && (
+        {!fatalError && message && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
             {message}
           </div>
         )}
 
-        {/* Only hide the form if the link itself is invalid.
-            For normal form errors, keep the form visible so they can retry. */}
-        {!verifying && !linkError && (
+        {/* Show form only when link is verified and not a fatal error, regardless of formError */}
+        {!verifying && !fatalError && !success && (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {formError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {formError}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                 New password
@@ -174,13 +174,6 @@ export default function ResetPasswordPage() {
               />
             </div>
 
-            {/* form-level errors (password too short, mismatch, etc.) */}
-            {formError && (
-              <p className="text-xs text-red-600">
-                {formError}
-              </p>
-            )}
-
             <button
               type="submit"
               disabled={loading}
@@ -191,7 +184,23 @@ export default function ResetPasswordPage() {
           </form>
         )}
 
-        <div className="mt-6 border-t border-neutral-200 pt-4 flex justify-center">
+        {/* After success, hide form and push them toward sign-in */}
+        {success && (
+          <div className="mt-4 space-y-4">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              {message}
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/signin')}
+              className="w-full rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Go to sign in
+            </button>
+          </div>
+        )}
+
+        <div className="mt-6 border-top border-neutral-200 pt-4 flex justify-center">
           <button
             type="button"
             onClick={handleBackHome}
