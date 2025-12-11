@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - Fixed for password reset with PKCE support
+// app/auth/callback/route.js - PKCE callback with password reset support
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -11,7 +11,8 @@ export async function GET(request) {
   const type = requestUrl.searchParams.get('type')
   const next = requestUrl.searchParams.get('next') || '/'
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
 
   console.log('🔄 Auth callback:', {
     hasCode: !!code,
@@ -21,15 +22,14 @@ export async function GET(request) {
     baseUrl,
   })
 
-  // Handle OAuth errors
+  // Handle OAuth / email-link errors
   if (error) {
     console.error('❌ OAuth error:', error, errorDescription)
-    
-    // Check if it's an expired/invalid link
+
     if (error === 'access_denied' && errorDescription?.includes('expired')) {
       return NextResponse.redirect(`${baseUrl}/?error=link_expired`)
     }
-    
+
     return NextResponse.redirect(`${baseUrl}/?error=${error}`)
   }
 
@@ -66,17 +66,18 @@ export async function GET(request) {
   )
 
   try {
-    // Exchange code for session
-    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    // Exchange code for a session (PKCE)
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+      code
+    )
 
     if (exchangeError) {
       console.error('❌ Session exchange failed:', exchangeError)
-      
-      // Handle specific PKCE errors
+
       if (exchangeError.message?.includes('code verifier')) {
         return NextResponse.redirect(`${baseUrl}/?error=pkce_failed`)
       }
-      
+
       return NextResponse.redirect(`${baseUrl}/?error=auth_failed`)
     }
 
@@ -87,12 +88,12 @@ export async function GET(request) {
 
     console.log('✅ Session established:', data.user.email)
 
-    // Check if this is a password recovery flow
-    // Priority: explicit type parameter > next parameter indicating reset
+    // --- EARLY RETURN: password recovery flow ---
     if (type === 'recovery' || next === '/reset-password' || next?.includes('reset-password')) {
-      console.log('🔐 Password recovery detected, redirecting to reset page')
+      console.log('🔐 Password recovery detected, redirecting to /reset-password')
       return NextResponse.redirect(`${baseUrl}/reset-password`)
     }
+    // --------------------------------------------
 
     // Check if terms accepted
     const { data: profile } = await supabase
@@ -117,7 +118,7 @@ export async function GET(request) {
       .maybeSingle()
 
     const now = new Date()
-    
+
     if (!activeSub) {
       const { data: recentCheckout } = await supabase
         .from('checkout_attempts')
@@ -127,7 +128,7 @@ export async function GET(request) {
         .limit(1)
         .maybeSingle()
 
-      if (recentCheckout && (now - new Date(recentCheckout.created_at)) < 300000) {
+      if (recentCheckout && now - new Date(recentCheckout.created_at) < 300000) {
         console.log('⏳ Recent checkout detected, allowing access')
         return NextResponse.redirect(baseUrl)
       }
@@ -144,7 +145,6 @@ export async function GET(request) {
 
     console.log('✅ All checks passed, redirecting to:', next)
     return NextResponse.redirect(`${baseUrl}${next}`)
-    
   } catch (error) {
     console.error('❌ Callback exception:', error)
     return NextResponse.redirect(`${baseUrl}/?error=callback_failed`)
