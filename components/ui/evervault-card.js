@@ -1,121 +1,165 @@
-'use client'
+// components/ui/evervault-card.js
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useMotionValue, useMotionTemplate, motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-const characters =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-
-export const generateRandomString = (length) => {
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length))
-  }
-  return result
-}
-
-/**
- * EvervaultCard
- *
- * - Keeps the Aceternity-style hover reveal effect
- * - NO central black circle anymore
- * - If you pass an `icon` prop, it renders the icon centered with no border
- *   example: <EvervaultCard icon={Icons.Camera} />
- */
-export function EvervaultCard({
-  text,              // kept for backwards-compat, but we prefer icon now
-  icon: IconComp,    // React component for the icon
-  iconClassName,
-  className,
-}) {
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
-  const [randomString, setRandomString] = useState('')
-
-  useEffect(() => {
-    setRandomString(generateRandomString(1500))
-  }, [])
-
-  function onMouseMove({ currentTarget, clientX, clientY }) {
-    const { left, top } = currentTarget.getBoundingClientRect()
-    mouseX.set(clientX - left)
-    mouseY.set(clientY - top)
-
-    // keeps the “binary” style text changing
-    setRandomString(generateRandomString(1500))
-  }
+export function EvervaultCard({ text, className }) {
+  const variant = (text || '').toLowerCase();
 
   return (
     <div
       className={cn(
-        'p-0.5 bg-transparent aspect-square flex items-center justify-center w-full h-full relative',
+        'relative flex items-center justify-center w-full h-full rounded-3xl',
+        'border border-black/10 dark:border-white/15',
+        'bg-white dark:bg-black/40',
+        'overflow-hidden',
         className
       )}
     >
-      <div
-        onMouseMove={onMouseMove}
-        className="group/card rounded-3xl w-full h-full relative overflow-hidden bg-transparent flex items-center justify-center"
-      >
-        <CardPattern mouseX={mouseX} mouseY={mouseY} randomString={randomString} />
+      {variant.includes('capture') && <CaptureAnimation />}
+      {variant.includes('cross') && <CrossCheckAnimation />}
+      {variant.includes('correct') && <CorrectAnimation />}
 
-        {/* CONTENT: just the icon (or fallback text) – no circle, no border */}
-        <div className="relative z-10 flex items-center justify-center h-full w-full">
-          {IconComp ? (
-            <IconComp
-              className={cn(
-                'h-16 w-16 text-black dark:text-white',
-                iconClassName
-              )}
-            />
-          ) : (
-            // Fallback to simple text if no icon is passed
-            <span className="text-3xl font-semibold text-black dark:text-white">
-              {text}
-            </span>
-          )}
-        </div>
-      </div>
+      {/* subtle vignette so it still feels “special” */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-b from-black/[0.02] to-black/[0.08] dark:from-white/[0.03] dark:to-white/[0.08]" />
     </div>
-  )
+  );
 }
 
-export function CardPattern({ mouseX, mouseY, randomString }) {
-  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`
-  const style = { maskImage, WebkitMaskImage: maskImage }
+/* --- 1. CAPTURE: big camera + flash lines on load --- */
 
+function CaptureAnimation() {
   return (
-    <div className="pointer-events-none">
-      <div className="absolute inset-0 rounded-2xl [mask-image:linear-gradient(white,transparent)] group-hover/card:opacity-50" />
+    <div className="relative flex items-center justify-center">
+      {/* camera body */}
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-black to-neutral-500 opacity-0 group-hover/card:opacity-100 backdrop-blur-xl transition duration-500"
-        style={style}
-      />
-      <motion.div
-        className="absolute inset-0 rounded-2xl opacity-0 mix-blend-overlay group-hover/card:opacity-100"
-        style={style}
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative"
       >
-        <p className="absolute inset-x-0 text-xs h-full break-words whitespace-pre-wrap text-white font-mono font-bold transition duration-500">
-          {randomString}
-        </p>
+        <div className="flex items-center gap-2 rounded-2xl border border-black/15 dark:border-white/25 bg-black/90 dark:bg-white/5 px-5 py-4">
+          {/* little indicator light */}
+          <div className="w-3 h-3 rounded-full bg-white/70 dark:bg-white" />
+          {/* big lens – about 2x the typical icon size */}
+          <div className="w-12 h-12 rounded-full border-2 border-white/85 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-full bg-white/80 dark:bg-white" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* “flash” lines – play once on load */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: [0, 1, 0], scale: [0.8, 1, 1.05] }}
+        transition={{ duration: 0.9, delay: 0.25, ease: 'easeOut' }}
+        className="pointer-events-none absolute inset-0"
+      >
+        <FlashLine className="top-2 left-1/2 -translate-x-1/2" />
+        <FlashLine className="bottom-3 left-1/4" />
+        <FlashLine className="top-6 right-4" />
       </motion.div>
     </div>
-  )
+  );
 }
 
-// Optional: still export the little corner “plus” icon if you use it anywhere
-export const Icon = ({ className, ...rest }) => {
+function FlashLine({ className = '' }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.5"
-      stroke="currentColor"
-      className={className}
-      {...rest}
+    <div
+      className={cn(
+        'absolute h-5 w-[2px] rounded-full',
+        'bg-white/80 dark:bg-white',
+        className
+      )}
+    />
+  );
+}
+
+/* --- 2. CROSS-CHECK: document with scrolling/typing lines --- */
+
+function CrossCheckAnimation() {
+  return (
+    <motion.div
+      initial={{ y: 10, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="relative flex items-center justify-center"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
-    </svg>
-  )
+      <div className="relative rounded-2xl border border-black/12 dark:border-white/25 bg-black/90 dark:bg-white/5 px-5 py-4">
+        {/* document shape */}
+        <div className="w-16 h-20 rounded-xl border border-white/40 bg-white/5 flex flex-col px-3 py-3 gap-1.5 overflow-hidden">
+          {/* fake header */}
+          <div className="h-2.5 w-8 rounded-full bg-white/60" />
+          {/* scrolling lines */}
+          <ScrollingLine delay={0} widthClass="w-10" />
+          <ScrollingLine delay={0.12} widthClass="w-9" />
+          <ScrollingLine delay={0.24} widthClass="w-11" />
+          <ScrollingLine delay={0.36} widthClass="w-7" />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ScrollingLine({ delay = 0, widthClass }) {
+  return (
+    <motion.div
+      initial={{ x: '-15%', opacity: 0.2 }}
+      animate={{ x: '15%', opacity: 0.9 }}
+      transition={{
+        repeat: Infinity,
+        repeatType: 'mirror',
+        duration: 1.4,
+        delay,
+        ease: 'easeInOut',
+      }}
+      className={cn(
+        'h-1.5 rounded-full bg-white/50',
+        widthClass
+      )}
+    />
+  );
+}
+
+/* --- 3. CORRECT: checkmark animation --- */
+
+function CorrectAnimation() {
+  return (
+    <motion.div
+      initial={{ scale: 0.85, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      className="relative flex items-center justify-center"
+    >
+      {/* outer circle */}
+      <div className="w-16 h-16 rounded-full border-2 border-emerald-400/90 dark:border-emerald-300/90 flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-400/10">
+        {/* animated checkmark */}
+        <motion.svg
+          viewBox="0 0 24 24"
+          className="w-9 h-9"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
+        >
+          <motion.path
+            d="M5 13.5L9.5 18 19 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            className="text-emerald-500 dark:text-emerald-300"
+          />
+        </motion.svg>
+      </div>
+
+      {/* soft success glow */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: [0, 0.5, 0], scale: [0.8, 1.15, 1.25] }}
+        transition={{ duration: 1.2, delay: 0.25 }}
+        className="pointer-events-none absolute w-24 h-24 rounded-full bg-emerald-400/10 blur-xl"
+      />
+    </motion.div>
+  );
 }
