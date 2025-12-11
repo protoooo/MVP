@@ -84,7 +84,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
     <div className="w-full relative z-10 min-h-full flex flex-col">
       {/* Hero */}
       <section className="relative py-14 md:py-20">
-        {/* subtle grid background */}
+        {/* subtle background */}
         <div
           className={`
             pointer-events-none absolute inset-0 -z-10 opacity-40
@@ -257,7 +257,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
                     `}
                   >
                     <span>3-comp sink · sanitizer change frequency</span>
-                    <span>change when < 200 ppm or every 4 hrs</span>
+                    <span>change when &lt; 200 ppm or every 4 hrs</span>
                     <span className="text-right">4-501.114</span>
                   </div>
                 </div>
@@ -416,7 +416,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
     setLoading(true)
     setMessage('')
 
-  try {
+    try {
       const captchaToken = await executeRecaptcha(mode)
 
       if (!captchaToken) {
@@ -823,7 +823,6 @@ export default function Page() {
 
     const init = async () => {
       try {
-        // Safety timeout - if loading takes more than 5 seconds, show the page anyway
         timeoutId = setTimeout(() => {
           if (mounted && isLoading) {
             console.warn('⚠️ Auth check timeout, showing page')
@@ -855,7 +854,6 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          // If user has active subscription and no pricing param, skip to chat
           if (active && searchParams.get('showPricing') !== 'true') {
             setShowPricingModal(false)
           } else if (!active) {
