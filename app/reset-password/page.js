@@ -1,49 +1,67 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [fatalError, setFatalError] = useState('')      // link/session errors
-  const [formError, setFormError] = useState('')        // validation / update errors
-  const [verifying, setVerifying] = useState(true)
-  const [passwordUpdated, setPasswordUpdated] = useState(false)
-
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
+  const errorParam = searchParams?.get('error')
+
+  const [checkingLink, setCheckingLink] = useState(true)
+  const [linkError, setLinkError] = useState('')
+
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [formError, setFormError] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // --- Verify that the reset link/session is valid -------------------------
   useEffect(() => {
-    const checkSession = async () => {
+    const verify = async () => {
+      // If callback explicitly told us the link is bad
+      if (
+        errorParam === 'link_invalid' ||
+        errorParam === 'callback_failed'
+      ) {
+        setLinkError(
+          'Invalid or expired reset link. Please request a new password reset.'
+        )
+        setCheckingLink(false)
+        return
+      }
+
       try {
-        // With PKCE + /auth/callback, the session should already be set via cookies
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (!session) {
-          setFatalError('Invalid or expired reset link. Please request a new password reset.')
+          setLinkError(
+            'Invalid or expired reset link. Please request a new password reset.'
+          )
         }
       } catch (err) {
         console.error('Error checking session for reset:', err)
-        setFatalError('Failed to verify reset link. Please try again.')
+        setLinkError('Failed to verify reset link. Please try again.')
       } finally {
-        setVerifying(false)
+        setCheckingLink(false)
       }
     }
 
-    checkSession()
-  }, [supabase])
+    verify()
+  }, [supabase, errorParam])
 
+  // --- Handle form submit ---------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
     setFormError('')
+    setMessage('')
 
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
@@ -58,18 +76,17 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password,
       })
 
-      if (updateError) {
-        console.error('Update password error:', updateError)
-        setFormError(updateError.message || 'Failed to update password.')
+      if (error) {
+        console.error('Update password error:', error)
+        setFormError(error.message || 'Failed to update password.')
         setLoading(false)
         return
       }
 
-      setPasswordUpdated(true)
       setMessage('Password updated successfully. Redirecting to home…')
       setLoading(false)
 
@@ -83,17 +100,14 @@ export default function ResetPasswordPage() {
     }
   }
 
+  // --- Back to home: sign out so you don't land in chat accidentally -------
   const handleBackHome = async () => {
     try {
-      // If they never successfully changed the password, don't leave them logged in
-      if (!passwordUpdated) {
-        await supabase.auth.signOut()
-      }
+      await supabase.auth.signOut()
     } catch (err) {
-      console.error('Error signing out on back home:', err)
-    } finally {
-      router.push('/')
+      console.error('Error signing out from reset page:', err)
     }
+    router.push('/')
   }
 
   return (
@@ -106,15 +120,15 @@ export default function ResetPasswordPage() {
           Choose a new password to secure your account.
         </p>
 
-        {verifying && !fatalError && (
+        {checkingLink && !linkError && (
           <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
 
-        {fatalError && (
+        {linkError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {fatalError}
+            {linkError}
           </div>
         )}
 
@@ -124,9 +138,15 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {/* Show the form as long as the link isn't fatally broken */}
-        {!verifying && !fatalError && (
+        {/* Show the form only if link is valid */}
+        {!checkingLink && !linkError && (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {formError && (
+              <div className="mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {formError}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                 New password
@@ -154,12 +174,6 @@ export default function ResetPasswordPage() {
                 className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
               />
             </div>
-
-            {formError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                {formError}
-              </div>
-            )}
 
             <button
               type="submit"
