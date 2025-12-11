@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
-import { EvervaultCard } from '@/components/ui/evervault-card'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -141,9 +140,23 @@ const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
 
           {/* how it works cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+            {/* Card 1 */}
             <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] flex items-center justify-center text-emerald-400 text-xs tracking-[0.16em] uppercase">
-                <EvervaultCard text="Capture" />
+              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
+                    CAPTURE
+                  </span>
+                  <span className="text-emerald-500/70">ONLINE</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
+                  <span>Area</span>
+                  <span className="text-emerald-200">Walk-in / prep line</span>
+                  <span>Input</span>
+                  <span>Photo snapshot</span>
+                  <span>Output</span>
+                  <span>Risk scan</span>
+                </div>
               </div>
               <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
                 1 · Turn any device into a health inspector
@@ -154,9 +167,23 @@ const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
               </p>
             </div>
 
+            {/* Card 2 */}
             <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] flex items-center justify-center text-emerald-400 text-xs tracking-[0.16em] uppercase">
-                <EvervaultCard text="Rulebook" />
+              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
+                    RULEBOOK
+                  </span>
+                  <span className="text-emerald-500/70">SYNCED</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
+                  <span>Data</span>
+                  <span className="text-emerald-200">MI Food Code</span>
+                  <span>Source</span>
+                  <span>Local enforcement</span>
+                  <span>Mode</span>
+                  <span>Read-only</span>
+                </div>
               </div>
               <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
                 2 · We handle the rulebook, you see the risks
@@ -167,9 +194,23 @@ const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
               </p>
             </div>
 
+            {/* Card 3 */}
             <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] flex items-center justify-center text-emerald-400 text-xs tracking-[0.16em] uppercase">
-                <EvervaultCard text="Checklist" />
+              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
+                    CHECKLIST
+                  </span>
+                  <span className="text-emerald-500/70">READY</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
+                  <span>View</span>
+                  <span className="text-emerald-200">Line check tasks</span>
+                  <span>Format</span>
+                  <span>Action list</span>
+                  <span>Focus</span>
+                  <span>Before inspector</span>
+                </div>
               </div>
               <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
                 3 · Turn risk into a quick checklist
@@ -578,9 +619,7 @@ const SubscriptionPollingBanner = () => (
       <div className="flex items-center gap-3">
         <Icons.Clock />
         <div>
-          <p className="text-[11px] font-semibold">
-            Activating your subscription…
-          </p>
+          <p className="text-[11px] font-semibold">Activating your subscription…</p>
           <p className="text-[10px] text-emerald-400">
             This usually completes within a few seconds.
           </p>
