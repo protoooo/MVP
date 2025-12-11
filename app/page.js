@@ -77,98 +77,312 @@ const Icons = {
   ),
 }
 
-const LandingPage = ({ onShowPricing }) => (
-  <div className="w-full bg-white relative z-10 min-h-full flex flex-col">
-    <section className="relative border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-        <h1
-          className={`text-3xl md:text-[2.7rem] font-semibold text-slate-900 tracking-tight leading-tight mb-4 ${outfit.className}`}
-        >
-          Spot Violations Before The Health Inspector
-        </h1>
-        <p
-          className={`text-sm md:text-base text-slate-700 max-w-xl leading-relaxed mb-10 ${inter.className}`}
-        >
-          Upload a photo or ask a question. protocolLM cross-checks the Michigan Food Code and local Washtenaw guidance.
-        </p>
-        <button
-          onClick={onShowPricing}
-          className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
-        >
-          Start 7-Day Free Trial
-        </button>
-      </div>
-    </section>
-    <section className="py-20 px-6 bg-white flex-1">
-      <div className="max-w-6xl mx-auto">
-        <h2
-          className={`text-xl font-semibold text-slate-900 mb-14 text-center tracking-tight ${outfit.className}`}
-        >
-          How it works
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white border border-slate-200 p-8 rounded-xl">
-            <div className="text-slate-500 mb-4">
-              <Icons.Camera />
-            </div>
-            <h3
-              className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
+const LandingPage = ({ onShowPricing, theme, onToggleTheme }) => {
+  const isDark = theme === 'dark'
+
+  return (
+    <div className="w-full relative z-10 min-h-full flex flex-col">
+      {/* Hero */}
+      <section className="relative py-12 md:py-16 lg:py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col items-center gap-3 mb-10">
+            <p
+              className={`text-[11px] tracking-[0.24em] uppercase ${
+                isDark ? 'text-slate-400' : 'text-slate-500'
+              } ${inter.className}`}
             >
-              1. Capture
-            </h3>
-            <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-              Take a photo of your cooler, prep line, or 3-comp sink using any smartphone.
+              Washtenaw County · Food-service compliance
             </p>
+
+            {/* Center Light / Dark toggle */}
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className={`relative inline-flex items-center rounded-full text-[11px] font-medium border px-1 py-1 transition-colors ${
+                isDark
+                  ? 'border-slate-600 bg-[#020617] text-slate-200'
+                  : 'border-slate-300 bg-white text-slate-700'
+              }`}
+            >
+              <span
+                className={`px-3 py-1 rounded-full transition-colors ${
+                  !isDark
+                    ? 'bg-slate-900 text-slate-50'
+                    : 'text-slate-400'
+                }`}
+              >
+                Light
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full transition-colors ${
+                  isDark
+                    ? 'bg-slate-100/5 text-slate-50'
+                    : 'text-slate-500'
+                }`}
+              >
+                Dark
+              </span>
+            </button>
           </div>
-          <div className="bg-white border border-slate-200 p-8 rounded-xl">
-            <div className="text-slate-500 mb-4">
-              <Icons.Zap />
+
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-10 items-stretch">
+            {/* Main 3D hero card */}
+            <div className="relative">
+              <div
+                className={`
+                  relative rounded-3xl overflow-hidden border
+                  shadow-[0_24px_80px_rgba(15,23,42,0.18)]
+                  transition-transform duration-500
+                  hover:-translate-y-1
+                  ${
+                    isDark
+                      ? 'border-slate-700/80 bg-gradient-to-b from-[#050816] via-[#020617] to-[#020617]'
+                      : 'border-slate-200 bg-gradient-to-b from-white via-slate-50 to-slate-100'
+                  }
+                `}
+              >
+                <div className="absolute inset-x-10 -top-20 h-40 bg-gradient-to-b from-white/10 to-transparent blur-3xl pointer-events-none" />
+                <div className="relative p-7 md:p-9 lg:p-10">
+                  <h1
+                    className={`text-3xl md:text-[2.4rem] font-semibold tracking-tight leading-tight mb-4 ${
+                      outfit.className
+                    } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
+                  >
+                    Stay inspection-ready<br className="hidden sm:block" /> at all times.
+                  </h1>
+                  <p
+                    className={`text-sm md:text-[0.95rem] leading-relaxed max-w-xl mb-8 ${
+                      inter.className
+                    } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                  >
+                    ProtocolLM gives your staff instant, plain-language answers pulled directly from Michigan Food Code,
+                    the Modified Food Code, and Washtenaw County guidance.
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-4 mb-8">
+                    <button
+                      onClick={onShowPricing}
+                      className={`
+                        btn-press inline-flex items-center justify-center
+                        rounded-full px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em]
+                        shadow-sm transition-colors
+                        ${
+                          isDark
+                            ? 'bg-slate-50 text-slate-900 hover:bg-white'
+                            : 'bg-slate-900 text-slate-50 hover:bg-black'
+                        }
+                      `}
+                    >
+                      Start free demo
+                    </button>
+                    <p
+                      className={`text-[11px] ${inter.className} ${
+                        isDark ? 'text-slate-400' : 'text-slate-500'
+                      }`}
+                    >
+                      No marketing. No chatbots. Just code sections and plain language.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div
+                      className={`rounded-2xl border px-4 py-3 ${
+                        isDark
+                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
+                          : 'border-slate-200 bg-white text-slate-800'
+                      }`}
+                    >
+                      <p className="font-semibold mb-1">Line checks</p>
+                      <p className="text-[11px] leading-relaxed">
+                        Use during pre-shift checks to confirm temps, storage, and setup.
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-2xl border px-4 py-3 ${
+                        isDark
+                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
+                          : 'border-slate-200 bg-white text-slate-800'
+                      }`}
+                    >
+                      <p className="font-semibold mb-1">Training</p>
+                      <p className="text-[11px] leading-relaxed">
+                        New staff can ask real questions instead of flipping through binders.
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-2xl border px-4 py-3 ${
+                        isDark
+                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
+                          : 'border-slate-200 bg-white text-slate-800'
+                      }`}
+                    >
+                      <p className="font-semibold mb-1">Inspections</p>
+                      <p className="text-[11px] leading-relaxed">
+                        See the exact section an inspector is referencing, in seconds.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3
-              className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
-            >
-              2. Process
-            </h3>
-            <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-              Your question or image is analyzed against Michigan Food Code and Washtenaw guidance.
-            </p>
-          </div>
-          <div className="bg-white border border-slate-200 p-8 rounded-xl">
-            <div className="text-slate-500 mb-4">
-              <Icons.FileText />
+
+            {/* Side instructional column */}
+            <div className="flex flex-col justify-between gap-6">
+              <div
+                className={`rounded-3xl border p-6 md:p-7 lg:p-8 shadow-[0_18px_60px_rgba(15,23,42,0.14)] ${
+                  isDark
+                    ? 'border-slate-700/80 bg-[#020617]'
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
+                <p
+                  className={`text-sm font-semibold mb-3 tracking-tight ${
+                    outfit.className
+                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                >
+                  What your staff actually see
+                </p>
+                <ul
+                  className={`space-y-2.5 text-[13px] leading-relaxed ${
+                    inter.className
+                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                >
+                  <li>• “Can I store raw chicken above sealed produce in this cooler?”</li>
+                  <li>• “How often should we change sanitizer at the 3-comp sink?”</li>
+                  <li>• “What are the holding temps for this line?”</li>
+                  <li>• ProtocolLM replies with a short answer and the exact section number.</li>
+                </ul>
+              </div>
+
+              <div
+                className={`rounded-2xl border px-5 py-4 text-[12px] ${
+                  isDark
+                    ? 'border-slate-700/80 bg-slate-900/40 text-slate-300'
+                    : 'border-slate-200 bg-slate-50 text-slate-700'
+                }`}
+              >
+                Designed to feel closer to a state-issued reference tool than a consumer app. Quiet, predictable, and
+                focused on staying in compliance.
+              </div>
             </div>
-            <h3
-              className={`text-base font-semibold text-slate-900 mb-2 ${outfit.className}`}
-            >
-              3. Review
-            </h3>
-            <p className={`text-sm text-slate-700 leading-relaxed ${inter.className}`}>
-              Receive a structured summary of likely violations and corrective guidance.
-            </p>
           </div>
         </div>
-      </div>
-    </section>
-    <footer className="mt-auto py-12 border-t border-slate-200 text-center">
-      <p
-        className={`text-slate-500 font-medium mb-4 text-sm ${inter.className}`}
+      </section>
+
+      {/* How it works – 3D cards */}
+      <section className="pb-16 md:pb-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2
+            className={`text-base md:text-lg font-semibold text-center mb-10 tracking-tight ${
+              outfit.className
+            } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+          >
+            How it works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+            {[
+              {
+                icon: <Icons.Camera />,
+                title: '1. Capture',
+                body: 'Take a photo of your cooler, prep line, or 3-comp sink using any smartphone.',
+              },
+              {
+                icon: <Icons.Zap />,
+                title: '2. Match to the rules',
+                body: 'ProtocolLM checks the image or question against the official codes and local guidance.',
+              },
+              {
+                icon: <Icons.FileText />,
+                title: '3. Act with confidence',
+                body: 'You get a clear answer plus the specific section so staff and managers can verify.',
+              },
+            ].map((card, idx) => (
+              <div
+                key={idx}
+                className={`
+                  group relative rounded-3xl border p-7
+                  transition-all duration-300
+                  hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(15,23,42,0.25)]
+                  ${
+                    isDark
+                      ? 'border-slate-700/80 bg-gradient-to-b from-[#020617] to-[#020617]'
+                      : 'border-slate-200 bg-gradient-to-b from-white to-slate-50'
+                  }
+                `}
+              >
+                <div
+                  className={`
+                    mb-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border
+                    ${
+                      isDark
+                        ? 'border-slate-700/80 bg-slate-900/70 text-slate-200'
+                        : 'border-slate-200 bg-slate-50 text-slate-600'
+                    }
+                  `}
+                >
+                  {card.icon}
+                </div>
+                <h3
+                  className={`text-sm font-semibold mb-2 ${
+                    outfit.className
+                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  className={`text-[13px] leading-relaxed ${
+                    inter.className
+                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                >
+                  {card.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer
+        className={`mt-auto py-12 border-t text-center ${
+          isDark ? 'border-slate-800' : 'border-slate-200'
+        }`}
       >
-        Serving Washtenaw County Food Service Establishments
-      </p>
-      <div className="flex justify-center gap-6 mb-6 text-sm text-slate-500 font-medium">
-        <Link href="/terms" className="hover:text-slate-900 transition-colors">
-          Terms of Service
-        </Link>
-        <Link href="/privacy" className="hover:text-slate-900 transition-colors">
-          Privacy Policy
-        </Link>
-        <Link href="/contact" className="hover:text-slate-900 transition-colors">
-          Contact
-        </Link>
-      </div>
-    </footer>
-  </div>
-)
+        <p
+          className={`font-medium mb-4 text-sm ${
+            inter.className
+          } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+        >
+          Serving Washtenaw County Food Service Establishments
+        </p>
+        <div
+          className={`flex justify-center gap-6 mb-6 text-sm font-medium ${
+            isDark ? 'text-slate-400' : 'text-slate-500'
+          }`}
+        >
+          <Link
+            href="/terms"
+            className="hover:text-slate-100 md:hover:text-slate-900 transition-colors"
+          >
+            Terms of Service
+          </Link>
+          <Link
+            href="/privacy"
+            className="hover:text-slate-100 md:hover:text-slate-900 transition-colors"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/contact"
+            className="hover:text-slate-100 md:hover:text-slate-900 transition-colors"
+          >
+            Contact
+          </Link>
+        </div>
+      </footer>
+    </div>
+  )
+}
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
@@ -251,7 +465,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       >
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h2 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>
+            <h2
+              className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
+            >
               {mode === 'signin' && 'Sign in to continue'}
               {mode === 'signup' && 'Create your account'}
               {mode === 'reset' && 'Reset your password'}
@@ -555,6 +771,7 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -890,12 +1107,13 @@ export default function Page() {
   }
 
   const canUseApp = session && hasActiveSubscription
+  const isDark = theme === 'dark'
 
   return (
     <>
       <style jsx global>{`
         body {
-          background-color: #f9fafb;
+          background-color: #020617;
           color: #111827;
         }
         .btn-press {
@@ -932,27 +1150,51 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="relative min-h-screen w-full overflow-hidden bg-white">
-        <div className={`relative z-10 flex flex-col h-[100dvh] ${isPollingSubscription ? 'pt-16' : ''}`}>
-          <header className="border-b border-slate-200 bg-white z-30">
+      <div
+        className={`relative min-h-screen w-full overflow-hidden transition-colors duration-500 ${
+          isDark ? 'bg-[#050816] text-slate-100' : 'bg-slate-50 text-slate-900'
+        }`}
+      >
+        <div
+          className={`relative z-10 flex flex-col h-[100dvh] ${
+            isPollingSubscription ? 'pt-16' : ''
+          }`}
+        >
+          <header
+            className={`border-b z-30 ${
+              isDark
+                ? 'border-slate-800 bg-[#050816]/80 backdrop-blur'
+                : 'border-slate-200 bg-white/80 backdrop-blur'
+            }`}
+          >
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
               <div
-                className={`font-semibold tracking-tight text-xl ${outfit.className} text-slate-900`}
+                className={`font-semibold tracking-tight text-xl ${outfit.className} ${
+                  isDark ? 'text-slate-50' : 'text-slate-900'
+                }`}
               >
-                protocol<span className="text-slate-500">LM</span>
+                protocol<span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
               </div>
               <div className="flex items-center gap-4">
                 {!session ? (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className={`text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
+                      className={`text-xs sm:text-sm font-semibold ${
+                        isDark
+                          ? 'text-slate-300 hover:text-slate-50'
+                          : 'text-slate-600 hover:text-slate-900'
+                      } transition-colors ${inter.className}`}
                     >
                       Sign in
                     </button>
                     <button
                       onClick={() => setShowPricingModal(true)}
-                      className={`inline-flex items-center gap-2 bg-black hover:bg-slate-900 text-white px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
+                      className={`inline-flex items-center gap-2 btn-press ${
+                        isDark
+                          ? 'bg-slate-50 text-slate-900 hover:bg-white'
+                          : 'bg-black text-white hover:bg-slate-900'
+                      } px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
                     >
                       <Icons.Check />
                       Sign up
@@ -963,7 +1205,11 @@ export default function Page() {
                     {canUseApp && (
                       <button
                         onClick={handleNewChat}
-                        className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors"
+                        className={`p-2 rounded-lg transition-colors ${
+                          isDark
+                            ? 'text-slate-300 hover:text-slate-50 hover:bg-slate-800/70'
+                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
                       >
                         <Icons.Plus />
                       </button>
@@ -971,7 +1217,11 @@ export default function Page() {
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
-                        className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold ${
+                          isDark
+                            ? 'bg-slate-900 border-slate-700 text-slate-100'
+                            : 'bg-slate-100 border-slate-200 text-slate-600'
+                        }`}
                       >
                         {session.user.email[0].toUpperCase()}
                       </button>
@@ -999,9 +1249,15 @@ export default function Page() {
             </div>
           </header>
 
-          <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto bg-white">
+          <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto">
             {!canUseApp ? (
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} />
+              <LandingPage
+                onShowPricing={() => setShowPricingModal(true)}
+                theme={theme}
+                onToggleTheme={() =>
+                  setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+                }
+              />
             ) : (
               <>
                 <div
@@ -1011,10 +1267,10 @@ export default function Page() {
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
-                        className={`text-slate-500 text-base max-w-md leading-relaxed ${inter.className}`}
+                        className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about the Michigan Food Code, Washtenaw enforcement, or
-                        upload a photo to check for violations.
+                        Ask about the Michigan Food Code, Washtenaw enforcement, or upload a photo to check for
+                        potential violations.
                       </p>
                     </div>
                   ) : (
@@ -1031,7 +1287,11 @@ export default function Page() {
                           <div
                             className={`max-w-[90%] px-2 ${
                               msg.role === 'user'
-                                ? 'text-slate-900 font-medium'
+                                ? isDark
+                                  ? 'text-slate-50 font-medium'
+                                  : 'text-slate-900 font-medium'
+                                : isDark
+                                ? 'text-slate-100'
                                 : 'text-slate-800'
                             }`}
                           >
@@ -1069,11 +1329,21 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="w-full shrink-0 z-20 bg-white border-t border-slate-100 pt-4">
+                <div
+                  className={`w-full shrink-0 z-20 border-t pt-4 ${
+                    isDark ? 'bg-[#050816] border-slate-800' : 'bg-white border-slate-100'
+                  }`}
+                >
                   <div className="w-full max-w-4xl mx-auto px-4 pb-8">
                     {selectedImage && (
-                      <div className="mb-3 mx-1 p-3 bg-white border border-slate-200 rounded-lg inline-flex items-center gap-3 shadow-sm">
-                        <span className="text-sm text-slate-900 font-semibold">
+                      <div
+                        className={`mb-3 mx-1 p-3 inline-flex items-center gap-3 rounded-lg shadow-sm border ${
+                          isDark
+                            ? 'bg-slate-900/60 border-slate-700 text-slate-100'
+                            : 'bg-white border-slate-200 text-slate-900'
+                        }`}
+                      >
+                        <span className="text-sm font-semibold">
                           Image attached
                         </span>
                         <button
@@ -1084,7 +1354,17 @@ export default function Page() {
                         </button>
                       </div>
                     )}
-                    <div className="relative flex items-end w-full p-2 bg-white border border-slate-300 rounded-xl shadow-sm focus-within:ring-1 focus-within:ring-slate-900 focus-within:border-slate-900 transition-all">
+                    <div
+                      className={`
+                        relative flex items-end w-full p-2 rounded-xl shadow-sm
+                        border transition-all
+                        ${
+                          isDark
+                            ? 'bg-slate-900/70 border-slate-700 focus-within:border-slate-300 focus-within:ring-1 focus-within:ring-slate-300'
+                            : 'bg-white border-slate-300 focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900'
+                        }
+                      `}
+                    >
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -1095,7 +1375,11 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all mb-1 ml-1"
+                        className={`w-10 h-10 flex items-center justify-center rounded-lg mb-1 ml-1 transition-all ${
+                          isDark
+                            ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        }`}
                       >
                         <Icons.Camera />
                       </button>
@@ -1110,7 +1394,13 @@ export default function Page() {
                           }
                         }}
                         placeholder="Ask about code sections, violations, or upload a photo..."
-                        className={`flex-1 max-h-[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-slate-900 placeholder-slate-400 text-base leading-relaxed ${inter.className}`}
+                        className={`flex-1 max-h-[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed ${
+                          inter.className
+                        } ${
+                          isDark
+                            ? 'text-slate-100 placeholder-slate-500'
+                            : 'text-slate-900 placeholder-slate-400'
+                        }`}
                         rows={1}
                       />
                       <button
@@ -1122,6 +1412,8 @@ export default function Page() {
                         className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
                           !input.trim() && !selectedImage
                             ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
+                            : isDark
+                            ? 'bg-slate-50 text-slate-900 hover:bg-white shadow-md'
                             : 'bg-black text-white hover:bg-slate-900 shadow-md'
                         }`}
                       >
