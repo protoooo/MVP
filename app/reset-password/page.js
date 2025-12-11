@@ -11,13 +11,11 @@ export default function ResetPasswordPage() {
   const [verifying, setVerifying] = useState(true)
   const [fatalError, setFatalError] = useState('')
   const [formError, setFormError] = useState('')
-  const [message, setMessage] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  // Verify the reset link using token_hash flow
   useEffect(() => {
     const verifyToken = async () => {
       try {
@@ -52,7 +50,6 @@ export default function ResetPasswordPage() {
   }, [supabase])
 
   const handleBackHome = async () => {
-    // Make sure no recovery session lingers
     try {
       await supabase.auth.signOut()
     } catch (e) {
@@ -67,9 +64,7 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
     setFormError('')
-    setMessage('')
 
-    // Local validation – these should NOT be fatal
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
       setLoading(false)
@@ -92,7 +87,7 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Kill the recovery session so they have to sign in normally
+      // Sign out the recovery session
       try {
         await supabase.auth.signOut()
       } catch (signOutErr) {
@@ -100,7 +95,6 @@ export default function ResetPasswordPage() {
       }
 
       setSuccess(true)
-      setMessage('Your password has been reset. You can now sign in with your new password.')
       setLoading(false)
     } catch (err) {
       console.error('Reset password exception:', err)
@@ -131,13 +125,6 @@ export default function ResetPasswordPage() {
           </div>
         )}
 
-        {!fatalError && message && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-            {message}
-          </div>
-        )}
-
-        {/* Show form only when link is verified and not a fatal error, regardless of formError */}
         {!verifying && !fatalError && !success && (
           <form onSubmit={handleSubmit} className="space-y-4">
             {formError && (
@@ -184,15 +171,14 @@ export default function ResetPasswordPage() {
           </form>
         )}
 
-        {/* After success, hide form and push them toward sign-in */}
         {success && (
-          <div className="mt-4 space-y-4">
+          <div className="space-y-4">
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-              {message}
+              Your password has been reset successfully! You can now sign in with your new password.
             </div>
             <button
               type="button"
-              onClick={() => router.push('/signin')}
+              onClick={() => router.push('/')}
               className="w-full rounded-xl bg-neutral-900 px-3 py-2 text-sm font-semibold text-white"
             >
               Go to sign in
