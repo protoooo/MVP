@@ -226,8 +226,10 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Take a quick photo of your cooler, prep line, or 3-comp sink — or ask a
-                direct question — using any smartphone in your operation.
+                Turn any phone into a mini health inspector. 
+                  Snap a quick photo of your walk-in, prep line, or dish area. 
+                  protocolLM analyzes the image for potential violations using your local health-department rules.
+
               </p>
             </div>
 
@@ -263,8 +265,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                protocolLM cross-checks what it sees against local enforcement actions
-                and Michigan food safety regulations to flag what might be out of line.
+                Compare what you see to the actual code. 
+                  Behind the scenes, protocolLM checks each image against local enforcement actions and the Michigan Food Code, so you don’t have to dig through PDFs or policy binders.
               </p>
             </div>
 
@@ -300,8 +302,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Get a concise summary of likely violations and practical corrective
-                actions so your team can fix issues before inspections.
+                Fix issues before the inspector arrives. Get a clear list of likely violations plus practical corrective actions. 
+                  Turn every photo into a focused to-do list your team can handle before inspection day.
               </p>
             </div>
           </div>
