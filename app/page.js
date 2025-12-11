@@ -112,7 +112,7 @@ const DocumentPill = () => {
   )
 }
 
-const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
+const LandingPage = ({ onShowPricing }) => {
   return (
     <div className="w-full relative z-10 min-h-full flex flex-col bg-[#020617] text-emerald-100 font-mono">
       <section className="relative border-b border-emerald-900/70 bg-[#020617]">
@@ -251,16 +251,8 @@ const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
   )
 }
 
-const AuthModal = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
-}) => {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
+const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -268,7 +260,7 @@ const AuthModal = ({
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
@@ -283,7 +275,7 @@ const AuthModal = ({
       }
 
       let endpoint = ''
-      const body: any = { email, captchaToken }
+      const body = { email, captchaToken }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
@@ -315,7 +307,7 @@ const AuthModal = ({
       } else {
         setMessage('✓ Signing in...')
         setTimeout(() => {
-          onSuccess?.()
+          if (onSuccess) onSuccess()
           window.location.reload()
         }, 1000)
       }
@@ -370,7 +362,7 @@ const AuthModal = ({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
               placeholder="gm@yourrestaurant.com"
               required
               className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 text-[12px] text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
@@ -387,7 +379,7 @@ const AuthModal = ({
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
                   placeholder="••••••••"
                   required
                   className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 pr-10 text-[12px] text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
@@ -505,17 +497,7 @@ const AuthModal = ({
   )
 }
 
-const PricingModal = ({
-  isOpen,
-  onClose,
-  onCheckout,
-  loading,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onCheckout: (priceId: string | undefined, planName: 'monthly' | 'annual') => void
-  loading: 'monthly' | 'annual' | null
-}) => {
+const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4">
@@ -643,34 +625,32 @@ const SubscriptionPollingBanner = () => (
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'annual' | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(null) // 'monthly' | 'annual' | null
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<
-    { role: 'user' | 'assistant'; content: string; image?: string | null }[]
-  >([])
+  const [currentChatId, setCurrentChatId] = useState(null)
+  const [messages, setMessages] = useState([]) // { role: 'user' | 'assistant', content, image? }[]
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const inputRef = useRef<HTMLTextAreaElement | null>(null)
-  const userMenuRef = useRef<HTMLDivElement | null>(null)
-  const pollIntervalRef = useRef<any>(null)
+  const fileInputRef = useRef(null)
+  const scrollRef = useRef(null)
+  const inputRef = useRef(null)
+  const userMenuRef = useRef(null)
+  const pollIntervalRef = useRef(null)
 
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   // close user menu on outside click
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false)
       }
     }
@@ -688,7 +668,7 @@ export default function Page() {
   // initial auth + subscription check
   useEffect(() => {
     let mounted = true
-    let timeoutId: any = null
+    let timeoutId = null
 
     const init = async () => {
       try {
@@ -835,7 +815,7 @@ export default function Page() {
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
-  const handleCheckout = async (priceId: string | undefined, planName: 'monthly' | 'annual') => {
+  const handleCheckout = async (priceId, planName) => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -870,7 +850,7 @@ export default function Page() {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
@@ -894,13 +874,13 @@ export default function Page() {
     setCurrentChatId(null)
   }
 
-  const handleSend = async (e?: React.FormEvent) => {
+  const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
-    const newMsg = { role: 'user' as const, content: currentInput, image: currentImage }
+    const newMsg = { role: 'user', content: currentInput, image: currentImage }
 
     setMessages((p) => [...p, newMsg, { role: 'assistant', content: '' }])
     setInput('')
@@ -957,7 +937,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response.'
         return u
       })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Chat error:', err)
       setMessages((p) => {
         const u = [...p]
@@ -969,12 +949,12 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleImage = async (e) => {
+    const file = e.target.files && e.target.files[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
-      setSelectedImage(compressed as any)
+      setSelectedImage(compressed)
     } catch (error) {
       console.error(error)
       alert('Failed to process image')
@@ -1228,7 +1208,7 @@ export default function Page() {
                       />
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
                         className="w-8 h-8 flex items-center justify-center rounded-sm mr-2 bg-emerald-900/40 text-emerald-300 hover:bg-emerald-800/80 transition-all border border-emerald-700"
                       >
                         <Icons.Camera />
