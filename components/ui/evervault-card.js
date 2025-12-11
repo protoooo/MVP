@@ -40,11 +40,11 @@ export function EvervaultCard({ text, className }) {
           justify-content: center;
         }
 
-        /* ~80% larger than your old tiny icons */
         .ev-icon {
-          width: 3rem;
-          height: 3rem;
-          color: #64748b;
+          width: 2.5rem;
+          height: 2.5rem;
+          color: #666;
+          stroke-width: 1.5;
         }
 
         .ev-fallback {
@@ -54,82 +54,79 @@ export function EvervaultCard({ text, className }) {
           border: 1px solid rgba(148, 163, 184, 0.4);
         }
 
-        /* CAPTURE – camera snap animation */
+        /* CAPTURE – subtle camera snap */
         .camera-icon {
-          animation: cameraShake 3s ease-in-out infinite;
+          animation: cameraSnap 4s ease-in-out infinite;
         }
 
         .camera-lens {
           transform-origin: center;
-          animation: lensZoom 3s ease-in-out infinite;
+          animation: lensClick 4s ease-in-out infinite;
         }
 
         .camera-flash {
           position: absolute;
-          inset: -10px;
+          inset: -20px;
           border-radius: 50%;
           background: radial-gradient(
             circle,
-            rgba(255, 255, 255, 0.8) 0%,
-            rgba(255, 255, 255, 0) 70%
+            rgba(255, 255, 255, 0.4) 0%,
+            rgba(255, 255, 255, 0) 60%
           );
           opacity: 0;
-          animation: flashSnap 3s ease-in-out infinite;
+          animation: flashBurst 4s ease-in-out infinite;
           pointer-events: none;
         }
 
-        @keyframes cameraShake {
+        @keyframes cameraSnap {
           0%, 100% {
-            transform: translateY(0) rotate(0deg);
+            transform: translateY(0);
           }
-          45% {
-            transform: translateY(0) rotate(0deg);
-          }
-          48% {
-            transform: translateY(-2px) rotate(-1deg);
+          47% {
+            transform: translateY(0);
           }
           50% {
-            transform: translateY(0) rotate(0deg);
+            transform: translateY(-1px);
           }
-          52% {
-            transform: translateY(-1px) rotate(1deg);
-          }
-          55% {
-            transform: translateY(0) rotate(0deg);
+          53% {
+            transform: translateY(0);
           }
         }
 
-        @keyframes lensZoom {
+        @keyframes lensClick {
           0%, 100% {
             transform: scale(1);
           }
-          45% {
+          47% {
             transform: scale(1);
           }
           50% {
-            transform: scale(0.85);
+            transform: scale(0.92);
           }
-          55% {
+          53% {
             transform: scale(1);
           }
         }
 
-        @keyframes flashSnap {
+        @keyframes flashBurst {
           0%, 100% {
             opacity: 0;
+            transform: scale(0.8);
           }
-          49% {
+          49.5% {
             opacity: 0;
           }
           50% {
-            opacity: 1;
+            opacity: 0.6;
+            transform: scale(1);
           }
-          52% {
+          51% {
             opacity: 0;
+            transform: scale(1.2);
           }
         }
 
-        /* CROSS-CHECK – scrolling document lines */
+        /* CROSS-CHECK – minimal scanning lines */
         .doc-lines {
           position: absolute;
           inset: 0;
@@ -139,61 +136,64 @@ export function EvervaultCard({ text, className }) {
 
         .doc-line {
           position: absolute;
-          left: 1rem;
-          height: 2px;
+          left: 0.9rem;
+          height: 1.5px;
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(148, 163, 184, 0.6) 20%,
-            rgba(148, 163, 184, 0.9) 50%,
-            rgba(148, 163, 184, 0.6) 80%,
+            rgba(100, 100, 100, 0.3) 30%,
+            rgba(100, 100, 100, 0.6) 50%,
+            rgba(100, 100, 100, 0.3) 70%,
             transparent 100%
           );
           border-radius: 9999px;
-          animation: docScroll 2.5s ease-in-out infinite;
+          animation: docScan 3s ease-in-out infinite;
         }
 
         .doc-line--1 {
-          top: 30%;
-          width: 65%;
+          top: 32%;
+          width: 60%;
         }
 
         .doc-line--2 {
-          top: 42%;
-          width: 55%;
-          animation-delay: 0.6s;
+          top: 44%;
+          width: 50%;
+          animation-delay: 0.7s;
         }
 
         .doc-line--3 {
-          top: 54%;
-          width: 70%;
-          animation-delay: 1.2s;
+          top: 56%;
+          width: 65%;
+          animation-delay: 1.4s;
         }
 
         .doc-line--4 {
-          top: 66%;
-          width: 50%;
-          animation-delay: 1.8s;
+          top: 68%;
+          width: 45%;
+          animation-delay: 2.1s;
         }
 
-        @keyframes docScroll {
+        @keyframes docScan {
           0% {
-            transform: translateX(-100%);
+            transform: translateX(-120%);
             opacity: 0;
           }
-          10% {
+          15% {
+            opacity: 0.5;
+          }
+          50% {
             opacity: 1;
           }
-          90% {
-            opacity: 1;
+          85% {
+            opacity: 0.5;
           }
           100% {
-            transform: translateX(150%);
+            transform: translateX(180%);
             opacity: 0;
           }
         }
 
-        /* CORRECT – clean animated checkmark */
+        /* CORRECT – clean checkmark draw */
         .check-shell {
           position: relative;
           display: flex;
@@ -202,14 +202,14 @@ export function EvervaultCard({ text, className }) {
         }
 
         .checkmark-icon {
-          color: #22c55e;
+          color: #10b981;
+          stroke-width: 2;
         }
 
         .check-path {
-          stroke-dasharray: 30;
-          stroke-dashoffset: 30;
-          animation: checkDraw 1.2s ease-out forwards;
-          animation-delay: 0.2s;
+          stroke-dasharray: 24;
+          stroke-dashoffset: 24;
+          animation: checkDraw 0.6s ease-out forwards;
         }
 
         @keyframes checkDraw {
@@ -232,7 +232,6 @@ function CaptureCardVisual() {
         className="ev-icon camera-icon"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
@@ -241,7 +240,6 @@ function CaptureCardVisual() {
         <circle cx="12" cy="13" r="3.4" className="camera-lens" />
       </svg>
 
-      {/* snap flash effect */}
       <div className="camera-flash" />
     </div>
   );
@@ -255,14 +253,12 @@ function CrossCheckCardVisual() {
         className="ev-icon"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
         <rect x="5" y="3.5" width="14" height="17" rx="2" />
       </svg>
 
-      {/* scrolling document lines */}
       <div className="doc-lines">
         <div className="doc-line doc-line--1" />
         <div className="doc-line doc-line--2" />
@@ -281,7 +277,6 @@ function CorrectCardVisual() {
         className="ev-icon checkmark-icon"
         fill="none"
         stroke="currentColor"
-        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
