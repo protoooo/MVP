@@ -83,145 +83,213 @@ const LandingPage = ({ onShowPricing, theme }) => {
   return (
     <div className="w-full relative z-10 min-h-full flex flex-col">
       {/* Hero */}
-      <section className="relative py-12 md:py-16 lg:py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col items-center gap-3 mb-10">
+      <section className="relative py-14 md:py-20">
+        {/* subtle grid background */}
+        <div
+          className={`
+            pointer-events-none absolute inset-0 -z-10 opacity-40
+            ${isDark ? 'bg-[radial-gradient(circle_at_top,_#0f172a,_#020617)]' : 'bg-slate-50'}
+          `}
+        >
+          <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.25),transparent_60%)]" />
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] items-center">
+          {/* Text column */}
+          <div className="space-y-6">
             <p
               className={`text-[11px] tracking-[0.24em] uppercase ${
                 isDark ? 'text-slate-400' : 'text-slate-500'
               } ${inter.className}`}
             >
-              Washtenaw County · Food-service compliance
+              Washtenaw County · Food code index
             </p>
-          </div>
+            <h1
+              className={`text-3xl md:text-[2.4rem] font-semibold tracking-tight leading-tight ${
+                outfit.className
+              } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
+            >
+              Food-safety rules, indexed like a database.
+            </h1>
+            <p
+              className={`text-sm md:text-[0.95rem] max-w-xl leading-relaxed ${
+                inter.className
+              } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+            >
+              ProtocolLM structures the Michigan Food Code, Modified Food Code, and
+              Washtenaw County enforcement documents so your staff can query them
+              in plain language or by section.
+            </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-10 items-stretch">
-            {/* Main 3D hero card */}
-            <div className="relative">
-              <div
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={onShowPricing}
                 className={`
-                  relative rounded-3xl overflow-hidden border
-                  shadow-[0_24px_80px_rgba(15,23,42,0.18)]
-                  transition-transform duration-500
-                  hover:-translate-y-1
-                  ${
-                    isDark
-                      ? 'border-slate-700/80 bg-gradient-to-b from-[#050816] via-[#020617] to-[#020617]'
-                      : 'border-slate-200 bg-gradient-to-b from-white via-slate-50 to-slate-100'
-                  }
+                  btn-press inline-flex items-center justify-center rounded-full px-7 py-3.5
+                  text-[11px] font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors
+                  ${isDark ? 'bg-slate-50 text-slate-900 hover:bg-white'
+                          : 'bg-slate-900 text-slate-50 hover:bg-black'}
                 `}
               >
-                <div className="absolute inset-x-10 -top-20 h-40 bg-gradient-to-b from-white/10 to-transparent blur-3xl pointer-events-none" />
-                <div className="relative p-7 md:p-9 lg:p-10">
-                  <h1
-                    className={`text-3xl md:text-[2.4rem] font-semibold tracking-tight leading-tight mb-4 ${
-                      outfit.className
-                    } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
-                  >
-                    Stay inspection-ready<br className="hidden sm:block" /> at all times.
-                  </h1>
-                  <p
-                    className={`text-sm md:text-[0.95rem] leading-relaxed max-w-xl mb-8 ${
-                      inter.className
-                    } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-                  >
-                    ProtocolLM gives your staff instant, plain-language answers pulled directly from Michigan Food Code,
-                    the Modified Food Code, and Washtenaw County guidance.
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-4 mb-8">
-                    <button
-                      onClick={onShowPricing}
-                      className={`
-                        btn-press inline-flex items-center justify-center
-                        rounded-full px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em]
-                        shadow-sm transition-colors
-                        ${
-                          isDark
-                            ? 'bg-slate-50 text-slate-900 hover:bg-white'
-                            : 'bg-slate-900 text-slate-50 hover:bg-black'
-                        }
-                      `}
-                    >
-                      Start free demo
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div
-                      className={`rounded-2xl border px-4 py-3 ${
-                        isDark
-                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
-                          : 'border-slate-200 bg-white text-slate-800'
-                      }`}
-                    >
-                      <p className="font-semibold mb-1">Line checks</p>
-                      <p className="text-[11px] leading-relaxed">
-                        Use during pre-shift checks to confirm temps, storage, and setup.
-                      </p>
-                    </div>
-                    <div
-                      className={`rounded-2xl border px-4 py-3 ${
-                        isDark
-                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
-                          : 'border-slate-200 bg-white text-slate-800'
-                      }`}
-                    >
-                      <p className="font-semibold mb-1">Training</p>
-                      <p className="text-[11px] leading-relaxed">
-                        New staff can ask real questions instead of flipping through binders.
-                      </p>
-                    </div>
-                    <div
-                      className={`rounded-2xl border px-4 py-3 ${
-                        isDark
-                          ? 'border-slate-700/80 bg-slate-900/40 text-slate-200'
-                          : 'border-slate-200 bg-white text-slate-800'
-                      }`}
-                    >
-                      <p className="font-semibold mb-1">Inspections</p>
-                      <p className="text-[11px] leading-relaxed">
-                        See the exact section an inspector is referencing, in seconds.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                Start free demo
+              </button>
             </div>
 
-            {/* Side instructional column */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-wrap gap-4 text-[11px] font-medium">
               <div
-                className={`rounded-3xl border p-6 md:p-7 lg:p-8 shadow-[0_18px_60px_rgba(15,23,42,0.14)] ${
+                className={`rounded-full px-3 py-1 border ${
                   isDark
-                    ? 'border-slate-700/80 bg-[#020617]'
-                    : 'border-slate-200 bg-white'
+                    ? 'border-slate-700 text-slate-300 bg-slate-900/60'
+                    : 'border-slate-200 text-slate-600 bg-white'
                 }`}
               >
-                <p
-                  className={`text-sm font-semibold mb-3 tracking-tight ${
-                    outfit.className
-                  } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
+                ~2,000+ pages indexed
+              </div>
+              <div
+                className={`rounded-full px-3 py-1 border ${
+                  isDark
+                    ? 'border-slate-700 text-slate-300 bg-slate-900/60'
+                    : 'border-slate-200 text-slate-600 bg-white'
+                }`}
+              >
+                Focused on Washtenaw County food service
+              </div>
+            </div>
+          </div>
+
+          {/* “Database” / console card */}
+          <div className="relative">
+            <div
+              className={`
+                rounded-3xl border shadow-[0_24px_80px_rgba(15,23,42,0.35)]
+                overflow-hidden
+                ${
+                  isDark
+                    ? 'border-slate-800 bg-[#020617]'
+                    : 'border-slate-200 bg-white'
+                }
+              `}
+            >
+              {/* top status bar */}
+              <div
+                className={`
+                  flex items-center justify-between px-4 py-3 text-[11px] font-medium border-b
+                  ${isDark ? 'border-slate-800 text-slate-300' : 'border-slate-200 text-slate-600'}
+                `}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      isDark ? 'bg-emerald-400' : 'bg-emerald-500'
+                    }`}
+                  />
+                  <span className="uppercase tracking-[0.18em]">
+                    inspection view
+                  </span>
+                </div>
+                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>
+                  source: mi &amp; washtenaw code
+                </span>
+              </div>
+
+              {/* fake table */}
+              <div className="px-4 pt-3 pb-4">
+                <div
+                  className={`
+                    mb-3 flex items-center justify-between text-[11px] uppercase tracking-[0.18em]
+                    ${isDark ? 'text-slate-400' : 'text-slate-500'}
+                  `}
                 >
-                  What your staff actually see
-                </p>
-                <ul
-                  className={`space-y-2.5 text-[13px] leading-relaxed ${
-                    inter.className
-                  } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
+                  <span>recent queries</span>
+                  <span>violations (preview)</span>
+                </div>
+
+                <div
+                  className={`
+                    rounded-xl border text-xs font-mono overflow-hidden
+                    ${
+                      isDark
+                        ? 'border-slate-800 bg-slate-950/60'
+                        : 'border-slate-200 bg-slate-50'
+                    }
+                  `}
                 >
-                  <li>• “Can I store raw chicken above sealed produce in this cooler?”</li>
-                  <li>• “How often should we change sanitizer at the 3-comp sink?”</li>
-                  <li>• “What are the holding temps for this line?”</li>
-                  <li>• ProtocolLM replies with a short answer and the exact section number.</li>
-                </ul>
+                  <div
+                    className={`
+                      grid grid-cols-[1.4fr,1.2fr,0.8fr] gap-3 px-3 py-2 border-b
+                      ${isDark ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-600'}
+                    `}
+                  >
+                    <span>Question</span>
+                    <span>System summary</span>
+                    <span className="text-right">Code</span>
+                  </div>
+
+                  {/* row 1 */}
+                  <div
+                    className={`
+                      grid grid-cols-[1.4fr,1.2fr,0.8fr] gap-3 px-3 py-2
+                      ${isDark ? 'text-slate-200' : 'text-slate-800'}
+                    `}
+                  >
+                    <span>cooler · raw chicken over lettuce?</span>
+                    <span>storage requires RTE above raw poultry</span>
+                    <span className="text-right">3-302.11</span>
+                  </div>
+
+                  {/* row 2 */}
+                  <div
+                    className={`
+                      grid grid-cols-[1.4fr,1.2fr,0.8fr] gap-3 px-3 py-2
+                      ${isDark ? 'bg-slate-900/60 text-slate-200' : 'bg-white text-slate-800'}
+                    `}
+                  >
+                    <span>line · holding temp on queso 124°F</span>
+                    <span>below hot-hold minimum, mark as priority</span>
+                    <span className="text-right">3-501.16</span>
+                  </div>
+
+                  {/* row 3 */}
+                  <div
+                    className={`
+                      grid grid-cols-[1.4fr,1.2fr,0.8fr] gap-3 px-3 py-2
+                      ${isDark ? 'text-slate-200' : 'text-slate-800'}
+                    `}
+                  >
+                    <span>3-comp sink · sanitizer change frequency</span>
+                    <span>change when < 200 ppm or every 4 hrs</span>
+                    <span className="text-right">4-501.114</span>
+                  </div>
+                </div>
+
+                {/* sources card */}
+                <div
+                  className={`
+                    mt-4 rounded-xl border px-3 py-3 text-[11px] leading-relaxed
+                    ${
+                      isDark
+                        ? 'border-slate-800 bg-slate-950/80 text-slate-300'
+                        : 'border-slate-200 bg-white text-slate-600'
+                    }
+                  `}
+                >
+                  <div className="mb-1 font-semibold uppercase tracking-[0.18em]">
+                    Loaded sources
+                  </div>
+                  <ul className="space-y-1">
+                    <li>• Michigan Food Code (2022)</li>
+                    <li>• Michigan Modified Food Code</li>
+                    <li>• Washtenaw County enforcement actions</li>
+                    <li>• USDA minimum cooking temperatures</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it works – 3D cards */}
+      {/* How it works */}
       <section className="pb-16 md:pb-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2
@@ -235,39 +303,37 @@ const LandingPage = ({ onShowPricing, theme }) => {
             {[
               {
                 icon: <Icons.Camera />,
-                title: '1. Capture',
-                body: 'Take a photo of your cooler, prep line, or 3-comp sink using any smartphone.',
+                title: '1. Capture or ask',
+                body: 'Take a photo of a station or type a question about a procedure, temp, or setup.',
               },
               {
                 icon: <Icons.Zap />,
                 title: '2. Match to the rules',
-                body: 'ProtocolLM checks the image or question against the official codes and local guidance.',
+                body: 'The system searches the indexed codes and local guidance instead of open web results.',
               },
               {
                 icon: <Icons.FileText />,
-                title: '3. Act with confidence',
-                body: 'You get a clear answer plus the specific section so staff and managers can verify.',
+                title: '3. Act and verify',
+                body: 'You see a short answer plus the exact section, so staff and managers can confirm quickly.',
               },
             ].map((card, idx) => (
               <div
                 key={idx}
                 className={`
-                  group relative rounded-3xl border p-7
-                  transition-all duration-300
-                  hover:-translate-y-1 hover:shadow-[0_24px_80px_rgba(15,23,42,0.25)]
+                  group relative rounded-2xl border p-7 transition-all duration-200
                   ${
                     isDark
-                      ? 'border-slate-700/80 bg-gradient-to-b from-[#020617] to-[#020617]'
-                      : 'border-slate-200 bg-gradient-to-b from-white to-slate-50'
+                      ? 'border-slate-800 bg-slate-950/80 hover:border-slate-600'
+                      : 'border-slate-200 bg-white hover:border-slate-900/70'
                   }
                 `}
               >
                 <div
                   className={`
-                    mb-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border
+                    mb-4 inline-flex h-9 w-9 items-center justify-center rounded-xl border
                     ${
                       isDark
-                        ? 'border-slate-700/80 bg-slate-900/70 text-slate-200'
+                        ? 'border-slate-700 bg-slate-900 text-slate-200'
                         : 'border-slate-200 bg-slate-50 text-slate-600'
                     }
                   `}
