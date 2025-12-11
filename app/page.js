@@ -22,11 +22,6 @@ const Icons = {
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
-  Zap: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  ),
   FileText: () => (
     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -76,17 +71,6 @@ const Icons = {
       <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
-  Sun: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l-1.5-1.5M20.5 20.5 19 19M5 19l-1.5 1.5M20.5 3.5 19 5" />
-    </svg>
-  ),
-  Moon: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79Z" />
-    </svg>
-  ),
 }
 
 const DOCUMENT_DISPLAY_NAMES = [
@@ -102,89 +86,50 @@ const DOCUMENT_DISPLAY_NAMES = [
   'Retail emergency action plans',
 ]
 
-const LandingPage = ({ onShowPricing, theme }) => {
-  const isDark = theme === 'dark'
+// ---------- LANDING PAGE ----------
+const LandingPage = ({ onShowPricing }) => {
   const [docIndex, setDocIndex] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length)
-    }, 3200) // ~3 seconds per document
+    const interval = setInterval(
+      () => setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length),
+      3200
+    )
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div
-      className={`w-full relative z-10 min-h-full flex flex-col ${
-        isDark ? 'bg-black' : 'bg-white'
-      }`}
-    >
-      {/* Main section with coverage + Evervault cards */}
-      <section
-        className={`relative border-b ${
-          isDark ? 'border-slate-800 bg-black' : 'border-slate-200 bg-white'
-        }`}
-      >
+    <div className="w-full relative z-10 min-h-full flex flex-col bg-white">
+      <section className="relative border-b border-slate-200 bg-white">
         <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-center">
           {/* Coverage + rotating docs */}
-          <div className="w-full max-w-3xl mx-auto mb-10 text-center space-y-3">
+          <div className="w-full max-w-3xl mx-auto mb-10 text-center space-y-4">
             <div className="flex flex-wrap justify-center gap-2">
-              <span
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase ${
-                  isDark
-                    ? 'border-slate-800 text-slate-400'
-                    : 'border-slate-200 text-slate-500'
-                }`}
-              >
+              <span className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
                 Coverage
               </span>
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${
-                  isDark
-                    ? 'bg-slate-900 text-slate-50'
-                    : 'bg-slate-900 text-slate-50'
-                }`}
-              >
-                Washtenaw County · Active
+              <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium bg-slate-900 text-slate-50">
+                Washtenaw County restaurants
               </span>
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${
-                  isDark
-                    ? 'bg-slate-900 text-slate-100 border border-slate-700'
-                    : 'bg-white text-slate-700 border border-slate-200'
-                }`}
-              >
-                Michigan State Code
-              </span>
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${
-                  isDark
-                    ? 'bg-black text-slate-400 border border-dashed border-slate-700'
-                    : 'bg-white text-slate-500 border border-dashed border-slate-300'
-                }`}
-              >
-                Additional Counties · 2026
+              <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium bg-white text-slate-700 border border-slate-200">
+                Michigan food code + local enforcement
               </span>
             </div>
 
-            <p
-              className={`text-xs leading-relaxed ${
-                inter.className
-              } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
-            >
+            <div className="flex justify-center">
+              <span className="inline-flex items-center rounded-full border border-dashed border-slate-300 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500">
+                Additional Michigan counties · 2026
+              </span>
+            </div>
+
+            <p className={`text-xs leading-relaxed text-slate-500 ${inter.className}`}>
               Grounded in local enforcement actions and Michigan food safety regulations
               so you can see issues before the inspector does.
             </p>
 
             {/* Rotating document pill */}
             <div className="flex justify-center">
-              <div
-                className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-medium tracking-[0.16em] uppercase ${
-                  isDark
-                    ? 'border-slate-800 text-slate-300 bg-black'
-                    : 'border-slate-200 text-slate-600 bg-white'
-                }`}
-              >
+              <div className="inline-flex items-center rounded-full border border-slate-200 text-slate-600 bg-white px-4 py-1.5 text-[10px] font-medium tracking-[0.16em] uppercase">
                 <span key={docIndex} className="doc-fade">
                   {DOCUMENT_DISPLAY_NAMES[docIndex]}
                 </span>
@@ -194,114 +139,66 @@ const LandingPage = ({ onShowPricing, theme }) => {
 
           {/* Three Evervault cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-            {/* 1. Capture */}
-            <div
-              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
-                isDark
-                  ? 'bg-black border-slate-800 text-slate-100'
-                  : 'bg-white border-slate-200 text-slate-900'
-              }`}
-            >
-              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-
+            {/* Capture */}
+            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
+              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
+                ([top, left], i) => (
+                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
+                    <Icons.Plus />
+                  </div>
+                )
+              )}
               <div className="h-44 mb-6">
                 <EvervaultCard text="Capture" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 1. Turn any device into a health inspector
               </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-              >
+              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
                 Snap a quick photo of your walk-in, prep line, or dish area. protocolLM
                 analyzes the image for potential violations using your local
                 health-department rules.
               </p>
             </div>
 
-            {/* 2. Cross-check */}
-            <div
-              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
-                isDark
-                  ? 'bg-black border-slate-800 text-slate-100'
-                  : 'bg-white border-slate-200 text-slate-900'
-              }`}
-            >
-              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-
+            {/* Cross-check */}
+            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
+              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
+                ([top, left], i) => (
+                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
+                    <Icons.Plus />
+                  </div>
+                )
+              )}
               <div className="h-44 mb-6">
                 <EvervaultCard text="Cross-check" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 2. We handle the rulebook, you see the risks
               </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-              >
+              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
                 Behind the scenes, protocolLM checks each image against local enforcement
                 actions and the Michigan Food Code, so you don’t have to dig through PDFs
                 or policy binders.
               </p>
             </div>
 
-            {/* 3. Correct */}
-            <div
-              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
-                isDark
-                  ? 'bg-black border-slate-800 text-slate-100'
-                  : 'bg-white border-slate-200 text-slate-900'
-              }`}
-            >
-              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
-                <Icons.Plus />
-              </div>
-
+            {/* Correct */}
+            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
+              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
+                ([top, left], i) => (
+                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
+                    <Icons.Plus />
+                  </div>
+                )
+              )}
               <div className="h-44 mb-6">
                 <EvervaultCard text="Correct" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 3. Turn risk into a quick checklist
               </h3>
-              <p
-                className={`text-sm leading-relaxed ${
-                  inter.className
-                } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
-              >
+              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
                 Get a clear list of likely violations plus practical corrective actions.
                 Turn every photo into a focused to-do list your team can handle before
                 inspection day.
@@ -309,7 +206,6 @@ const LandingPage = ({ onShowPricing, theme }) => {
             </div>
           </div>
 
-          {/* Single CTA */}
           <button
             onClick={onShowPricing}
             className="mt-10 bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
@@ -319,24 +215,11 @@ const LandingPage = ({ onShowPricing, theme }) => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        className={`mt-auto py-12 text-center border-t ${
-          isDark ? 'border-slate-800' : 'border-slate-200'
-        }`}
-      >
-        <p
-          className={`font-medium mb-4 text-sm ${
-            inter.className
-          } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
-        >
+      <footer className="mt-auto py-12 text-center border-t border-slate-200">
+        <p className={`font-medium mb-4 text-sm text-slate-500 ${inter.className}`}>
           Serving Washtenaw County food service establishments
         </p>
-        <div
-          className={`flex justify-center gap-6 mb-6 text-sm font-medium ${
-            isDark ? 'text-slate-400' : 'text-slate-500'
-          }`}
-        >
+        <div className="flex justify-center gap-6 mb-6 text-sm font-medium text-slate-500">
           <Link href="/terms" className="hover:text-slate-900 transition-colors">
             Terms of Service
           </Link>
@@ -352,6 +235,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
   )
 }
 
+// ---------- AUTH MODAL ----------
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
   const [email, setEmail] = useState('')
@@ -368,7 +252,6 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
     try {
       const captchaToken = await executeRecaptcha(mode)
-
       if (!captchaToken) {
         setMessage('Security verification failed. Please try again.')
         setLoading(false)
@@ -392,7 +275,6 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       })
 
       const data = await response.json()
-
       if (!response.ok) {
         setMessage(`Error: ${data.error || 'Authentication failed'}`)
         setLoading(false)
@@ -598,6 +480,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   )
 }
 
+// ---------- PRICING MODAL ----------
 const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   if (!isOpen) return null
   return (
@@ -721,6 +604,7 @@ const SubscriptionPollingBanner = () => (
   </div>
 )
 
+// ---------- MAIN PAGE ----------
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
@@ -728,7 +612,7 @@ export default function Page() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(null) // 'monthly' | 'annual' | null
+  const [checkoutLoading, setCheckoutLoading] = useState(null)
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -736,7 +620,6 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [theme, setTheme] = useState('light') // light/dark toggle
 
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -771,10 +654,7 @@ export default function Page() {
     const init = async () => {
       try {
         timeoutId = setTimeout(() => {
-          if (mounted && isLoading) {
-            console.warn('⚠️ Auth check timeout, showing page')
-            setIsLoading(false)
-          }
+          if (mounted && isLoading) setIsLoading(false)
         }, 5000)
 
         const {
@@ -801,9 +681,7 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          if (active && searchParams.get('showPricing') !== 'true') {
-            setShowPricingModal(false)
-          } else if (!active) {
+          if (!active) {
             setShowPricingModal(true)
           }
         } else {
@@ -872,7 +750,6 @@ export default function Page() {
 
     const pollSubscription = async () => {
       pollCount++
-
       try {
         const { data: sub } = await supabase
           .from('subscriptions')
@@ -910,9 +787,7 @@ export default function Page() {
     pollIntervalRef.current = setInterval(pollSubscription, 5000)
 
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current)
-      }
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
@@ -960,9 +835,9 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut()
-      window.location.href = '/'
-    } catch (error) {
+      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
+      await supabase.auth.signOut().catch(() => {})
+    } finally {
       window.location.href = '/'
     }
   }
@@ -1017,15 +892,16 @@ export default function Page() {
 
       if (!res.ok) {
         if (res.status === 402) {
+          const data = await res.json().catch(() => ({}))
           setShowPricingModal(true)
-          throw new Error('Subscription required.')
+          throw new Error(data.error || 'Subscription required.')
         }
         if (res.status === 429) {
-          const data = await res.json()
+          const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Rate limit exceeded. Please upgrade.')
         }
         if (res.status === 503) {
-          const data = await res.json()
+          const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Service temporarily unavailable')
         }
         throw new Error(`Server error: ${res.status}`)
@@ -1069,8 +945,8 @@ export default function Page() {
     )
   }
 
-  const canUseApp = session && hasActiveSubscription
-  const isDark = theme === 'dark'
+  // NEW: any logged-in user gets the chat UI; subscription is enforced by the API
+  const canUseApp = !!session
 
   return (
     <>
@@ -1121,9 +997,7 @@ export default function Page() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false)
-        }}
+        onSuccess={() => setShowAuthModal(false)}
       />
       <PricingModal
         isOpen={showPricingModal}
@@ -1132,88 +1006,29 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div
-        className={`relative min-h-screen w-full overflow-hidden transition-colors duration-300 ${
-          isDark ? 'bg-black text-slate-100' : 'bg-white text-slate-900'
-        }`}
-      >
-        <div
-          className={`relative z-10 flex flex-col h-[100dvh] ${
-            isPollingSubscription ? 'pt-16' : ''
-          }`}
-        >
+      <div className="relative min-h-screen w-full overflow-hidden bg-white text-slate-900">
+        <div className={`relative z-10 flex flex-col h-[100dvh] ${isPollingSubscription ? 'pt-16' : ''}`}>
           {/* HEADER */}
-          <header
-            className={`border-b z-30 ${
-              isDark
-                ? 'border-slate-800 bg-black/90 backdrop-blur'
-                : 'border-slate-200 bg-white/80 backdrop-blur'
-            }`}
-          >
+          <header className="border-b border-slate-200 bg-white/80 backdrop-blur z-30">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
               <div
-                className={`font-semibold tracking-tight text-xl ${outfit.className} ${
-                  isDark ? 'text-slate-50' : 'text-slate-900'
-                }`}
+                className={`font-semibold tracking-tight text-xl text-slate-900 ${outfit.className}`}
               >
                 protocol
-                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
+                <span className="text-slate-500">LM</span>
               </div>
               <div className="flex items-center gap-4">
-                {/* Theme toggle: sun / moon */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-                  }
-                  className={`
-                    hidden sm:inline-flex items-center rounded-full border px-1.5 py-1 text-[11px] font-medium transition-colors
-                    ${
-                      isDark
-                        ? 'border-slate-700 text-slate-200 bg-black hover:bg-slate-900'
-                        : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
-                    }
-                  `}
-                >
-                  <span
-                    className={`p-1 rounded-full flex items-center justify-center ${
-                      !isDark
-                        ? 'bg-slate-900 text-slate-50'
-                        : 'text-slate-500'
-                    }`}
-                  >
-                    <Icons.Sun />
-                  </span>
-                  <span
-                    className={`p-1 rounded-full flex items-center justify-center ${
-                      isDark
-                        ? 'bg-slate-100 text-slate-900'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    <Icons.Moon />
-                  </span>
-                </button>
-
                 {!session ? (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className={`text-xs sm:text-sm font-semibold ${
-                        isDark
-                          ? 'text-slate-300 hover:text-slate-50'
-                          : 'text-slate-600 hover:text-slate-900'
-                      } transition-colors ${inter.className}`}
+                      className={`text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors ${inter.className}`}
                     >
                       Sign in
                     </button>
                     <button
                       onClick={() => setShowPricingModal(true)}
-                      className={`inline-flex items-center gap-2 btn-press ${
-                        isDark
-                          ? 'bg-slate-50 text-slate-900 hover:bg-white'
-                          : 'bg-black text-white hover:bg-slate-900'
-                      } px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
+                      className={`inline-flex items-center gap-2 btn-press bg-black text-white hover:bg-slate-900 px-3 sm:px-4 py-2.5 rounded-lg text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors ${inter.className}`}
                     >
                       <Icons.Check />
                       Sign up
@@ -1224,11 +1039,7 @@ export default function Page() {
                     {canUseApp && (
                       <button
                         onClick={handleNewChat}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isDark
-                            ? 'text-slate-300 hover:text-slate-50 hover:bg-slate-800/70'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
+                        className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                       >
                         <Icons.Plus />
                       </button>
@@ -1236,11 +1047,7 @@ export default function Page() {
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
-                        className={`w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold ${
-                          isDark
-                            ? 'bg-black border-slate-700 text-slate-100'
-                            : 'bg-slate-100 border-slate-200 text-slate-600'
-                        }`}
+                        className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
                       >
                         {session.user.email[0].toUpperCase()}
                       </button>
@@ -1271,23 +1078,18 @@ export default function Page() {
           {/* MAIN */}
           <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto">
             {!canUseApp ? (
-              <LandingPage
-                onShowPricing={() => setShowPricingModal(true)}
-                theme={theme}
-              />
+              <LandingPage onShowPricing={() => setShowPricingModal(true)} />
             ) : (
               <>
-                <div
-                  className="flex-1 overflow-y-auto w-full py-8"
-                  ref={scrollRef}
-                >
+                {/* messages */}
+                <div className="flex-1 overflow-y-auto w-full py-8" ref={scrollRef}>
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
                         className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about the Michigan Food Code, Washtenaw enforcement, or
-                        upload a photo to check for violations.
+                        Ask about the Michigan Food Code, Washtenaw enforcement, or upload a
+                        photo to check for violations.
                       </p>
                     </div>
                   ) : (
@@ -1302,11 +1104,7 @@ export default function Page() {
                           <div
                             className={`max-w-[90%] px-2 ${
                               msg.role === 'user'
-                                ? isDark
-                                  ? 'text-slate-50 font-medium'
-                                  : 'text-slate-900 font-medium'
-                                : isDark
-                                ? 'text-slate-100'
+                                ? 'text-slate-900 font-medium'
                                 : 'text-slate-800'
                             }`}
                           >
@@ -1345,20 +1143,10 @@ export default function Page() {
                 </div>
 
                 {/* INPUT BAR */}
-                <div
-                  className={`w-full shrink-0 z-20 border-t pt-4 ${
-                    isDark ? 'bg-black border-slate-800' : 'bg-white border-slate-100'
-                  }`}
-                >
+                <div className="w-full shrink-0 z-20 border-t border-slate-100 bg-white pt-4">
                   <div className="w-full max-w-4xl mx-auto px-4 pb-8">
                     {selectedImage && (
-                      <div
-                        className={`mb-3 mx-1 p-3 inline-flex items-center gap-3 rounded-lg shadow-sm border ${
-                          isDark
-                            ? 'bg-slate-900 border-slate-700 text-slate-100'
-                            : 'bg-white border-slate-200 text-slate-900'
-                        }`}
-                      >
+                      <div className="mb-3 mx-1 p-3 inline-flex items-center gap-3 rounded-lg shadow-sm border bg-white border-slate-200 text-slate-900">
                         <span className="text-sm font-semibold">Image attached</span>
                         <button
                           onClick={() => setSelectedImage(null)}
@@ -1368,15 +1156,12 @@ export default function Page() {
                         </button>
                       </div>
                     )}
+
                     <div
                       className={`
-                        relative flex items-end w-full p-2 rounded-xl shadow-sm
-                        border transition-all
-                        ${
-                          isDark
-                            ? 'bg-slate-900 border-slate-700 focus-within:border-slate-300 focus-within:ring-1 focus-within:ring-slate-300'
-                            : 'bg-white border-slate-300 focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900'
-                        }
+                        relative flex items-center w-full p-2 rounded-xl shadow-sm
+                        border bg-white border-slate-300
+                        focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900
                       `}
                     >
                       <input
@@ -1389,14 +1174,11 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className={`w-10 h-10 flex items-center justify-center rounded-lg mb-1 ml-1 transition-all ${
-                          isDark
-                            ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
-                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className="w-10 h-10 flex items-center justify-center rounded-lg mb-1 ml-1 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all"
                       >
                         <Icons.Camera />
                       </button>
+
                       <textarea
                         ref={inputRef}
                         value={input}
@@ -1408,26 +1190,17 @@ export default function Page() {
                           }
                         }}
                         placeholder="Ask about code sections, violations, or upload a photo..."
-                        className={`flex-1 max-h=[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed ${
-                          inter.className
-                        } ${
-                          isDark
-                            ? 'text-slate-100 placeholder-slate-500'
-                            : 'text-slate-900 placeholder-slate-400'
-                        }`}
-                        rows={1}
+                        className={`flex-1 max-h-[200px] min-h-[52px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed text-slate-900 placeholder-slate-400 ${inter.className}`}
+                        rows={2}
                       />
+
                       <button
                         type="submit"
                         onClick={handleSend}
-                        disabled={
-                          (!input.trim() && !selectedImage) || isSending
-                        }
+                        disabled={(!input.trim() && !selectedImage) || isSending}
                         className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
-                          !input.trim() && !selectedImage
+                          (!input.trim() && !selectedImage) || isSending
                             ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
-                            : isDark
-                            ? 'bg-slate-50 text-slate-900 hover:bg-white shadow-md'
                             : 'bg-black text-white hover:bg-slate-900 shadow-md'
                         }`}
                       >
@@ -1438,10 +1211,9 @@ export default function Page() {
                         )}
                       </button>
                     </div>
+
                     <p
-                      className={`mt-3 text-[11px] text-center ${
-                        isDark ? 'text-slate-500' : 'text-slate-500'
-                      } ${inter.className}`}
+                      className={`mt-3 text-[11px] text-center text-slate-500 ${inter.className}`}
                     >
                       protocolLM uses AI and may make mistakes. Always confirm critical
                       food safety decisions with official regulations and your local
