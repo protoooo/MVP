@@ -54,9 +54,8 @@ export async function POST(request) {
       }
     )
 
-    // Send password reset email.
-    // We are now using the token_hash flow, and the email template builds
-    // the URL with {{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery
+    // Token-hash flow:
+    // The email template uses {{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery
     const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
