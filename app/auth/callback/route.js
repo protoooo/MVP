@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - PKCE callback with password reset support
+// app/auth/callback/route.js - Fixed version with proper redirects
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -88,12 +88,11 @@ export async function GET(request) {
 
     console.log('✅ Session established:', data.user.email)
 
-    // --- EARLY RETURN: password recovery flow ---
+    // EARLY RETURN: password recovery flow
     if (type === 'recovery' || next === '/reset-password' || next?.includes('reset-password')) {
       console.log('🔐 Password recovery detected, redirecting to /reset-password')
       return NextResponse.redirect(`${baseUrl}/reset-password`)
     }
-    // --------------------------------------------
 
     // Check if terms accepted
     const { data: profile } = await supabase
@@ -143,8 +142,9 @@ export async function GET(request) {
       return NextResponse.redirect(`${baseUrl}/?showPricing=true&expired=true`)
     }
 
-    console.log('✅ All checks passed, redirecting to:', next)
-    return NextResponse.redirect(`${baseUrl}${next}`)
+    console.log('✅ All checks passed, redirecting to home')
+    return NextResponse.redirect(baseUrl)
+    
   } catch (error) {
     console.error('❌ Callback exception:', error)
     return NextResponse.redirect(`${baseUrl}/?error=callback_failed`)
