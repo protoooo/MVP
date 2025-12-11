@@ -8,46 +8,55 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
-  // Fatal link problems (expired / invalid link)
-  const [fatalError, setFatalError] = useState('')
-  // Normal form errors (too short, mismatch, updateUser error)
-  const [formError, setFormError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
+  // separate errors:
+  const [linkError, setLinkError] = useState('')   // problems with the email link / session
+  const [formError, setFormError] = useState('')   // problems with what the user typed
   const [verifying, setVerifying] = useState(true)
 
   const router = useRouter()
   const supabase = createClient()
 
+  // 1) Check that we actually have a valid session from /auth/callback
   useEffect(() => {
+    let isMounted = true
+
     const checkSession = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+        const { data } = await supabase.auth.getSession()
+        const session = data?.session
 
-        if (!session) {
-          setFatalError(
-            'Invalid or expired reset link. Please request a new password reset.'
-          )
+        if (!session && isMounted) {
+          setLinkError('Invalid or expired reset link. Please request a new password reset.')
         }
       } catch (err) {
         console.error('Error checking session for reset:', err)
-        setFatalError('Failed to verify reset link. Please try again.')
+        if (isMounted) {
+          setLinkError('Failed to verify reset link. Please try again.')
+        }
       } finally {
-        setVerifying(false)
+        if (isMounted) {
+          setVerifying(false)
+        }
       }
     }
 
     checkSession()
+
+    return () => {
+      isMounted = false
+    }
   }, [supabase])
 
+  // 2) Submit new password
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setMessage('')
     setFormError('')
-    setSuccessMessage('')
 
+    // basic validation
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
       setLoading(false)
@@ -70,19 +79,18 @@ export default function ResetPasswordPage() {
         return
       }
 
-      setSuccessMessage(
-        'Password updated successfully. You can now log in with your new password.'
-      )
+      setMessage('Password updated successfully. Please sign in with your new password.')
       setLoading(false)
 
-      // Clear the recovery session so they must log in explicitly
+      // Important: sign the user OUT after changing the password
+      // so they are forced to log in again.
       try {
         await supabase.auth.signOut()
-      } catch (signOutError) {
-        console.error('Error signing out after password reset:', signOutError)
+      } catch (signOutErr) {
+        console.error('Error signing out after password reset:', signOutErr)
       }
 
-      // Give them a moment to read the success message, then send to landing
+      // small delay so they see the success message, then go home / sign-in
       setTimeout(() => {
         router.push('/')
       }, 2000)
@@ -93,8 +101,8 @@ export default function ResetPasswordPage() {
     }
   }
 
+  // 3) Back to home should NOT leave them silently logged in
   const handleBackHome = async () => {
-    // Always sign out when leaving this flow so you never drop into chat from a reset link
     try {
       await supabase.auth.signOut()
     } catch (err) {
@@ -113,37 +121,30 @@ export default function ResetPasswordPage() {
           Choose a new password to secure your account.
         </p>
 
-        {verifying && !fatalError && (
+        {/* verifying state */}
+        {verifying && !linkError && (
           <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
 
-        {fatalError && (
+        {/* link-level error (bad / expired email link) */}
+        {linkError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {fatalError}
+            {linkError}
           </div>
         )}
 
-        {!fatalError && (
-          <>
-            {formError && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
-
-            {successMessage && (
-              <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {successMessage}
-              </div>
-            )}
-          </>
+        {/* success message after updating */}
+        {message && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            {message}
+          </div>
         )}
 
-        {/* If link is good and verification is done, keep the form visible
-            even when there are validation errors so they can retry */}
-        {!verifying && !fatalError && (
+        {/* Only hide the form if the link itself is invalid.
+            For normal form errors, keep the form visible so they can retry. */}
+        {!verifying && !linkError && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
@@ -172,6 +173,13 @@ export default function ResetPasswordPage() {
                 className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
               />
             </div>
+
+            {/* form-level errors (password too short, mismatch, etc.) */}
+            {formError && (
+              <p className="text-xs text-red-600">
+                {formError}
+              </p>
+            )}
 
             <button
               type="submit"
