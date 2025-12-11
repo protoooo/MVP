@@ -26,7 +26,6 @@ const MAX_IMAGE_SIZE_MB = 10
 
 // Timeouts
 const VISION_TIMEOUT = 10000
-const SEARCH_TIMEOUT = 8000
 const GENERATION_TIMEOUT = 25000
 
 const timeoutPromise = (ms, message) =>
@@ -197,7 +196,8 @@ export async function POST(req) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
+    const adminEmail =
+      process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
     // Check subscription for non-admin users
@@ -248,8 +248,7 @@ export async function POST(req) {
 
         if (
           recentCheckout &&
-          Date.now() -
-            new Date(recentCheckout.created_at).getTime() <
+          Date.now() - new Date(recentCheckout.created_at).getTime() <
             300000
         ) {
           hasActiveSub = true
@@ -364,10 +363,8 @@ export async function POST(req) {
       try {
         const searchQuery = `${searchTerms} Washtenaw County Michigan food service inspection violation types enforcement actions date marking cooling hot holding cold holding handwashing cross contamination temperature control ready-to-eat food`
 
-        searchResults = await Promise.race([
-          searchDocuments(searchQuery, 'washtenaw', 25),
-          timeoutPromise(SEARCH_TIMEOUT, 'SEARCH_TIMEOUT'),
-        ])
+        // Let searchDocuments manage its own timing; reliability > strict timeout here.
+        searchResults = await searchDocuments(searchQuery, 'washtenaw', 25)
       } catch (err) {
         logger.error('Search failed', {
           requestId,
@@ -375,13 +372,35 @@ export async function POST(req) {
         })
       }
 
-      if (Array.isArray(searchResults) && searchResults.length > 0) {
-        context = searchResults
-          .map((doc) => `[SOURCE: ${doc.source}]\n${doc.text}`)
+      // Normalise different possible shapes from searchDocuments
+      let normalizedResults = []
+      if (Array.isArray(searchResults)) {
+        normalizedResults = searchResults
+      } else if (Array.isArray(searchResults?.results)) {
+        normalizedResults = searchResults.results
+      } else if (Array.isArray(searchResults?.matches)) {
+        normalizedResults = searchResults.matches
+      }
+
+      if (normalizedResults.length > 0) {
+        context = normalizedResults
+          .map((doc) => {
+            const text = doc.text || doc.content || doc.chunk || ''
+            if (!text || !text.trim()) return ''
+            const source =
+              doc.source ||
+              doc.metadata?.source ||
+              doc.document_name ||
+              doc.title ||
+              'Washtenaw food code'
+            return `[SOURCE: ${source}]\n${text}`
+          })
+          .filter(Boolean)
           .join('\n\n')
+
         logger.info('Search completed', {
           requestId,
-          resultsCount: searchResults.length,
+          resultsCount: normalizedResults.length,
         })
       } else {
         logger.warn(
@@ -393,10 +412,13 @@ export async function POST(req) {
 
     // HARD RULE: never answer without document context
     if (!context) {
-      logger.warn('No regulatory context; refusing to answer from general model', {
-        requestId,
-        searchTerms,
-      })
+      logger.warn(
+        'No regulatory context; refusing to answer from general model',
+        {
+          requestId,
+          searchTerms,
+        }
+      )
 
       return NextResponse.json(
         {
