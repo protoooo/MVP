@@ -8,29 +8,12 @@ import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 import { EvervaultCard } from '@/components/ui/evervault-card'
 
-
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
-
-// Cleaned display names for your docs (no .pdf / underscores)
-const DOCUMENT_DISPLAY_NAMES = [
-  'Washtenaw County Enforcement Actions',
-  'Inspection Report Types – Washtenaw County',
-  'Violation Types – Washtenaw County',
-  'Cooling Foods Guidance',
-  'Cross Contamination Guide',
-  'Date Marking Guide',
-  'Food Labeling Guide',
-  'Internal Cooking Temperatures',
-  'Summary – Minimum Cooking Temps',
-  'USDA Safe Minimum Internal Temperatures',
-  'Michigan Modified Food Code',
-  'FDA Food Code 2022',
-]
 
 const Icons = {
   Camera: () => (
@@ -94,27 +77,39 @@ const Icons = {
     </svg>
   ),
   Sun: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
       <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l-1.5-1.5M20.5 20.5 19 19M5 19 3.5 20.5M20.5 3.5 19 5" />
+      <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l-1.5-1.5M20.5 20.5 19 19M5 19l-1.5 1.5M20.5 3.5 19 5" />
     </svg>
   ),
   Moon: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 1 0 21 12.79z" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+      <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79Z" />
     </svg>
   ),
 }
+
+const DOCUMENT_DISPLAY_NAMES = [
+  'Michigan Modified Food Code',
+  'FDA Food Code 2022',
+  'Washtenaw enforcement actions',
+  'Inspection report types · Washtenaw',
+  'Minimum cooking temperatures',
+  'Cooling foods guidance',
+  'Consumer advisory requirements',
+  'Date marking guide',
+  'Food labeling guide',
+  'Retail emergency action plans',
+]
 
 const LandingPage = ({ onShowPricing, theme }) => {
   const isDark = theme === 'dark'
   const [docIndex, setDocIndex] = useState(0)
 
-  // Slow, smooth-ish rotation for document pill
   useEffect(() => {
     const interval = setInterval(() => {
       setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length)
-    }, 3500) // ~3.5 seconds per doc
+    }, 3200) // ~3 seconds per document
     return () => clearInterval(interval)
   }, [])
 
@@ -124,15 +119,15 @@ const LandingPage = ({ onShowPricing, theme }) => {
         isDark ? 'bg-black' : 'bg-white'
       }`}
     >
-      {/* Hero */}
+      {/* Main section with coverage + Evervault cards */}
       <section
         className={`relative border-b ${
-          isDark ? 'border-slate-800' : 'border-slate-200'
+          isDark ? 'border-slate-800 bg-black' : 'border-slate-200 bg-white'
         }`}
       >
-        <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-          {/* Coverage + docs */}
-          <div className="w-full max-w-3xl mx-auto mb-10 space-y-3">
+        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-center">
+          {/* Coverage + rotating docs */}
+          <div className="w-full max-w-3xl mx-auto mb-10 text-center space-y-3">
             <div className="flex flex-wrap justify-center gap-2">
               <span
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase ${
@@ -181,7 +176,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               so you can see issues before the inspector does.
             </p>
 
-            {/* Rotating document pill (no "Documents" label) */}
+            {/* Rotating document pill */}
             <div className="flex justify-center">
               <div
                 className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-medium tracking-[0.16em] uppercase ${
@@ -197,55 +192,33 @@ const LandingPage = ({ onShowPricing, theme }) => {
             </div>
           </div>
 
-          {/* Main headline + CTA */}
-          <h1
-            className={`text-3xl md:text-[2.7rem] font-semibold tracking-tight leading-tight mb-8 ${
-              outfit.className
-            } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
-          >
-            Spot Violations Before The Health Inspector.
-          </h1>
-
-          <button
-            onClick={onShowPricing}
-            className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
-          >
-            Sign up
-          </button>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section
-        className={`py-20 px-6 flex-1 ${
-          isDark ? 'bg-black' : 'bg-white'
-        }`}
-      >
-        <div className="max-w-6xl mx-auto">
-          <h2
-            className={`text-xl font-semibold mb-14 text-center tracking-tight ${
-              outfit.className
-            } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-          >
-            How it works
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Three Evervault cards: Capture / Cross-check / Correct */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
             {/* 1. Capture */}
             <div
-              className={`how-step-card how-step-1 p-8 rounded-xl border min-h-[220px] ${
+              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
                 isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
+                  ? 'bg-black border-slate-800 text-slate-100'
+                  : 'bg-white border-slate-200 text-slate-900'
               }`}
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.Camera />
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
               </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-              >
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
+              <div className="h-44 mb-6">
+                <EvervaultCard text="Capture" />
+              </div>
+              <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 1. Capture
               </h3>
               <p
@@ -254,26 +227,35 @@ const LandingPage = ({ onShowPricing, theme }) => {
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
                 Take a quick photo of your cooler, prep line, or 3-comp sink — or ask a
-                direct question — using any smartphone.
+                direct question — using any smartphone in your operation.
               </p>
             </div>
 
             {/* 2. Cross-check */}
             <div
-              className={`how-step-card how-step-2 p-8 rounded-xl border min-h-[220px] ${
+              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
                 isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
+                  ? 'bg-black border-slate-800 text-slate-100'
+                  : 'bg-white border-slate-200 text-slate-900'
               }`}
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.Zap />
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
               </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-              >
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
+              <div className="h-44 mb-6">
+                <EvervaultCard text="Cross-check" />
+              </div>
+              <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 2. Cross-check
               </h3>
               <p
@@ -281,28 +263,36 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                protocolLM cross-checks what it sees against county enforcement actions
-                and Michigan food safety regulations to highlight what might be out of
-                compliance.
+                protocolLM cross-checks what it sees against local enforcement actions
+                and Michigan food safety regulations to flag what might be out of line.
               </p>
             </div>
 
             {/* 3. Correct */}
             <div
-              className={`how-step-card how-step-3 p-8 rounded-xl border min-h-[220px] ${
+              className={`relative border rounded-2xl p-6 flex flex-col min-h-[260px] ${
                 isDark
-                  ? 'bg-black border-slate-800'
-                  : 'bg-white border-slate-200'
+                  ? 'bg-black border-slate-800 text-slate-100'
+                  : 'bg-white border-slate-200 text-slate-900'
               }`}
             >
-              <div className={`mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                <Icons.FileText />
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
               </div>
-              <h3
-                className={`text-base font-semibold mb-2 ${
-                  outfit.className
-                } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
-              >
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
+              <div className="h-44 mb-6">
+                <EvervaultCard text="Correct" />
+              </div>
+              <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 3. Correct
               </h3>
               <p
@@ -310,11 +300,19 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Receive a structured summary of likely violations plus corrective steps,
-                so your team can fix issues before inspection.
+                Get a concise summary of likely violations and practical corrective
+                actions so your team can fix issues before inspections.
               </p>
             </div>
           </div>
+
+          {/* Single CTA */}
+          <button
+            onClick={onShowPricing}
+            className="mt-10 bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
+          >
+            Sign up
+          </button>
         </div>
       </section>
 
@@ -329,8 +327,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             inter.className
           } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
         >
-          Serving Washtenaw County food service establishments. Additional Michigan
-          counties planned for 2026.
+          Serving Washtenaw County food service establishments
         </p>
         <div
           className={`flex justify-center gap-6 mb-6 text-sm font-medium ${
@@ -620,9 +617,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
           >
             Choose your plan
           </p>
-          <p
-            className={`text-sm text-slate-600 max-w-xl mx-auto ${inter.className}`}
-          >
+          <p className={`text-sm text-slate-600 max-w-xl mx-auto ${inter.className}`}>
             Start with a 7-day free trial. Cancel anytime.
           </p>
         </div>
@@ -710,10 +705,8 @@ const SubscriptionPollingBanner = () => (
       <div className="flex items-center gap-3">
         <Icons.Clock />
         <div>
-          <p className="text-sm font-semibold text-blue-900">
-            Activating your subscription...
-          </p>
-          <p className="text-xs text-blue-700">This usually takes 5–10 seconds</p>
+          <p className="text-sm font-semibold text-blue-900">Activating your subscription...</p>
+          <p className="text-xs text-blue-700">This usually takes 5-10 seconds</p>
         </div>
       </div>
       <div className="flex gap-1">
@@ -1099,54 +1092,24 @@ export default function Page() {
           background: rgba(0, 0, 0, 0.12);
           border-radius: 3px;
         }
-        /* subtle "tracing" animation on How it works cards */
-        .how-step-card {
-          position: relative;
-          overflow: hidden;
-        }
-        .how-step-card::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          border: 1px solid transparent;
-          pointer-events: none;
-        }
-        @keyframes howStepHighlight {
-          0%,
-          55%,
-          100% {
-            opacity: 0;
-            border-color: transparent;
-          }
-          8%,
-          25% {
-            opacity: 1;
-            border-color: rgba(148, 163, 184, 0.9);
-          }
-        }
-        .how-step-1::after {
-          animation: howStepHighlight 9s infinite;
-        }
-        .how-step-2::after {
-          animation: howStepHighlight 9s infinite 3s;
-        }
-        .how-step-3::after {
-          animation: howStepHighlight 9s infinite 6s;
+        .doc-fade {
+          display: inline-block;
+          animation: docFade 3.2s ease-in-out;
         }
         @keyframes docFade {
-          from {
+          0% {
             opacity: 0;
             transform: translateY(4px);
           }
-          to {
+          10%,
+          90% {
             opacity: 1;
             transform: translateY(0);
           }
-        }
-        .doc-fade {
-          animation: docFade 0.45s ease-out;
-          display: inline-block;
+          100% {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
         }
       `}</style>
 
@@ -1190,24 +1153,43 @@ export default function Page() {
                   isDark ? 'text-slate-50' : 'text-slate-900'
                 }`}
               >
-                protocol<span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
+                protocol
+                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
               </div>
               <div className="flex items-center gap-4">
                 {/* Theme toggle: sun / moon */}
                 <button
                   type="button"
-                  onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+                  onClick={() =>
+                    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
+                  }
                   className={`
-                    inline-flex items-center justify-center rounded-full border w-9 h-9
+                    hidden sm:inline-flex items-center rounded-full border px-1.5 py-1 text-[11px] font-medium transition-colors
                     ${
                       isDark
                         ? 'border-slate-700 text-slate-200 bg-black hover:bg-slate-900'
                         : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
                     }
                   `}
-                  aria-label="Toggle theme"
                 >
-                  {isDark ? <Icons.Sun /> : <Icons.Moon />}
+                  <span
+                    className={`p-1 rounded-full flex items-center justify-center ${
+                      !isDark
+                        ? 'bg-slate-900 text-slate-50'
+                        : 'text-slate-500'
+                    }`}
+                  >
+                    <Icons.Sun />
+                  </span>
+                  <span
+                    className={`p-1 rounded-full flex items-center justify-center ${
+                      isDark
+                        ? 'bg-slate-100 text-slate-900'
+                        : 'text-slate-400'
+                    }`}
+                  >
+                    <Icons.Moon />
+                  </span>
                 </button>
 
                 {!session ? (
@@ -1302,7 +1284,7 @@ export default function Page() {
                         className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
                         Ask about the Michigan Food Code, Washtenaw enforcement, or
-                        upload a photo to check for likely violations before inspection.
+                        upload a photo to check for violations.
                       </p>
                     </div>
                   ) : (
@@ -1311,9 +1293,7 @@ export default function Page() {
                         <div
                           key={idx}
                           className={`w-full flex ${
-                            msg.role === 'user'
-                              ? 'justify-end'
-                              : 'justify-start'
+                            msg.role === 'user' ? 'justify-end' : 'justify-start'
                           }`}
                         >
                           <div
@@ -1361,13 +1341,13 @@ export default function Page() {
                   )}
                 </div>
 
-                {/* INPUT BAR + DISCLAIMER */}
+                {/* INPUT BAR */}
                 <div
                   className={`w-full shrink-0 z-20 border-t pt-4 ${
                     isDark ? 'bg-black border-slate-800' : 'bg-white border-slate-100'
                   }`}
                 >
-                  <div className="w-full max-w-4xl mx-auto px-4 pb-4">
+                  <div className="w-full max-w-4xl mx-auto px-4 pb-8">
                     {selectedImage && (
                       <div
                         className={`mb-3 mx-1 p-3 inline-flex items-center gap-3 rounded-lg shadow-sm border ${
@@ -1376,9 +1356,7 @@ export default function Page() {
                             : 'bg-white border-slate-200 text-slate-900'
                         }`}
                       >
-                        <span className="text-sm font-semibold">
-                          Image attached
-                        </span>
+                        <span className="text-sm font-semibold">Image attached</span>
                         <button
                           onClick={() => setSelectedImage(null)}
                           className="text-slate-400 hover:text-slate-900"
@@ -1457,15 +1435,14 @@ export default function Page() {
                         )}
                       </button>
                     </div>
-
-                    {/* DISCLAIMER UNDER CHAT BOX */}
                     <p
                       className={`mt-3 text-[11px] text-center ${
-                        inter.className
-                      } ${isDark ? 'text-slate-500' : 'text-slate-500'}`}
+                        isDark ? 'text-slate-500' : 'text-slate-500'
+                      } ${inter.className}`}
                     >
-                      protocolLM can make mistakes. Always confirm important decisions with
-                      official code and your local health department.
+                      protocolLM uses AI and may make mistakes. Always confirm critical
+                      food safety decisions with official regulations and your local
+                      health department.
                     </p>
                   </div>
                 </div>
