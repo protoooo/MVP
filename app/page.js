@@ -216,7 +216,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="Snap a photo. Spot the risk." />
+                <EvervaultCard text="Capture" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 1. Capture
@@ -255,7 +255,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="We handle the rulebook, you see the risks." />
+                <EvervaultCard text="Cross-check" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 2. Cross-check
@@ -292,7 +292,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
               </div>
 
               <div className="h-44 mb-6">
-                <EvervaultCard text="Turn risk into a quick checklist." />
+                <EvervaultCard text="Correct" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 3. Correct
