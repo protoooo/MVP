@@ -14,6 +14,25 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
+// Nicely formatted document names (no .pdf, no underscores)
+const DOCUMENT_PILLS = [
+  'Washtenaw enforcement actions',
+  'Violation types – Washtenaw County',
+  'Inspection report types',
+  'Food service inspection program',
+  'Food allergy information',
+  'Cooling & cold holding',
+  'Cross-contamination guidance',
+  '3-comp sink procedures',
+  'Consumer advisory requirements',
+  'Date marking guide',
+  'Food labeling guide',
+  'Internal cooking temperatures',
+  'USDA safe minimum temperatures',
+  'Michigan Modified Food Code (2022)',
+  'FDA Food Code (2022)',
+]
+
 const Icons = {
   Camera: () => (
     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -75,6 +94,24 @@ const Icons = {
       <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
+  Sun: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" />
+      <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
+      <line x1="2" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+      <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" />
+      <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" />
+    </svg>
+  ),
+  Moon: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
 }
 
 const LandingPage = ({ onShowPricing, theme }) => {
@@ -93,38 +130,38 @@ const LandingPage = ({ onShowPricing, theme }) => {
         }`}
       >
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-          {/* smaller, tool-like copy instead of big header */}
+          {/* small, general preheader */}
           <p
             className={`text-xs md:text-sm mb-3 font-medium tracking-[0.18em] uppercase ${
               inter.className
             } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
           >
-            Food-safety compliance for Michigan food service
+            Food-safety checks for restaurants and food service
           </p>
 
+          {/* general header, no specific county */}
           <p
             className={`text-lg md:text-2xl font-semibold tracking-tight leading-snug mb-4 max-w-3xl ${
               outfit.className
             } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
           >
-            Take photos to cross-check Washtenaw County and Michigan food-safety
-            regulations and spot likely violations before inspections.
+            Take photos to cross-check food-safety regulations in your county and flag
+            likely violations before inspections.
           </p>
 
+          {/* shorter subheader, no doc list / fallback talk */}
           <p
             className={`text-sm md:text-base max-w-2xl leading-relaxed mb-8 ${
               inter.className
             } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
           >
             Upload a photo of your cooler, prep line, or dish area—or ask a question.
-            protocolLM compares what it sees against official{' '}
-            <span className="font-medium">Washtenaw County enforcement documents</span>{' '}
-            first, then the <span className="font-medium">Michigan Food Code</span>,
-            with FDA Food Code as a fallback.
+            protocolLM compares what it sees against local, state, and federal
+            food-safety rules.
           </p>
 
-          {/* Coverage pills */}
-          <div className="mb-10">
+          {/* Coverage */}
+          <div className="mb-2">
             <p
               className={`text-[11px] font-semibold tracking-[0.22em] uppercase mb-3 ${
                 inter.className
@@ -161,15 +198,16 @@ const LandingPage = ({ onShowPricing, theme }) => {
                 Oakland County · Coming 2026
               </span>
             </div>
+            <p
+              className={`mt-3 text-[11px] ${inter.className} ${
+                isDark ? 'text-slate-500' : 'text-slate-500'
+              }`}
+            >
+              Also grounded in Michigan Food Code and FDA Food Code.
+            </p>
           </div>
 
-          {/* Primary CTA */}
-          <button
-            onClick={onShowPricing}
-            className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
-          >
-            View pricing & usage
-          </button>
+          {/* No hero CTA button now – sign-up is handled in header */}
         </div>
       </section>
 
@@ -211,8 +249,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Take a photo of your cooler, prep line, dish room, or 3-comp sink
-                using any smartphone, or ask a question about specific code sections.
+                Take a photo of your cooler, prep line, dish room, or 3-comp sink using
+                any smartphone, or ask a question about specific code sections.
               </p>
             </div>
 
@@ -238,9 +276,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                protocolLM cross-checks your photo or question against Washtenaw County
-                enforcement documents first, then the Michigan Food Code, with FDA Food
-                Code used as a safety fallback.
+                protocolLM compares your photo or question against local county
+                documents, state guidance, and federal food-safety standards.
               </p>
             </div>
 
@@ -621,7 +658,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Grounded in Washtenaw County guidance</span>
+                  <span>Grounded in local county guidance</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -708,6 +745,7 @@ export default function Page() {
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [theme, setTheme] = useState('light') // light/dark toggle
+  const [docIndex, setDocIndex] = useState(0) // rotating document pill
 
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -733,6 +771,14 @@ export default function Page() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  // rotate document pill
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDocIndex((prev) => (prev + 1) % DOCUMENT_PILLS.length)
+    }, 3500)
+    return () => clearInterval(interval)
+  }, [])
 
   // Initial auth + subscription check
   useEffect(() => {
@@ -1138,47 +1184,56 @@ export default function Page() {
             }`}
           >
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-              <div
-                className={`font-semibold tracking-tight text-xl ${outfit.className} ${
-                  isDark ? 'text-slate-50' : 'text-slate-900'
-                }`}
-              >
-                protocol<span className={isDark ? 'text-slate-400' : 'text-slate-500'}>LM</span>
-              </div>
+              {/* Logo + rotating document pill */}
               <div className="flex items-center gap-4">
-                {/* Theme toggle in header */}
+                <div
+                  className={`font-semibold tracking-tight text-xl ${outfit.className} ${
+                    isDark ? 'text-slate-50' : 'text-slate-900'
+                  }`}
+                >
+                  protocol
+                  <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>
+                    LM
+                  </span>
+                </div>
+                <div className="hidden md:flex items-center gap-2">
+                  <span
+                    className={`text-[10px] uppercase tracking-[0.18em] ${
+                      isDark ? 'text-slate-500' : 'text-slate-500'
+                    }`}
+                  >
+                    Documents
+                  </span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium border whitespace-nowrap transition-colors ${
+                      isDark
+                        ? 'border-slate-700 text-slate-200 bg-black'
+                        : 'border-slate-200 text-slate-700 bg-white'
+                    }`}
+                  >
+                    {DOCUMENT_PILLS[docIndex]}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                {/* Sun/moon theme toggle */}
                 <button
                   type="button"
                   onClick={() =>
                     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
                   }
                   className={`
-                    hidden sm:inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-medium transition-colors
+                    inline-flex items-center justify-center rounded-full border p-2 text-[11px] font-medium transition-colors
                     ${
                       isDark
                         ? 'border-slate-700 text-slate-200 bg-black hover:bg-slate-900'
                         : 'border-slate-300 text-slate-600 bg-white hover:bg-slate-50'
                     }
                   `}
+                  aria-label="Toggle theme"
                 >
-                  <span
-                    className={`px-2 py-0.5 rounded-full ${
-                      !isDark
-                        ? 'bg-slate-900 text-slate-50'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    Light
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full ${
-                      isDark
-                        ? 'bg-slate-100 text-slate-900'
-                        : 'text-slate-400'
-                    }`}
-                  >
-                    Dark
-                  </span>
+                  {isDark ? <Icons.Sun /> : <Icons.Moon />}
                 </button>
 
                 {!session ? (
@@ -1272,8 +1327,8 @@ export default function Page() {
                       <p
                         className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about the Michigan Food Code, Washtenaw enforcement, or
-                        upload a photo to check for violations.
+                        Ask about the Michigan Food Code, local enforcement, or upload a
+                        photo to check for violations.
                       </p>
                     </div>
                   ) : (
@@ -1417,7 +1472,7 @@ export default function Page() {
                           !input.trim() && !selectedImage
                             ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
                             : isDark
-                            ? 'bg-slate-50 text-slate-900 hover:bg-white shift-md'
+                            ? 'bg-slate-50 text-slate-900 hover:bg-white shadow-md'
                             : 'bg-black text-white hover:bg-slate-900 shadow-md'
                         }`}
                       >
