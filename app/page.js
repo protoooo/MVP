@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -20,6 +21,11 @@ const Icons = {
     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
+  Zap: () => (
+    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   ),
   FileText: () => (
@@ -86,119 +92,135 @@ const DOCUMENT_DISPLAY_NAMES = [
   'Retail emergency action plans',
 ]
 
-// ---------- LANDING PAGE ----------
-const LandingPage = ({ onShowPricing }) => {
+// NEW: rotating pill moved into header next to logo
+const DocumentPill = () => {
   const [docIndex, setDocIndex] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length),
-      3200
-    )
+    const interval = setInterval(() => {
+      setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length)
+    }, 3200)
     return () => clearInterval(interval)
   }, [])
 
   return (
+    <div className="hidden sm:flex ml-4">
+      <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-[11px] font-semibold tracking-[0.18em] uppercase border-slate-200 bg-white text-slate-900">
+        <span key={docIndex} className="doc-fade">
+          {DOCUMENT_DISPLAY_NAMES[docIndex]}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
+  return (
     <div className="w-full relative z-10 min-h-full flex flex-col bg-white">
       <section className="relative border-b border-slate-200 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col items-center">
-          {/* Coverage + rotating docs */}
-          <div className="w-full max-w-3xl mx-auto mb-10 text-center space-y-4">
-            <div className="flex flex-wrap justify-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
-                Coverage
-              </span>
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium bg-slate-900 text-slate-50">
-                Washtenaw County restaurants
-              </span>
-              <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium bg-white text-slate-700 border border-slate-200">
-                Michigan food code + local enforcement
-              </span>
-            </div>
-
-            <div className="flex justify-center">
-              <span className="inline-flex items-center rounded-full border border-dashed border-slate-300 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-500">
-                Additional Michigan counties · 2026
-              </span>
-            </div>
-
-            <p className={`text-xs leading-relaxed text-slate-500 ${inter.className}`}>
+        <div className="max-w-6xl mx-auto px-6 pt-12 pb-16 flex flex-col items-center">
+          {/* top center copy */}
+          <div className="w-full max-w-3xl mx-auto mb-8 text-center space-y-2">
+            <p
+              className={`text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 ${inter.className}`}
+            >
+              Serving Washtenaw County
+            </p>
+            <p className={`text-xs text-slate-500 ${inter.className}`}>
+              Wayne County and Oakland County coming in 2026.
+            </p>
+            <p
+              className={`text-xs leading-relaxed text-slate-500 mt-2 ${inter.className}`}
+            >
               Grounded in local enforcement actions and Michigan food safety regulations
               so you can see issues before the inspector does.
             </p>
+          </div>
 
-            {/* Rotating document pill */}
-            <div className="flex justify-center">
-              <div className="inline-flex items-center rounded-full border border-slate-200 text-slate-600 bg-white px-4 py-1.5 text-[10px] font-medium tracking-[0.16em] uppercase">
-                <span key={docIndex} className="doc-fade">
-                  {DOCUMENT_DISPLAY_NAMES[docIndex]}
-                </span>
-              </div>
+          {/* centered Michigan Modified Food Code “document” pill */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase border-slate-200 text-slate-600 bg-white">
+              Michigan Modified Food Code
             </div>
           </div>
 
-          {/* Three Evervault cards */}
+          {/* how it works cards – moved up slightly by reducing padding above */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
-            {/* Capture */}
-            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
-              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
-                ([top, left], i) => (
-                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
-                    <Icons.Plus />
-                  </div>
-                )
-              )}
+            <div className="relative border rounded-2xl p-6 flex flex-col min-h-[260px] bg-white border-slate-200 text-slate-900">
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
               <div className="h-44 mb-6">
                 <EvervaultCard text="Capture" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 1. Turn any device into a health inspector
               </h3>
-              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
+              <p className={`text-sm leading-relaxed ${inter.className} text-slate-700`}>
                 Snap a quick photo of your walk-in, prep line, or dish area. protocolLM
                 analyzes the image for potential violations using your local
                 health-department rules.
               </p>
             </div>
 
-            {/* Cross-check */}
-            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
-              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
-                ([top, left], i) => (
-                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
-                    <Icons.Plus />
-                  </div>
-                )
-              )}
+            <div className="relative border rounded-2xl p-6 flex flex-col min-h-[260px] bg-white border-slate-200 text-slate-900">
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
               <div className="h-44 mb-6">
-                <EvervaultCard text="Cross-check" />
+                <EvervaultCard text="Rulebook" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 2. We handle the rulebook, you see the risks
               </h3>
-              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
+              <p className={`text-sm leading-relaxed ${inter.className} text-slate-700`}>
                 Behind the scenes, protocolLM checks each image against local enforcement
                 actions and the Michigan Food Code, so you don’t have to dig through PDFs
                 or policy binders.
               </p>
             </div>
 
-            {/* Correct */}
-            <div className="relative border border-slate-200 rounded-2xl p-6 flex flex-col min-h-[260px] bg-white text-slate-900">
-              {[['-top-3', '-left-3'], ['-bottom-3', '-left-3'], ['-top-3', '-right-3'], ['-bottom-3', '-right-3']].map(
-                ([top, left], i) => (
-                  <div key={i} className={`absolute h-6 w-6 ${top} ${left} text-slate-400`}>
-                    <Icons.Plus />
-                  </div>
-                )
-              )}
+            <div className="relative border rounded-2xl p-6 flex flex-col min-h-[260px] bg-white border-slate-200 text-slate-900">
+              <div className="absolute h-6 w-6 -top-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -left-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -top-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+              <div className="absolute h-6 w-6 -bottom-3 -right-3 text-slate-400">
+                <Icons.Plus />
+              </div>
+
               <div className="h-44 mb-6">
-                <EvervaultCard text="Correct" />
+                <EvervaultCard text="Checklist" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
                 3. Turn risk into a quick checklist
               </h3>
-              <p className={`text-sm leading-relaxed text-slate-700 ${inter.className}`}>
+              <p className={`text-sm leading-relaxed ${inter.className} text-slate-700`}>
                 Get a clear list of likely violations plus practical corrective actions.
                 Turn every photo into a focused to-do list your team can handle before
                 inspection day.
@@ -216,7 +238,9 @@ const LandingPage = ({ onShowPricing }) => {
       </section>
 
       <footer className="mt-auto py-12 text-center border-t border-slate-200">
-        <p className={`font-medium mb-4 text-sm text-slate-500 ${inter.className}`}>
+        <p
+          className={`font-medium mb-4 text-sm ${inter.className} text-slate-500`}
+        >
           Serving Washtenaw County food service establishments
         </p>
         <div className="flex justify-center gap-6 mb-6 text-sm font-medium text-slate-500">
@@ -235,9 +259,16 @@ const LandingPage = ({ onShowPricing }) => {
   )
 }
 
-// ---------- AUTH MODAL ----------
-const AuthModal = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
+const AuthModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess?: () => void
+}) => {
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -245,13 +276,14 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
 
     try {
       const captchaToken = await executeRecaptcha(mode)
+
       if (!captchaToken) {
         setMessage('Security verification failed. Please try again.')
         setLoading(false)
@@ -259,7 +291,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       }
 
       let endpoint = ''
-      const body = { email, captchaToken }
+      const body: any = { email, captchaToken }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
@@ -275,6 +307,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       })
 
       const data = await response.json()
+
       if (!response.ok) {
         setMessage(`Error: ${data.error || 'Authentication failed'}`)
         setLoading(false)
@@ -345,7 +378,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="work@restaurant.com"
               required
               className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
@@ -362,7 +395,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder="••••••••"
                   required
                   className="w-full bg-white border border-slate-300 rounded-lg px-4 py-3 pr-12 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-sm"
@@ -480,8 +513,17 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   )
 }
 
-// ---------- PRICING MODAL ----------
-const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
+const PricingModal = ({
+  isOpen,
+  onClose,
+  onCheckout,
+  loading,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onCheckout: (priceId: string | undefined, planName: 'monthly' | 'annual') => void
+  loading: 'monthly' | 'annual' | null
+}) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4">
@@ -526,8 +568,8 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               </div>
               <p className={`text-sm text-slate-600 mb-4 ${inter.className}`}>
                 Includes approximately{' '}
-                <span className="font-semibold">1,300 monthly compliance checks</span>{' '}
-                for a single restaurant. Text questions count as one check; photo analyses
+                <span className="font-semibold">1,300 monthly compliance checks</span> for
+                a single restaurant. Text questions count as one check; photo analyses
                 count as two.
               </p>
               <ul className="space-y-2 text-sm text-slate-700">
@@ -541,7 +583,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Michigan Food Code & local enforcement docs</span>
+                  <span>Michigan Food Code &amp; local enforcement docs</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -559,9 +601,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
                 disabled={!!loading && loading !== 'monthly'}
                 className={`w-full bg-black hover:bg-slate-900 text-white font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] transition-colors ${
-                  loading && loading !== 'monthly'
-                    ? 'opacity-60 cursor-not-allowed'
-                    : ''
+                  loading && loading !== 'monthly' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
                 {loading === 'monthly' ? 'Processing...' : 'Monthly Access - Start Free Trial'}
@@ -570,9 +610,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
                 disabled={!!loading && loading !== 'annual'}
                 className={`w-full bg-white border border-dashed border-slate-400 text-slate-900 font-semibold py-3.5 rounded-lg text-xs uppercase tracking-[0.18em] hover:bg-slate-50 transition-colors ${
-                  loading && loading !== 'annual'
-                    ? 'opacity-60 cursor-not-allowed'
-                    : ''
+                  loading && loading !== 'annual' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
                 {loading === 'annual' ? 'Processing...' : 'Yearly Access - Save 15%'}
@@ -591,48 +629,58 @@ const SubscriptionPollingBanner = () => (
       <div className="flex items-center gap-3">
         <Icons.Clock />
         <div>
-          <p className="text-sm font-semibold text-blue-900">Activating your subscription...</p>
-          <p className="text-xs text-blue-700">This usually takes 5-10 seconds</p>
+          <p className="text-sm font-semibold text-blue-900">
+            Activating your subscription...
+          </p>
+          <p className="text-xs text-blue-700">This usually takes 5–10 seconds</p>
         </div>
       </div>
       <div className="flex gap-1">
         <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
-        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-        <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+        <div
+          className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+          style={{ animationDelay: '0.1s' }}
+        />
+        <div
+          className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+          style={{ animationDelay: '0.2s' }}
+        />
       </div>
     </div>
   </div>
 )
 
-// ---------- MAIN PAGE ----------
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<any>(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(null)
+  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'annual' | null>(null)
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState(null)
-  const [messages, setMessages] = useState([])
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<
+    { role: 'user' | 'assistant'; content: string; image?: string | null }[]
+  >([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const fileInputRef = useRef(null)
-  const scrollRef = useRef(null)
-  const inputRef = useRef(null)
-  const userMenuRef = useRef(null)
-  const pollIntervalRef = useRef(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
+  const pollIntervalRef = useRef<any>(null)
 
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
+  // close user menu on outside click
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
     }
@@ -640,21 +688,25 @@ export default function Page() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // keep chat scrolled to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
 
-  // Initial auth + subscription check
+  // initial auth + subscription check
   useEffect(() => {
     let mounted = true
-    let timeoutId = null
+    let timeoutId: any = null
 
     const init = async () => {
       try {
         timeoutId = setTimeout(() => {
-          if (mounted && isLoading) setIsLoading(false)
+          if (mounted && isLoading) {
+            console.warn('⚠️ Auth check timeout, showing page')
+            setIsLoading(false)
+          }
         }, 5000)
 
         const {
@@ -681,7 +733,9 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          if (!active) {
+          if (active && searchParams.get('showPricing') !== 'true') {
+            setShowPricingModal(false)
+          } else if (!active) {
             setShowPricingModal(true)
           }
         } else {
@@ -701,8 +755,7 @@ export default function Page() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (!mounted) return
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession)
       if (newSession) {
         const { data: sub } = await supabase
@@ -732,7 +785,7 @@ export default function Page() {
     }
   }, [supabase, searchParams, isLoading])
 
-  // Subscription polling after payment
+  // poll Stripe after returning from checkout
   useEffect(() => {
     if (!session) return
 
@@ -750,6 +803,7 @@ export default function Page() {
 
     const pollSubscription = async () => {
       pollCount++
+
       try {
         const { data: sub } = await supabase
           .from('subscriptions')
@@ -791,7 +845,7 @@ export default function Page() {
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
-  const handleCheckout = async (priceId, planName) => {
+  const handleCheckout = async (priceId: string | undefined, planName: 'monthly' | 'annual') => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -826,7 +880,7 @@ export default function Page() {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
@@ -835,8 +889,9 @@ export default function Page() {
 
   const handleSignOut = async () => {
     try {
-      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
-      await supabase.auth.signOut().catch(() => {})
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Sign out error', error)
     } finally {
       window.location.href = '/'
     }
@@ -849,13 +904,13 @@ export default function Page() {
     setCurrentChatId(null)
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
-    const newMsg = { role: 'user', content: currentInput, image: currentImage }
+    const newMsg = { role: 'user' as const, content: currentInput, image: currentImage }
 
     setMessages((p) => [...p, newMsg, { role: 'assistant', content: '' }])
     setInput('')
@@ -892,16 +947,15 @@ export default function Page() {
 
       if (!res.ok) {
         if (res.status === 402) {
-          const data = await res.json().catch(() => ({}))
           setShowPricingModal(true)
-          throw new Error(data.error || 'Subscription required.')
+          throw new Error('Subscription required.')
         }
         if (res.status === 429) {
-          const data = await res.json().catch(() => ({}))
+          const data = await res.json()
           throw new Error(data.error || 'Rate limit exceeded. Please upgrade.')
         }
         if (res.status === 503) {
-          const data = await res.json().catch(() => ({}))
+          const data = await res.json()
           throw new Error(data.error || 'Service temporarily unavailable')
         }
         throw new Error(`Server error: ${res.status}`)
@@ -913,7 +967,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response.'
         return u
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err)
       setMessages((p) => {
         const u = [...p]
@@ -925,12 +979,12 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
-      setSelectedImage(compressed)
+      setSelectedImage(compressed as any)
     } catch (error) {
       console.error(error)
       alert('Failed to process image')
@@ -945,8 +999,7 @@ export default function Page() {
     )
   }
 
-  // NEW: any logged-in user gets the chat UI; subscription is enforced by the API
-  const canUseApp = !!session
+  const canUseApp = session && hasActiveSubscription
 
   return (
     <>
@@ -997,7 +1050,9 @@ export default function Page() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onSuccess={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false)
+        }}
       />
       <PricingModal
         isOpen={showPricingModal}
@@ -1007,16 +1062,23 @@ export default function Page() {
       />
 
       <div className="relative min-h-screen w-full overflow-hidden bg-white text-slate-900">
-        <div className={`relative z-10 flex flex-col h-[100dvh] ${isPollingSubscription ? 'pt-16' : ''}`}>
-          {/* HEADER */}
-          <header className="border-b border-slate-200 bg-white/80 backdrop-blur z-30">
+        <div
+          className={`relative z-10 flex flex-col min-h-screen ${
+            isPollingSubscription ? 'pt-16' : ''
+          }`}
+        >
+          <header className="border-b z-30 border-slate-200 bg-white/80 backdrop-blur">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-              <div
-                className={`font-semibold tracking-tight text-xl text-slate-900 ${outfit.className}`}
-              >
-                protocol
-                <span className="text-slate-500">LM</span>
+              <div className="flex items-center">
+                <div
+                  className={`font-semibold tracking-tight text-xl ${outfit.className} text-slate-900`}
+                >
+                  protocol
+                  <span className="text-slate-500">LM</span>
+                </div>
+                <DocumentPill />
               </div>
+
               <div className="flex items-center gap-4">
                 {!session ? (
                   <div className="flex items-center gap-2">
@@ -1047,7 +1109,7 @@ export default function Page() {
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
-                        className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold"
+                        className="w-9 h-9 rounded-full border flex items-center justify-center text-xs font-bold bg-slate-100 border-slate-200 text-slate-600"
                       >
                         {session.user.email[0].toUpperCase()}
                       </button>
@@ -1075,25 +1137,27 @@ export default function Page() {
             </div>
           </header>
 
-          {/* MAIN */}
-          <main className="flex-1 flex flex-col items-center justify-start w-full pb-20 md:pb-0 overflow-y-auto">
+          <main className="flex-1 flex flex-col items-center justify-start w-full">
             {!canUseApp ? (
               <LandingPage onShowPricing={() => setShowPricingModal(true)} />
             ) : (
               <>
-                {/* messages */}
-                <div className="flex-1 overflow-y-auto w-full py-8" ref={scrollRef}>
+                {/* messages area */}
+                <div
+                  className="flex-1 overflow-y-auto w-full py-6"
+                  ref={scrollRef}
+                >
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
-                        className={`text-slate-400 text-base max-w-md leading-relaxed ${inter.className}`}
+                        className={`text-slate-400 text-sm md:text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about the Michigan Food Code, Washtenaw enforcement, or upload a
-                        photo to check for violations.
+                        Ask about the Michigan Food Code, Washtenaw enforcement, or
+                        upload a photo to check for violations.
                       </p>
                     </div>
                   ) : (
-                    <div className="flex flex-col w-full max-w-4xl mx-auto py-8 px-6 gap-8">
+                    <div className="flex flex-col w-full max-w-4xl mx-auto py-6 px-6 gap-8">
                       {messages.map((msg, idx) => (
                         <div
                           key={idx}
@@ -1142,9 +1206,9 @@ export default function Page() {
                   )}
                 </div>
 
-                {/* INPUT BAR */}
-                <div className="w-full shrink-0 z-20 border-t border-slate-100 bg-white pt-4">
-                  <div className="w-full max-w-4xl mx-auto px-4 pb-8">
+                {/* input area – smaller, normal chat size on desktop & mobile */}
+                <div className="w-full shrink-0 z-20 border-t bg-white border-slate-100">
+                  <div className="w-full max-w-4xl mx-auto px-4 pt-4 pb-6">
                     {selectedImage && (
                       <div className="mb-3 mx-1 p-3 inline-flex items-center gap-3 rounded-lg shadow-sm border bg-white border-slate-200 text-slate-900">
                         <span className="text-sm font-semibold">Image attached</span>
@@ -1156,13 +1220,12 @@ export default function Page() {
                         </button>
                       </div>
                     )}
-
                     <div
-                      className={`
-                        relative flex items-center w-full p-2 rounded-xl shadow-sm
-                        border bg-white border-slate-300
+                      className="
+                        relative flex items-center w-full px-2.5 py-1.5 rounded-2xl shadow-sm
+                        border transition-all bg-white border-slate-300
                         focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900
-                      `}
+                      "
                     >
                       <input
                         type="file"
@@ -1174,11 +1237,10 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-10 h-10 flex items-center justify-center rounded-lg mb-1 ml-1 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg mr-2 bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all"
                       >
                         <Icons.Camera />
                       </button>
-
                       <textarea
                         ref={inputRef}
                         value={input}
@@ -1189,17 +1251,16 @@ export default function Page() {
                             handleSend(e)
                           }
                         }}
-                        placeholder="Ask about code sections, violations, or upload a photo..."
-                        className={`flex-1 max-h-[200px] min-h-[52px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed text-slate-900 placeholder-slate-400 ${inter.className}`}
-                        rows={2}
+                        placeholder="Ask about code sections, violations, or upload a photo"
+                        className={`flex-1 max-h-[160px] min-h-[40px] py-2 px-3 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-sm md:text-base leading-relaxed ${inter.className} text-slate-900 placeholder-slate-400`}
+                        rows={1}
                       />
-
                       <button
                         type="submit"
                         onClick={handleSend}
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 mr-1 transition-all duration-200 ${
-                          (!input.trim() && !selectedImage) || isSending
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ml-2 transition-all duration-200 ${
+                          !input.trim() && !selectedImage
                             ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
                             : 'bg-black text-white hover:bg-slate-900 shadow-md'
                         }`}
@@ -1211,13 +1272,12 @@ export default function Page() {
                         )}
                       </button>
                     </div>
-
                     <p
                       className={`mt-3 text-[11px] text-center text-slate-500 ${inter.className}`}
                     >
                       protocolLM uses AI and may make mistakes. Always confirm critical
-                      food safety decisions with official regulations and your local
-                      health department.
+                      food safety decisions with official regulations and your local health
+                      department.
                     </p>
                   </div>
                 </div>
