@@ -8,9 +8,12 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [linkError, setLinkError] = useState('')   // fatal: bad/expired link
-  const [formError, setFormError] = useState('')   // validation errors
+
+  // Fatal link problems (expired / invalid link)
+  const [fatalError, setFatalError] = useState('')
+  // Normal form errors (too short, mismatch, updateUser error)
+  const [formError, setFormError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [verifying, setVerifying] = useState(true)
 
   const router = useRouter()
@@ -19,17 +22,18 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // After /auth/callback runs, a valid recovery link should give us a session
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (!session) {
-          setLinkError('Invalid or expired reset link. Please request a new password reset.')
+          setFatalError(
+            'Invalid or expired reset link. Please request a new password reset.'
+          )
         }
       } catch (err) {
         console.error('Error checking session for reset:', err)
-        setLinkError('Failed to verify reset link. Please try again.')
+        setFatalError('Failed to verify reset link. Please try again.')
       } finally {
         setVerifying(false)
       }
@@ -41,8 +45,8 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
     setFormError('')
+    setSuccessMessage('')
 
     if (password.length < 8) {
       setFormError('Password must be at least 8 characters.')
@@ -57,9 +61,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      })
+      const { error: updateError } = await supabase.auth.updateUser({ password })
 
       if (updateError) {
         console.error('Update password error:', updateError)
@@ -68,10 +70,19 @@ export default function ResetPasswordPage() {
         return
       }
 
-      setMessage('Password updated successfully. Redirecting to home…')
+      setSuccessMessage(
+        'Password updated successfully. You can now log in with your new password.'
+      )
       setLoading(false)
 
-      // After successful reset, keep them signed in and send to home
+      // Clear the recovery session so they must log in explicitly
+      try {
+        await supabase.auth.signOut()
+      } catch (signOutError) {
+        console.error('Error signing out after password reset:', signOutError)
+      }
+
+      // Give them a moment to read the success message, then send to landing
       setTimeout(() => {
         router.push('/')
       }, 2000)
@@ -83,15 +94,13 @@ export default function ResetPasswordPage() {
   }
 
   const handleBackHome = async () => {
+    // Always sign out when leaving this flow so you never drop into chat from a reset link
     try {
-      // If we got here via a reset link, we likely have a session.
-      // Sign out so “Back to home” does NOT silently log them into chat.
       await supabase.auth.signOut()
     } catch (err) {
-      console.error('Error signing out from reset page:', err)
-    } finally {
-      router.push('/')
+      console.error('Error signing out on back to home:', err)
     }
+    router.push('/')
   }
 
   return (
@@ -104,32 +113,37 @@ export default function ResetPasswordPage() {
           Choose a new password to secure your account.
         </p>
 
-        {verifying && !linkError && (
+        {verifying && !fatalError && (
           <div className="mb-4 text-sm text-neutral-500 text-center">
             Verifying your reset link…
           </div>
         )}
 
-        {linkError && (
+        {fatalError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {linkError}
+            {fatalError}
           </div>
         )}
 
-        {formError && !linkError && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {formError}
-          </div>
+        {!fatalError && (
+          <>
+            {formError && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {formError}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+                {successMessage}
+              </div>
+            )}
+          </>
         )}
 
-        {message && (
-          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-            {message}
-          </div>
-        )}
-
-        {/* Show form only if link is valid and verification finished */}
-        {!verifying && !linkError && (
+        {/* If link is good and verification is done, keep the form visible
+            even when there are validation errors so they can retry */}
+        {!verifying && !fatalError && (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1.5">
