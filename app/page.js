@@ -133,8 +133,9 @@ const LandingPage = ({ onShowPricing, theme }) => {
             How it works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* subtle tracing animation: step 1 → 2 → 3 */}
             <div
-              className={`p-8 rounded-xl border ${
+              className={`how-step-card how-step-1 p-8 rounded-xl border ${
                 isDark
                   ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
@@ -161,7 +162,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             </div>
 
             <div
-              className={`p-8 rounded-xl border ${
+              className={`how-step-card how-step-2 p-8 rounded-xl border ${
                 isDark
                   ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
@@ -188,7 +189,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             </div>
 
             <div
-              className={`p-8 rounded-xl border ${
+              className={`how-step-card how-step-3 p-8 rounded-xl border ${
                 isDark
                   ? 'bg-black border-slate-800'
                   : 'bg-white border-slate-200'
@@ -538,7 +539,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
           <div className="border border-slate-200 rounded-xl p-6 bg-white">
             <div className="mb-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 mb-2">
-                Unlimited Access
+                Compliance Plan
               </p>
               <div className="flex items-baseline mb-2">
                 <span
@@ -551,24 +552,27 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </span>
               </div>
               <p className={`text-sm text-slate-600 mb-4 ${inter.className}`}>
-                Full access to compliance tools and resources.
+                Includes approximately{' '}
+                <span className="font-semibold">1,300 monthly compliance checks</span>{' '}
+                for a single restaurant. Text questions count as one check; photo analyses
+                count as two.
               </p>
               <ul className="space-y-2 text-sm text-slate-700">
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Unlimited text queries</span>
+                  <span>Text questions and photo analyses</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Unlimited image analyses</span>
+                  <span>Grounded in Washtenaw County guidance</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Washtenaw County guidance</span>
+                  <span>Michigan Food Code & local enforcement docs</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
-                  <span>Michigan Food Code access</span>
+                  <span>Designed for a single restaurant site license</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Icons.Check />
@@ -646,7 +650,7 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [theme, setTheme] = useState('light') // NEW: light/dark toggle
+  const [theme, setTheme] = useState('light') // light/dark toggle
 
   const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
@@ -1004,6 +1008,41 @@ export default function Page() {
         ::-webkit-scrollbar-thumb {
           background: rgba(0, 0, 0, 0.12);
           border-radius: 3px;
+        }
+        /* subtle "tracing" animation on How it works cards */
+        .how-step-card {
+          position: relative;
+          overflow: hidden;
+        }
+        .how-step-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          border: 1px solid transparent;
+          pointer-events: none;
+        }
+        @keyframes howStepHighlight {
+          0%,
+          55%,
+          100% {
+            opacity: 0;
+            border-color: transparent;
+          }
+          8%,
+          25% {
+            opacity: 1;
+            border-color: rgba(148, 163, 184, 0.9); /* slate-400ish */
+          }
+        }
+        .how-step-1::after {
+          animation: howStepHighlight 9s infinite;
+        }
+        .how-step-2::after {
+          animation: howStepHighlight 9s infinite 3s;
+        }
+        .how-step-3::after {
+          animation: howStepHighlight 9s infinite 6s;
         }
       `}</style>
 
