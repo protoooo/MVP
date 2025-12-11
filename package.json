@@ -11,30 +11,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ingest": "node scripts/ingest-documents.js",
+    "test-search": "node scripts/test-search.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.17.1",
-    "@react-three/drei": "^9.122.0",
-    "@react-three/fiber": "^8.18.0",
-    "@react-three/postprocessing": "^2.16.2",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.87.0",
-    "@types/three": "^0.181.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.6.1",
     "framer-motion": "^12.23.26",
-    "google-auth-library": "^10.5.0",
     "lucide-react": "^0.263.1",
     "next": "14.2.5",
-    "node-fetch": "^3.3.2",
     "openai": "^6.10.0",
     "pdf-parse": "^1.1.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stripe": "^14.10.0",
-    "three": "^0.181.2",
-    "vanta": "^0.5.24"
+    "stripe": "^14.10.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
