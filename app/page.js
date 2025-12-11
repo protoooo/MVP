@@ -192,7 +192,7 @@ const LandingPage = ({ onShowPricing, theme }) => {
             </div>
           </div>
 
-          {/* Three Evervault cards: Capture / Cross-check / Correct */}
+          {/* Three Evervault cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
             {/* 1. Capture */}
             <div
@@ -219,17 +219,16 @@ const LandingPage = ({ onShowPricing, theme }) => {
                 <EvervaultCard text="Capture" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
-                1. Capture
+                1. Turn any device into a health inspector
               </h3>
               <p
                 className={`text-sm leading-relaxed ${
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Turn any phone into a mini health inspector. 
-                  Snap a quick photo of your walk-in, prep line, or dish area. 
-                  protocolLM analyzes the image for potential violations using your local health-department rules.
-
+                Snap a quick photo of your walk-in, prep line, or dish area. protocolLM
+                analyzes the image for potential violations using your local
+                health-department rules.
               </p>
             </div>
 
@@ -258,15 +257,16 @@ const LandingPage = ({ onShowPricing, theme }) => {
                 <EvervaultCard text="Cross-check" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
-                2. Cross-check
+                2. We handle the rulebook, you see the risks
               </h3>
               <p
                 className={`text-sm leading-relaxed ${
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Compare what you see to the actual code. 
-                  Behind the scenes, protocolLM checks each image against local enforcement actions and the Michigan Food Code, so you don’t have to dig through PDFs or policy binders.
+                Behind the scenes, protocolLM checks each image against local enforcement
+                actions and the Michigan Food Code, so you don’t have to dig through PDFs
+                or policy binders.
               </p>
             </div>
 
@@ -295,15 +295,16 @@ const LandingPage = ({ onShowPricing, theme }) => {
                 <EvervaultCard text="Correct" />
               </div>
               <h3 className={`text-base font-semibold mb-1 ${outfit.className}`}>
-                3. Correct
+                3. Turn risk into a quick checklist
               </h3>
               <p
                 className={`text-sm leading-relaxed ${
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Fix issues before the inspector arrives. Get a clear list of likely violations plus practical corrective actions. 
-                  Turn every photo into a focused to-do list your team can handle before inspection day.
+                Get a clear list of likely violations plus practical corrective actions.
+                Turn every photo into a focused to-do list your team can handle before
+                inspection day.
               </p>
             </div>
           </div>
@@ -1407,7 +1408,7 @@ export default function Page() {
                           }
                         }}
                         placeholder="Ask about code sections, violations, or upload a photo..."
-                        className={`flex-1 max-h-[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed ${
+                        className={`flex-1 max-h=[200px] min-h-[44px] py-3 px-4 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-base leading-relaxed ${
                           inter.className
                         } ${
                           isDark
