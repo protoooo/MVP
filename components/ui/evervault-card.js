@@ -1,165 +1,192 @@
-// components/ui/evervault-card.js
 'use client';
 
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-export function EvervaultCard({ text, className }) {
-  const variant = (text || '').toLowerCase();
-
+// Simple bigger camera icon
+function CameraIcon({ className }) {
   return (
-    <div
-      className={cn(
-        'relative flex items-center justify-center w-full h-full rounded-3xl',
-        'border border-black/10 dark:border-white/15',
-        'bg-white dark:bg-black/40',
-        'overflow-hidden',
-        className
-      )}
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      {variant.includes('capture') && <CaptureAnimation />}
-      {variant.includes('cross') && <CrossCheckAnimation />}
-      {variant.includes('correct') && <CorrectAnimation />}
+      <rect x="3" y="7" width="18" height="12" rx="2" />
+      <path d="M9 7l1.2-2.2A1 1 0 0 1 11.1 4h1.8a1 1 0 0 1 .9.5L15 7" />
+      <circle cx="12" cy="13" r="3.4" />
+    </svg>
+  );
+}
 
-      {/* subtle vignette so it still feels “special” */}
-      <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-b from-black/[0.02] to-black/[0.08] dark:from-white/[0.03] dark:to-white/[0.08]" />
+// Document icon for Cross-check
+function DocumentIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="5" y="3.5" width="14" height="17" rx="2" />
+      <path d="M9 9h8" />
+      <path d="M9 12.5h6" />
+      <path d="M9 16h5" />
+    </svg>
+  );
+}
+
+// Checkmark icon for Correct
+function CheckIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 6.5L10.5 17 5 11.5" />
+    </svg>
+  );
+}
+
+function CaptureContent() {
+  return (
+    <div className="relative flex items-center justify-center h-full w-full">
+      {/* Camera with a little “snap” on first paint */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{
+          opacity: [0, 1, 1],
+          scale: [0.9, 1.05, 1],
+        }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+        className="relative flex items-center justify-center"
+      >
+        <CameraIcon className="w-12 h-12 text-neutral-900 dark:text-neutral-50" />
+
+        {/* Flash lines – only play once on load */}
+        <motion.span
+          className="absolute -top-3 left-1/2 -translate-x-1/2 h-px w-8 bg-white dark:bg-neutral-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        />
+        <motion.span
+          className="absolute top-1/2 -right-3 -translate-y-1/2 w-px h-8 bg-white dark:bg-neutral-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.4, delay: 0.18 }}
+        />
+        <motion.span
+          className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-px w-8 bg-white dark:bg-neutral-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.4, delay: 0.26 }}
+        />
+        <motion.span
+          className="absolute top-1/2 -left-3 -translate-y-1/2 w-px h-8 bg-white dark:bg-neutral-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.4, delay: 0.34 }}
+        />
+      </motion.div>
     </div>
   );
 }
 
-/* --- 1. CAPTURE: big camera + flash lines on load --- */
-
-function CaptureAnimation() {
+function CrossCheckContent() {
   return (
-    <div className="relative flex items-center justify-center">
-      {/* camera body */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="relative"
-      >
-        <div className="flex items-center gap-2 rounded-2xl border border-black/15 dark:border-white/25 bg-black/90 dark:bg-white/5 px-5 py-4">
-          {/* little indicator light */}
-          <div className="w-3 h-3 rounded-full bg-white/70 dark:bg-white" />
-          {/* big lens – about 2x the typical icon size */}
-          <div className="w-12 h-12 rounded-full border-2 border-white/85 flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-white/80 dark:bg-white" />
-          </div>
-        </div>
-      </motion.div>
+    <div className="relative flex items-center justify-center h-full w-full">
+      <DocumentIcon className="w-11 h-11 text-neutral-900 dark:text-neutral-50" />
 
-      {/* “flash” lines – play once on load */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: [0, 1, 0], scale: [0.8, 1, 1.05] }}
-        transition={{ duration: 0.9, delay: 0.25, ease: 'easeOut' }}
-        className="pointer-events-none absolute inset-0"
-      >
-        <FlashLine className="top-2 left-1/2 -translate-x-1/2" />
-        <FlashLine className="bottom-3 left-1/4" />
-        <FlashLine className="top-6 right-4" />
-      </motion.div>
-    </div>
-  );
-}
-
-function FlashLine({ className = '' }) {
-  return (
-    <div
-      className={cn(
-        'absolute h-5 w-[2px] rounded-full',
-        'bg-white/80 dark:bg-white',
-        className
-      )}
-    />
-  );
-}
-
-/* --- 2. CROSS-CHECK: document with scrolling/typing lines --- */
-
-function CrossCheckAnimation() {
-  return (
-    <motion.div
-      initial={{ y: 10, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="relative flex items-center justify-center"
-    >
-      <div className="relative rounded-2xl border border-black/12 dark:border-white/25 bg-black/90 dark:bg-white/5 px-5 py-4">
-        {/* document shape */}
-        <div className="w-16 h-20 rounded-xl border border-white/40 bg-white/5 flex flex-col px-3 py-3 gap-1.5 overflow-hidden">
-          {/* fake header */}
-          <div className="h-2.5 w-8 rounded-full bg-white/60" />
-          {/* scrolling lines */}
-          <ScrollingLine delay={0} widthClass="w-10" />
-          <ScrollingLine delay={0.12} widthClass="w-9" />
-          <ScrollingLine delay={0.24} widthClass="w-11" />
-          <ScrollingLine delay={0.36} widthClass="w-7" />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function ScrollingLine({ delay = 0, widthClass }) {
-  return (
-    <motion.div
-      initial={{ x: '-15%', opacity: 0.2 }}
-      animate={{ x: '15%', opacity: 0.9 }}
-      transition={{
-        repeat: Infinity,
-        repeatType: 'mirror',
-        duration: 1.4,
-        delay,
-        ease: 'easeInOut',
-      }}
-      className={cn(
-        'h-1.5 rounded-full bg-white/50',
-        widthClass
-      )}
-    />
-  );
-}
-
-/* --- 3. CORRECT: checkmark animation --- */
-
-function CorrectAnimation() {
-  return (
-    <motion.div
-      initial={{ scale: 0.85, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      className="relative flex items-center justify-center"
-    >
-      {/* outer circle */}
-      <div className="w-16 h-16 rounded-full border-2 border-emerald-400/90 dark:border-emerald-300/90 flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-400/10">
-        {/* animated checkmark */}
-        <motion.svg
-          viewBox="0 0 24 24"
-          className="w-9 h-9"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
-        >
-          <motion.path
-            d="M5 13.5L9.5 18 19 7"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            className="text-emerald-500 dark:text-emerald-300"
+      {/* “Text” lines sliding like scanning / reviewing */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="h-px w-12 rounded-full bg-neutral-400/70 dark:bg-neutral-500/80"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: [0, 1, 1, 0], x: [10, 0, -6, -6] }}
+            transition={{
+              duration: 1.3,
+              ease: 'easeInOut',
+              repeat: Infinity,
+              repeatDelay: 0.4,
+              delay: 0.12 * i,
+            }}
+            style={{ marginTop: i === 0 ? 0 : 4 }}
           />
-        </motion.svg>
+        ))}
       </div>
+    </div>
+  );
+}
 
-      {/* soft success glow */}
+function CorrectContent() {
+  return (
+    <div className="relative flex items-center justify-center h-full w-full">
+      {/* Soft green glow */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: [0, 0.5, 0], scale: [0.8, 1.15, 1.25] }}
-        transition={{ duration: 1.2, delay: 0.25 }}
-        className="pointer-events-none absolute w-24 h-24 rounded-full bg-emerald-400/10 blur-xl"
+        className="absolute w-16 h-16 rounded-full bg-emerald-500/25 blur-xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 1, 0.7] }}
+        transition={{ duration: 1.1, ease: 'easeOut' }}
       />
-    </motion.div>
+      {/* Circle + checkmark */}
+      <motion.div
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.65, ease: 'easeOut', delay: 0.1 }}
+        className="relative flex items-center justify-center"
+      >
+        <div className="w-12 h-12 rounded-full border border-emerald-500/80 dark:border-emerald-400/90 flex items-center justify-center bg-white dark:bg-neutral-900">
+          <CheckIcon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+export function EvervaultCard({ text, className }) {
+  const key = (text || '').toLowerCase();
+
+  let content;
+  if (key === 'capture') {
+    content = <CaptureContent />;
+  } else if (key === 'cross-check' || key === 'crosscheck') {
+    content = <CrossCheckContent />;
+  } else if (key === 'correct') {
+    content = <CorrectContent />;
+  } else {
+    // Fallback – shouldn’t really hit this
+    content = (
+      <div className="flex items-center justify-center h-full w-full">
+        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+          {text}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'relative flex items-center justify-center h-full w-full',
+        className
+      )}
+    >
+      {content}
+    </div>
   );
 }
