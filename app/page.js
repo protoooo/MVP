@@ -114,7 +114,7 @@ const DocumentPill = () => {
   )
 }
 
-const LandingPage = ({ onShowPricing }: { onShowPricing: () => void }) => {
+const LandingPage = ({ onShowPricing }) => {
   return (
     <div className="w-full relative z-10 min-h-full flex flex-col bg-white">
       <section className="relative border-b border-slate-200 bg-white">
@@ -263,11 +263,8 @@ const AuthModal = ({
   isOpen,
   onClose,
   onSuccess,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess?: () => void
 }) => {
+  
   const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -518,12 +515,8 @@ const PricingModal = ({
   onClose,
   onCheckout,
   loading,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onCheckout: (priceId: string | undefined, planName: 'monthly' | 'annual') => void
-  loading: 'monthly' | 'annual' | null
 }) => {
+
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[1000] bg-white/95 flex items-center justify-center p-4">
