@@ -3,18 +3,23 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-export function EvervaultCard({ text, className }) {
-  const key = (text || '').toLowerCase();
+export function EvervaultCard({ text, icon, className }) {
+  // normalize the text so "Cross-check", "crosscheck", etc all work
+  const key = (text || '').toLowerCase().trim();
 
   let visual = null;
+
   if (key === 'capture') {
     visual = <CaptureCardVisual />;
-  } else if (key === 'cross-check' || key === 'crosscheck') {
+  } else if (key === 'cross-check' || key === 'crosscheck' || key === 'cross check') {
     visual = <CrossCheckCardVisual />;
   } else if (key === 'correct') {
     visual = <CorrectCardVisual />;
+  } else if (icon) {
+    // safety net: if someone passes an icon prop again
+    visual = <div className="ev-shell ev-icon-only">{icon}</div>;
   } else {
-    // fallback – just show a neutral circle if text doesn't match
+    // last-resort fallback
     visual = (
       <div className="ev-shell">
         <div className="ev-fallback" />
@@ -31,7 +36,7 @@ export function EvervaultCard({ text, className }) {
     >
       {visual}
 
-      {/* Local scoped styles (no Tailwind config changes needed) */}
+      {/* Local scoped styles */}
       <style jsx>{`
         .ev-shell {
           position: relative;
@@ -40,21 +45,30 @@ export function EvervaultCard({ text, className }) {
           justify-content: center;
         }
 
+        /* ~80% bigger than your original 24px icons */
         .ev-icon {
-          width: 2.5rem;
-          height: 2.5rem;
-          color: #666;
-          stroke-width: 1.5;
+          width: 3rem;
+          height: 3rem;
+          color: #64748b;
+          stroke-width: 1.7;
+        }
+
+        /* if we ever use the icon prop again, size its SVG too */
+        .ev-icon-only :global(svg) {
+          width: 3rem;
+          height: 3rem;
+          color: #64748b;
+          stroke-width: 1.7;
         }
 
         .ev-fallback {
-          width: 1.8rem;
-          height: 1.8rem;
+          width: 1.5rem;
+          height: 1.5rem;
           border-radius: 9999px;
           border: 1px solid rgba(148, 163, 184, 0.4);
         }
 
-        /* CAPTURE – subtle camera snap */
+        /* CAPTURE – subtle camera snap + flash */
         .camera-icon {
           animation: cameraSnap 4s ease-in-out infinite;
         }
@@ -66,16 +80,16 @@ export function EvervaultCard({ text, className }) {
 
         .camera-flash {
           position: absolute;
-          inset: -20px;
-          border-radius: 50%;
+          inset: -18px;
+          border-radius: 9999px;
           background: radial-gradient(
             circle,
-            rgba(255, 255, 255, 0.4) 0%,
+            rgba(255, 255, 255, 0.55) 0%,
             rgba(255, 255, 255, 0) 60%
           );
           opacity: 0;
-          animation: flashBurst 4s ease-in-out infinite;
           pointer-events: none;
+          animation: flashBurst 4s ease-in-out infinite;
         }
 
         @keyframes cameraSnap {
@@ -126,7 +140,7 @@ export function EvervaultCard({ text, className }) {
           }
         }
 
-        /* CROSS-CHECK – minimal scanning lines */
+        /* CROSS-CHECK – scrolling review lines */
         .doc-lines {
           position: absolute;
           inset: 0;
@@ -193,7 +207,7 @@ export function EvervaultCard({ text, className }) {
           }
         }
 
-        /* CORRECT – clean checkmark draw */
+        /* CORRECT – animated checkmark draw */
         .check-shell {
           position: relative;
           display: flex;
