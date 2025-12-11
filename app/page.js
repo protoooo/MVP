@@ -561,14 +561,25 @@ export default function Page() {
     }
   }, [messages])
 
-  // Initial auth and subscription check
+  // Initial auth and subscription check with timeout
 useEffect(() => {
   let mounted = true
+  let timeoutId = null
+
   const init = async () => {
     try {
+      // Set a safety timeout - if loading takes more than 5 seconds, show the page anyway
+      timeoutId = setTimeout(() => {
+        if (mounted && isLoading) {
+          console.warn('⚠️ Auth check timeout, showing page')
+          setIsLoading(false)
+        }
+      }, 5000)
+
       const {
         data: { session: s },
       } = await supabase.auth.getSession()
+      
       if (!mounted) return
       setSession(s)
 
@@ -579,6 +590,7 @@ useEffect(() => {
           .eq('user_id', s.user.id)
           .in('status', ['active', 'trialing'])
           .maybeSingle()
+        
         let active = false
         if (s.user.email === ADMIN_EMAIL) {
           active = true
@@ -600,11 +612,20 @@ useEffect(() => {
     } catch (e) {
       console.error('Auth Init Error', e)
     } finally {
-      if (mounted) setIsLoading(false)
+      if (mounted) {
+        clearTimeout(timeoutId)
+        setIsLoading(false)
+      }
     }
   }
+  
   init()
 
+  return () => {
+    mounted = false
+    if (timeoutId) clearTimeout(timeoutId)
+  }
+}, [supabase, searchParams])
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
