@@ -25,6 +25,7 @@
     "dotenv": "^16.6.1",
     "google-auth-library": "^10.5.0",
     "lucide-react": "^0.263.1",
+    "motion": "^11.15.0",
     "next": "14.2.5",
     "node-fetch": "^3.3.2",
     "openai": "^6.10.0",
