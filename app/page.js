@@ -562,48 +562,48 @@ export default function Page() {
   }, [messages])
 
   // Initial auth and subscription check
-  useEffect(() => {
-    let mounted = true
-    const init = async () => {
-      try {
-        const {
-          data: { session: s },
-        } = await supabase.auth.getSession()
-        if (!mounted) return
-        setSession(s)
+useEffect(() => {
+  let mounted = true
+  const init = async () => {
+    try {
+      const {
+        data: { session: s },
+      } = await supabase.auth.getSession()
+      if (!mounted) return
+      setSession(s)
 
-        if (s) {
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('status, current_period_end, trial_end')
-            .eq('user_id', s.user.id)
-            .in('status', ['active', 'trialing'])
-            .maybeSingle()
-          let active = false
-          if (s.user.email === ADMIN_EMAIL) {
-            active = true
-          } else if (sub) {
-            const periodEnd = new Date(sub.current_period_end)
-            if (periodEnd > new Date()) active = true
-          }
-          setHasActiveSubscription(active)
-
-          // If user has active subscription and no pricing param, skip to chat
-          if (active && searchParams.get('showPricing') !== 'true') {
-            setShowPricingModal(false)
-          } else if (!active) {
-            setShowPricingModal(true)
-          }
-        } else {
-          setHasActiveSubscription(false)
+      if (s) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status, current_period_end, trial_end')
+          .eq('user_id', s.user.id)
+          .in('status', ['active', 'trialing'])
+          .maybeSingle()
+        let active = false
+        if (s.user.email === ADMIN_EMAIL) {
+          active = true
+        } else if (sub) {
+          const periodEnd = new Date(sub.current_period_end)
+          if (periodEnd > new Date()) active = true
         }
-      } catch (e) {
-        console.error('Auth Init Error', e)
-      } finally {
-        if (mounted) setIsLoading(false)
+        setHasActiveSubscription(active)
+
+        // If user has active subscription and no pricing param, skip to chat
+        if (active && searchParams.get('showPricing') !== 'true') {
+          setShowPricingModal(false)
+        } else if (!active) {
+          setShowPricingModal(true)
+        }
+      } else {
+        setHasActiveSubscription(false)
       }
+    } catch (e) {
+      console.error('Auth Init Error', e)
+    } finally {
+      if (mounted) setIsLoading(false)
     }
-    init()
+  }
+  init()
 
     const {
       data: { subscription },
