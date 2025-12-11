@@ -1,6 +1,6 @@
-// app/api/chat/route.js - Production-ready with enhanced security and confidence levels
+// app/api/chat/route.js - Production-ready with confidence levels and no rate limits
 import OpenAI from 'openai'
-import { checkAndIncrementUsage } from '@/lib/usage'
+import { logUsageForAnalytics } from '@/lib/usage'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -74,6 +74,20 @@ function validateImage(base64String) {
     throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
   }
   return cleanBase64
+}
+
+function extractConfidence(text) {
+  const match = text.match(/\[CONFIDENCE:\s*(HIGH|MODERATE|LOW)\]/i)
+  if (match) {
+    return {
+      confidence: match[1].toUpperCase(),
+      text: text.replace(match[0], '').trim()
+    }
+  }
+  return {
+    confidence: 'UNKNOWN',
+    text: text
+  }
 }
 
 export async function POST(req) {
@@ -216,7 +230,7 @@ export async function POST(req) {
 
       // Log usage (no limits enforced for unlimited plan)
       try {
-        await checkAndIncrementUsage(user.id, { isImage: !!imageBase64 })
+        await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
       } catch (err) {
         if (err.code === 'NO_SUBSCRIPTION' || err.code === 'SUB_EXPIRED') {
           return NextResponse.json(
@@ -224,7 +238,7 @@ export async function POST(req) {
             { status: 402 }
           )
         }
-        logger.error('Usage check failed', { requestId, error: err.message })
+        logger.error('Usage logging failed', { requestId, error: err.message })
       }
     }
 
@@ -304,7 +318,7 @@ export async function POST(req) {
       context = context.slice(0, MAX_CONTEXT_LENGTH)
     }
 
-    // IMPROVED System prompt with confidence levels
+    // System prompt with ENFORCED confidence levels
     const SYSTEM_PROMPT = `You are ProtocolLM, a food safety and inspection assistant focused on restaurants in Washtenaw County, Michigan.
 
 Your role:
@@ -313,18 +327,23 @@ Your role:
 - Help identify potential violations in facility photos
 - Offer corrective action recommendations
 
-CRITICAL: Confidence Levels
-You must ALWAYS express confidence levels when identifying potential violations. Never state violations as absolute certainty unless explicitly documented in the provided context.
+CRITICAL: Confidence Level Format (MANDATORY)
+You MUST start EVERY response with a confidence assessment using EXACTLY this format on the first line:
 
-Use this format:
-- HIGH CONFIDENCE (90-100%): Clear violation directly referenced in code/guidance with visible confirmation
-- MODERATE CONFIDENCE (60-89%): Likely violation based on code interpretation and visual evidence
-- LOW CONFIDENCE (30-59%): Possible concern that should be verified with local health department
-- UNCERTAIN (<30%): Cannot determine from image/information provided
+[CONFIDENCE: HIGH]
+or
+[CONFIDENCE: MODERATE]
+or
+[CONFIDENCE: LOW]
 
-Example responses:
-❌ BAD: "This is a temperature control violation."
-✅ GOOD: "MODERATE CONFIDENCE: This appears to be a potential temperature control violation based on visible condensation and placement, though the actual food temperature cannot be confirmed from the image."
+Then provide your answer. Use this rubric:
+- HIGH (90-100%): Clear violation directly referenced in code/guidance with visible confirmation
+- MODERATE (60-89%): Likely violation based on code interpretation and visual evidence
+- LOW (30-59%): Possible concern that should be verified with local health department
+
+Example format:
+[CONFIDENCE: MODERATE]
+Based on Michigan Food Code 3-501.16, this appears to be a potential temperature control violation...
 
 Guidelines:
 1. Base answers on provided regulatory context when available
@@ -332,11 +351,9 @@ Guidelines:
    - Code requirements (what the law says)
    - Local enforcement practices (how it is applied)
    - Best practices (recommended but not required)
-   - Your assessment confidence level
 3. When uncertain, direct users to contact Washtenaw County Health Department
 4. For images: describe only what is visible, do not speculate beyond what can be seen
 5. Be professional but clear - use plain language
-6. Always caveat image-based assessments with confidence levels
 
 Important limitations:
 - You are NOT a substitute for professional consultation
@@ -359,7 +376,7 @@ ${lastMessageText || '[No additional text provided. Base your answer on the imag
 
 ${imageBase64 ? `VISION DESCRIPTION OF CURRENT IMAGE:\n${searchTerms}` : ''}
 
-REMINDER: Include appropriate confidence levels (HIGH/MODERATE/LOW/UNCERTAIN) for any potential violations identified.`
+REMINDER: You MUST start your response with [CONFIDENCE: HIGH/MODERATE/LOW] on the first line.`
 
     logger.info('Generating response', { requestId })
 
@@ -379,10 +396,18 @@ REMINDER: Include appropriate confidence levels (HIGH/MODERATE/LOW/UNCERTAIN) fo
         timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
       ])
 
-      let text = result?.choices?.[0]?.message?.content || ''
-      text = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '')
+      let rawText = result?.choices?.[0]?.message?.content || ''
+      
+      // Extract confidence level
+      const { confidence, text } = extractConfidence(rawText)
+      
+      // Clean up text
+      const cleanText = text
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/`/g, '')
 
-      if (!text || text.length < 10) {
+      if (!cleanText || cleanText.length < 10) {
         throw new Error('Empty or invalid response from model')
       }
 
@@ -390,7 +415,8 @@ REMINDER: Include appropriate confidence levels (HIGH/MODERATE/LOW/UNCERTAIN) fo
       logger.info('Response generated successfully', {
         requestId,
         durationMs: duration,
-        responseLength: text.length
+        responseLength: cleanText.length,
+        confidence
       })
 
       // Save to database
@@ -404,14 +430,22 @@ REMINDER: Include appropriate confidence levels (HIGH/MODERATE/LOW/UNCERTAIN) fo
               content: lastMessageText,
               image: imageBase64 ? 'stored' : null,
             },
-            { chat_id: chatId, role: 'assistant', content: text },
+            { 
+              chat_id: chatId, 
+              role: 'assistant', 
+              content: cleanText,
+              metadata: { confidence }
+            },
           ])
         )
       }
 
       await Promise.allSettled(dbTasks)
 
-      return NextResponse.json({ message: text })
+      return NextResponse.json({ 
+        message: cleanText,
+        confidence: confidence
+      })
       
     } catch (genError) {
       logger.error('Generation failed', { requestId, error: genError.message })
