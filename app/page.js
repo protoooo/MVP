@@ -93,27 +93,82 @@ const LandingPage = ({ onShowPricing, theme }) => {
         }`}
       >
         <div className="max-w-6xl mx-auto px-6 py-20 flex flex-col items-center text-center">
-          <h1
-            className={`text-3xl md:text-[2.7rem] font-semibold tracking-tight leading-tight mb-4 ${
+          {/* smaller, tool-like copy instead of big header */}
+          <p
+            className={`text-xs md:text-sm mb-3 font-medium tracking-[0.18em] uppercase ${
+              inter.className
+            } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+          >
+            Food-safety compliance for Michigan food service
+          </p>
+
+          <p
+            className={`text-lg md:text-2xl font-semibold tracking-tight leading-snug mb-4 max-w-3xl ${
               outfit.className
             } ${isDark ? 'text-slate-50' : 'text-slate-900'}`}
           >
-            Spot Violations Before The Health Inspector
-          </h1>
+            Take photos to cross-check Washtenaw County and Michigan food-safety
+            regulations and spot likely violations before inspections.
+          </p>
+
           <p
-            className={`text-sm md:text-base max-w-xl leading-relaxed mb-10 ${
+            className={`text-sm md:text-base max-w-2xl leading-relaxed mb-8 ${
               inter.className
             } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
           >
-            Upload a photo or ask a question. protocolLM cross-checks the Michigan Food
-            Code and local Washtenaw guidance.
+            Upload a photo of your cooler, prep line, or dish area—or ask a question.
+            protocolLM compares what it sees against official{' '}
+            <span className="font-medium">Washtenaw County enforcement documents</span>{' '}
+            first, then the <span className="font-medium">Michigan Food Code</span>,
+            with FDA Food Code as a fallback.
           </p>
-          {/* same button in both themes: black background, white text */}
+
+          {/* Coverage pills */}
+          <div className="mb-10">
+            <p
+              className={`text-[11px] font-semibold tracking-[0.22em] uppercase mb-3 ${
+                inter.className
+              } ${isDark ? 'text-slate-500' : 'text-slate-500'}`}
+            >
+              Coverage
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <span
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium ${
+                  isDark
+                    ? 'bg-slate-50 text-slate-900'
+                    : 'bg-slate-900 text-slate-50'
+                }`}
+              >
+                Washtenaw County · Active
+              </span>
+              <span
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border ${
+                  isDark
+                    ? 'border-slate-700 text-slate-400'
+                    : 'border-slate-300 text-slate-600'
+                }`}
+              >
+                Wayne County · Coming 2026
+              </span>
+              <span
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium border ${
+                  isDark
+                    ? 'border-slate-700 text-slate-400'
+                    : 'border-slate-300 text-slate-600'
+                }`}
+              >
+                Oakland County · Coming 2026
+              </span>
+            </div>
+          </div>
+
+          {/* Primary CTA */}
           <button
             onClick={onShowPricing}
             className="bg-black hover:bg-slate-900 text-white text-xs font-semibold py-3.5 px-8 rounded-full uppercase tracking-[0.18em] shadow-sm transition-colors"
           >
-            Start 7-Day Free Trial
+            View pricing & usage
           </button>
         </div>
       </section>
@@ -156,8 +211,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Take a photo of your cooler, prep line, or 3-comp sink using any
-                smartphone.
+                Take a photo of your cooler, prep line, dish room, or 3-comp sink
+                using any smartphone, or ask a question about specific code sections.
               </p>
             </div>
 
@@ -176,15 +231,16 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   outfit.className
                 } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
               >
-                2. Process
+                2. Cross-check
               </h3>
               <p
                 className={`text-sm leading-relaxed ${
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Your question or image is analyzed against Michigan Food Code and
-                Washtenaw guidance.
+                protocolLM cross-checks your photo or question against Washtenaw County
+                enforcement documents first, then the Michigan Food Code, with FDA Food
+                Code used as a safety fallback.
               </p>
             </div>
 
@@ -203,15 +259,15 @@ const LandingPage = ({ onShowPricing, theme }) => {
                   outfit.className
                 } ${isDark ? 'text-slate-100' : 'text-slate-900'}`}
               >
-                3. Review
+                3. Correct
               </h3>
               <p
                 className={`text-sm leading-relaxed ${
                   inter.className
                 } ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
               >
-                Receive a structured summary of likely violations and corrective
-                guidance.
+                Receive a structured summary of likely violations and practical
+                corrective actions so you can address issues before the next inspection.
               </p>
             </div>
           </div>
@@ -229,7 +285,8 @@ const LandingPage = ({ onShowPricing, theme }) => {
             inter.className
           } ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
         >
-          Serving Washtenaw County Food Service Establishments
+          Currently serving Washtenaw County food service establishments. Additional
+          southeast Michigan counties planned for 2026.
         </p>
         <div
           className={`flex justify-center gap-6 mb-6 text-sm font-medium ${
@@ -407,7 +464,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                       strokeWidth="2"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8s-4 8-11 8-11-8-11-8z" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
@@ -1360,7 +1417,7 @@ export default function Page() {
                           !input.trim() && !selectedImage
                             ? 'bg-slate-100 text-slate-300 cursor-not-allowed'
                             : isDark
-                            ? 'bg-slate-50 text-slate-900 hover:bg-white shadow-md'
+                            ? 'bg-slate-50 text-slate-900 hover:bg-white shift-md'
                             : 'bg-black text-white hover:bg-slate-900 shadow-md'
                         }`}
                       >
