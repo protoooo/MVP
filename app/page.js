@@ -140,7 +140,7 @@ function LandingPage({ onShowPricing }) {
               style={{
                 animationDelay: c.delay,
                 // custom tint per card for “translucent plastic” vibe
-                ['--glass-tint' as any]: c.tint,
+                ['--glass-tint']: c.tint,
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -464,10 +464,6 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
-  // Keeps the chat perfectly fit in the viewport (ChatGPT/Claude-style):
-  // - no double-100vh containers
-  // - internal scroll only in the message list
-  // - auto-scroll only when user is already near bottom
   const shouldAutoScrollRef = useRef(true)
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -479,7 +475,7 @@ export default function Page() {
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
-    const threshold = 120 // px from bottom
+    const threshold = 120
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
@@ -763,11 +759,7 @@ export default function Page() {
           position: relative;
         }
 
-        /* Subtle “N64 palette everywhere” without looking like a toy:
-           - very low-opacity spectral glows
-           - a tiny prism wash
-           - keep UI surfaces clean & readable
-        */
+        /* Subtle “N64 palette everywhere” without looking like a toy */
         body.n64-glass-bg::before {
           content: '';
           position: fixed;
@@ -958,7 +950,7 @@ export default function Page() {
           mix-blend-mode: soft-light;
         }
 
-        /* Buttons: clearer/less “smoky”, more Apple liquid glass */
+        /* Buttons: clearer, more see-through liquid glass */
         .n64-liquid-cta {
           color: rgba(15, 23, 42, 0.92);
           border: 2px solid rgba(94, 234, 212, 0.55);
@@ -1038,7 +1030,6 @@ export default function Page() {
           mix-blend-mode: soft-light;
         }
 
-        /* varied subtle card motion */
         @keyframes cardDriftA {
           0%,
           100% {
@@ -1093,7 +1084,6 @@ export default function Page() {
             transform: scale(0.95);
           }
         }
-
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -1104,7 +1094,6 @@ export default function Page() {
             transform: translateY(0);
           }
         }
-
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -1115,7 +1104,6 @@ export default function Page() {
             transform: translateY(0);
           }
         }
-
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1124,7 +1112,6 @@ export default function Page() {
             opacity: 1;
           }
         }
-
         @keyframes shimmer {
           0% {
             background-position: -100% 0;
@@ -1133,7 +1120,6 @@ export default function Page() {
             background-position: 200% 0;
           }
         }
-
         @keyframes float {
           0%,
           100% {
@@ -1143,7 +1129,6 @@ export default function Page() {
             transform: translateY(-4px);
           }
         }
-
         @keyframes ripple {
           0% {
             box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4), 0 0 0 0 rgba(20, 184, 166, 0.4);
@@ -1159,15 +1144,12 @@ export default function Page() {
         .animate-slide-up {
           animation: slideUp 0.3s ease-out;
         }
-
         .animate-slide-down {
           animation: slideDown 0.3s ease-out;
         }
-
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out;
         }
-
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
@@ -1175,7 +1157,6 @@ export default function Page() {
         .hover-lift {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .hover-lift:hover {
           transform: translateY(-2px);
         }
@@ -1238,7 +1219,7 @@ export default function Page() {
             </div>
 
             <div className="flex items-center gap-3">
-              {!isAuthenticated ? (
+              {!session ? (
                 <>
                   <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-slate-700 hover:text-slate-950 ${inter.className}`}>
                     Sign in
