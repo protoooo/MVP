@@ -74,13 +74,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    setLoading(true)
-    setMessage('')
+  const handleSubmit = async (e) => {
+  if (e) e.preventDefault()
+  setLoading(true)
+  setMessage('')
 
-    try {
-      const captchaToken = await executeRecaptcha(mode)
+  try {
+    const captchaToken = await executeRecaptcha(mode)
 
       if (!captchaToken) {
         setMessage('Error: security verification failed.')
