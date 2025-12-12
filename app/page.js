@@ -22,9 +22,9 @@ const Icons = {
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
-  Check: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polyline points="20 6 9 17 4 12" />
+  ArrowUp: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+      <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
@@ -33,21 +33,9 @@ const Icons = {
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Plus: () => (
+  Check: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  ),
-  ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24">
-      <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Settings: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   LogOut: () => (
@@ -57,111 +45,108 @@ const Icons = {
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
-  Clock: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
+  Settings: () => (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
 }
 
-const LandingPage = ({ onShowPricing }) => {
+function LandingPage({ onShowPricing }) {
   return (
-    <section className="flex-1 flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-8 pb-20">
-        <div className="max-w-3xl w-full text-center space-y-5">
-          <p
-            className={`text-xs font-semibold tracking-[0.27em] uppercase text-teal-700 ${inter.className}`}
-          >
-            Washtenaw County · Live
-          </p>
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
+      <div className="max-w-3xl w-full text-center space-y-8">
+        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-teal-300/60 bg-white/70 shadow-[0_8px_30px_rgba(15,118,110,0.15)] backdrop-blur-sm text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-800">
+          protocolLM · restaurant compliance console
+        </div>
+
+        <div className="space-y-4">
           <h1
-            className={`text-2xl sm:text-3xl md:text-4xl font-semibold text-slate-900 leading-tight md:leading-snug ${outfit.className} [text-wrap:balance]`}
+            className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-900 ${outfit.className}`}
           >
             Spot violations before the health inspector.
           </h1>
-          <p className={`text-sm sm:text-base text-slate-600 leading-relaxed ${inter.className}`}>
-            ProtocolLM watches your food safety the way you watch sales – in real time,
-            grounded in local enforcement actions and the Michigan Food Code. Wayne and
-            Oakland County support scheduled for 2026.
+          <p className={`text-sm sm:text-base text-slate-600 ${inter.className}`}>
+            Built for GMs and owners who want fewer surprises on inspection day.
+            Ask about Michigan Food Code sections, past Washtenaw enforcement, or
+            upload a photo of your walk-in or line to scan for likely issues.
           </p>
-        </div>
-
-        <div className="mt-10 max-w-4xl w-full space-y-6">
-          {/* glassy three-up explainer – still GM-friendly */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-2xl border border-teal-300/60 bg-white/70 backdrop-blur-xl shadow-[0_18px_40px_rgba(15,118,110,0.18)] p-5 text-left">
-              <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-teal-700 mb-2">
-                Capture
-              </p>
-              <p className={`text-sm font-semibold text-slate-900 mb-2 ${outfit.className}`}>
-                Turn any device into a health inspector
-              </p>
-              <p className={`text-xs sm:text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                Snap a quick photo of your walk-in, prep line, or dish area. ProtocolLM
-                flags likely issues using your local health-department rules.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-teal-300/60 bg-white/70 backdrop-blur-xl shadow-[0_18px_40px_rgba(15,118,110,0.18)] p-5 text-left">
-              <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-teal-700 mb-2">
-                Rulebook
-              </p>
-              <p className={`text-sm font-semibold text-slate-900 mb-2 ${outfit.className}`}>
-                We handle the code, you see the risk
-              </p>
-              <p className={`text-xs sm:text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                Behind the scenes, ProtocolLM reads the Michigan Food Code and Washtenaw
-                enforcement history so your team isn’t hunting through PDFs.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-teal-300/60 bg-white/70 backdrop-blur-xl shadow-[0_18px_40px_rgba(15,118,110,0.18)] p-5 text-left">
-              <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-teal-700 mb-2">
-                Checklist
-              </p>
-              <p className={`text-sm font-semibold text-slate-900 mb-2 ${outfit.className}`}>
-                Turn risk into a quick checklist
-              </p>
-              <p className={`text-xs sm:text-sm text-slate-600 leading-relaxed ${inter.className}`}>
-                Get a clear list of likely violations and corrective actions your shift can
-                knock out before the inspector walks in.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              onClick={onShowPricing}
-              className={`glass-button px-8 py-3 rounded-full text-[11px] font-semibold uppercase tracking-[0.2em] ${inter.className}`}
-            >
-              Sign up · Compliance access
-            </button>
-          </div>
-        </div>
-
-        <footer className="mt-10 text-center space-y-3">
           <p className={`text-xs text-slate-500 ${inter.className}`}>
-            Serving Washtenaw County food service establishments
+            Focused on <span className="font-medium text-slate-700">Washtenaw County</span>{' '}
+            today. Wayne and Oakland County support planned for 2026.
           </p>
-          <div className="flex justify-center gap-6 text-xs font-medium text-slate-500">
-            <Link href="/terms" className="hover:text-slate-800 transition-colors">
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+          <div className="rounded-2xl border border-teal-200/80 bg-white/80 backdrop-blur-sm shadow-[0_18px_40px_rgba(15,118,110,0.15)] p-4">
+            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-700 mb-3">
+              <span>Capture</span>
+              <span className="text-teal-500">Online</span>
+            </div>
+            <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+              Snap your walk-in, prep line, or dish area. protocolLM turns photos into a
+              quick risk scan using local rules instead of guesswork.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-teal-200/80 bg-white/80 backdrop-blur-sm shadow-[0_18px_40px_rgba(15,118,110,0.15)] p-4">
+            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-700 mb-3">
+              <span>Rulebook</span>
+              <span className="text-teal-500">Synced</span>
+            </div>
+            <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+              Answers pull from the Michigan Food Code and Washtenaw enforcement
+              history, so your team doesn&apos;t have to dig through PDFs.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-teal-200/80 bg-white/80 backdrop-blur-sm shadow-[0_18px_40px_rgba(15,118,110,0.15)] p-4">
+            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-700 mb-3">
+              <span>Checklist</span>
+              <span className="text-teal-500">Ready</span>
+            </div>
+            <p className={`text-xs text-slate-600 leading-relaxed ${inter.className}`}>
+              Turn flagged risks into a short action list your closers or AM can knock
+              out before the inspector walks in.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onShowPricing}
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-teal-500 text-white text-xs font-semibold tracking-[0.2em] uppercase shadow-[0_14px_30px_rgba(20,184,166,0.45)] hover:bg-teal-600 active:scale-[0.98] transition-all"
+        >
+          <Icons.Check />
+          Sign up · Compliance access
+        </button>
+
+        <footer className="pt-4 text-xs text-slate-500">
+          <p className={`mb-2 ${inter.className}`}>
+            Serving Washtenaw County food service establishments.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/terms" className="hover:text-slate-800">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-slate-800 transition-colors">
+            <Link href="/privacy" className="hover:text-slate-800">
               Privacy
             </Link>
-            <Link href="/contact" className="hover:text-slate-800 transition-colors">
+            <Link href="/contact" className="hover:text-slate-800">
               Contact
             </Link>
           </div>
         </footer>
       </div>
-    </section>
+    </div>
   )
 }
 
-const AuthModal = ({ isOpen, onClose, onSuccess }) => {
+function AuthModal({ isOpen, onClose }) {
   const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -172,15 +157,15 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault()
+    if (loading) return
+
     setLoading(true)
     setMessage('')
 
     try {
       const captchaToken = await executeRecaptcha(mode)
-
       if (!captchaToken) {
-        setMessage('Security verification failed. Please try again.')
-        setLoading(false)
+        setMessage('Error: Security verification failed. Please try again.')
         return
       }
 
@@ -194,36 +179,41 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
       }
 
-      const response = await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
-      const data = await response.json()
+      const data = await res.json().catch(() => ({}))
 
-      if (!response.ok) {
+      if (!res.ok) {
         setMessage(`Error: ${data.error || 'Authentication failed'}`)
-        setLoading(false)
         return
       }
 
       if (mode === 'reset') {
         setMessage('✓ Check your email for password reset instructions.')
-        setTimeout(() => setMode('signin'), 2000)
-      } else if (mode === 'signup') {
-        setMessage('✓ Account created! Check your email to verify.')
-        setTimeout(() => setMode('signin'), 2000)
-      } else {
-        setMessage('✓ Signing in...')
         setTimeout(() => {
-          if (onSuccess) onSuccess()
-          window.location.href = '/'
-        }, 900)
+          setMode('signin')
+          setMessage('')
+        }, 2200)
+      } else if (mode === 'signup') {
+        setMessage('✓ Account created. Check your email to verify.')
+        setTimeout(() => {
+          setMode('signin')
+          setMessage('')
+        }, 2200)
+      } else {
+        setMessage('✓ Signed in. Redirecting…')
+        setTimeout(() => {
+          onClose()
+          // onAuthStateChange in the main component will flip the UI to chat
+        }, 600)
       }
     } catch (error) {
       console.error('Auth error:', error)
-      setMessage('Error: unexpected issue. Please try again.')
+      setMessage('Error: Unexpected issue. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -233,67 +223,69 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-teal-300/70 bg-white/80 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,118,110,0.35)] p-8"
+        className="w-full max-w-md rounded-2xl border border-teal-200/70 bg-white/90 shadow-[0_22px_55px_rgba(15,118,110,0.45)] p-7"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex items-start justify-between mb-6">
           <div>
             <h2
-              className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
+              className={`text-lg font-semibold text-slate-900 tracking-tight mb-1 ${outfit.className}`}
             >
-              {mode === 'signin' && 'Sign in to ProtocolLM'}
+              {mode === 'signin' && 'Sign in to protocolLM'}
               {mode === 'signup' && 'Create your account'}
               {mode === 'reset' && 'Reset your password'}
             </h2>
-            <p className={`text-sm text-slate-600 ${inter.className}`}>
-              {mode === 'signin' && 'Use the email you’ll use for inspections and line checks.'}
-              {mode === 'signup' && 'One login per restaurant site license.'}
-              {mode === 'reset' && "We'll send you a reset link."}
+            <p className={`text-xs text-slate-600 ${inter.className}`}>
+              {mode === 'signin' && 'Use your work email to continue.'}
+              {mode === 'signup' && 'Best with an owner / GM email for your site.'}
+              {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100"
+            className="rounded-full p-1.5 bg-slate-100 text-slate-500 hover:bg-slate-200"
           >
             <Icons.X />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">
+              Email address
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
               placeholder="gm@restaurant.com"
               required
-              className="w-full rounded-lg border border-slate-300 bg-white/70 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500"
-            </input>
+              className="w-full rounded-lg border border-slate-300 bg-white/80 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-500"
+            />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white/70 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/80 focus:border-teal-500"
+                  className="w-full rounded-lg border border-slate-300 bg-white/80 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -304,14 +296,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             type="submit"
             disabled={loading || !isLoaded}
-            className={`glass-button w-full py-2.5 rounded-lg text-[11px] font-semibold uppercase tracking-[0.2em] ${
-              !isLoaded || loading ? 'opacity-70 cursor-not-allowed' : ''
-            }`}
+            className="w-full mt-2 inline-flex items-center justify-center rounded-full bg-teal-500 text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 shadow-[0_16px_34px_rgba(20,184,166,0.55)] hover:bg-teal-600 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading
-              ? 'Processing...'
-              : !isLoaded
-              ? 'Loading...'
+              ? 'Processing…'
               : mode === 'signin'
               ? 'Sign in'
               : mode === 'signup'
@@ -322,32 +310,32 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
         {message && (
           <div
-            className={`mt-4 rounded-lg border px-3 py-2 text-xs ${
+            className={`mt-4 text-xs rounded-lg px-3 py-2 border ${
               message.startsWith('Error')
-                ? 'border-red-300 bg-red-50 text-red-800'
-                : 'border-teal-300 bg-teal-50 text-teal-800'
+                ? 'bg-red-50 border-red-200 text-red-700'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
             }`}
           >
             {message}
           </div>
         )}
 
-        <div className="mt-5 text-center space-y-1.5 text-sm">
+        <div className="mt-4 text-center space-y-1 text-xs text-slate-600">
           {mode === 'signin' && (
             <>
               <button
                 type="button"
                 onClick={() => setMode('reset')}
-                className="block w-full text-slate-600 hover:text-slate-900"
+                className="block w-full text-teal-700 hover:text-teal-800"
               >
                 Forgot password?
               </button>
               <button
                 type="button"
                 onClick={() => setMode('signup')}
-                className="text-teal-700 font-semibold hover:underline"
+                className="block w-full text-slate-600 hover:text-slate-800"
               >
-                Need an account? Sign up
+                Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
@@ -355,16 +343,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={() => setMode('signin')}
-              className="text-slate-600 hover:text-slate-900"
+              className="text-slate-600 hover:text-slate-800"
             >
-              Already have an account? Sign in
+              Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
             <button
               type="button"
               onClick={() => setMode('signin')}
-              className="text-slate-600 hover:text-slate-900"
+              className="text-slate-600 hover:text-slate-800"
             >
               Back to sign in
             </button>
@@ -377,90 +365,95 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   )
 }
 
-const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
+function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] bg-slate-900/35 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-xl rounded-2xl border border-teal-300/70 bg-white/85 backdrop-blur-xl shadow-[0_24px_60px_rgba(15,118,110,0.35)] p-8 md:p-9">
+    <div
+      className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl border border-teal-200/80 bg-white/95 shadow-[0_26px_60px_rgba(15,118,110,0.5)] p-7"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 rounded-full p-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100"
+          className="absolute right-7 top-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 p-1.5"
         >
           <Icons.X />
         </button>
 
         <div className="mb-6 text-center">
           <p
-            className={`text-[11px] font-semibold tracking-[0.27em] uppercase text-teal-700 mb-2 ${inter.className}`}
+            className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-700 mb-2 ${outfit.className}`}
           >
-            ProtocolLM · Site license
+            protocolLM
           </p>
-          <p
-            className={`text-lg md:text-xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}
+          <h3
+            className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
           >
-            Compliance plan
-          </p>
-          <p className={`mt-1 text-sm text-slate-600 ${inter.className}`}>
-            Built for a single restaurant. Unlimited users on your team.
+            Compliance access
+          </h3>
+          <p className={`text-sm text-slate-600 ${inter.className}`}>
+            One site license per restaurant. 7-day free trial included.
           </p>
         </div>
 
-        <div className="max-w-md mx-auto">
-          <div className="rounded-2xl border border-teal-300/70 bg-white/80 p-6 space-y-4">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span
-                  className={`text-4xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}
-                >
-                  $100
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  / month
-                </span>
-              </div>
-              <p className={`mt-2 text-sm text-slate-600 ${inter.className}`}>
-                Includes roughly <span className="font-semibold">1,300 monthly checks</span>{' '}
-                for one location. Text questions count as one check; photo analyses count
-                as two.
-              </p>
-            </div>
-
-            <ul className="text-sm text-slate-700 space-y-1.5">
-              <li className="flex gap-2 items-start">
-                <Icons.Check />
-                <span>Questions about Michigan Food Code &amp; local guidance</span>
-              </li>
-              <li className="flex gap-2 items-start">
-                <Icons.Check />
-                <span>Image checks for walk-ins, prep lines, and service areas</span>
-              </li>
-              <li className="flex gap-2 items-start">
-                <Icons.Check />
-                <span>Designed for a single restaurant site license</span>
-              </li>
-            </ul>
-
-            <div className="space-y-3 pt-2">
-              <button
-                onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-                disabled={!!loading && loading !== 'monthly'}
-                className={`glass-button w-full py-3 rounded-lg text-[11px] font-semibold uppercase tracking-[0.2em] ${
-                  loading && loading !== 'monthly' ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+        <div className="rounded-2xl border border-teal-200/80 bg-white/90 p-5 space-y-4">
+          <div>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span
+                className={`text-3xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}
               >
-                {loading === 'monthly' ? 'Starting checkout…' : 'Start monthly access'}
-              </button>
-              <button
-                onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-                disabled={!!loading && loading !== 'annual'}
-                className={`w-full py-3 rounded-lg text-[11px] font-semibold uppercase tracking-[0.2em] border border-teal-400/70 text-teal-800 bg-teal-50/70 hover:bg-teal-100/80 transition-colors ${
-                  loading && loading !== 'annual' ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading === 'annual' ? 'Starting checkout…' : 'Annual · Save 15%'}
-              </button>
+                $100
+              </span>
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                / month
+              </span>
             </div>
+            <p className={`text-xs text-slate-600 ${inter.className}`}>
+              Includes roughly{' '}
+              <span className="font-semibold text-slate-800">1,300 monthly checks</span>{' '}
+              for a single restaurant. Text questions count as one check; photo analyses
+              count as two.
+            </p>
+          </div>
+
+          <ul className="text-xs text-slate-700 space-y-2">
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>Text questions and photo uploads</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>Grounded in Michigan Food Code &amp; Washtenaw guidance</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>Built for one restaurant site license</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>7-day free trial · cancel anytime</span>
+            </li>
+          </ul>
+
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+              disabled={!!loading && loading !== 'monthly'}
+              className="w-full inline-flex items-center justify-center rounded-full bg-teal-500 text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 shadow-[0_18px_40px_rgba(20,184,166,0.6)] hover:bg-teal-600 active:scale-[0.98] disabled:opacity-60"
+            >
+              {loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}
+            </button>
+            <button
+              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+              disabled={!!loading && loading !== 'annual'}
+              className="w-full inline-flex items-center justify-center rounded-full border border-dashed border-teal-400 bg-white text-[11px] font-semibold tracking-[0.22em] uppercase text-teal-800 py-3 hover:bg-teal-50 active:scale-[0.98] disabled:opacity-60"
+            >
+              {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
+            </button>
           </div>
         </div>
       </div>
@@ -468,255 +461,164 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   )
 }
 
-const SubscriptionPollingBanner = () => (
-  <div className="fixed top-0 left-0 right-0 z-40 bg-teal-50/95 border-b border-teal-200 px-4 py-2">
-    <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <Icons.Clock />
-        <p className="text-xs font-medium text-teal-900">
-          Activating your subscription… usually just a few seconds.
-        </p>
-      </div>
-      <div className="flex gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-bounce" />
-        <div
-          className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-bounce"
-          style={{ animationDelay: '0.08s' }}
-        />
-        <div
-          className="w-1.5 h-1.5 rounded-full bg-teal-600 animate-bounce"
-          style={{ animationDelay: '0.16s' }}
-        />
-      </div>
-    </div>
-  </div>
-)
-
 export default function Page() {
+  const [supabase] = useState(() => createClient())
+  const router = useRouter()
   const searchParams = useSearchParams()
+
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
+
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
-  const [isPollingSubscription, setIsPollingSubscription] = useState(false)
+
   const [currentChatId, setCurrentChatId] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
+
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const fileInputRef = useRef(null)
   const scrollRef = useRef(null)
-  const inputRef = useRef(null)
+  const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
-  const pollIntervalRef = useRef(null)
 
-  const [supabase] = useState(() => createClient())
-  const router = useRouter()
-
-  // close user menu on outside click
+  // Global glassy / light theme
   useEffect(() => {
-    function handleClickOutside(event) {
+    if (typeof document === 'undefined') return
+    document.body.classList.add('bg-sky-50')
+    return () => {
+      document.body.classList.remove('bg-sky-50')
+    }
+  }, [])
+
+  // Close user menu on outside click
+  useEffect(() => {
+    function handleClick(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // keep chat scrolled to bottom
+  // Scroll chat to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
 
-  // initial auth + subscription check
+  // Initial auth + subscription check
   useEffect(() => {
-    let mounted = true
-    let timeoutId = null
+    let isMounted = true
 
-    const init = async () => {
+    async function loadSessionAndSub(s) {
+      if (!isMounted) return
+      setSession(s)
+
+      if (!s) {
+        setHasActiveSubscription(false)
+        setShowPricingModal(false)
+        setIsLoading(false)
+        return
+      }
+
+      let active = false
       try {
-        timeoutId = setTimeout(() => {
-          if (mounted && isLoading) {
-            console.warn('Auth check timeout, showing page')
-            setIsLoading(false)
-          }
-        }, 5000)
-
-        const {
-          data: { session: s },
-        } = await supabase.auth.getSession()
-
-        if (!mounted) return
-        setSession(s)
-
-        if (s) {
+        if (s.user.email === ADMIN_EMAIL) {
+          active = true
+        } else {
           const { data: sub } = await supabase
             .from('subscriptions')
-            .select('status, current_period_end')
+            .select('status,current_period_end')
             .eq('user_id', s.user.id)
             .in('status', ['active', 'trialing'])
             .maybeSingle()
 
-          let active = false
-          if (s.user.email === ADMIN_EMAIL) {
-            active = true
-          } else if (sub) {
-            const periodEnd = new Date(sub.current_period_end)
-            if (periodEnd > new Date()) active = true
+          if (sub && sub.current_period_end) {
+            const end = new Date(sub.current_period_end)
+            if (end > new Date()) active = true
           }
-          setHasActiveSubscription(active)
-        } else {
-          setHasActiveSubscription(false)
         }
       } catch (e) {
+        console.error('Subscription check error', e)
+      }
+
+      if (!isMounted) return
+      setHasActiveSubscription(active)
+      // If logged in but not active, we still show chat, just keep pricing handy
+      if (!active && searchParams.get('payment') === 'success') {
+        // Just finished checkout but Stripe might still be syncing – keep modal available
+        setShowPricingModal(false)
+      }
+      setIsLoading(false)
+    }
+
+    async function init() {
+      try {
+        const { data } = await supabase.auth.getSession()
+        await loadSessionAndSub(data.session || null)
+      } catch (e) {
         console.error('Auth init error', e)
-      } finally {
-        if (mounted) {
-          if (timeoutId) clearTimeout(timeoutId)
-          setIsLoading(false)
-        }
+        if (isMounted) setIsLoading(false)
       }
     }
 
     init()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession)
-      if (newSession) {
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status, current_period_end')
-          .eq('user_id', newSession.user.id)
-          .in('status', ['active', 'trialing'])
-          .maybeSingle()
-
-        let active = false
-        if (newSession.user.email === ADMIN_EMAIL) {
-          active = true
-        } else if (sub) {
-          const periodEnd = new Date(sub.current_period_end)
-          if (periodEnd > new Date()) active = true
-        }
-        setHasActiveSubscription(active)
-      } else {
-        setHasActiveSubscription(false)
-      }
+    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      loadSessionAndSub(newSession)
     })
 
     return () => {
-      mounted = false
-      if (timeoutId) clearTimeout(timeoutId)
-      subscription.unsubscribe()
+      isMounted = false
+      data.subscription?.unsubscribe()
     }
-  }, [supabase, isLoading])
-
-  // poll Stripe after returning from checkout
-  useEffect(() => {
-    if (!session) return
-
-    const paymentStatus = searchParams.get('payment')
-    if (paymentStatus !== 'success') return
-
-    if (hasActiveSubscription) {
-      router.replace('/')
-      return
-    }
-
-    setIsPollingSubscription(true)
-    let pollCount = 0
-    const maxPolls = 12
-
-    const pollSubscription = async () => {
-      pollCount++
-
-      try {
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status, current_period_end')
-          .eq('user_id', session.user.id)
-          .in('status', ['active', 'trialing'])
-          .maybeSingle()
-
-        if (sub) {
-          const periodEnd = new Date(sub.current_period_end)
-          if (periodEnd > new Date()) {
-            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-            setIsPollingSubscription(false)
-            setHasActiveSubscription(true)
-            setShowPricingModal(false)
-            router.replace('/')
-          }
-        } else if (pollCount >= maxPolls) {
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-          setIsPollingSubscription(false)
-          alert(
-            'Subscription activation is taking longer than expected. Please refresh in a moment or contact support.'
-          )
-        }
-      } catch (error) {
-        console.error('Subscription polling error:', error)
-        if (pollCount >= maxPolls) {
-          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-          setIsPollingSubscription(false)
-        }
-      }
-    }
-
-    pollSubscription()
-    pollIntervalRef.current = setInterval(pollSubscription, 5000)
-
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-    }
-  }, [session, searchParams, supabase, router, hasActiveSubscription])
+  }, [supabase, searchParams])
 
   const handleCheckout = async (priceId, planName) => {
-    const {
-      data: { session: currentSession },
-    } = await supabase.auth.getSession()
-    if (!currentSession) {
-      setShowPricingModal(false)
-      setShowAuthModal(true)
-      return
-    }
-    if (!priceId) {
-      alert('Invalid price selected')
-      return
-    }
-    setCheckoutLoading(planName)
     try {
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) {
+        setShowPricingModal(false)
+        setShowAuthModal(true)
+        return
+      }
+      if (!priceId) {
+        alert('Invalid price selected.')
+        return
+      }
+
+      setCheckoutLoading(planName)
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentSession.access_token}`,
+          Authorization: `Bearer ${data.session.access_token}`,
         },
         body: JSON.stringify({ priceId }),
       })
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Checkout failed')
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Checkout failed')
       }
 
-      const data = await res.json()
-      if (data.url) {
-        window.location.href = data.url
+      const payload = await res.json()
+      if (payload.url) {
+        window.location.href = payload.url
       } else {
-        throw new Error('No checkout URL received')
+        throw new Error('No checkout URL returned')
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout: ' + error.message)
+      alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       setCheckoutLoading(null)
     }
   }
@@ -724,10 +626,12 @@ export default function Page() {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut()
-    } catch (error) {
-      console.error('Sign out error', error)
+    } catch (e) {
+      console.error('Sign out error', e)
     } finally {
-      window.location.href = '/'
+      setMessages([])
+      setCurrentChatId(null)
+      router.replace('/')
     }
   }
 
@@ -742,39 +646,41 @@ export default function Page() {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
-    const currentInput = input
-    const currentImage = selectedImage
-    const newMsg = { role: 'user', content: currentInput, image: currentImage }
+    const question = input.trim()
+    const image = selectedImage
 
-    setMessages((p) => [...p, newMsg, { role: 'assistant', content: '' }])
+    const newUserMessage = { role: 'user', content: question, image }
+    setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
     setInput('')
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
     let activeChatId = currentChatId
-    if (session && !activeChatId) {
-      const { data: newChat } = await supabase
-        .from('chats')
-        .insert({
-          user_id: session.user.id,
-          title: currentInput.slice(0, 30) + '...',
-        })
-        .select()
-        .single()
-      if (newChat) {
-        activeChatId = newChat.id
-        setCurrentChatId(newChat.id)
-      }
-    }
 
     try {
+      if (session && !activeChatId) {
+        const { data: created } = await supabase
+          .from('chats')
+          .insert({
+            user_id: session.user.id,
+            title: (question || 'New chat').slice(0, 40),
+          })
+          .select()
+          .single()
+
+        if (created) {
+          activeChatId = created.id
+          setCurrentChatId(created.id)
+        }
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newMsg],
-          image: currentImage,
+          messages: [...messages, newUserMessage],
+          image,
           chatId: activeChatId,
         }),
       })
@@ -782,87 +688,74 @@ export default function Page() {
       if (!res.ok) {
         if (res.status === 402) {
           setShowPricingModal(true)
-          throw new Error('Subscription required.')
+          throw new Error('Subscription required for additional questions.')
         }
         if (res.status === 429) {
-          const data = await res.json()
-          throw new Error(data.error || 'Rate limit exceeded. Please upgrade.')
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Rate limit exceeded.')
         }
         if (res.status === 503) {
-          const data = await res.json()
+          const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Service temporarily unavailable.')
         }
-        throw new Error(`Server error: ${res.status}`)
+        throw new Error(`Server error (${res.status})`)
       }
 
       const data = await res.json()
-      setMessages((p) => {
-        const u = [...p]
-        u[u.length - 1].content = data.message || 'No response.'
-        return u
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: data.message || 'No response.',
+        }
+        return updated
       })
-    } catch (err) {
-      console.error('Chat error:', err)
-      setMessages((p) => {
-        const u = [...p]
-        u[u.length - 1].content = `Error: ${err.message}`
-        return u
+    } catch (error) {
+      console.error('Chat error:', error)
+      setMessages((prev) => {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+        }
+        return updated
       })
     } finally {
       setIsSending(false)
     }
   }
 
-  const handleImage = async (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
     } catch (error) {
-      console.error(error)
-      alert('Failed to process image')
+      console.error('Image compression error', error)
+      alert('Failed to process image.')
     }
   }
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-slate-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-sky-50">
         <div className="w-8 h-8 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
       </div>
     )
   }
 
-  const signedIn = !!session
+  const isAuthenticated = !!session
 
   return (
     <>
       <style jsx global>{`
         body {
-          background: radial-gradient(circle at top, #e0f7fa 0, #f1f5f9 40%, #e5edf7 100%);
-          color: #020617;
-        }
-        .glass-button {
-          background: linear-gradient(145deg, rgba(45, 212, 191, 0.95), rgba(56, 189, 248, 0.95));
-          color: #022c22;
-          box-shadow: 0 14px 30px rgba(13, 148, 136, 0.42);
-          border: 1px solid rgba(34, 197, 235, 0.9);
-          transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
-        }
-        .glass-button:hover {
-          filter: brightness(1.04);
-          transform: translateY(-1px);
-          box-shadow: 0 18px 40px rgba(13, 148, 136, 0.5);
-        }
-        .glass-button:active {
-          transform: translateY(0);
-          box-shadow: 0 8px 18px rgba(13, 148, 136, 0.35);
+          background: radial-gradient(circle at top, #e0f7ff 0, #f8fbff 40%, #ecfdf5 100%);
+          color: #0f172a;
         }
         ::-webkit-scrollbar {
           width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-          background: transparent;
         }
         ::-webkit-scrollbar-thumb {
           background: rgba(15, 118, 110, 0.25);
@@ -870,13 +763,8 @@ export default function Page() {
         }
       `}</style>
 
-      {isPollingSubscription && <SubscriptionPollingBanner />}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => setShowAuthModal(false)}
-      />
       <PricingModal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
@@ -884,186 +772,192 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="relative min-h-screen w-full">
-        <div
-          className={`flex flex-col min-h-screen ${
-            isPollingSubscription ? 'pt-10 md:pt-12' : ''
-          }`}
-        >
-          {/* header */}
-          <header className="sticky top-0 z-30 bg-white/70 backdrop-blur border-b border-slate-200/70">
-            <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`text-lg font-semibold tracking-tight text-slate-900 ${outfit.className}`}
-                >
-                  protocol<span className="text-teal-600">LM</span>
-                </div>
+      <div className="min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-40 border-b border-teal-100 bg-white/70 backdrop-blur-md">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`px-3 py-1 rounded-full bg-emerald-50/80 border border-emerald-200 text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-700 ${outfit.className}`}
+              >
+                protocol<span className="text-emerald-500">LM</span>
               </div>
-
-              <div className="flex items-center gap-3">
-                {!signedIn ? (
-                  <>
-                    <button
-                      onClick={() => setShowAuthModal(true)}
-                      className={`text-xs sm:text-sm font-semibold text-slate-700 hover:text-slate-900 ${inter.className}`}
-                    >
-                      Sign in
-                    </button>
-                    <button
-                      onClick={() => setShowPricingModal(true)}
-                      className={`glass-button rounded-full px-4 sm:px-5 py-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.2em] ${inter.className}`}
-                    >
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleNewChat}
-                      className="h-8 w-8 rounded-full flex items-center justify-center border border-teal-400/70 bg-white/80 text-teal-700 hover:bg-teal-50"
-                    >
-                      <Icons.Plus />
-                    </button>
-                    <div className="relative" ref={userMenuRef}>
-                      <button
-                        onClick={() => setShowUserMenu((v) => !v)}
-                        className="h-8 w-8 rounded-full bg-teal-600 text-white text-xs font-bold flex items-center justify-center shadow-md"
-                      >
-                        {session.user.email[0].toUpperCase()}
-                      </button>
-                      {showUserMenu && (
-                        <div className="absolute top-10 right-0 w-48 rounded-xl border border-slate-200 bg-white shadow-lg py-1 text-sm">
-                          <button
-                            onClick={() => setShowPricingModal(true)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50"
-                          >
-                            <Icons.Settings />
-                            Subscription
-                          </button>
-                          <div className="my-1 h-px bg-slate-100" />
-                          <button
-                            onClick={handleSignOut}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50"
-                          >
-                            <Icons.LogOut />
-                            Log out
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {hasActiveSubscription && (
+                <span className="hidden sm:inline-flex text-[10px] px-2 py-1 rounded-full bg-emerald-100/80 text-emerald-800 border border-emerald-200 font-medium tracking-[0.16em] uppercase">
+                  Active · site license
+                </span>
+              )}
             </div>
-          </header>
 
-          <main className="flex-1 flex flex-col">
-            {!signedIn ? (
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} />
-            ) : (
-              <section className="flex-1 flex flex-col">
-                {/* messages area – open canvas like ChatGPT */}
-                <div
-                  ref={scrollRef}
-                  className="flex-1 overflow-y-auto px-4 sm:px-6 pt-4 pb-24 max-w-4xl mx-auto w-full"
-                >
-                  {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center">
-                      <p
-                        className={`text-xs sm:text-sm text-slate-500 max-w-md leading-relaxed ${inter.className}`}
-                      >
-                        Ask about Michigan Food Code sections, past Washtenaw enforcement
-                        actions, or attach a photo of your walk-in or prep line to check
-                        for issues before inspection.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4 pb-4">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex w-full ${
-                            msg.role === 'user' ? 'justify-end' : 'justify-start'
-                          }`}
-                        >
-                          <div
-                            className={`max-w-[92%] text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${
-                              msg.role === 'user'
-                                ? 'bg-teal-50 border border-teal-200 text-slate-900 rounded-2xl rounded-br-sm px-3 py-2 shadow-sm'
-                                : 'bg-white/80 border border-slate-200 text-slate-900 rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm'
-                            }`}
-                          >
-                            {msg.image && (
-                              <img
-                                src={msg.image}
-                                alt="Upload"
-                                className="rounded-lg mb-3 max-h-80 object-contain border border-slate-200"
-                              />
-                            )}
-                            {msg.role === 'assistant' &&
-                            msg.content === '' &&
-                            isSending &&
-                            idx === messages.length - 1 ? (
-                              <div className="flex gap-1 items-center">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce" />
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
-                                  style={{ animationDelay: '0.08s' }}
-                                />
-                                <span
-                                  className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"
-                                  style={{ animationDelay: '0.16s' }}
-                                />
-                              </div>
-                            ) : (
-                              msg.content
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* input pinned to bottom, always visible */}
-                <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/90 backdrop-blur">
-                  <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-3 pb-4">
-                    {selectedImage && (
-                      <div className="mb-2 inline-flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/80 px-3 py-2 text-xs text-slate-800">
-                        <span className="font-semibold">Image attached</span>
+            <div className="flex items-center gap-3">
+              {!isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className={`text-xs font-semibold text-slate-700 hover:text-slate-900 ${inter.className}`}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => setShowPricingModal(true)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-teal-500 text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 shadow-[0_12px_26px_rgba(20,184,166,0.55)] hover:bg-teal-600 active:scale-[0.98]"
+                  >
+                    <Icons.Check />
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleNewChat}
+                    className="hidden sm:inline-flex items-center justify-center rounded-full bg-sky-100 text-slate-700 px-3 py-1.5 text-[11px] font-semibold tracking-[0.16em] uppercase hover:bg-sky-200"
+                  >
+                    <Icons.Plus />
+                    New chat
+                  </button>
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      onClick={() => setShowUserMenu((v) => !v)}
+                      className="w-8 h-8 rounded-full bg-sky-100 border border-sky-200 flex items-center justify-center text-xs font-bold text-slate-700"
+                    >
+                      {session.user.email?.[0]?.toUpperCase() || 'U'}
+                    </button>
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.25)] overflow-hidden text-sm">
                         <button
-                          onClick={() => setSelectedImage(null)}
-                          className="text-slate-500 hover:text-slate-800"
+                          onClick={() => {
+                            setShowPricingModal(true)
+                            setShowUserMenu(false)
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-50 text-slate-700"
                         >
-                          <Icons.X />
+                          <Icons.Settings />
+                          <span>Subscription</span>
+                        </button>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50"
+                        >
+                          <Icons.LogOut />
+                          <span>Log out</span>
                         </button>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Main */}
+        <main className="flex-1 flex flex-col">
+          {!isAuthenticated ? (
+            <LandingPage onShowPricing={() => setShowPricingModal(true)} />
+          ) : (
+            <div className="flex-1 flex flex-col max-h-[calc(100vh-3.25rem)]">
+              {/* Messages */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto w-full"
+              >
+                {messages.length === 0 ? (
+                  <div className="h-full flex items-center justify-center px-4">
+                    <p
+                      className={`max-w-md text-sm text-slate-500 text-center leading-relaxed ${inter.className}`}
+                    >
+                      Ask about Michigan Food Code requirements, past Washtenaw
+                      enforcement actions, or attach a photo of your walk-in or line to
+                      scan for likely violations before inspection.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex w-full ${
+                          msg.role === 'user' ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                            msg.role === 'user'
+                              ? 'bg-teal-500 text-white shadow-[0_16px_34px_rgba(20,184,166,0.6)]'
+                              : 'bg-white/85 border border-slate-200 text-slate-900 shadow-[0_16px_34px_rgba(15,23,42,0.08)]'
+                          }`}
+                        >
+                          {msg.image && (
+                            <img
+                              src={msg.image}
+                              alt="Uploaded"
+                              className="mb-3 rounded-xl border border-slate-200 max-h-64 object-contain bg-white"
+                            />
+                          )}
+                          {msg.role === 'assistant' &&
+                          msg.content === '' &&
+                          isSending &&
+                          idx === messages.length - 1 ? (
+                            <div className="flex gap-1 items-center">
+                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" />
+                              <span
+                                className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"
+                                style={{ animationDelay: '0.12s' }}
+                              />
+                              <span
+                                className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"
+                                style={{ animationDelay: '0.24s' }}
+                              />
+                            </div>
+                          ) : (
+                            <span className="whitespace-pre-wrap">{msg.content}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Input bar fixed to bottom of viewport */}
+              <div className="shrink-0 border-t border-teal-100 bg-white/90 backdrop-blur-md">
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 pt-2 pb-3">
+                  {selectedImage && (
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-100 border border-sky-200 text-[11px] text-slate-700">
+                      <span>Image attached</span>
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="text-slate-500 hover:text-slate-800"
+                      >
+                        <Icons.X />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-end gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center justify-center w-9 h-9 rounded-full bg-sky-100 border border-sky-200 text-slate-700 hover:bg-sky-200 hover:border-sky-300 active:scale-[0.97] transition-all"
+                    >
+                      <Icons.Camera />
+                    </button>
                     <form
                       onSubmit={handleSend}
-                      className="flex items-end gap-2 rounded-2xl border border-teal-300/70 bg-white/70 backdrop-blur px-2.5 py-2 shadow-[0_10px_24px_rgba(15,118,110,0.22)]"
+                      className="flex-1 flex items-end gap-2"
                     >
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImage}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100"
-                      >
-                        <Icons.Camera />
-                      </button>
                       <textarea
-                        ref={inputRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask about code sections, enforcement history, or attach a photo of your line or walk-in."
-                        className={`flex-1 max-h-32 min-h-[40px] resize-none bg-transparent border-none focus:outline-none text-sm sm:text-base leading-relaxed ${inter.className}`}
+                        rows={1}
+                        className={`flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border border-slate-300 bg-white/80 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-500 ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1074,32 +968,30 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`h-9 w-9 flex items-center justify-center rounded-xl ${
-                          !input.trim() && !selectedImage
-                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                            : 'glass-button text-slate-900'
+                        className={`flex items-center justify-center w-9 h-9 rounded-full shadow-[0_12px_28px_rgba(20,184,166,0.55)] transition-all ${
+                          (!input.trim() && !selectedImage) || isSending
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                            : 'bg-teal-500 text-white hover:bg-teal-600 active:scale-[0.97]'
                         }`}
                       >
                         {isSending ? (
-                          <div className="w-4 h-4 rounded-full border-2 border-white/60 border-t-white animate-spin" />
+                          <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
                         ) : (
                           <Icons.ArrowUp />
                         )}
                       </button>
                     </form>
-                    <p
-                      className={`mt-2 text-[10px] text-center text-slate-500 ${inter.className}`}
-                    >
-                      ProtocolLM uses AI and may make mistakes. Always confirm critical food
-                      safety decisions with official regulations and your local health
-                      department.
-                    </p>
                   </div>
+                  <p className={`mt-2 text-[10px] text-center text-slate-500 ${inter.className}`}>
+                    protocolLM uses AI and may make mistakes. Always confirm critical
+                    food safety decisions with official regulations and your local health
+                    department.
+                  </p>
                 </div>
-              </section>
-            )}
-          </main>
-        </div>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
     </>
   )
