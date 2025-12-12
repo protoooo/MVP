@@ -58,6 +58,7 @@ const Icons = {
     </svg>
   ),
 
+  // Retro/N64-ish icons for the landing cards (inline SVG; no new deps)
   RetroCamera: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
       <path d="M7 7h2l1-2h4l1 2h2a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z" />
@@ -88,8 +89,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Photo scan',
       icon: <Icons.RetroCamera />,
       body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
-      accent: '20 184 166',
-      accent2: '34 211 238',
+      tint: 'rgba(45, 212, 191, 0.16)',
       anim: 'card-drift-a',
       delay: '0.06s',
     },
@@ -98,8 +98,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Grounded',
       icon: <Icons.GamePak />,
       body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
-      accent: '59 130 246',
-      accent2: '34 211 238',
+      tint: 'rgba(59, 130, 246, 0.14)',
       anim: 'card-drift-b',
       delay: '0.12s',
     },
@@ -108,8 +107,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Actionable',
       icon: <Icons.ClipboardCheck />,
       body: 'Turn flags into a short close/open list your team can run.',
-      accent: '124 58 237',
-      accent2: '236 72 153',
+      tint: 'rgba(168, 85, 247, 0.12)',
       anim: 'card-drift-c',
       delay: '0.18s',
     },
@@ -118,40 +116,41 @@ function LandingPage({ onShowPricing }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
       <div className="max-w-3xl w-full text-center space-y-8">
-        <div
-          className="inline-flex items-center justify-center px-4 py-1.5 text-[11px] font-semibold tracking-[0.24em] uppercase n64-surface n64-grain"
-          style={{ borderRadius: 12 }}
-        >
+        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg n64-liquid-panel text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-950/90">
           protocolLM · compliance console
         </div>
 
         <div className="space-y-4">
           <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
-            Be inspection-ready.
+            Be inspection‑ready.
           </h1>
           <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
             Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
           </p>
-          <p className={`text-xs text-slate-600 ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
+          <p className={`text-xs text-slate-600 ${inter.className}`}>
+            Washtenaw County today · Wayne + Oakland planned for 2026.
+          </p>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
           {cards.map((c) => (
             <div
               key={c.title}
-              className={`n64-surface n64-grain p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
+              className={`rounded-2xl n64-liquid-card p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
               style={{
                 animationDelay: c.delay,
-                ['--accent']: c.accent,
-                ['--accent-2']: c.accent2,
+                // custom tint per card for “translucent plastic” vibe
+                ['--glass-tint']: c.tint,
               }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="inline-flex items-center gap-2">
-                  <div className="n64-chip">{c.icon}</div>
+                  <div className="retro-icon-chip">{c.icon}</div>
                   <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase n64-pill">{c.badge}</span>
+                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">
+                  {c.badge}
+                </span>
               </div>
 
               <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
@@ -161,8 +160,7 @@ function LandingPage({ onShowPricing }) {
 
         <button
           onClick={onShowPricing}
-          className="n64-btn n64-btn--solid inline-flex items-center justify-center gap-2 px-6 py-3 text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
-          style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg n64-liquid-cta text-white text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
         >
           <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
           <Icons.Check />
@@ -265,11 +263,7 @@ function AuthModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md n64-surface n64-grain p-7"
-        style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="w-full max-w-md rounded-2xl n64-liquid-panel-strong p-7" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className={`text-lg font-semibold text-slate-950 tracking-tight mb-1 ${outfit.className}`}>
@@ -283,7 +277,7 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
-          <button onClick={onClose} className="n64-iconbtn" type="button" aria-label="Close">
+          <button onClick={onClose} className="rounded-lg p-1.5 n64-liquid-chip text-slate-700 hover:text-slate-950">
             <Icons.X />
           </button>
         </div>
@@ -297,7 +291,7 @@ function AuthModal({ isOpen, onClose }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="gm@restaurant.com"
               required
-              className={`n64-input ${inter.className}`}
+              className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/85 via-slate-50/75 to-white/85 backdrop-blur-sm px-3.5 py-2.5 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
             />
           </div>
 
@@ -311,12 +305,12 @@ function AuthModal({ isOpen, onClose }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className={`n64-input pr-10 ${inter.className}`}
+                  className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/85 via-slate-50/75 to-white/85 backdrop-blur-sm px-3.5 py-2.5 pr-10 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-900 text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -327,8 +321,7 @@ function AuthModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={loading || !isLoaded}
-            className="n64-btn n64-btn--solid w-full mt-2 inline-flex items-center justify-center text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
-            style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
+            className="w-full mt-2 inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
           >
             <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
             <span className="relative">
@@ -339,9 +332,11 @@ function AuthModal({ isOpen, onClose }) {
 
         {message && (
           <div
-            className={`mt-4 text-xs rounded-lg px-3 py-2 border ${
-              message.startsWith('Error') ? 'bg-red-50/70 border-red-300/70 text-red-700' : 'bg-emerald-50/70 border-emerald-300/70 text-emerald-700'
-            } backdrop-blur-sm`}
+            className={`mt-4 text-xs rounded-lg px-3 py-2 border-2 ${
+              message.startsWith('Error')
+                ? 'bg-red-50/80 border-red-300/70 text-red-700 backdrop-blur-sm'
+                : 'bg-emerald-50/80 border-emerald-300/70 text-emerald-700 backdrop-blur-sm'
+            }`}
           >
             {message}
           </div>
@@ -381,12 +376,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-lg n64-surface n64-grain p-7 relative"
-        style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button onClick={onClose} className="n64-iconbtn absolute right-7 top-7" type="button" aria-label="Close">
+      <div className="w-full max-w-lg rounded-2xl n64-liquid-panel-strong p-7 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute right-7 top-7 rounded-lg p-1.5 n64-liquid-chip text-slate-700 hover:text-slate-950">
           <Icons.X />
         </button>
 
@@ -396,7 +387,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           <p className={`text-sm text-slate-700 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
         </div>
 
-        <div className="n64-surface n64-grain p-5 space-y-4" style={{ ['--accent']: '59 130 246', ['--accent-2']: '34 211 238' }}>
+        <div className="rounded-2xl n64-liquid-card p-5 space-y-4">
           <div>
             <div className="flex items-baseline gap-2 mb-2">
               <span className={`text-3xl font-semibold text-slate-950 tracking-tight ${outfit.className}`}>$100</span>
@@ -431,18 +422,15 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="n64-btn n64-btn--solid w-full inline-flex items-center justify-center text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
-              style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
+              className="w-full inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
             >
               <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
               <span className="relative">{loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}</span>
             </button>
-
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="n64-btn w-full inline-flex items-center justify-center text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60"
-              style={{ ['--accent']: '124 58 237', ['--accent-2']: '236 72 153' }}
+              className="w-full inline-flex items-center justify-center rounded-lg border-2 border-dashed border-teal-400/70 bg-gradient-to-br from-white/70 via-cyan-50/60 to-teal-50/70 backdrop-blur-sm text-[11px] font-semibold tracking-[0.22em] uppercase text-teal-900 py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.18),inset_0_1px_2px_rgba(255,255,255,0.7)] hover-lift button-press disabled:opacity-60"
             >
               {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
             </button>
@@ -478,6 +466,10 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
+  // Keeps the chat perfectly fit in the viewport (ChatGPT/Claude-style):
+  // - no double-100vh containers
+  // - internal scroll only in the message list
+  // - auto-scroll only when user is already near bottom
   const shouldAutoScrollRef = useRef(true)
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -489,12 +481,13 @@ export default function Page() {
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
-    const threshold = 120
+    const threshold = 120 // px from bottom
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
 
   useEffect(() => {
+    // initial auto-scroll (after first paint)
     requestAnimationFrame(() => scrollToBottom('auto'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -571,11 +564,13 @@ export default function Page() {
   }, [supabase, searchParams])
 
   useEffect(() => {
-    // Use our background system instead of Tailwind body gradients
+    // Background stays consistent + premium retro “Liquid Glass meets N64” vibe.
     if (typeof document === 'undefined') return
-    document.body.classList.add('n64-stage-body')
+    document.body.classList.add('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
+    document.body.classList.add('n64-glass-bg')
     return () => {
-      document.body.classList.remove('n64-stage-body')
+      document.body.classList.remove('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
+      document.body.classList.remove('n64-glass-bg')
     }
   }, [])
 
@@ -666,6 +661,7 @@ export default function Page() {
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
+    // after user sends, we definitely want to stay pinned to bottom
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -751,10 +747,8 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center n64-stage">
-        <div className="n64-surface" style={{ width: 44, height: 44, borderRadius: 999, display: 'grid', placeItems: 'center' }}>
-          <div className="w-6 h-6 rounded-full border-2 border-slate-400 border-t-transparent animate-spin" />
-        </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-cyan-50 via-sky-100 to-blue-100">
+        <div className="w-8 h-8 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -764,250 +758,298 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* --- Viewport fit fix --- */
+        /* --- Viewport fit fix (prevents double-100vh and “input off screen” issues) --- */
         html,
         body {
           height: 100%;
           width: 100%;
         }
-        body.n64-stage-body {
+        /* Keep scrolling inside the app panes (chat list), not the body. */
+        body.n64-glass-bg {
           overflow: hidden;
           position: relative;
-          background:
-            radial-gradient(1200px 800px at 20% 10%, rgba(20, 184, 166, 0.14), transparent 60%),
-            radial-gradient(900px 700px at 85% 35%, rgba(34, 211, 238, 0.10), transparent 55%),
-            radial-gradient(800px 700px at 10% 85%, rgba(124, 58, 237, 0.10), transparent 55%),
-            linear-gradient(180deg, rgb(248, 250, 252), rgb(248, 250, 252));
         }
-        body.n64-stage-body::after {
+
+        /* Premium-retro background: translucent plastic + liquid sheen (kept subtle) */
+        body.n64-glass-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background-image:
+            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
+            radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.35), transparent 44%),
+            radial-gradient(circle at 22% 70%, rgba(45, 212, 191, 0.12), transparent 46%),
+            radial-gradient(circle at 84% 68%, rgba(59, 130, 246, 0.1), transparent 52%),
+            linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.06), rgba(59, 130, 246, 0.06));
+          mix-blend-mode: soft-light;
+          opacity: 0.95;
+          filter: saturate(1.05);
+        }
+
+        body.n64-glass-bg::after {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          /* Tiny “N64-ish” pixel grid + micro-dither */
+          background-image:
             linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
             radial-gradient(rgba(15, 23, 42, 0.06) 0.55px, transparent 0.65px);
           background-size: 26px 26px, 26px 26px, 6px 6px;
-          opacity: 0.14;
+          opacity: 0.16;
         }
 
-        /* ============================
-           N64 Liquid Glass UI (v1)
-           ============================ */
+        /* 64-color palette (N64 energy), used subtly via gradients/borders */
         :root {
-          --accent: 20 184 166;
-          --accent-2: 34 211 238;
-          --bg: 248 250 252;
-          --fg: 15 23 42;
-
-          --radius-xl: 26px;
-          --radius-lg: 20px;
-          --radius-md: 14px;
-
-          --border: 255 255 255;
-          --glass: 255 255 255;
-
-          --shadow-1: 0 10px 30px rgba(2, 6, 23, 0.1);
-          --shadow-2: 0 2px 10px rgba(2, 6, 23, 0.08);
-
-          --blur: 16px;
-          --rim: 1.5px;
+          --n64-0: #0b1020;
+          --n64-1: #0f172a;
+          --n64-2: #111827;
+          --n64-3: #1f2937;
+          --n64-4: #334155;
+          --n64-5: #475569;
+          --n64-6: #64748b;
+          --n64-7: #94a3b8;
+          --n64-8: #e2e8f0;
+          --n64-9: #f8fafc;
+          --n64-10: #0ea5e9;
+          --n64-11: #0284c7;
+          --n64-12: #38bdf8;
+          --n64-13: #22c55e;
+          --n64-14: #16a34a;
+          --n64-15: #86efac;
+          --n64-16: #14b8a6;
+          --n64-17: #0d9488;
+          --n64-18: #2dd4bf;
+          --n64-19: #a7f3d0;
+          --n64-20: #3b82f6;
+          --n64-21: #2563eb;
+          --n64-22: #93c5fd;
+          --n64-23: #1d4ed8;
+          --n64-24: #a855f7;
+          --n64-25: #7c3aed;
+          --n64-26: #c4b5fd;
+          --n64-27: #6d28d9;
+          --n64-28: #f97316;
+          --n64-29: #ea580c;
+          --n64-30: #fdba74;
+          --n64-31: #c2410c;
+          --n64-32: #ef4444;
+          --n64-33: #dc2626;
+          --n64-34: #fecaca;
+          --n64-35: #991b1b;
+          --n64-36: #eab308;
+          --n64-37: #ca8a04;
+          --n64-38: #fde68a;
+          --n64-39: #854d0e;
+          --n64-40: #f59e0b;
+          --n64-41: #d97706;
+          --n64-42: #fed7aa;
+          --n64-43: #92400e;
+          --n64-44: #ec4899;
+          --n64-45: #db2777;
+          --n64-46: #fbcfe8;
+          --n64-47: #9d174d;
+          --n64-48: #06b6d4;
+          --n64-49: #0891b2;
+          --n64-50: #a5f3fc;
+          --n64-51: #164e63;
+          --n64-52: #10b981;
+          --n64-53: #059669;
+          --n64-54: #bbf7d0;
+          --n64-55: #064e3b;
+          --n64-56: #8b5cf6;
+          --n64-57: #6366f1;
+          --n64-58: #60a5fa;
+          --n64-59: #34d399;
+          --n64-60: #f472b6;
+          --n64-61: #fb7185;
+          --n64-62: #fdba74;
+          --n64-63: #fde047;
         }
 
-        .n64-stage {
-          background:
-            radial-gradient(1200px 800px at 20% 10%, rgba(var(--accent), 0.14), transparent 60%),
-            radial-gradient(900px 700px at 85% 35%, rgba(var(--accent-2), 0.10), transparent 55%),
-            linear-gradient(180deg, rgb(var(--bg)), rgb(var(--bg)));
-          color: rgb(var(--fg));
-        }
-
-        .n64-surface {
+        .n64-spectrum-line {
           position: relative;
-          border-radius: var(--radius-lg);
-          background: linear-gradient(180deg, rgba(var(--glass), 0.72), rgba(var(--glass), 0.46));
-          border: var(--rim) solid rgba(var(--border), 0.38);
-          box-shadow: var(--shadow-1), var(--shadow-2);
-          overflow: hidden;
-          transform: translateZ(0);
         }
-        @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-          .n64-surface {
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(1.35);
-            backdrop-filter: blur(var(--blur)) saturate(1.35);
-          }
-        }
-        .n64-surface::before,
-        .n64-surface::after {
+        .n64-spectrum-line::before {
           content: '';
           position: absolute;
-          inset: -2px;
-          pointer-events: none;
-          border-radius: inherit;
-        }
-        .n64-surface::before {
-          background:
-            radial-gradient(120% 70% at 10% 10%, rgba(var(--accent), 0.22), transparent 55%),
-            radial-gradient(100% 80% at 90% 20%, rgba(var(--accent-2), 0.16), transparent 60%);
-          opacity: 0.95;
-        }
-        .n64-surface::after {
+          left: 0;
+          right: 0;
+          top: -2px;
+          height: 2px;
           background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.55) 0%,
-            rgba(255, 255, 255, 0.16) 18%,
-            rgba(255, 255, 255, 0.06) 45%,
-            rgba(255, 255, 255, 0) 70%
+            90deg,
+            var(--n64-10),
+            var(--n64-16),
+            var(--n64-20),
+            var(--n64-24),
+            var(--n64-28),
+            var(--n64-36),
+            var(--n64-44),
+            var(--n64-48),
+            var(--n64-52),
+            var(--n64-56),
+            var(--n64-60),
+            var(--n64-63)
           );
-          transform: translateY(-12%) rotate(-2deg);
-          opacity: 0.9;
+          opacity: 0.62;
+          filter: saturate(1.05);
         }
 
-        .n64-grain {
+        .n64-spectrum-border {
           position: relative;
         }
-        .n64-grain::before {
+        .n64-spectrum-border::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 2px;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.28));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+          opacity: 0.55;
+        }
+
+        /* --- “N64 transparent plastic x Apple liquid glass” building blocks --- */
+        .n64-liquid-panel {
+          border: 2px solid rgba(45, 212, 191, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.22)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.7), transparent 42%),
+            radial-gradient(circle at 85% 25%, rgba(45, 212, 191, 0.12), transparent 50%);
+          backdrop-filter: blur(14px) saturate(1.15);
+          -webkit-backdrop-filter: blur(14px) saturate(1.15);
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .n64-liquid-panel::before {
+          content: '';
+          position: absolute;
+          inset: -40% -30%;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 40%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 55%);
+          transform: rotate(12deg);
+          opacity: 0.6;
+          pointer-events: none;
+        }
+
+        .n64-liquid-panel::after {
           content: '';
           position: absolute;
           inset: 0;
           pointer-events: none;
-          opacity: 0.1;
-          background: repeating-radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.22) 0 1px, rgba(255, 255, 255, 0) 1px 6px);
-          mix-blend-mode: overlay;
+          /* tiny dither/noise + faint “chromatic edge” */
+          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.6px, transparent 0.7px),
+            linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(168, 85, 247, 0.06));
+          background-size: 7px 7px, 100% 100%;
+          opacity: 0.18;
+          mix-blend-mode: soft-light;
         }
 
-        .n64-btn {
+        .n64-liquid-panel-strong {
+          border: 2px solid rgba(45, 212, 191, 0.6);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)),
+            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.75), transparent 42%),
+            radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.12), transparent 52%);
+          backdrop-filter: blur(18px) saturate(1.18);
+          -webkit-backdrop-filter: blur(18px) saturate(1.18);
+          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
           position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 11px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(var(--border), 0.42);
-          background: linear-gradient(180deg, rgba(var(--glass), 0.76), rgba(var(--glass), 0.42));
-          box-shadow: 0 10px 26px rgba(2, 6, 23, 0.16), 0 2px 8px rgba(2, 6, 23, 0.1);
-          color: rgb(var(--fg));
-          cursor: pointer;
-          user-select: none;
-          transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+          overflow: hidden;
         }
-        .n64-btn::before {
+        .n64-liquid-panel-strong::after {
           content: '';
           position: absolute;
-          inset: -1px;
-          border-radius: inherit;
+          inset: 0;
           pointer-events: none;
-          background: linear-gradient(90deg, rgba(var(--accent), 0.35), rgba(var(--accent-2), 0.22), rgba(var(--accent), 0.3));
-          opacity: 0.65;
-          filter: blur(10px);
+          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px);
+          background-size: 7px 7px;
+          opacity: 0.16;
+          mix-blend-mode: soft-light;
         }
-        .n64-btn:hover {
-          transform: translateY(-1px);
-          filter: saturate(1.05);
+
+        .n64-liquid-card {
+          --glass-tint: rgba(45, 212, 191, 0.14);
+          border: 2px solid rgba(148, 163, 184, 0.5);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.72), transparent 45%),
+            radial-gradient(circle at 88% 30%, var(--glass-tint), transparent 58%);
+          backdrop-filter: blur(16px) saturate(1.12);
+          -webkit-backdrop-filter: blur(16px) saturate(1.12);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
+          position: relative;
+          overflow: hidden;
         }
-        .n64-btn:active {
-          transform: translateY(0px) scale(0.99);
-          box-shadow: 0 6px 16px rgba(2, 6, 23, 0.14), 0 2px 6px rgba(2, 6, 23, 0.1);
+        .n64-liquid-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.5), transparent 35%),
+            radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.55), transparent 40%);
+          opacity: 0.6;
         }
-        .n64-btn:focus-visible {
-          outline: 3px solid rgba(var(--accent), 0.35);
-          outline-offset: 3px;
+        .n64-liquid-card::after {
+          content: '';
+          position: absolute;
+          inset: -40% -60%;
+          pointer-events: none;
+          background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%);
+          transform: rotate(10deg);
+          opacity: 0.0;
+          transition: opacity 250ms ease;
         }
-        .n64-btn--solid {
-          color: white;
-          border-color: rgba(255, 255, 255, 0.22);
-          background: linear-gradient(180deg, rgba(var(--accent), 0.9), rgba(var(--accent), 0.62));
+        .n64-liquid-card:hover::after {
+          opacity: 0.9;
+          animation: sheenSweep 1.25s ease-in-out;
         }
-        .n64-btn--ghost {
-          background: transparent;
-          box-shadow: none;
+
+        .n64-liquid-chip {
+          border: 2px solid rgba(148, 163, 184, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .n64-liquid-cta {
+          border: 2px solid rgba(45, 212, 191, 0.65);
+          background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(34, 211, 238, 0.72), rgba(20, 184, 166, 0.88));
+          backdrop-filter: blur(10px) saturate(1.1);
+          -webkit-backdrop-filter: blur(10px) saturate(1.1);
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.45);
         }
 
         .n64-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
+          border: 1px solid rgba(20, 184, 166, 0.35);
+          padding: 3px 8px;
           border-radius: 999px;
-          border: 1px solid rgba(var(--border), 0.36);
-          background: rgba(var(--glass), 0.4);
+          background: rgba(255, 255, 255, 0.45);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
         }
 
-        .n64-input {
-          width: 100%;
-          padding: 12px 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(var(--border), 0.34);
-          background: rgba(var(--glass), 0.42);
-          color: rgb(var(--fg));
-          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset;
-        }
-        .n64-input:focus {
-          outline: 3px solid rgba(var(--accent), 0.28);
-          outline-offset: 2px;
-        }
-
-        /* Tiny helpers */
-        .n64-chip {
+        .retro-icon-chip {
           width: 34px;
           height: 34px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          border: 1px solid rgba(var(--border), 0.38);
-          background: rgba(var(--glass), 0.52);
-          box-shadow: 0 6px 16px rgba(2, 6, 23, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.55);
-          color: rgba(15, 23, 42, 0.86);
-        }
-        .n64-iconbtn {
-          width: 34px;
-          height: 34px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 12px;
-          border: 1px solid rgba(var(--border), 0.38);
-          background: rgba(var(--glass), 0.48);
-          -webkit-backdrop-filter: blur(12px) saturate(1.25);
-          backdrop-filter: blur(12px) saturate(1.25);
-          box-shadow: 0 6px 16px rgba(2, 6, 23, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.55);
-          color: rgba(15, 23, 42, 0.8);
-        }
-        .n64-iconbtn:hover {
-          transform: translateY(-1px);
+          border: 2px solid rgba(148, 163, 184, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25));
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
+          color: rgba(15, 23, 42, 0.85);
         }
 
-        /* Bars */
-        .n64-bar {
-          background: rgba(255, 255, 255, 0.55);
-          -webkit-backdrop-filter: blur(18px) saturate(1.35);
-          backdrop-filter: blur(18px) saturate(1.35);
-          border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Chat bubbles */
-        .n64-bubble {
-          border-radius: 20px;
-          padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.45);
-          -webkit-backdrop-filter: blur(16px) saturate(1.35);
-          backdrop-filter: blur(16px) saturate(1.35);
-          box-shadow: 0 10px 24px rgba(2, 6, 23, 0.1);
-        }
-        .n64-bubble--assistant {
-          background: rgba(255, 255, 255, 0.62);
-          color: rgb(15, 23, 42);
-        }
-        .n64-bubble--user {
-          background: linear-gradient(180deg, rgba(20, 184, 166, 0.92), rgba(20, 184, 166, 0.68));
-          color: white;
-          border-color: rgba(255, 255, 255, 0.28);
-        }
-
-        /* animations + misc (kept from your original) */
+        /* varied subtle card motion (not identical per card) */
         @keyframes cardDriftA {
           0%,
           100% {
@@ -1045,6 +1087,24 @@ export default function Page() {
           animation: cardDriftC 6.2s ease-in-out infinite;
         }
 
+        @keyframes sheenSweep {
+          0% {
+            transform: translateX(-18%) rotate(10deg);
+          }
+          100% {
+            transform: translateX(22%) rotate(10deg);
+          }
+        }
+
+        /* scrollbars */
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(20, 184, 166, 0.3);
+          border-radius: 999px;
+        }
+
         @keyframes buttonPress {
           0%,
           100% {
@@ -1054,6 +1114,7 @@ export default function Page() {
             transform: scale(0.95);
           }
         }
+
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -1064,6 +1125,7 @@ export default function Page() {
             transform: translateY(0);
           }
         }
+
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -1074,6 +1136,7 @@ export default function Page() {
             transform: translateY(0);
           }
         }
+
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -1082,6 +1145,7 @@ export default function Page() {
             opacity: 1;
           }
         }
+
         @keyframes shimmer {
           0% {
             background-position: -100% 0;
@@ -1090,6 +1154,7 @@ export default function Page() {
             background-position: 200% 0;
           }
         }
+
         @keyframes float {
           0%,
           100% {
@@ -1100,46 +1165,64 @@ export default function Page() {
           }
         }
 
+        @keyframes ripple {
+          0% {
+            box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4), 0 0 0 0 rgba(20, 184, 166, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0), 0 0 0 0 rgba(20, 184, 166, 0.4);
+          }
+          100% {
+            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0), 0 0 0 16px rgba(20, 184, 166, 0);
+          }
+        }
+
         .animate-slide-up {
           animation: slideUp 0.3s ease-out;
         }
+
         .animate-slide-down {
           animation: slideDown 0.3s ease-out;
         }
+
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out;
         }
+
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
+
         .hover-lift {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .hover-lift:hover {
           transform: translateY(-2px);
         }
+
         .button-press:active {
           animation: buttonPress 0.15s ease;
         }
+
         .message-appear {
           animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
         .shimmer-effect {
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.28) 50%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
 
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(20, 184, 166, 0.28);
-          border-radius: 999px;
+        .pulse-ring {
+          animation: ripple 2s ease-out infinite;
         }
 
+        /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
           .animate-float,
+          .pulse-ring,
           .card-drift-a,
           .card-drift-b,
           .card-drift-c,
@@ -1150,7 +1233,8 @@ export default function Page() {
           .shimmer-effect {
             animation: none !important;
           }
-          .hover-lift {
+          .hover-lift,
+          .n64-liquid-card::after {
             transition: none !important;
           }
         }
@@ -1160,20 +1244,19 @@ export default function Page() {
 
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      <div className="n64-stage h-[100dvh] min-h-0 flex flex-col">
+      {/* SINGLE viewport container; no nested 100dvh (fixes “not visible on load”) */}
+      <div className="h-[100dvh] min-h-0 flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex-shrink-0 border-b border-white/50 n64-bar animate-slide-down">
+        <header className="sticky top-0 z-40 flex-shrink-0 n64-spectrum-line border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
-                className={`px-3 py-1 text-[11px] font-semibold tracking-[0.22em] uppercase n64-surface n64-grain cursor-pointer ${outfit.className}`}
-                style={{ borderRadius: 12, ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
+                className={`px-3 py-1 rounded-lg n64-liquid-panel text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-900 hover-lift cursor-pointer ${outfit.className}`}
               >
-                protocol<span className="opacity-80">LM</span>
+                protocol<span className="text-emerald-700">LM</span>
               </div>
-
               {hasActiveSubscription && (
-                <span className="hidden sm:inline-flex text-[10px] font-medium tracking-[0.16em] uppercase n64-pill animate-fade-in">
+                <span className="hidden sm:inline-flex text-[10px] px-2 py-1 rounded-lg border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-200/50 via-teal-100/40 to-emerald-300/50 backdrop-blur-sm text-emerald-950 font-medium tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] pulse-ring animate-fade-in">
                   Active · site license
                 </span>
               )}
@@ -1187,8 +1270,7 @@ export default function Page() {
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className="n64-btn n64-btn--solid inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
-                    style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
+                    className="inline-flex items-center gap-1.5 rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
                     <Icons.Check />
@@ -1199,31 +1281,34 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleNewChat}
-                    className="hidden sm:inline-flex n64-btn items-center justify-center text-[11px] font-semibold tracking-[0.16em] uppercase px-3 py-2"
-                    style={{ ['--accent']: '59 130 246', ['--accent-2']: '34 211 238' }}
+                    className="hidden sm:inline-flex items-center justify-center rounded-full border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/50 via-cyan-100/40 to-sky-300/50 backdrop-blur-sm text-slate-800 px-3 py-1.5 text-[11px] font-semibold tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.22),inset_0_1px_2px_rgba(255,255,255,0.6)]"
                   >
                     <Icons.Plus />
                     New chat
                   </button>
-
                   <div className="relative" ref={userMenuRef}>
-                    <button onClick={() => setShowUserMenu((v) => !v)} className="n64-iconbtn" type="button" aria-label="User menu">
-                      <span className="text-xs font-bold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
+                    <button
+                      onClick={() => setShowUserMenu((v) => !v)}
+                      className="w-8 h-8 rounded-full border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] flex items-center justify-center text-xs font-bold text-slate-800"
+                    >
+                      {session.user.email?.[0]?.toUpperCase() || 'U'}
                     </button>
-
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-48 n64-surface n64-grain overflow-hidden text-sm animate-slide-down">
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl border-2 border-slate-300/70 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-xl shadow-[0_8px_20px_rgba(15,23,42,0.2),inset_0_1px_2px_rgba(255,255,255,0.6)] overflow-hidden text-sm animate-slide-down">
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/40 text-slate-800 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-100/60 text-slate-700 transition-colors hover-lift"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
                         </button>
-                        <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50/60 transition-colors">
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50/60 transition-colors hover-lift"
+                        >
                           <Icons.LogOut />
                           <span>Log out</span>
                         </button>
@@ -1236,6 +1321,7 @@ export default function Page() {
           </div>
         </header>
 
+        {/* Main: flex-1 + min-h-0 ensures message list is visible immediately */}
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1243,12 +1329,16 @@ export default function Page() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Messages */}
+              {/* Messages container */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
+                style={{
+                  overscrollBehavior: 'contain',
+                  scrollbarGutter: 'stable',
+                  paddingBottom: '2px',
+                }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
@@ -1265,15 +1355,20 @@ export default function Page() {
                         className={`flex w-full message-appear ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         style={{ animationDelay: `${idx * 0.05}s` }}
                       >
-                        <div className={`max-w-[85%] n64-bubble ${msg.role === 'user' ? 'n64-bubble--user' : 'n64-bubble--assistant'}`}>
+                        <div
+                          className={`n64-spectrum-border max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all ${
+                            msg.role === 'user'
+                              ? 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]'
+                              : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-md text-slate-950 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
+                          }`}
+                        >
                           {msg.image && (
                             <img
                               src={msg.image}
                               alt="Uploaded"
-                              className="mb-3 rounded-xl border border-white/40 max-h-64 object-contain bg-white/80"
+                              className="mb-3 rounded-xl border-2 border-slate-200/60 max-h-64 object-contain bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]"
                             />
                           )}
-
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
                               <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" />
@@ -1291,37 +1386,35 @@ export default function Page() {
               </div>
 
               {/* Input bar */}
-              <div className="flex-shrink-0 border-t border-white/50 n64-bar">
+              <div className="flex-shrink-0 n64-spectrum-line border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 n64-pill text-[11px] text-slate-800 animate-slide-up">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] text-[11px] text-slate-800 animate-slide-up">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="text-slate-600 hover:text-slate-950 transition-colors" type="button">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="text-slate-600 hover:text-slate-950 transition-colors hover:rotate-90 transition-transform duration-200"
+                      >
                         <Icons.X />
                       </button>
                     </div>
                   )}
-
                   <div className="flex items-end gap-2">
                     <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="n64-iconbtn"
-                      style={{ ['--accent']: '59 130 246', ['--accent-2']: '34 211 238' }}
-                      aria-label="Attach image"
+                      className="flex items-center justify-center w-9 h-9 rounded-lg border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm text-slate-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover-lift button-press transition-all"
                     >
                       <Icons.Camera />
                     </button>
-
                     <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a code question or attach a photo."
                         rows={1}
-                        className={`n64-input flex-1 max-h-32 min-h-[40px] resize-none ${inter.className}`}
+                        className={`flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-white/80 backdrop-blur-sm px-3.5 py-2 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1329,19 +1422,19 @@ export default function Page() {
                           }
                         }}
                       />
-
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`n64-iconbtn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        style={{ ['--accent']: '20 184 166', ['--accent-2']: '34 211 238' }}
-                        aria-label="Send"
+                        className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all hover-lift button-press ${
+                          (!input.trim() && !selectedImage) || isSending
+                            ? 'bg-slate-300/60 text-slate-500 cursor-not-allowed border-2 border-slate-300/40'
+                            : 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]'
+                        }`}
                       >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-slate-600/40 border-t-slate-700 animate-spin" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
-
                   <p className={`mt-2 text-[10px] text-center text-slate-600 ${inter.className}`}>
                     protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
                   </p>
