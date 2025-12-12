@@ -65,75 +65,65 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="w-full max-w-5xl">
         <div className="ent-hero-shell">
           <div className="ent-hero-card">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div className={`ent-badge ${outfit.className}`}>protocolLM</div>
-              <div className="hidden sm:flex items-center gap-2">
-                <button onClick={onShowAuth} className={`ent-link ${inter.className}`}>
-                  Sign in
-                </button>
-                <button onClick={onShowPricing} className={`ent-btn-primary ${outfit.className}`}>
-                  Request access
-                </button>
-              </div>
-            </div>
+            <div className={`ent-eyebrow ${outfit.className}`}>Washtenaw County edition</div>
 
-            <h1 className={`ent-title ${outfit.className}`}>
-              Compliance answers your staff can trust.
-            </h1>
+            <h1 className={`ent-title ${outfit.className}`}>Inspection-ready, on demand.</h1>
 
             <p className={`ent-subtitle ${inter.className}`}>
-              Built for restaurants that take inspections seriously. Ask the Michigan Food Code, scan photos for likely violations, and keep a clean paper trail—without digging through PDFs.
+              protocolLM is a compliance console for food service. Ask grounded questions about regulations and upload photos for a risk-oriented scan—built specifically
+              around Washtenaw County.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="ent-mini">
-                <div className={`ent-mini-kicker ${outfit.className}`}>Photo scans</div>
-                <div className={`ent-mini-body ${inter.className}`}>Attach a walk-in or line photo. Get a risk-oriented summary fast.</div>
+            {/* reduced “cards”: 3 rows, not 5 panels */}
+            <div className="mt-8 ent-feature-list">
+              <div className="ent-feature-row">
+                <div className={`ent-feature-kicker ${outfit.className}`}>Photo scan</div>
+                <div className={`ent-feature-body ${inter.className}`}>Upload a walk-in or line photo and get likely issues + next steps.</div>
               </div>
-              <div className="ent-mini">
-                <div className={`ent-mini-kicker ${outfit.className}`}>Grounded answers</div>
-                <div className={`ent-mini-body ${inter.className}`}>Focused on local regs & guidance so your team stops guessing.</div>
+              <div className="ent-feature-row">
+                <div className={`ent-feature-kicker ${outfit.className}`}>Rulebook access</div>
+                <div className={`ent-feature-body ${inter.className}`}>Fast answers grounded in the right documents—without searching through PDFs.</div>
               </div>
-              <div className="ent-mini">
-                <div className={`ent-mini-kicker ${outfit.className}`}>Operator-ready</div>
-                <div className={`ent-mini-body ${inter.className}`}>Short, actionable next steps—written for real kitchens.</div>
+              <div className="ent-feature-row">
+                <div className={`ent-feature-kicker ${outfit.className}`}>Actionable output</div>
+                <div className={`ent-feature-body ${inter.className}`}>Short, operational guidance written for real kitchens.</div>
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div className="mt-9 flex flex-col sm:flex-row gap-3 sm:items-center">
               <button onClick={onShowPricing} className={`ent-btn-primary ent-btn-lg ${outfit.className}`}>
-                See pricing
+                View pricing
               </button>
-              <div className={`ent-fine ${inter.className}`}>
-                Washtenaw first • Wayne + Oakland planned for 2026
-              </div>
+              <button onClick={onShowAuth} className={`ent-btn-ghost ent-btn-lg ${outfit.className}`}>
+                Sign in
+              </button>
+              <div className={`ent-fine ${inter.className}`}>Premium site license • Limited scope by design</div>
             </div>
 
-            <div className="mt-8 ent-divider" />
+            <div className="mt-9 ent-divider" />
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="ent-try">
-                <div className={`ent-try-title ${outfit.className}`}>Try asking</div>
-                <ul className={`ent-try-list ${inter.className}`}>
-                  <li>“Can raw chicken be stored above produce in the walk-in?”</li>
-                  <li>“What should our sanitizer bucket concentration be?”</li>
-                  <li>“What’s the safest cooling method for chili after service?”</li>
-                </ul>
-              </div>
-              <div className="ent-try">
-                <div className={`ent-try-title ${outfit.className}`}>Built for owners & GMs</div>
-                <div className={`ent-try-body ${inter.className}`}>
-                  This is not a toy chatbot. It’s positioned like a real operational system: premium, limited, and designed to reduce risk—fast.
-                </div>
+            {/* examples: more relatable, not code-y */}
+            <div className="mt-7">
+              <div className={`ent-examples-title ${outfit.className}`}>Examples</div>
+              <div className={`ent-examples ${inter.className}`}>
+                <div className="ent-example">“Can raw chicken be stored above produce in the walk-in?”</div>
+                <div className="ent-example">“What should sanitizer buckets be at during service?”</div>
+                <div className="ent-example">“What’s the safest way to cool chili after close?”</div>
               </div>
             </div>
           </div>
         </div>
 
         <footer className="mt-10 flex flex-wrap gap-4 justify-center text-xs text-white/55">
-          <Link href="/terms" className="hover:text-white/80">Terms</Link>
-          <Link href="/privacy" className="hover:text-white/80">Privacy</Link>
-          <Link href="/contact" className="hover:text-white/80">Contact</Link>
+          <Link href="/terms" className="hover:text-white/80">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-white/80">
+            Privacy
+          </Link>
+          <Link href="/contact" className="hover:text-white/80">
+            Contact
+          </Link>
         </footer>
       </div>
     </div>
@@ -227,7 +217,7 @@ function AuthModal({ isOpen, onClose }) {
             </h2>
             <p className={`text-xs text-white/60 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
-              {mode === 'signup' && 'Best with an owner / GM email for your site.'}
+              {mode === 'signup' && 'Use an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
@@ -278,11 +268,11 @@ function AuthModal({ isOpen, onClose }) {
         </form>
 
         {message && (
-          <div className={`mt-4 text-xs rounded-lg px-3 py-2 border ${
-            message.startsWith('Error')
-              ? 'bg-red-500/10 border-red-400/30 text-red-200'
-              : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-200'
-          }`}>
+          <div
+            className={`mt-4 text-xs rounded-lg px-3 py-2 border ${
+              message.startsWith('Error') ? 'bg-red-500/10 border-red-400/30 text-red-200' : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-200'
+            }`}
+          >
             {message}
           </div>
         )}
@@ -327,11 +317,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         </button>
 
         <div className="mb-6">
-          <div className={`ent-badge ${outfit.className}`}>protocolLM</div>
-          <h3 className={`mt-3 text-xl font-semibold text-white tracking-tight ${outfit.className}`}>Site license</h3>
-          <p className={`mt-1 text-sm text-white/60 ${inter.className}`}>
-            One license per restaurant. Serious compliance tooling. 7-day free trial.
-          </p>
+          <h3 className={`text-xl font-semibold text-white tracking-tight ${outfit.className}`}>Site license</h3>
+          <p className={`mt-1 text-sm text-white/60 ${inter.className}`}>One license per restaurant. 7-day free trial.</p>
         </div>
 
         <div className="ent-price-card">
@@ -342,21 +329,37 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
               <p className={`mt-2 text-xs text-white/60 ${inter.className}`}>
-                Includes roughly <span className="text-white font-semibold">1,000 monthly checks</span> for a single restaurant.
-                Text questions count as one check; photo analyses count as two.
+                Includes roughly <span className="text-white font-semibold">1,000 monthly checks</span> for a single restaurant. Text = 1 check. Photo scan = 2
+                checks.
               </p>
-            </div>
-            <div className="hidden sm:block text-right">
-              <div className={`text-[11px] tracking-[0.22em] uppercase text-white/60 ${outfit.className}`}>Premium</div>
-              <div className={`text-xs text-white/40 ${inter.className}`}>Risk reduction</div>
             </div>
           </div>
 
           <ul className="mt-5 text-xs text-white/70 space-y-2">
-            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Text questions + photo uploads</span></li>
-            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Grounded in Michigan Food Code &amp; local guidance</span></li>
-            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Built for one restaurant site license</span></li>
-            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>7-day free trial · cancel anytime</span></li>
+            <li className="flex items-start gap-2">
+              <span className="text-white/80">
+                <Icons.Check />
+              </span>
+              <span>Text questions + photo uploads</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-white/80">
+                <Icons.Check />
+              </span>
+              <span>Grounded in the right compliance documents</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-white/80">
+                <Icons.Check />
+              </span>
+              <span>One restaurant site license</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-white/80">
+                <Icons.Check />
+              </span>
+              <span>Washtenaw County focus</span>
+            </li>
           </ul>
 
           <div className="mt-6 space-y-3">
@@ -376,9 +379,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Yearly · $2,000'}
             </button>
 
-            <div className={`text-[11px] text-white/45 text-center ${inter.className}`}>
-              Need higher volume? Email support for an expanded license.
-            </div>
+            <div className={`text-[11px] text-white/45 text-center ${inter.className}`}>Need higher volume? Ask about an expanded license.</div>
           </div>
         </div>
       </div>
@@ -700,26 +701,25 @@ export default function Page() {
           background: #05070c;
         }
 
-        /* Keep scrolling inside panes, not the page */
         body.ui-enterprise-bg {
           overflow: hidden;
           position: relative;
           color: white;
-          background: radial-gradient(circle at 50% -20%, rgba(255,255,255,0.08), transparent 48%), #05070c;
+          background: #05070c;
         }
 
-        /* OPTION A: “void + spotlight” (no grid) */
+        /* Mostly black / dark gray. No blue or purple. */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1200px 520px at 50% -6%, rgba(255, 255, 255, 0.12), transparent 60%),
-            radial-gradient(900px 520px at 18% 10%, rgba(0, 255, 200, 0.06), transparent 58%),
-            radial-gradient(900px 520px at 84% 10%, rgba(120, 90, 255, 0.06), transparent 58%),
-            radial-gradient(700px 700px at 50% 70%, rgba(255, 255, 255, 0.04), transparent 62%),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.03), transparent 35%);
+            radial-gradient(1200px 520px at 50% -8%, rgba(255, 255, 255, 0.12), transparent 62%),
+            radial-gradient(900px 560px at 18% 12%, rgba(255, 255, 255, 0.045), transparent 58%),
+            radial-gradient(900px 560px at 84% 12%, rgba(255, 255, 255, 0.040), transparent 58%),
+            radial-gradient(700px 700px at 50% 70%, rgba(255, 255, 255, 0.030), transparent 62%),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 35%);
           opacity: 1;
         }
 
@@ -729,14 +729,12 @@ export default function Page() {
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(circle at 50% 22%, transparent 0%, rgba(0, 0, 0, 0.62) 72%),
-            radial-gradient(rgba(255, 255, 255, 0.035) 0.7px, transparent 0.8px);
+            radial-gradient(circle at 50% 24%, transparent 0%, rgba(0, 0, 0, 0.70) 74%),
+            radial-gradient(rgba(255, 255, 255, 0.030) 0.7px, transparent 0.8px);
           background-size: auto, 7px 7px;
           opacity: 0.95;
-          mix-blend-mode: normal;
         }
 
-        /* Scrollbars */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -748,33 +746,20 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* --- Enterprise components (NO “white leaking borders”) --- */
-        .ent-border {
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          background-clip: padding-box;
-        }
-
-        .ent-glass {
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-          backdrop-filter: blur(18px) saturate(1.15);
-          -webkit-backdrop-filter: blur(18px) saturate(1.15);
-          box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        }
-
         .ent-hero-shell {
           position: relative;
-          padding: 1px; /* thin “edge” without glowing white */
+          padding: 1px;
           border-radius: 20px;
-          background: linear-gradient(135deg, rgba(0,255,200,0.12), rgba(120,90,255,0.10), rgba(255,255,255,0.06));
+          background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06), rgba(255,255,255,0.10));
         }
 
         .ent-hero-card {
           border-radius: 19px;
           border: 1px solid rgba(255, 255, 255, 0.08);
           background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
-          backdrop-filter: blur(22px) saturate(1.2);
-          -webkit-backdrop-filter: blur(22px) saturate(1.2);
-          box-shadow: 0 40px 120px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10);
+          backdrop-filter: blur(22px) saturate(1.18);
+          -webkit-backdrop-filter: blur(22px) saturate(1.18);
+          box-shadow: 0 40px 120px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,255,255,0.10);
           padding: 28px;
           position: relative;
           overflow: hidden;
@@ -785,23 +770,25 @@ export default function Page() {
           position: absolute;
           inset: -30%;
           pointer-events: none;
-          background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.14), transparent 42%);
+          background: radial-gradient(circle at 30% 18%, rgba(255,255,255,0.14), transparent 42%);
           transform: rotate(10deg);
           opacity: 0.9;
         }
 
-        .ent-badge {
+        .ent-eyebrow {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
+          gap: 8px;
           padding: 8px 12px;
           border-radius: 999px;
           border: 1px solid rgba(255,255,255,0.10);
-          background: rgba(255,255,255,0.06);
-          color: rgba(255,255,255,0.85);
+          background: rgba(0,0,0,0.28);
+          color: rgba(255,255,255,0.80);
           font-size: 11px;
           letter-spacing: 0.24em;
           text-transform: uppercase;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          width: fit-content;
         }
 
         .ent-title {
@@ -809,56 +796,64 @@ export default function Page() {
           line-height: 1.1;
           letter-spacing: -0.02em;
           color: rgba(255,255,255,0.96);
-          margin-top: 6px;
+          margin-top: 12px;
         }
 
         .ent-subtitle {
           margin-top: 10px;
           color: rgba(255,255,255,0.66);
-          max-width: 56ch;
+          max-width: 62ch;
           font-size: 14px;
           line-height: 1.6;
         }
 
-        .ent-mini {
+        .ent-feature-list {
           border: 1px solid rgba(255,255,255,0.08);
           background: rgba(0,0,0,0.22);
-          border-radius: 14px;
-          padding: 14px;
+          border-radius: 16px;
+          overflow: hidden;
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
-        .ent-mini-kicker {
+
+        .ent-feature-row {
+          padding: 14px 14px;
+          display: grid;
+          grid-template-columns: 140px 1fr;
+          gap: 14px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .ent-feature-row:first-child {
+          border-top: none;
+        }
+
+        .ent-feature-kicker {
           font-size: 11px;
           letter-spacing: 0.22em;
           text-transform: uppercase;
-          color: rgba(255,255,255,0.80);
+          color: rgba(255,255,255,0.78);
         }
-        .ent-mini-body {
-          margin-top: 8px;
+        .ent-feature-body {
           font-size: 12px;
           line-height: 1.55;
-          color: rgba(255,255,255,0.62);
+          color: rgba(255,255,255,0.60);
         }
 
         .ent-btn-primary {
           border-radius: 12px;
           padding: 10px 14px;
-          border: 1px solid rgba(255,255,255,0.10);
-          background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+          border: 1px solid rgba(255,255,255,0.12);
+          background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
           color: rgba(255,255,255,0.92);
-          box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.58), inset 0 1px 0 rgba(255,255,255,0.10);
           transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
         }
         .ent-btn-primary:hover {
           transform: translateY(-1px);
-          background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
-          box-shadow: 0 20px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.12);
-        }
-        .ent-btn-primary:active {
-          transform: translateY(0px);
+          background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+          box-shadow: 0 20px 60px rgba(0,0,0,0.64), inset 0 1px 0 rgba(255,255,255,0.12);
         }
 
-        .ent-btn-secondary {
+        .ent-btn-ghost {
           border-radius: 12px;
           padding: 10px 14px;
           border: 1px solid rgba(255,255,255,0.10);
@@ -867,7 +862,7 @@ export default function Page() {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
           transition: transform 150ms ease, background 150ms ease;
         }
-        .ent-btn-secondary:hover {
+        .ent-btn-ghost:hover {
           transform: translateY(-1px);
           background: rgba(0,0,0,0.26);
         }
@@ -876,18 +871,9 @@ export default function Page() {
           padding: 12px 16px;
         }
 
-        .ent-link {
-          color: rgba(255,255,255,0.68);
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .ent-link:hover {
-          color: rgba(255,255,255,0.90);
-        }
-
         .ent-fine {
           font-size: 12px;
-          color: rgba(255,255,255,0.52);
+          color: rgba(255,255,255,0.50);
         }
 
         .ent-divider {
@@ -895,44 +881,37 @@ export default function Page() {
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
         }
 
-        .ent-try {
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(0,0,0,0.20);
-          border-radius: 14px;
-          padding: 14px;
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-        }
-        .ent-try-title {
+        .ent-examples-title {
           font-size: 11px;
           letter-spacing: 0.22em;
           text-transform: uppercase;
-          color: rgba(255,255,255,0.78);
+          color: rgba(255,255,255,0.75);
         }
-        .ent-try-list {
+
+        .ent-examples {
           margin-top: 10px;
-          color: rgba(255,255,255,0.60);
-          font-size: 12px;
-          line-height: 1.6;
-          list-style: none;
-          padding: 0;
+          display: grid;
+          gap: 10px;
         }
-        .ent-try-list li {
-          margin: 6px 0;
-        }
-        .ent-try-body {
-          margin-top: 10px;
-          color: rgba(255,255,255,0.60);
+
+        .ent-example {
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,0,0,0.22);
+          border-radius: 14px;
+          padding: 12px 14px;
+          color: rgba(255,255,255,0.62);
           font-size: 12px;
-          line-height: 1.6;
+          line-height: 1.55;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .ent-modal {
           border-radius: 18px;
           border: 1px solid rgba(255,255,255,0.10);
           background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
-          backdrop-filter: blur(24px) saturate(1.2);
-          -webkit-backdrop-filter: blur(24px) saturate(1.2);
-          box-shadow: 0 36px 120px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.10);
+          backdrop-filter: blur(24px) saturate(1.18);
+          -webkit-backdrop-filter: blur(24px) saturate(1.18);
+          box-shadow: 0 36px 120px rgba(0,0,0,0.74), inset 0 1px 0 rgba(255,255,255,0.10);
           padding: 22px;
           position: relative;
           overflow: hidden;
@@ -970,8 +949,8 @@ export default function Page() {
           color: rgba(255,255,255,0.36);
         }
         .ent-input:focus {
-          border-color: rgba(0,255,200,0.28);
-          box-shadow: 0 0 0 3px rgba(0,255,200,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+          border-color: rgba(255,255,255,0.18);
+          box-shadow: 0 0 0 3px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .ent-price-card {
@@ -986,6 +965,9 @@ export default function Page() {
           .ent-title {
             font-size: 28px;
           }
+          .ent-feature-row {
+            grid-template-columns: 1fr;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -997,12 +979,7 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         {/* Header */}
@@ -1024,9 +1001,9 @@ export default function Page() {
             </div>
 
             <div className="flex items-center gap-3">
-              {!isAuthenticated ? (
+              {!session ? (
                 <>
-                  <button onClick={() => setShowAuthModal(true)} className={`ent-link ${inter.className}`}>
+                  <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-white/70 hover:text-white ${inter.className}`}>
                     Sign in
                   </button>
                   <button onClick={() => setShowPricingModal(true)} className={`ent-btn-primary ${outfit.className}`}>
@@ -1082,7 +1059,7 @@ export default function Page() {
 
         {/* Main */}
         <main className="flex-1 min-h-0 flex flex-col">
-          {!isAuthenticated ? (
+          {!session ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
               <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
             </div>
@@ -1095,7 +1072,7 @@ export default function Page() {
                 className="flex-1 min-h-0 overflow-y-auto"
                 style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
               >
-                {/* Removed “demo / empty-state box” */}
+                {/* demo/empty-state box intentionally removed */}
                 {messages.length > 0 && (
                   <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
