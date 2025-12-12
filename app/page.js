@@ -78,8 +78,10 @@ const Icons = {
 }
 
 /**
- * UI/UX-only: adds a subtle “card moves alone” parallax on the landing shell,
- * and improves contrast/legibility. No app logic changes.
+ * UI/UX-only landing behavior:
+ * - Big “Liquid Glass” card stays visually independent (sticky + subtle drift).
+ * - Top header stays fixed, bottom landing bar stays fixed.
+ * - No functional / data / auth changes.
  */
 function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
   const shellRef = useRef(null)
@@ -94,22 +96,33 @@ function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
       typeof window !== 'undefined' &&
       window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
     if (prefersReduced) return
 
     const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 
     const update = () => {
       rafRef.current = null
-      const t = clamp(scroller.scrollTop, 0, 640)
 
-      // The “liquid glass card” drifts subtly, independent of content scroll
-      const driftY = t * 0.14
-      const tiltX = t * 0.004 // deg
-      const tiltY = t * 0.0015 // deg
+      // Use scroll to move the *light* and apply micro drift/tilt. Card itself is sticky (independent).
+      const t = clamp(scroller.scrollTop, 0, 1200)
+      const p = clamp(t / 900, 0, 1)
 
-      shell.style.transform = `translate3d(0, ${driftY}px, 0) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
-      shell.style.boxShadow = `0 40px 120px rgba(0,0,0,0.72), 0 ${18 + t * 0.05}px ${56 + t * 0.16}px rgba(0,0,0,0.55)`
+      // micro motion: feels like an object under glass, not content moving
+      const driftY = (p * 10).toFixed(2) // px
+      const tiltX = (p * 1.4).toFixed(3) // deg
+      const tiltY = (p * -0.9).toFixed(3) // deg
+
+      // Move a specular highlight across the glass (Apple-esque)
+      const sheenX = (20 + p * 60).toFixed(2) // %
+      const sheenY = (8 + p * 18).toFixed(2) // %
+
+      shell.style.setProperty('--lg-drift-y', `${driftY}px`)
+      shell.style.setProperty('--lg-tilt-x', `${tiltX}deg`)
+      shell.style.setProperty('--lg-tilt-y', `${tiltY}deg`)
+      shell.style.setProperty('--lg-sheen-x', `${sheenX}%`)
+      shell.style.setProperty('--lg-sheen-y', `${sheenY}%`)
+
+      shell.style.boxShadow = `0 40px 120px rgba(0,0,0,0.72), 0 ${22 + p * 10}px ${60 + p * 50}px rgba(0,0,0,0.55)`
     }
 
     const onScroll = () => {
@@ -126,22 +139,25 @@ function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
   }, [scrollElRef])
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-      <div className="max-w-6xl w-full ui-parallax-stage">
-        <div ref={shellRef} className="ui-shell ui-shell--parallax">
+    <div className="ui-landing-stage">
+      {/* Spacer above gives scroll room while card remains visually “separate” */}
+      <div className="ui-landing-spacer" aria-hidden="true" />
+
+      <div className="ui-landing-stickwrap">
+        <div ref={shellRef} className="ui-shell ui-shell--liquid ui-shell--sticky">
           <div className="ui-hero">
             <div className="ui-kickers">
               <span className={`ui-kicker ${inter.className}`}>
                 <Icons.Shield /> Inspection-grade
               </span>
-              <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
+              <span className={`ui-kicker-muted ${inter.className}`}>Michigan-first · enterprise posture</span>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>Compliance you can run your restaurant on.</h1>
+            <h1 className={`ui-title ${outfit.className}`}>Inspection-grade compliance, operationalized.</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
-              A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans, and actionable
-              close/open checklists — without digging through manuals.
+              Serious answers grounded in Michigan Food Code and Washtenaw guidance. Photo risk scans, concise checklists, and a workflow
+              your team can run without guesswork.
             </p>
 
             <div className="ui-cta-row">
@@ -168,43 +184,45 @@ function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
             </div>
           </div>
 
-          {/* Minimal, enterprise “spec rows” */}
           <div className="ui-specgrid">
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
-              <div className={`ui-spec-body ${inter.className}`}>Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.</div>
+              <div className={`ui-spec-body ${inter.className}`}>Upload a walk-in or line photo. Verify the likely issues fast.</div>
             </div>
 
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Grounded answers</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
-              </div>
+              <div className={`ui-spec-body ${inter.className}`}>Ask normal questions. Get rulebook-backed guidance you can cite.</div>
             </div>
 
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Action checklist</div>
-              <div className={`ui-spec-body ${inter.className}`}>Convert concerns into a short close/open list your lead can run — today.</div>
+              <div className={`ui-spec-body ${inter.className}`}>Convert concerns into a short open/close list your lead can run today.</div>
             </div>
           </div>
 
           <div className={`ui-footerline ${inter.className}`}>One site license per restaurant · 7-day trial · Cancel anytime</div>
         </div>
-
-        <footer className="pt-10 text-xs text-white/45">
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/terms" className="hover:text-white/70">
-              Terms
-            </Link>
-            <Link href="/privacy" className="hover:text-white/70">
-              Privacy
-            </Link>
-            <Link href="/contact" className="hover:text-white/70">
-              Contact
-            </Link>
-          </div>
-        </footer>
       </div>
+
+      {/* Footer is real content that scrolls “behind” the sticky card */}
+      <footer className="ui-landing-footer text-xs">
+        <div className="flex flex-wrap gap-4 justify-center">
+          <Link href="/terms" className="hover:text-white/75 text-white/55">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-white/75 text-white/55">
+            Privacy
+          </Link>
+          <Link href="/contact" className="hover:text-white/75 text-white/55">
+            Contact
+          </Link>
+        </div>
+        <div className={`mt-3 text-center text-white/40 ${inter.className}`}>Built for operators. Not for hobbyists.</div>
+      </footer>
+
+      {/* Spacer below gives more scroll so you can feel the card independence */}
+      <div className="ui-landing-spacer ui-landing-spacer--bottom" aria-hidden="true" />
     </div>
   )
 }
@@ -405,8 +423,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
               <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as
-                two.
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
               </p>
             </div>
 
@@ -487,7 +504,7 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
-  // UI/UX-only: ref for landing scroll container so the glass shell can parallax
+  // Landing scroll container ref (for sticky card lighting/micro motion)
   const landingScrollRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
@@ -782,30 +799,30 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Background: remove grid; keep premium glow + subtle “satin” texture */
+        /* Background: calm, premium, no grid */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 56%),
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.13), transparent 56%),
             radial-gradient(980px 560px at 18% 6%, rgba(0, 255, 200, 0.085), transparent 58%),
             radial-gradient(980px 560px at 86% 8%, rgba(120, 90, 255, 0.085), transparent 60%),
-            radial-gradient(900px 900px at 50% 72%, rgba(255, 255, 255, 0.04), transparent 62%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0px, rgba(255, 255, 255, 0.018) 1px, transparent 1px, transparent 9px);
+            radial-gradient(900px 900px at 50% 72%, rgba(255, 255, 255, 0.035), transparent 62%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.016) 0px, rgba(255, 255, 255, 0.016) 1px, transparent 1px, transparent 10px);
           opacity: 1;
           mask-image: radial-gradient(circle at 50% 20%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
-        /* Soft vignette */
+        /* Vignette */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 72%);
-          opacity: 0.95;
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.64) 74%);
+          opacity: 0.96;
         }
 
         ::-webkit-scrollbar {
@@ -819,12 +836,12 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Header */
+        /* Header (fixed feel) */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(5, 6, 8, 0.68);
+          backdrop-filter: blur(18px) saturate(1.2);
+          -webkit-backdrop-filter: blur(18px) saturate(1.2);
         }
 
         .ui-brand {
@@ -838,56 +855,103 @@ export default function Page() {
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
-        /* Parallax stage (landing only) */
-        .ui-parallax-stage {
-          perspective: 1200px;
-          perspective-origin: 50% 20%;
+        /* Landing scroll stage */
+        .ui-landing-stage {
+          max-width: 1100px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 18px 14px;
         }
 
-        /* Premium “real quality Liquid Glass” shell */
+        /* Create scroll space so sticky card feels “independent” */
+        .ui-landing-spacer {
+          height: clamp(24px, 6vh, 70px);
+        }
+        .ui-landing-spacer--bottom {
+          height: clamp(120px, 18vh, 220px);
+        }
+
+        /* The sticky wrapper keeps the card visible while other content scrolls */
+        .ui-landing-stickwrap {
+          position: sticky;
+          top: calc(72px + 10px); /* header height + breathing room */
+          z-index: 5;
+          display: flex;
+          justify-content: center;
+        }
+
+        /* Footer scrolls beneath the card */
+        .ui-landing-footer {
+          margin-top: 18px;
+          padding: 18px 10px 0;
+        }
+
+        /* Premium “Apple-esque” Liquid Glass shell */
         .ui-shell {
           position: relative;
           border-radius: 22px;
           overflow: hidden;
-
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016));
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+          width: min(980px, 100%);
         }
 
-        /* Optical highlights + edge definition (makes it easier to see) */
-        .ui-shell::before {
+        .ui-shell--liquid {
+          /* CSS vars controlled by JS */
+          --lg-drift-y: 0px;
+          --lg-tilt-x: 0deg;
+          --lg-tilt-y: 0deg;
+          --lg-sheen-x: 35%;
+          --lg-sheen-y: 12%;
+
+          transform: translate3d(0, var(--lg-drift-y), 0) rotateX(var(--lg-tilt-x)) rotateY(var(--lg-tilt-y));
+          transform-style: preserve-3d;
+          will-change: transform, box-shadow;
+
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(22px) saturate(1.3);
+          -webkit-backdrop-filter: blur(22px) saturate(1.3);
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72);
+
+          /* subtle internal contrast to make it easy to see */
+          outline: 1px solid rgba(0, 0, 0, 0.38);
+          outline-offset: -2px;
+        }
+
+        /* Specular highlight + edge glow */
+        .ui-shell--liquid::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          pointer-events: none;
+          background:
+            radial-gradient(900px 340px at var(--lg-sheen-x) var(--lg-sheen-y), rgba(255, 255, 255, 0.20), transparent 58%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.11), transparent 34%),
+            radial-gradient(700px 420px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
+            radial-gradient(700px 420px at 86% 12%, rgba(120, 90, 255, 0.06), transparent 60%);
+          opacity: 0.95;
+          mix-blend-mode: screen;
+        }
+
+        /* Noise + inner rim light (keeps it “real glass”, not flat) */
+        .ui-shell--liquid::after {
           content: '';
           position: absolute;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(900px 300px at 50% 0%, rgba(255, 255, 255, 0.12), transparent 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 30%);
-          opacity: 0.9;
-          mix-blend-mode: screen;
-        }
-
-        /* Subtle inner shadow to separate from background */
-        .ui-shell::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
+            linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 36%),
+            radial-gradient(1200px 520px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 62%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+          background-size: auto, auto, 160px 160px;
+          opacity: 0.22;
           box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.08),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.10),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.05),
             inset 0 0 0 1px rgba(0, 0, 0, 0.25);
-          opacity: 1;
-        }
-
-        .ui-shell--parallax {
-          transform-style: preserve-3d;
-          will-change: transform, box-shadow;
         }
 
         .ui-hero {
-          padding: 28px 22px 20px;
+          padding: clamp(18px, 2.6vw, 28px) clamp(16px, 2.4vw, 22px) 18px;
           position: relative;
           z-index: 1;
         }
@@ -906,8 +970,8 @@ export default function Page() {
           gap: 8px;
           padding: 7px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.05);
           font-size: 11px;
           color: rgba(255, 255, 255, 0.86);
           letter-spacing: 0.14em;
@@ -932,7 +996,7 @@ export default function Page() {
         .ui-subtitle {
           font-size: 14px;
           line-height: 1.75;
-          color: rgba(255, 255, 255, 0.72); /* improved legibility */
+          color: rgba(255, 255, 255, 0.74);
           max-width: 72ch;
         }
 
@@ -959,8 +1023,8 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .ui-dot {
@@ -970,18 +1034,18 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.22);
         }
 
-        /* Spec grid (enterprise separators) */
+        /* Spec grid */
         .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
-          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          border-top: 1px solid rgba(255, 255, 255, 0.10);
           position: relative;
           z-index: 1;
         }
 
         .ui-spec {
           padding: 18px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.07);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .ui-spec:first-child {
@@ -999,7 +1063,7 @@ export default function Page() {
         .ui-spec-body {
           font-size: 12px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.66); /* improved legibility */
+          color: rgba(255, 255, 255, 0.68);
           max-width: 76ch;
         }
 
@@ -1009,7 +1073,7 @@ export default function Page() {
           }
           .ui-spec {
             border-top: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.07);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
           }
           .ui-spec:first-child {
             border-left: none;
@@ -1018,7 +1082,7 @@ export default function Page() {
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          border-top: 1px solid rgba(255, 255, 255, 0.10);
           color: rgba(255, 255, 255, 0.52);
           font-size: 12px;
           position: relative;
@@ -1053,13 +1117,13 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.92);
           border: 1px solid rgba(255, 255, 255, 0.14);
         }
 
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.07);
           border-color: rgba(255, 255, 255, 0.2);
         }
 
@@ -1071,13 +1135,13 @@ export default function Page() {
           justify-content: center;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.84);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
 
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.07);
           border-color: rgba(255, 255, 255, 0.2);
           color: rgba(255, 255, 255, 0.96);
         }
@@ -1088,15 +1152,15 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(6, 7, 9, 0.86);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
+          backdrop-filter: blur(18px) saturate(1.2);
+          -webkit-backdrop-filter: blur(18px) saturate(1.2);
         }
 
         .ui-input {
           width: 100%;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.94);
           outline: none;
@@ -1109,7 +1173,7 @@ export default function Page() {
 
         .ui-input:focus {
           border-color: rgba(255, 255, 255, 0.24);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.05);
           box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
         }
 
@@ -1126,7 +1190,7 @@ export default function Page() {
           border-color: rgba(239, 68, 68, 0.35);
         }
 
-        /* Pricing premium surfaces */
+        /* Pricing surfaces */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1134,7 +1198,7 @@ export default function Page() {
           padding: 6px 10px;
           border-radius: 999px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           font-size: 11px;
           color: rgba(255, 255, 255, 0.78);
           letter-spacing: 0.12em;
@@ -1170,7 +1234,7 @@ export default function Page() {
           padding: 8px 10px;
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.8);
           font-size: 12px;
           font-weight: 700;
@@ -1187,7 +1251,7 @@ export default function Page() {
           border-radius: 14px;
           padding: 12px 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.92);
         }
 
@@ -1201,11 +1265,56 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.62);
         }
 
+        /* Fixed bottom bar for landing (top+bottom fixed, middle scroll) */
+        .ui-landing-bottombar {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 60;
+          border-top: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(5, 6, 8, 0.58);
+          backdrop-filter: blur(20px) saturate(1.25);
+          -webkit-backdrop-filter: blur(20px) saturate(1.25);
+        }
+
+        .ui-landing-bottombar-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 10px 14px;
+          padding-bottom: max(10px, env(safe-area-inset-bottom));
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .ui-landing-bottombar-note {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.50);
+          line-height: 1.3;
+        }
+
+        @media (max-width: 520px) {
+          .ui-landing-bottombar-inner {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .ui-landing-bottombar-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .ui-landing-bottombar-note {
+            text-align: center;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
           }
-          .ui-shell--parallax {
+          .ui-shell--liquid {
             transform: none !important;
           }
         }
@@ -1215,13 +1324,16 @@ export default function Page() {
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
+        {/* Top header stays fixed */}
+        <header className="sticky top-0 z-50 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
-              {hasActiveSubscription && <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>}
+              {hasActiveSubscription && (
+                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -1281,13 +1393,37 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div ref={landingScrollRef} className="flex-1 min-h-0 overflow-y-auto" style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable' }}>
-              <LandingPage
-                onShowPricing={() => setShowPricingModal(true)}
-                onShowAuth={() => setShowAuthModal(true)}
-                scrollElRef={landingScrollRef}
-              />
-            </div>
+            <>
+              {/* Middle scroll area (between fixed top + fixed bottom) */}
+              <div
+                ref={landingScrollRef}
+                className="flex-1 min-h-0 overflow-y-auto"
+                style={{
+                  overscrollBehavior: 'contain',
+                  scrollbarGutter: 'stable',
+                  paddingBottom: 'calc(88px + env(safe-area-inset-bottom))', // room for bottom bar
+                }}
+              >
+                <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} scrollElRef={landingScrollRef} />
+              </div>
+
+              {/* Fixed bottom bar */}
+              <div className="ui-landing-bottombar">
+                <div className="ui-landing-bottombar-inner">
+                  <div className={`ui-landing-bottombar-note ${inter.className}`}>
+                    Inspection workflows for operators. Grounded, auditable output.
+                  </div>
+                  <div className="ui-landing-bottombar-actions flex gap-2">
+                    <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
+                      Sign in
+                    </button>
+                    <button onClick={() => setShowPricingModal(true)} className="ui-btn ui-btn-primary">
+                      Start trial
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
               <div
@@ -1386,4 +1522,4 @@ export default function Page() {
       </div>
     </>
   )
-}
+
