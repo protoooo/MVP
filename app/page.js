@@ -1,6 +1,3 @@
-I'm going to give you the liquid glass, I'm sorry, the app.paste file we're working with right now, the one I like the most, but still need some upgrades. So, I like how it looks a lot, but it's a little hard to see. I am liking it. It's looking like a professional dashboard. I don't know if I love the grid. I don't know if we can do a different type of background. Maybe we can implement something from Ace Eternity UI, or maybe not. I'll find something to provide, see if it's worth doing, but I'm going to give you this first. But I love what we have so far. What I'd like is when I notice moving the page, that the liquid glass card that everything is sitting on my page moves with a GIF, all moving together. I kind of want that card to move alone, if you know what I mean.
-
-
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -80,11 +77,58 @@ const Icons = {
   ),
 }
 
-function LandingPage({ onShowPricing, onShowAuth }) {
+/**
+ * UI/UX-only: adds a subtle “card moves alone” parallax on the landing shell,
+ * and improves contrast/legibility. No app logic changes.
+ */
+function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
+  const shellRef = useRef(null)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    const scroller = scrollElRef?.current
+    const shell = shellRef.current
+    if (!scroller || !shell) return
+
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReduced) return
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+    const update = () => {
+      rafRef.current = null
+      const t = clamp(scroller.scrollTop, 0, 640)
+
+      // The “liquid glass card” drifts subtly, independent of content scroll
+      const driftY = t * 0.14
+      const tiltX = t * 0.004 // deg
+      const tiltY = t * 0.0015 // deg
+
+      shell.style.transform = `translate3d(0, ${driftY}px, 0) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+      shell.style.boxShadow = `0 40px 120px rgba(0,0,0,0.72), 0 ${18 + t * 0.05}px ${56 + t * 0.16}px rgba(0,0,0,0.55)`
+    }
+
+    const onScroll = () => {
+      if (rafRef.current != null) return
+      rafRef.current = window.requestAnimationFrame(update)
+    }
+
+    update()
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+    }
+  }, [scrollElRef])
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-      <div className="max-w-6xl w-full">
-        <div className="ui-shell">
+      <div className="max-w-6xl w-full ui-parallax-stage">
+        <div ref={shellRef} className="ui-shell ui-shell--parallax">
           <div className="ui-hero">
             <div className="ui-kickers">
               <span className={`ui-kicker ${inter.className}`}>
@@ -93,13 +137,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>
-              Compliance you can run your restaurant on.
-            </h1>
+            <h1 className={`ui-title ${outfit.className}`}>Compliance you can run your restaurant on.</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
-              A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans,
-              and actionable close/open checklists — without digging through manuals.
+              A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans, and actionable
+              close/open checklists — without digging through manuals.
             </p>
 
             <div className="ui-cta-row">
@@ -126,13 +168,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* Minimal, enterprise “spec rows” (not playful cards) */}
+          {/* Minimal, enterprise “spec rows” */}
           <div className="ui-specgrid">
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.
-              </div>
+              <div className={`ui-spec-body ${inter.className}`}>Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.</div>
             </div>
 
             <div className="ui-spec">
@@ -144,15 +184,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Action checklist</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Convert concerns into a short close/open list your lead can run — today.
-              </div>
+              <div className={`ui-spec-body ${inter.className}`}>Convert concerns into a short close/open list your lead can run — today.</div>
             </div>
           </div>
 
-          <div className={`ui-footerline ${inter.className}`}>
-            One site license per restaurant · 7-day trial · Cancel anytime
-          </div>
+          <div className={`ui-footerline ${inter.className}`}>One site license per restaurant · 7-day trial · Cancel anytime</div>
         </div>
 
         <footer className="pt-10 text-xs text-white/45">
@@ -358,9 +394,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-6">
           <div className={`ui-tag ${inter.className}`}>Enterprise • Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>
-            For operators who want inspection-grade confidence. Includes full chat + photo scanning.
-          </p>
+          <p className={`text-sm text-white/60 ${inter.className}`}>For operators who want inspection-grade confidence. Includes full chat + photo scanning.</p>
         </div>
 
         <div className="ui-pricewrap p-6">
@@ -371,7 +405,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
               <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as
+                two.
               </p>
             </div>
 
@@ -419,9 +454,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>
-              Not for hobbyists. Built for real operators who want inspection-ready workflows.
-            </p>
+            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>Not for hobbyists. Built for real operators who want inspection-ready workflows.</p>
           </div>
         </div>
       </div>
@@ -453,6 +486,9 @@ export default function Page() {
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
+
+  // UI/UX-only: ref for landing scroll container so the glass shell can parallax
+  const landingScrollRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
 
@@ -746,42 +782,41 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Enterprise glow + grid (subtle, expensive) */
+        /* Background: remove grid; keep premium glow + subtle “satin” texture */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 500px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 55%),
-            radial-gradient(900px 520px at 20% 10%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(900px 520px at 85% 10%, rgba(120, 90, 255, 0.06), transparent 55%),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 56%),
+            radial-gradient(980px 560px at 18% 6%, rgba(0, 255, 200, 0.085), transparent 58%),
+            radial-gradient(980px 560px at 86% 8%, rgba(120, 90, 255, 0.085), transparent 60%),
+            radial-gradient(900px 900px at 50% 72%, rgba(255, 255, 255, 0.04), transparent 62%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.018) 0px, rgba(255, 255, 255, 0.018) 1px, transparent 1px, transparent 9px);
           opacity: 1;
-          mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+          mask-image: radial-gradient(circle at 50% 20%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
-        /* soft vignette */
+        /* Soft vignette */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.55) 70%);
-          opacity: 0.9;
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 72%);
+          opacity: 0.95;
         }
 
         ::-webkit-scrollbar {
           width: 9px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.14);
           border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.2);
         }
 
         /* Header */
@@ -798,22 +833,63 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
-        /* Premium “shell” */
+        /* Parallax stage (landing only) */
+        .ui-parallax-stage {
+          perspective: 1200px;
+          perspective-origin: 50% 20%;
+        }
+
+        /* Premium “real quality Liquid Glass” shell */
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          position: relative;
           border-radius: 22px;
           overflow: hidden;
+
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016));
           box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Optical highlights + edge definition (makes it easier to see) */
+        .ui-shell::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(900px 300px at 50% 0%, rgba(255, 255, 255, 0.12), transparent 55%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 30%);
+          opacity: 0.9;
+          mix-blend-mode: screen;
+        }
+
+        /* Subtle inner shadow to separate from background */
+        .ui-shell::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+            inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+          opacity: 1;
+        }
+
+        .ui-shell--parallax {
+          transform-style: preserve-3d;
+          will-change: transform, box-shadow;
         }
 
         .ui-hero {
           padding: 28px 22px 20px;
+          position: relative;
+          z-index: 1;
         }
 
         .ui-kickers {
@@ -830,10 +906,10 @@ export default function Page() {
           gap: 8px;
           padding: 7px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.86);
           letter-spacing: 0.14em;
           text-transform: uppercase;
           font-weight: 800;
@@ -841,7 +917,7 @@ export default function Page() {
 
         .ui-kicker-muted {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         .ui-title {
@@ -849,13 +925,14 @@ export default function Page() {
           line-height: 1.02;
           letter-spacing: -0.05em;
           margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.98);
+          text-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
         }
 
         .ui-subtitle {
           font-size: 14px;
           line-height: 1.75;
-          color: rgba(255, 255, 255, 0.64);
+          color: rgba(255, 255, 255, 0.72); /* improved legibility */
           max-width: 72ch;
         }
 
@@ -873,57 +950,66 @@ export default function Page() {
           align-items: center;
           margin-top: 14px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
+
         .ui-trust-item {
           display: inline-flex;
           align-items: center;
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.02);
         }
+
         .ui-dot {
           width: 4px;
           height: 4px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.22);
         }
 
         /* Spec grid (enterprise separators) */
         .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          position: relative;
+          z-index: 1;
         }
+
         .ui-spec {
           padding: 18px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid rgba(255, 255, 255, 0.07);
         }
+
         .ui-spec:first-child {
           border-top: none;
         }
+
         .ui-spec-title {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           margin-bottom: 6px;
         }
+
         .ui-spec-body {
           font-size: 12px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.58);
+          color: rgba(255, 255, 255, 0.66); /* improved legibility */
           max-width: 76ch;
         }
+
         @media (min-width: 920px) {
           .ui-specgrid {
             grid-template-columns: 1fr 1fr 1fr;
           }
           .ui-spec {
             border-top: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 1px solid rgba(255, 255, 255, 0.07);
           }
           .ui-spec:first-child {
             border-left: none;
@@ -932,9 +1018,11 @@ export default function Page() {
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.45);
+          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          color: rgba(255, 255, 255, 0.52);
           font-size: 12px;
+          position: relative;
+          z-index: 1;
         }
 
         /* Buttons */
@@ -948,6 +1036,7 @@ export default function Page() {
           transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
           user-select: none;
         }
+
         .ui-btn:active {
           transform: translateY(1px);
         }
@@ -958,18 +1047,20 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.2);
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
+
         .ui-btn-primary:hover {
           box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.14);
         }
+
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
         .ui-icon-btn {
@@ -979,21 +1070,22 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.84);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
+
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
-          color: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: rgba(255, 255, 255, 0.96);
         }
 
         /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(6, 7, 9, 0.86);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
           backdrop-filter: blur(18px);
@@ -1003,29 +1095,33 @@ export default function Page() {
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
+
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(255, 255, 255, 0.42);
         }
+
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.24);
+          background: rgba(255, 255, 255, 0.04);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
         }
 
         .ui-toast {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.04);
         }
+
         .ui-toast-ok {
           border-color: rgba(34, 197, 94, 0.35);
         }
+
         .ui-toast-err {
           border-color: rgba(239, 68, 68, 0.35);
         }
@@ -1037,10 +1133,10 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.78);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1049,20 +1145,21 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.016));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
         }
+
         .ui-pricewrap::before {
           content: '';
           position: absolute;
           inset: -40% -30%;
           background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
+            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
+            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.07), transparent 55%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.07), transparent 55%);
           pointer-events: none;
         }
 
@@ -1072,9 +1169,9 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.8);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1082,30 +1179,34 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.09);
         }
 
-        /* Chat bubbles — tool-like (less playful) */
+        /* Chat bubbles — tool-like */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.92);
         }
+
         .ui-bubble-user {
-          background: rgba(255, 255, 255, 0.92);
+          background: rgba(255, 255, 255, 0.94);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.22);
         }
 
         .ui-empty {
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
+          }
+          .ui-shell--parallax {
+            transform: none !important;
           }
         }
       `}</style>
@@ -1120,9 +1221,7 @@ export default function Page() {
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
-              {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
-              )}
+              {hasActiveSubscription && <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>}
             </div>
 
             <div className="flex items-center gap-2">
@@ -1182,8 +1281,12 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+            <div ref={landingScrollRef} className="flex-1 min-h-0 overflow-y-auto" style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable' }}>
+              <LandingPage
+                onShowPricing={() => setShowPricingModal(true)}
+                onShowAuth={() => setShowAuthModal(true)}
+                scrollElRef={landingScrollRef}
+              />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
