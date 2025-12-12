@@ -58,7 +58,6 @@ const Icons = {
     </svg>
   ),
 
-  // Retro/N64-ish icons for the landing cards (inline SVG; no new deps)
   RetroCamera: () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
       <path d="M7 7h2l1-2h4l1 2h2a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z" />
@@ -89,7 +88,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Photo scan',
       icon: <Icons.RetroCamera />,
       body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
-      tint: 'rgba(45, 212, 191, 0.22)',
+      tint: 'rgba(45, 212, 191, 0.26)',
       anim: 'card-drift-a',
       delay: '0.06s',
     },
@@ -98,7 +97,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Grounded',
       icon: <Icons.GamePak />,
       body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
-      tint: 'rgba(59, 130, 246, 0.20)',
+      tint: 'rgba(59, 130, 246, 0.22)',
       anim: 'card-drift-b',
       delay: '0.12s',
     },
@@ -127,7 +126,9 @@ function LandingPage({ onShowPricing }) {
           <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
             Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
           </p>
-          <p className={`text-xs text-slate-600 ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
+          <p className={`text-xs text-slate-600 ${inter.className}`}>
+            Washtenaw County today · Wayne + Oakland planned for 2026.
+          </p>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
@@ -472,7 +473,7 @@ export default function Page() {
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
-    const threshold = 120 // px from bottom
+    const threshold = 120
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
@@ -746,7 +747,6 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* --- Viewport fit fix (prevents double-100vh and “input off screen” issues) --- */
         html,
         body {
           height: 100%;
@@ -758,158 +758,146 @@ export default function Page() {
         }
 
         /* =========================================================
-           N64 TRANSLUCENT PLASTIC  ✕  LIQUID GLASS (PUSHED HARD)
+           REAL LIQUID GLASS + N64 TRANSLUCENT PLASTIC (NO WHITE BORDERS)
            ========================================================= */
-
         :root {
-          /* global “shell colors” (you can tweak these) */
-          --lg-a: 20 184 166; /* teal */
-          --lg-b: 34 211 238; /* cyan */
-          --lg-c: 124 58 237; /* violet */
-          --ink: 15 23 42;
+          /* tinted “plastic shell” colors */
+          --p-teal: 20 184 166;
+          --p-cyan: 34 211 238;
+          --p-blue: 59 130 246;
+          --p-violet: 168 85 247;
 
-          /* stronger glass + stronger rim */
-          --glass-blur: 22px;
-          --rim: 2.5px;
-          --rim-soft: 0.58;
+          /* glass strength */
+          --glass-blur: 28px;
+          --glass-sat: 1.9;
 
-          /* glass body */
-          --g-top: 0.80;
-          --g-bot: 0.44;
+          /* overall surface opacity */
+          --glass-top: 0.72;
+          --glass-bot: 0.26;
+
+          /* rim thickness (NOT a border; it’s a masked gradient) */
+          --rim-pad: 2.25px;
 
           /* shadows */
-          --sh-1: 0 22px 70px rgba(2, 6, 23, 0.18);
-          --sh-2: 0 3px 14px rgba(2, 6, 23, 0.12);
-          --sh-in: inset 0 1px 2px rgba(255, 255, 255, 0.70), inset 0 -18px 48px rgba(2, 6, 23, 0.06);
+          --shA: 0 26px 90px rgba(2, 6, 23, 0.16);
+          --shB: 0 6px 18px rgba(2, 6, 23, 0.10);
+          --inA: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+          --inB: inset 0 -22px 44px rgba(2, 6, 23, 0.08);
+          --inC: inset 0 0 0 1px rgba(var(--p-cyan), 0.18);
 
           /* specular */
           --spec: rgba(255, 255, 255, 0.72);
         }
 
-        /* Background stays consistent + PREMIUM: refraction + plastic glow + micro grid */
+        /* Background: caustics + soft refraction (NO grid/dither) */
         body.n64-glass-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background-image:
-            radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.74), transparent 42%),
-            radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.42), transparent 52%),
-            radial-gradient(circle at 22% 70%, rgba(var(--lg-a), 0.20), transparent 56%),
-            radial-gradient(circle at 86% 74%, rgba(var(--lg-b), 0.16), transparent 58%),
-            radial-gradient(circle at 70% 46%, rgba(var(--lg-c), 0.10), transparent 60%),
+            radial-gradient(circle at 16% 10%, rgba(255, 255, 255, 0.78), transparent 46%),
+            radial-gradient(circle at 86% 12%, rgba(255, 255, 255, 0.44), transparent 56%),
+            radial-gradient(circle at 20% 72%, rgba(var(--p-teal), 0.18), transparent 60%),
+            radial-gradient(circle at 86% 72%, rgba(var(--p-blue), 0.14), transparent 64%),
+            radial-gradient(circle at 66% 48%, rgba(var(--p-violet), 0.10), transparent 66%),
             conic-gradient(
-              from 220deg at 60% 20%,
-              rgba(var(--lg-b), 0.10),
-              rgba(var(--lg-a), 0.10),
-              rgba(var(--lg-c), 0.08),
-              rgba(var(--lg-b), 0.10)
+              from 210deg at 60% 22%,
+              rgba(var(--p-cyan), 0.10),
+              rgba(var(--p-teal), 0.10),
+              rgba(var(--p-violet), 0.08),
+              rgba(var(--p-blue), 0.09),
+              rgba(var(--p-cyan), 0.10)
             );
           mix-blend-mode: soft-light;
           opacity: 0.98;
-          filter: saturate(1.25) contrast(1.02);
+          filter: saturate(1.35);
         }
 
+        /* kill the old overlay if anything else ever adds it */
         body.n64-glass-bg::after {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background-image:
-            linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-            radial-gradient(rgba(15, 23, 42, 0.07) 0.55px, transparent 0.65px);
-          background-size: 22px 22px, 22px 22px, 5px 5px;
-          opacity: 0.18;
+          content: none !important;
         }
 
-        /* “Spectrum line” gets more plastic glow */
-        .n64-spectrum-line {
-          position: relative;
-        }
-        .n64-spectrum-line::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: -2px;
-          height: 3px;
-          background: linear-gradient(90deg, rgba(var(--lg-b), 0.9), rgba(var(--lg-a), 0.95), rgba(59, 130, 246, 0.9), rgba(var(--lg-c), 0.9));
-          opacity: 0.62;
-          filter: blur(0.2px) saturate(1.25);
-        }
-
-        /* Border wrapper gets a thicker iridescent rim */
-        .n64-spectrum-border {
-          position: relative;
-        }
+        /* Slightly toned down message rim effect (no white outline) */
         .n64-spectrum-border::after {
           content: '';
           position: absolute;
           inset: 0;
           border-radius: inherit;
-          padding: 2px;
+          padding: 1.5px;
           background: linear-gradient(
             135deg,
-            rgba(255, 255, 255, 0.55),
-            rgba(var(--lg-b), 0.20),
-            rgba(var(--lg-a), 0.18),
-            rgba(var(--lg-c), 0.16),
-            rgba(255, 255, 255, 0.40)
+            rgba(var(--p-cyan), 0.22),
+            rgba(var(--p-teal), 0.18),
+            rgba(var(--p-violet), 0.14),
+            rgba(var(--p-blue), 0.16)
           );
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
           pointer-events: none;
-          opacity: 0.62;
+          opacity: 0.34;
         }
 
-        /* ---------- N64 liquid glass surfaces (more of BOTH) ---------- */
-
+        /* ===== Core surfaces (NO borders, just glass + plastic thickness) ===== */
         .n64-liquid-panel,
         .n64-liquid-panel-strong,
-        .n64-liquid-card {
+        .n64-liquid-card,
+        .n64-liquid-chip,
+        .n64-pill,
+        .retro-icon-chip,
+        .n64-liquid-cta {
+          border: 0 !important; /* removes the “white border” problem */
+          outline: none !important;
           position: relative;
           overflow: hidden;
           transform: translateZ(0);
+        }
 
-          border: var(--rim) solid rgba(255, 255, 255, var(--rim-soft));
-          box-shadow: var(--sh-1), var(--sh-2), var(--sh-in);
-
+        /* Shared liquid-glass base */
+        .n64-liquid-panel,
+        .n64-liquid-panel-strong,
+        .n64-liquid-card {
           background:
-            linear-gradient(180deg, rgba(255, 255, 255, var(--g-top)), rgba(255, 255, 255, var(--g-bot))),
-            radial-gradient(140% 90% at 12% 10%, rgba(var(--lg-a), 0.22), transparent 58%),
-            radial-gradient(140% 90% at 92% 18%, rgba(var(--lg-b), 0.18), transparent 62%),
-            conic-gradient(from 210deg at 70% 30%, rgba(var(--lg-b), 0.08), rgba(var(--lg-c), 0.06), rgba(var(--lg-a), 0.08), rgba(var(--lg-b), 0.08));
+            linear-gradient(180deg, rgba(255, 255, 255, var(--glass-top)), rgba(255, 255, 255, var(--glass-bot))),
+            radial-gradient(140% 90% at 12% 10%, rgba(var(--p-cyan), 0.16), transparent 60%),
+            radial-gradient(140% 90% at 92% 22%, rgba(var(--p-teal), 0.14), transparent 66%),
+            conic-gradient(from 220deg at 64% 26%, rgba(var(--p-blue), 0.10), rgba(var(--p-violet), 0.08), rgba(var(--p-teal), 0.10), rgba(var(--p-blue), 0.10));
+          box-shadow: var(--shA), var(--shB), var(--inA), var(--inB), var(--inC);
         }
 
         @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
           .n64-liquid-panel,
           .n64-liquid-panel-strong,
-          .n64-liquid-card {
-            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
-            backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
+          .n64-liquid-card,
+          .n64-liquid-chip,
+          .n64-pill,
+          .retro-icon-chip,
+          .n64-liquid-cta {
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+            backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
           }
         }
 
-        /* Liquid refraction + strong specular band */
+        /* Specular highlight (liquid glass “wet” streak) */
         .n64-liquid-panel::before,
         .n64-liquid-panel-strong::before,
         .n64-liquid-card::before {
           content: '';
           position: absolute;
-          inset: -8%;
+          inset: -20%;
           pointer-events: none;
           border-radius: inherit;
           background:
-            linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.18) 18%, rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.0) 70%),
-            radial-gradient(120% 70% at 18% 18%, rgba(255, 255, 255, 0.60), transparent 54%),
-            linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.22) 52%, transparent 62%);
-          transform: translateY(-10%) rotate(-2deg);
-          opacity: 0.92;
+            radial-gradient(120% 70% at 18% 18%, rgba(255, 255, 255, 0.62), transparent 56%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.70) 0%, rgba(255, 255, 255, 0.16) 24%, rgba(255, 255, 255, 0.00) 58%),
+            linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.18) 52%, transparent 64%);
+          transform: rotate(-6deg) translateY(-6%);
+          opacity: 0.85;
         }
 
-        /* N64-ish dither + chroma edge */
+        /* N64 “thickness rim” (tinted, masked — NOT white) */
         .n64-liquid-panel::after,
         .n64-liquid-panel-strong::after,
         .n64-liquid-card::after {
@@ -918,80 +906,61 @@ export default function Page() {
           inset: 0;
           pointer-events: none;
           border-radius: inherit;
-          background-image:
-            radial-gradient(rgba(2, 6, 23, 0.10) 0.55px, transparent 0.65px),
-            linear-gradient(90deg, rgba(var(--lg-b), 0.10), rgba(var(--lg-c), 0.08)),
-            linear-gradient(0deg, rgba(var(--lg-a), 0.08), rgba(59, 130, 246, 0.06));
-          background-size: 6px 6px, 100% 100%, 100% 100%;
-          opacity: 0.22;
-          mix-blend-mode: soft-light;
+          padding: var(--rim-pad);
+          background: linear-gradient(
+            135deg,
+            rgba(var(--p-cyan), 0.34),
+            rgba(var(--p-teal), 0.26),
+            rgba(var(--p-blue), 0.18),
+            rgba(var(--p-violet), 0.18)
+          );
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0.52;
         }
 
-        /* Stronger modal glass */
+        /* Strong glass for modals */
         .n64-liquid-panel-strong {
-          --g-top: 0.86;
-          --g-bot: 0.50;
-          box-shadow: 0 26px 90px rgba(2, 6, 23, 0.22), 0 6px 18px rgba(2, 6, 23, 0.14), var(--sh-in);
-          border-color: rgba(255, 255, 255, 0.70);
+          --glass-top: 0.78;
+          --glass-bot: 0.30;
+          box-shadow: 0 34px 120px rgba(2, 6, 23, 0.18), 0 10px 26px rgba(2, 6, 23, 0.12), var(--inA), var(--inB), var(--inC);
         }
 
-        /* Card tint hook you already use */
+        /* Card tint hook you already pass */
         .n64-liquid-card {
           background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.40)),
-            radial-gradient(140% 90% at 12% 10%, rgba(var(--lg-a), 0.18), transparent 60%),
-            radial-gradient(140% 90% at 92% 26%, var(--glass-tint, rgba(var(--lg-b), 0.16)), transparent 64%),
-            conic-gradient(from 210deg at 70% 30%, rgba(var(--lg-b), 0.08), rgba(var(--lg-c), 0.06), rgba(var(--lg-a), 0.08), rgba(var(--lg-b), 0.08));
+            linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.22)),
+            radial-gradient(140% 90% at 12% 10%, rgba(var(--p-cyan), 0.14), transparent 60%),
+            radial-gradient(140% 90% at 92% 26%, var(--glass-tint, rgba(var(--p-teal), 0.18)), transparent 68%),
+            conic-gradient(from 220deg at 64% 26%, rgba(var(--p-blue), 0.10), rgba(var(--p-violet), 0.08), rgba(var(--p-teal), 0.10), rgba(var(--p-blue), 0.10));
         }
 
-        .n64-liquid-card:hover {
-          box-shadow: 0 28px 90px rgba(2, 6, 23, 0.18), 0 6px 18px rgba(2, 6, 23, 0.12), var(--sh-in);
-        }
-
-        /* Chips */
-        .n64-liquid-chip {
-          border: 2px solid rgba(255, 255, 255, 0.60);
-          background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.44)),
-            radial-gradient(120% 80% at 20% 18%, rgba(var(--lg-b), 0.14), transparent 60%);
-          box-shadow: 0 10px 28px rgba(2, 6, 23, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -12px 26px rgba(2, 6, 23, 0.06);
-          -webkit-backdrop-filter: blur(18px) saturate(1.35);
-          backdrop-filter: blur(18px) saturate(1.35);
-        }
-
-        /* Pills */
-        .n64-pill {
-          border: 2px solid rgba(255, 255, 255, 0.58);
-          background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34)),
-            radial-gradient(120% 80% at 20% 18%, rgba(var(--lg-a), 0.12), transparent 60%);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.60);
-          -webkit-backdrop-filter: blur(16px) saturate(1.35);
-          backdrop-filter: blur(16px) saturate(1.35);
-        }
-
-        /* Icon chip: more “N64 shell” bevel */
+        /* Chips + icon chip = more “plastic shell” */
+        .n64-liquid-chip,
         .retro-icon-chip {
-          border: 2px solid rgba(255, 255, 255, 0.62);
           background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.38)),
-            radial-gradient(120% 80% at 18% 18%, rgba(var(--lg-b), 0.18), transparent 60%),
-            radial-gradient(120% 80% at 84% 30%, rgba(var(--lg-a), 0.14), transparent 62%);
-          box-shadow: 0 12px 34px rgba(2, 6, 23, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.70), inset 0 -14px 30px rgba(2, 6, 23, 0.06);
-          -webkit-backdrop-filter: blur(18px) saturate(1.35);
-          backdrop-filter: blur(18px) saturate(1.35);
+            linear-gradient(180deg, rgba(255, 255, 255, 0.70), rgba(255, 255, 255, 0.20)),
+            radial-gradient(120% 80% at 18% 18%, rgba(var(--p-cyan), 0.18), transparent 62%),
+            radial-gradient(120% 80% at 84% 30%, rgba(var(--p-teal), 0.14), transparent 66%);
+          box-shadow: 0 18px 60px rgba(2, 6, 23, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -18px 34px rgba(2, 6, 23, 0.08),
+            inset 0 0 0 1px rgba(var(--p-cyan), 0.16);
         }
 
-        /* CTA button: thicker rim + glossy top */
-        .n64-liquid-cta {
-          border: 2px solid rgba(255, 255, 255, 0.45);
+        .n64-pill {
           background:
-            linear-gradient(180deg, rgba(var(--lg-a), 0.95), rgba(var(--lg-a), 0.62)),
-            radial-gradient(120% 80% at 18% 12%, rgba(255, 255, 255, 0.34), transparent 60%),
-            linear-gradient(90deg, rgba(var(--lg-b), 0.30), rgba(var(--lg-c), 0.18), rgba(var(--lg-b), 0.26));
-          box-shadow: 0 22px 70px rgba(var(--lg-a), 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.44);
-          -webkit-backdrop-filter: blur(14px) saturate(1.35);
-          backdrop-filter: blur(14px) saturate(1.35);
+            linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.18)),
+            radial-gradient(120% 80% at 20% 18%, rgba(var(--p-teal), 0.14), transparent 64%);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(var(--p-teal), 0.14);
+        }
+
+        /* CTA = liquid glass + soft “jelly” glow (no outline) */
+        .n64-liquid-cta {
+          background:
+            linear-gradient(180deg, rgba(var(--p-teal), 0.92), rgba(var(--p-teal), 0.58)),
+            radial-gradient(120% 80% at 18% 12%, rgba(255, 255, 255, 0.28), transparent 62%),
+            linear-gradient(90deg, rgba(var(--p-cyan), 0.28), rgba(var(--p-violet), 0.12), rgba(var(--p-cyan), 0.22));
+          box-shadow: 0 26px 90px rgba(var(--p-teal), 0.22), 0 8px 18px rgba(2, 6, 23, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
         /* scrollbars */
@@ -999,11 +968,11 @@ export default function Page() {
           width: 6px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(var(--lg-a), 0.34);
+          background: rgba(var(--p-teal), 0.26);
           border-radius: 999px;
         }
 
-        /* --- Your motion (kept) --- */
+        /* --- motion (your original) --- */
         @keyframes cardDriftA {
           0%,
           100% {
@@ -1039,15 +1008,6 @@ export default function Page() {
         }
         .card-drift-c {
           animation: cardDriftC 6.2s ease-in-out infinite;
-        }
-
-        @keyframes sheenSweep {
-          0% {
-            transform: translateX(-18%) rotate(10deg);
-          }
-          100% {
-            transform: translateX(22%) rotate(10deg);
-          }
         }
 
         @keyframes buttonPress {
@@ -1125,15 +1085,12 @@ export default function Page() {
         .animate-slide-up {
           animation: slideUp 0.3s ease-out;
         }
-
         .animate-slide-down {
           animation: slideDown 0.3s ease-out;
         }
-
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out;
         }
-
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
@@ -1141,11 +1098,9 @@ export default function Page() {
         .hover-lift {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .hover-lift:hover {
           transform: translateY(-2px);
         }
-
         .button-press:active {
           animation: buttonPress 0.15s ease;
         }
@@ -1155,7 +1110,7 @@ export default function Page() {
         }
 
         .shimmer-effect {
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.36) 50%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.30) 50%, transparent 100%);
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
@@ -1164,7 +1119,6 @@ export default function Page() {
           animation: ripple 2s ease-out infinite;
         }
 
-        /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
           .animate-float,
           .pulse-ring,
@@ -1185,12 +1139,9 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      {/* SINGLE viewport container; no nested 100dvh (fixes “not visible on load”) */}
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        {/* Header */}
         <header className="sticky top-0 z-40 flex-shrink-0 n64-spectrum-line border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1265,7 +1216,6 @@ export default function Page() {
           </div>
         </header>
 
-        {/* Main: flex-1 + min-h-0 ensures message list is visible immediately */}
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1273,7 +1223,6 @@ export default function Page() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Messages container */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
@@ -1329,7 +1278,6 @@ export default function Page() {
                 )}
               </div>
 
-              {/* Input bar */}
               <div className="flex-shrink-0 n64-spectrum-line border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
