@@ -17,238 +17,52 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
 const Icons = {
   Camera: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
-  Zap: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  ),
-  FileText: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
   Check: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   X: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Plus: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   Settings: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
   LogOut: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   Clock: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
-}
-
-const DOCUMENT_DISPLAY_NAMES = [
-  'MI Modified Food Code',
-  'FDA Food Code 2022',
-  'Washtenaw enforcement actions',
-  'Inspection report types · Washtenaw',
-  'Minimum cooking temperatures',
-  'Cooling foods guidance',
-  'Consumer advisory requirements',
-  'Date marking guide',
-  'Food labeling guide',
-  'Retail emergency action plans',
-]
-
-const DocumentPill = () => {
-  const [docIndex, setDocIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDocIndex((prev) => (prev + 1) % DOCUMENT_DISPLAY_NAMES.length)
-    }, 3200)
-    return () => clearInterval(interval)
-  }, [])
-
-  return (
-    <div className="hidden sm:flex ml-4">
-      <div className="inline-flex items-center rounded-sm border px-4 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase border-emerald-700 bg-black/60 text-emerald-300 font-mono">
-        <span key={docIndex} className="doc-fade">
-          {DOCUMENT_DISPLAY_NAMES[docIndex]}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-const LandingPage = ({ onShowPricing }) => {
-  return (
-    <div className="w-full relative z-10 min-h-full flex flex-col bg-[#020617] text-emerald-100 font-mono">
-      <section className="relative border-b border-emerald-900/70 bg-[#020617]">
-        <div className="max-w-6xl mx-auto px-6 pt-10 pb-14 flex flex-col items-center">
-          {/* top center copy */}
-          <div className="w-full max-w-3xl mx-auto mb-6 text-center space-y-1.5">
-            <p className={`text-[10px] font-semibold tracking-[0.22em] uppercase text-emerald-500 ${inter.className}`}>
-              WASHTENAW COUNTY · LIVE
-            </p>
-            <p className={`text-[11px] text-emerald-400 ${inter.className}`}>
-              Wayne County and Oakland County scheduled for 2026.
-            </p>
-            <p className={`text-[11px] leading-relaxed text-emerald-400/80 mt-1.5 ${inter.className}`}>
-              ProtocolLM watches your food safety the way a GM watches sales: in real time,
-              grounded in local enforcement actions and Michigan regulations.
-            </p>
-          </div>
-
-          {/* center “document” pill */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center rounded-sm border px-4 py-1 text-[10px] font-semibold tracking-[0.18em] uppercase border-emerald-700 bg-black/70 text-emerald-300 font-mono">
-              MICHIGAN MODIFIED FOOD CODE · INDEX
-            </div>
-          </div>
-
-          {/* how it works cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            {/* Card 1 */}
-            <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
-                    CAPTURE
-                  </span>
-                  <span className="text-emerald-500/70">ONLINE</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
-                  <span>Area</span>
-                  <span className="text-emerald-200">Walk-in / prep line</span>
-                  <span>Input</span>
-                  <span>Photo snapshot</span>
-                  <span>Output</span>
-                  <span>Risk scan</span>
-                </div>
-              </div>
-              <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
-                1 · Turn any device into a health inspector
-              </h3>
-              <p className={`text-[11px] leading-relaxed text-emerald-400/90 ${inter.className}`}>
-                Snap a quick photo of your walk-in, prep line, or dish area. protocolLM
-                analyzes the image for likely violations using your local health-department rules.
-              </p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
-                    RULEBOOK
-                  </span>
-                  <span className="text-emerald-500/70">SYNCED</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
-                  <span>Data</span>
-                  <span className="text-emerald-200">MI Food Code</span>
-                  <span>Source</span>
-                  <span>Local enforcement</span>
-                  <span>Mode</span>
-                  <span>Read-only</span>
-                </div>
-              </div>
-              <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
-                2 · We handle the rulebook, you see the risks
-              </h3>
-              <p className={`text-[11px] leading-relaxed text-emerald-400/90 ${inter.className}`}>
-                Behind the scenes, protocolLM checks each image against enforcement history
-                and the Michigan Food Code, so you&apos;re not hunting through PDFs or binders.
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="relative border border-emerald-900/70 rounded-sm p-4 flex flex-col min-h-[220px] bg-black/60">
-              <div className="h-32 mb-4 border border-emerald-900/70 bg-[#020617] px-3 py-2 flex flex-col justify-between text-[11px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-emerald-400/90 tracking-[0.16em] uppercase">
-                    CHECKLIST
-                  </span>
-                  <span className="text-emerald-500/70">READY</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-emerald-400/80 mt-1.5">
-                  <span>View</span>
-                  <span className="text-emerald-200">Line check tasks</span>
-                  <span>Format</span>
-                  <span>Action list</span>
-                  <span>Focus</span>
-                  <span>Before inspector</span>
-                </div>
-              </div>
-              <h3 className={`text-[13px] font-semibold mb-1 text-emerald-200 ${outfit.className}`}>
-                3 · Turn risk into a quick checklist
-              </h3>
-              <p className={`text-[11px] leading-relaxed text-emerald-400/90 ${inter.className}`}>
-                Get a clear list of likely issues and corrective actions. Turn a daily line
-                check into a simple, repeatable routine before the inspector walks in.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={onShowPricing}
-            className="mt-8 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-semibold py-3 px-8 rounded-sm uppercase tracking-[0.18em] shadow-sm transition-colors border border-emerald-300"
-          >
-            SIGN UP · COMPLIANCE ACCESS
-          </button>
-        </div>
-      </section>
-
-      <footer className="mt-auto py-6 text-center border-t border-emerald-900/70 bg-[#020617]">
-        <p className={`font-medium mb-3 text-[11px] ${inter.className} text-emerald-500/80`}>
-          Serving Washtenaw County food service establishments
-        </p>
-        <div className="flex justify-center gap-6 mb-2 text-[11px] font-medium text-emerald-500/80">
-          <Link href="/terms" className="hover:text-emerald-300 transition-colors">
-            Terms
-          </Link>
-          <Link href="/privacy" className="hover:text-emerald-300 transition-colors">
-            Privacy
-          </Link>
-          <Link href="/contact" className="hover:text-emerald-300 transition-colors">
-            Contact
-          </Link>
-        </div>
-      </footer>
-    </div>
-  )
 }
 
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
@@ -333,16 +147,16 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2
-              className={`text-lg font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
+              className={`text-xl md:text-2xl font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
             >
-              {mode === 'signin' && 'Sign in · protocolLM'}
+              {mode === 'signin' && 'Sign in to protocolLM'}
               {mode === 'signup' && 'Create access'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-[11px] text-emerald-400 ${inter.className}`}>
-              {mode === 'signin' && 'Use your restaurant account email.'}
-              {mode === 'signup' && 'Set up access for your location.'}
-              {mode === 'reset' && 'We will email you a reset link.'}
+            <p className={`text-xs md:text-sm text-emerald-400 ${inter.className}`}>
+              {mode === 'signin' && 'Use your work email for this location.'}
+              {mode === 'signup' && 'Set up access for your restaurant.'}
+              {mode === 'reset' && 'We’ll email you a reset link.'}
             </p>
           </div>
           <button
@@ -355,7 +169,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-[11px] font-medium text-emerald-300 mb-1">
+            <label className="block text-xs font-medium text-emerald-300 mb-1">
               Email address
             </label>
             <input
@@ -365,13 +179,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
               placeholder="gm@yourrestaurant.com"
               required
-              className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 text-[12px] text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
+              className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 text-sm text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
             />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-[11px] font-medium text-emerald-300 mb-1">
+              <label className="block text-xs font-medium text-emerald-300 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -382,7 +196,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 pr-10 text-[12px] text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
+                  className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 pr-9 text-sm text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
                 />
                 <button
                   type="button"
@@ -422,7 +236,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             onClick={handleSubmit}
             disabled={loading || !isLoaded}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-[10px] uppercase tracking-[0.18em] transition-colors border border-emerald-300 disabled:opacity-60"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] transition-colors border border-emerald-300 disabled:opacity-60"
           >
             {loading
               ? 'Processing...'
@@ -438,7 +252,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
         {message && (
           <div
-            className={`mt-5 p-3 rounded-sm text-[11px] border font-mono ${
+            className={`mt-5 p-3 rounded-sm text-xs border font-mono ${
               message.startsWith('Error')
                 ? 'bg-red-950 border-red-500 text-red-100'
                 : 'bg-emerald-950 border-emerald-500 text-emerald-100'
@@ -448,7 +262,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
         )}
 
-        <div className="mt-5 text-center space-y-2 text-[11px]">
+        <div className="mt-5 text-center space-y-2 text-xs">
           {mode === 'signin' && (
             <>
               <button
@@ -510,16 +324,16 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
         </button>
         <div className="mb-7 text-center">
           <h3
-            className={`text-[10px] font-semibold text-emerald-400 uppercase tracking-[0.25em] mb-2 ${outfit.className}`}
+            className={`text-xs font-semibold text-emerald-400 uppercase tracking-[0.25em] mb-2 ${outfit.className}`}
           >
             PROTOCOLLM · ACCESS
           </h3>
           <p
-            className={`text-lg md:text-xl font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
+            className={`text-lg md:text-2xl font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
           >
             Single-site compliance plan
           </p>
-          <p className={`text-[11px] text-emerald-400/90 max-w-xl mx-auto ${inter.className}`}>
+          <p className={`text-sm text-emerald-400/90 max-w-xl mx-auto ${inter.className}`}>
             Designed for GMs and owners who want fewer surprises on inspection day.
           </p>
         </div>
@@ -527,24 +341,24 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
         <div className="max-w-md mx-auto">
           <div className="border border-emerald-900/80 rounded-sm p-5 bg-black/60">
             <div className="mb-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-500 mb-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-500 mb-1.5">
                 Compliance Plan
               </p>
               <div className="flex items-baseline mb-1.5">
                 <span
-                  className={`text-3xl font-semibold text-emerald-300 tracking-tight ${outfit.className}`}
+                  className={`text-3xl md:text-4xl font-semibold text-emerald-300 tracking-tight ${outfit.className}`}
                 >
                   $100
                 </span>
-                <span className="ml-2 text-emerald-500 text-[10px] font-medium uppercase tracking-wide">
+                <span className="ml-2 text-emerald-500 text-[11px] font-medium uppercase tracking-wide">
                   /month · per site
                 </span>
               </div>
-              <p className={`text-[11px] text-emerald-400 mb-3.5 ${inter.className}`}>
+              <p className={`text-sm text-emerald-400 mb-3.5 ${inter.className}`}>
                 Includes roughly <span className="font-semibold">1,300 monthly checks</span>{' '}
                 for one restaurant. Text questions count as one check; photo analyses count as two.
               </p>
-              <ul className="space-y-1.5 text-[11px] text-emerald-300">
+              <ul className="space-y-1.5 text-sm text-emerald-300">
                 <li className="flex items-start gap-2">
                   <Icons.Check />
                   <span>Text questions and photo analyses</span>
@@ -572,7 +386,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               <button
                 onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
                 disabled={!!loading && loading !== 'monthly'}
-                className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-[10px] uppercase tracking-[0.18em] transition-colors border border-emerald-300 ${
+                className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] transition-colors border border-emerald-300 ${
                   loading && loading !== 'monthly' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
@@ -581,7 +395,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               <button
                 onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
                 disabled={!!loading && loading !== 'annual'}
-                className={`w-full bg-[#020617] border border-dashed border-emerald-500/80 text-emerald-200 font-semibold py-2.5 rounded-sm text-[10px] uppercase tracking-[0.18em] hover:bg-emerald-900/40 transition-colors ${
+                className={`w-full bg-[#020617] border border-dashed border-emerald-500/80 text-emerald-200 font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] hover:bg-emerald-900/40 transition-colors ${
                   loading && loading !== 'annual' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
@@ -601,8 +415,8 @@ const SubscriptionPollingBanner = () => (
       <div className="flex items-center gap-3">
         <Icons.Clock />
         <div>
-          <p className="text-[11px] font-semibold">Activating your subscription…</p>
-          <p className="text-[10px] text-emerald-400">
+          <p className="text-xs font-semibold">Activating your subscription…</p>
+          <p className="text-[11px] text-emerald-400">
             This usually completes within a few seconds.
           </p>
         </div>
@@ -621,6 +435,60 @@ const SubscriptionPollingBanner = () => (
     </div>
   </div>
 )
+
+const LandingPage = ({ onShowPricing, onOpenAuth }) => {
+  return (
+    <div className="w-full min-h-full flex flex-col items-center justify-center bg-[#020617] text-emerald-100 font-mono">
+      <main className="w-full max-w-3xl px-6 text-center">
+        <p
+          className={`text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-500 mb-3 ${inter.className}`}
+        >
+          WASHTENAW COUNTY · FOOD SAFETY
+        </p>
+        <h1
+          className={`text-3xl md:text-4xl font-semibold mb-4 text-emerald-100 leading-snug ${outfit.className}`}
+        >
+          Food safety compliance for Washtenaw County.
+        </h1>
+        <p
+          className={`text-sm md:text-base text-emerald-400 mb-8 leading-relaxed ${inter.className}`}
+        >
+          Get instant, code-backed guidance using the Michigan Modified Food Code and local
+          enforcement history—before the inspector walks in.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={onOpenAuth}
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-sm border border-emerald-400 text-emerald-200 text-sm font-semibold tracking-[0.14em] uppercase hover:bg-emerald-900/40 transition-colors"
+          >
+            Sign In
+          </button>
+          <button
+            onClick={onShowPricing}
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-sm bg-emerald-500 text-black text-sm font-semibold tracking-[0.16em] uppercase border border-emerald-300 hover:bg-emerald-400 transition-colors"
+          >
+            Create Account
+          </button>
+        </div>
+      </main>
+
+      <footer className="mt-12 text-[11px] text-emerald-500/80 flex flex-col items-center gap-2">
+        <p className={inter.className}>Serving Washtenaw County food service establishments</p>
+        <div className="flex gap-5">
+          <Link href="/terms" className="hover:text-emerald-300 transition-colors">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-emerald-300 transition-colors">
+            Privacy
+          </Link>
+          <Link href="/contact" className="hover:text-emerald-300 transition-colors">
+            Contact
+          </Link>
+        </div>
+      </footer>
+    </div>
+  )
+}
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -964,7 +832,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#020617] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-emerald-500/50 border-t-emerald-300 rounded-full animate-spin" />
+        <div className="w-7 h-7 border-2 border-emerald-500/50 border-t-emerald-300 rounded-full animate-spin" />
       </div>
     )
   }
@@ -996,25 +864,6 @@ export default function Page() {
           background: rgba(16, 185, 129, 0.6);
           border-radius: 3px;
         }
-        .doc-fade {
-          display: inline-block;
-          animation: docFade 3.2s ease-in-out;
-        }
-        @keyframes docFade {
-          0% {
-            opacity: 0;
-            transform: translateY(4px);
-          }
-          10%,
-          90% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-4px);
-          }
-        }
       `}</style>
 
       {isPollingSubscription && <SubscriptionPollingBanner />}
@@ -1043,11 +892,10 @@ export default function Page() {
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
               <div className="flex items-center">
                 <div
-                  className={`font-semibold tracking-[0.18em] text-[13px] uppercase ${outfit.className} text-emerald-300`}
+                  className={`font-semibold tracking-[0.18em] text-sm md:text-base uppercase ${outfit.className} text-emerald-300`}
                 >
                   protocol<span className="text-emerald-500">LM</span>
                 </div>
-                <DocumentPill />
               </div>
 
               <div className="flex items-center gap-4">
@@ -1055,13 +903,13 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className={`text-[11px] font-semibold text-emerald-400 hover:text-emerald-200 transition-colors ${inter.className}`}
+                      className={`text-xs md:text-sm font-semibold text-emerald-400 hover:text-emerald-200 transition-colors ${inter.className}`}
                     >
                       Sign in
                     </button>
                     <button
                       onClick={() => setShowPricingModal(true)}
-                      className={`inline-flex items-center gap-2 btn-press bg-emerald-500 text-black hover:bg-emerald-400 px-3 py-2 rounded-sm text-[10px] font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors border border-emerald-300 ${inter.className}`}
+                      className={`inline-flex items-center gap-2 btn-press bg-emerald-500 text-black hover:bg-emerald-400 px-3 py-2 rounded-sm text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors border border-emerald-300 ${inter.className}`}
                     >
                       <Icons.Check />
                       Sign up
@@ -1080,12 +928,12 @@ export default function Page() {
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
-                        className="w-8 h-8 rounded-sm border flex items-center justify-center text-[11px] font-bold bg-emerald-900/40 border-emerald-700 text-emerald-200"
+                        className="w-8 h-8 rounded-sm border flex items-center justify-center text-xs font-bold bg-emerald-900/40 border-emerald-700 text-emerald-200"
                       >
                         {session.user.email[0].toUpperCase()}
                       </button>
                       {showUserMenu && (
-                        <div className="absolute top-full right-0 mt-2 w-52 bg-black border border-emerald-900/80 rounded-sm shadow-xl overflow-hidden z-50 p-1 text-[11px]">
+                        <div className="absolute top-full right-0 mt-2 w-52 bg-black border border-emerald-900/80 rounded-sm shadow-xl overflow-hidden z-50 p-1 text-xs">
                           <button
                             onClick={() => setShowPricingModal(true)}
                             className="w-full px-3 py-2 text-left text-emerald-300 hover:text-emerald-100 hover:bg-emerald-900/40 flex items-center gap-2 rounded-sm transition-colors"
@@ -1110,7 +958,10 @@ export default function Page() {
 
           <main className="flex-1 flex flex-col items-center justify-start w-full">
             {!canUseApp ? (
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} />
+              <LandingPage
+                onShowPricing={() => setShowPricingModal(true)}
+                onOpenAuth={() => setShowAuthModal(true)}
+              />
             ) : (
               <>
                 {/* messages area */}
@@ -1121,11 +972,11 @@ export default function Page() {
                   {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
                       <p
-                        className={`text-emerald-500/80 text-[12px] md:text-[13px] max-w-md leading-relaxed ${inter.className}`}
+                        className={`text-emerald-500/80 text-sm md:text-base max-w-md leading-relaxed ${inter.className}`}
                       >
-                        Ask about Michigan Food Code sections, past Washtenaw enforcement,
-                        or upload a photo of your walk-in or line to check for issues
-                        before inspection.
+                        Ask about Michigan Food Code sections, past Washtenaw enforcement, or
+                        upload a photo of your walk-in, prep line, or dish area to check for
+                        issues before inspection.
                       </p>
                     </div>
                   ) : (
@@ -1138,7 +989,7 @@ export default function Page() {
                           }`}
                         >
                           <div
-                            className={`max-w-[90%] px-3 py-2 rounded-sm border text-[13px] leading-relaxed whitespace-pre-wrap ${
+                            className={`max-w-[90%] px-3 py-2 rounded-sm border text-sm md:text-base leading-relaxed whitespace-pre-wrap ${
                               msg.role === 'user'
                                 ? 'border-amber-400/70 bg-black/70 text-amber-100'
                                 : 'border-emerald-700 bg-black/60 text-emerald-100'
@@ -1180,7 +1031,7 @@ export default function Page() {
                 <div className="w-full shrink-0 z-20 border-t bg-black border-emerald-900/80">
                   <div className="w-full max-w-4xl mx-auto px-4 pt-3 pb-5">
                     {selectedImage && (
-                      <div className="mb-3 mx-1 p-2.5 inline-flex items-center gap-3 rounded-sm shadow-sm border bg-black/70 border-emerald-800 text-emerald-200 text-[11px]">
+                      <div className="mb-3 mx-1 p-2.5 inline-flex items-center gap-3 rounded-sm shadow-sm border bg-black/70 border-emerald-800 text-emerald-200 text-xs">
                         <span className="font-semibold tracking-[0.12em] uppercase">
                           Image attached
                         </span>
@@ -1223,8 +1074,8 @@ export default function Page() {
                             handleSend(e)
                           }
                         }}
-                        placeholder="Ask about code sections, inspection history, or attach a photo of your line or walk-in."
-                        className={`flex-1 max-h-[140px] min-h-[38px] py-1.5 px-2 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-[13px] leading-relaxed ${inter.className} text-emerald-100 placeholder-emerald-600`}
+                        placeholder="Ask about code sections, enforcement history, or attach a photo of your line or walk-in."
+                        className={`flex-1 max-h-[140px] min-h-[38px] py-1.5 px-2 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-sm md:text-base leading-relaxed ${inter.className} text-emerald-100 placeholder-emerald-600`}
                         rows={1}
                       />
                       <button
@@ -1245,11 +1096,10 @@ export default function Page() {
                       </button>
                     </div>
                     <p
-                      className={`mt-2.5 text-[10px] text-center text-emerald-500/80 ${inter.className}`}
+                      className={`mt-2.5 text-[11px] text-center text-emerald-500/80 ${inter.className}`}
                     >
-                      protocolLM uses AI and may make mistakes. Always confirm critical
-                      food safety decisions with official regulations and your local health
-                      department.
+                      protocolLM uses AI and may make mistakes. Always confirm critical food
+                      safety decisions with official regulations and your local health department.
                     </p>
                   </div>
                 </div>
