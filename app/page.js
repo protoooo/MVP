@@ -68,9 +68,7 @@ function LandingPage({ onShowPricing }) {
         </div>
 
         <div className="space-y-4">
-          <h1
-            className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-900 ${outfit.className}`}
-          >
+          <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-900 ${outfit.className}`}>
             Spot violations before the health inspector.
           </h1>
           <p className={`text-sm sm:text-base text-slate-600 ${inter.className}`}>
@@ -85,7 +83,10 @@ function LandingPage({ onShowPricing }) {
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          <div className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <div
+            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
+            style={{ animationDelay: '0.1s' }}
+          >
             <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
               <span>Capture</span>
               <span className="text-teal-600 pulse-ring">Online</span>
@@ -95,7 +96,10 @@ function LandingPage({ onShowPricing }) {
               quick risk scan using local rules instead of guesswork.
             </p>
           </div>
-          <div className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div
+            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
+            style={{ animationDelay: '0.2s' }}
+          >
             <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
               <span>Rulebook</span>
               <span className="text-teal-600 pulse-ring">Synced</span>
@@ -105,7 +109,10 @@ function LandingPage({ onShowPricing }) {
               history, so your team doesn&apos;t have to dig through PDFs.
             </p>
           </div>
-          <div className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <div
+            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
+            style={{ animationDelay: '0.3s' }}
+          >
             <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
               <span>Checklist</span>
               <span className="text-teal-600 pulse-ring">Ready</span>
@@ -127,9 +134,7 @@ function LandingPage({ onShowPricing }) {
         </button>
 
         <footer className="pt-4 text-xs text-slate-500">
-          <p className={`mb-2 ${inter.className}`}>
-            Serving Washtenaw County food service establishments.
-          </p>
+          <p className={`mb-2 ${inter.className}`}>Serving Washtenaw County food service establishments.</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/terms" className="hover:text-slate-800">
               Terms
@@ -233,9 +238,7 @@ function AuthModal({ isOpen, onClose }) {
       >
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2
-              className={`text-lg font-semibold text-slate-900 tracking-tight mb-1 ${outfit.className}`}
-            >
+            <h2 className={`text-lg font-semibold text-slate-900 tracking-tight mb-1 ${outfit.className}`}>
               {mode === 'signin' && 'Sign in to protocolLM'}
               {mode === 'signup' && 'Create your account'}
               {mode === 'reset' && 'Reset your password'}
@@ -256,9 +259,7 @@ function AuthModal({ isOpen, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Email address
-            </label>
+            <label className="block text-xs font-semibold text-slate-700 mb-2">Email address</label>
             <input
               type="email"
               value={email}
@@ -271,9 +272,7 @@ function AuthModal({ isOpen, onClose }) {
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
-                Password
-              </label>
+              <label className="block text-xs font-semibold text-slate-700 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -301,13 +300,7 @@ function AuthModal({ isOpen, onClose }) {
           >
             <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
             <span className="relative">
-              {loading
-                ? 'Processing…'
-                : mode === 'signin'
-                ? 'Sign in'
-                : mode === 'signup'
-                ? 'Create account'
-                : 'Send reset link'}
+              {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
             </span>
           </button>
         </form>
@@ -327,37 +320,21 @@ function AuthModal({ isOpen, onClose }) {
         <div className="mt-4 text-center space-y-1 text-xs text-slate-600">
           {mode === 'signin' && (
             <>
-              <button
-                type="button"
-                onClick={() => setMode('reset')}
-                className="block w-full text-teal-700 hover:text-teal-800"
-              >
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-teal-700 hover:text-teal-800">
                 Forgot password?
               </button>
-              <button
-                type="button"
-                onClick={() => setMode('signup')}
-                className="block w-full text-slate-600 hover:text-slate-800"
-              >
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-slate-600 hover:text-slate-800">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button
-              type="button"
-              onClick={() => setMode('signin')}
-              className="text-slate-600 hover:text-slate-800"
-            >
+            <button type="button" onClick={() => setMode('signin')} className="text-slate-600 hover:text-slate-800">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button
-              type="button"
-              onClick={() => setMode('signin')}
-              className="text-slate-600 hover:text-slate-800"
-            >
+            <button type="button" onClick={() => setMode('signin')} className="text-slate-600 hover:text-slate-800">
               Back to sign in
             </button>
           )}
@@ -373,10 +350,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-2xl border-2 border-teal-300/80 bg-gradient-to-br from-teal-100/70 via-cyan-50/60 to-blue-100/70 backdrop-blur-xl shadow-[0_8px_24px_rgba(20,184,166,0.25),inset_0_1px_2px_rgba(255,255,255,0.7)] p-7 relative"
         onClick={(e) => e.stopPropagation()}
@@ -389,38 +363,20 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         </button>
 
         <div className="mb-6 text-center">
-          <p
-            className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-800 mb-2 ${outfit.className}`}
-          >
-            protocolLM
-          </p>
-          <h3
-            className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}
-          >
-            Compliance access
-          </h3>
-          <p className={`text-sm text-slate-600 ${inter.className}`}>
-            One site license per restaurant. 7-day free trial included.
-          </p>
+          <p className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-800 mb-2 ${outfit.className}`}>protocolLM</p>
+          <h3 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>Compliance access</h3>
+          <p className={`text-sm text-slate-600 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
         </div>
 
         <div className="rounded-2xl border-2 border-teal-300/70 bg-gradient-to-br from-white/70 via-slate-50/60 to-cyan-50/70 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-5 space-y-4">
           <div>
             <div className="flex items-baseline gap-2 mb-2">
-              <span
-                className={`text-3xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}
-              >
-                $100
-              </span>
-              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                / month
-              </span>
+              <span className={`text-3xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}>$100</span>
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">/ month</span>
             </div>
             <p className={`text-xs text-slate-600 ${inter.className}`}>
-              Includes roughly{' '}
-              <span className="font-semibold text-slate-800">1,300 monthly checks</span>{' '}
-              for a single restaurant. Text questions count as one check; photo analyses
-              count as two.
+              Includes roughly <span className="font-semibold text-slate-800">1,300 monthly checks</span> for a single restaurant. Text questions count as one
+              check; photo analyses count as two.
             </p>
           </div>
 
@@ -491,9 +447,35 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
+  // Keeps the chat perfectly fit in the viewport (ChatGPT/Claude-style):
+  // - no double-100vh containers
+  // - internal scroll only in the message list
+  // - auto-scroll only when user is already near bottom
+  const shouldAutoScrollRef = useRef(true)
+
+  const scrollToBottom = (behavior = 'auto') => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }
+
+  const handleScroll = () => {
+    const el = scrollRef.current
+    if (!el) return
+    const threshold = 120 // px from bottom
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    shouldAutoScrollRef.current = distanceFromBottom < threshold
+  }
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    // initial auto-scroll (after first paint)
+    requestAnimationFrame(() => scrollToBottom('auto'))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (shouldAutoScrollRef.current) {
+      requestAnimationFrame(() => scrollToBottom('auto'))
     }
   }, [messages])
 
@@ -562,6 +544,27 @@ export default function Page() {
     }
   }, [supabase, searchParams])
 
+  useEffect(() => {
+    // Background stays consistent + premium retro “Liquid Glass meets N64” vibe.
+    if (typeof document === 'undefined') return
+    document.body.classList.add('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
+    document.body.classList.add('n64-glass-bg')
+    return () => {
+      document.body.classList.remove('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
+      document.body.classList.remove('n64-glass-bg')
+    }
+  }, [])
+
+  useEffect(() => {
+    function handleClick(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
   const handleCheckout = async (priceId, planName) => {
     try {
       const { data } = await supabase.auth.getSession()
@@ -621,6 +624,8 @@ export default function Page() {
     setInput('')
     setSelectedImage(null)
     setCurrentChatId(null)
+    shouldAutoScrollRef.current = true
+    requestAnimationFrame(() => scrollToBottom('auto'))
   }
 
   const handleSend = async (e) => {
@@ -636,6 +641,9 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
+
+    // after user sends, we definitely want to stay pinned to bottom
+    shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
 
@@ -731,6 +739,119 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
+        /* --- Viewport fit fix (prevents double-100vh and “input off screen” issues) --- */
+        html,
+        body {
+          height: 100%;
+          width: 100%;
+        }
+        /* Keep scrolling inside the app panes (chat list), not the body. */
+        body.n64-glass-bg {
+          overflow: hidden;
+          position: relative;
+        }
+
+        /* Premium-retro background: subtle pixel grid + liquid glass sheen (serious, not clowny) */
+        body.n64-glass-bg::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background-image:
+            radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.55), transparent 35%),
+            radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.35), transparent 40%),
+            linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.06), rgba(59, 130, 246, 0.06));
+          mix-blend-mode: soft-light;
+          opacity: 0.9;
+        }
+
+        body.n64-glass-bg::after {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          /* Tiny “N64-ish” pixel grid + micro-dither */
+          background-image:
+            linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+            radial-gradient(rgba(15, 23, 42, 0.06) 0.5px, transparent 0.6px);
+          background-size: 26px 26px, 26px 26px, 6px 6px;
+          opacity: 0.18;
+        }
+
+        /* 64-color palette (N64 energy), used subtly via gradients/borders */
+        :root {
+          --n64-0: #0b1020; --n64-1: #0f172a; --n64-2: #111827; --n64-3: #1f2937;
+          --n64-4: #334155; --n64-5: #475569; --n64-6: #64748b; --n64-7: #94a3b8;
+          --n64-8: #e2e8f0; --n64-9: #f8fafc; --n64-10: #0ea5e9; --n64-11: #0284c7;
+          --n64-12: #38bdf8; --n64-13: #22c55e; --n64-14: #16a34a; --n64-15: #86efac;
+          --n64-16: #14b8a6; --n64-17: #0d9488; --n64-18: #2dd4bf; --n64-19: #a7f3d0;
+          --n64-20: #3b82f6; --n64-21: #2563eb; --n64-22: #93c5fd; --n64-23: #1d4ed8;
+          --n64-24: #a855f7; --n64-25: #7c3aed; --n64-26: #c4b5fd; --n64-27: #6d28d9;
+          --n64-28: #f97316; --n64-29: #ea580c; --n64-30: #fdba74; --n64-31: #c2410c;
+          --n64-32: #ef4444; --n64-33: #dc2626; --n64-34: #fecaca; --n64-35: #991b1b;
+          --n64-36: #eab308; --n64-37: #ca8a04; --n64-38: #fde68a; --n64-39: #854d0e;
+          --n64-40: #f59e0b; --n64-41: #d97706; --n64-42: #fed7aa; --n64-43: #92400e;
+          --n64-44: #ec4899; --n64-45: #db2777; --n64-46: #fbcfe8; --n64-47: #9d174d;
+          --n64-48: #06b6d4; --n64-49: #0891b2; --n64-50: #a5f3fc; --n64-51: #164e63;
+          --n64-52: #10b981; --n64-53: #059669; --n64-54: #bbf7d0; --n64-55: #064e3b;
+          --n64-56: #8b5cf6; --n64-57: #6366f1; --n64-58: #60a5fa; --n64-59: #34d399;
+          --n64-60: #f472b6; --n64-61: #fb7185; --n64-62: #fdba74; --n64-63: #fde047;
+        }
+
+        .n64-spectrum-line {
+          position: relative;
+        }
+        .n64-spectrum-line::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: -2px;
+          height: 2px;
+          background: linear-gradient(
+            90deg,
+            var(--n64-10),
+            var(--n64-16),
+            var(--n64-20),
+            var(--n64-24),
+            var(--n64-28),
+            var(--n64-36),
+            var(--n64-44),
+            var(--n64-48),
+            var(--n64-52),
+            var(--n64-56),
+            var(--n64-60),
+            var(--n64-63)
+          );
+          opacity: 0.65;
+          filter: saturate(1.1);
+        }
+
+        .n64-spectrum-border {
+          position: relative;
+        }
+        .n64-spectrum-border::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 2px;
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.35),
+            rgba(255, 255, 255, 0.1),
+            rgba(255, 255, 255, 0.25)
+          );
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+          opacity: 0.55;
+        }
+
         ::-webkit-scrollbar {
           width: 6px;
         }
@@ -738,12 +859,17 @@ export default function Page() {
           background: rgba(20, 184, 166, 0.3);
           border-radius: 999px;
         }
-        
+
         @keyframes buttonPress {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(0.95); }
+          0%,
+          100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(0.95);
+          }
         }
-        
+
         @keyframes slideUp {
           from {
             opacity: 0;
@@ -754,7 +880,7 @@ export default function Page() {
             transform: translateY(0);
           }
         }
-        
+
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -765,80 +891,85 @@ export default function Page() {
             transform: translateY(0);
           }
         }
-        
+
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: -100% 0; }
-          100% { background-position: 200% 0; }
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-4px); }
-        }
-        
-        @keyframes ripple {
-          0% {
-            box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4),
-                        0 0 0 0 rgba(20, 184, 166, 0.4);
+          from {
+            opacity: 0;
           }
-          50% {
-            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0),
-                        0 0 0 0 rgba(20, 184, 166, 0.4);
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            background-position: -100% 0;
           }
           100% {
-            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0),
-                        0 0 0 16px rgba(20, 184, 166, 0);
+            background-position: 200% 0;
           }
         }
-        
+
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+        }
+
+        @keyframes ripple {
+          0% {
+            box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4), 0 0 0 0 rgba(20, 184, 166, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0), 0 0 0 0 rgba(20, 184, 166, 0.4);
+          }
+          100% {
+            box-shadow: 0 0 0 8px rgba(20, 184, 166, 0), 0 0 0 16px rgba(20, 184, 166, 0);
+          }
+        }
+
         .animate-slide-up {
           animation: slideUp 0.3s ease-out;
         }
-        
+
         .animate-slide-down {
           animation: slideDown 0.3s ease-out;
         }
-        
+
         .animate-fade-in {
           animation: fadeIn 0.3s ease-out;
         }
-        
+
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
-        
+
         .hover-lift {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
+
         .hover-lift:hover {
           transform: translateY(-2px);
         }
-        
+
         .button-press:active {
           animation: buttonPress 0.15s ease;
         }
-        
+
         .message-appear {
           animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
+
         .shimmer-effect {
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.3) 50%,
-            transparent 100%
-          );
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
-        
+
         .pulse-ring {
           animation: ripple 2s ease-out infinite;
         }
@@ -853,9 +984,10 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="min-h-screen flex flex-col" style={{ height: '100dvh' }}>
+      {/* SINGLE viewport container; no nested 100dvh (fixes “not visible on load”) */}
+      <div className="h-[100dvh] min-h-0 flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down flex-shrink-0">
+        <header className="sticky top-0 z-40 flex-shrink-0 n64-spectrum-line border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -873,10 +1005,7 @@ export default function Page() {
             <div className="flex items-center gap-3">
               {!isAuthenticated ? (
                 <>
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className={`text-xs font-semibold text-slate-700 hover:text-slate-900 ${inter.className}`}
-                  >
+                  <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-slate-700 hover:text-slate-900 ${inter.className}`}>
                     Sign in
                   </button>
                   <button
@@ -932,25 +1061,30 @@ export default function Page() {
           </div>
         </header>
 
-        {/* Main */}
-        <main className="flex-1 flex flex-col" style={{ height: '100dvh' }}>
+        {/* Main: flex-1 + min-h-0 ensures message list is visible immediately */}
+        <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <LandingPage onShowPricing={() => setShowPricingModal(true)} />
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <LandingPage onShowPricing={() => setShowPricingModal(true)} />
+            </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Messages container with proper height calculation */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* Messages container */}
               <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto"
+                onScroll={handleScroll}
+                className="flex-1 min-h-0 overflow-y-auto"
+                style={{
+                  overscrollBehavior: 'contain',
+                  scrollbarGutter: 'stable',
+                  paddingBottom: '2px',
+                }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
-                    <p
-                      className={`max-w-md text-sm text-slate-600 text-center leading-relaxed ${inter.className}`}
-                    >
-                      Ask about Michigan Food Code requirements, past Washtenaw
-                      enforcement actions, or attach a photo of your walk-in or line to
-                      scan for likely violations before inspection.
+                    <p className={`max-w-md text-sm text-slate-600 text-center leading-relaxed ${inter.className}`}>
+                      Ask about Michigan Food Code requirements, past Washtenaw enforcement actions, or attach a photo of your walk-in or line to scan for likely
+                      violations before inspection.
                     </p>
                   </div>
                 ) : (
@@ -958,13 +1092,11 @@ export default function Page() {
                     {messages.map((msg, idx) => (
                       <div
                         key={idx}
-                        className={`flex w-full message-appear ${
-                          msg.role === 'user' ? 'justify-end' : 'justify-start'
-                        }`}
+                        className={`flex w-full message-appear ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         style={{ animationDelay: `${idx * 0.05}s` }}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all ${
+                          className={`n64-spectrum-border max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all ${
                             msg.role === 'user'
                               ? 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]'
                               : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-md text-slate-900 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
@@ -977,20 +1109,11 @@ export default function Page() {
                               className="mb-3 rounded-xl border-2 border-slate-200/60 max-h-64 object-contain bg-white/90 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]"
                             />
                           )}
-                          {msg.role === 'assistant' &&
-                          msg.content === '' &&
-                          isSending &&
-                          idx === messages.length - 1 ? (
+                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
                               <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" />
-                              <span
-                                className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"
-                                style={{ animationDelay: '0.12s' }}
-                              />
-                              <span
-                                className="w-2 h-2 rounded-full bg-slate-400 animate-bounce"
-                                style={{ animationDelay: '0.24s' }}
-                              />
+                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1002,8 +1125,8 @@ export default function Page() {
                 )}
               </div>
 
-              {/* Input bar fixed to viewport bottom */}
-              <div className="flex-shrink-0 border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
+              {/* Input bar */}
+              <div className="flex-shrink-0 n64-spectrum-line border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] text-[11px] text-slate-800 animate-slide-up">
@@ -1017,13 +1140,7 @@ export default function Page() {
                     </div>
                   )}
                   <div className="flex items-end gap-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
+                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -1031,10 +1148,7 @@ export default function Page() {
                     >
                       <Icons.Camera />
                     </button>
-                    <form
-                      onSubmit={handleSend}
-                      className="flex-1 flex items-end gap-2"
-                    >
+                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -1057,18 +1171,12 @@ export default function Page() {
                             : 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]'
                         }`}
                       >
-                        {isSending ? (
-                          <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                        ) : (
-                          <Icons.ArrowUp />
-                        )}
+                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
                   <p className={`mt-2 text-[10px] text-center text-slate-500 ${inter.className}`}>
-                    protocolLM uses AI and may make mistakes. Always confirm critical
-                    food safety decisions with official regulations and your local health
-                    department.
+                    protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
                   </p>
                 </div>
               </div>
@@ -1078,22 +1186,4 @@ export default function Page() {
       </div>
     </>
   )
-}(() => {
-    if (typeof document === 'undefined') return
-    document.body.classList.add('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
-    return () => {
-      document.body.classList.remove('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
-    }
-  }, [])
-
-  useEffect(() => {
-    function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  useEffect
+}
