@@ -83,91 +83,114 @@ const Icons = {
 }
 
 function LandingPage({ onShowPricing }) {
-  const cards = [
+  const features = [
     {
-      title: 'Capture',
-      badge: 'Photo scan',
+      title: 'Photo scan',
       icon: <Icons.RetroCamera />,
-      body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
-      tint: 'rgba(45, 212, 191, 0.16)',
+      body: 'Snap a walk‑in, line, or storage area. Get likely risk flags in seconds.',
+      kicker: 'Fast triage',
+      tint: 'rgba(45, 212, 191, 0.18)',
+      tab: 'rgba(20, 184, 166, 0.85)',
       anim: 'card-drift-a',
-      delay: '0.06s',
+      delay: '0.05s',
     },
     {
-      title: 'Rulebook',
-      badge: 'Grounded',
+      title: 'Code Q&A',
       icon: <Icons.GamePak />,
-      body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
-      tint: 'rgba(59, 130, 246, 0.14)',
+      body: 'Ask Michigan Food Code with Washtenaw-first context—no PDF hunting.',
+      kicker: 'Grounded answers',
+      tint: 'rgba(59, 130, 246, 0.16)',
+      tab: 'rgba(37, 99, 235, 0.82)',
       anim: 'card-drift-b',
-      delay: '0.12s',
+      delay: '0.10s',
     },
     {
-      title: 'Checklist',
-      badge: 'Actionable',
+      title: 'Runbook',
       icon: <Icons.ClipboardCheck />,
-      body: 'Turn flags into a short close/open list your team can run.',
-      tint: 'rgba(168, 85, 247, 0.12)',
+      body: 'Turn findings into a short open/close checklist your team can execute.',
+      kicker: 'Actionable',
+      tint: 'rgba(168, 85, 247, 0.14)',
+      tab: 'rgba(124, 58, 237, 0.8)',
       anim: 'card-drift-c',
-      delay: '0.18s',
+      delay: '0.15s',
     },
   ]
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-      <div className="max-w-3xl w-full text-center space-y-8">
+      <div className="max-w-4xl w-full text-center space-y-9">
+        {/* top “cartridge label” */}
         <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg n64-liquid-panel text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-950/90">
           protocolLM · compliance console
         </div>
 
+        {/* hero */}
         <div className="space-y-4">
-          <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
+          <h1 className={`text-3xl sm:text-4xl md:text-[2.8rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
             Be inspection‑ready.
           </h1>
-          <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
-            Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
-          </p>
-          <p className={`text-xs text-slate-600 ${inter.className}`}>
-            Washtenaw County today · Wayne + Oakland planned for 2026.
-          </p>
+          <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>Catch violations before the inspector does.</p>
+          <p className={`text-xs text-slate-600 ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          {cards.map((c) => (
+        {/* feature “cartridges” */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+          {features.map((f) => (
             <div
-              key={c.title}
-              className={`rounded-2xl n64-liquid-card p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
+              key={f.title}
+              className={`rounded-2xl n64-feature-card p-4 hover-lift transition-all animate-slide-up ${f.anim}`}
               style={{
-                animationDelay: c.delay,
-                // custom tint per card for “translucent plastic” vibe
-                ['--glass-tint']: c.tint,
+                animationDelay: f.delay,
+                ['--glass-tint']: f.tint,
+                ['--tab-color']: f.tab,
               }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="inline-flex items-center gap-2">
-                  <div className="retro-icon-chip">{c.icon}</div>
-                  <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
+              <div className="n64-corner-tab" aria-hidden="true" />
+              <div className="flex items-center gap-3 mb-3">
+                <div className="retro-icon-chip">{f.icon}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-semibold tracking-tight text-slate-950">{f.title}</span>
+                    <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-700 n64-pill-soft">{f.kicker}</span>
+                  </div>
+                  <div className="text-[10px] tracking-[0.22em] uppercase text-slate-500 mt-0.5">site ops</div>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">
-                  {c.badge}
-                </span>
               </div>
-
-              <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
+              <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{f.body}</p>
             </div>
           ))}
         </div>
 
-        <button
-          onClick={onShowPricing}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg n64-liquid-cta text-white text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
-        >
-          <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
-          <Icons.Check />
-          <span className="relative">Start trial</span>
-        </button>
+        {/* CTA row */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+          <button
+            onClick={onShowPricing}
+            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-[14px] n64-plastic-btn-primary text-white text-[11px] font-semibold tracking-[0.24em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
+          >
+            <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100" />
+            <span className="n64-btn-dots" aria-hidden="true" />
+            <Icons.Check />
+            <span className="relative">Start trial</span>
+          </button>
 
-        <footer className="pt-4 text-xs text-slate-600">
+          <button
+            onClick={onShowPricing}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-[14px] n64-plastic-btn-secondary text-slate-900 text-[11px] font-semibold tracking-[0.24em] uppercase hover-lift button-press relative overflow-hidden group transition-all"
+          >
+            <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100" />
+            <span className="relative">See pricing</span>
+          </button>
+        </div>
+
+        {/* small trust line */}
+        <div className="mx-auto max-w-2xl rounded-2xl n64-liquid-card px-4 py-3 text-left">
+          <div className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-800">Simple promise</div>
+          <p className={`mt-1 text-xs text-slate-700 ${inter.className}`}>
+            Built for operators. Clear, county-aware guidance—plus photo triage to spot common issues fast.
+          </p>
+        </div>
+
+        <footer className="pt-2 text-xs text-slate-600">
           <p className={`mb-2 ${inter.className}`}>Built for Washtenaw County food service establishments.</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/terms" className="hover:text-slate-900">
@@ -321,7 +344,7 @@ function AuthModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={loading || !isLoaded}
-            className="w-full mt-2 inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
+            className="w-full mt-2 inline-flex items-center justify-center rounded-[14px] n64-plastic-btn-primary text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3.5 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
           >
             <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
             <span className="relative">
@@ -422,7 +445,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="w-full inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
+              className="w-full inline-flex items-center justify-center rounded-[14px] n64-plastic-btn-primary text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3.5 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
             >
               <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
               <span className="relative">{loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}</span>
@@ -430,7 +453,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="w-full inline-flex items-center justify-center rounded-lg border-2 border-dashed border-teal-400/70 bg-gradient-to-br from-white/70 via-cyan-50/60 to-teal-50/70 backdrop-blur-sm text-[11px] font-semibold tracking-[0.22em] uppercase text-teal-900 py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.18),inset_0_1px_2px_rgba(255,255,255,0.7)] hover-lift button-press disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center rounded-[14px] n64-plastic-btn-secondary text-[11px] font-semibold tracking-[0.22em] uppercase py-3.5 disabled:opacity-60"
             >
               {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
             </button>
@@ -776,8 +799,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background-image:
-            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
+          background-image: radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
             radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.35), transparent 44%),
             radial-gradient(circle at 22% 70%, rgba(45, 212, 191, 0.12), transparent 46%),
             radial-gradient(circle at 84% 68%, rgba(59, 130, 246, 0.1), transparent 52%),
@@ -793,8 +815,7 @@ export default function Page() {
           inset: 0;
           pointer-events: none;
           /* Tiny “N64-ish” pixel grid + micro-dither */
-          background-image:
-            linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+          background-image: linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
             radial-gradient(rgba(15, 23, 42, 0.06) 0.55px, transparent 0.65px);
           background-size: 26px 26px, 26px 26px, 6px 6px;
@@ -835,37 +856,13 @@ export default function Page() {
           --n64-29: #ea580c;
           --n64-30: #fdba74;
           --n64-31: #c2410c;
-          --n64-32: #ef4444;
-          --n64-33: #dc2626;
-          --n64-34: #fecaca;
-          --n64-35: #991b1b;
           --n64-36: #eab308;
-          --n64-37: #ca8a04;
-          --n64-38: #fde68a;
-          --n64-39: #854d0e;
           --n64-40: #f59e0b;
-          --n64-41: #d97706;
-          --n64-42: #fed7aa;
-          --n64-43: #92400e;
           --n64-44: #ec4899;
-          --n64-45: #db2777;
-          --n64-46: #fbcfe8;
-          --n64-47: #9d174d;
           --n64-48: #06b6d4;
-          --n64-49: #0891b2;
-          --n64-50: #a5f3fc;
-          --n64-51: #164e63;
           --n64-52: #10b981;
-          --n64-53: #059669;
-          --n64-54: #bbf7d0;
-          --n64-55: #064e3b;
           --n64-56: #8b5cf6;
-          --n64-57: #6366f1;
-          --n64-58: #60a5fa;
-          --n64-59: #34d399;
           --n64-60: #f472b6;
-          --n64-61: #fb7185;
-          --n64-62: #fdba74;
           --n64-63: #fde047;
         }
 
@@ -923,7 +920,8 @@ export default function Page() {
             radial-gradient(circle at 85% 25%, rgba(45, 212, 191, 0.12), transparent 50%);
           backdrop-filter: blur(14px) saturate(1.15);
           -webkit-backdrop-filter: blur(14px) saturate(1.15);
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7),
+            inset 0 -8px 24px rgba(15, 23, 42, 0.06);
           position: relative;
           overflow: hidden;
         }
@@ -959,7 +957,8 @@ export default function Page() {
             radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.12), transparent 52%);
           backdrop-filter: blur(18px) saturate(1.18);
           -webkit-backdrop-filter: blur(18px) saturate(1.18);
-          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
+          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74),
+            inset 0 -10px 30px rgba(15, 23, 42, 0.08);
           position: relative;
           overflow: hidden;
         }
@@ -982,7 +981,8 @@ export default function Page() {
             radial-gradient(circle at 88% 30%, var(--glass-tint), transparent 58%);
           backdrop-filter: blur(16px) saturate(1.12);
           -webkit-backdrop-filter: blur(16px) saturate(1.12);
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75),
+            inset 0 -10px 26px rgba(15, 23, 42, 0.06);
           position: relative;
           overflow: hidden;
         }
@@ -1002,7 +1002,7 @@ export default function Page() {
           pointer-events: none;
           background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%);
           transform: rotate(10deg);
-          opacity: 0.0;
+          opacity: 0;
           transition: opacity 250ms ease;
         }
         .n64-liquid-card:hover::after {
@@ -1018,35 +1018,121 @@ export default function Page() {
           box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
         }
 
-        .n64-liquid-cta {
-          border: 2px solid rgba(45, 212, 191, 0.65);
-          background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(34, 211, 238, 0.72), rgba(20, 184, 166, 0.88));
-          backdrop-filter: blur(10px) saturate(1.1);
-          -webkit-backdrop-filter: blur(10px) saturate(1.1);
-          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.45);
-        }
-
-        .n64-pill {
-          border: 1px solid rgba(20, 184, 166, 0.35);
-          padding: 3px 8px;
+        /* Soft pill (less “busy” for B2B) */
+        .n64-pill-soft {
+          border: 1px solid rgba(148, 163, 184, 0.35);
+          padding: 2px 8px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.45);
+          background: rgba(255, 255, 255, 0.38);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.55);
         }
 
         .retro-icon-chip {
-          width: 34px;
-          height: 34px;
+          width: 38px;
+          height: 38px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 12px;
+          border-radius: 14px;
           border: 2px solid rgba(148, 163, 184, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25));
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
-          color: rgba(15, 23, 42, 0.85);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.22));
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -10px 20px rgba(15, 23, 42, 0.06);
+          color: rgba(15, 23, 42, 0.86);
+        }
+
+        /* NEW: feature card that feels like “cartridge plastic” */
+        .n64-feature-card {
+          --glass-tint: rgba(45, 212, 191, 0.14);
+          --tab-color: rgba(20, 184, 166, 0.85);
+          border: 2px solid rgba(148, 163, 184, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.22)),
+            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.75), transparent 46%),
+            radial-gradient(circle at 90% 28%, var(--glass-tint), transparent 60%);
+          backdrop-filter: blur(16px) saturate(1.12);
+          -webkit-backdrop-filter: blur(16px) saturate(1.12);
+          box-shadow: 0 16px 40px rgba(15, 23, 42, 0.09), inset 0 1px 2px rgba(255, 255, 255, 0.8),
+            inset 0 -12px 30px rgba(15, 23, 42, 0.07);
+          position: relative;
+          overflow: hidden;
+        }
+        .n64-feature-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.55), transparent 38%),
+            radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.55), transparent 44%);
+          opacity: 0.55;
+        }
+        .n64-feature-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px);
+          background-size: 7px 7px;
+          opacity: 0.12;
+          mix-blend-mode: soft-light;
+        }
+        .n64-corner-tab {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 26px;
+          height: 12px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08)),
+            linear-gradient(90deg, var(--tab-color), rgba(255, 255, 255, 0));
+          box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.55);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          opacity: 0.9;
+        }
+
+        /* NEW: “plastic” buttons (N64 colored but professional) */
+        .n64-plastic-btn-primary {
+          border: 2px solid rgba(45, 212, 191, 0.7);
+          background: linear-gradient(135deg, rgba(20, 184, 166, 0.96), rgba(34, 211, 238, 0.78), rgba(59, 130, 246, 0.62));
+          backdrop-filter: blur(10px) saturate(1.12);
+          -webkit-backdrop-filter: blur(10px) saturate(1.12);
+          box-shadow: 0 16px 40px rgba(20, 184, 166, 0.24), inset 0 1px 2px rgba(255, 255, 255, 0.42),
+            inset 0 -14px 24px rgba(2, 6, 23, 0.12);
+          position: relative;
+        }
+        .n64-plastic-btn-primary::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.45), transparent 40%),
+            linear-gradient(115deg, rgba(255, 255, 255, 0.2), transparent 55%);
+          opacity: 0.65;
+        }
+
+        .n64-btn-dots {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 20px;
+          height: 8px;
+          opacity: 0.9;
+          background: radial-gradient(circle at 4px 4px, rgba(253, 224, 71, 0.9) 0 2px, transparent 3px),
+            radial-gradient(circle at 10px 4px, rgba(236, 72, 153, 0.85) 0 2px, transparent 3px),
+            radial-gradient(circle at 16px 4px, rgba(59, 130, 246, 0.85) 0 2px, transparent 3px);
+          filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.18));
+          pointer-events: none;
+        }
+
+        .n64-plastic-btn-secondary {
+          border: 2px solid rgba(148, 163, 184, 0.65);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(236, 254, 255, 0.46), rgba(224, 231, 255, 0.52));
+          backdrop-filter: blur(12px) saturate(1.08);
+          -webkit-backdrop-filter: blur(12px) saturate(1.08);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.7),
+            inset 0 -14px 24px rgba(2, 6, 23, 0.06);
         }
 
         /* varied subtle card motion (not identical per card) */
@@ -1234,7 +1320,8 @@ export default function Page() {
             animation: none !important;
           }
           .hover-lift,
-          .n64-liquid-card::after {
+          .n64-liquid-card::after,
+          .n64-feature-card::after {
             transition: none !important;
           }
         }
@@ -1270,7 +1357,7 @@ export default function Page() {
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
+                    className="inline-flex items-center gap-1.5 rounded-[14px] n64-plastic-btn-primary text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2.5 hover-lift button-press relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
                     <Icons.Check />
@@ -1358,8 +1445,8 @@ export default function Page() {
                         <div
                           className={`n64-spectrum-border max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all ${
                             msg.role === 'user'
-                              ? 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]'
-                              : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-md text-slate-950 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
+                              ? 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/85 via-cyan-400/75 to-blue-500/65 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.28),inset_0_-12px_22px_rgba(2,6,23,0.12)]'
+                              : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/82 via-slate-50/72 to-cyan-50/82 backdrop-blur-md text-slate-950 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
                           }`}
                         >
                           {msg.image && (
@@ -1404,7 +1491,7 @@ export default function Page() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center justify-center w-9 h-9 rounded-lg border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm text-slate-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover-lift button-press transition-all"
+                      className="flex items-center justify-center w-9 h-9 rounded-[14px] border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm text-slate-700 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover-lift button-press transition-all"
                     >
                       <Icons.Camera />
                     </button>
@@ -1425,10 +1512,10 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all hover-lift button-press ${
+                        className={`flex items-center justify-center w-9 h-9 rounded-[14px] transition-all hover-lift button-press ${
                           (!input.trim() && !selectedImage) || isSending
                             ? 'bg-slate-300/60 text-slate-500 cursor-not-allowed border-2 border-slate-300/40'
-                            : 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]'
+                            : 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/85 via-cyan-400/75 to-blue-500/65 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.28),inset_0_-12px_22px_rgba(2,6,23,0.12)] hover:shadow-[inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_-14px_26px_rgba(2,6,23,0.14)]'
                         }`}
                       >
                         {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <Icons.ArrowUp />}
@@ -1436,7 +1523,8 @@ export default function Page() {
                     </form>
                   </div>
                   <p className={`mt-2 text-[10px] text-center text-slate-600 ${inter.className}`}>
-                    protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
+                    protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health
+                    department.
                   </p>
                 </div>
               </div>
