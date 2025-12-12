@@ -853,9 +853,9 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col" style={{ height: '100dvh' }}>
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down">
+        <header className="sticky top-0 z-40 border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down flex-shrink-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -933,16 +933,15 @@ export default function Page() {
         </header>
 
         {/* Main */}
-        <main className="flex-1 flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
+        <main className="flex-1 flex flex-col" style={{ height: '100dvh' }}>
           {!isAuthenticated ? (
             <LandingPage onShowPricing={() => setShowPricingModal(true)} />
           ) : (
-            <div className="flex-1 flex flex-col" style={{ height: 'calc(100dvh - 64px)' }}>
+            <div className="flex-1 flex flex-col min-h-0">
               {/* Messages container with proper height calculation */}
               <div
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto"
-                style={{ height: 'calc(100% - 160px)', minHeight: 0 }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
@@ -1004,8 +1003,8 @@ export default function Page() {
               </div>
 
               {/* Input bar fixed to viewport bottom */}
-              <div className="shrink-0 border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 pt-2 pb-safe" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+              <div className="flex-shrink-0 border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/60 via-cyan-100/50 to-sky-300/60 backdrop-blur-sm shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] text-[11px] text-slate-800 animate-slide-up">
                       <span>Image attached</span>
