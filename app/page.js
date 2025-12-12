@@ -17,13 +17,13 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -57,113 +57,83 @@ const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
-  Shield: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
-      <path d="M9 12l2 2 4-5" />
-    </svg>
-  ),
-  Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  ),
-  Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
-      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
-    </svg>
-  ),
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-      <div className="max-w-6xl w-full">
-        <div className="ui-shell">
-          <div className="ui-hero">
-            <div className="ui-kickers">
-              <span className={`ui-kicker ${inter.className}`}>
-                <Icons.Shield /> Inspection-grade
-              </span>
-              <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
+    <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-5xl">
+        <div className="ent-hero-shell">
+          <div className="ent-hero-card">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div className={`ent-badge ${outfit.className}`}>protocolLM</div>
+              <div className="hidden sm:flex items-center gap-2">
+                <button onClick={onShowAuth} className={`ent-link ${inter.className}`}>
+                  Sign in
+                </button>
+                <button onClick={onShowPricing} className={`ent-btn-primary ${outfit.className}`}>
+                  Request access
+                </button>
+              </div>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>
-              Compliance you can run your restaurant on.
+            <h1 className={`ent-title ${outfit.className}`}>
+              Compliance answers your staff can trust.
             </h1>
 
-            <p className={`ui-subtitle ${inter.className}`}>
-              A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans,
-              and actionable close/open checklists — without digging through manuals.
+            <p className={`ent-subtitle ${inter.className}`}>
+              Built for restaurants that take inspections seriously. Ask the Michigan Food Code, scan photos for likely violations, and keep a clean paper trail—without digging through PDFs.
             </p>
 
-            <div className="ui-cta-row">
-              <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                Start trial
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="ent-mini">
+                <div className={`ent-mini-kicker ${outfit.className}`}>Photo scans</div>
+                <div className={`ent-mini-body ${inter.className}`}>Attach a walk-in or line photo. Get a risk-oriented summary fast.</div>
+              </div>
+              <div className="ent-mini">
+                <div className={`ent-mini-kicker ${outfit.className}`}>Grounded answers</div>
+                <div className={`ent-mini-body ${inter.className}`}>Focused on local regs & guidance so your team stops guessing.</div>
+              </div>
+              <div className="ent-mini">
+                <div className={`ent-mini-kicker ${outfit.className}`}>Operator-ready</div>
+                <div className={`ent-mini-body ${inter.className}`}>Short, actionable next steps—written for real kitchens.</div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 sm:items-center">
+              <button onClick={onShowPricing} className={`ent-btn-primary ent-btn-lg ${outfit.className}`}>
+                See pricing
               </button>
-              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                Sign in
-              </button>
-            </div>
-
-            <div className={`ui-trust ${inter.className}`}>
-              <span className="ui-trust-item">
-                <Icons.Lock /> Secure by design
-              </span>
-              <span className="ui-dot" />
-              <span className="ui-trust-item">
-                <Icons.Spark /> Operator-focused
-              </span>
-              <span className="ui-dot" />
-              <span className="ui-trust-item">
-                <Icons.Shield /> Built for audits
-              </span>
-            </div>
-          </div>
-
-          {/* Minimal, enterprise “spec rows” (not playful cards) */}
-          <div className="ui-specgrid">
-            <div className="ui-spec">
-              <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.
+              <div className={`ent-fine ${inter.className}`}>
+                Washtenaw first • Wayne + Oakland planned for 2026
               </div>
             </div>
 
-            <div className="ui-spec">
-              <div className={`ui-spec-title ${inter.className}`}>Grounded answers</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
+            <div className="mt-8 ent-divider" />
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="ent-try">
+                <div className={`ent-try-title ${outfit.className}`}>Try asking</div>
+                <ul className={`ent-try-list ${inter.className}`}>
+                  <li>“Can raw chicken be stored above produce in the walk-in?”</li>
+                  <li>“What should our sanitizer bucket concentration be?”</li>
+                  <li>“What’s the safest cooling method for chili after service?”</li>
+                </ul>
+              </div>
+              <div className="ent-try">
+                <div className={`ent-try-title ${outfit.className}`}>Built for owners & GMs</div>
+                <div className={`ent-try-body ${inter.className}`}>
+                  This is not a toy chatbot. It’s positioned like a real operational system: premium, limited, and designed to reduce risk—fast.
+                </div>
               </div>
             </div>
-
-            <div className="ui-spec">
-              <div className={`ui-spec-title ${inter.className}`}>Action checklist</div>
-              <div className={`ui-spec-body ${inter.className}`}>
-                Convert concerns into a short close/open list your lead can run — today.
-              </div>
-            </div>
-          </div>
-
-          <div className={`ui-footerline ${inter.className}`}>
-            One site license per restaurant · 7-day trial · Cancel anytime
           </div>
         </div>
 
-        <footer className="pt-10 text-xs text-white/45">
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/terms" className="hover:text-white/70">
-              Terms
-            </Link>
-            <Link href="/privacy" className="hover:text-white/70">
-              Privacy
-            </Link>
-            <Link href="/contact" className="hover:text-white/70">
-              Contact
-            </Link>
-          </div>
+        <footer className="mt-10 flex flex-wrap gap-4 justify-center text-xs text-white/55">
+          <Link href="/terms" className="hover:text-white/80">Terms</Link>
+          <Link href="/privacy" className="hover:text-white/80">Privacy</Link>
+          <Link href="/contact" className="hover:text-white/80">Contact</Link>
         </footer>
       </div>
     </div>
@@ -217,7 +187,7 @@ function AuthModal({ isOpen, onClose }) {
       }
 
       if (mode === 'reset') {
-        setMessage('✓ Check your email for password reset instructions.')
+        setMessage('✓ Check your email for reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
@@ -247,7 +217,7 @@ function AuthModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal p-7" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md ent-modal" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
@@ -261,7 +231,7 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
-          <button onClick={onClose} className="ui-icon-btn" aria-label="Close">
+          <button onClick={onClose} className="ent-icon-btn" aria-label="Close">
             <Icons.X />
           </button>
         </div>
@@ -275,7 +245,7 @@ function AuthModal({ isOpen, onClose }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="gm@restaurant.com"
               required
-              className={`ui-input ${inter.className}`}
+              className="ent-input"
             />
           </div>
 
@@ -289,12 +259,12 @@ function AuthModal({ isOpen, onClose }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className={`ui-input pr-16 ${inter.className}`}
+                  className="ent-input pr-16"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -302,35 +272,39 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="submit" disabled={loading || !isLoaded} className={`ent-btn-primary w-full ${outfit.className}`}>
             {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 text-xs rounded-lg px-3 py-2 ui-toast ${message.startsWith('Error') ? 'ui-toast-err' : 'ui-toast-ok'}`}>
+          <div className={`mt-4 text-xs rounded-lg px-3 py-2 border ${
+            message.startsWith('Error')
+              ? 'bg-red-500/10 border-red-400/30 text-red-200'
+              : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-200'
+          }`}>
             {message}
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/70">
+        <div className="mt-4 text-center space-y-1 text-xs text-white/60">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/70 hover:text-white">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full hover:text-white">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/70 hover:text-white">
-                Need an account? <span className="font-semibold">Sign up</span>
+              <button type="button" onClick={() => setMode('signup')} className="block w-full hover:text-white">
+                Need an account? <span className="font-semibold text-white">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
-              Already have an account? <span className="font-semibold">Sign in</span>
+            <button type="button" onClick={() => setMode('signin')} className="hover:text-white">
+              Already have an account? <span className="font-semibold text-white">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="hover:text-white">
               Back to sign in
             </button>
           )}
@@ -347,78 +321,64 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="fixed inset-0 z-[900] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal p-7 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6" aria-label="Close pricing">
+      <div className="w-full max-w-lg ent-modal relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute right-5 top-5 ent-icon-btn" aria-label="Close">
           <Icons.X />
         </button>
 
         <div className="mb-6">
-          <div className={`ui-tag ${inter.className}`}>Enterprise • Single site license</div>
-          <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>
-            For operators who want inspection-grade confidence. Includes full chat + photo scanning.
+          <div className={`ent-badge ${outfit.className}`}>protocolLM</div>
+          <h3 className={`mt-3 text-xl font-semibold text-white tracking-tight ${outfit.className}`}>Site license</h3>
+          <p className={`mt-1 text-sm text-white/60 ${inter.className}`}>
+            One license per restaurant. Serious compliance tooling. 7-day free trial.
           </p>
         </div>
 
-        <div className="ui-pricewrap p-6">
-          <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div className="ent-price-card">
+          <div className="flex items-end justify-between gap-4">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
+                <span className={`text-4xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+              <p className={`mt-2 text-xs text-white/60 ${inter.className}`}>
+                Includes roughly <span className="text-white font-semibold">1,000 monthly checks</span> for a single restaurant.
+                Text questions count as one check; photo analyses count as two.
               </p>
             </div>
-
-            <div className={`ui-badge ${inter.className}`}>
-              <Icons.Shield />
-              Premium tier
+            <div className="hidden sm:block text-right">
+              <div className={`text-[11px] tracking-[0.22em] uppercase text-white/60 ${outfit.className}`}>Premium</div>
+              <div className={`text-xs text-white/40 ${inter.className}`}>Risk reduction</div>
             </div>
           </div>
 
-          <div className="ui-divider my-5" />
-
-          <ul className="text-xs text-white/70 space-y-2">
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Text + photo compliance checks</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Grounded in Michigan Food Code &amp; Washtenaw guidance</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>One restaurant site license</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>7-day free trial · cancel anytime</span>
-            </li>
+          <ul className="mt-5 text-xs text-white/70 space-y-2">
+            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Text questions + photo uploads</span></li>
+            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Grounded in Michigan Food Code &amp; local guidance</span></li>
+            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>Built for one restaurant site license</span></li>
+            <li className="flex items-start gap-2"><span className="text-white/80"><Icons.Check /></span><span>7-day free trial · cancel anytime</span></li>
           </ul>
 
-          <div className="space-y-3 pt-5">
+          <div className="mt-6 space-y-3">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`ent-btn-primary w-full ${outfit.className}`}
             >
-              {loading === 'monthly' ? 'Processing…' : 'Start $200/mo trial'}
+              {loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`ent-btn-secondary w-full ${outfit.className}`}
             >
-              {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
+              {loading === 'annual' ? 'Processing…' : 'Yearly · $2,000'}
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>
-              Not for hobbyists. Built for real operators who want inspection-ready workflows.
-            </p>
+            <div className={`text-[11px] text-white/45 text-center ${inter.className}`}>
+              Need higher volume? Email support for an expanded license.
+            </div>
           </div>
         </div>
       </div>
@@ -515,6 +475,9 @@ export default function Page() {
 
       if (!isMounted) return
       setHasActiveSubscription(active)
+      if (!active && searchParams.get('payment') === 'success') {
+        setShowPricingModal(false)
+      }
       setIsLoading(false)
     }
 
@@ -634,7 +597,6 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
-
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -721,7 +683,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+        <div className="w-8 h-8 rounded-full border border-white/20 border-t-white/70 animate-spin" />
       </div>
     )
   }
@@ -735,43 +697,48 @@ export default function Page() {
         body {
           height: 100%;
           width: 100%;
+          background: #05070c;
         }
 
+        /* Keep scrolling inside panes, not the page */
         body.ui-enterprise-bg {
           overflow: hidden;
-          background: #050608;
-          color: rgba(255, 255, 255, 0.92);
+          position: relative;
+          color: white;
+          background: radial-gradient(circle at 50% -20%, rgba(255,255,255,0.08), transparent 48%), #05070c;
         }
 
-        /* Enterprise glow + grid (subtle, expensive) */
+        /* OPTION A: “void + spotlight” (no grid) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 500px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 55%),
-            radial-gradient(900px 520px at 20% 10%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(900px 520px at 85% 10%, rgba(120, 90, 255, 0.06), transparent 55%),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+            radial-gradient(1200px 520px at 50% -6%, rgba(255, 255, 255, 0.12), transparent 60%),
+            radial-gradient(900px 520px at 18% 10%, rgba(0, 255, 200, 0.06), transparent 58%),
+            radial-gradient(900px 520px at 84% 10%, rgba(120, 90, 255, 0.06), transparent 58%),
+            radial-gradient(700px 700px at 50% 70%, rgba(255, 255, 255, 0.04), transparent 62%),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.03), transparent 35%);
           opacity: 1;
-          mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
-        /* soft vignette */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.55) 70%);
-          opacity: 0.9;
+          background:
+            radial-gradient(circle at 50% 22%, transparent 0%, rgba(0, 0, 0, 0.62) 72%),
+            radial-gradient(rgba(255, 255, 255, 0.035) 0.7px, transparent 0.8px);
+          background-size: auto, 7px 7px;
+          opacity: 0.95;
+          mix-blend-mode: normal;
         }
 
+        /* Scrollbars */
         ::-webkit-scrollbar {
-          width: 9px;
+          width: 8px;
         }
         ::-webkit-scrollbar-thumb {
           background: rgba(255, 255, 255, 0.12);
@@ -781,360 +748,297 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* Header */
-        .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+        /* --- Enterprise components (NO “white leaking borders”) --- */
+        .ent-border {
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          background-clip: padding-box;
         }
 
-        .ui-brand {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 12px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+        .ent-glass {
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+          backdrop-filter: blur(18px) saturate(1.15);
+          -webkit-backdrop-filter: blur(18px) saturate(1.15);
+          box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
-        /* Premium “shell” */
-        .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-          border-radius: 22px;
-          overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+        .ent-hero-shell {
+          position: relative;
+          padding: 1px; /* thin “edge” without glowing white */
+          border-radius: 20px;
+          background: linear-gradient(135deg, rgba(0,255,200,0.12), rgba(120,90,255,0.10), rgba(255,255,255,0.06));
         }
 
-        .ui-hero {
-          padding: 28px 22px 20px;
-        }
-
-        .ui-kickers {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 14px;
-        }
-
-        .ui-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.82);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
-        .ui-kicker-muted {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-        }
-
-        .ui-title {
-          font-size: clamp(30px, 4vw, 56px);
-          line-height: 1.02;
-          letter-spacing: -0.05em;
-          margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .ui-subtitle {
-          font-size: 14px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.64);
-          max-width: 72ch;
-        }
-
-        .ui-cta-row {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-top: 18px;
-        }
-
-        .ui-trust {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-top: 14px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-        }
-        .ui-trust-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
+        .ent-hero-card {
+          border-radius: 19px;
           border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.015);
-        }
-        .ui-dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
-        }
-
-        /* Spec grid (enterprise separators) */
-        .ui-specgrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .ui-spec {
-          padding: 18px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .ui-spec:first-child {
-          border-top: none;
-        }
-        .ui-spec-title {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
-          margin-bottom: 6px;
-        }
-        .ui-spec-body {
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.58);
-          max-width: 76ch;
-        }
-        @media (min-width: 920px) {
-          .ui-specgrid {
-            grid-template-columns: 1fr 1fr 1fr;
-          }
-          .ui-spec {
-            border-top: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.06);
-          }
-          .ui-spec:first-child {
-            border-left: none;
-          }
-        }
-
-        .ui-footerline {
-          padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.45);
-          font-size: 12px;
-        }
-
-        /* Buttons */
-        .ui-btn {
-          border-radius: 12px;
-          padding: 11px 14px;
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
-          user-select: none;
-        }
-        .ui-btn:active {
-          transform: translateY(1px);
-        }
-
-        .ui-btn-primary {
-          background: #ffffff;
-          color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-        }
-        .ui-btn-primary:hover {
-          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
-        }
-
-        .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
-        }
-
-        .ui-icon-btn {
-          width: 38px;
-          height: 38px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
-          transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-        }
-        .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
-          color: rgba(255, 255, 255, 0.95);
-        }
-
-        /* Modals / panels */
-        .ui-modal {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.86);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-        }
-
-        .ui-input {
-          width: 100%;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.92);
-          outline: none;
-          transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-        }
-        .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
-        }
-        .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
-        }
-
-        .ui-toast {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .ui-toast-ok {
-          border-color: rgba(34, 197, 94, 0.35);
-        }
-        .ui-toast-err {
-          border-color: rgba(239, 68, 68, 0.35);
-        }
-
-        /* Pricing premium surfaces */
-        .ui-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          width: fit-content;
-        }
-
-        .ui-pricewrap {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+          background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+          backdrop-filter: blur(22px) saturate(1.2);
+          -webkit-backdrop-filter: blur(22px) saturate(1.2);
+          box-shadow: 0 40px 120px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10);
+          padding: 28px;
           position: relative;
           overflow: hidden;
         }
-        .ui-pricewrap::before {
+
+        .ent-hero-card::before {
           content: '';
           position: absolute;
-          inset: -40% -30%;
-          background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
+          inset: -30%;
           pointer-events: none;
+          background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.14), transparent 42%);
+          transform: rotate(10deg);
+          opacity: 0.9;
         }
 
-        .ui-badge {
+        .ent-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
+          justify-content: center;
+          padding: 8px 12px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(255,255,255,0.06);
+          color: rgba(255,255,255,0.85);
+          font-size: 11px;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+        }
+
+        .ent-title {
+          font-size: 34px;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+          color: rgba(255,255,255,0.96);
+          margin-top: 6px;
+        }
+
+        .ent-subtitle {
+          margin-top: 10px;
+          color: rgba(255,255,255,0.66);
+          max-width: 56ch;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .ent-mini {
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,0,0,0.22);
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.78);
+          padding: 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .ent-mini-kicker {
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.80);
+        }
+        .ent-mini-body {
+          margin-top: 8px;
           font-size: 12px;
-          font-weight: 700;
+          line-height: 1.55;
+          color: rgba(255,255,255,0.62);
         }
 
-        .ui-divider {
+        .ent-btn-primary {
+          border-radius: 12px;
+          padding: 10px 14px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+          color: rgba(255,255,255,0.92);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
+          transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+        }
+        .ent-btn-primary:hover {
+          transform: translateY(-1px);
+          background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+          box-shadow: 0 20px 60px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .ent-btn-primary:active {
+          transform: translateY(0px);
+        }
+
+        .ent-btn-secondary {
+          border-radius: 12px;
+          padding: 10px 14px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(0,0,0,0.18);
+          color: rgba(255,255,255,0.82);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          transition: transform 150ms ease, background 150ms ease;
+        }
+        .ent-btn-secondary:hover {
+          transform: translateY(-1px);
+          background: rgba(0,0,0,0.26);
+        }
+
+        .ent-btn-lg {
+          padding: 12px 16px;
+        }
+
+        .ent-link {
+          color: rgba(255,255,255,0.68);
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .ent-link:hover {
+          color: rgba(255,255,255,0.90);
+        }
+
+        .ent-fine {
+          font-size: 12px;
+          color: rgba(255,255,255,0.52);
+        }
+
+        .ent-divider {
           height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.08);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
         }
 
-        /* Chat bubbles — tool-like (less playful) */
-        .ui-bubble {
+        .ent-try {
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,0,0,0.20);
           border-radius: 14px;
-          padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          padding: 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
-        .ui-bubble-user {
-          background: rgba(255, 255, 255, 0.92);
-          color: #000;
-          border-color: rgba(255, 255, 255, 0.18);
+        .ent-try-title {
+          font-size: 11px;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.78);
+        }
+        .ent-try-list {
+          margin-top: 10px;
+          color: rgba(255,255,255,0.60);
+          font-size: 12px;
+          line-height: 1.6;
+          list-style: none;
+          padding: 0;
+        }
+        .ent-try-list li {
+          margin: 6px 0;
+        }
+        .ent-try-body {
+          margin-top: 10px;
+          color: rgba(255,255,255,0.60);
+          font-size: 12px;
+          line-height: 1.6;
         }
 
-        .ui-empty {
-          color: rgba(255, 255, 255, 0.55);
+        .ent-modal {
+          border-radius: 18px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.05));
+          backdrop-filter: blur(24px) saturate(1.2);
+          -webkit-backdrop-filter: blur(24px) saturate(1.2);
+          box-shadow: 0 36px 120px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.10);
+          padding: 22px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ent-icon-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(0,0,0,0.20);
+          color: rgba(255,255,255,0.78);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 150ms ease, transform 150ms ease;
+        }
+        .ent-icon-btn:hover {
+          background: rgba(0,0,0,0.32);
+          transform: translateY(-1px);
+        }
+
+        .ent-input {
+          width: 100%;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(0,0,0,0.26);
+          color: rgba(255,255,255,0.88);
+          padding: 10px 12px;
+          font-size: 14px;
+          outline: none;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .ent-input::placeholder {
+          color: rgba(255,255,255,0.36);
+        }
+        .ent-input:focus {
+          border-color: rgba(0,255,200,0.28);
+          box-shadow: 0 0 0 3px rgba(0,255,200,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .ent-price-card {
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(0,0,0,0.26);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          padding: 18px;
+        }
+
+        @media (max-width: 640px) {
+          .ent-title {
+            font-size: 28px;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
+            transition: none !important;
           }
         }
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
+        {/* Header */}
+        <header className="flex-shrink-0 border-b border-white/10 bg-black/30 backdrop-blur-xl">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`ui-brand ${outfit.className}`}>
-                <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
-              </div>
+              <button
+                onClick={() => router.push('/')}
+                className={`text-xs tracking-[0.24em] uppercase text-white/80 hover:text-white ${outfit.className}`}
+              >
+                protocolLM
+              </button>
+
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
+                <span className="hidden sm:inline-flex text-[10px] px-2 py-1 rounded-full border border-white/10 bg-white/5 text-white/70 tracking-[0.18em] uppercase">
+                  Active
+                </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {!isAuthenticated ? (
                 <>
-                  <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
+                  <button onClick={() => setShowAuthModal(true)} className={`ent-link ${inter.className}`}>
                     Sign in
                   </button>
-                  <button onClick={() => setShowPricingModal(true)} className="ui-btn ui-btn-primary">
-                    Start trial
+                  <button onClick={() => setShowPricingModal(true)} className={`ent-btn-primary ${outfit.className}`}>
+                    Pricing
                   </button>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
+                  <button
+                    onClick={handleNewChat}
+                    className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] tracking-[0.18em] uppercase text-white/70 hover:text-white hover:bg-white/10"
+                  >
                     <Icons.Plus />
                     New chat
                   </button>
@@ -1142,28 +1046,27 @@ export default function Page() {
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu((v) => !v)}
-                      className="ui-icon-btn"
+                      className="w-9 h-9 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/75 flex items-center justify-center text-xs font-bold"
                       aria-label="User menu"
-                      title={session?.user?.email || 'User'}
                     >
-                      <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
+                      {session.user.email?.[0]?.toUpperCase() || 'U'}
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-52 ui-modal overflow-hidden">
+                      <div className="absolute right-0 mt-2 w-52 rounded-xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-[0_24px_90px_rgba(0,0,0,0.70)] overflow-hidden text-sm">
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 text-white/75 hover:text-white transition-colors"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
                         </button>
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-300 hover:bg-red-500/10 transition-colors"
                         >
                           <Icons.LogOut />
                           <span>Log out</span>
@@ -1177,6 +1080,7 @@ export default function Page() {
           </div>
         </header>
 
+        {/* Main */}
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1184,25 +1088,30 @@ export default function Page() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
+              {/* Messages */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
                 style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
               >
-                {messages.length === 0 ? (
-                  <div className="h-full flex items-center justify-center px-4">
-                    <div className="max-w-xl text-center">
-                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
-                        Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for an inspection-grade risk scan.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
+                {/* Removed “demo / empty-state box” */}
+                {messages.length > 0 && (
+                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                        <div
+                          className={`max-w-[86%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                            msg.role === 'user'
+                              ? 'border border-white/10 bg-white/10 text-white'
+                              : 'border border-white/10 bg-black/30 text-white/85'
+                          }`}
+                          style={{
+                            backdropFilter: 'blur(14px)',
+                            WebkitBackdropFilter: 'blur(14px)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                          }}
+                        >
                           {msg.image && (
                             <img
                               src={msg.image}
@@ -1210,6 +1119,7 @@ export default function Page() {
                               className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/30"
                             />
                           )}
+
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
                               <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
@@ -1226,12 +1136,13 @@ export default function Page() {
                 )}
               </div>
 
-              <div className="flex-shrink-0 ui-header border-t border-white/10">
+              {/* Input bar */}
+              <div className="flex-shrink-0 border-t border-white/10 bg-black/35 backdrop-blur-xl">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[11px] text-white/70">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
+                      <button onClick={() => setSelectedImage(null)} className="text-white/50 hover:text-white transition-colors" aria-label="Remove image">
                         <Icons.X />
                       </button>
                     </div>
@@ -1239,7 +1150,12 @@ export default function Page() {
 
                   <div className="flex items-end gap-2">
                     <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center justify-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 transition"
+                      aria-label="Attach image"
+                    >
                       <Icons.Camera />
                     </button>
 
@@ -1249,7 +1165,12 @@ export default function Page() {
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
+                        className={`flex-1 max-h-32 min-h-[44px] resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/90 placeholder-white/30 focus:outline-none ${inter.className}`}
+                        style={{
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                          backdropFilter: 'blur(14px)',
+                          WebkitBackdropFilter: 'blur(14px)',
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1261,16 +1182,20 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center justify-center w-10 h-10 rounded-xl border transition ${
+                          (!input.trim() && !selectedImage) || isSending
+                            ? 'border-white/10 bg-white/5 text-white/35 cursor-not-allowed'
+                            : 'border-white/12 bg-white/10 text-white hover:bg-white/15'
+                        }`}
                         aria-label="Send"
                       >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="w-4 h-4 rounded-full border border-white/30 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
-                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+                  <p className={`mt-2 text-[10px] text-center text-white/40 ${inter.className}`}>
+                    protocolLM may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
                   </p>
                 </div>
               </div>
