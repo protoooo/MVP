@@ -140,7 +140,7 @@ function LandingPage({ onShowPricing }) {
               style={{
                 animationDelay: c.delay,
                 // custom tint per card for “translucent plastic” vibe
-                ['--glass-tint']: c.tint,
+                ['--glass-tint' as any]: c.tint,
               }}
             >
               <div className="flex items-center justify-between mb-3">
@@ -148,9 +148,7 @@ function LandingPage({ onShowPricing }) {
                   <div className="retro-icon-chip">{c.icon}</div>
                   <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">
-                  {c.badge}
-                </span>
+                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-900/90 n64-pill">{c.badge}</span>
               </div>
 
               <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
@@ -160,7 +158,7 @@ function LandingPage({ onShowPricing }) {
 
         <button
           onClick={onShowPricing}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg n64-liquid-cta text-white text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg n64-liquid-cta text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
         >
           <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
           <Icons.Check />
@@ -321,7 +319,7 @@ function AuthModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={loading || !isLoaded}
-            className="w-full mt-2 inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
+            className="w-full mt-2 inline-flex items-center justify-center rounded-lg n64-liquid-cta text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
           >
             <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
             <span className="relative">
@@ -422,7 +420,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="w-full inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
+              className="w-full inline-flex items-center justify-center rounded-lg n64-liquid-cta text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
             >
               <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
               <span className="relative">{loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}</span>
@@ -487,7 +485,6 @@ export default function Page() {
   }
 
   useEffect(() => {
-    // initial auto-scroll (after first paint)
     requestAnimationFrame(() => scrollToBottom('auto'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -564,7 +561,6 @@ export default function Page() {
   }, [supabase, searchParams])
 
   useEffect(() => {
-    // Background stays consistent + premium retro “Liquid Glass meets N64” vibe.
     if (typeof document === 'undefined') return
     document.body.classList.add('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
     document.body.classList.add('n64-glass-bg')
@@ -661,7 +657,6 @@ export default function Page() {
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
-    // after user sends, we definitely want to stay pinned to bottom
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -758,33 +753,46 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* --- Viewport fit fix (prevents double-100vh and “input off screen” issues) --- */
         html,
         body {
           height: 100%;
           width: 100%;
         }
-        /* Keep scrolling inside the app panes (chat list), not the body. */
         body.n64-glass-bg {
           overflow: hidden;
           position: relative;
         }
 
-        /* Premium-retro background: translucent plastic + liquid sheen (kept subtle) */
+        /* Subtle “N64 palette everywhere” without looking like a toy:
+           - very low-opacity spectral glows
+           - a tiny prism wash
+           - keep UI surfaces clean & readable
+        */
         body.n64-glass-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background-image:
-            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
-            radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.35), transparent 44%),
+            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.65), transparent 38%),
+            radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.38), transparent 44%),
             radial-gradient(circle at 22% 70%, rgba(45, 212, 191, 0.12), transparent 46%),
             radial-gradient(circle at 84% 68%, rgba(59, 130, 246, 0.1), transparent 52%),
-            linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.06), rgba(59, 130, 246, 0.06));
+            conic-gradient(
+              from 210deg at 50% 40%,
+              rgba(14, 165, 233, 0.08),
+              rgba(20, 184, 166, 0.06),
+              rgba(59, 130, 246, 0.06),
+              rgba(168, 85, 247, 0.05),
+              rgba(249, 115, 22, 0.05),
+              rgba(234, 179, 8, 0.04),
+              rgba(236, 72, 153, 0.05),
+              rgba(6, 182, 212, 0.06),
+              rgba(14, 165, 233, 0.08)
+            );
           mix-blend-mode: soft-light;
           opacity: 0.95;
-          filter: saturate(1.05);
+          filter: saturate(1.06);
         }
 
         body.n64-glass-bg::after {
@@ -792,81 +800,39 @@ export default function Page() {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          /* Tiny “N64-ish” pixel grid + micro-dither */
           background-image:
             linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
             radial-gradient(rgba(15, 23, 42, 0.06) 0.55px, transparent 0.65px);
           background-size: 26px 26px, 26px 26px, 6px 6px;
-          opacity: 0.16;
+          opacity: 0.15;
         }
 
-        /* 64-color palette (N64 energy), used subtly via gradients/borders */
         :root {
-          --n64-0: #0b1020;
-          --n64-1: #0f172a;
-          --n64-2: #111827;
-          --n64-3: #1f2937;
-          --n64-4: #334155;
-          --n64-5: #475569;
-          --n64-6: #64748b;
-          --n64-7: #94a3b8;
-          --n64-8: #e2e8f0;
-          --n64-9: #f8fafc;
           --n64-10: #0ea5e9;
-          --n64-11: #0284c7;
-          --n64-12: #38bdf8;
-          --n64-13: #22c55e;
-          --n64-14: #16a34a;
-          --n64-15: #86efac;
           --n64-16: #14b8a6;
-          --n64-17: #0d9488;
-          --n64-18: #2dd4bf;
-          --n64-19: #a7f3d0;
           --n64-20: #3b82f6;
-          --n64-21: #2563eb;
-          --n64-22: #93c5fd;
-          --n64-23: #1d4ed8;
           --n64-24: #a855f7;
-          --n64-25: #7c3aed;
-          --n64-26: #c4b5fd;
-          --n64-27: #6d28d9;
           --n64-28: #f97316;
-          --n64-29: #ea580c;
-          --n64-30: #fdba74;
-          --n64-31: #c2410c;
-          --n64-32: #ef4444;
-          --n64-33: #dc2626;
-          --n64-34: #fecaca;
-          --n64-35: #991b1b;
           --n64-36: #eab308;
-          --n64-37: #ca8a04;
-          --n64-38: #fde68a;
-          --n64-39: #854d0e;
-          --n64-40: #f59e0b;
-          --n64-41: #d97706;
-          --n64-42: #fed7aa;
-          --n64-43: #92400e;
           --n64-44: #ec4899;
-          --n64-45: #db2777;
-          --n64-46: #fbcfe8;
-          --n64-47: #9d174d;
           --n64-48: #06b6d4;
-          --n64-49: #0891b2;
-          --n64-50: #a5f3fc;
-          --n64-51: #164e63;
           --n64-52: #10b981;
-          --n64-53: #059669;
-          --n64-54: #bbf7d0;
-          --n64-55: #064e3b;
           --n64-56: #8b5cf6;
-          --n64-57: #6366f1;
-          --n64-58: #60a5fa;
-          --n64-59: #34d399;
           --n64-60: #f472b6;
-          --n64-61: #fb7185;
-          --n64-62: #fdba74;
           --n64-63: #fde047;
+
+          --n64-prism: linear-gradient(
+            90deg,
+            rgba(14, 165, 233, 0.12),
+            rgba(20, 184, 166, 0.1),
+            rgba(59, 130, 246, 0.1),
+            rgba(168, 85, 247, 0.09),
+            rgba(249, 115, 22, 0.09),
+            rgba(234, 179, 8, 0.07),
+            rgba(236, 72, 153, 0.09),
+            rgba(6, 182, 212, 0.1)
+          );
         }
 
         .n64-spectrum-line {
@@ -894,7 +860,7 @@ export default function Page() {
             var(--n64-60),
             var(--n64-63)
           );
-          opacity: 0.62;
+          opacity: 0.52;
           filter: saturate(1.05);
         }
 
@@ -915,38 +881,24 @@ export default function Page() {
           opacity: 0.55;
         }
 
-        /* --- “N64 transparent plastic x Apple liquid glass” building blocks --- */
+        /* --- N64 transparent plastic x Apple liquid glass --- */
         .n64-liquid-panel {
           border: 2px solid rgba(45, 212, 191, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.22)),
-            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.7), transparent 42%),
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.22)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.75), transparent 42%),
             radial-gradient(circle at 85% 25%, rgba(45, 212, 191, 0.12), transparent 50%);
-          backdrop-filter: blur(14px) saturate(1.15);
-          -webkit-backdrop-filter: blur(14px) saturate(1.15);
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
+          backdrop-filter: blur(14px) saturate(1.18);
+          -webkit-backdrop-filter: blur(14px) saturate(1.18);
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
           position: relative;
           overflow: hidden;
         }
-
-        .n64-liquid-panel::before {
-          content: '';
-          position: absolute;
-          inset: -40% -30%;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 40%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 55%);
-          transform: rotate(12deg);
-          opacity: 0.6;
-          pointer-events: none;
-        }
-
         .n64-liquid-panel::after {
           content: '';
           position: absolute;
           inset: 0;
           pointer-events: none;
-          /* tiny dither/noise + faint “chromatic edge” */
-          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.6px, transparent 0.7px),
-            linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(168, 85, 247, 0.06));
+          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.6px, transparent 0.7px), var(--n64-prism);
           background-size: 7px 7px, 100% 100%;
           opacity: 0.18;
           mix-blend-mode: soft-light;
@@ -954,12 +906,12 @@ export default function Page() {
 
         .n64-liquid-panel-strong {
           border: 2px solid rgba(45, 212, 191, 0.6);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)),
-            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.75), transparent 42%),
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.28)),
+            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.78), transparent 42%),
             radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.12), transparent 52%);
-          backdrop-filter: blur(18px) saturate(1.18);
-          -webkit-backdrop-filter: blur(18px) saturate(1.18);
-          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
+          backdrop-filter: blur(18px) saturate(1.2);
+          -webkit-backdrop-filter: blur(18px) saturate(1.2);
+          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.76), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
           position: relative;
           overflow: hidden;
         }
@@ -968,8 +920,8 @@ export default function Page() {
           position: absolute;
           inset: 0;
           pointer-events: none;
-          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px);
-          background-size: 7px 7px;
+          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px), var(--n64-prism);
+          background-size: 7px 7px, 100% 100%;
           opacity: 0.16;
           mix-blend-mode: soft-light;
         }
@@ -977,12 +929,12 @@ export default function Page() {
         .n64-liquid-card {
           --glass-tint: rgba(45, 212, 191, 0.14);
           border: 2px solid rgba(148, 163, 184, 0.5);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25)),
-            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.72), transparent 45%),
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.25)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.74), transparent 45%),
             radial-gradient(circle at 88% 30%, var(--glass-tint), transparent 58%);
-          backdrop-filter: blur(16px) saturate(1.12);
-          -webkit-backdrop-filter: blur(16px) saturate(1.12);
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
+          backdrop-filter: blur(16px) saturate(1.16);
+          -webkit-backdrop-filter: blur(16px) saturate(1.16);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.78), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
           position: relative;
           overflow: hidden;
         }
@@ -991,49 +943,75 @@ export default function Page() {
           position: absolute;
           inset: 0;
           pointer-events: none;
-          background: linear-gradient(115deg, rgba(255, 255, 255, 0.5), transparent 35%),
-            radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.55), transparent 40%);
-          opacity: 0.6;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.52), transparent 35%),
+            radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.58), transparent 40%);
+          opacity: 0.58;
         }
         .n64-liquid-card::after {
           content: '';
           position: absolute;
-          inset: -40% -60%;
+          inset: 0;
           pointer-events: none;
-          background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%);
-          transform: rotate(10deg);
-          opacity: 0.0;
-          transition: opacity 250ms ease;
+          background-image: radial-gradient(rgba(2, 6, 23, 0.06) 0.6px, transparent 0.7px), var(--n64-prism);
+          background-size: 7px 7px, 100% 100%;
+          opacity: 0.14;
+          mix-blend-mode: soft-light;
         }
-        .n64-liquid-card:hover::after {
-          opacity: 0.9;
-          animation: sheenSweep 1.25s ease-in-out;
+
+        /* Buttons: clearer/less “smoky”, more Apple liquid glass */
+        .n64-liquid-cta {
+          color: rgba(15, 23, 42, 0.92);
+          border: 2px solid rgba(94, 234, 212, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.22)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.85), transparent 46%),
+            radial-gradient(circle at 90% 35%, rgba(20, 184, 166, 0.18), transparent 58%);
+          backdrop-filter: blur(12px) saturate(1.22);
+          -webkit-backdrop-filter: blur(12px) saturate(1.22);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.78);
+          position: relative;
+          overflow: hidden;
+        }
+        .n64-liquid-cta::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: var(--n64-prism);
+          opacity: 0.14;
+          mix-blend-mode: soft-light;
+        }
+        .n64-liquid-cta:hover {
+          box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.82);
+          border-color: rgba(94, 234, 212, 0.68);
         }
 
         .n64-liquid-chip {
           border: 2px solid rgba(148, 163, 184, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
-        }
-
-        .n64-liquid-cta {
-          border: 2px solid rgba(45, 212, 191, 0.65);
-          background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(34, 211, 238, 0.72), rgba(20, 184, 166, 0.88));
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.35));
           backdrop-filter: blur(10px) saturate(1.1);
           -webkit-backdrop-filter: blur(10px) saturate(1.1);
-          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.45);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.72);
+          position: relative;
+          overflow: hidden;
+        }
+        .n64-liquid-chip::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: var(--n64-prism);
+          opacity: 0.09;
+          mix-blend-mode: soft-light;
         }
 
         .n64-pill {
           border: 1px solid rgba(20, 184, 166, 0.35);
           padding: 3px 8px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.45);
+          background: rgba(255, 255, 255, 0.5);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.62);
         }
 
         .retro-icon-chip {
@@ -1044,12 +1022,23 @@ export default function Page() {
           justify-content: center;
           border-radius: 12px;
           border: 2px solid rgba(148, 163, 184, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25));
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.25));
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.72), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
           color: rgba(15, 23, 42, 0.85);
+          position: relative;
+          overflow: hidden;
+        }
+        .retro-icon-chip::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: var(--n64-prism);
+          opacity: 0.1;
+          mix-blend-mode: soft-light;
         }
 
-        /* varied subtle card motion (not identical per card) */
+        /* varied subtle card motion */
         @keyframes cardDriftA {
           0%,
           100% {
@@ -1087,16 +1076,6 @@ export default function Page() {
           animation: cardDriftC 6.2s ease-in-out infinite;
         }
 
-        @keyframes sheenSweep {
-          0% {
-            transform: translateX(-18%) rotate(10deg);
-          }
-          100% {
-            transform: translateX(22%) rotate(10deg);
-          }
-        }
-
-        /* scrollbars */
         ::-webkit-scrollbar {
           width: 6px;
         }
@@ -1210,7 +1189,7 @@ export default function Page() {
         }
 
         .shimmer-effect {
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.32) 50%, transparent 100%);
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
@@ -1219,7 +1198,6 @@ export default function Page() {
           animation: ripple 2s ease-out infinite;
         }
 
-        /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
           .animate-float,
           .pulse-ring,
@@ -1233,8 +1211,7 @@ export default function Page() {
           .shimmer-effect {
             animation: none !important;
           }
-          .hover-lift,
-          .n64-liquid-card::after {
+          .hover-lift {
             transition: none !important;
           }
         }
@@ -1244,9 +1221,7 @@ export default function Page() {
 
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      {/* SINGLE viewport container; no nested 100dvh (fixes “not visible on load”) */}
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        {/* Header */}
         <header className="sticky top-0 z-40 flex-shrink-0 n64-spectrum-line border-b-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] animate-slide-down">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1270,7 +1245,7 @@ export default function Page() {
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
+                    className="inline-flex items-center gap-1.5 rounded-lg n64-liquid-cta text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
                     <Icons.Check />
@@ -1321,7 +1296,6 @@ export default function Page() {
           </div>
         </header>
 
-        {/* Main: flex-1 + min-h-0 ensures message list is visible immediately */}
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1329,7 +1303,6 @@ export default function Page() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Messages container */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
@@ -1385,7 +1358,6 @@ export default function Page() {
                 )}
               </div>
 
-              {/* Input bar */}
               <div className="flex-shrink-0 n64-spectrum-line border-t-2 border-teal-300/60 bg-gradient-to-br from-teal-200/40 via-cyan-100/35 to-blue-200/40 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
