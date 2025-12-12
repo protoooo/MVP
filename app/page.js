@@ -89,7 +89,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Photo scan',
       icon: <Icons.RetroCamera />,
       body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
-      tint: 'rgba(45, 212, 191, 0.16)',
+      tint: 'rgba(45, 212, 191, 0.22)',
       anim: 'card-drift-a',
       delay: '0.06s',
     },
@@ -98,7 +98,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Grounded',
       icon: <Icons.GamePak />,
       body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
-      tint: 'rgba(59, 130, 246, 0.14)',
+      tint: 'rgba(59, 130, 246, 0.20)',
       anim: 'card-drift-b',
       delay: '0.12s',
     },
@@ -107,7 +107,7 @@ function LandingPage({ onShowPricing }) {
       badge: 'Actionable',
       icon: <Icons.ClipboardCheck />,
       body: 'Turn flags into a short close/open list your team can run.',
-      tint: 'rgba(168, 85, 247, 0.12)',
+      tint: 'rgba(168, 85, 247, 0.18)',
       anim: 'card-drift-c',
       delay: '0.18s',
     },
@@ -122,14 +122,12 @@ function LandingPage({ onShowPricing }) {
 
         <div className="space-y-4">
           <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
-            Be inspection‑ready.
+            Be inspection-ready.
           </h1>
           <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
             Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
           </p>
-          <p className={`text-xs text-slate-600 ${inter.className}`}>
-            Washtenaw County today · Wayne + Oakland planned for 2026.
-          </p>
+          <p className={`text-xs text-slate-600 ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
@@ -139,7 +137,6 @@ function LandingPage({ onShowPricing }) {
               className={`rounded-2xl n64-liquid-card p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
               style={{
                 animationDelay: c.delay,
-                // custom tint per card for “translucent plastic” vibe
                 ['--glass-tint']: c.tint,
               }}
             >
@@ -148,9 +145,7 @@ function LandingPage({ onShowPricing }) {
                   <div className="retro-icon-chip">{c.icon}</div>
                   <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
                 </div>
-                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">
-                  {c.badge}
-                </span>
+                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">{c.badge}</span>
               </div>
 
               <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
@@ -466,10 +461,6 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
-  // Keeps the chat perfectly fit in the viewport (ChatGPT/Claude-style):
-  // - no double-100vh containers
-  // - internal scroll only in the message list
-  // - auto-scroll only when user is already near bottom
   const shouldAutoScrollRef = useRef(true)
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -487,7 +478,6 @@ export default function Page() {
   }
 
   useEffect(() => {
-    // initial auto-scroll (after first paint)
     requestAnimationFrame(() => scrollToBottom('auto'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -564,7 +554,6 @@ export default function Page() {
   }, [supabase, searchParams])
 
   useEffect(() => {
-    // Background stays consistent + premium retro “Liquid Glass meets N64” vibe.
     if (typeof document === 'undefined') return
     document.body.classList.add('bg-gradient-to-br', 'from-cyan-50', 'via-sky-100', 'to-blue-100')
     document.body.classList.add('n64-glass-bg')
@@ -661,7 +650,6 @@ export default function Page() {
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
 
-    // after user sends, we definitely want to stay pinned to bottom
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -764,27 +752,62 @@ export default function Page() {
           height: 100%;
           width: 100%;
         }
-        /* Keep scrolling inside the app panes (chat list), not the body. */
         body.n64-glass-bg {
           overflow: hidden;
           position: relative;
         }
 
-        /* Premium-retro background: translucent plastic + liquid sheen (kept subtle) */
+        /* =========================================================
+           N64 TRANSLUCENT PLASTIC  ✕  LIQUID GLASS (PUSHED HARD)
+           ========================================================= */
+
+        :root {
+          /* global “shell colors” (you can tweak these) */
+          --lg-a: 20 184 166; /* teal */
+          --lg-b: 34 211 238; /* cyan */
+          --lg-c: 124 58 237; /* violet */
+          --ink: 15 23 42;
+
+          /* stronger glass + stronger rim */
+          --glass-blur: 22px;
+          --rim: 2.5px;
+          --rim-soft: 0.58;
+
+          /* glass body */
+          --g-top: 0.80;
+          --g-bot: 0.44;
+
+          /* shadows */
+          --sh-1: 0 22px 70px rgba(2, 6, 23, 0.18);
+          --sh-2: 0 3px 14px rgba(2, 6, 23, 0.12);
+          --sh-in: inset 0 1px 2px rgba(255, 255, 255, 0.70), inset 0 -18px 48px rgba(2, 6, 23, 0.06);
+
+          /* specular */
+          --spec: rgba(255, 255, 255, 0.72);
+        }
+
+        /* Background stays consistent + PREMIUM: refraction + plastic glow + micro grid */
         body.n64-glass-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background-image:
-            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
-            radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.35), transparent 44%),
-            radial-gradient(circle at 22% 70%, rgba(45, 212, 191, 0.12), transparent 46%),
-            radial-gradient(circle at 84% 68%, rgba(59, 130, 246, 0.1), transparent 52%),
-            linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.06), rgba(59, 130, 246, 0.06));
+            radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.74), transparent 42%),
+            radial-gradient(circle at 82% 10%, rgba(255, 255, 255, 0.42), transparent 52%),
+            radial-gradient(circle at 22% 70%, rgba(var(--lg-a), 0.20), transparent 56%),
+            radial-gradient(circle at 86% 74%, rgba(var(--lg-b), 0.16), transparent 58%),
+            radial-gradient(circle at 70% 46%, rgba(var(--lg-c), 0.10), transparent 60%),
+            conic-gradient(
+              from 220deg at 60% 20%,
+              rgba(var(--lg-b), 0.10),
+              rgba(var(--lg-a), 0.10),
+              rgba(var(--lg-c), 0.08),
+              rgba(var(--lg-b), 0.10)
+            );
           mix-blend-mode: soft-light;
-          opacity: 0.95;
-          filter: saturate(1.05);
+          opacity: 0.98;
+          filter: saturate(1.25) contrast(1.02);
         }
 
         body.n64-glass-bg::after {
@@ -792,83 +815,15 @@ export default function Page() {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          /* Tiny “N64-ish” pixel grid + micro-dither */
           background-image:
             linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-            radial-gradient(rgba(15, 23, 42, 0.06) 0.55px, transparent 0.65px);
-          background-size: 26px 26px, 26px 26px, 6px 6px;
-          opacity: 0.16;
+            radial-gradient(rgba(15, 23, 42, 0.07) 0.55px, transparent 0.65px);
+          background-size: 22px 22px, 22px 22px, 5px 5px;
+          opacity: 0.18;
         }
 
-        /* 64-color palette (N64 energy), used subtly via gradients/borders */
-        :root {
-          --n64-0: #0b1020;
-          --n64-1: #0f172a;
-          --n64-2: #111827;
-          --n64-3: #1f2937;
-          --n64-4: #334155;
-          --n64-5: #475569;
-          --n64-6: #64748b;
-          --n64-7: #94a3b8;
-          --n64-8: #e2e8f0;
-          --n64-9: #f8fafc;
-          --n64-10: #0ea5e9;
-          --n64-11: #0284c7;
-          --n64-12: #38bdf8;
-          --n64-13: #22c55e;
-          --n64-14: #16a34a;
-          --n64-15: #86efac;
-          --n64-16: #14b8a6;
-          --n64-17: #0d9488;
-          --n64-18: #2dd4bf;
-          --n64-19: #a7f3d0;
-          --n64-20: #3b82f6;
-          --n64-21: #2563eb;
-          --n64-22: #93c5fd;
-          --n64-23: #1d4ed8;
-          --n64-24: #a855f7;
-          --n64-25: #7c3aed;
-          --n64-26: #c4b5fd;
-          --n64-27: #6d28d9;
-          --n64-28: #f97316;
-          --n64-29: #ea580c;
-          --n64-30: #fdba74;
-          --n64-31: #c2410c;
-          --n64-32: #ef4444;
-          --n64-33: #dc2626;
-          --n64-34: #fecaca;
-          --n64-35: #991b1b;
-          --n64-36: #eab308;
-          --n64-37: #ca8a04;
-          --n64-38: #fde68a;
-          --n64-39: #854d0e;
-          --n64-40: #f59e0b;
-          --n64-41: #d97706;
-          --n64-42: #fed7aa;
-          --n64-43: #92400e;
-          --n64-44: #ec4899;
-          --n64-45: #db2777;
-          --n64-46: #fbcfe8;
-          --n64-47: #9d174d;
-          --n64-48: #06b6d4;
-          --n64-49: #0891b2;
-          --n64-50: #a5f3fc;
-          --n64-51: #164e63;
-          --n64-52: #10b981;
-          --n64-53: #059669;
-          --n64-54: #bbf7d0;
-          --n64-55: #064e3b;
-          --n64-56: #8b5cf6;
-          --n64-57: #6366f1;
-          --n64-58: #60a5fa;
-          --n64-59: #34d399;
-          --n64-60: #f472b6;
-          --n64-61: #fb7185;
-          --n64-62: #fdba74;
-          --n64-63: #fde047;
-        }
-
+        /* “Spectrum line” gets more plastic glow */
         .n64-spectrum-line {
           position: relative;
         }
@@ -878,26 +833,13 @@ export default function Page() {
           left: 0;
           right: 0;
           top: -2px;
-          height: 2px;
-          background: linear-gradient(
-            90deg,
-            var(--n64-10),
-            var(--n64-16),
-            var(--n64-20),
-            var(--n64-24),
-            var(--n64-28),
-            var(--n64-36),
-            var(--n64-44),
-            var(--n64-48),
-            var(--n64-52),
-            var(--n64-56),
-            var(--n64-60),
-            var(--n64-63)
-          );
+          height: 3px;
+          background: linear-gradient(90deg, rgba(var(--lg-b), 0.9), rgba(var(--lg-a), 0.95), rgba(59, 130, 246, 0.9), rgba(var(--lg-c), 0.9));
           opacity: 0.62;
-          filter: saturate(1.05);
+          filter: blur(0.2px) saturate(1.25);
         }
 
+        /* Border wrapper gets a thicker iridescent rim */
         .n64-spectrum-border {
           position: relative;
         }
@@ -907,149 +849,161 @@ export default function Page() {
           inset: 0;
           border-radius: inherit;
           padding: 2px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.28));
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.55),
+            rgba(var(--lg-b), 0.20),
+            rgba(var(--lg-a), 0.18),
+            rgba(var(--lg-c), 0.16),
+            rgba(255, 255, 255, 0.40)
+          );
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
           pointer-events: none;
-          opacity: 0.55;
+          opacity: 0.62;
         }
 
-        /* --- “N64 transparent plastic x Apple liquid glass” building blocks --- */
-        .n64-liquid-panel {
-          border: 2px solid rgba(45, 212, 191, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.22)),
-            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.7), transparent 42%),
-            radial-gradient(circle at 85% 25%, rgba(45, 212, 191, 0.12), transparent 50%);
-          backdrop-filter: blur(14px) saturate(1.15);
-          -webkit-backdrop-filter: blur(14px) saturate(1.15);
-          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
-          position: relative;
-          overflow: hidden;
-        }
+        /* ---------- N64 liquid glass surfaces (more of BOTH) ---------- */
 
-        .n64-liquid-panel::before {
-          content: '';
-          position: absolute;
-          inset: -40% -30%;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 40%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 55%);
-          transform: rotate(12deg);
-          opacity: 0.6;
-          pointer-events: none;
-        }
-
-        .n64-liquid-panel::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          /* tiny dither/noise + faint “chromatic edge” */
-          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.6px, transparent 0.7px),
-            linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(168, 85, 247, 0.06));
-          background-size: 7px 7px, 100% 100%;
-          opacity: 0.18;
-          mix-blend-mode: soft-light;
-        }
-
-        .n64-liquid-panel-strong {
-          border: 2px solid rgba(45, 212, 191, 0.6);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)),
-            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.75), transparent 42%),
-            radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.12), transparent 52%);
-          backdrop-filter: blur(18px) saturate(1.18);
-          -webkit-backdrop-filter: blur(18px) saturate(1.18);
-          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
-          position: relative;
-          overflow: hidden;
-        }
-        .n64-liquid-panel-strong::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px);
-          background-size: 7px 7px;
-          opacity: 0.16;
-          mix-blend-mode: soft-light;
-        }
-
+        .n64-liquid-panel,
+        .n64-liquid-panel-strong,
         .n64-liquid-card {
-          --glass-tint: rgba(45, 212, 191, 0.14);
-          border: 2px solid rgba(148, 163, 184, 0.5);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25)),
-            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.72), transparent 45%),
-            radial-gradient(circle at 88% 30%, var(--glass-tint), transparent 58%);
-          backdrop-filter: blur(16px) saturate(1.12);
-          -webkit-backdrop-filter: blur(16px) saturate(1.12);
-          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
           position: relative;
           overflow: hidden;
+          transform: translateZ(0);
+
+          border: var(--rim) solid rgba(255, 255, 255, var(--rim-soft));
+          box-shadow: var(--sh-1), var(--sh-2), var(--sh-in);
+
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, var(--g-top)), rgba(255, 255, 255, var(--g-bot))),
+            radial-gradient(140% 90% at 12% 10%, rgba(var(--lg-a), 0.22), transparent 58%),
+            radial-gradient(140% 90% at 92% 18%, rgba(var(--lg-b), 0.18), transparent 62%),
+            conic-gradient(from 210deg at 70% 30%, rgba(var(--lg-b), 0.08), rgba(var(--lg-c), 0.06), rgba(var(--lg-a), 0.08), rgba(var(--lg-b), 0.08));
         }
+
+        @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+          .n64-liquid-panel,
+          .n64-liquid-panel-strong,
+          .n64-liquid-card {
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
+            backdrop-filter: blur(var(--glass-blur)) saturate(1.45);
+          }
+        }
+
+        /* Liquid refraction + strong specular band */
+        .n64-liquid-panel::before,
+        .n64-liquid-panel-strong::before,
         .n64-liquid-card::before {
           content: '';
           position: absolute;
-          inset: 0;
+          inset: -8%;
           pointer-events: none;
-          background: linear-gradient(115deg, rgba(255, 255, 255, 0.5), transparent 35%),
-            radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.55), transparent 40%);
-          opacity: 0.6;
+          border-radius: inherit;
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.18) 18%, rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.0) 70%),
+            radial-gradient(120% 70% at 18% 18%, rgba(255, 255, 255, 0.60), transparent 54%),
+            linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.22) 52%, transparent 62%);
+          transform: translateY(-10%) rotate(-2deg);
+          opacity: 0.92;
         }
+
+        /* N64-ish dither + chroma edge */
+        .n64-liquid-panel::after,
+        .n64-liquid-panel-strong::after,
         .n64-liquid-card::after {
           content: '';
           position: absolute;
-          inset: -40% -60%;
+          inset: 0;
           pointer-events: none;
-          background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%);
-          transform: rotate(10deg);
-          opacity: 0.0;
-          transition: opacity 250ms ease;
-        }
-        .n64-liquid-card:hover::after {
-          opacity: 0.9;
-          animation: sheenSweep 1.25s ease-in-out;
+          border-radius: inherit;
+          background-image:
+            radial-gradient(rgba(2, 6, 23, 0.10) 0.55px, transparent 0.65px),
+            linear-gradient(90deg, rgba(var(--lg-b), 0.10), rgba(var(--lg-c), 0.08)),
+            linear-gradient(0deg, rgba(var(--lg-a), 0.08), rgba(59, 130, 246, 0.06));
+          background-size: 6px 6px, 100% 100%, 100% 100%;
+          opacity: 0.22;
+          mix-blend-mode: soft-light;
         }
 
+        /* Stronger modal glass */
+        .n64-liquid-panel-strong {
+          --g-top: 0.86;
+          --g-bot: 0.50;
+          box-shadow: 0 26px 90px rgba(2, 6, 23, 0.22), 0 6px 18px rgba(2, 6, 23, 0.14), var(--sh-in);
+          border-color: rgba(255, 255, 255, 0.70);
+        }
+
+        /* Card tint hook you already use */
+        .n64-liquid-card {
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.40)),
+            radial-gradient(140% 90% at 12% 10%, rgba(var(--lg-a), 0.18), transparent 60%),
+            radial-gradient(140% 90% at 92% 26%, var(--glass-tint, rgba(var(--lg-b), 0.16)), transparent 64%),
+            conic-gradient(from 210deg at 70% 30%, rgba(var(--lg-b), 0.08), rgba(var(--lg-c), 0.06), rgba(var(--lg-a), 0.08), rgba(var(--lg-b), 0.08));
+        }
+
+        .n64-liquid-card:hover {
+          box-shadow: 0 28px 90px rgba(2, 6, 23, 0.18), 0 6px 18px rgba(2, 6, 23, 0.12), var(--sh-in);
+        }
+
+        /* Chips */
         .n64-liquid-chip {
-          border: 2px solid rgba(148, 163, 184, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
+          border: 2px solid rgba(255, 255, 255, 0.60);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.44)),
+            radial-gradient(120% 80% at 20% 18%, rgba(var(--lg-b), 0.14), transparent 60%);
+          box-shadow: 0 10px 28px rgba(2, 6, 23, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -12px 26px rgba(2, 6, 23, 0.06);
+          -webkit-backdrop-filter: blur(18px) saturate(1.35);
+          backdrop-filter: blur(18px) saturate(1.35);
         }
 
-        .n64-liquid-cta {
-          border: 2px solid rgba(45, 212, 191, 0.65);
-          background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(34, 211, 238, 0.72), rgba(20, 184, 166, 0.88));
-          backdrop-filter: blur(10px) saturate(1.1);
-          -webkit-backdrop-filter: blur(10px) saturate(1.1);
-          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.45);
-        }
-
+        /* Pills */
         .n64-pill {
-          border: 1px solid rgba(20, 184, 166, 0.35);
-          padding: 3px 8px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.45);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+          border: 2px solid rgba(255, 255, 255, 0.58);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34)),
+            radial-gradient(120% 80% at 20% 18%, rgba(var(--lg-a), 0.12), transparent 60%);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.60);
+          -webkit-backdrop-filter: blur(16px) saturate(1.35);
+          backdrop-filter: blur(16px) saturate(1.35);
         }
 
+        /* Icon chip: more “N64 shell” bevel */
         .retro-icon-chip {
-          width: 34px;
-          height: 34px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 12px;
-          border: 2px solid rgba(148, 163, 184, 0.55);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25));
-          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
-          color: rgba(15, 23, 42, 0.85);
+          border: 2px solid rgba(255, 255, 255, 0.62);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.38)),
+            radial-gradient(120% 80% at 18% 18%, rgba(var(--lg-b), 0.18), transparent 60%),
+            radial-gradient(120% 80% at 84% 30%, rgba(var(--lg-a), 0.14), transparent 62%);
+          box-shadow: 0 12px 34px rgba(2, 6, 23, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.70), inset 0 -14px 30px rgba(2, 6, 23, 0.06);
+          -webkit-backdrop-filter: blur(18px) saturate(1.35);
+          backdrop-filter: blur(18px) saturate(1.35);
         }
 
-        /* varied subtle card motion (not identical per card) */
+        /* CTA button: thicker rim + glossy top */
+        .n64-liquid-cta {
+          border: 2px solid rgba(255, 255, 255, 0.45);
+          background:
+            linear-gradient(180deg, rgba(var(--lg-a), 0.95), rgba(var(--lg-a), 0.62)),
+            radial-gradient(120% 80% at 18% 12%, rgba(255, 255, 255, 0.34), transparent 60%),
+            linear-gradient(90deg, rgba(var(--lg-b), 0.30), rgba(var(--lg-c), 0.18), rgba(var(--lg-b), 0.26));
+          box-shadow: 0 22px 70px rgba(var(--lg-a), 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.44);
+          -webkit-backdrop-filter: blur(14px) saturate(1.35);
+          backdrop-filter: blur(14px) saturate(1.35);
+        }
+
+        /* scrollbars */
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(var(--lg-a), 0.34);
+          border-radius: 999px;
+        }
+
+        /* --- Your motion (kept) --- */
         @keyframes cardDriftA {
           0%,
           100% {
@@ -1094,15 +1048,6 @@ export default function Page() {
           100% {
             transform: translateX(22%) rotate(10deg);
           }
-        }
-
-        /* scrollbars */
-        ::-webkit-scrollbar {
-          width: 6px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(20, 184, 166, 0.3);
-          border-radius: 999px;
         }
 
         @keyframes buttonPress {
@@ -1210,7 +1155,7 @@ export default function Page() {
         }
 
         .shimmer-effect {
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.36) 50%, transparent 100%);
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
@@ -1233,8 +1178,7 @@ export default function Page() {
           .shimmer-effect {
             animation: none !important;
           }
-          .hover-lift,
-          .n64-liquid-card::after {
+          .hover-lift {
             transition: none !important;
           }
         }
