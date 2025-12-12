@@ -79,8 +79,8 @@ const Icons = {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-      <div className="max-w-6xl w-full">
+    <div className="ui-landing px-4 py-12 sm:py-16">
+      <div className="max-w-6xl w-full mx-auto">
         <div className="ui-shell">
           <div className="ui-hero">
             <div className="ui-kickers">
@@ -90,9 +90,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>
-              Compliance you can run your restaurant on.
-            </h1>
+            <h1 className={`ui-title ${outfit.className}`}>Compliance you can run your restaurant on.</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
               A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans,
@@ -123,7 +121,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* Minimal, enterprise “spec rows” (not playful cards) */}
           <div className="ui-specgrid">
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
@@ -147,9 +144,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          <div className={`ui-footerline ${inter.className}`}>
-            One site license per restaurant · 7-day trial · Cancel anytime
-          </div>
+          <div className={`ui-footerline ${inter.className}`}>One site license per restaurant · 7-day trial · Cancel anytime</div>
         </div>
 
         <footer className="pt-10 text-xs text-white/45">
@@ -302,7 +297,11 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+          <button
+            type="submit"
+            disabled={loading || !isLoaded}
+            className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+          >
             {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
@@ -368,7 +367,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
               <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one
+                check; photo analyses count as two.
               </p>
             </div>
 
@@ -448,6 +448,9 @@ export default function Page() {
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const scrollRef = useRef(null)
+  const landingScrollRef = useRef(null) // UI-only: landing scroll container so the “card” can stay put
+  const stageCardRef = useRef(null) // UI-only: parallax / sheen host
+
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
@@ -557,6 +560,36 @@ export default function Page() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  // UI-only: subtle “card moves alone” effect (parallax on the stage card),
+  // driven by whichever scroll area is active.
+  useEffect(() => {
+    const card = stageCardRef.current
+    const scroller = (session ? scrollRef.current : landingScrollRef.current) || null
+    if (!card || !scroller) return
+
+    let raf = 0
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n))
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const t = scroller.scrollTop || 0
+        // Small, “premium” range (avoid wobble)
+        const y = clamp(-t * 0.035, -16, 0)
+        const x = clamp(Math.sin(t / 260) * 4, -6, 6)
+        card.style.setProperty('--ui-card-float-y', `${y}px`)
+        card.style.setProperty('--ui-card-float-x', `${x}px`)
+      })
+    }
+
+    onScroll()
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [session])
 
   const handleCheckout = async (priceId, planName) => {
     try {
@@ -743,31 +776,34 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Enterprise glow + grid (subtle, expensive) */
+        /* Background: premium “dark aurora” (replaces strong grid) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 500px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 55%),
-            radial-gradient(900px 520px at 20% 10%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(900px 520px at 85% 10%, rgba(120, 90, 255, 0.06), transparent 55%),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+            radial-gradient(1100px 520px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 58%),
+            radial-gradient(980px 560px at 18% 12%, rgba(0, 255, 200, 0.055), transparent 60%),
+            radial-gradient(980px 560px at 85% 10%, rgba(120, 90, 255, 0.055), transparent 60%),
+            radial-gradient(900px 900px at 50% 65%, rgba(255, 255, 255, 0.035), transparent 70%),
+            repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.018) 0px, rgba(255, 255, 255, 0.018) 1px, transparent 1px, transparent 120px);
           opacity: 1;
           mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
-        /* soft vignette */
+        /* Grain (micro-noise) to avoid banding & plastic look */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.55) 70%);
-          opacity: 0.9;
+          background:
+            radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.58) 72%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+          background-size: auto, 180px 180px;
+          mix-blend-mode: overlay;
+          opacity: 0.22;
         }
 
         ::-webkit-scrollbar {
@@ -783,10 +819,10 @@ export default function Page() {
 
         /* Header */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.09);
           background: rgba(5, 6, 8, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(16px) saturate(140%);
+          -webkit-backdrop-filter: blur(16px) saturate(140%);
         }
 
         .ui-brand {
@@ -795,18 +831,115 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
-        /* Premium “shell” */
-        .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+        /* Stage card (the “liquid glass card everything sits on”) */
+        .ui-stage {
+          height: calc(100dvh - 58px);
+          min-height: 0;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          padding: 16px 12px 18px;
+        }
+        @media (min-width: 640px) {
+          .ui-stage {
+            padding: 18px 16px 20px;
+          }
+        }
+
+        .ui-stage-card {
+          width: 100%;
+          max-width: 1080px;
+          min-height: 0;
           border-radius: 22px;
+          position: relative;
           overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: linear-gradient(180deg, rgba(10, 12, 16, 0.58), rgba(10, 12, 16, 0.44));
+          backdrop-filter: blur(26px) saturate(155%);
+          -webkit-backdrop-filter: blur(26px) saturate(155%);
+
+          box-shadow:
+            0 46px 140px rgba(0, 0, 0, 0.78),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+
+          transform: translate3d(var(--ui-card-float-x, 0px), var(--ui-card-float-y, 0px), 0);
+          transition: transform 120ms ease-out;
+          will-change: transform;
+        }
+
+        /* Liquid sheen inside the card (moves independently of scroll content) */
+        .ui-stage-card::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          pointer-events: none;
+          background:
+            radial-gradient(900px 280px at 25% 0%, rgba(255, 255, 255, 0.14), transparent 60%),
+            radial-gradient(700px 220px at 80% 10%, rgba(0, 255, 200, 0.08), transparent 62%),
+            radial-gradient(700px 220px at 65% 90%, rgba(120, 90, 255, 0.08), transparent 62%);
+          opacity: 0.55;
+          mix-blend-mode: screen;
+          animation: uiSheen 12s ease-in-out infinite;
+        }
+
+        .ui-stage-card::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+          background-size: 180px 180px;
+          opacity: 0.08;
+          mix-blend-mode: overlay;
+        }
+
+        @keyframes uiSheen {
+          0% {
+            transform: translate3d(0px, 0px, 0);
+            opacity: 0.52;
+          }
+          50% {
+            transform: translate3d(16px, 10px, 0);
+            opacity: 0.64;
+          }
+          100% {
+            transform: translate3d(0px, 0px, 0);
+            opacity: 0.52;
+          }
+        }
+
+        /* Stage inner layout helpers */
+        .ui-stage-inner {
+          position: relative;
+          z-index: 1; /* above sheen/noise */
+          height: 100%;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .ui-stage-scroll {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          scrollbar-gutter: stable;
+        }
+
+        /* Premium “shell” (landing inner panel) */
+        .ui-shell {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
+          border-radius: 18px;
+          overflow: hidden;
+          box-shadow: 0 34px 110px rgba(0, 0, 0, 0.62);
         }
 
         .ui-hero {
@@ -827,10 +960,10 @@ export default function Page() {
           gap: 8px;
           padding: 7px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.86);
           letter-spacing: 0.14em;
           text-transform: uppercase;
           font-weight: 800;
@@ -838,7 +971,7 @@ export default function Page() {
 
         .ui-kicker-muted {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         .ui-title {
@@ -846,13 +979,13 @@ export default function Page() {
           line-height: 1.02;
           letter-spacing: -0.05em;
           margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.97);
         }
 
         .ui-subtitle {
           font-size: 14px;
           line-height: 1.75;
-          color: rgba(255, 255, 255, 0.64);
+          color: rgba(255, 255, 255, 0.70); /* improved legibility */
           max-width: 72ch;
         }
 
@@ -870,7 +1003,7 @@ export default function Page() {
           align-items: center;
           margin-top: 14px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
         .ui-trust-item {
           display: inline-flex;
@@ -878,8 +1011,8 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
         }
         .ui-dot {
           width: 4px;
@@ -888,11 +1021,11 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* Spec grid (enterprise separators) */
+        /* Spec grid */
         .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid rgba(255, 255, 255, 0.09);
         }
         .ui-spec {
           padding: 18px 22px;
@@ -905,13 +1038,13 @@ export default function Page() {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           margin-bottom: 6px;
         }
         .ui-spec-body {
           font-size: 12px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.58);
+          color: rgba(255, 255, 255, 0.66); /* improved legibility */
           max-width: 76ch;
         }
         @media (min-width: 920px) {
@@ -929,8 +1062,8 @@ export default function Page() {
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.45);
+          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          color: rgba(255, 255, 255, 0.52);
           font-size: 12px;
         }
 
@@ -960,13 +1093,13 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.14);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.20);
         }
 
         .ui-icon-btn {
@@ -976,48 +1109,48 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.86);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
-          color: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.22);
+          color: rgba(255, 255, 255, 0.97);
         }
 
-        /* Modals / panels */
+        /* Modals */
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.86);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(6, 7, 9, 0.88);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
+          backdrop-filter: blur(18px) saturate(140%);
+          -webkit-backdrop-filter: blur(18px) saturate(140%);
         }
 
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(255, 255, 255, 0.42);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.26);
+          background: rgba(255, 255, 255, 0.045);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.055);
         }
 
         .ui-toast {
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.03);
         }
         .ui-toast-ok {
@@ -1027,17 +1160,17 @@ export default function Page() {
           border-color: rgba(239, 68, 68, 0.35);
         }
 
-        /* Pricing premium surfaces */
+        /* Pricing */
         .ui-tag {
           display: inline-flex;
           align-items: center;
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.78);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1046,8 +1179,8 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
@@ -1069,9 +1202,9 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.82);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1079,16 +1212,16 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.09);
         }
 
-        /* Chat bubbles — tool-like (less playful) */
+        /* Chat bubbles (more contrast, still “tool-like”) */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.045);
+          color: rgba(255, 255, 255, 0.93);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
@@ -1097,12 +1230,17 @@ export default function Page() {
         }
 
         .ui-empty {
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
+            animation: none !important;
+            transition: none !important;
+          }
+          .ui-stage-card {
+            transform: none !important;
           }
         }
       `}</style>
@@ -1117,9 +1255,7 @@ export default function Page() {
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
-              {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
-              )}
+              {hasActiveSubscription && <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>}
             </div>
 
             <div className="flex items-center gap-2">
@@ -1177,101 +1313,120 @@ export default function Page() {
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 flex flex-col">
+        <main className="flex-1 min-h-0">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+            <div className="ui-stage">
+              <div ref={stageCardRef} className="ui-stage-card">
+                <div className="ui-stage-inner">
+                  <div ref={landingScrollRef} className="ui-stage-scroll">
+                    <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
-              >
-                {messages.length === 0 ? (
-                  <div className="h-full flex items-center justify-center px-4">
-                    <div className="max-w-xl text-center">
-                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
-                        Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for an inspection-grade risk scan.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
-                    {messages.map((msg, idx) => (
-                      <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
-                          {msg.image && (
-                            <img
-                              src={msg.image}
-                              alt="Uploaded"
-                              className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/30"
-                            />
-                          )}
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
-                            </div>
-                          ) : (
-                            <span className="whitespace-pre-wrap">{msg.content}</span>
-                          )}
+            <div className="ui-stage">
+              <div ref={stageCardRef} className="ui-stage-card">
+                <div className="ui-stage-inner">
+                  {/* Chat area stays functionally identical; it just sits inside the stage card */}
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <div
+                      ref={scrollRef}
+                      onScroll={handleScroll}
+                      className="flex-1 min-h-0 overflow-y-auto"
+                      style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
+                    >
+                      {messages.length === 0 ? (
+                        <div className="h-full flex items-center justify-center px-4">
+                          <div className="max-w-xl text-center">
+                            <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
+                              Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for an inspection-grade
+                              risk scan.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-                  {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
-                      <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
-                        <Icons.X />
-                      </button>
+                      ) : (
+                        <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
+                          {messages.map((msg, idx) => (
+                            <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                                {msg.image && (
+                                  <img
+                                    src={msg.image}
+                                    alt="Uploaded"
+                                    className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/30"
+                                  />
+                                )}
+                                {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                                  <div className="flex gap-1 items-center">
+                                    <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
+                                    <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                                    <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                                  </div>
+                                ) : (
+                                  <span className="whitespace-pre-wrap">{msg.content}</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  <div className="flex items-end gap-2">
-                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
-                      <Icons.Camera />
-                    </button>
+                    {/* Composer */}
+                    <div className="flex-shrink-0 border-t border-white/10" style={{ background: 'rgba(5,6,8,0.35)' }}>
+                      <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                        {selectedImage && (
+                          <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                            <span>Image attached</span>
+                            <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
+                              <Icons.X />
+                            </button>
+                          </div>
+                        )}
 
-                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
-                      <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a question or attach a photo…"
-                        rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
-                      />
+                        <div className="flex items-end gap-2">
+                          <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
+                          <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
+                            <Icons.Camera />
+                          </button>
 
-                      <button
-                        type="submit"
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        aria-label="Send"
-                      >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
-                      </button>
-                    </form>
+                          <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
+                            <textarea
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              placeholder="Ask a question or attach a photo…"
+                              rows={1}
+                              className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault()
+                                  handleSend(e)
+                                }
+                              }}
+                            />
+
+                            <button
+                              type="submit"
+                              disabled={(!input.trim() && !selectedImage) || isSending}
+                              className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              aria-label="Send"
+                            >
+                              {isSending ? (
+                                <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+                              ) : (
+                                <Icons.ArrowUp />
+                              )}
+                            </button>
+                          </form>
+                        </div>
+
+                        <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                          protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
-                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
-                  </p>
                 </div>
               </div>
             </div>
@@ -1280,4 +1435,4 @@ export default function Page() {
       </div>
     </>
   )
-}
+
