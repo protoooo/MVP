@@ -60,78 +60,68 @@ const Icons = {
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const examples = [
-    'We found raw chicken above ready-to-eat food — what’s the correct fix?',
-    'What temperature does hot soup need to stay at during service?',
-    'Can we store sanitizer spray bottles next to prep tables?',
-    'Does Washtenaw require date marking for opened deli meats?',
-  ]
-
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-5 py-12">
-      <div className="w-full max-w-4xl">
-        <div className="vc-badge inline-flex items-center gap-2 mb-8">
-          <span className="vc-dot" />
-          <span className={`text-[11px] tracking-[0.22em] uppercase ${inter.className}`}>Compliance console</span>
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-14">
+      <div className="max-w-5xl w-full">
+        {/* Hero */}
+        <div className="ui-hero">
+          <div className="ui-kicker-row">
+            <span className={`ui-kicker ${inter.className}`}>Washtenaw-first</span>
+            <span className={`ui-kicker-muted ${inter.className}`}>Wayne + Oakland planned</span>
+          </div>
+
+          <h1 className={`ui-title ${outfit.className}`}>Compliance, instantly.</h1>
+          <p className={`ui-subtitle ${inter.className}`}>
+            Ask the Michigan Food Code and local guidance without digging through PDFs. Upload a photo of your walk-in or line for a quick risk scan.
+          </p>
+
+          <div className="ui-cta-row">
+            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+              Start trial
+            </button>
+            <button onClick={onShowAuth} className="ui-btn ui-btn-ghost">
+              Sign in
+            </button>
+          </div>
+
+          <p className={`ui-meta ${inter.className}`}>
+            One site license per restaurant · Built to reduce risk — not replace judgment.
+          </p>
         </div>
 
-        <h1 className={`vc-hero text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight ${outfit.className}`}>
-          Inspection support that feels like a tool.
-        </h1>
-
-        <p className={`mt-5 text-base sm:text-lg vc-muted max-w-2xl ${inter.className}`}>
-          Ask the Michigan Food Code. Scan photos for likely violations. Grounded answers for Washtenaw County food service — fast, clear, and audit-friendly.
-        </p>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          <button onClick={onShowPricing} className={`vc-btn vc-btn-primary ${inter.className}`}>
-            Start trial
-          </button>
-          <button onClick={onShowAuth} className={`vc-btn vc-btn-ghost ${inter.className}`}>
-            Sign in
-          </button>
-        </div>
-
-        <div className="mt-10 vc-divider" />
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className={`vc-kicker ${inter.className}`}>Photo checks</p>
-            <p className={`vc-body ${inter.className}`}>Upload a walk-in or line photo and get a short list of likely risks to verify.</p>
+        {/* Feature grid (Vercel-ish: hairlines + minimal) */}
+        <div className="ui-features">
+          <div className="ui-feature">
+            <div className={`ui-feature-title ${inter.className}`}>Photo scan</div>
+            <div className={`ui-feature-body ${inter.className}`}>
+              Snap a picture of your cooler, prep table, or dish area — get likely issues to check before an inspection.
+            </div>
           </div>
-          <div>
-            <p className={`vc-kicker ${inter.className}`}>Grounded answers</p>
-            <p className={`vc-body ${inter.className}`}>Answers are based on your stored rule set — not vibes, not guessing.</p>
-          </div>
-          <div>
-            <p className={`vc-kicker ${inter.className}`}>Fewer surprises</p>
-            <p className={`vc-body ${inter.className}`}>Use it during prep, closing, and training to catch issues before inspection day.</p>
-          </div>
-        </div>
 
-        <div className="mt-10 vc-divider" />
+          <div className="ui-feature">
+            <div className={`ui-feature-title ${inter.className}`}>Grounded answers</div>
+            <div className={`ui-feature-body ${inter.className}`}>
+              Ask things like “Can raw chicken be stored above produce?” and get a straight answer based on the rulebook.
+            </div>
+          </div>
 
-        <div className="mt-8">
-          <p className={`text-sm vc-muted mb-3 ${inter.className}`}>Example questions your staff can ask:</p>
-          <div className="flex flex-wrap gap-2">
-            {examples.map((t) => (
-              <span key={t} className={`vc-chip ${inter.className}`}>
-                {t}
-              </span>
-            ))}
+          <div className="ui-feature">
+            <div className={`ui-feature-title ${inter.className}`}>Action list</div>
+            <div className={`ui-feature-body ${inter.className}`}>
+              Turn a concern into a short close/open checklist your shift lead can run today.
+            </div>
           </div>
         </div>
 
-        <footer className="mt-12 flex flex-col items-center gap-3">
-          <p className={`text-xs vc-muted ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
-          <div className="flex gap-5 text-xs">
-            <Link href="/terms" className="vc-link">
+        <footer className="pt-10 text-xs text-white/50">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/terms" className="hover:text-white/80">
               Terms
             </Link>
-            <Link href="/privacy" className="vc-link">
+            <Link href="/privacy" className="hover:text-white/80">
               Privacy
             </Link>
-            <Link href="/contact" className="vc-link">
+            <Link href="/contact" className="hover:text-white/80">
               Contact
             </Link>
           </div>
@@ -217,42 +207,42 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] vc-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md vc-modal p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-5">
+    <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-md ui-modal p-7" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className={`text-lg font-semibold vc-text ${outfit.className}`}>
+            <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs vc-muted mt-1 ${inter.className}`}>
+            <p className={`text-xs text-white/60 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
-          <button onClick={onClose} className="vc-iconbtn" aria-label="Close">
+          <button onClick={onClose} className="ui-icon-btn" aria-label="Close">
             <Icons.X />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className={`block text-xs font-medium vc-muted mb-2 ${inter.className}`}>Email</label>
+            <label className="block text-xs font-semibold text-white/70 mb-2">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="gm@restaurant.com"
               required
-              className={`vc-input ${inter.className}`}
+              className={`ui-input ${inter.className}`}
             />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className={`block text-xs font-medium vc-muted mb-2 ${inter.className}`}>Password</label>
+              <label className="block text-xs font-semibold text-white/70 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -260,46 +250,48 @@ function AuthModal({ isOpen, onClose }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className={`vc-input pr-12 ${inter.className}`}
+                  className={`ui-input pr-16 ${inter.className}`}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className={`vc-link-btn ${inter.className}`}>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
+                >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className={`vc-btn vc-btn-primary w-full ${inter.className}`}>
+          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
             {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 text-xs rounded-lg px-3 py-2 border ${message.startsWith('Error') ? 'vc-alert-error' : 'vc-alert-ok'}`}>
+          <div className={`mt-4 text-xs rounded-lg px-3 py-2 ui-toast ${message.startsWith('Error') ? 'ui-toast-err' : 'ui-toast-ok'}`}>
             {message}
           </div>
         )}
 
-        <div className={`mt-4 text-center space-y-1 text-xs ${inter.className}`}>
+        <div className="mt-4 text-center space-y-1 text-xs text-white/70">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="vc-link">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/70 hover:text-white">
                 Forgot password?
               </button>
-              <div>
-                <button type="button" onClick={() => setMode('signup')} className="vc-link">
-                  Need an account? <span className="font-semibold">Sign up</span>
-                </button>
-              </div>
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/70 hover:text-white">
+                Need an account? <span className="font-semibold">Sign up</span>
+              </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="vc-link">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="vc-link">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
               Back to sign in
             </button>
           )}
@@ -315,70 +307,66 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] vc-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-lg vc-modal p-6 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="vc-iconbtn absolute right-5 top-5" aria-label="Close pricing">
+    <div className="fixed inset-0 z-[900] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-lg ui-modal p-7 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6" aria-label="Close pricing">
           <Icons.X />
         </button>
 
         <div className="mb-6">
-          <p className={`text-[11px] tracking-[0.22em] uppercase vc-muted ${inter.className}`}>protocolLM</p>
-          <h3 className={`text-xl font-semibold vc-text mt-2 ${outfit.className}`}>Compliance access</h3>
-          <p className={`text-sm vc-muted mt-1 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
+          <p className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-white/60 mb-2 ${outfit.className}`}>protocolLM</p>
+          <h3 className={`text-xl font-semibold text-white mb-1 tracking-tight ${outfit.className}`}>Compliance access</h3>
+          <p className={`text-sm text-white/60 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
         </div>
 
-        <div className="vc-panel p-5">
-          <div className="flex items-baseline gap-2 mb-2">
-            <span className={`text-4xl font-semibold vc-text tracking-tight ${outfit.className}`}>$200</span>
-            <span className={`text-xs uppercase tracking-[0.22em] vc-muted ${inter.className}`}>/ month</span>
+        <div className="ui-panel p-5 space-y-4">
+          <div>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className={`text-4xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
+            </div>
+            <p className={`text-xs text-white/60 ${inter.className}`}>
+              Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span> for a single restaurant. Text questions count as one check;
+              photo analyses count as two.
+            </p>
           </div>
 
-          <p className={`text-xs vc-muted ${inter.className}`}>
-            Includes roughly <span className="vc-text font-medium">2,600 monthly checks</span> for a single restaurant. Text questions count as one check; photo
-            analyses count as two.
-          </p>
-
-          <ul className={`text-xs mt-5 space-y-2 ${inter.className}`}>
-            <li className="flex items-start gap-2 vc-text">
+          <ul className="text-xs text-white/70 space-y-2">
+            <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Text questions and photo uploads</span>
             </li>
-            <li className="flex items-start gap-2 vc-text">
+            <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Grounded in Michigan Food Code &amp; Washtenaw guidance</span>
             </li>
-            <li className="flex items-start gap-2 vc-text">
+            <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Built for one restaurant site license</span>
             </li>
-            <li className="flex items-start gap-2 vc-text">
+            <li className="flex items-start gap-2">
               <Icons.Check />
               <span>7-day free trial · cancel anytime</span>
             </li>
           </ul>
 
-          <div className="space-y-3 pt-5">
+          <div className="space-y-3 pt-2">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className={`vc-btn vc-btn-primary w-full ${inter.className}`}
+              className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}
             </button>
-
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className={`vc-btn vc-btn-secondary w-full ${inter.className}`}
+              className="ui-btn ui-btn-ghost w-full disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
             </button>
           </div>
         </div>
-
-        <p className={`mt-4 text-[11px] vc-muted ${inter.className}`}>
-          You can upgrade, cancel, or change billing anytime from Subscription.
-        </p>
       </div>
     </div>
   )
@@ -473,9 +461,6 @@ export default function Page() {
 
       if (!isMounted) return
       setHasActiveSubscription(active)
-      if (!active && searchParams.get('payment') === 'success') {
-        setShowPricingModal(false)
-      }
       setIsLoading(false)
     }
 
@@ -503,9 +488,9 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.body.classList.add('vc-bg')
+    document.body.classList.add('ui-vercel-bg')
     return () => {
-      document.body.classList.remove('vc-bg')
+      document.body.classList.remove('ui-vercel-bg')
     }
   }, [])
 
@@ -681,19 +666,13 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center vc-loading">
-        <div className="w-8 h-8 rounded-full border border-white/15 border-t-white/70 animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center bg-black">
+        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
       </div>
     )
   }
 
   const isAuthenticated = !!session
-
-  const quickPrompts = [
-    'What’s the correct order for storing raw meat in the walk-in?',
-    'What should we do if the sanitizer bucket is too weak?',
-    'Do we need date labels on opened deli turkey?',
-  ]
 
   return (
     <>
@@ -704,256 +683,30 @@ export default function Page() {
           width: 100%;
         }
 
-        body.vc-bg {
+        body.ui-vercel-bg {
           overflow: hidden;
           background: #000;
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Subtle Vercel-ish background */
-        body.vc-bg::before {
+        /* Vercel-ish glow + grid (subtle) */
+        body.ui-vercel-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(circle at 20% 15%, rgba(59, 130, 246, 0.18), transparent 40%),
-            radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.14), transparent 42%),
-            radial-gradient(circle at 50% 85%, rgba(168, 85, 247, 0.10), transparent 46%),
-            radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.06), transparent 55%);
-          filter: saturate(1.05);
-          opacity: 0.95;
-        }
-
-        body.vc-bg::after {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background-image:
-            linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+            radial-gradient(1200px 600px at 50% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
+            radial-gradient(700px 500px at 15% 10%, rgba(0, 255, 200, 0.06), transparent 55%),
+            radial-gradient(700px 500px at 85% 15%, rgba(120, 90, 255, 0.06), transparent 55%),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: 42px 42px;
-          opacity: 0.12;
-          mask-image: radial-gradient(circle at 50% 20%, black 0%, transparent 60%);
+          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+          opacity: 1;
+          mask-image: radial-gradient(circle at 50% 12%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
-        :root {
-          --vc-bg: #000;
-          --vc-text: rgba(255, 255, 255, 0.92);
-          --vc-muted: rgba(255, 255, 255, 0.62);
-          --vc-border: rgba(255, 255, 255, 0.10);
-          --vc-border-2: rgba(255, 255, 255, 0.14);
-          --vc-panel: rgba(255, 255, 255, 0.04);
-          --vc-panel-2: rgba(255, 255, 255, 0.06);
-          --vc-accent: rgba(255, 255, 255, 0.92);
-          --vc-glow: rgba(255, 255, 255, 0.10);
-        }
-
-        .vc-text {
-          color: var(--vc-text);
-        }
-        .vc-muted {
-          color: var(--vc-muted);
-        }
-
-        .vc-loading {
-          background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.06), transparent 55%), #000;
-        }
-
-        .vc-topbar {
-          border-bottom: 1px solid var(--vc-border);
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-        }
-
-        .vc-logo {
-          border: 1px solid var(--vc-border);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-        }
-
-        .vc-badge {
-          border: 1px solid var(--vc-border);
-          background: rgba(255, 255, 255, 0.04);
-          border-radius: 999px;
-          padding: 6px 10px;
-          color: var(--vc-muted);
-        }
-        .vc-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.8);
-          box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.06);
-        }
-
-        .vc-hero {
-          color: var(--vc-text);
-          line-height: 1.05;
-        }
-
-        .vc-divider {
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--vc-border), transparent);
-        }
-
-        .vc-kicker {
-          font-size: 12px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.74);
-          margin-bottom: 8px;
-        }
-
-        .vc-body {
-          font-size: 13px;
-          line-height: 1.55;
-          color: rgba(255, 255, 255, 0.62);
-        }
-
-        .vc-chip {
-          border: 1px solid var(--vc-border);
-          background: rgba(255, 255, 255, 0.03);
-          padding: 8px 10px;
-          border-radius: 999px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.72);
-        }
-
-        .vc-link {
-          color: rgba(255, 255, 255, 0.72);
-          text-decoration: none;
-        }
-        .vc-link:hover {
-          color: rgba(255, 255, 255, 0.92);
-        }
-
-        .vc-link-btn {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.62);
-        }
-        .vc-link-btn:hover {
-          color: rgba(255, 255, 255, 0.88);
-        }
-
-        .vc-panel {
-          border: 1px solid var(--vc-border);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
-          border-radius: 14px;
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-        }
-
-        .vc-modal {
-          border: 1px solid var(--vc-border-2);
-          background: rgba(0, 0, 0, 0.72);
-          border-radius: 16px;
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-          box-shadow: 0 18px 70px rgba(0, 0, 0, 0.7);
-        }
-
-        .vc-backdrop {
-          background: rgba(0, 0, 0, 0.55);
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-        }
-
-        .vc-input {
-          width: 100%;
-          border-radius: 12px;
-          border: 1px solid var(--vc-border);
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.92);
-          padding: 10px 12px;
-          outline: none;
-        }
-        .vc-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
-        }
-        .vc-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
-        }
-
-        .vc-btn {
-          border-radius: 12px;
-          padding: 10px 14px;
-          font-size: 13px;
-          font-weight: 600;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-          border: 1px solid var(--vc-border);
-        }
-        .vc-btn:active {
-          transform: translateY(1px);
-        }
-
-        .vc-btn-primary {
-          background: rgba(255, 255, 255, 0.92);
-          color: rgba(0, 0, 0, 0.92);
-          border-color: rgba(255, 255, 255, 0.18);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
-        }
-        .vc-btn-primary:hover {
-          background: rgba(255, 255, 255, 0.98);
-        }
-
-        .vc-btn-secondary {
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.88);
-          border-color: rgba(255, 255, 255, 0.14);
-        }
-        .vc-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.18);
-        }
-
-        .vc-btn-ghost {
-          background: transparent;
-          color: rgba(255, 255, 255, 0.78);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-        .vc-btn-ghost:hover {
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .vc-iconbtn {
-          width: 34px;
-          height: 34px;
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.72);
-          transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-        }
-        .vc-iconbtn:hover {
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.92);
-          border-color: rgba(255, 255, 255, 0.16);
-        }
-
-        /* chat bubbles */
-        .vc-bubble-user {
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.92);
-          color: rgba(0, 0, 0, 0.92);
-        }
-        .vc-bubble-ai {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.92);
-        }
-
-        /* scrollbars */
+        /* Scrollbars */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -965,9 +718,245 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
+        /* Header */
+        .ui-header {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(0, 0, 0, 0.72);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+        }
+
+        .ui-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Buttons */
+        .ui-btn {
+          border-radius: 10px;
+          padding: 10px 14px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+          user-select: none;
+        }
+        .ui-btn:active {
+          transform: translateY(1px);
+        }
+
+        .ui-btn-primary {
+          background: #ffffff;
+          color: #000000;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+        .ui-btn-primary:hover {
+          box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+        }
+
+        .ui-btn-ghost {
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.88);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .ui-btn-ghost:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .ui-icon-btn {
+          width: 36px;
+          height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.82);
+          transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+        }
+        .ui-icon-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.18);
+          color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Modals / panels */
+        .ui-modal {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(0, 0, 0, 0.8);
+          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+
+        .ui-panel {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ui-input {
+          width: 100%;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 10px 12px;
+          color: rgba(255, 255, 255, 0.92);
+          outline: none;
+          transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+        }
+        .ui-input::placeholder {
+          color: rgba(255, 255, 255, 0.35);
+        }
+        .ui-input:focus {
+          border-color: rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+        }
+
+        .ui-toast {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .ui-toast-ok {
+          border-color: rgba(34, 197, 94, 0.35);
+        }
+        .ui-toast-err {
+          border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        /* Landing (no “cards” look) */
+        .ui-hero {
+          padding: 18px 6px 6px;
+        }
+
+        .ui-kicker-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+        .ui-kicker {
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.82);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 700;
+        }
+        .ui-kicker-muted {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        .ui-title {
+          font-size: clamp(30px, 4vw, 54px);
+          line-height: 1.03;
+          letter-spacing: -0.04em;
+          margin-bottom: 10px;
+          color: rgba(255, 255, 255, 0.95);
+        }
+
+        .ui-subtitle {
+          font-size: 14px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.62);
+          max-width: 62ch;
+        }
+
+        .ui-cta-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 18px;
+        }
+
+        .ui-meta {
+          margin-top: 12px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.42);
+        }
+
+        .ui-features {
+          margin-top: 22px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ui-feature {
+          padding: 16px 6px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .ui-feature:first-child {
+          border-top: none;
+        }
+
+        .ui-feature-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 4px;
+          letter-spacing: 0.02em;
+        }
+
+        .ui-feature-body {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.58);
+          line-height: 1.65;
+          max-width: 70ch;
+        }
+
+        @media (min-width: 860px) {
+          .ui-features {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+          .ui-feature {
+            border-top: none;
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 18px 14px;
+          }
+          .ui-feature:first-child {
+            border-left: none;
+            padding-left: 6px;
+          }
+        }
+
+        /* Chat bubbles: less “chatty”, more tool */
+        .ui-bubble {
+          border-radius: 14px;
+          padding: 12px 14px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.9);
+        }
+        .ui-bubble-user {
+          background: rgba(255, 255, 255, 0.9);
+          color: #000;
+          border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .ui-empty {
+          color: rgba(255, 255, 255, 0.55);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           * {
-            transition: none !important;
             scroll-behavior: auto !important;
           }
         }
@@ -977,38 +966,30 @@ export default function Page() {
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        {/* Header (minimal, Vercel-ish) */}
-        <header className="sticky top-0 z-40 flex-shrink-0 vc-topbar">
+        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div
-                className={`px-3 py-1.5 rounded-full vc-logo text-[12px] font-semibold tracking-tight cursor-pointer ${outfit.className}`}
-                onClick={() => router.replace('/')}
-              >
-                protocol<span className="opacity-80">LM</span>
+              <div className={`ui-brand ${outfit.className}`}>
+                <span className="text-white/90 text-[12px] font-semibold tracking-[0.12em] uppercase">protocolLM</span>
               </div>
-
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex vc-badge ${inter.className}`}>
-                  <span className="vc-dot" />
-                  <span className="text-[11px] tracking-[0.18em] uppercase">Active</span>
-                </span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {!isAuthenticated ? (
                 <>
-                  <button onClick={() => setShowAuthModal(true)} className={`vc-btn vc-btn-ghost ${inter.className}`}>
+                  <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-ghost">
                     Sign in
                   </button>
-                  <button onClick={() => setShowPricingModal(true)} className={`vc-btn vc-btn-primary ${inter.className}`}>
+                  <button onClick={() => setShowPricingModal(true)} className="ui-btn ui-btn-primary">
                     Start trial
                   </button>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button onClick={handleNewChat} className={`hidden sm:inline-flex items-center gap-2 vc-btn vc-btn-secondary ${inter.className}`}>
+                  <button onClick={handleNewChat} className="ui-btn ui-btn-ghost hidden sm:inline-flex items-center gap-2">
                     <Icons.Plus />
                     New chat
                   </button>
@@ -1016,30 +997,31 @@ export default function Page() {
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu((v) => !v)}
-                      className="w-9 h-9 rounded-full border border-white/15 bg-white/5 hover:bg-white/7 text-white/80 flex items-center justify-center text-sm font-semibold"
+                      className="ui-icon-btn"
                       aria-label="User menu"
+                      title={session?.user?.email || 'User'}
                     >
-                      {session.user.email?.[0]?.toUpperCase() || 'U'}
+                      <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-48 vc-panel overflow-hidden">
+                      <div className="absolute right-0 mt-2 w-52 ui-panel overflow-hidden">
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 ${inter.className}`}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icons.Settings />
-                          <span className="vc-text">Subscription</span>
+                          <span>Subscription</span>
                         </button>
                         <button
                           onClick={handleSignOut}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 ${inter.className}`}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors"
                         >
                           <Icons.LogOut />
-                          <span className="vc-text">Log out</span>
+                          <span>Log out</span>
                         </button>
                       </div>
                     )}
@@ -1065,46 +1047,31 @@ export default function Page() {
                 style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
               >
                 {messages.length === 0 ? (
-                  // ✅ No “demo box” — just a clean empty state + optional quick prompts
-                  <div className="h-full flex items-center justify-center px-5">
-                    <div className="max-w-xl w-full">
-                      <p className={`text-sm vc-muted leading-relaxed ${inter.className}`}>
-                        Ask a question or attach a photo for a quick compliance check. Keep it simple — like you’d say it to a manager.
+                  // ✅ No demo box — clean empty state
+                  <div className="h-full flex items-center justify-center px-4">
+                    <div className="max-w-xl text-center">
+                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
+                        Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for a quick risk scan.
                       </p>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {quickPrompts.map((p) => (
-                          <button
-                            key={p}
-                            type="button"
-                            className={`vc-chip ${inter.className}`}
-                            onClick={() => setInput(p)}
-                            title="Click to use this question"
-                          >
-                            {p}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ) : (
                   <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === 'user' ? 'vc-bubble-user' : 'vc-bubble-ai'}`}>
+                        <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
                           {msg.image && (
                             <img
                               src={msg.image}
                               alt="Uploaded"
-                              className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/40"
+                              className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/30"
                             />
                           )}
-
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1117,12 +1084,12 @@ export default function Page() {
               </div>
 
               {/* Input bar */}
-              <div className="flex-shrink-0 border-t border-white/10 bg-black/55 backdrop-blur-xl">
+              <div className="flex-shrink-0 ui-header border-t border-white/10">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className={`mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/12 bg-white/5 text-[12px] ${inter.className}`}>
-                      <span className="vc-text">Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="vc-iconbtn !w-8 !h-8" aria-label="Remove image">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl ui-panel text-[12px] text-white/70">
+                      <span>Image attached</span>
+                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
                         <Icons.X />
                       </button>
                     </div>
@@ -1130,8 +1097,7 @@ export default function Page() {
 
                   <div className="flex items-end gap-2">
                     <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="vc-iconbtn" aria-label="Attach image">
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
                       <Icons.Camera />
                     </button>
 
@@ -1139,9 +1105,9 @@ export default function Page() {
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a compliance question…"
+                        placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`flex-1 max-h-32 min-h-[42px] resize-none vc-input ${inter.className}`}
+                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1153,16 +1119,16 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`vc-iconbtn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
                         aria-label="Send"
                       >
-                        {isSending ? <div className="w-4 h-4 rounded-full border border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center vc-muted ${inter.className}`}>
-                    protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
+                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
               </div>
