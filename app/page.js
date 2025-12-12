@@ -65,11 +65,6 @@ function LandingPage({ onShowPricing }) {
       <div className="max-w-4xl w-full space-y-4">
         <div className="term-window">
           <div className="term-titlebar">
-            <div className="term-dots">
-              <span className="dot dot-r" />
-              <span className="dot dot-y" />
-              <span className="dot dot-g" />
-            </div>
             <div className="term-title">protocolLM — compliance console</div>
             <div className="term-spacer" />
           </div>
@@ -79,29 +74,21 @@ function LandingPage({ onShowPricing }) {
               <span className="term-dim">Connected:</span> <span className="term-ok">washtenaw_ruleset</span>
             </div>
             <div className="term-line">
-              <span className="term-dim">Mode:</span> <span className="term-ok">database / terminal</span>
-            </div>
-            <div className="term-line">
-              <span className="term-dim">Version:</span> <span className="term-ok">v1</span>
+              <span className="term-dim">Mode:</span> <span className="term-ok">database view</span>
             </div>
 
             <div className="term-gap" />
 
-            <div className="term-line term-dim">Available commands:</div>
-            <div className="term-line">
-              <span className="term-prompt">$</span> scan &lt;photo&gt; <span className="term-dim">→ likely violations</span>
-            </div>
-            <div className="term-line">
-              <span className="term-prompt">$</span> ask "&lt;question&gt;" <span className="term-dim">→ grounded answers</span>
-            </div>
-            <div className="term-line">
-              <span className="term-prompt">$</span> checklist "&lt;issue&gt;" <span className="term-dim">→ close/open tasks</span>
-            </div>
+            <div className="term-line term-dim">Use it for things like:</div>
+            <div className="term-line">• “Is this walk-in set up okay for inspection?”</div>
+            <div className="term-line">• “What temperature should we cold-hold chicken salad?”</div>
+            <div className="term-line">• “We had raw chicken above ready-to-eat food — what’s the correct fix?”</div>
+            <div className="term-line">• “Give me a short closing checklist for tonight.”</div>
 
             <div className="term-gap" />
 
             <div className="term-line">
-              <span className="term-dim">Notes:</span> Text question = 1 check · Photo analysis = 2 checks
+              <span className="term-dim">Notes:</span> Text questions = 1 check · Photo analysis = 2 checks
             </div>
 
             <div className="term-gap" />
@@ -111,9 +98,7 @@ function LandingPage({ onShowPricing }) {
                 <Icons.Check />
                 Start trial
               </button>
-              <div className="term-dim text-xs">
-                Washtenaw County today · Wayne + Oakland planned for 2026
-              </div>
+              <div className="term-dim text-xs">Washtenaw County today · Wayne + Oakland planned for 2026</div>
             </div>
           </div>
         </div>
@@ -204,18 +189,13 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
       <div className="w-full max-w-md term-window" onClick={(e) => e.stopPropagation()}>
         <div className="term-titlebar">
-          <div className="term-dots">
-            <span className="dot dot-r" />
-            <span className="dot dot-y" />
-            <span className="dot dot-g" />
-          </div>
           <div className="term-title">
-            {mode === 'signin' && 'auth/login'}
-            {mode === 'signup' && 'auth/create'}
-            {mode === 'reset' && 'auth/reset'}
+            {mode === 'signin' && 'sign in'}
+            {mode === 'signup' && 'create account'}
+            {mode === 'reset' && 'reset password'}
           </div>
           <div className="term-spacer" />
           <button onClick={onClose} className="term-icon-btn" aria-label="Close">
@@ -249,11 +229,7 @@ function AuthModal({ isOpen, onClose }) {
                     required
                     className="term-input w-full pr-14"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 term-link text-xs"
-                  >
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 term-link text-xs">
                     {showPassword ? 'hide' : 'show'}
                   </button>
                 </div>
@@ -265,11 +241,7 @@ function AuthModal({ isOpen, onClose }) {
             </button>
           </form>
 
-          {message && (
-            <div className={`mt-3 term-msg ${message.startsWith('Error') ? 'term-msg-err' : 'term-msg-ok'}`}>
-              {message}
-            </div>
-          )}
+          {message && <div className={`mt-3 term-msg ${message.startsWith('Error') ? 'term-msg-err' : 'term-msg-ok'}`}>{message}</div>}
 
           <div className="mt-3 text-xs space-y-1">
             {mode === 'signin' && (
@@ -305,15 +277,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[900] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
       <div className="w-full max-w-lg term-window relative" onClick={(e) => e.stopPropagation()}>
         <div className="term-titlebar">
-          <div className="term-dots">
-            <span className="dot dot-r" />
-            <span className="dot dot-y" />
-            <span className="dot dot-g" />
-          </div>
-          <div className="term-title">billing/subscription</div>
+          <div className="term-title">subscription</div>
           <div className="term-spacer" />
           <button onClick={onClose} className="term-icon-btn" aria-label="Close">
             <Icons.X />
@@ -337,19 +304,11 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
 
           <div className="space-y-2 pt-2">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading && loading !== 'monthly'}
-              className="term-btn term-btn-primary w-full"
-            >
+            <button onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading && loading !== 'monthly'} className="term-btn term-btn-primary w-full">
               {loading === 'monthly' ? 'processing…' : 'start monthly trial'}
             </button>
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading && loading !== 'annual'}
-              className="term-btn w-full"
-            >
+            <button onClick={() => onCheckout(ANNUAL_PRICE, 'annual')} disabled={!!loading && loading !== 'annual'} className="term-btn w-full">
               {loading === 'annual' ? 'processing…' : 'yearly · save 15%'}
             </button>
           </div>
@@ -406,9 +365,7 @@ export default function Page() {
   }, [])
 
   useEffect(() => {
-    if (shouldAutoScrollRef.current) {
-      requestAnimationFrame(() => scrollToBottom('auto'))
-    }
+    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages])
 
   useEffect(() => {
@@ -448,9 +405,7 @@ export default function Page() {
 
       if (!isMounted) return
       setHasActiveSubscription(active)
-      if (!active && searchParams.get('payment') === 'success') {
-        setShowPricingModal(false)
-      }
+      if (!active && searchParams.get('payment') === 'success') setShowPricingModal(false)
       setIsLoading(false)
     }
 
@@ -484,9 +439,7 @@ export default function Page() {
 
   useEffect(() => {
     function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false)
-      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -522,27 +475,12 @@ export default function Page() {
       }
 
       const payload = await res.json()
-      if (payload.url) {
-        window.location.href = payload.url
-      } else {
-        throw new Error('No checkout URL returned')
-      }
+      if (payload.url) window.location.href = payload.url
+      else throw new Error('No checkout URL returned')
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       setCheckoutLoading(null)
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (e) {
-      console.error('Sign out error', e)
-    } finally {
-      setMessages([])
-      setCurrentChatId(null)
-      router.replace('/')
     }
   }
 
@@ -568,7 +506,6 @@ export default function Page() {
     setSelectedImage(null)
     setIsSending(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
-
     shouldAutoScrollRef.current = true
 
     let activeChatId = currentChatId
@@ -577,10 +514,7 @@ export default function Page() {
       if (session && !activeChatId) {
         const { data: created } = await supabase
           .from('chats')
-          .insert({
-            user_id: session.user.id,
-            title: (question || 'New chat').slice(0, 40),
-          })
+          .insert({ user_id: session.user.id, title: (question || 'New chat').slice(0, 40) })
           .select()
           .single()
 
@@ -593,11 +527,7 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, newUserMessage],
-          image,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({ messages: [...messages, newUserMessage], image, chatId: activeChatId }),
       })
 
       if (!res.ok) {
@@ -619,20 +549,14 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: data.message || 'No response.',
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: `Error: ${error.message}`,
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
         return updated
       })
     } finally {
@@ -660,8 +584,6 @@ export default function Page() {
     )
   }
 
-  const isAuthenticated = !!session
-
   return (
     <>
       <style jsx global>{`
@@ -681,7 +603,6 @@ export default function Page() {
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
         }
 
-        /* Scanlines + subtle noise */
         body.term-bg::before {
           content: '';
           position: fixed;
@@ -706,46 +627,47 @@ export default function Page() {
           background: linear-gradient(180deg, #05080d 0%, #03060a 100%);
         }
 
-        /* Core terminal components */
         .term-window {
-          border: 1px solid rgba(16, 185, 129, 0.18);
+          position: relative;
           border-radius: 14px;
-          background: rgba(3, 6, 10, 0.72);
-          box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          background: rgba(3, 6, 10, 0.9);
+          border: 1px solid rgba(52, 211, 153, 0.18);
+          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 0, 0, 0.55);
           overflow: hidden;
+          background-clip: padding-box;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
+        .term-window::before {
+          content: '';
+          position: absolute;
+          inset: 1px;
+          border-radius: 12px;
+          border: 1px solid rgba(52, 211, 153, 0.1);
+          pointer-events: none;
+        }
+
+        .term-window::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(900px 220px at 30% 0%, rgba(16, 185, 129, 0.06), transparent 60%),
+            radial-gradient(900px 220px at 70% 0%, rgba(34, 211, 238, 0.05), transparent 60%);
+          opacity: 0.9;
+          mix-blend-mode: screen;
         }
 
         .term-titlebar {
+          position: relative;
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 10px 12px;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-          border-bottom: 1px solid rgba(16, 185, 129, 0.14);
-        }
-
-        .term-dots {
-          display: flex;
-          gap: 6px;
-          padding-right: 2px;
-        }
-        .dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 999px;
-          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
-          opacity: 0.9;
-        }
-        .dot-r {
-          background: #ff5f57;
-        }
-        .dot-y {
-          background: #febc2e;
-        }
-        .dot-g {
-          background: #28c840;
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.32));
+          border-bottom: 1px solid rgba(52, 211, 153, 0.12);
+          z-index: 1;
         }
 
         .term-title {
@@ -759,6 +681,8 @@ export default function Page() {
         }
 
         .term-body {
+          position: relative;
+          z-index: 1;
           padding: 14px 14px 16px;
         }
 
@@ -768,7 +692,6 @@ export default function Page() {
           color: rgba(209, 250, 229, 0.92);
           white-space: pre-wrap;
         }
-
         .term-gap {
           height: 10px;
         }
@@ -776,19 +699,12 @@ export default function Page() {
         .term-dim {
           color: rgba(209, 250, 229, 0.62);
         }
-
         .term-ok {
           color: rgba(52, 211, 153, 0.95);
         }
-
         .term-strong {
           color: rgba(209, 250, 229, 0.98);
           font-weight: 700;
-        }
-
-        .term-prompt {
-          color: rgba(34, 211, 238, 0.85);
-          margin-right: 8px;
         }
 
         .term-btn {
@@ -798,28 +714,26 @@ export default function Page() {
           gap: 8px;
           padding: 10px 12px;
           border-radius: 12px;
-          border: 1px solid rgba(209, 250, 229, 0.18);
-          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(52, 211, 153, 0.16);
+          background: rgba(0, 0, 0, 0.34);
           color: rgba(209, 250, 229, 0.92);
           font-size: 12px;
           text-transform: lowercase;
           letter-spacing: 0.04em;
           transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
         }
-
         .term-btn:hover {
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(0, 0, 0, 0.44);
           border-color: rgba(52, 211, 153, 0.26);
           transform: translateY(-1px);
         }
-
         .term-btn:active {
           transform: translateY(0px);
         }
 
         .term-btn-primary {
-          border-color: rgba(52, 211, 153, 0.35);
-          background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.08));
+          border-color: rgba(52, 211, 153, 0.28);
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.22), rgba(0, 0, 0, 0.34));
         }
 
         .term-icon-btn {
@@ -829,36 +743,36 @@ export default function Page() {
           width: 30px;
           height: 30px;
           border-radius: 10px;
-          border: 1px solid rgba(209, 250, 229, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(52, 211, 153, 0.14);
+          background: rgba(0, 0, 0, 0.3);
           color: rgba(209, 250, 229, 0.85);
         }
         .term-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(0, 0, 0, 0.42);
           border-color: rgba(52, 211, 153, 0.22);
         }
 
         .term-input {
           border-radius: 12px;
-          border: 1px solid rgba(209, 250, 229, 0.16);
-          background: rgba(0, 0, 0, 0.35);
+          border: 1px solid rgba(52, 211, 153, 0.14);
+          background: rgba(0, 0, 0, 0.45);
           color: rgba(209, 250, 229, 0.95);
           padding: 10px 12px;
           outline: none;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+          box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.55);
         }
         .term-input::placeholder {
           color: rgba(209, 250, 229, 0.42);
         }
         .term-input:focus {
           border-color: rgba(34, 211, 238, 0.35);
-          box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
+          box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1);
         }
 
         .term-label {
           display: block;
           font-size: 11px;
-          color: rgba(209, 250, 229, 0.70);
+          color: rgba(209, 250, 229, 0.7);
           margin-bottom: 6px;
           text-transform: lowercase;
           letter-spacing: 0.06em;
@@ -866,13 +780,13 @@ export default function Page() {
 
         .term-msg {
           border-radius: 12px;
-          border: 1px solid rgba(209, 250, 229, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(52, 211, 153, 0.14);
+          background: rgba(0, 0, 0, 0.3);
           padding: 10px 12px;
           font-size: 12px;
         }
         .term-msg-ok {
-          border-color: rgba(52, 211, 153, 0.22);
+          border-color: rgba(52, 211, 153, 0.2);
           color: rgba(52, 211, 153, 0.95);
         }
         .term-msg-err {
@@ -897,12 +811,11 @@ export default function Page() {
           text-decoration: underline;
         }
 
-        /* Chat scroll area scrollbar */
         ::-webkit-scrollbar {
           width: 8px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(52, 211, 153, 0.20);
+          background: rgba(52, 211, 153, 0.2);
           border-radius: 999px;
         }
 
@@ -918,7 +831,6 @@ export default function Page() {
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        {/* Header */}
         <header className="flex-shrink-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -926,14 +838,17 @@ export default function Page() {
                 protocolLM
               </div>
               {hasActiveSubscription && (
-                <span className="text-[11px] px-3 py-1 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.22)', color: 'rgba(52,211,153,0.95)' }}>
+                <span
+                  className="text-[11px] px-3 py-1 rounded-full"
+                  style={{ border: '1px solid rgba(52,211,153,0.18)', color: 'rgba(52,211,153,0.95)', background: 'rgba(0,0,0,0.26)' }}
+                >
                   active · site license
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-3">
-              {!isAuthenticated ? (
+              {!session ? (
                 <>
                   <button onClick={() => setShowAuthModal(true)} className={`text-xs term-link ${inter.className}`}>
                     sign in
@@ -961,10 +876,7 @@ export default function Page() {
                     </button>
 
                     {showUserMenu && (
-                      <div
-                        className="absolute right-0 mt-2 w-52 term-window"
-                        style={{ overflow: 'hidden' }}
-                      >
+                      <div className="absolute right-0 mt-2 w-52 term-window" style={{ overflow: 'hidden' }}>
                         <div className="term-body" style={{ padding: 10 }}>
                           <button
                             onClick={() => {
@@ -979,7 +891,13 @@ export default function Page() {
                           </button>
 
                           <button
-                            onClick={handleSignOut}
+                            onClick={async () => {
+                              setShowUserMenu(false)
+                              await supabase.auth.signOut().catch(() => {})
+                              setMessages([])
+                              setCurrentChatId(null)
+                              router.replace('/')
+                            }}
                             className="term-btn w-full"
                             style={{ justifyContent: 'flex-start', borderColor: 'rgba(248,113,113,0.22)', color: 'rgba(248,113,113,0.95)' }}
                           >
@@ -997,13 +915,12 @@ export default function Page() {
         </header>
 
         <main className="flex-1 min-h-0 flex flex-col">
-          {!isAuthenticated ? (
+          {!session ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
               <LandingPage onShowPricing={() => setShowPricingModal(true)} />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Messages container */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
@@ -1011,44 +928,19 @@ export default function Page() {
                 style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable' }}
               >
                 <div className="max-w-4xl mx-auto w-full px-4 py-5">
+                  {/* ✅ NO demo/help box when empty (just blank chat area) */}
                   {messages.length === 0 ? (
-                    <div className="term-window">
-                      <div className="term-titlebar">
-                        <div className="term-dots">
-                          <span className="dot dot-r" />
-                          <span className="dot dot-y" />
-                          <span className="dot dot-g" />
-                        </div>
-                        <div className="term-title">help</div>
-                        <div className="term-spacer" />
-                      </div>
-                      <div className="term-body">
-                        <div className="term-line term-dim">Try:</div>
-                        <div className="term-line">
-                          <span className="term-prompt">$</span> ask "What does the Michigan Food Code require for cold holding?"
-                        </div>
-                        <div className="term-line">
-                          <span className="term-prompt">$</span> scan &lt;photo&gt; (attach image) → likely violations
-                        </div>
-                        <div className="term-line">
-                          <span className="term-prompt">$</span> checklist "raw chicken above RTE"
-                        </div>
-                      </div>
-                    </div>
+                    <div className="h-full" />
                   ) : (
                     <div className="space-y-2">
                       {messages.map((msg, idx) => {
                         const isUser = msg.role === 'user'
-                        const label = isUser ? 'USER' : 'PROTOCOL'
-                        const prompt = isUser ? '>' : '<'
+                        const label = isUser ? 'YOU' : 'PROTOCOL'
 
                         return (
                           <div key={idx} className="term-line">
                             <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                              <span style={{ color: isUser ? 'rgba(34,211,238,0.95)' : 'rgba(52,211,153,0.95)', fontWeight: 700 }}>
-                                {label}
-                              </span>
-                              <span className="term-dim">{prompt}</span>
+                              <span style={{ color: isUser ? 'rgba(34,211,238,0.95)' : 'rgba(52,211,153,0.95)', fontWeight: 700 }}>{label}</span>
                               <span className="whitespace-pre-wrap" style={{ color: 'rgba(209,250,229,0.92)' }}>
                                 {msg.content === '' && !isUser && isSending && idx === messages.length - 1 ? '…' : msg.content}
                               </span>
@@ -1057,21 +949,11 @@ export default function Page() {
                             {msg.image && (
                               <div className="mt-2 term-window" style={{ maxWidth: 520 }}>
                                 <div className="term-titlebar">
-                                  <div className="term-dots">
-                                    <span className="dot dot-r" />
-                                    <span className="dot dot-y" />
-                                    <span className="dot dot-g" />
-                                  </div>
-                                  <div className="term-title">attachment/image</div>
+                                  <div className="term-title">attachment</div>
                                   <div className="term-spacer" />
                                 </div>
                                 <div className="term-body">
-                                  <img
-                                    src={msg.image}
-                                    alt="Uploaded"
-                                    className="rounded-lg"
-                                    style={{ maxHeight: 320, width: '100%', objectFit: 'contain' }}
-                                  />
+                                  <img src={msg.image} alt="Uploaded" className="rounded-lg" style={{ maxHeight: 320, width: '100%', objectFit: 'contain' }} />
                                 </div>
                               </div>
                             )}
@@ -1088,7 +970,7 @@ export default function Page() {
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
                     <div className="mb-2 term-msg term-msg-ok" style={{ display: 'inline-flex', gap: 10, alignItems: 'center' }}>
-                      <span>attached: image</span>
+                      <span>photo attached</span>
                       <button onClick={() => setSelectedImage(null)} className="term-icon-btn" aria-label="Remove image">
                         <Icons.X />
                       </button>
@@ -1100,24 +982,15 @@ export default function Page() {
                       <div className="flex items-end gap-2">
                         <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
 
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="term-btn"
-                          style={{ width: 44, height: 44, padding: 0 }}
-                          aria-label="Attach photo"
-                        >
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="term-btn" style={{ width: 44, height: 44, padding: 0 }} aria-label="Attach photo">
                           <Icons.Camera />
                         </button>
 
                         <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
-                          <div style={{ width: 28, paddingBottom: 10 }} className="term-dim">
-                            &gt;
-                          </div>
                           <textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder='ask "question" or attach photo'
+                            placeholder="Type your question… or attach a photo."
                             rows={1}
                             className="term-input flex-1 resize-none"
                             style={{ minHeight: 44, maxHeight: 140 }}
@@ -1154,7 +1027,6 @@ export default function Page() {
                   </div>
                 </div>
               </div>
-
             </div>
           )}
         </main>
