@@ -65,9 +65,8 @@ const Icons = {
   ),
 }
 
-// AUTH MODAL (light + glass)
 const AuthModal = ({ isOpen, onClose, onSuccess }) => {
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'reset'
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -75,7 +74,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setLoading(true)
     setMessage('')
@@ -90,7 +89,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
       }
 
       let endpoint = ''
-      const body = { email, captchaToken }
+      const body: any = { email, captchaToken }
 
       if (mode === 'reset') {
         endpoint = '/api/auth/reset-password'
@@ -120,9 +119,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         setMessage('✓ Account created. Check your email to verify.')
         setTimeout(() => setMode('signin'), 2000)
       } else {
-        setMessage('✓ Signing in...')
+        setMessage('✓ Signing in…')
         setTimeout(() => {
-          if (onSuccess) onSuccess()
+          onSuccess?.()
           window.location.href = '/'
         }, 800)
       }
@@ -312,7 +311,17 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
   )
 }
 
-const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
+const PricingModal = ({
+  isOpen,
+  onClose,
+  onCheckout,
+  loading,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onCheckout: (priceId: string | undefined, plan: 'monthly' | 'annual') => void
+  loading: 'monthly' | 'annual' | null
+}) => {
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-xl flex items-center justify-center p-4">
@@ -356,9 +365,8 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
                 </span>
               </div>
               <p className={`text-sm text-slate-700 mb-3.5 ${inter.className}`}>
-                Includes roughly <span className="font-semibold">1,300 monthly checks</span>{' '}
-                for one restaurant. Text questions count as one check; photo analyses count as
-                two.
+                Includes roughly <span className="font-semibold">1,300 monthly checks</span> for
+                one restaurant. Text questions count as one check; photo analyses count as two.
               </p>
               <ul className="space-y-1.5 text-sm text-slate-800">
                 <li className="flex items-start gap-2">
@@ -418,9 +426,7 @@ const SubscriptionPollingBanner = () => (
         <Icons.Clock />
         <div>
           <p className="font-semibold">Activating your subscription…</p>
-          <p className="text-[11px] text-slate-600">
-            This usually completes within a few seconds.
-          </p>
+          <p className="text-[11px] text-slate-600">This usually completes within a few seconds.</p>
         </div>
       </div>
       <div className="flex gap-1">
@@ -438,8 +444,13 @@ const SubscriptionPollingBanner = () => (
   </div>
 )
 
-// Minimal business-card landing
-const LandingPage = ({ onShowPricing, onOpenAuth }) => {
+const LandingPage = ({
+  onShowPricing,
+  onOpenAuth,
+}: {
+  onShowPricing: () => void
+  onOpenAuth: () => void
+}) => {
   return (
     <div className="flex-1 w-full flex flex-col items-center justify-center px-6 py-16">
       <main className="w-full max-w-3xl text-center">
@@ -456,8 +467,8 @@ const LandingPage = ({ onShowPricing, onOpenAuth }) => {
         <p
           className={`text-sm md:text-base text-slate-700 mb-8 leading-relaxed ${inter.className}`}
         >
-          protocolLM checks your questions and photos against the Michigan Modified Food Code
-          and local enforcement history so you can fix issues before the inspector walks in.
+          protocolLM checks your questions and photos against the Michigan Modified Food Code and
+          local enforcement history so you can fix issues before the inspector walks in.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
@@ -496,32 +507,33 @@ const LandingPage = ({ onShowPricing, onOpenAuth }) => {
 export default function Page() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<any>(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(null)
+  const [checkoutLoading, setCheckoutLoading] = useState<'monthly' | 'annual' | null>(null)
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
-  const [currentChatId, setCurrentChatId] = useState(null)
-  const [messages, setMessages] = useState([])
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null)
+  const [messages, setMessages] = useState<
+    { role: 'user' | 'assistant'; content: string; image?: string | null }[]
+  >([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
-  const fileInputRef = useRef(null)
-  const scrollRef = useRef(null)
-  const inputRef = useRef(null)
-  const userMenuRef = useRef(null)
-  const pollIntervalRef = useRef(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
+  const pollIntervalRef = useRef<any>(null)
 
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   // close user menu on outside click
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
     }
@@ -539,7 +551,7 @@ export default function Page() {
   // initial auth + subscription check
   useEffect(() => {
     let mounted = true
-    let timeoutId = null
+    let timeoutId: any = null
 
     const init = async () => {
       try {
@@ -617,7 +629,7 @@ export default function Page() {
       }
     })
 
-  return () => {
+    return () => {
       mounted = false
       if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
@@ -684,7 +696,7 @@ export default function Page() {
     }
   }, [session, searchParams, supabase, router, hasActiveSubscription])
 
-  const handleCheckout = async (priceId, planName) => {
+  const handleCheckout = async (priceId: string | undefined, planName: 'monthly' | 'annual') => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession()
@@ -719,7 +731,7 @@ export default function Page() {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + error.message)
       setCheckoutLoading(null)
@@ -745,13 +757,13 @@ export default function Page() {
     setCurrentChatId(null)
   }
 
-  const handleSend = async (e) => {
+  const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
 
     const currentInput = input
     const currentImage = selectedImage
-    const newMsg = { role: 'user', content: currentInput, image: currentImage }
+    const newMsg = { role: 'user' as const, content: currentInput, image: currentImage }
 
     setMessages((p) => [...p, newMsg, { role: 'assistant', content: '' }])
     setInput('')
@@ -808,7 +820,7 @@ export default function Page() {
         u[u.length - 1].content = data.message || 'No response.'
         return u
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err)
       setMessages((p) => {
         const u = [...p]
@@ -820,12 +832,12 @@ export default function Page() {
     }
   }
 
-  const handleImage = async (e) => {
-    const file = e.target.files && e.target.files[0]
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
-      setSelectedImage(compressed)
+      setSelectedImage(compressed as any)
     } catch (error) {
       console.error(error)
       alert('Failed to process image')
@@ -957,14 +969,11 @@ export default function Page() {
                 onOpenAuth={() => setShowAuthModal(true)}
               />
             ) : (
-              // OPEN CHAT VIEW (no boxed panel)
-              <div className="flex-1 w-full flex justify-center">
-                <div className="flex-1 max-w-4xl flex flex-col px-4 md:px-6 pt-4 pb-4">
-                  {/* Messages area: takes remaining height, open background */}
-                  <div
-                    ref={scrollRef}
-                    className="flex-1 overflow-y-auto space-y-4 pb-2"
-                  >
+              // CHAT VIEW: open canvas + fixed input bar at bottom of viewport
+              <div className="relative flex-1 w-full flex justify-center">
+                {/* messages area with extra bottom padding so last bubble isn't under the bar */}
+                <div className="flex-1 max-w-4xl flex flex-col px-4 md:px-6 pt-4 pb-28 md:pb-32">
+                  <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4">
                     {messages.length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center px-4">
                         <p
@@ -1020,9 +1029,11 @@ export default function Page() {
                       ))
                     )}
                   </div>
+                </div>
 
-                  {/* Input area pinned to bottom of content area */}
-                  <div className="mt-3">
+                {/* fixed bottom input bar – always visible on every device */}
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-t from-slate-100/95 via-slate-100/95 to-transparent backdrop-blur-xl border-t border-sky-200">
+                  <div className="max-w-4xl mx-auto px-4 md:px-6 pt-2 pb-4">
                     {selectedImage && (
                       <div className="mb-2 mx-1 p-2.5 inline-flex items-center gap-3 rounded-full shadow-sm border bg-white/80 border-sky-200 text-slate-800 text-xs">
                         <span className="font-semibold tracking-[0.12em] uppercase">
@@ -1036,6 +1047,7 @@ export default function Page() {
                         </button>
                       </div>
                     )}
+
                     <div
                       className="
                         relative flex items-center w-full px-2.5 py-1.5 rounded-full shadow-[0_16px_40px_rgba(148,163,184,0.75)]
@@ -1052,13 +1064,12 @@ export default function Page() {
                       />
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        onClick={() => fileInputRef.current?.click()}
                         className="w-9 h-9 flex items-center justify-center rounded-full mr-2 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-all border border-sky-200"
                       >
                         <Icons.Camera />
                       </button>
                       <textarea
-                        ref={inputRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -1091,8 +1102,8 @@ export default function Page() {
                     <p
                       className={`mt-2 text-[11px] text-center text-slate-500 ${inter.className}`}
                     >
-                      protocolLM uses AI and may make mistakes. Always confirm critical food
-                      safety decisions with official regulations and your local health department.
+                      protocolLM uses AI and may make mistakes. Always confirm critical food safety
+                      decisions with official regulations and your local health department.
                     </p>
                   </div>
                 </div>
