@@ -17,13 +17,13 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -57,125 +57,72 @@ const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
-
-  RetroCamera: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-      <path d="M7 7h2l1-2h4l1 2h2a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z" />
-      <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-      <path d="M8 10h.01" />
-    </svg>
-  ),
-  GamePak: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-      <path d="M7 4h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
-      <path d="M8 4v4h8V4" />
-      <path d="M9 12h6" />
-      <path d="M9 15h6" />
-    </svg>
-  ),
-  ClipboardCheck: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-      <path d="M9 4h6l1 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l-1-2Z" />
-      <path d="M9 13l2 2 4-5" />
-    </svg>
-  ),
 }
 
 function LandingPage({ onShowPricing }) {
-  const cards = [
-    {
-      title: 'Capture',
-      badge: 'Photo scan',
-      icon: <Icons.RetroCamera />,
-      body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
-      tint: 'rgba(0, 255, 168, 0.18)',
-      anim: 'card-drift-a',
-      delay: '0.06s',
-    },
-    {
-      title: 'Rulebook',
-      badge: 'Grounded',
-      icon: <Icons.GamePak />,
-      body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
-      tint: 'rgba(43, 123, 255, 0.16)',
-      anim: 'card-drift-b',
-      delay: '0.12s',
-    },
-    {
-      title: 'Checklist',
-      badge: 'Actionable',
-      icon: <Icons.ClipboardCheck />,
-      body: 'Turn flags into a short close/open list your team can run.',
-      tint: 'rgba(124, 58, 237, 0.14)',
-      anim: 'card-drift-c',
-      delay: '0.18s',
-    },
-  ]
-
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-      <div className="max-w-3xl w-full text-center space-y-8">
-        <div className="inline-flex items-center justify-center px-4 py-1.5 text-[11px] font-semibold tracking-[0.24em] uppercase text-slate-950/90 gb64-chip">
-          protocolLM · compliance console
-        </div>
-
-        <div className="space-y-4">
-          <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
-            Be inspection-ready.
-          </h1>
-          <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
-            Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
-          </p>
-          <p className={`text-xs text-slate-600 ${inter.className}`}>Washtenaw County today · Wayne + Oakland planned for 2026.</p>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          {cards.map((c) => (
-            <div
-              key={c.title}
-              className={`rounded-2xl gb64-surface p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
-              style={{
-                animationDelay: c.delay,
-                ['--gb64-tint']: c.tint,
-              }}
-            >
-              <span className="gb64-sheen" />
-              <div className="flex items-center justify-between mb-3">
-                <div className="inline-flex items-center gap-2">
-                  <div className="gb64-icon">{c.icon}</div>
-                  <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
-                </div>
-                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-900/80 gb64-pill">{c.badge}</span>
-              </div>
-
-              <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
+      <div className="max-w-4xl w-full space-y-4">
+        <div className="term-window">
+          <div className="term-titlebar">
+            <div className="term-dots">
+              <span className="dot dot-r" />
+              <span className="dot dot-y" />
+              <span className="dot dot-g" />
             </div>
-          ))}
+            <div className="term-title">protocolLM — compliance console</div>
+            <div className="term-spacer" />
+          </div>
+
+          <div className="term-body">
+            <div className="term-line">
+              <span className="term-dim">Connected:</span> <span className="term-ok">washtenaw_ruleset</span>
+            </div>
+            <div className="term-line">
+              <span className="term-dim">Mode:</span> <span className="term-ok">database / terminal</span>
+            </div>
+            <div className="term-line">
+              <span className="term-dim">Version:</span> <span className="term-ok">v1</span>
+            </div>
+
+            <div className="term-gap" />
+
+            <div className="term-line term-dim">Available commands:</div>
+            <div className="term-line">
+              <span className="term-prompt">$</span> scan &lt;photo&gt; <span className="term-dim">→ likely violations</span>
+            </div>
+            <div className="term-line">
+              <span className="term-prompt">$</span> ask "&lt;question&gt;" <span className="term-dim">→ grounded answers</span>
+            </div>
+            <div className="term-line">
+              <span className="term-prompt">$</span> checklist "&lt;issue&gt;" <span className="term-dim">→ close/open tasks</span>
+            </div>
+
+            <div className="term-gap" />
+
+            <div className="term-line">
+              <span className="term-dim">Notes:</span> Text question = 1 check · Photo analysis = 2 checks
+            </div>
+
+            <div className="term-gap" />
+
+            <div className="flex flex-wrap gap-3 items-center">
+              <button onClick={onShowPricing} className="term-btn term-btn-primary">
+                <Icons.Check />
+                Start trial
+              </button>
+              <div className="term-dim text-xs">
+                Washtenaw County today · Wayne + Oakland planned for 2026
+              </div>
+            </div>
+          </div>
         </div>
 
-        <button
-          onClick={onShowPricing}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg gb64-cta text-white text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
-        >
-          <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
-          <Icons.Check />
-          <span className="relative">Start trial</span>
-        </button>
-
-        <footer className="pt-4 text-xs text-slate-600">
-          <p className={`mb-2 ${inter.className}`}>Built for Washtenaw County food service establishments.</p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/terms" className="hover:text-slate-900">
-              Terms
-            </Link>
-            <Link href="/privacy" className="hover:text-slate-900">
-              Privacy
-            </Link>
-            <Link href="/contact" className="hover:text-slate-900">
-              Contact
-            </Link>
-          </div>
-        </footer>
+        <div className="flex flex-wrap gap-4 justify-center text-xs term-links">
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/contact">Contact</Link>
+        </div>
       </div>
     </div>
   )
@@ -228,19 +175,19 @@ function AuthModal({ isOpen, onClose }) {
       }
 
       if (mode === 'reset') {
-        setMessage('✓ Check your email for password reset instructions.')
+        setMessage('OK: check your email for reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2200)
       } else if (mode === 'signup') {
-        setMessage('✓ Account created. Check your email to verify.')
+        setMessage('OK: account created. Check email to verify.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2200)
       } else {
-        setMessage('✓ Signed in. Redirecting…')
+        setMessage('OK: signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
@@ -257,109 +204,98 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl gb64-surface p-7" onClick={(e) => e.stopPropagation()}>
-        <span className="gb64-sheen" />
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h2 className={`text-lg font-semibold text-slate-950 tracking-tight mb-1 ${outfit.className}`}>
-              {mode === 'signin' && 'Sign in to protocolLM'}
-              {mode === 'signup' && 'Create your account'}
-              {mode === 'reset' && 'Reset your password'}
-            </h2>
-            <p className={`text-xs text-slate-700 ${inter.className}`}>
-              {mode === 'signin' && 'Use your work email to continue.'}
-              {mode === 'signup' && 'Best with an owner / GM email for your site.'}
-              {mode === 'reset' && "We'll email you a reset link."}
-            </p>
+    <div className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-md term-window" onClick={(e) => e.stopPropagation()}>
+        <div className="term-titlebar">
+          <div className="term-dots">
+            <span className="dot dot-r" />
+            <span className="dot dot-y" />
+            <span className="dot dot-g" />
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 gb64-chip text-slate-700 hover:text-slate-950">
+          <div className="term-title">
+            {mode === 'signin' && 'auth/login'}
+            {mode === 'signup' && 'auth/create'}
+            {mode === 'reset' && 'auth/reset'}
+          </div>
+          <div className="term-spacer" />
+          <button onClick={onClose} className="term-icon-btn" aria-label="Close">
             <Icons.X />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-2">Email address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="gm@restaurant.com"
-              required
-              className="w-full gb64-input"
-            />
-          </div>
-
-          {mode !== 'reset' && (
+        <div className="term-body">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-800 mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full gb64-input pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
+              <label className="term-label">email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="gm@restaurant.com"
+                required
+                className="term-input w-full"
+              />
+            </div>
+
+            {mode !== 'reset' && (
+              <div>
+                <label className="term-label">password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className="term-input w-full pr-14"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 term-link text-xs"
+                  >
+                    {showPassword ? 'hide' : 'show'}
+                  </button>
+                </div>
               </div>
+            )}
+
+            <button type="submit" disabled={loading || !isLoaded} className="term-btn term-btn-primary w-full">
+              {loading ? 'processing…' : mode === 'signin' ? 'sign in' : mode === 'signup' ? 'create account' : 'send reset link'}
+            </button>
+          </form>
+
+          {message && (
+            <div className={`mt-3 term-msg ${message.startsWith('Error') ? 'term-msg-err' : 'term-msg-ok'}`}>
+              {message}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading || !isLoaded}
-            className="w-full mt-2 inline-flex items-center justify-center rounded-lg gb64-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
-          >
-            <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
-            <span className="relative">
-              {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-            </span>
-          </button>
-        </form>
-
-        {message && (
-          <div
-            className={`mt-4 text-xs rounded-lg px-3 py-2 ${
-              message.startsWith('Error') ? 'gb64-toast gb64-toast-error' : 'gb64-toast gb64-toast-ok'
-            }`}
-          >
-            {message}
+          <div className="mt-3 text-xs space-y-1">
+            {mode === 'signin' && (
+              <>
+                <button type="button" onClick={() => setMode('reset')} className="term-link w-full text-left">
+                  forgot password?
+                </button>
+                <button type="button" onClick={() => setMode('signup')} className="term-link w-full text-left">
+                  need an account? <span className="term-strong">sign up</span>
+                </button>
+              </>
+            )}
+            {mode === 'signup' && (
+              <button type="button" onClick={() => setMode('signin')} className="term-link w-full text-left">
+                already have an account? <span className="term-strong">sign in</span>
+              </button>
+            )}
+            {mode === 'reset' && (
+              <button type="button" onClick={() => setMode('signin')} className="term-link w-full text-left">
+                back to sign in
+              </button>
+            )}
           </div>
-        )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-slate-700">
-          {mode === 'signin' && (
-            <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-emerald-700 hover:text-emerald-900">
-                Forgot password?
-              </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-slate-700 hover:text-slate-950">
-                Need an account? <span className="font-semibold">Sign up</span>
-              </button>
-            </>
-          )}
-          {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-slate-700 hover:text-slate-950">
-              Already have an account? <span className="font-semibold">Sign in</span>
-            </button>
-          )}
-          {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-slate-700 hover:text-slate-950">
-              Back to sign in
-            </button>
-          )}
+          <RecaptchaBadge />
         </div>
-
-        <RecaptchaBadge />
       </div>
     </div>
   )
@@ -369,68 +305,52 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-2xl gb64-surface p-7 relative" onClick={(e) => e.stopPropagation()}>
-        <span className="gb64-sheen" />
-        <button onClick={onClose} className="absolute right-7 top-7 rounded-lg p-1.5 gb64-chip text-slate-700 hover:text-slate-950">
-          <Icons.X />
-        </button>
-
-        <div className="mb-6 text-center">
-          <p className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-slate-900/80 mb-2 ${outfit.className}`}>protocolLM</p>
-          <h3 className={`text-xl font-semibold text-slate-950 mb-1 tracking-tight ${outfit.className}`}>Compliance access</h3>
-          <p className={`text-sm text-slate-700 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
+    <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-lg term-window relative" onClick={(e) => e.stopPropagation()}>
+        <div className="term-titlebar">
+          <div className="term-dots">
+            <span className="dot dot-r" />
+            <span className="dot dot-y" />
+            <span className="dot dot-g" />
+          </div>
+          <div className="term-title">billing/subscription</div>
+          <div className="term-spacer" />
+          <button onClick={onClose} className="term-icon-btn" aria-label="Close">
+            <Icons.X />
+          </button>
         </div>
 
-        <div className="rounded-2xl gb64-surface p-5 space-y-4" style={{ ['--gb64-tint']: 'rgba(0, 255, 168, 0.10)' }}>
-          <span className="gb64-sheen" />
-
-          <div>
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className={`text-3xl font-semibold text-slate-950 tracking-tight ${outfit.className}`}>$100</span>
-              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-600">/ month</span>
-            </div>
-            <p className={`text-xs text-slate-700 ${inter.className}`}>
-              Includes roughly <span className="font-semibold text-slate-900">1,300 monthly checks</span> for a single restaurant. Text questions count as one
-              check; photo analyses count as two.
-            </p>
+        <div className="term-body space-y-4">
+          <div className="term-line">
+            <span className="term-dim">Plan:</span> <span className="term-ok">Site license</span>
+          </div>
+          <div className="term-line">
+            <span className="term-dim">Trial:</span> <span className="term-ok">7 days</span>
           </div>
 
-          <ul className="text-xs text-slate-800 space-y-2">
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Text questions and photo uploads</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Grounded in Michigan Food Code &amp; Washtenaw guidance</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Built for one restaurant site license</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>7-day free trial · cancel anytime</span>
-            </li>
-          </ul>
+          <div className="term-line">
+            <span className="term-dim">Price:</span> <span className="term-strong">$100</span> / month
+          </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="term-dim text-xs">
+            Includes roughly <span className="term-strong">1,300 monthly checks</span>. Text = 1 · Photo = 2.
+          </div>
+
+          <div className="space-y-2 pt-2">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="w-full inline-flex items-center justify-center rounded-lg gb64-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
+              className="term-btn term-btn-primary w-full"
             >
-              <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
-              <span className="relative">{loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}</span>
+              {loading === 'monthly' ? 'processing…' : 'start monthly trial'}
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="w-full inline-flex items-center justify-center rounded-lg gb64-chip text-[11px] font-semibold tracking-[0.22em] uppercase text-slate-900 py-3 hover-lift button-press disabled:opacity-60"
+              className="term-btn w-full"
             >
-              {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
+              {loading === 'annual' ? 'processing…' : 'yearly · save 15%'}
             </button>
           </div>
         </div>
@@ -558,10 +478,8 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return
-    document.body.classList.add('gb64-bg')
-    return () => {
-      document.body.classList.remove('gb64-bg')
-    }
+    document.body.classList.add('term-bg')
+    return () => document.body.classList.remove('term-bg')
   }, [])
 
   useEffect(() => {
@@ -736,8 +654,8 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center gb64-loading">
-        <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center term-loading">
+        <div className="w-8 h-8 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -753,400 +671,245 @@ export default function Page() {
           width: 100%;
         }
 
-        /* Keep scrolling inside panes (chat list), not the body */
-        body.gb64-bg {
+        body.term-bg {
           overflow: hidden;
-          position: relative;
-          background: radial-gradient(1200px 900px at 18% 12%, rgba(255, 255, 255, 0.85), rgba(235, 249, 255, 0.55) 48%, rgba(210, 244, 236, 0.45) 72%),
-            radial-gradient(900px 700px at 78% 18%, rgba(255, 255, 255, 0.55), rgba(220, 245, 255, 0.32) 58%, rgba(210, 244, 236, 0.22) 78%),
-            linear-gradient(135deg, rgba(230, 252, 246, 0.9), rgba(220, 242, 255, 0.9));
+          background: radial-gradient(1000px 800px at 20% 10%, rgba(16, 185, 129, 0.08), transparent 55%),
+            radial-gradient(900px 700px at 80% 20%, rgba(34, 211, 238, 0.06), transparent 55%),
+            radial-gradient(900px 700px at 60% 80%, rgba(59, 130, 246, 0.05), transparent 55%),
+            linear-gradient(180deg, #05080d 0%, #04070b 60%, #03060a 100%);
+          color: #d1fae5;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
         }
 
-        /* Subtle “clear shell reflections” */
-        body.gb64-bg::before {
+        /* Scanlines + subtle noise */
+        body.term-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background-image: radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.75), transparent 38%),
-            radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.55), transparent 44%),
-            radial-gradient(circle at 22% 74%, rgba(0, 255, 168, 0.10), transparent 48%),
-            radial-gradient(circle at 84% 68%, rgba(43, 123, 255, 0.08), transparent 52%),
-            linear-gradient(135deg, rgba(0, 229, 255, 0.06), rgba(0, 255, 168, 0.05), rgba(124, 58, 237, 0.04));
+          background: linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+          background-size: 100% 4px;
+          opacity: 0.08;
           mix-blend-mode: soft-light;
-          opacity: 0.9;
-          filter: saturate(1.05);
         }
-
-        /* Micro dither/noise (NO grids, NO outlines) */
-        body.gb64-bg::after {
+        body.term-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.55px, transparent 0.65px);
+          background-image: radial-gradient(rgba(255, 255, 255, 0.06) 0.55px, transparent 0.65px);
           background-size: 7px 7px;
-          opacity: 0.12;
-          mix-blend-mode: soft-light;
+          opacity: 0.06;
         }
 
-        .gb64-loading {
-          background: radial-gradient(1000px 700px at 20% 20%, rgba(255, 255, 255, 0.95), rgba(230, 252, 246, 0.7));
+        .term-loading {
+          background: linear-gradient(180deg, #05080d 0%, #03060a 100%);
         }
 
-        /* N64 energy palette (used only as light) */
-        :root {
-          --n64-cyan: 0, 229, 255;
-          --n64-mint: 0, 255, 168;
-          --n64-blue: 43, 123, 255;
-          --n64-purple: 124, 58, 237;
-          --n64-magenta: 255, 79, 216;
-          --n64-orange: 255, 122, 24;
-          --n64-yellow: 255, 228, 77;
-          --n64-green: 52, 211, 153;
-
-          --shell-clear-a: rgba(255, 255, 255, 0.22);
-          --shell-clear-b: rgba(255, 255, 255, 0.08);
-          --shell-depth: rgba(6, 12, 20, 0.22);
-          --shell-mint: rgba(0, 255, 168, 0.12);
-        }
-
-        /* =========================
-           CLEAR SHELL × LIQUID GLASS
-           ========================= */
-
-        .gb64-surface {
-          --gb64-tint: var(--shell-mint);
-          position: relative;
-          border-radius: 18px;
-          background: radial-gradient(120% 90% at 20% 18%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 48%),
-            radial-gradient(90% 70% at 86% 28%, var(--gb64-tint), rgba(0, 0, 0, 0) 58%),
-            linear-gradient(180deg, var(--shell-clear-a), var(--shell-clear-b));
-          backdrop-filter: blur(22px) saturate(1.38);
-          -webkit-backdrop-filter: blur(22px) saturate(1.38);
-          box-shadow: 0 22px 64px rgba(2, 6, 23, 0.16), inset 0 1px 1px rgba(255, 255, 255, 0.26), inset 0 -28px 60px rgba(2, 6, 23, 0.10);
-          overflow: hidden;
-        }
-
-        /* Molded rim (not a border) */
-        .gb64-surface::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 -1px 0 rgba(2, 6, 23, 0.10), inset 0 18px 44px rgba(255, 255, 255, 0.10);
-          opacity: 0.95;
-        }
-
-        /* Prism edge — thin, subtle, colorful, not a white outline */
-        .gb64-surface::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          padding: 1px;
-          background: conic-gradient(
-            from 220deg,
-            rgba(var(--n64-cyan), 1),
-            rgba(var(--n64-mint), 1),
-            rgba(var(--n64-blue), 1),
-            rgba(var(--n64-purple), 1),
-            rgba(var(--n64-magenta), 1),
-            rgba(var(--n64-orange), 1),
-            rgba(var(--n64-yellow), 1),
-            rgba(var(--n64-green), 1),
-            rgba(var(--n64-cyan), 1)
-          );
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0.14;
-          mix-blend-mode: screen;
-          filter: saturate(1.1);
-          transition: opacity 220ms ease;
-        }
-
-        .gb64-surface:hover::after {
-          opacity: 0.26;
-        }
-
-        /* Liquid sweep element (child span) */
-        .gb64-sheen {
-          position: absolute;
-          inset: -40% -60%;
-          background: linear-gradient(110deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0) 60%);
-          transform: rotate(10deg);
-          opacity: 0;
-          transition: opacity 220ms ease;
-          pointer-events: none;
-        }
-
-        .gb64-surface:hover .gb64-sheen {
-          opacity: 1;
-          animation: gb64Sweep 1.2s ease-in-out;
-        }
-
-        @keyframes gb64Sweep {
-          0% {
-            transform: translateX(-12%) rotate(10deg);
-          }
-          100% {
-            transform: translateX(18%) rotate(10deg);
-          }
-        }
-
-        .gb64-chip {
-          position: relative;
+        /* Core terminal components */
+        .term-window {
+          border: 1px solid rgba(16, 185, 129, 0.18);
           border-radius: 14px;
-          background: radial-gradient(120% 100% at 18% 18%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
-          backdrop-filter: blur(18px) saturate(1.25);
-          -webkit-backdrop-filter: blur(18px) saturate(1.25);
-          box-shadow: 0 16px 46px rgba(2, 6, 23, 0.14), inset 0 1px 1px rgba(255, 255, 255, 0.22), inset 0 -18px 44px rgba(2, 6, 23, 0.08);
+          background: rgba(3, 6, 10, 0.72);
+          box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           overflow: hidden;
         }
 
-        .gb64-pill {
+        .term-titlebar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+          border-bottom: 1px solid rgba(16, 185, 129, 0.14);
+        }
+
+        .term-dots {
+          display: flex;
+          gap: 6px;
+          padding-right: 2px;
+        }
+        .dot {
+          width: 10px;
+          height: 10px;
           border-radius: 999px;
-          padding: 3px 10px;
-          background: radial-gradient(120% 100% at 18% 18%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 60%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.08));
-          backdrop-filter: blur(16px) saturate(1.2);
-          -webkit-backdrop-filter: blur(16px) saturate(1.2);
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.20), inset 0 -10px 24px rgba(2, 6, 23, 0.06);
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+          opacity: 0.9;
+        }
+        .dot-r {
+          background: #ff5f57;
+        }
+        .dot-y {
+          background: #febc2e;
+        }
+        .dot-g {
+          background: #28c840;
         }
 
-        .gb64-cta {
-          border-radius: 14px;
-          background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(0, 229, 255, 0.70), rgba(43, 123, 255, 0.55));
-          box-shadow: 0 22px 70px rgba(16, 185, 129, 0.16), 0 20px 46px rgba(2, 6, 23, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.22),
-            inset 0 -26px 60px rgba(2, 6, 23, 0.14);
-          backdrop-filter: blur(16px) saturate(1.18);
-          -webkit-backdrop-filter: blur(16px) saturate(1.18);
-          position: relative;
-          overflow: hidden;
+        .term-title {
+          color: rgba(209, 250, 229, 0.9);
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: lowercase;
+        }
+        .term-spacer {
+          flex: 1;
         }
 
-        .gb64-cta::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background: conic-gradient(
-            from 240deg,
-            rgba(var(--n64-cyan), 0.0),
-            rgba(var(--n64-mint), 0.28),
-            rgba(var(--n64-blue), 0.22),
-            rgba(var(--n64-purple), 0.22),
-            rgba(var(--n64-magenta), 0.20),
-            rgba(var(--n64-orange), 0.20),
-            rgba(var(--n64-yellow), 0.22),
-            rgba(var(--n64-green), 0.22),
-            rgba(var(--n64-cyan), 0.0)
-          );
-          opacity: 0.55;
-          mix-blend-mode: soft-light;
+        .term-body {
+          padding: 14px 14px 16px;
         }
 
-        .gb64-icon {
-          width: 34px;
-          height: 34px;
+        .term-line {
+          font-size: 12px;
+          line-height: 1.7;
+          color: rgba(209, 250, 229, 0.92);
+          white-space: pre-wrap;
+        }
+
+        .term-gap {
+          height: 10px;
+        }
+
+        .term-dim {
+          color: rgba(209, 250, 229, 0.62);
+        }
+
+        .term-ok {
+          color: rgba(52, 211, 153, 0.95);
+        }
+
+        .term-strong {
+          color: rgba(209, 250, 229, 0.98);
+          font-weight: 700;
+        }
+
+        .term-prompt {
+          color: rgba(34, 211, 238, 0.85);
+          margin-right: 8px;
+        }
+
+        .term-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          gap: 8px;
+          padding: 10px 12px;
           border-radius: 12px;
-          background: radial-gradient(120% 100% at 20% 20%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
-          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.20), inset 0 -14px 34px rgba(2, 6, 23, 0.08);
-          color: rgba(10, 18, 28, 0.86);
+          border: 1px solid rgba(209, 250, 229, 0.18);
+          background: rgba(255, 255, 255, 0.04);
+          color: rgba(209, 250, 229, 0.92);
+          font-size: 12px;
+          text-transform: lowercase;
+          letter-spacing: 0.04em;
+          transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
         }
 
-        .gb64-input {
-          width: 100%;
-          border-radius: 16px;
-          background: radial-gradient(120% 100% at 18% 18%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
-          backdrop-filter: blur(18px) saturate(1.25);
-          -webkit-backdrop-filter: blur(18px) saturate(1.25);
-          box-shadow: 0 16px 46px rgba(2, 6, 23, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.20), inset 0 -18px 44px rgba(2, 6, 23, 0.08);
-          padding: 10px 14px;
-          color: rgba(2, 6, 23, 0.92);
+        .term-btn:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(52, 211, 153, 0.26);
+          transform: translateY(-1px);
+        }
+
+        .term-btn:active {
+          transform: translateY(0px);
+        }
+
+        .term-btn-primary {
+          border-color: rgba(52, 211, 153, 0.35);
+          background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(16, 185, 129, 0.08));
+        }
+
+        .term-icon-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 10px;
+          border: 1px solid rgba(209, 250, 229, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(209, 250, 229, 0.85);
+        }
+        .term-icon-btn:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(52, 211, 153, 0.22);
+        }
+
+        .term-input {
+          border-radius: 12px;
+          border: 1px solid rgba(209, 250, 229, 0.16);
+          background: rgba(0, 0, 0, 0.35);
+          color: rgba(209, 250, 229, 0.95);
+          padding: 10px 12px;
           outline: none;
-          border: none;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        .term-input::placeholder {
+          color: rgba(209, 250, 229, 0.42);
+        }
+        .term-input:focus {
+          border-color: rgba(34, 211, 238, 0.35);
+          box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
         }
 
-        .gb64-input::placeholder {
-          color: rgba(71, 85, 105, 0.60);
+        .term-label {
+          display: block;
+          font-size: 11px;
+          color: rgba(209, 250, 229, 0.70);
+          margin-bottom: 6px;
+          text-transform: lowercase;
+          letter-spacing: 0.06em;
         }
 
-        .gb64-input:focus {
-          box-shadow: 0 18px 56px rgba(2, 6, 23, 0.12), 0 0 0 2px rgba(0, 255, 168, 0.18), 0 0 0 5px rgba(43, 123, 255, 0.08),
-            inset 0 1px 1px rgba(255, 255, 255, 0.22), inset 0 -18px 44px rgba(2, 6, 23, 0.08);
+        .term-msg {
+          border-radius: 12px;
+          border: 1px solid rgba(209, 250, 229, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          padding: 10px 12px;
+          font-size: 12px;
+        }
+        .term-msg-ok {
+          border-color: rgba(52, 211, 153, 0.22);
+          color: rgba(52, 211, 153, 0.95);
+        }
+        .term-msg-err {
+          border-color: rgba(248, 113, 113, 0.22);
+          color: rgba(248, 113, 113, 0.95);
         }
 
-        .gb64-toast {
-          border-radius: 14px;
-          background: radial-gradient(120% 100% at 18% 18%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.10));
-          backdrop-filter: blur(18px) saturate(1.25);
-          -webkit-backdrop-filter: blur(18px) saturate(1.25);
-          box-shadow: 0 16px 46px rgba(2, 6, 23, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.20), inset 0 -18px 44px rgba(2, 6, 23, 0.08);
+        .term-link {
+          color: rgba(34, 211, 238, 0.85);
+          text-decoration: none;
         }
-        .gb64-toast-error {
-          color: rgba(185, 28, 28, 0.95);
-        }
-        .gb64-toast-ok {
-          color: rgba(4, 120, 87, 0.95);
+        .term-link:hover {
+          color: rgba(34, 211, 238, 1);
+          text-decoration: underline;
         }
 
-        /* Motion helpers (kept from your version) */
-        @keyframes cardDriftA {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          50% {
-            transform: translate3d(0, -3px, 0);
-          }
+        .term-links a {
+          color: rgba(209, 250, 229, 0.65);
         }
-        @keyframes cardDriftB {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          50% {
-            transform: translate3d(1px, -2px, 0);
-          }
-        }
-        @keyframes cardDriftC {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-          50% {
-            transform: translate3d(-1px, -3px, 0);
-          }
-        }
-        .card-drift-a {
-          animation: cardDriftA 5.8s ease-in-out infinite;
-        }
-        .card-drift-b {
-          animation: cardDriftB 6.6s ease-in-out infinite;
-        }
-        .card-drift-c {
-          animation: cardDriftC 6.2s ease-in-out infinite;
+        .term-links a:hover {
+          color: rgba(209, 250, 229, 0.95);
+          text-decoration: underline;
         }
 
-        @keyframes buttonPress {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(0.96);
-          }
-        }
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes shimmer {
-          0% {
-            background-position: -100% 0;
-          }
-          100% {
-            background-position: 200% 0;
-          }
-        }
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out;
-        }
-        .animate-slide-down {
-          animation: slideDown 0.3s ease-out;
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        .hover-lift {
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .hover-lift:hover {
-          transform: translateY(-2px);
-        }
-        .button-press:active {
-          animation: buttonPress 0.15s ease;
-        }
-        .message-appear {
-          animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .shimmer-effect {
-          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.30) 50%, transparent 100%);
-          background-size: 200% 100%;
-          animation: shimmer 2s infinite;
-        }
-
-        /* Scrollbars */
+        /* Chat scroll area scrollbar */
         ::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(0, 255, 168, 0.22);
+          background: rgba(52, 211, 153, 0.20);
           border-radius: 999px;
         }
 
-        /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
-          .animate-float,
-          .card-drift-a,
-          .card-drift-b,
-          .card-drift-c,
-          .message-appear,
-          .animate-slide-up,
-          .animate-slide-down,
-          .animate-fade-in,
-          .shimmer-effect {
-            animation: none !important;
-          }
-          .hover-lift {
+          * {
             transition: none !important;
+            animation: none !important;
           }
         }
       `}</style>
@@ -1156,17 +919,15 @@ export default function Page() {
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex-shrink-0 animate-slide-down">
+        <header className="flex-shrink-0">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div
-                className={`px-3 py-1 text-[11px] font-semibold tracking-[0.22em] uppercase text-slate-900 hover-lift cursor-pointer ${outfit.className} gb64-chip`}
-              >
-                protocol<span className="opacity-80">LM</span>
+              <div className={`term-btn ${outfit.className}`} style={{ padding: '8px 10px' }}>
+                protocolLM
               </div>
               {hasActiveSubscription && (
-                <span className="hidden sm:inline-flex text-[10px] px-3 py-1 rounded-full gb64-pill text-slate-900 font-medium tracking-[0.16em] uppercase animate-fade-in">
-                  Active · site license
+                <span className="text-[11px] px-3 py-1 rounded-full" style={{ border: '1px solid rgba(52,211,153,0.22)', color: 'rgba(52,211,153,0.95)' }}>
+                  active · site license
                 </span>
               )}
             </div>
@@ -1174,56 +935,58 @@ export default function Page() {
             <div className="flex items-center gap-3">
               {!isAuthenticated ? (
                 <>
-                  <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-slate-700 hover:text-slate-950 ${inter.className}`}>
-                    Sign in
+                  <button onClick={() => setShowAuthModal(true)} className={`text-xs term-link ${inter.className}`}>
+                    sign in
                   </button>
-                  <button
-                    onClick={() => setShowPricingModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg gb64-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
-                  >
-                    <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
+                  <button onClick={() => setShowPricingModal(true)} className="term-btn term-btn-primary">
                     <Icons.Check />
-                    <span className="relative">Sign up</span>
+                    sign up
                   </button>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleNewChat}
-                    className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold tracking-[0.16em] uppercase text-slate-900 gb64-chip hover-lift button-press"
-                  >
+                  <button onClick={handleNewChat} className="term-btn hidden sm:inline-flex">
                     <Icons.Plus />
-                    New chat
+                    new chat
                   </button>
 
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu((v) => !v)}
-                      className="w-9 h-9 rounded-full gb64-chip flex items-center justify-center text-xs font-bold text-slate-800 hover-lift button-press"
+                      className="term-btn"
+                      style={{ width: 38, height: 38, padding: 0, borderRadius: 999 }}
+                      aria-label="User menu"
                     >
                       {session.user.email?.[0]?.toUpperCase() || 'U'}
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-48 rounded-2xl gb64-surface overflow-hidden text-sm animate-slide-down">
-                        <span className="gb64-sheen" />
-                        <button
-                          onClick={() => {
-                            setShowPricingModal(true)
-                            setShowUserMenu(false)
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/30 text-slate-800 transition-colors"
-                        >
-                          <Icons.Settings />
-                          <span>Subscription</span>
-                        </button>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-white/30 transition-colors"
-                        >
-                          <Icons.LogOut />
-                          <span>Log out</span>
-                        </button>
+                      <div
+                        className="absolute right-0 mt-2 w-52 term-window"
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div className="term-body" style={{ padding: 10 }}>
+                          <button
+                            onClick={() => {
+                              setShowPricingModal(true)
+                              setShowUserMenu(false)
+                            }}
+                            className="term-btn w-full"
+                            style={{ justifyContent: 'flex-start' }}
+                          >
+                            <Icons.Settings />
+                            subscription
+                          </button>
+
+                          <button
+                            onClick={handleSignOut}
+                            className="term-btn w-full"
+                            style={{ justifyContent: 'flex-start', borderColor: 'rgba(248,113,113,0.22)', color: 'rgba(248,113,113,0.95)' }}
+                          >
+                            <Icons.LogOut />
+                            log out
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1240,120 +1003,158 @@ export default function Page() {
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
-              {/* Messages */}
+              {/* Messages container */}
               <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
+                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable' }}
               >
-                {messages.length === 0 ? (
-                  <div className="h-full flex items-center justify-center px-4">
-                    <p className={`max-w-md text-sm text-slate-700 text-center leading-relaxed ${inter.className}`}>
-                      Ask about Michigan Food Code requirements, past Washtenaw enforcement actions, or attach a photo of your walk-in or line to scan for likely
-                      violations before inspection.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex w-full message-appear ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        style={{ animationDelay: `${idx * 0.05}s` }}
-                      >
-                        <div
-                          className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all gb64-surface"
-                          style={{
-                            ['--gb64-tint']:
-                              msg.role === 'user'
-                                ? 'rgba(0,255,168,0.22)'
-                                : 'rgba(43,123,255,0.10)',
-                            color: msg.role === 'user' ? 'rgba(2,6,23,0.92)' : 'rgba(2,6,23,0.92)',
-                          }}
-                        >
-                          <span className="gb64-sheen" />
-                          {msg.image && (
-                            <img
-                              src={msg.image}
-                              alt="Uploaded"
-                              className="mb-3 rounded-xl max-h-64 object-contain bg-white/70"
-                            />
-                          )}
-
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: '0.24s' }} />
-                            </div>
-                          ) : (
-                            <span className="whitespace-pre-wrap">{msg.content}</span>
-                          )}
+                <div className="max-w-4xl mx-auto w-full px-4 py-5">
+                  {messages.length === 0 ? (
+                    <div className="term-window">
+                      <div className="term-titlebar">
+                        <div className="term-dots">
+                          <span className="dot dot-r" />
+                          <span className="dot dot-y" />
+                          <span className="dot dot-g" />
+                        </div>
+                        <div className="term-title">help</div>
+                        <div className="term-spacer" />
+                      </div>
+                      <div className="term-body">
+                        <div className="term-line term-dim">Try:</div>
+                        <div className="term-line">
+                          <span className="term-prompt">$</span> ask "What does the Michigan Food Code require for cold holding?"
+                        </div>
+                        <div className="term-line">
+                          <span className="term-prompt">$</span> scan &lt;photo&gt; (attach image) → likely violations
+                        </div>
+                        <div className="term-line">
+                          <span className="term-prompt">$</span> checklist "raw chicken above RTE"
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {messages.map((msg, idx) => {
+                        const isUser = msg.role === 'user'
+                        const label = isUser ? 'USER' : 'PROTOCOL'
+                        const prompt = isUser ? '>' : '<'
+
+                        return (
+                          <div key={idx} className="term-line">
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                              <span style={{ color: isUser ? 'rgba(34,211,238,0.95)' : 'rgba(52,211,153,0.95)', fontWeight: 700 }}>
+                                {label}
+                              </span>
+                              <span className="term-dim">{prompt}</span>
+                              <span className="whitespace-pre-wrap" style={{ color: 'rgba(209,250,229,0.92)' }}>
+                                {msg.content === '' && !isUser && isSending && idx === messages.length - 1 ? '…' : msg.content}
+                              </span>
+                            </div>
+
+                            {msg.image && (
+                              <div className="mt-2 term-window" style={{ maxWidth: 520 }}>
+                                <div className="term-titlebar">
+                                  <div className="term-dots">
+                                    <span className="dot dot-r" />
+                                    <span className="dot dot-y" />
+                                    <span className="dot dot-g" />
+                                  </div>
+                                  <div className="term-title">attachment/image</div>
+                                  <div className="term-spacer" />
+                                </div>
+                                <div className="term-body">
+                                  <img
+                                    src={msg.image}
+                                    alt="Uploaded"
+                                    className="rounded-lg"
+                                    style={{ maxHeight: 320, width: '100%', objectFit: 'contain' }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Input */}
+              {/* Input bar */}
               <div className="flex-shrink-0">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg gb64-chip text-[11px] text-slate-800 animate-slide-up">
-                      <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="text-slate-600 hover:text-slate-950 transition-colors">
+                    <div className="mb-2 term-msg term-msg-ok" style={{ display: 'inline-flex', gap: 10, alignItems: 'center' }}>
+                      <span>attached: image</span>
+                      <button onClick={() => setSelectedImage(null)} className="term-icon-btn" aria-label="Remove image">
                         <Icons.X />
                       </button>
                     </div>
                   )}
 
-                  <div className="flex items-end gap-2">
-                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
+                  <div className="term-window">
+                    <div className="term-body" style={{ padding: 10 }}>
+                      <div className="flex items-end gap-2">
+                        <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
 
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center justify-center w-10 h-10 rounded-lg gb64-chip text-slate-700 hover-lift button-press"
-                      aria-label="Attach photo"
-                    >
-                      <Icons.Camera />
-                    </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="term-btn"
+                          style={{ width: 44, height: 44, padding: 0 }}
+                          aria-label="Attach photo"
+                        >
+                          <Icons.Camera />
+                        </button>
 
-                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
-                      <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a code question or attach a photo."
-                        rows={1}
-                        className={`flex-1 max-h-32 min-h-[40px] resize-none ${inter.className} gb64-input`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
-                      />
+                        <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
+                          <div style={{ width: 28, paddingBottom: 10 }} className="term-dim">
+                            &gt;
+                          </div>
+                          <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder='ask "question" or attach photo'
+                            rows={1}
+                            className="term-input flex-1 resize-none"
+                            style={{ minHeight: 44, maxHeight: 140 }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSend(e)
+                              }
+                            }}
+                          />
 
-                      <button
-                        type="submit"
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`flex items-center justify-center w-10 h-10 rounded-lg transition-all hover-lift button-press ${
-                          (!input.trim() && !selectedImage) || isSending ? 'gb64-chip opacity-60 cursor-not-allowed' : 'gb64-cta text-white'
-                        }`}
-                        aria-label="Send"
-                      >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> : <Icons.ArrowUp />}
-                      </button>
-                    </form>
+                          <button
+                            type="submit"
+                            disabled={(!input.trim() && !selectedImage) || isSending}
+                            className="term-btn term-btn-primary"
+                            style={{
+                              width: 44,
+                              height: 44,
+                              padding: 0,
+                              opacity: (!input.trim() && !selectedImage) || isSending ? 0.55 : 1,
+                              cursor: (!input.trim() && !selectedImage) || isSending ? 'not-allowed' : 'pointer',
+                            }}
+                            aria-label="Send"
+                          >
+                            {isSending ? <div className="w-4 h-4 rounded-full border-2 border-emerald-200/40 border-t-emerald-200 animate-spin" /> : <Icons.ArrowUp />}
+                          </button>
+                        </form>
+                      </div>
+
+                      <div className="term-dim text-[10px]" style={{ marginTop: 8 }}>
+                        protocolLM may make mistakes. Confirm critical food safety decisions with official regulations and your local health department.
+                      </div>
+                    </div>
                   </div>
-
-                  <p className={`mt-2 text-[10px] text-center text-slate-600 ${inter.className}`}>
-                    protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
-                  </p>
                 </div>
               </div>
+
             </div>
           )}
         </main>
