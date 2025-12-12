@@ -15,6 +15,7 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
+// Basic icon set
 const Icons = {
   Camera: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -122,8 +123,9 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
         setMessage('✓ Signing in...')
         setTimeout(() => {
           if (onSuccess) onSuccess()
-          window.location.reload()
-        }, 1000)
+          // Hard redirect back to root; session + redirect logic will show chat
+          window.location.href = '/'
+        }, 800)
       }
     } catch (error) {
       console.error('Auth error:', error)
@@ -137,23 +139,23 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-xl flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="bg-[#020617] border border-emerald-900/80 rounded-sm w-full max-w-md p-8 shadow-2xl text-emerald-100 font-mono"
+        className="bg-white/7 border border-white/20 rounded-2xl w-full max-w-md p-8 shadow-[0_20px_60px_rgba(0,0,0,0.6)] text-sky-50 font-mono backdrop-blur-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2
-              className={`text-xl md:text-2xl font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
+              className={`text-xl md:text-2xl font-semibold text-sky-50 mb-1 tracking-tight ${outfit.className}`}
             >
               {mode === 'signin' && 'Sign in to protocolLM'}
               {mode === 'signup' && 'Create access'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs md:text-sm text-emerald-400 ${inter.className}`}>
+            <p className={`text-xs md:text-sm text-sky-200/80 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email for this location.'}
               {mode === 'signup' && 'Set up access for your restaurant.'}
               {mode === 'reset' && 'We’ll email you a reset link.'}
@@ -161,7 +163,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
           <button
             onClick={onClose}
-            className="text-emerald-500 hover:text-emerald-300 transition-colors"
+            className="text-sky-200 hover:text-white transition-colors"
           >
             <Icons.X />
           </button>
@@ -169,7 +171,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-emerald-300 mb-1">
+            <label className="block text-xs font-medium text-sky-100 mb-1">
               Email address
             </label>
             <input
@@ -179,13 +181,13 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
               placeholder="gm@yourrestaurant.com"
               required
-              className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 text-sm text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
+              className="w-full bg-slate-950/60 border border-sky-500/40 rounded-lg px-3 py-2.5 text-sm text-sky-50 placeholder-sky-400 focus:outline-none focus:border-sky-300 focus:ring-1 focus:ring-sky-300/80"
             />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-medium text-emerald-300 mb-1">
+              <label className="block text-xs font-medium text-sky-100 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -196,12 +198,12 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-[#020617] border border-emerald-800 rounded-sm px-3 py-2.5 pr-9 text-sm text-emerald-100 placeholder-emerald-600 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400/60"
+                  className="w-full bg-slate-950/60 border border-sky-500/40 rounded-lg px-3 py-2.5 pr-9 text-sm text-sky-50 placeholder-sky-400 focus:outline-none focus:border-sky-300 focus:ring-1 focus:ring-sky-300/80"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-500 hover:text-emerald-300"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sky-300 hover:text-white"
                 >
                   {showPassword ? (
                     <svg
@@ -236,7 +238,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           <button
             onClick={handleSubmit}
             disabled={loading || !isLoaded}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] transition-colors border border-emerald-300 disabled:opacity-60"
+            className="w-full bg-gradient-to-b from-sky-200 via-sky-300 to-sky-500 text-slate-900 font-semibold py-2.5 rounded-full text-xs uppercase tracking-[0.18em] shadow-[0_10px_25px_rgba(15,23,42,0.8)] border border-white/60 hover:from-sky-100 hover:via-sky-200 hover:to-sky-400 transition-colors disabled:opacity-60"
           >
             {loading
               ? 'Processing...'
@@ -252,10 +254,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 
         {message && (
           <div
-            className={`mt-5 p-3 rounded-sm text-xs border font-mono ${
+            className={`mt-5 p-3 rounded-lg text-xs border font-mono ${
               message.startsWith('Error')
-                ? 'bg-red-950 border-red-500 text-red-100'
-                : 'bg-emerald-950 border-emerald-500 text-emerald-100'
+                ? 'bg-red-950/70 border-red-500 text-red-100'
+                : 'bg-emerald-950/70 border-emerald-500 text-emerald-100'
             }`}
           >
             {message}
@@ -267,15 +269,15 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
             <>
               <button
                 onClick={() => setMode('reset')}
-                className="text-emerald-400 hover:text-emerald-200 transition-colors block w-full"
+                className="text-sky-200 hover:text-white transition-colors block w-full"
               >
                 Forgot password?
               </button>
-              <div className="text-emerald-500/80">
+              <div className="text-sky-200/80">
                 No account yet?{' '}
                 <button
                   onClick={() => setMode('signup')}
-                  className="text-emerald-300 font-semibold hover:underline"
+                  className="text-sky-100 font-semibold hover:underline"
                 >
                   Sign up
                 </button>
@@ -284,11 +286,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           )}
 
           {mode === 'signup' && (
-            <div className="text-emerald-500/80">
+            <div className="text-sky-200/80">
               Already have access?{' '}
               <button
                 onClick={() => setMode('signin')}
-                className="text-emerald-300 font-semibold hover:underline"
+                className="text-sky-100 font-semibold hover:underline"
               >
                 Sign in
               </button>
@@ -298,7 +300,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
           {mode === 'reset' && (
             <button
               onClick={() => setMode('signin')}
-              className="text-emerald-400 hover:text-emerald-200 transition-colors"
+              className="text-sky-200 hover:text-white transition-colors"
             >
               Back to sign in
             </button>
@@ -314,51 +316,52 @@ const AuthModal = ({ isOpen, onClose, onSuccess }) => {
 const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/80 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl bg-[#020617] border border-emerald-900/80 rounded-sm p-8 md:p-9 shadow-2xl text-emerald-100 font-mono">
+    <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-xl flex items-center justify-center p-4">
+      <div className="relative w-full max-w-2xl bg-white/7 border border-white/20 rounded-2xl p-8 md:p-9 shadow-[0_24px_80px_rgba(0,0,0,0.85)] text-sky-50 font-mono backdrop-blur-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-emerald-500 hover:text-emerald-300 transition-colors"
+          className="absolute top-4 right-4 text-sky-200 hover:text-white transition-colors"
         >
           <Icons.X />
         </button>
         <div className="mb-7 text-center">
           <h3
-            className={`text-xs font-semibold text-emerald-400 uppercase tracking-[0.25em] mb-2 ${outfit.className}`}
+            className={`text-[11px] font-semibold text-sky-200 uppercase tracking-[0.25em] mb-2 ${outfit.className}`}
           >
             PROTOCOLLM · ACCESS
           </h3>
           <p
-            className={`text-lg md:text-2xl font-semibold text-emerald-100 mb-1 tracking-tight ${outfit.className}`}
+            className={`text-lg md:text-2xl font-semibold text-sky-50 mb-1 tracking-tight ${outfit.className}`}
           >
             Single-site compliance plan
           </p>
-          <p className={`text-sm text-emerald-400/90 max-w-xl mx-auto ${inter.className}`}>
+          <p className={`text-sm text-sky-200/85 max-w-xl mx-auto ${inter.className}`}>
             Designed for GMs and owners who want fewer surprises on inspection day.
           </p>
         </div>
 
         <div className="max-w-md mx-auto">
-          <div className="border border-emerald-900/80 rounded-sm p-5 bg-black/60">
+          <div className="border border-white/20 rounded-2xl p-5 bg-slate-950/60 shadow-inner">
             <div className="mb-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-500 mb-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-300 mb-1.5">
                 Compliance Plan
               </p>
               <div className="flex items-baseline mb-1.5">
                 <span
-                  className={`text-3xl md:text-4xl font-semibold text-emerald-300 tracking-tight ${outfit.className}`}
+                  className={`text-3xl md:text-4xl font-semibold text-sky-100 tracking-tight ${outfit.className}`}
                 >
                   $100
                 </span>
-                <span className="ml-2 text-emerald-500 text-[11px] font-medium uppercase tracking-wide">
+                <span className="ml-2 text-sky-300 text-[11px] font-medium uppercase tracking-wide">
                   /month · per site
                 </span>
               </div>
-              <p className={`text-sm text-emerald-400 mb-3.5 ${inter.className}`}>
+              <p className={`text-sm text-sky-200/85 mb-3.5 ${inter.className}`}>
                 Includes roughly <span className="font-semibold">1,300 monthly checks</span>{' '}
-                for one restaurant. Text questions count as one check; photo analyses count as two.
+                for one restaurant. Text questions count as one check; photo analyses count as
+                two.
               </p>
-              <ul className="space-y-1.5 text-sm text-emerald-300">
+              <ul className="space-y-1.5 text-sm text-sky-50">
                 <li className="flex items-start gap-2">
                   <Icons.Check />
                   <span>Text questions and photo analyses</span>
@@ -386,7 +389,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               <button
                 onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
                 disabled={!!loading && loading !== 'monthly'}
-                className={`w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] transition-colors border border-emerald-300 ${
+                className={`w-full bg-gradient-to-b from-emerald-200 via-emerald-300 to-emerald-500 text-slate-900 font-semibold py-2.5 rounded-full text-xs uppercase tracking-[0.18em] shadow-[0_12px_30px_rgba(6,95,70,0.9)] border border-white/70 hover:from-emerald-100 hover:via-emerald-200 hover:to-emerald-400 transition-colors ${
                   loading && loading !== 'monthly' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
@@ -395,7 +398,7 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
               <button
                 onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
                 disabled={!!loading && loading !== 'annual'}
-                className={`w-full bg-[#020617] border border-dashed border-emerald-500/80 text-emerald-200 font-semibold py-2.5 rounded-sm text-xs uppercase tracking-[0.18em] hover:bg-emerald-900/40 transition-colors ${
+                className={`w-full bg-slate-950/70 border border-dashed border-sky-300/80 text-sky-100 font-semibold py-2.5 rounded-full text-xs uppercase tracking-[0.18em] hover:bg-sky-900/40 transition-colors ${
                   loading && loading !== 'annual' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
               >
@@ -410,25 +413,25 @@ const PricingModal = ({ isOpen, onClose, onCheckout, loading }) => {
 }
 
 const SubscriptionPollingBanner = () => (
-  <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-emerald-800 px-4 py-2">
-    <div className="max-w-4xl mx-auto flex items-center justify-between text-emerald-200 font-mono">
+  <div className="fixed top-0 left-0 right-0 z-50 bg-slate-950/95 border-b border-sky-500/40 px-4 py-2">
+    <div className="max-w-4xl mx-auto flex items-center justify-between text-sky-100 font-mono">
       <div className="flex items-center gap-3">
         <Icons.Clock />
         <div>
           <p className="text-xs font-semibold">Activating your subscription…</p>
-          <p className="text-[11px] text-emerald-400">
+          <p className="text-[11px] text-sky-200/80">
             This usually completes within a few seconds.
           </p>
         </div>
       </div>
       <div className="flex gap-1">
-        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+        <div className="w-2 h-2 bg-sky-400 rounded-full animate-bounce" />
         <div
-          className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+          className="w-2 h-2 bg-sky-400 rounded-full animate-bounce"
           style={{ animationDelay: '0.1s' }}
         />
         <div
-          className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+          className="w-2 h-2 bg-sky-400 rounded-full animate-bounce"
           style={{ animationDelay: '0.2s' }}
         />
       </div>
@@ -436,52 +439,54 @@ const SubscriptionPollingBanner = () => (
   </div>
 )
 
+// Very minimal, business-card style landing page
 const LandingPage = ({ onShowPricing, onOpenAuth }) => {
   return (
-    <div className="w-full min-h-full flex flex-col items-center justify-center bg-[#020617] text-emerald-100 font-mono">
-      <main className="w-full max-w-3xl px-6 text-center">
+    <div className="flex-1 w-full flex flex-col items-center justify-center px-6 py-16">
+      <main className="w-full max-w-3xl text-center">
         <p
-          className={`text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-500 mb-3 ${inter.className}`}
+          className={`text-[11px] font-semibold tracking-[0.22em] uppercase text-sky-200/80 mb-3 ${inter.className}`}
         >
-          WASHTENAW COUNTY · FOOD SAFETY
+          WASHTENAW COUNTY · LIVE · WAYNE &amp; OAKLAND COMING 2026
         </p>
         <h1
-          className={`text-3xl md:text-4xl font-semibold mb-4 text-emerald-100 leading-snug ${outfit.className}`}
+          className={`text-3xl md:text-4xl font-semibold mb-4 text-sky-50 leading-snug ${outfit.className}`}
         >
-          Food safety compliance for Washtenaw County.
+          Spot violations before the health inspector.
         </h1>
         <p
-          className={`text-sm md:text-base text-emerald-400 mb-8 leading-relaxed ${inter.className}`}
+          className={`text-sm md:text-base text-sky-200/90 mb-8 leading-relaxed ${inter.className}`}
         >
-          Get instant, code-backed guidance using the Michigan Modified Food Code and local
-          enforcement history—before the inspector walks in.
+          Built for GMs and owners. protocolLM checks your questions and photos against the
+          Michigan Modified Food Code and local enforcement history so you can fix issues
+          before the inspector walks in.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={onOpenAuth}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-sm border border-emerald-400 text-emerald-200 text-sm font-semibold tracking-[0.14em] uppercase hover:bg-emerald-900/40 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full border border-white/60 bg-slate-950/50 text-sky-50 text-sm font-semibold tracking-[0.14em] uppercase shadow-[0_10px_24px_rgba(15,23,42,0.8)] hover:bg-slate-900/80 transition-colors"
           >
             Sign In
           </button>
           <button
             onClick={onShowPricing}
-            className="inline-flex items-center justify-center px-6 py-2.5 rounded-sm bg-emerald-500 text-black text-sm font-semibold tracking-[0.16em] uppercase border border-emerald-300 hover:bg-emerald-400 transition-colors"
+            className="inline-flex items-center justify-center px-7 py-2.5 rounded-full bg-gradient-to-b from-emerald-200 via-emerald-300 to-emerald-500 text-slate-900 text-sm font-semibold tracking-[0.18em] uppercase border border-white/60 shadow-[0_14px_32px_rgba(6,95,70,0.9)] hover:from-emerald-100 hover:via-emerald-200 hover:to-emerald-400 transition-colors"
           >
-            Create Account
+            Start Access
           </button>
         </div>
       </main>
 
-      <footer className="mt-12 text-[11px] text-emerald-500/80 flex flex-col items-center gap-2">
+      <footer className="mt-10 text-[11px] text-sky-200/75 flex flex-col items-center gap-2">
         <p className={inter.className}>Serving Washtenaw County food service establishments</p>
         <div className="flex gap-5">
-          <Link href="/terms" className="hover:text-emerald-300 transition-colors">
+          <Link href="/terms" className="hover:text-white transition-colors">
             Terms
           </Link>
-          <Link href="/privacy" className="hover:text-emerald-300 transition-colors">
+          <Link href="/privacy" className="hover:text-white transition-colors">
             Privacy
           </Link>
-          <Link href="/contact" className="hover:text-emerald-300 transition-colors">
+          <Link href="/contact" className="hover:text-white transition-colors">
             Contact
           </Link>
         </div>
@@ -500,7 +505,7 @@ export default function Page() {
   const [checkoutLoading, setCheckoutLoading] = useState(null) // 'monthly' | 'annual' | null
   const [isPollingSubscription, setIsPollingSubscription] = useState(false)
   const [currentChatId, setCurrentChatId] = useState(null)
-  const [messages, setMessages] = useState([]) // { role: 'user' | 'assistant', content, image? }[]
+  const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
@@ -571,9 +576,8 @@ export default function Page() {
           }
           setHasActiveSubscription(active)
 
-          if (active && searchParams.get('showPricing') !== 'true') {
-            setShowPricingModal(false)
-          } else if (!active) {
+          // Only auto-open pricing if explicitly requested in URL
+          if (searchParams.get('showPricing') === 'true') {
             setShowPricingModal(true)
           }
         } else {
@@ -731,6 +735,8 @@ export default function Page() {
     } catch (error) {
       console.error('Sign out error', error)
     } finally {
+      setSession(null)
+      setHasActiveSubscription(false)
       window.location.href = '/'
     }
   }
@@ -831,22 +837,21 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-[#020617] flex items-center justify-center">
-        <div className="w-7 h-7 border-2 border-emerald-500/50 border-t-emerald-300 rounded-full animate-spin" />
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-sky-400/40 border-t-sky-200 rounded-full animate-spin" />
       </div>
     )
   }
 
-  const canUseApp = session && hasActiveSubscription
+  // IMPORTANT: any logged-in user goes to the app/chat view.
+  const canUseApp = !!session
 
   return (
     <>
       <style jsx global>{`
         body {
-          background-color: #020617;
-          color: #e5f4d3;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-            'Courier New', monospace;
+          background: radial-gradient(circle at top left, #1e293b 0, #020617 55%);
+          color: #e5f4ff;
         }
         .btn-press {
           transition: transform 0.1s ease;
@@ -858,10 +863,10 @@ export default function Page() {
           width: 6px;
         }
         ::-webkit-scrollbar-track {
-          background: #020617;
+          background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(16, 185, 129, 0.6);
+          background: rgba(56, 189, 248, 0.6);
           border-radius: 3px;
         }
       `}</style>
@@ -871,9 +876,7 @@ export default function Page() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false)
-        }}
+        onSuccess={() => setShowAuthModal(false)}
       />
       <PricingModal
         isOpen={showPricingModal}
@@ -882,20 +885,16 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="relative min-h-screen w-full overflow-hidden bg-[#020617] text-emerald-100 font-mono">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 text-sky-50 flex flex-col">
         <div
-          className={`relative z-10 flex flex-col min-h-screen ${
-            isPollingSubscription ? 'pt-10' : ''
-          }`}
+          className={`flex flex-col flex-1 ${isPollingSubscription ? 'pt-8' : ''}`}
         >
-          <header className="border-b z-30 border-emerald-900/80 bg-black/90">
+          <header className="border-b border-sky-500/30 bg-slate-950/90 backdrop-blur-md">
             <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-3">
-              <div className="flex items-center">
-                <div
-                  className={`font-semibold tracking-[0.18em] text-sm md:text-base uppercase ${outfit.className} text-emerald-300`}
-                >
-                  protocol<span className="text-emerald-500">LM</span>
-                </div>
+              <div
+                className={`font-semibold tracking-[0.18em] text-sm md:text-base uppercase ${outfit.className} text-sky-100`}
+              >
+                protocol<span className="text-sky-300">LM</span>
               </div>
 
               <div className="flex items-center gap-4">
@@ -903,13 +902,13 @@ export default function Page() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className={`text-xs md:text-sm font-semibold text-emerald-400 hover:text-emerald-200 transition-colors ${inter.className}`}
+                      className={`text-xs md:text-sm font-semibold text-sky-200 hover:text-white transition-colors ${inter.className}`}
                     >
                       Sign in
                     </button>
                     <button
                       onClick={() => setShowPricingModal(true)}
-                      className={`inline-flex items-center gap-2 btn-press bg-emerald-500 text-black hover:bg-emerald-400 px-3 py-2 rounded-sm text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] shadow-sm transition-colors border border-emerald-300 ${inter.className}`}
+                      className={`inline-flex items-center gap-2 btn-press bg-gradient-to-b from-emerald-200 via-emerald-300 to-emerald-500 text-slate-900 hover:from-emerald-100 hover:via-emerald-200 hover:to-emerald-400 px-3 py-2 rounded-full text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] shadow-[0_12px_30px_rgba(6,95,70,0.9)] border border-white/60 ${inter.className}`}
                     >
                       <Icons.Check />
                       Sign up
@@ -920,7 +919,7 @@ export default function Page() {
                     {canUseApp && (
                       <button
                         onClick={handleNewChat}
-                        className="p-2 rounded-sm text-emerald-400 hover:text-emerald-200 hover:bg-emerald-900/40 transition-colors border border-transparent hover:border-emerald-700"
+                        className="p-2 rounded-full text-sky-100 hover:text-white hover:bg-sky-900/60 transition-colors border border-sky-500/40 bg-slate-950/60"
                       >
                         <Icons.Plus />
                       </button>
@@ -928,22 +927,22 @@ export default function Page() {
                     <div className="relative" ref={userMenuRef}>
                       <button
                         onClick={() => setShowUserMenu(!showUserMenu)}
-                        className="w-8 h-8 rounded-sm border flex items-center justify-center text-xs font-bold bg-emerald-900/40 border-emerald-700 text-emerald-200"
+                        className="w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold bg-slate-950/80 border-sky-500/50 text-sky-100"
                       >
                         {session.user.email[0].toUpperCase()}
                       </button>
                       {showUserMenu && (
-                        <div className="absolute top-full right-0 mt-2 w-52 bg-black border border-emerald-900/80 rounded-sm shadow-xl overflow-hidden z-50 p-1 text-xs">
+                        <div className="absolute top-full right-0 mt-2 w-52 bg-slate-950/95 border border-sky-500/40 rounded-xl shadow-2xl overflow-hidden z-50 p-1 text-xs backdrop-blur-xl">
                           <button
                             onClick={() => setShowPricingModal(true)}
-                            className="w-full px-3 py-2 text-left text-emerald-300 hover:text-emerald-100 hover:bg-emerald-900/40 flex items-center gap-2 rounded-sm transition-colors"
+                            className="w-full px-3 py-2 text-left text-sky-100 hover:text-white hover:bg-sky-900/60 flex items-center gap-2 rounded-lg transition-colors"
                           >
                             <Icons.Settings /> Subscription
                           </button>
-                          <div className="h-px bg-emerald-900 my-1" />
+                          <div className="h-px bg-sky-500/40 my-1" />
                           <button
                             onClick={handleSignOut}
-                            className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-950 flex items-center gap-2 rounded-sm transition-colors"
+                            className="w-full px-3 py-2 text-left text-red-300 hover:bg-red-950/70 flex items-center gap-2 rounded-lg transition-colors"
                           >
                             <Icons.LogOut /> Log out
                           </button>
@@ -956,32 +955,33 @@ export default function Page() {
             </div>
           </header>
 
-          <main className="flex-1 flex flex-col items-center justify-start w-full">
+          <main className="flex-1 flex flex-col items-center w-full">
             {!canUseApp ? (
               <LandingPage
                 onShowPricing={() => setShowPricingModal(true)}
                 onOpenAuth={() => setShowAuthModal(true)}
               />
             ) : (
-              <>
-                {/* messages area */}
-                <div
-                  className="flex-1 overflow-y-auto w-full py-4 bg-[#020617]"
-                  ref={scrollRef}
-                >
-                  {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                      <p
-                        className={`text-emerald-500/80 text-sm md:text-base max-w-md leading-relaxed ${inter.className}`}
-                      >
-                        Ask about Michigan Food Code sections, past Washtenaw enforcement, or
-                        upload a photo of your walk-in, prep line, or dish area to check for
-                        issues before inspection.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col w-full max-w-4xl mx-auto py-4 px-4 gap-4">
-                      {messages.map((msg, idx) => (
+              // CHAT VIEW
+              <div className="flex-1 w-full flex justify-center">
+                <div className="flex-1 max-w-4xl flex flex-col px-4 pt-4 pb-5 md:px-6">
+                  {/* Messages area */}
+                  <div
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-auto rounded-2xl bg-slate-950/50 border border-white/10 backdrop-blur-xl px-3 md:px-4 py-4 space-y-4"
+                  >
+                    {messages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                        <p
+                          className={`text-sky-100 text-sm md:text-base max-w-md leading-relaxed ${inter.className}`}
+                        >
+                          Ask about Michigan Food Code sections, past Washtenaw enforcement, or
+                          upload a photo of your walk-in, prep line, or dish area to check for
+                          issues before inspection.
+                        </p>
+                      </div>
+                    ) : (
+                      messages.map((msg, idx) => (
                         <div
                           key={idx}
                           className={`w-full flex ${
@@ -989,17 +989,17 @@ export default function Page() {
                           }`}
                         >
                           <div
-                            className={`max-w-[90%] px-3 py-2 rounded-sm border text-sm md:text-base leading-relaxed whitespace-pre-wrap ${
+                            className={`max-w-[92%] px-3 py-2.5 rounded-2xl border text-sm md:text-base leading-relaxed whitespace-pre-wrap shadow-[0_10px_25px_rgba(15,23,42,0.85)] ${
                               msg.role === 'user'
-                                ? 'border-amber-400/70 bg-black/70 text-amber-100'
-                                : 'border-emerald-700 bg-black/60 text-emerald-100'
+                                ? 'border-amber-300/70 bg-amber-100/15 text-amber-50'
+                                : 'border-sky-300/60 bg-sky-100/10 text-sky-50'
                             }`}
                           >
                             {msg.image && (
                               <img
                                 src={msg.image}
                                 alt="Upload"
-                                className="rounded-sm mb-3 max-h-72 object-contain border border-emerald-800"
+                                className="rounded-xl mb-3 max-h-72 object-contain border border-white/20"
                               />
                             )}
                             {msg.role === 'assistant' &&
@@ -1007,13 +1007,13 @@ export default function Page() {
                             isSending &&
                             idx === messages.length - 1 ? (
                               <div className="flex gap-1">
-                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" />
+                                <div className="w-2 h-2 bg-sky-200 rounded-full animate-bounce" />
                                 <div
-                                  className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
+                                  className="w-2 h-2 bg-sky-200 rounded-full animate-bounce"
                                   style={{ animationDelay: '0.1s' }}
                                 />
                                 <div
-                                  className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
+                                  className="w-2 h-2 bg-sky-200 rounded-full animate-bounce"
                                   style={{ animationDelay: '0.2s' }}
                                 />
                               </div>
@@ -1022,22 +1022,20 @@ export default function Page() {
                             )}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      ))
+                    )}
+                  </div>
 
-                {/* input area */}
-                <div className="w-full shrink-0 z-20 border-t bg-black border-emerald-900/80">
-                  <div className="w-full max-w-4xl mx-auto px-4 pt-3 pb-5">
+                  {/* Input area pinned to bottom of content */}
+                  <div className="mt-3">
                     {selectedImage && (
-                      <div className="mb-3 mx-1 p-2.5 inline-flex items-center gap-3 rounded-sm shadow-sm border bg-black/70 border-emerald-800 text-emerald-200 text-xs">
+                      <div className="mb-2 mx-1 p-2.5 inline-flex items-center gap-3 rounded-full shadow-sm border bg-slate-950/70 border-sky-500/60 text-sky-100 text-xs">
                         <span className="font-semibold tracking-[0.12em] uppercase">
                           Image attached
                         </span>
                         <button
                           onClick={() => setSelectedImage(null)}
-                          className="text-emerald-500 hover:text-emerald-300"
+                          className="text-sky-200 hover:text-white"
                         >
                           <Icons.X />
                         </button>
@@ -1045,9 +1043,9 @@ export default function Page() {
                     )}
                     <div
                       className="
-                        relative flex items-center w-full px-2.5 py-1.5 rounded-sm shadow-sm
-                        border transition-all bg-black/70 border-emerald-800
-                        focus-within:border-emerald-400 focus-within:ring-1 focus-within:ring-emerald-400/60
+                        relative flex items-center w-full px-2.5 py-1.5 rounded-full shadow-[0_16px_40px_rgba(15,23,42,0.9)]
+                        border bg-slate-950/80 border-sky-500/60 backdrop-blur-xl
+                        focus-within:border-sky-200 focus-within:ring-2 focus-within:ring-sky-300/70
                       "
                     >
                       <input
@@ -1060,7 +1058,7 @@ export default function Page() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                        className="w-8 h-8 flex items-center justify-center rounded-sm mr-2 bg-emerald-900/40 text-emerald-300 hover:bg-emerald-800/80 transition-all border border-emerald-700"
+                        className="w-9 h-9 flex items-center justify-center rounded-full mr-2 bg-sky-500/20 text-sky-100 hover:bg-sky-400/40 transition-all border border-sky-300/60"
                       >
                         <Icons.Camera />
                       </button>
@@ -1075,35 +1073,35 @@ export default function Page() {
                           }
                         }}
                         placeholder="Ask about code sections, enforcement history, or attach a photo of your line or walk-in."
-                        className={`flex-1 max-h-[140px] min-h-[38px] py-1.5 px-2 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-sm md:text-base leading-relaxed ${inter.className} text-emerald-100 placeholder-emerald-600`}
+                        className={`flex-1 max-h-[140px] min-h-[38px] py-1.5 px-2 bg-transparent border-none focus:ring-0 focus:outline-none appearance-none resize-none text-sm md:text-base leading-relaxed ${inter.className} text-sky-50 placeholder-sky-400`}
                         rows={1}
                       />
                       <button
                         type="submit"
                         onClick={handleSend}
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`w-8 h-8 rounded-sm flex items-center justify-center flex-shrink-0 ml-2 transition-all duration-200 border ${
+                        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ml-2 transition-all duration-200 border ${
                           !input.trim() && !selectedImage
-                            ? 'bg-emerald-900/40 text-emerald-700 border-emerald-900 cursor-not-allowed'
-                            : 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-md border-emerald-300'
+                            ? 'bg-slate-900/70 text-sky-600 border-slate-800 cursor-not-allowed'
+                            : 'bg-gradient-to-b from-emerald-200 via-emerald-300 to-emerald-500 text-slate-900 hover:from-emerald-100 hover:via-emerald-200 hover:to-emerald-400 shadow-[0_10px_26px_rgba(6,95,70,0.9)] border-white/70'
                         }`}
                       >
                         {isSending ? (
-                          <div className="w-4 h-4 border-2 border-black/40 border-t-black rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-slate-900/40 border-t-slate-900 rounded-full animate-spin" />
                         ) : (
                           <Icons.ArrowUp />
                         )}
                       </button>
                     </div>
                     <p
-                      className={`mt-2.5 text-[11px] text-center text-emerald-500/80 ${inter.className}`}
+                      className={`mt-2 text-[11px] text-center text-sky-200/80 ${inter.className}`}
                     >
                       protocolLM uses AI and may make mistakes. Always confirm critical food
                       safety decisions with official regulations and your local health department.
                     </p>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </main>
         </div>
