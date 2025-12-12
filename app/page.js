@@ -57,92 +57,126 @@ const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
+
+  // Retro/N64-ish icons for the landing cards (inline SVG; no new deps)
+  RetroCamera: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+      <path d="M7 7h2l1-2h4l1 2h2a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z" />
+      <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+      <path d="M8 10h.01" />
+    </svg>
+  ),
+  GamePak: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+      <path d="M7 4h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+      <path d="M8 4v4h8V4" />
+      <path d="M9 12h6" />
+      <path d="M9 15h6" />
+    </svg>
+  ),
+  ClipboardCheck: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+      <path d="M9 4h6l1 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l-1-2Z" />
+      <path d="M9 13l2 2 4-5" />
+    </svg>
+  ),
 }
 
 function LandingPage({ onShowPricing }) {
+  const cards = [
+    {
+      title: 'Capture',
+      badge: 'Photo scan',
+      icon: <Icons.RetroCamera />,
+      body: 'Snap a walk-in or line. Get a quick risk scan in seconds.',
+      tint: 'rgba(45, 212, 191, 0.16)',
+      anim: 'card-drift-a',
+      delay: '0.06s',
+    },
+    {
+      title: 'Rulebook',
+      badge: 'Grounded',
+      icon: <Icons.GamePak />,
+      body: 'Ask Michigan Food Code + Washtenaw context. No PDF digging.',
+      tint: 'rgba(59, 130, 246, 0.14)',
+      anim: 'card-drift-b',
+      delay: '0.12s',
+    },
+    {
+      title: 'Checklist',
+      badge: 'Actionable',
+      icon: <Icons.ClipboardCheck />,
+      body: 'Turn flags into a short close/open list your team can run.',
+      tint: 'rgba(168, 85, 247, 0.12)',
+      anim: 'card-drift-c',
+      delay: '0.18s',
+    },
+  ]
+
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
       <div className="max-w-3xl w-full text-center space-y-8">
-        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg border-2 border-teal-400/70 bg-gradient-to-br from-teal-300/40 via-cyan-200/30 to-blue-300/40 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-900">
-          protocolLM · restaurant compliance console
+        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg n64-liquid-panel text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-950/90">
+          protocolLM · compliance console
         </div>
 
         <div className="space-y-4">
-          <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-900 ${outfit.className}`}>
-            Spot violations before the health inspector.
+          <h1 className={`text-3xl sm:text-4xl md:text-[2.6rem] leading-tight font-semibold text-slate-950 ${outfit.className}`}>
+            Be inspection‑ready.
           </h1>
-          <p className={`text-sm sm:text-base text-slate-600 ${inter.className}`}>
-            Built for GMs and owners who want fewer surprises on inspection day.
-            Ask about Michigan Food Code sections, past Washtenaw enforcement, or
-            upload a photo of your walk-in or line to scan for likely issues.
+          <p className={`text-sm sm:text-base text-slate-700 ${inter.className}`}>
+            Ask the Michigan Food Code. Scan photos for likely violations. Washtenaw-first.
           </p>
-          <p className={`text-xs text-slate-500 ${inter.className}`}>
-            Focused on <span className="font-medium text-slate-700">Washtenaw County</span>{' '}
-            today. Wayne and Oakland County support planned for 2026.
+          <p className={`text-xs text-slate-600 ${inter.className}`}>
+            Washtenaw County today · Wayne + Oakland planned for 2026.
           </p>
         </div>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-          <div
-            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
-            style={{ animationDelay: '0.1s' }}
-          >
-            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
-              <span>Capture</span>
-              <span className="text-teal-600 pulse-ring">Online</span>
+          {cards.map((c) => (
+            <div
+              key={c.title}
+              className={`rounded-2xl n64-liquid-card p-4 hover-lift transition-all animate-slide-up ${c.anim}`}
+              style={{
+                animationDelay: c.delay,
+                // custom tint per card for “translucent plastic” vibe
+                ['--glass-tint']: c.tint,
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="inline-flex items-center gap-2">
+                  <div className="retro-icon-chip">{c.icon}</div>
+                  <span className="text-[11px] font-semibold tracking-[0.18em] uppercase text-slate-900">{c.title}</span>
+                </div>
+                <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-teal-800/90 n64-pill">
+                  {c.badge}
+                </span>
+              </div>
+
+              <p className={`text-xs text-slate-700/90 leading-relaxed ${inter.className}`}>{c.body}</p>
             </div>
-            <p className={`text-xs text-slate-700 leading-relaxed ${inter.className}`}>
-              Snap your walk-in, prep line, or dish area. protocolLM turns photos into a
-              quick risk scan using local rules instead of guesswork.
-            </p>
-          </div>
-          <div
-            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
-            style={{ animationDelay: '0.2s' }}
-          >
-            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
-              <span>Rulebook</span>
-              <span className="text-teal-600 pulse-ring">Synced</span>
-            </div>
-            <p className={`text-xs text-slate-700 leading-relaxed ${inter.className}`}>
-              Answers pull from the Michigan Food Code and Washtenaw enforcement
-              history, so your team doesn&apos;t have to dig through PDFs.
-            </p>
-          </div>
-          <div
-            className="rounded-2xl border-2 border-teal-300/60 bg-gradient-to-br from-teal-200/30 via-cyan-100/25 to-blue-200/30 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-4 hover-lift transition-all animate-slide-up"
-            style={{ animationDelay: '0.3s' }}
-          >
-            <div className="flex items-center justify-between text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 mb-3">
-              <span>Checklist</span>
-              <span className="text-teal-600 pulse-ring">Ready</span>
-            </div>
-            <p className={`text-xs text-slate-700 leading-relaxed ${inter.className}`}>
-              Turn flagged risks into a short action list your closers or AM can knock
-              out before the inspector walks in.
-            </p>
-          </div>
+          ))}
         </div>
 
         <button
           onClick={onShowPricing}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white text-xs font-semibold tracking-[0.2em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.3),inset_0_1px_2px_rgba(255,255,255,0.5)] hover-lift button-press relative overflow-hidden group transition-all animate-float"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg n64-liquid-cta text-white text-xs font-semibold tracking-[0.2em] uppercase hover-lift button-press relative overflow-hidden group transition-all animate-float"
         >
           <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
           <Icons.Check />
-          <span className="relative">Sign up · Compliance access</span>
+          <span className="relative">Start trial</span>
         </button>
 
-        <footer className="pt-4 text-xs text-slate-500">
-          <p className={`mb-2 ${inter.className}`}>Serving Washtenaw County food service establishments.</p>
+        <footer className="pt-4 text-xs text-slate-600">
+          <p className={`mb-2 ${inter.className}`}>Built for Washtenaw County food service establishments.</p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/terms" className="hover:text-slate-800">
+            <Link href="/terms" className="hover:text-slate-900">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-slate-800">
+            <Link href="/privacy" className="hover:text-slate-900">
               Privacy
             </Link>
-            <Link href="/contact" className="hover:text-slate-800">
+            <Link href="/contact" className="hover:text-slate-900">
               Contact
             </Link>
           </div>
@@ -228,51 +262,42 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl border-2 border-teal-300/70 bg-gradient-to-br from-teal-100/60 via-cyan-50/50 to-blue-100/60 backdrop-blur-xl shadow-[0_8px_24px_rgba(20,184,166,0.2),inset_0_1px_2px_rgba(255,255,255,0.7)] p-7"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl n64-liquid-panel-strong p-7" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h2 className={`text-lg font-semibold text-slate-900 tracking-tight mb-1 ${outfit.className}`}>
+            <h2 className={`text-lg font-semibold text-slate-950 tracking-tight mb-1 ${outfit.className}`}>
               {mode === 'signin' && 'Sign in to protocolLM'}
               {mode === 'signup' && 'Create your account'}
               {mode === 'reset' && 'Reset your password'}
             </h2>
-            <p className={`text-xs text-slate-600 ${inter.className}`}>
+            <p className={`text-xs text-slate-700 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 border-2 border-slate-300/60 bg-gradient-to-br from-slate-100/70 via-slate-50/60 to-slate-200/70 backdrop-blur-sm text-slate-600 hover:border-slate-400/70 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]"
-          >
+          <button onClick={onClose} className="rounded-lg p-1.5 n64-liquid-chip text-slate-700 hover:text-slate-950">
             <Icons.X />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-2">Email address</label>
+            <label className="block text-xs font-semibold text-slate-800 mb-2">Email address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="gm@restaurant.com"
               required
-              className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-white/80 backdrop-blur-sm px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+              className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/85 via-slate-50/75 to-white/85 backdrop-blur-sm px-3.5 py-2.5 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
             />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">Password</label>
+              <label className="block text-xs font-semibold text-slate-800 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -280,12 +305,12 @@ function AuthModal({ isOpen, onClose }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-white/80 backdrop-blur-sm px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
+                  className="w-full rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-white/85 via-slate-50/75 to-white/85 backdrop-blur-sm px-3.5 py-2.5 pr-10 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -296,7 +321,7 @@ function AuthModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={loading || !isLoaded}
-            className="w-full mt-2 inline-flex items-center justify-center rounded-lg border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.35),inset_0_1px_2px_rgba(255,255,255,0.5)] hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
+            className="w-full mt-2 inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden group"
           >
             <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
             <span className="relative">
@@ -317,24 +342,24 @@ function AuthModal({ isOpen, onClose }) {
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-slate-600">
+        <div className="mt-4 text-center space-y-1 text-xs text-slate-700">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-teal-700 hover:text-teal-800">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-teal-700 hover:text-teal-900">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-slate-600 hover:text-slate-800">
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-slate-700 hover:text-slate-950">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-slate-600 hover:text-slate-800">
+            <button type="button" onClick={() => setMode('signin')} className="text-slate-700 hover:text-slate-950">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-slate-600 hover:text-slate-800">
+            <button type="button" onClick={() => setMode('signin')} className="text-slate-700 hover:text-slate-950">
               Back to sign in
             </button>
           )}
@@ -351,36 +376,30 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="fixed inset-0 z-[900] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-2xl border-2 border-teal-300/80 bg-gradient-to-br from-teal-100/70 via-cyan-50/60 to-blue-100/70 backdrop-blur-xl shadow-[0_8px_24px_rgba(20,184,166,0.25),inset_0_1px_2px_rgba(255,255,255,0.7)] p-7 relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute right-7 top-7 rounded-lg border-2 border-slate-300/60 bg-gradient-to-br from-slate-100/70 via-slate-50/60 to-slate-200/70 backdrop-blur-sm text-slate-600 hover:border-slate-400/70 p-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]"
-        >
+      <div className="w-full max-w-lg rounded-2xl n64-liquid-panel-strong p-7 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute right-7 top-7 rounded-lg p-1.5 n64-liquid-chip text-slate-700 hover:text-slate-950">
           <Icons.X />
         </button>
 
         <div className="mb-6 text-center">
-          <p className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-800 mb-2 ${outfit.className}`}>protocolLM</p>
-          <h3 className={`text-xl font-semibold text-slate-900 mb-1 tracking-tight ${outfit.className}`}>Compliance access</h3>
-          <p className={`text-sm text-slate-600 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
+          <p className={`text-[11px] font-semibold tracking-[0.24em] uppercase text-teal-900/90 mb-2 ${outfit.className}`}>protocolLM</p>
+          <h3 className={`text-xl font-semibold text-slate-950 mb-1 tracking-tight ${outfit.className}`}>Compliance access</h3>
+          <p className={`text-sm text-slate-700 ${inter.className}`}>One site license per restaurant. 7-day free trial included.</p>
         </div>
 
-        <div className="rounded-2xl border-2 border-teal-300/70 bg-gradient-to-br from-white/70 via-slate-50/60 to-cyan-50/70 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] p-5 space-y-4">
+        <div className="rounded-2xl n64-liquid-card p-5 space-y-4">
           <div>
             <div className="flex items-baseline gap-2 mb-2">
-              <span className={`text-3xl font-semibold text-slate-900 tracking-tight ${outfit.className}`}>$100</span>
-              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">/ month</span>
+              <span className={`text-3xl font-semibold text-slate-950 tracking-tight ${outfit.className}`}>$100</span>
+              <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-600">/ month</span>
             </div>
-            <p className={`text-xs text-slate-600 ${inter.className}`}>
-              Includes roughly <span className="font-semibold text-slate-800">1,300 monthly checks</span> for a single restaurant. Text questions count as one
+            <p className={`text-xs text-slate-700 ${inter.className}`}>
+              Includes roughly <span className="font-semibold text-slate-900">1,300 monthly checks</span> for a single restaurant. Text questions count as one
               check; photo analyses count as two.
             </p>
           </div>
 
-          <ul className="text-xs text-slate-700 space-y-2">
+          <ul className="text-xs text-slate-800 space-y-2">
             <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Text questions and photo uploads</span>
@@ -403,7 +422,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="w-full inline-flex items-center justify-center rounded-lg border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.4),inset_0_1px_2px_rgba(255,255,255,0.5)] hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
+              className="w-full inline-flex items-center justify-center rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase py-3 hover-lift button-press disabled:opacity-60 relative overflow-hidden group"
             >
               <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
               <span className="relative">{loading === 'monthly' ? 'Processing…' : 'Start monthly trial'}</span>
@@ -411,7 +430,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="w-full inline-flex items-center justify-center rounded-lg border-2 border-dashed border-teal-400/70 bg-gradient-to-br from-white/70 via-cyan-50/60 to-teal-50/70 backdrop-blur-sm text-[11px] font-semibold tracking-[0.22em] uppercase text-teal-800 py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.2),inset_0_1px_2px_rgba(255,255,255,0.6)] hover-lift button-press disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center rounded-lg border-2 border-dashed border-teal-400/70 bg-gradient-to-br from-white/70 via-cyan-50/60 to-teal-50/70 backdrop-blur-sm text-[11px] font-semibold tracking-[0.22em] uppercase text-teal-900 py-3 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.18),inset_0_1px_2px_rgba(255,255,255,0.7)] hover-lift button-press disabled:opacity-60"
             >
               {loading === 'annual' ? 'Processing…' : 'Yearly · save 15%'}
             </button>
@@ -751,18 +770,21 @@ export default function Page() {
           position: relative;
         }
 
-        /* Premium-retro background: subtle pixel grid + liquid glass sheen (serious, not clowny) */
+        /* Premium-retro background: translucent plastic + liquid sheen (kept subtle) */
         body.n64-glass-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background-image:
-            radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.55), transparent 35%),
-            radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.35), transparent 40%),
+            radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.6), transparent 38%),
+            radial-gradient(circle at 78% 12%, rgba(255, 255, 255, 0.35), transparent 44%),
+            radial-gradient(circle at 22% 70%, rgba(45, 212, 191, 0.12), transparent 46%),
+            radial-gradient(circle at 84% 68%, rgba(59, 130, 246, 0.1), transparent 52%),
             linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(20, 184, 166, 0.06), rgba(59, 130, 246, 0.06));
           mix-blend-mode: soft-light;
-          opacity: 0.9;
+          opacity: 0.95;
+          filter: saturate(1.05);
         }
 
         body.n64-glass-bg::after {
@@ -774,29 +796,77 @@ export default function Page() {
           background-image:
             linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
-            radial-gradient(rgba(15, 23, 42, 0.06) 0.5px, transparent 0.6px);
+            radial-gradient(rgba(15, 23, 42, 0.06) 0.55px, transparent 0.65px);
           background-size: 26px 26px, 26px 26px, 6px 6px;
-          opacity: 0.18;
+          opacity: 0.16;
         }
 
         /* 64-color palette (N64 energy), used subtly via gradients/borders */
         :root {
-          --n64-0: #0b1020; --n64-1: #0f172a; --n64-2: #111827; --n64-3: #1f2937;
-          --n64-4: #334155; --n64-5: #475569; --n64-6: #64748b; --n64-7: #94a3b8;
-          --n64-8: #e2e8f0; --n64-9: #f8fafc; --n64-10: #0ea5e9; --n64-11: #0284c7;
-          --n64-12: #38bdf8; --n64-13: #22c55e; --n64-14: #16a34a; --n64-15: #86efac;
-          --n64-16: #14b8a6; --n64-17: #0d9488; --n64-18: #2dd4bf; --n64-19: #a7f3d0;
-          --n64-20: #3b82f6; --n64-21: #2563eb; --n64-22: #93c5fd; --n64-23: #1d4ed8;
-          --n64-24: #a855f7; --n64-25: #7c3aed; --n64-26: #c4b5fd; --n64-27: #6d28d9;
-          --n64-28: #f97316; --n64-29: #ea580c; --n64-30: #fdba74; --n64-31: #c2410c;
-          --n64-32: #ef4444; --n64-33: #dc2626; --n64-34: #fecaca; --n64-35: #991b1b;
-          --n64-36: #eab308; --n64-37: #ca8a04; --n64-38: #fde68a; --n64-39: #854d0e;
-          --n64-40: #f59e0b; --n64-41: #d97706; --n64-42: #fed7aa; --n64-43: #92400e;
-          --n64-44: #ec4899; --n64-45: #db2777; --n64-46: #fbcfe8; --n64-47: #9d174d;
-          --n64-48: #06b6d4; --n64-49: #0891b2; --n64-50: #a5f3fc; --n64-51: #164e63;
-          --n64-52: #10b981; --n64-53: #059669; --n64-54: #bbf7d0; --n64-55: #064e3b;
-          --n64-56: #8b5cf6; --n64-57: #6366f1; --n64-58: #60a5fa; --n64-59: #34d399;
-          --n64-60: #f472b6; --n64-61: #fb7185; --n64-62: #fdba74; --n64-63: #fde047;
+          --n64-0: #0b1020;
+          --n64-1: #0f172a;
+          --n64-2: #111827;
+          --n64-3: #1f2937;
+          --n64-4: #334155;
+          --n64-5: #475569;
+          --n64-6: #64748b;
+          --n64-7: #94a3b8;
+          --n64-8: #e2e8f0;
+          --n64-9: #f8fafc;
+          --n64-10: #0ea5e9;
+          --n64-11: #0284c7;
+          --n64-12: #38bdf8;
+          --n64-13: #22c55e;
+          --n64-14: #16a34a;
+          --n64-15: #86efac;
+          --n64-16: #14b8a6;
+          --n64-17: #0d9488;
+          --n64-18: #2dd4bf;
+          --n64-19: #a7f3d0;
+          --n64-20: #3b82f6;
+          --n64-21: #2563eb;
+          --n64-22: #93c5fd;
+          --n64-23: #1d4ed8;
+          --n64-24: #a855f7;
+          --n64-25: #7c3aed;
+          --n64-26: #c4b5fd;
+          --n64-27: #6d28d9;
+          --n64-28: #f97316;
+          --n64-29: #ea580c;
+          --n64-30: #fdba74;
+          --n64-31: #c2410c;
+          --n64-32: #ef4444;
+          --n64-33: #dc2626;
+          --n64-34: #fecaca;
+          --n64-35: #991b1b;
+          --n64-36: #eab308;
+          --n64-37: #ca8a04;
+          --n64-38: #fde68a;
+          --n64-39: #854d0e;
+          --n64-40: #f59e0b;
+          --n64-41: #d97706;
+          --n64-42: #fed7aa;
+          --n64-43: #92400e;
+          --n64-44: #ec4899;
+          --n64-45: #db2777;
+          --n64-46: #fbcfe8;
+          --n64-47: #9d174d;
+          --n64-48: #06b6d4;
+          --n64-49: #0891b2;
+          --n64-50: #a5f3fc;
+          --n64-51: #164e63;
+          --n64-52: #10b981;
+          --n64-53: #059669;
+          --n64-54: #bbf7d0;
+          --n64-55: #064e3b;
+          --n64-56: #8b5cf6;
+          --n64-57: #6366f1;
+          --n64-58: #60a5fa;
+          --n64-59: #34d399;
+          --n64-60: #f472b6;
+          --n64-61: #fb7185;
+          --n64-62: #fdba74;
+          --n64-63: #fde047;
         }
 
         .n64-spectrum-line {
@@ -824,8 +894,8 @@ export default function Page() {
             var(--n64-60),
             var(--n64-63)
           );
-          opacity: 0.65;
-          filter: saturate(1.1);
+          opacity: 0.62;
+          filter: saturate(1.05);
         }
 
         .n64-spectrum-border {
@@ -837,21 +907,196 @@ export default function Page() {
           inset: 0;
           border-radius: inherit;
           padding: 2px;
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.35),
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.25)
-          );
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.28));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
           pointer-events: none;
           opacity: 0.55;
         }
 
+        /* --- “N64 transparent plastic x Apple liquid glass” building blocks --- */
+        .n64-liquid-panel {
+          border: 2px solid rgba(45, 212, 191, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.22)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.7), transparent 42%),
+            radial-gradient(circle at 85% 25%, rgba(45, 212, 191, 0.12), transparent 50%);
+          backdrop-filter: blur(14px) saturate(1.15);
+          -webkit-backdrop-filter: blur(14px) saturate(1.15);
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 24px rgba(15, 23, 42, 0.06);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .n64-liquid-panel::before {
+          content: '';
+          position: absolute;
+          inset: -40% -30%;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.55), transparent 40%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 55%);
+          transform: rotate(12deg);
+          opacity: 0.6;
+          pointer-events: none;
+        }
+
+        .n64-liquid-panel::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          /* tiny dither/noise + faint “chromatic edge” */
+          background-image: radial-gradient(rgba(2, 6, 23, 0.07) 0.6px, transparent 0.7px),
+            linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(168, 85, 247, 0.06));
+          background-size: 7px 7px, 100% 100%;
+          opacity: 0.18;
+          mix-blend-mode: soft-light;
+        }
+
+        .n64-liquid-panel-strong {
+          border: 2px solid rgba(45, 212, 191, 0.6);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28)),
+            radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.75), transparent 42%),
+            radial-gradient(circle at 82% 24%, rgba(59, 130, 246, 0.12), transparent 52%);
+          backdrop-filter: blur(18px) saturate(1.18);
+          -webkit-backdrop-filter: blur(18px) saturate(1.18);
+          box-shadow: 0 16px 44px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.74), inset 0 -10px 30px rgba(15, 23, 42, 0.08);
+          position: relative;
+          overflow: hidden;
+        }
+        .n64-liquid-panel-strong::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: radial-gradient(rgba(2, 6, 23, 0.08) 0.6px, transparent 0.7px);
+          background-size: 7px 7px;
+          opacity: 0.16;
+          mix-blend-mode: soft-light;
+        }
+
+        .n64-liquid-card {
+          --glass-tint: rgba(45, 212, 191, 0.14);
+          border: 2px solid rgba(148, 163, 184, 0.5);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25)),
+            radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.72), transparent 45%),
+            radial-gradient(circle at 88% 30%, var(--glass-tint), transparent 58%);
+          backdrop-filter: blur(16px) saturate(1.12);
+          -webkit-backdrop-filter: blur(16px) saturate(1.12);
+          box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75), inset 0 -10px 26px rgba(15, 23, 42, 0.06);
+          position: relative;
+          overflow: hidden;
+        }
+        .n64-liquid-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(115deg, rgba(255, 255, 255, 0.5), transparent 35%),
+            radial-gradient(circle at 24% 22%, rgba(255, 255, 255, 0.55), transparent 40%);
+          opacity: 0.6;
+        }
+        .n64-liquid-card::after {
+          content: '';
+          position: absolute;
+          inset: -40% -60%;
+          pointer-events: none;
+          background: linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, 0.28) 50%, transparent 60%);
+          transform: rotate(10deg);
+          opacity: 0.0;
+          transition: opacity 250ms ease;
+        }
+        .n64-liquid-card:hover::after {
+          opacity: 0.9;
+          animation: sheenSweep 1.25s ease-in-out;
+        }
+
+        .n64-liquid-chip {
+          border: 2px solid rgba(148, 163, 184, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.35));
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .n64-liquid-cta {
+          border: 2px solid rgba(45, 212, 191, 0.65);
+          background: linear-gradient(135deg, rgba(20, 184, 166, 0.92), rgba(34, 211, 238, 0.72), rgba(20, 184, 166, 0.88));
+          backdrop-filter: blur(10px) saturate(1.1);
+          -webkit-backdrop-filter: blur(10px) saturate(1.1);
+          box-shadow: 0 14px 34px rgba(20, 184, 166, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.45);
+        }
+
+        .n64-pill {
+          border: 1px solid rgba(20, 184, 166, 0.35);
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.45);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
+        }
+
+        .retro-icon-chip {
+          width: 34px;
+          height: 34px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          border: 2px solid rgba(148, 163, 184, 0.55);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.25));
+          box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), inset 0 -8px 18px rgba(15, 23, 42, 0.06);
+          color: rgba(15, 23, 42, 0.85);
+        }
+
+        /* varied subtle card motion (not identical per card) */
+        @keyframes cardDriftA {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+          50% {
+            transform: translate3d(0, -3px, 0);
+          }
+        }
+        @keyframes cardDriftB {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+          50% {
+            transform: translate3d(1px, -2px, 0);
+          }
+        }
+        @keyframes cardDriftC {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+          50% {
+            transform: translate3d(-1px, -3px, 0);
+          }
+        }
+        .card-drift-a {
+          animation: cardDriftA 5.8s ease-in-out infinite;
+        }
+        .card-drift-b {
+          animation: cardDriftB 6.6s ease-in-out infinite;
+        }
+        .card-drift-c {
+          animation: cardDriftC 6.2s ease-in-out infinite;
+        }
+
+        @keyframes sheenSweep {
+          0% {
+            transform: translateX(-18%) rotate(10deg);
+          }
+          100% {
+            transform: translateX(22%) rotate(10deg);
+          }
+        }
+
+        /* scrollbars */
         ::-webkit-scrollbar {
           width: 6px;
         }
@@ -973,16 +1218,31 @@ export default function Page() {
         .pulse-ring {
           animation: ripple 2s ease-out infinite;
         }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float,
+          .pulse-ring,
+          .card-drift-a,
+          .card-drift-b,
+          .card-drift-c,
+          .message-appear,
+          .animate-slide-up,
+          .animate-slide-down,
+          .animate-fade-in,
+          .shimmer-effect {
+            animation: none !important;
+          }
+          .hover-lift,
+          .n64-liquid-card::after {
+            transition: none !important;
+          }
+        }
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       {/* SINGLE viewport container; no nested 100dvh (fixes “not visible on load”) */}
       <div className="h-[100dvh] min-h-0 flex flex-col">
@@ -991,12 +1251,12 @@ export default function Page() {
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
-                className={`px-3 py-1 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-300/50 via-teal-200/40 to-cyan-300/50 backdrop-blur-md shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-800 hover-lift cursor-pointer ${outfit.className}`}
+                className={`px-3 py-1 rounded-lg n64-liquid-panel text-[11px] font-semibold tracking-[0.22em] uppercase text-emerald-900 hover-lift cursor-pointer ${outfit.className}`}
               >
-                protocol<span className="text-emerald-600">LM</span>
+                protocol<span className="text-emerald-700">LM</span>
               </div>
               {hasActiveSubscription && (
-                <span className="hidden sm:inline-flex text-[10px] px-2 py-1 rounded-lg border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-200/50 via-teal-100/40 to-emerald-300/50 backdrop-blur-sm text-emerald-900 font-medium tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] pulse-ring animate-fade-in">
+                <span className="hidden sm:inline-flex text-[10px] px-2 py-1 rounded-lg border-2 border-emerald-400/60 bg-gradient-to-br from-emerald-200/50 via-teal-100/40 to-emerald-300/50 backdrop-blur-sm text-emerald-950 font-medium tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] pulse-ring animate-fade-in">
                   Active · site license
                 </span>
               )}
@@ -1005,12 +1265,12 @@ export default function Page() {
             <div className="flex items-center gap-3">
               {!isAuthenticated ? (
                 <>
-                  <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-slate-700 hover:text-slate-900 ${inter.className}`}>
+                  <button onClick={() => setShowAuthModal(true)} className={`text-xs font-semibold text-slate-700 hover:text-slate-950 ${inter.className}`}>
                     Sign in
                   </button>
                   <button
                     onClick={() => setShowPricingModal(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] hover:shadow-[0_4px_12px_rgba(20,184,166,0.35),inset_0_1px_2px_rgba(255,255,255,0.5)] hover-lift button-press relative overflow-hidden group"
+                    className="inline-flex items-center gap-1.5 rounded-lg n64-liquid-cta text-white text-[11px] font-semibold tracking-[0.22em] uppercase px-4 py-2 hover-lift button-press relative overflow-hidden group"
                   >
                     <span className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></span>
                     <Icons.Check />
@@ -1021,7 +1281,7 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleNewChat}
-                    className="hidden sm:inline-flex items-center justify-center rounded-full border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/50 via-cyan-100/40 to-sky-300/50 backdrop-blur-sm text-slate-800 px-3 py-1.5 text-[11px] font-semibold tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.25),inset_0_1px_2px_rgba(255,255,255,0.6)]"
+                    className="hidden sm:inline-flex items-center justify-center rounded-full border-2 border-sky-300/60 bg-gradient-to-br from-sky-200/50 via-cyan-100/40 to-sky-300/50 backdrop-blur-sm text-slate-800 px-3 py-1.5 text-[11px] font-semibold tracking-[0.16em] uppercase shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)] hover:shadow-[0_8px_20px_rgba(14,165,233,0.22),inset_0_1px_2px_rgba(255,255,255,0.6)]"
                   >
                     <Icons.Plus />
                     New chat
@@ -1082,7 +1342,7 @@ export default function Page() {
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
-                    <p className={`max-w-md text-sm text-slate-600 text-center leading-relaxed ${inter.className}`}>
+                    <p className={`max-w-md text-sm text-slate-700 text-center leading-relaxed ${inter.className}`}>
                       Ask about Michigan Food Code requirements, past Washtenaw enforcement actions, or attach a photo of your walk-in or line to scan for likely
                       violations before inspection.
                     </p>
@@ -1099,7 +1359,7 @@ export default function Page() {
                           className={`n64-spectrum-border max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed hover-lift transition-all ${
                             msg.role === 'user'
                               ? 'border-2 border-teal-400/70 bg-gradient-to-br from-teal-400/80 via-cyan-400/70 to-teal-500/80 backdrop-blur-sm text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)]'
-                              : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-md text-slate-900 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
+                              : 'border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-cyan-50/80 backdrop-blur-md text-slate-950 shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)]'
                           }`}
                         >
                           {msg.image && (
@@ -1133,7 +1393,7 @@ export default function Page() {
                       <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="text-slate-600 hover:text-slate-900 transition-colors hover:rotate-90 transition-transform duration-200"
+                        className="text-slate-600 hover:text-slate-950 transition-colors hover:rotate-90 transition-transform duration-200"
                       >
                         <Icons.X />
                       </button>
@@ -1152,9 +1412,9 @@ export default function Page() {
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask about code sections, enforcement history, or attach a photo of your line or walk-in."
+                        placeholder="Ask a code question or attach a photo."
                         rows={1}
-                        className={`flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-white/80 backdrop-blur-sm px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 ${inter.className}`}
+                        className={`flex-1 max-h-32 min-h-[40px] resize-none rounded-2xl border-2 border-slate-300/60 bg-gradient-to-br from-white/80 via-slate-50/70 to-white/80 backdrop-blur-sm px-3.5 py-2 text-sm text-slate-950 placeholder-slate-400 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1175,7 +1435,7 @@ export default function Page() {
                       </button>
                     </form>
                   </div>
-                  <p className={`mt-2 text-[10px] text-center text-slate-500 ${inter.className}`}>
+                  <p className={`mt-2 text-[10px] text-center text-slate-600 ${inter.className}`}>
                     protocolLM uses AI and may make mistakes. Always confirm critical food safety decisions with official regulations and your local health department.
                   </p>
                 </div>
