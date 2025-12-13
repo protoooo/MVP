@@ -57,22 +57,16 @@ const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
-  Shield: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
-      <path d="M9 12l2 2 4-5" />
-    </svg>
-  ),
   Lock: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
   ),
-  Spark: () => (
+  Shield: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
-      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
+      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
+      <path d="M9 12l2 2 4-5" />
     </svg>
   ),
   Chevron: ({ open }) => (
@@ -94,20 +88,28 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   const faqs = useMemo(
     () => [
       {
-        q: 'Is this built specifically for Washtenaw County?',
-        a: 'Yes. Responses are grounded in Michigan Food Code + local Washtenaw materials you’d normally have to hunt down.',
+        q: 'What does the photo scan actually return?',
+        a: 'A short, checkable list of likely violations to verify from your photo—built for speed during a shift.',
       },
       {
-        q: 'What does a “photo risk scan” return?',
-        a: 'A short list of likely compliance risks to verify (not a novel). It’s designed to be checked quickly during a shift.',
+        q: 'What’s in the “rulebook” behind the answers?',
+        a: 'Washtenaw enforcement guidance plus Michigan Modified Food Code and FDA Food Code references—so your team isn’t guessing.',
       },
       {
-        q: 'How should my team use it day-to-day?',
-        a: 'Use it during opening checks, pre-rush line checks, and closing—plus anytime a new hire asks the same compliance question.',
+        q: 'Will my staff need training to use it?',
+        a: 'No. It’s built for plain language. If someone can text a question, they can use it.',
       },
       {
-        q: 'Does it replace the health inspector or my SOPs?',
-        a: 'No. It helps you catch issues earlier and keeps answers consistent. You still confirm critical decisions with official guidance.',
+        q: 'Can multiple people use it at one location?',
+        a: 'Yes—one site license per restaurant. Owners and managers can share access with their team.',
+      },
+      {
+        q: 'What kinds of photos work best?',
+        a: 'Walk-ins, prep tables, hot-hold/cold-hold setups, storage shelves, sanitizer stations—anything you’d want to sanity-check before an inspection.',
+      },
+      {
+        q: 'Does this replace the health inspector?',
+        a: 'No. It helps you catch issues earlier and stay consistent. You still confirm critical decisions with official guidance.',
       },
     ],
     []
@@ -120,80 +122,37 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16">
         {/* HERO */}
         <section className="ui-shell ui-sheen p-7 sm:p-9">
-          <div className="ui-kickers">
-            <span className={`ui-kicker ${inter.className}`}>
-              <Icons.Shield /> Compliance Console
-            </span>
-            <span className={`ui-kicker-muted ${inter.className}`}>for Washtenaw County restaurant operators</span>
-          </div>
+          <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
-          <h1 className={`ui-title ${outfit.className}`}>Inspection-ready workflows. Calm UI. Clear outputs.</h1>
-
-          <p className={`ui-subtitle ${inter.className}`}>
-            Ask a question, scan a photo, get a short list of what to verify, then turn it into a close/open checklist your lead can run.
+          <p className={`ui-subtitle ${inter.className}`} style={{ marginTop: 6 }}>
+            Catch violations before the health inspector.
           </p>
 
-          <div className="ui-cta-row">
-            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-              Start trial
-            </button>
-            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-              Sign in
-            </button>
-          </div>
+          <p className={`ui-hero-body ${inter.className}`}>
+            Upload a photo for a fast compliance scan, or use document chat to get grounded answers from Washtenaw enforcement guidance and the food codes your
+            team actually needs.
+          </p>
 
-          <div className={`ui-trust ${inter.className}`}>
-            <span className="ui-trust-item">
-              <Icons.Lock /> Secure by design
-            </span>
-            <span className="ui-dot" />
-            <span className="ui-trust-item">
-              <Icons.Spark /> No fluff outputs
-            </span>
-            <span className="ui-dot" />
-            <span className="ui-trust-item">
-              <Icons.Shield /> Built for audits
-            </span>
-          </div>
-        </section>
-
-        {/* CAPABILITIES */}
-        <section className="mt-8">
-          <div className="ui-capgrid">
-            <div className="ui-capcard ui-sheen">
-              <div className="ui-caphead">
-                <span className="ui-capicon">
-                  <Icons.Camera />
-                </span>
-                <div>
-                  <div className={`ui-captitle ${inter.className}`}>Photo risk scan</div>
-                  <div className={`ui-capbody ${inter.className}`}>Upload a walk-in / line photo → get a tight verify list.</div>
-                </div>
-              </div>
+          <div className="ui-hero-bottom">
+            <div className="ui-cta-row">
+              <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+                Start trial
+              </button>
+              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+                Sign in
+              </button>
             </div>
 
-            <div className="ui-capcard ui-sheen">
-              <div className="ui-caphead">
-                <span className="ui-capicon">
-                  <Icons.Spark />
-                </span>
-                <div>
-                  <div className={`ui-captitle ${inter.className}`}>Grounded answers</div>
-                  <div className={`ui-capbody ${inter.className}`}>Plain language questions → rulebook-backed guidance.</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="ui-capcard ui-sheen">
-              <div className="ui-caphead">
-                <span className="ui-capicon">
-                  <Icons.Check />
-                </span>
-                <div>
-                  <div className={`ui-captitle ${inter.className}`}>Action checklist</div>
-                  <div className={`ui-capbody ${inter.className}`}>Convert risks into a short close/open list.</div>
-                </div>
-              </div>
+            <div className={`ui-trust ${inter.className}`}>
+              <span className="ui-trust-item">
+                <Icons.Lock /> Secure by design
+              </span>
+              <span className="ui-trust-item">
+                <Icons.Shield /> Washtenaw-grounded
+              </span>
+              <span className="ui-trust-item">
+                <Icons.Check /> 7-day trial
+              </span>
             </div>
           </div>
         </section>
@@ -202,33 +161,37 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <section className="mt-10 ui-workgrid">
           <div className="ui-workleft">
             <div className={`ui-sectioneyebrow ${inter.className}`}>WORKFLOW</div>
-            <h2 className={`ui-h2 ${outfit.className}`}>A black-card vibe for real ops.</h2>
+            <h2 className={`ui-h2 ${outfit.className}`}>Use it in three steps.</h2>
             <p className={`ui-p ${inter.className}`}>
-              The point is speed + consistency: scan or ask, verify the list, then log actions as a checklist.
+              Built for owner-operators, GMs, and shift leads—so you can verify fast, fix issues early, and walk into inspections calm.
             </p>
 
             <div className="ui-steps">
               <div className="ui-step ui-sheen">
                 <div className={`ui-stepnum ${inter.className}`}>01</div>
                 <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Scan or ask</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Photo scan for risks, or ask a question in plain language.</div>
+                  <div className={`ui-steptitle ${inter.className}`}>Photo compliance scan</div>
+                  <div className={`ui-stepbody ${inter.className}`}>Take a picture. Catch likely violations before they become write-ups.</div>
                 </div>
               </div>
 
               <div className="ui-step ui-sheen">
                 <div className={`ui-stepnum ${inter.className}`}>02</div>
                 <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Verify the list</div>
-                  <div className={`ui-stepbody ${inter.className}`}>You get a short list of likely issues—tight, not chatty.</div>
+                  <div className={`ui-steptitle ${inter.className}`}>Document-backed answers</div>
+                  <div className={`ui-stepbody ${inter.className}`}>
+                    Ask questions and get grounded guidance from Washtenaw enforcement actions, Michigan Modified Food Code, and FDA Food Code references.
+                  </div>
                 </div>
               </div>
 
               <div className="ui-step ui-sheen">
                 <div className={`ui-stepnum ${inter.className}`}>03</div>
                 <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Turn it into actions</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Convert the important items into a close/open checklist.</div>
+                  <div className={`ui-steptitle ${inter.className}`}>Stay inspection-ready</div>
+                  <div className={`ui-stepbody ${inter.className}`}>
+                    Know what to fix, what to verify, and what to document—without digging through binders mid-shift.
+                  </div>
                 </div>
               </div>
             </div>
@@ -238,7 +201,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <div className={`ui-cardtag ${inter.className}`}>INCLUDED</div>
             <ul className={`ui-included ${inter.className}`}>
               <li>
-                <Icons.Check /> Text + photo checks
+                <Icons.Check /> Photo + document chat
               </li>
               <li>
                 <Icons.Check /> One site license per restaurant
@@ -265,7 +228,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         {/* FAQ */}
         <section className="mt-12">
           <div className={`ui-sectioneyebrow ${inter.className}`}>FAQ</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
+          <h2 className={`ui-h2 ${outfit.className}`}>Real questions. Real answers.</h2>
 
           <div className="ui-faqwrap">
             {faqs.map((item, idx) => {
@@ -283,7 +246,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                     </span>
                   </button>
 
-                  <div className="ui-faqpanel" style={{ maxHeight: open ? 240 : 0 }}>
+                  <div className="ui-faqpanel" style={{ maxHeight: open ? 260 : 0 }}>
                     <div className={`ui-faqqa ${inter.className}`}>{item.a}</div>
                   </div>
                 </div>
@@ -295,9 +258,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         {/* FINAL CTA */}
         <section className="mt-12 ui-shell ui-sheen p-7 sm:p-9">
           <div className={`ui-sectioneyebrow ${inter.className}`}>READY</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Run a scan. Verify. Close clean.</h2>
+          <h2 className={`ui-h2 ${outfit.className}`}>Run one scan tonight.</h2>
           <p className={`ui-p ${inter.className}`}>
-            Start a trial, run one real scan in your walk-in, then keep the checklist on a manager clipboard.
+            Start a trial, run a real photo scan in your walk-in, and use the answer as a checklist for your next close/open.
           </p>
           <div className="ui-cta-row mt-5">
             <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
@@ -526,7 +489,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
               <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as
+                two.
               </p>
             </div>
 
@@ -541,11 +505,11 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           <ul className="text-xs text-white/70 space-y-2">
             <li className="flex items-start gap-2">
               <Icons.Check />
-              <span>Text + photo compliance checks</span>
+              <span>Photo + document chat</span>
             </li>
             <li className="flex items-start gap-2">
               <Icons.Check />
-              <span>Grounded in Michigan Food Code &amp; Washtenaw guidance</span>
+              <span>Grounded in Washtenaw guidance + food codes</span>
             </li>
             <li className="flex items-start gap-2">
               <Icons.Check />
@@ -899,20 +863,17 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Background layer (no body pseudo-elements -> avoids “dark film” bugs) */
         .ui-bg {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: 0;
-          background:
-            radial-gradient(1100px 600px at 50% -10%, rgba(255, 255, 255, 0.10), transparent 55%),
+          background: radial-gradient(1100px 600px at 50% -10%, rgba(255, 255, 255, 0.1), transparent 55%),
             radial-gradient(900px 560px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
             radial-gradient(900px 560px at 86% 14%, rgba(120, 90, 255, 0.06), transparent 60%),
             radial-gradient(900px 700px at 50% 100%, rgba(255, 255, 255, 0.04), transparent 60%),
             linear-gradient(135deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
           background-size: auto, auto, auto, auto, 14px 14px;
-          opacity: 1;
         }
 
         .ui-vignette {
@@ -940,7 +901,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           background: rgba(5, 6, 8, 0.62);
@@ -959,9 +919,8 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.02);
         }
 
-        /* Premium surfaces */
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012));
           border-radius: 22px;
           overflow: hidden;
@@ -969,33 +928,32 @@ export default function Page() {
           position: relative;
         }
 
-        /* Subtle “alive” sheen (transform-only, less glitchy) */
         .ui-sheen::before {
           content: '';
           position: absolute;
           inset: -40% -30%;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
-            radial-gradient(circle at 85% 15%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(circle at 70% 85%, rgba(120, 90, 255, 0.06), transparent 55%);
-          opacity: 0.55;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1), transparent 45%),
+            radial-gradient(circle at 85% 15%, rgba(0, 255, 200, 0.05), transparent 55%),
+            radial-gradient(circle at 70% 85%, rgba(120, 90, 255, 0.05), transparent 55%);
+          opacity: 0.45;
           transform: translate3d(-2%, -1%, 0);
           will-change: transform, opacity;
-          animation: uiSheen 10s ease-in-out infinite;
+          animation: uiSheen 12s ease-in-out infinite;
           pointer-events: none;
         }
 
         @keyframes uiSheen {
           0% {
             transform: translate3d(-2%, -1%, 0);
-            opacity: 0.45;
+            opacity: 0.38;
           }
           50% {
             transform: translate3d(2%, 1.2%, 0);
-            opacity: 0.6;
+            opacity: 0.52;
           }
           100% {
             transform: translate3d(-2%, -1%, 0);
-            opacity: 0.45;
+            opacity: 0.38;
           }
         }
 
@@ -1004,47 +962,37 @@ export default function Page() {
           z-index: 1;
         }
 
-        .ui-kickers {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 14px;
-        }
-
-        .ui-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.86);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
-        .ui-kicker-muted {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.58);
-        }
-
         .ui-title {
-          font-size: clamp(30px, 4vw, 56px);
+          font-size: clamp(34px, 4.6vw, 60px);
           line-height: 1.02;
-          letter-spacing: -0.05em;
-          margin-bottom: 10px;
+          letter-spacing: -0.06em;
+          margin-bottom: 6px;
           color: rgba(255, 255, 255, 0.96);
         }
 
         .ui-subtitle {
-          font-size: 14px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.66);
+          font-size: 16px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.72);
+          font-weight: 600;
           max-width: 72ch;
+        }
+
+        .ui-hero-body {
+          font-size: 13px;
+          line-height: 1.75;
+          color: rgba(255, 255, 255, 0.62);
+          max-width: 84ch;
+          margin-top: 12px;
+        }
+
+        .ui-hero-bottom {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 18px;
         }
 
         .ui-sectioneyebrow {
@@ -1073,7 +1021,6 @@ export default function Page() {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
-          margin-top: 18px;
         }
 
         .ui-trust {
@@ -1081,7 +1028,6 @@ export default function Page() {
           flex-wrap: wrap;
           gap: 10px;
           align-items: center;
-          margin-top: 14px;
           font-size: 12px;
           color: rgba(255, 255, 255, 0.55);
         }
@@ -1094,66 +1040,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           background: rgba(255, 255, 255, 0.015);
         }
-        .ui-dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
-        }
 
-        /* Capability cards (equal height) */
-        .ui-capgrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-          align-items: stretch;
-        }
-        @media (min-width: 920px) {
-          .ui-capgrid {
-            grid-template-columns: 1fr 1fr 1fr;
-          }
-        }
-        .ui-capcard {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 16px;
-          position: relative;
-          overflow: hidden;
-          min-height: 84px;
-        }
-        .ui-caphead {
-          display: flex;
-          gap: 12px;
-          align-items: flex-start;
-        }
-        .ui-capicon {
-          width: 38px;
-          height: 38px;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.8);
-          flex: 0 0 auto;
-        }
-        .ui-captitle {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 6px;
-        }
-        .ui-capbody {
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        /* Workflow layout */
         .ui-workgrid {
           display: grid;
           grid-template-columns: 1fr;
@@ -1174,7 +1061,7 @@ export default function Page() {
 
         .ui-step {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.02);
           padding: 14px;
           display: grid;
@@ -1190,7 +1077,7 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.02);
           color: rgba(255, 255, 255, 0.72);
           font-size: 11px;
@@ -1213,12 +1100,13 @@ export default function Page() {
 
         .ui-workright {
           border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.02);
           padding: 18px;
           position: relative;
           overflow: hidden;
           align-self: start;
+          justify-self: stretch;
         }
 
         .ui-cardtag {
@@ -1252,7 +1140,6 @@ export default function Page() {
           align-items: flex-start;
         }
 
-        /* FAQ (robust accordion) */
         .ui-faqwrap {
           margin-top: 14px;
           display: grid;
@@ -1261,9 +1148,9 @@ export default function Page() {
 
         .ui-faqrow {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.02);
-          overflow: hidden; /* keeps it clean */
+          overflow: hidden;
         }
 
         .ui-faqbtn {
@@ -1303,7 +1190,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.62);
         }
 
-        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1356,7 +1242,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.95);
         }
 
-        /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1396,7 +1281,6 @@ export default function Page() {
           border-color: rgba(239, 68, 68, 0.35);
         }
 
-        /* Pricing premium surfaces */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1415,7 +1299,7 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
@@ -1441,11 +1325,10 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Chat bubbles — tool-like */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(255, 255, 255, 0.02);
           color: rgba(255, 255, 255, 0.9);
         }
@@ -1477,17 +1360,18 @@ export default function Page() {
 
       <div className="ui-app h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 grid grid-cols-3 items-center gap-3">
+            <div className="justify-self-start flex items-center gap-3">
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
-              {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
-              )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="justify-self-center text-[11px] text-white/55 tracking-wide hidden sm:block">
+              Made in Washtenaw County for Washtenaw County
+            </div>
+
+            <div className="justify-self-end flex items-center gap-2">
               {!isAuthenticated ? (
                 <>
                   <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
@@ -1557,7 +1441,7 @@ export default function Page() {
                   <div className="h-full flex items-center justify-center px-4">
                     <div className="max-w-xl text-center">
                       <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
-                        Ask about Michigan Food Code requirements, Washtenaw guidance, or attach a photo for a risk scan.
+                        Ask about Michigan Food Code requirements, Washtenaw guidance, or attach a photo for a scan.
                       </p>
                     </div>
                   </div>
