@@ -222,21 +222,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
         </div>
 
-        <footer className="pt-8 text-xs text-white/40">
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/terms" className="hover:text-white/70">
+        <footer className={`pt-8 text-[13px] text-white/80 ${inter.className}`}>
+          <div className="flex flex-wrap gap-5 justify-center">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-white/70">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               Privacy
             </Link>
-            <Link href="/contact" className="hover:text-white/70">
+            <Link href="/contact" className="hover:text-white transition-colors">
               Contact
             </Link>
-          </div>
-
-          <div className="mt-4 text-center text-[11px] text-white/35">
-            Made in Washtenaw County for Washtenaw County.
           </div>
         </footer>
       </div>
@@ -503,8 +499,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               </span>
             </button>
 
-            <p className={`text-[11px] text-white/40 text-center ${inter.className}`}>
-              7-day trial · cancel anytime · one restaurant site license
+            <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
+              One site license per restaurant · 7-day trial · Cancel anytime
             </p>
           </div>
         </div>
@@ -567,6 +563,14 @@ export default function Page() {
     }
   }, [messages])
 
+  // ✅ Make /?showPricing=true actually open the pricing modal (used by accept-terms flow)
+  useEffect(() => {
+    const showPricing = searchParams?.get('showPricing')
+    if (showPricing === 'true') {
+      setShowPricingModal(true)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     let isMounted = true
 
@@ -578,6 +582,31 @@ export default function Page() {
         setHasActiveSubscription(false)
         setShowPricingModal(false)
         setIsLoading(false)
+        return
+      }
+
+      // ✅ Enforce Accept Terms before app usage
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('accepted_terms, accepted_privacy')
+          .eq('id', s.user.id)
+          .maybeSingle()
+
+        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
+
+        if (!accepted) {
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+      } catch (e) {
+        // If the profile fetch fails, fail safe → require accept-terms
+        console.error('Policy check error', e)
+        setHasActiveSubscription(false)
+        setIsLoading(false)
+        router.replace('/accept-terms')
         return
       }
 
@@ -627,7 +656,7 @@ export default function Page() {
       isMounted = false
       data.subscription?.unsubscribe()
     }
-  }, [supabase, searchParams])
+  }, [supabase, searchParams, router])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -838,7 +867,8 @@ export default function Page() {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-          --ui-lamp: 1.28;
+          /* ✅ +8% lamp brightness (real brightness, not clamped opacity) */
+          --ui-lamp: 1.08;
           --ui-vignette: 0.93;
         }
 
@@ -851,8 +881,12 @@ export default function Page() {
             radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.11), transparent 58%),
             radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.05), transparent 60%),
             radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.05), transparent 60%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 11px);
-          opacity: calc(0.9 * var(--ui-lamp));
+            /* slightly smoother diagonals */
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 12px),
+            /* ultra subtle secondary layer to reduce “chopped” feel */
+            repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 24px);
+          opacity: 0.9;
+          filter: brightness(var(--ui-lamp));
           transform: translateZ(0);
         }
 
@@ -894,17 +928,24 @@ export default function Page() {
           gap: 0;
           user-select: none;
         }
+        /* ✅ logo +2 “sizes” */
         .ui-logo-protocol {
-          font-size: 13px;
+          font-size: 15px;
           font-weight: 800;
           letter-spacing: -0.03em;
           color: rgba(255, 255, 255, 0.92);
         }
         .ui-logo-lm {
-          font-size: 13px;
+          font-size: 15px;
           font-weight: 900;
           letter-spacing: -0.03em;
           color: rgba(255, 255, 255, 0.92);
+        }
+        @media (min-width: 640px) {
+          .ui-logo-protocol,
+          .ui-logo-lm {
+            font-size: 16px;
+          }
         }
 
         .ui-shell {
@@ -1122,11 +1163,12 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.55);
         }
 
+        /* ✅ footer line now white + slightly larger */
         .ui-footerline {
           padding: 14px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.4);
-          font-size: 12px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 13px;
         }
 
         .ui-btn {
@@ -1328,12 +1370,15 @@ export default function Page() {
           padding: 0 !important;
           color: rgba(255, 255, 255, 0.94);
         }
+
+        /* ✅ USER message: no bubble, just readable white text */
         .ui-bubble-user {
           border: none !important;
-          background: rgba(255, 255, 255, 0.92) !important;
-          color: #000 !important;
-          padding: 12px 14px !important;
-          border-radius: 14px !important;
+          background: transparent !important;
+          color: rgba(255, 255, 255, 0.94) !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+          font-weight: 600;
         }
 
         .ui-chatimgwrap {
@@ -1422,78 +1467,89 @@ export default function Page() {
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`ui-logo ${outfit.className}`}>
-                <span className="ui-logo-protocol">protocol</span>
-                <span className="ui-logo-lm">LM</span>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`ui-logo ${outfit.className}`}>
+                  <span className="ui-logo-protocol">protocol</span>
+                  <span className="ui-logo-lm">LM</span>
+                </div>
+
+                <div className="flex flex-col leading-tight">
+                  <span className={`text-[12px] text-white/80 ${inter.className}`}>Washtenaw Compliance Database</span>
+                  <span className={`text-[12px] text-white/55 ${inter.className}`}>Additional Counties Coming 2026</span>
+                </div>
+
+                {hasActiveSubscription && (
+                  <span className={`hidden sm:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
+                )}
               </div>
 
-              <div className="flex flex-col leading-tight">
-                <span className={`text-[11px] text-white/75 ${inter.className}`}>Washtenaw Compliance Database</span>
-                <span className={`text-[11px] text-white/45 ${inter.className}`}>Additional Counties Coming 2026</span>
+              {/* ✅ moved “Made in Washtenaw…” into the sticky header */}
+              <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
+                Made in Washtenaw County for Washtenaw County.
               </div>
 
-              {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/40 ${inter.className}`}>Active · site license</span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {!isAuthenticated ? (
-                <button
-                  onClick={() => {
-                    setAuthInitialMode('signin')
-                    setShowAuthModal(true)
-                  }}
-                  className="ui-btn ui-btn-secondary"
-                >
-                  <span className="ui-btn-inner">Sign in</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
-                    <Icons.Plus />
-                    <span className="ui-btn-inner" style={{ gap: 8 }}>
-                      New chat
-                    </span>
+              <div className="flex items-center gap-2">
+                {!isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      setAuthInitialMode('signin')
+                      setShowAuthModal(true)
+                    }}
+                    className="ui-btn ui-btn-secondary"
+                  >
+                    <span className="ui-btn-inner">Sign in</span>
                   </button>
-
-                  <div className="relative" ref={userMenuRef}>
-                    <button
-                      onClick={() => setShowUserMenu((v) => !v)}
-                      className="ui-icon-btn"
-                      aria-label="User menu"
-                      title={session?.user?.email || 'User'}
-                    >
-                      <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
+                      <Icons.Plus />
+                      <span className="ui-btn-inner" style={{ gap: 8 }}>
+                        New chat
+                      </span>
                     </button>
 
-                    {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
-                        <div className="px-3 pt-3 pb-2 text-[11px] text-white/40">Press Esc to close</div>
-                        <button
-                          onClick={() => {
-                            setShowPricingModal(true)
-                            setShowUserMenu(false)
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                        >
-                          <Icons.Settings />
-                          <span>Subscription</span>
-                        </button>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors"
-                        >
-                          <Icons.LogOut />
-                          <span>Log out</span>
-                        </button>
-                      </div>
-                    )}
+                    <div className="relative" ref={userMenuRef}>
+                      <button
+                        onClick={() => setShowUserMenu((v) => !v)}
+                        className="ui-icon-btn"
+                        aria-label="User menu"
+                        title={session?.user?.email || 'User'}
+                      >
+                        <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
+                      </button>
+
+                      {showUserMenu && (
+                        <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
+                          <div className="px-3 pt-3 pb-2 text-[11px] text-white/40">Press Esc to close</div>
+                          <button
+                            onClick={() => {
+                              setShowPricingModal(true)
+                              setShowUserMenu(false)
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                          >
+                            <Icons.Settings />
+                            <span>Subscription</span>
+                          </button>
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors"
+                          >
+                            <Icons.LogOut />
+                            <span>Log out</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
+              Made in Washtenaw County for Washtenaw County.
             </div>
           </div>
         </header>
