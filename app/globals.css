@@ -183,10 +183,10 @@ button, a, input, textarea, select {
   transition: all 0.2s ease-in-out;
 }
 
-button:focus-visible, 
-a:focus-visible, 
-input:focus-visible, 
-textarea:focus-visible, 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
 select:focus-visible {
   outline: 2px solid var(--color-steel-blue);
   outline-offset: 2px;
@@ -196,13 +196,99 @@ select:focus-visible {
   * {
     max-width: 100vw;
   }
-  
+
   body {
     overflow-x: hidden;
     position: relative;
   }
-  
+
   input, textarea, select, button {
     max-width: 100%;
+  }
+}
+
+/* =========================================================
+   ProtocolLM Chat – remove borders/frames (global-safe)
+   ========================================================= */
+
+/* Common “chat bubble / thinking / message container” classnames (if they exist) */
+.chat-bubble,
+.chat-message,
+.message-bubble,
+.message-surface,
+.typing-indicator,
+.thinking-indicator,
+.thinking-pill,
+.thinking-bubble,
+.assistant-thinking,
+.user-message,
+.assistant-message {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* If your chat uses data attributes (recommended), these are rock-solid */
+[data-chat-bubble],
+[data-chat-message],
+[data-chat-thinking],
+[data-chat-typing] {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove the “white frame” around uploaded images (wrapper + image) */
+.chat-image-frame,
+.message-image-frame,
+.image-preview-frame,
+.image-frame,
+.chat-upload-preview {
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.chat-image-frame img,
+.message-image-frame img,
+.image-preview-frame img,
+.image-frame img,
+.chat-upload-preview img {
+  display: block;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Tailwind-ish utility escape hatches (add these classNames in JSX if needed) */
+@layer utilities {
+  .plm-no-border {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .plm-no-frame {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .plm-image-plain {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .plm-image-plain img {
+    display: block;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
   }
 }
