@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -75,286 +75,6 @@ const Icons = {
       <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
     </svg>
   ),
-}
-
-function LandingPage({ onShowPricing, onShowAuth, shellRef, landingRootRef }) {
-  useEffect(() => {
-    const root = landingRootRef?.current
-    if (!root) return
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return
-
-    const items = Array.from(root.querySelectorAll('[data-reveal]'))
-    if (!items.length) return
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add('ui-reveal-in')
-        })
-      },
-      { threshold: 0.14, root: root, rootMargin: '0px 0px -10% 0px' }
-    )
-
-    items.forEach((el) => io.observe(el))
-    return () => io.disconnect()
-  }, [landingRootRef])
-
-  return (
-    <div className="min-h-[calc(100dvh-72px)] flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-10 pb-10">
-        <div className="max-w-6xl w-full">
-          {/* HERO SHELL */}
-          <div ref={shellRef} className="ui-shell ui-shell-parallax ui-blackcard">
-            {/* platinum shimmer stripe */}
-            <div className="ui-metal-stripe" aria-hidden="true" />
-
-            <div className="ui-hero">
-              <div className="ui-kickers">
-                <span className={`ui-kicker ${inter.className}`}>
-                  <Icons.Shield /> Inspection-grade
-                </span>
-                <span className={`ui-kicker-muted ${inter.className}`}>Built for Washtenaw County operators · enterprise posture</span>
-              </div>
-
-              <h1 className={`ui-title ${outfit.className}`}>Compliance that feels like a console.</h1>
-
-              <p className={`ui-subtitle ${inter.className}`}>
-                A premium compliance workspace for restaurants that take inspections seriously. Grounded answers, photo risk scans,
-                and quick action checklists — without digging through manuals.
-              </p>
-
-              <div className="ui-cta-row">
-                <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                  Start trial
-                </button>
-                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                  Sign in
-                </button>
-              </div>
-
-              <div className={`ui-trust ${inter.className}`}>
-                <span className="ui-trust-item">
-                  <Icons.Lock /> Secure by design
-                </span>
-                <span className="ui-dot" />
-                <span className="ui-trust-item">
-                  <Icons.Spark /> Built for audits
-                </span>
-                <span className="ui-dot" />
-                <span className="ui-trust-item">
-                  <Icons.Shield /> Operator-ready
-                </span>
-              </div>
-            </div>
-
-            {/* SPEC STRIP */}
-            <div className="ui-specstrip">
-              <div className={`ui-specpill ${inter.className}`}>Photo scan</div>
-              <div className={`ui-specpill ${inter.className}`}>Rulebook-backed answers</div>
-              <div className={`ui-specpill ${inter.className}`}>Close/Open checklist</div>
-              <div className={`ui-specpill ${inter.className}`}>One site license</div>
-            </div>
-          </div>
-
-          {/* SECTION: CAPABILITIES */}
-          <section className="mt-10">
-            <div className="ui-sectionhead" data-reveal>
-              <div className={`ui-sectionkicker ${inter.className}`}>Capabilities</div>
-              <h2 className={`ui-sectiontitle ${outfit.className}`}>Everything you need, nothing you don’t.</h2>
-              <p className={`ui-sectionsub ${inter.className}`}>
-                The point is speed and certainty — a calm, premium workflow that gets you inspection-ready.
-              </p>
-            </div>
-
-            <div className="ui-tilegrid mt-6">
-              <div className="ui-tile" data-reveal>
-                <div className="ui-tileicon">
-                  <Icons.Camera />
-                </div>
-                <div className={`ui-titletxt ${inter.className}`}>Photo risk scan</div>
-                <div className={`ui-bodytxt ${inter.className}`}>
-                  Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.
-                </div>
-              </div>
-
-              <div className="ui-tile" data-reveal>
-                <div className="ui-tileicon">
-                  <Icons.Spark />
-                </div>
-                <div className={`ui-titletxt ${inter.className}`}>Grounded answers</div>
-                <div className={`ui-bodytxt ${inter.className}`}>
-                  Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
-                </div>
-              </div>
-
-              <div className="ui-tile" data-reveal>
-                <div className="ui-tileicon">
-                  <Icons.Check />
-                </div>
-                <div className={`ui-titletxt ${inter.className}`}>Action checklist</div>
-                <div className={`ui-bodytxt ${inter.className}`}>
-                  Convert concerns into a short close/open list your lead can run — today.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION: HOW IT WORKS */}
-          <section className="mt-12">
-            <div className="ui-sectionhead" data-reveal>
-              <div className={`ui-sectionkicker ${inter.className}`}>How it works</div>
-              <h2 className={`ui-sectiontitle ${outfit.className}`}>A premium flow your team can repeat.</h2>
-              <p className={`ui-sectionsub ${inter.className}`}>
-                No training manuals. No “AI vibes.” Just a clean sequence: scan, verify, fix, log.
-              </p>
-            </div>
-
-            <div className="ui-steps mt-6">
-              <div className="ui-step" data-reveal>
-                <div className={`ui-stepnum ${outfit.className}`}>01</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Capture</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Snap a photo or ask a direct question in plain language.</div>
-                </div>
-              </div>
-
-              <div className="ui-step" data-reveal>
-                <div className={`ui-stepnum ${outfit.className}`}>02</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Cross-check</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Get likely issues + what to verify — grounded in local guidance.</div>
-                </div>
-              </div>
-
-              <div className="ui-step" data-reveal>
-                <div className={`ui-stepnum ${outfit.className}`}>03</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Correct</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Turn findings into a short list your manager can execute.</div>
-                </div>
-              </div>
-
-              <div className="ui-step" data-reveal>
-                <div className={`ui-stepnum ${outfit.className}`}>04</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Repeat</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Use it daily or weekly — the workflow stays calm and consistent.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION: TRUST / BLACK CARD BAND */}
-          <section className="mt-12">
-            <div className="ui-band" data-reveal>
-              <div className="ui-bandleft">
-                <div className={`ui-bandkicker ${inter.className}`}>Premium posture</div>
-                <div className={`ui-bandtitle ${outfit.className}`}>Built to feel like a black card product.</div>
-                <div className={`ui-bandbody ${inter.className}`}>
-                  Quiet visuals. Clear outputs. A console that feels expensive — because compliance is expensive when it goes wrong.
-                </div>
-              </div>
-
-              <div className="ui-bandright">
-                <div className="ui-mini">
-                  <div className={`ui-minih ${inter.className}`}>Includes</div>
-                  <ul className={`ui-minilist ${inter.className}`}>
-                    <li>
-                      <Icons.Check /> Text + photo checks
-                    </li>
-                    <li>
-                      <Icons.Check /> One site license per restaurant
-                    </li>
-                    <li>
-                      <Icons.Check /> 7-day trial · cancel anytime
-                    </li>
-                    <li>
-                      <Icons.Check /> Fast, grounded responses
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SECTION: FAQ */}
-          <section className="mt-12">
-            <div className="ui-sectionhead" data-reveal>
-              <div className={`ui-sectionkicker ${inter.className}`}>FAQ</div>
-              <h2 className={`ui-sectiontitle ${outfit.className}`}>Short answers. No fluff.</h2>
-            </div>
-
-            <div className="ui-faq mt-6">
-              <details className="ui-faqitem" data-reveal>
-                <summary className={`ui-faqsum ${inter.className}`}>Is this made for Washtenaw specifically?</summary>
-                <div className={`ui-faqbody ${inter.className}`}>
-                  Yes — it’s built around the reality of local inspections and how operators actually work day to day.
-                </div>
-              </details>
-
-              <details className="ui-faqitem" data-reveal>
-                <summary className={`ui-faqsum ${inter.className}`}>Do I need it every day?</summary>
-                <div className={`ui-faqbody ${inter.className}`}>
-                  Some teams use it daily, others run it weekly. It’s designed to stay valuable even with light usage.
-                </div>
-              </details>
-
-              <details className="ui-faqitem" data-reveal>
-                <summary className={`ui-faqsum ${inter.className}`}>How should my team use photo scans?</summary>
-                <div className={`ui-faqbody ${inter.className}`}>
-                  Treat them like a “risk scan.” You verify in the moment, then execute the checklist output.
-                </div>
-              </details>
-            </div>
-          </section>
-
-          {/* FINAL CTA CARD */}
-          <section className="mt-12 mb-6">
-            <div className="ui-final" data-reveal>
-              <div>
-                <div className={`ui-sectionkicker ${inter.className}`}>Ready</div>
-                <h3 className={`ui-finaltitle ${outfit.className}`}>Make inspections boring again.</h3>
-                <p className={`ui-finalsub ${inter.className}`}>
-                  Start the trial, run a scan in your walk-in, and keep the checklist on a manager clipboard.
-                </p>
-              </div>
-              <div className="ui-finalcta">
-                <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                  Start trial
-                </button>
-                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                  Sign in
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-
-      {/* Footer pinned to bottom when content is short */}
-      <footer className="mt-auto pb-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="ui-footline" />
-          <div className="pt-6 text-xs text-white/45">
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/terms" className="hover:text-white/70">
-                Terms
-              </Link>
-              <Link href="/privacy" className="hover:text-white/70">
-                Privacy
-              </Link>
-              <Link href="/contact" className="hover:text-white/70">
-                Contact
-              </Link>
-            </div>
-            <p className={`mt-3 text-center text-[11px] text-white/35 ${inter.className}`}>
-              protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
 }
 
 function AuthModal({ isOpen, onClose }) {
@@ -442,7 +162,7 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/60 ${inter.className}`}>
+            <p className={`text-xs text-white/65 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
@@ -481,7 +201,7 @@ function AuthModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -540,10 +260,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         </button>
 
         <div className="mb-6">
-          <div className={`ui-tag ${inter.className}`}>Enterprise • Single site license</div>
+          <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/65 ${inter.className}`}>
-            For operators who want inspection-grade confidence. Includes full chat + photo scanning.
+          <p className={`text-sm text-white/70 ${inter.className}`}>
+            A calm, inspection-grade console. Includes chat + photo scanning.
           </p>
         </div>
 
@@ -554,8 +274,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/55">/ month</span>
               </div>
-              <p className={`text-xs text-white/62 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+              <p className={`text-xs text-white/65 mt-2 ${inter.className}`}>
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text = 1 check; photo = 2.
               </p>
             </div>
 
@@ -603,12 +323,290 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
             </button>
 
-            <p className={`text-[11px] text-white/50 text-center ${inter.className}`}>
-              Not for hobbyists. Built for real operators who want inspection-ready workflows.
+            <p className={`text-[11px] text-white/55 text-center ${inter.className}`}>
+              Built to feel like a black card product: quiet visuals, clear outputs.
             </p>
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function LandingPage({ onShowPricing, onShowAuth }) {
+  const heroRef = useRef(null)
+
+  const faqs = useMemo(
+    () => [
+      {
+        q: 'Is this made for Washtenaw County specifically?',
+        a: 'Yes. It’s tuned for Washtenaw County operators and grounded in the Michigan Food Code + local guidance used during inspections.',
+      },
+      {
+        q: 'Do I need this every day?',
+        a: 'Not necessarily. Most teams use it when training, tightening routines, or verifying “are we actually OK?” before an inspection window.',
+      },
+      {
+        q: 'How should my team use photo scans?',
+        a: 'Snap a walk-in, prep line, or dish area. You’ll get a short list of likely risks to verify—then convert the important ones into a close/open checklist.',
+      },
+      {
+        q: 'Does it replace a health inspector?',
+        a: 'No—think “inspection-grade second set of eyes.” It helps you catch common issues and get rulebook-backed answers fast.',
+      },
+    ],
+    []
+  )
+
+  const [openFaq, setOpenFaq] = useState(0)
+
+  // Subtle “card moves alone” parallax for the main hero card
+  useEffect(() => {
+    const el = heroRef.current
+    if (!el) return
+
+    let raf = 0
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY || 0
+        const p = Math.max(-18, Math.min(18, y * -0.03))
+        el.style.setProperty('--ui-parallax', `${p}px`)
+      })
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
+  return (
+    <div className="ui-landing">
+      <section className="ui-section ui-section-hero">
+        <div ref={heroRef} className="ui-heroCard ui-reveal" data-reveal>
+          <div className="ui-kickers">
+            <span className={`ui-kicker ${inter.className}`}>
+              <Icons.Shield /> Inspection-grade
+            </span>
+            <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw County operators · premium posture</span>
+          </div>
+
+          <h1 className={`ui-title ${outfit.className}`}>Compliance that feels like a console.</h1>
+
+          <p className={`ui-subtitle ${inter.className}`}>
+            Quiet visuals. Clear outputs. Photo risk scans, rulebook-backed answers, and fast close/open checklists—without digging through manuals.
+          </p>
+
+          <div className="ui-cta-row">
+            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+              Start trial
+            </button>
+            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+              Sign in
+            </button>
+          </div>
+
+          <div className={`ui-trust ${inter.className}`}>
+            <span className="ui-trust-item">
+              <Icons.Lock /> Secure by design
+            </span>
+            <span className="ui-dot" />
+            <span className="ui-trust-item">
+              <Icons.Spark /> Operator-ready
+            </span>
+            <span className="ui-dot" />
+            <span className="ui-trust-item">
+              <Icons.Shield /> Built for audits
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="ui-section">
+        <div className="ui-sectionHead ui-reveal" data-reveal>
+          <div className={`ui-eyebrow ${inter.className}`}>Capabilities</div>
+          <h2 className={`ui-h2 ${outfit.className}`}>Everything you need. Nothing you don’t.</h2>
+          <p className={`ui-lead ${inter.className}`}>
+            The point is speed + certainty—calm workflows that keep you inspection-ready.
+          </p>
+        </div>
+
+        <div className="ui-cardGrid">
+          <div className="ui-card ui-reveal" data-reveal>
+            <div className="ui-cardTop">
+              <div className="ui-cardIcon">
+                <Icons.Camera />
+              </div>
+              <div>
+                <div className={`ui-cardTitle ${inter.className}`}>Photo risk scan</div>
+                <div className={`ui-cardBody ${inter.className}`}>
+                  Upload a walk-in or line photo. Get a tight list of likely issues to verify—fast.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ui-card ui-reveal" data-reveal>
+            <div className="ui-cardTop">
+              <div className="ui-cardIcon">
+                <Icons.Spark />
+              </div>
+              <div>
+                <div className={`ui-cardTitle ${inter.className}`}>Grounded answers</div>
+                <div className={`ui-cardBody ${inter.className}`}>
+                  Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ui-card ui-reveal" data-reveal>
+            <div className="ui-cardTop">
+              <div className="ui-cardIcon">
+                <Icons.Check />
+              </div>
+              <div>
+                <div className={`ui-cardTitle ${inter.className}`}>Action checklist</div>
+                <div className={`ui-cardBody ${inter.className}`}>
+                  Convert concerns into a short close/open list your lead can run—today.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="ui-section">
+        <div className="ui-split">
+          <div className="ui-reveal" data-reveal>
+            <div className={`ui-eyebrow ${inter.className}`}>Workflow</div>
+            <h2 className={`ui-h2 ${outfit.className}`}>A black-card vibe for real ops.</h2>
+            <p className={`ui-lead ${inter.className}`}>
+              Less chaos. More clarity. Use it before a rush, after a new hire, or when you want to tighten the line.
+            </p>
+
+            <div className="ui-steps">
+              <div className="ui-step">
+                <div className="ui-stepNum">01</div>
+                <div>
+                  <div className={`ui-stepTitle ${inter.className}`}>Scan or ask</div>
+                  <div className={`ui-stepBody ${inter.className}`}>Photo scan for risks, or ask a question in plain language.</div>
+                </div>
+              </div>
+
+              <div className="ui-step">
+                <div className="ui-stepNum">02</div>
+                <div>
+                  <div className={`ui-stepTitle ${inter.className}`}>Verify the list</div>
+                  <div className={`ui-stepBody ${inter.className}`}>You get a short list of likely issues—tight, not fluffy.</div>
+                </div>
+              </div>
+
+              <div className="ui-step">
+                <div className="ui-stepNum">03</div>
+                <div>
+                  <div className={`ui-stepTitle ${inter.className}`}>Turn it into actions</div>
+                  <div className={`ui-stepBody ${inter.className}`}>Convert the important items into a close/open checklist.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ui-sideCard ui-reveal" data-reveal>
+            <div className={`ui-sideTag ${inter.className}`}>Included</div>
+            <ul className={`ui-sideList ${inter.className}`}>
+              <li>
+                <span className="ui-sideDot" /> Text + photo checks
+              </li>
+              <li>
+                <span className="ui-sideDot" /> One site license per restaurant
+              </li>
+              <li>
+                <span className="ui-sideDot" /> 7-day trial · cancel anytime
+              </li>
+              <li>
+                <span className="ui-sideDot" /> Fast, grounded responses
+              </li>
+            </ul>
+
+            <div className="ui-sideBtns">
+              <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
+                Start trial
+              </button>
+              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full">
+                Sign in
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="ui-section">
+        <div className="ui-sectionHead ui-reveal" data-reveal>
+          <div className={`ui-eyebrow ${inter.className}`}>FAQ</div>
+          <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
+        </div>
+
+        <div className="ui-faq">
+          {faqs.map((item, i) => {
+            const open = openFaq === i
+            return (
+              <div key={i} className={`ui-faqItem ${open ? 'is-open' : ''} ui-reveal`} data-reveal>
+                <button
+                  className={`ui-faqQ ${inter.className}`}
+                  onClick={() => setOpenFaq((v) => (v === i ? -1 : i))}
+                  aria-expanded={open}
+                >
+                  <span>{item.q}</span>
+                  <span className="ui-faqChevron">{open ? '–' : '+'}</span>
+                </button>
+                <div className="ui-faqA" style={{ maxHeight: open ? 220 : 0 }}>
+                  <div className={`ui-faqAText ${inter.className}`}>{item.a}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="ui-section ui-section-bottom">
+        <div className="ui-ready ui-reveal" data-reveal>
+          <div className={`ui-eyebrow ${inter.className}`}>Ready</div>
+          <h2 className={`ui-h2 ${outfit.className}`}>Make inspections boring again.</h2>
+          <p className={`ui-lead ${inter.className}`}>
+            Start the trial, run a scan in your walk-in, and keep the checklist on a manager clipboard.
+          </p>
+
+          <div className="ui-cta-row">
+            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+              Start trial
+            </button>
+            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+              Sign in
+            </button>
+          </div>
+        </div>
+
+        <footer className="ui-footer">
+          <div className="ui-footerLinks">
+            <Link href="/terms" className="hover:text-white/80">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-white/80">
+              Privacy
+            </Link>
+            <Link href="/contact" className="hover:text-white/80">
+              Contact
+            </Link>
+          </div>
+          <div className={`ui-footnote ${inter.className}`}>
+            protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+          </div>
+        </footer>
+      </section>
     </div>
   )
 }
@@ -638,12 +636,6 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
-  // Landing scroll + shell parallax
-  const landingWrapRef = useRef(null)
-  const landingRootRef = useRef(null)
-  const shellParallaxRef = useRef(null)
-  const parallaxRafRef = useRef(null)
-
   const shouldAutoScrollRef = useRef(true)
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -660,20 +652,6 @@ export default function Page() {
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
 
-  const applyShellParallax = (scrollTop) => {
-    const shell = shellParallaxRef.current
-    if (!shell) return
-    const max = 18
-    const ty = Math.min(max, Math.max(0, scrollTop * 0.06))
-    shell.style.setProperty('--ui-shell-parallax', `${ty.toFixed(2)}px`)
-  }
-
-  const handleLandingScroll = () => {
-    const y = landingWrapRef.current?.scrollTop || 0
-    if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current)
-    parallaxRafRef.current = requestAnimationFrame(() => applyShellParallax(y))
-  }
-
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom('auto'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -684,14 +662,6 @@ export default function Page() {
       requestAnimationFrame(() => scrollToBottom('auto'))
     }
   }, [messages])
-
-  useEffect(() => {
-    applyShellParallax(0)
-    return () => {
-      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -738,7 +708,7 @@ export default function Page() {
         const { data } = await supabase.auth.getSession()
         await loadSessionAndSub(data.session || null)
       } catch (e) {
-        console.error('Auth init error:', e)
+        console.error('Auth init error', e)
         if (isMounted) setIsLoading(false)
       }
     }
@@ -755,11 +725,44 @@ export default function Page() {
     }
   }, [supabase, searchParams])
 
+  // ✅ Background + iOS-safe layering (no more body ::after overlay)
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('ui-enterprise-bg')
-    return () => document.body.classList.remove('ui-enterprise-bg')
+    return () => {
+      document.body.classList.remove('ui-enterprise-bg')
+      document.body.classList.remove('ui-appmode')
+    }
   }, [])
+
+  // ✅ Only lock body scroll in app/chat mode (fixes iPad landing weirdness)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (session) document.body.classList.add('ui-appmode')
+    else document.body.classList.remove('ui-appmode')
+  }, [session])
+
+  // Reveal animations (subtle)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const els = Array.from(document.querySelectorAll('[data-reveal]'))
+    if (els.length === 0) return
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add('ui-reveal-in')
+            io.unobserve(e.target)
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: '80px' }
+    )
+
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [session, isLoading])
 
   useEffect(() => {
     function handleClick(event) {
@@ -788,7 +791,10 @@ export default function Page() {
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
         body: JSON.stringify({ priceId }),
       })
 
@@ -798,8 +804,11 @@ export default function Page() {
       }
 
       const payload = await res.json()
-      if (payload.url) window.location.href = payload.url
-      else throw new Error('No checkout URL returned')
+      if (payload.url) {
+        window.location.href = payload.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
@@ -850,7 +859,10 @@ export default function Page() {
       if (session && !activeChatId) {
         const { data: created } = await supabase
           .from('chats')
-          .insert({ user_id: session.user.id, title: (question || 'New chat').slice(0, 40) })
+          .insert({
+            user_id: session.user.id,
+            title: (question || 'New chat').slice(0, 40),
+          })
           .select()
           .single()
 
@@ -863,7 +875,11 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, newUserMessage], image, chatId: activeChatId }),
+        body: JSON.stringify({
+          messages: [...messages, newUserMessage],
+          image,
+          chatId: activeChatId,
+        }),
       })
 
       if (!res.ok) {
@@ -885,14 +901,20 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: data.message || 'No response.',
+        }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+        }
         return updated
       })
     } finally {
@@ -929,55 +951,56 @@ export default function Page() {
         body {
           height: 100%;
           width: 100%;
+          -webkit-text-size-adjust: 100%;
         }
 
         body.ui-enterprise-bg {
-          overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.92);
         }
 
-        body.ui-enterprise-bg::before {
-          content: '';
-          position: fixed;
-          inset: -14%;
-          pointer-events: none;
-          background:
-            radial-gradient(900px 520px at 50% 0%, rgba(255, 255, 255, 0.14), transparent 62%),
-            radial-gradient(980px 560px at 18% 12%, rgba(0, 255, 200, 0.085), transparent 64%),
-            radial-gradient(980px 560px at 86% 12%, rgba(120, 90, 255, 0.085), transparent 64%),
-            radial-gradient(900px 560px at 50% 110%, rgba(255, 255, 255, 0.05), transparent 65%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 10px);
-          opacity: 1;
-          filter: saturate(1.1) contrast(1.05);
-          transform: translate3d(0, 0, 0) scale(1);
-          animation: ui-bg-float 18s ease-in-out infinite alternate;
-          mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+        /* Only lock scroll in app mode (chat) */
+        body.ui-appmode {
+          overflow: hidden;
         }
 
-        @keyframes ui-bg-float {
-          from {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          to {
-            transform: translate3d(0, -22px, 0) scale(1.02);
-          }
-        }
-
-        body.ui-enterprise-bg::after {
-          content: '';
+        /* ✅ iPad-safe background layer BEHIND content (no body ::after overlay) */
+        .ui-bg {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.68) 72%);
-          opacity: 0.92;
+          z-index: 0;
+          background:
+            radial-gradient(900px 520px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 62%),
+            radial-gradient(900px 520px at 18% 12%, rgba(0, 255, 200, 0.05), transparent 62%),
+            radial-gradient(900px 520px at 85% 12%, rgba(120, 90, 255, 0.06), transparent 62%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 9px);
+          opacity: 0.95;
+          filter: saturate(110%);
         }
 
+        .ui-stage {
+          position: relative;
+          z-index: 1;
+        }
+
+        ::-webkit-scrollbar {
+          width: 9px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.14);
+          border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.20);
+        }
+
+        /* Header */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(6, 7, 9, 0.78);
-          backdrop-filter: blur(18px) saturate(150%);
-          -webkit-backdrop-filter: blur(18px) saturate(150%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(5, 6, 8, 0.62);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }
 
         .ui-brand {
@@ -988,518 +1011,24 @@ export default function Page() {
           border-radius: 999px;
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.40);
         }
 
-        .ui-shell {
-          position: relative;
-          border-radius: 22px;
-          overflow: hidden;
-          transform: translate3d(0, var(--ui-shell-parallax, 0px), 0);
-          will-change: transform;
-        }
-
-        .ui-blackcard {
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background:
-            radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.09), transparent 52%),
-            radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.74);
-          backdrop-filter: blur(20px) saturate(160%);
-          -webkit-backdrop-filter: blur(20px) saturate(160%);
-        }
-
-        .ui-blackcard::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          border-radius: inherit;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.03));
-          opacity: 0.75;
-          mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-          -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-          padding: 1px;
-          mask-composite: exclude;
-          -webkit-mask-composite: xor;
-        }
-
-        .ui-blackcard::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          border-radius: inherit;
-          opacity: 0.22;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
-          mix-blend-mode: overlay;
-        }
-
-        /* Black-card “metal” stripe (subtle shimmer) */
-        .ui-metal-stripe {
-          position: absolute;
-          left: 18px;
-          right: 18px;
-          top: 14px;
-          height: 2px;
-          border-radius: 999px;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.04),
-            rgba(255, 255, 255, 0.14),
-            rgba(255, 255, 255, 0.05),
-            rgba(255, 255, 255, 0.12),
-            rgba(255, 255, 255, 0.04)
-          );
-          opacity: 0.7;
-          overflow: hidden;
-          pointer-events: none;
-          filter: saturate(1.1);
-          z-index: 2;
-        }
-
-        .ui-metal-stripe::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0) 35%,
-            rgba(255, 255, 255, 0.85) 50%,
-            rgba(255, 255, 255, 0) 65%,
-            transparent 100%
-          );
-          transform: translateX(-70%);
-          animation: ui-stripe-shimmer 5.2s ease-in-out infinite;
-          opacity: 0.55;
-          mix-blend-mode: screen;
-        }
-
-        @keyframes ui-stripe-shimmer {
-          0% {
-            transform: translateX(-70%);
-          }
-          45% {
-            transform: translateX(120%);
-          }
-          100% {
-            transform: translateX(120%);
-          }
-        }
-
-        .ui-hero {
-          padding: 28px 22px 18px;
-          position: relative;
-          z-index: 3;
-        }
-
-        .ui-kickers {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 14px;
-        }
-
-        .ui-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.9);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
-        .ui-kicker-muted {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .ui-title {
-          font-size: clamp(30px, 4vw, 56px);
-          line-height: 1.02;
-          letter-spacing: -0.05em;
-          margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.98);
-          text-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-        }
-
-        .ui-subtitle {
-          font-size: 14px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.74);
-          max-width: 76ch;
-        }
-
-        .ui-cta-row {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-top: 18px;
-        }
-
-        .ui-trust {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-top: 14px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.62);
-        }
-
-        .ui-trust-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.02);
-        }
-
-        .ui-dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.22);
-        }
-
-        .ui-specstrip {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          padding: 14px 18px 18px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          position: relative;
-          z-index: 3;
-        }
-
-        .ui-specpill {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          padding: 8px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.78);
-        }
-
-        .ui-sectionhead {
-          max-width: 70ch;
-        }
-
-        .ui-sectionkicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-          width: fit-content;
-        }
-
-        .ui-sectiontitle {
-          margin-top: 10px;
-          font-size: 28px;
-          line-height: 1.08;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .ui-sectionsub {
-          margin-top: 10px;
-          font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.68);
-        }
-
-        .ui-tilegrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-        }
-
-        @media (min-width: 920px) {
-          .ui-tilegrid {
-            grid-template-columns: 1fr 1fr 1fr;
-          }
-        }
-
-        .ui-tile {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
-          backdrop-filter: blur(16px) saturate(150%);
-          -webkit-backdrop-filter: blur(16px) saturate(150%);
-          padding: 16px;
-          box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
-        }
-
-        .ui-tileicon {
-          width: 40px;
-          height: 40px;
-          border-radius: 14px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .ui-titletxt {
-          margin-top: 12px;
-          font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .ui-bodytxt {
-          margin-top: 8px;
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.68);
-        }
-
-        .ui-steps {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-
-        .ui-step {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.035);
-          padding: 14px 16px;
-          display: flex;
-          gap: 14px;
-          align-items: flex-start;
-          backdrop-filter: blur(14px) saturate(140%);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
-        }
-
-        .ui-stepnum {
-          width: 46px;
-          height: 46px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.92);
-          letter-spacing: 0.08em;
-          font-size: 12px;
-        }
-
-        .ui-steptitle {
-          font-size: 12px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .ui-stepbody {
-          margin-top: 6px;
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.68);
-        }
-
-        .ui-band {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background:
-            radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.12), transparent 52%),
-            radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
-            rgba(255, 255, 255, 0.04);
-          padding: 18px;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 14px;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(18px) saturate(150%);
-          -webkit-backdrop-filter: blur(18px) saturate(150%);
-        }
-
-        @media (min-width: 920px) {
-          .ui-band {
-            grid-template-columns: 1.25fr 0.75fr;
-            align-items: center;
-          }
-        }
-
-        .ui-bandkicker {
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.72);
-          font-weight: 800;
-        }
-
-        .ui-bandtitle {
-          margin-top: 10px;
-          font-size: 26px;
-          line-height: 1.08;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .ui-bandbody {
-          margin-top: 10px;
-          font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.7);
-          max-width: 65ch;
-        }
-
-        .ui-mini {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(0, 0, 0, 0.18);
-          padding: 14px 14px;
-        }
-
-        .ui-minih {
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.72);
-          font-weight: 800;
-        }
-
-        .ui-minilist {
-          margin-top: 10px;
-          display: grid;
-          gap: 8px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.76);
-        }
-
-        .ui-minilist li {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .ui-faq {
-          display: grid;
-          gap: 10px;
-        }
-
-        .ui-faqitem {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.035);
-          padding: 14px 16px;
-          backdrop-filter: blur(14px) saturate(140%);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
-        }
-
-        .ui-faqsum {
-          cursor: pointer;
-          list-style: none;
-          font-size: 12px;
-          letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.88);
-          font-weight: 700;
-        }
-
-        .ui-faqsum::-webkit-details-marker {
-          display: none;
-        }
-
-        .ui-faqbody {
-          margin-top: 10px;
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.68);
-        }
-
-        .ui-final {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
-          padding: 18px;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 14px;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(18px) saturate(150%);
-          -webkit-backdrop-filter: blur(18px) saturate(150%);
-        }
-
-        @media (min-width: 920px) {
-          .ui-final {
-            grid-template-columns: 1.4fr 0.6fr;
-            align-items: center;
-          }
-        }
-
-        .ui-finaltitle {
-          margin-top: 8px;
-          font-size: 24px;
-          line-height: 1.08;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .ui-finalsub {
-          margin-top: 10px;
-          font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.7);
-          max-width: 65ch;
-        }
-
-        .ui-finalcta {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          justify-content: flex-start;
-        }
-
-        @media (min-width: 920px) {
-          .ui-finalcta {
-            justify-content: flex-end;
-          }
-        }
-
-        .ui-footline {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.1);
-        }
-
+        /* Buttons */
         .ui-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
           border-radius: 12px;
           padding: 11px 14px;
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.10em;
           text-transform: uppercase;
           transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
           user-select: none;
+          white-space: nowrap;
         }
         .ui-btn:active {
           transform: translateY(1px);
@@ -1509,20 +1038,20 @@ export default function Page() {
           background: #ffffff;
           color: #000000;
           border: 1px solid rgba(255, 255, 255, 0.22);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+          box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
         }
         .ui-btn-primary:hover {
-          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
+          box-shadow: 0 28px 90px rgba(0, 0, 0, 0.65);
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           color: rgba(255, 255, 255, 0.92);
           border: 1px solid rgba(255, 255, 255, 0.14);
         }
         .ui-btn-secondary:hover {
           background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.20);
         }
 
         .ui-icon-btn {
@@ -1534,43 +1063,56 @@ export default function Page() {
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.86);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
         .ui-icon-btn:hover {
           background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.22);
+          border-color: rgba(255, 255, 255, 0.20);
           color: rgba(255, 255, 255, 0.98);
         }
 
+        /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(6, 7, 9, 0.9);
+          background: rgba(6, 7, 9, 0.88);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(20px) saturate(150%);
-          -webkit-backdrop-filter: blur(20px) saturate(150%);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
         }
 
         .ui-input {
           width: 100%;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(255, 255, 255, 0.42);
         }
         .ui-input:focus {
           border-color: rgba(255, 255, 255, 0.26);
-          background: rgba(255, 255, 255, 0.055);
+          background: rgba(255, 255, 255, 0.04);
           box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
         }
 
+        .ui-toast {
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.04);
+        }
+        .ui-toast-ok {
+          border-color: rgba(34, 197, 94, 0.35);
+        }
+        .ui-toast-err {
+          border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        /* Pricing premium surfaces */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1580,7 +1122,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.78);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1590,21 +1132,19 @@ export default function Page() {
         .ui-pricewrap {
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
-          backdrop-filter: blur(18px) saturate(150%);
-          -webkit-backdrop-filter: blur(18px) saturate(150%);
         }
         .ui-pricewrap::before {
           content: '';
           position: absolute;
           inset: -40% -30%;
           background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.12), transparent 48%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.08), transparent 58%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.08), transparent 58%);
+            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
+            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
           pointer-events: none;
         }
 
@@ -1616,7 +1156,7 @@ export default function Page() {
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.84);
+          color: rgba(255, 255, 255, 0.80);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1624,17 +1164,404 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.10);
         }
 
+        /* Landing layout */
+        .ui-landing {
+          width: 100%;
+          max-width: 72rem;
+          margin: 0 auto;
+          padding: 26px 16px 0;
+        }
+
+        .ui-section {
+          padding: 36px 0;
+        }
+        .ui-section-hero {
+          padding-top: 22px;
+        }
+        .ui-section-bottom {
+          padding-bottom: 40px;
+        }
+
+        .ui-heroCard {
+          position: relative;
+          border-radius: 22px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 10px);
+          box-shadow: 0 55px 170px rgba(0, 0, 0, 0.75);
+          padding: 26px 22px 20px;
+          transform: translate3d(0, var(--ui-parallax, 0px), 0);
+          will-change: transform;
+        }
+        .ui-heroCard::before {
+          /* “liquid glass” motion only on the card */
+          content: '';
+          position: absolute;
+          inset: -60% -40%;
+          background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.16) 42%, transparent 60%);
+          opacity: 0.22;
+          transform: translate3d(-40%, 0, 0);
+          animation: uiSheen 7.5s ease-in-out infinite;
+          pointer-events: none;
+          mix-blend-mode: overlay;
+        }
+        @keyframes uiSheen {
+          0% {
+            transform: translate3d(-45%, 0, 0) rotate(0.001deg);
+          }
+          50% {
+            transform: translate3d(45%, 0, 0) rotate(0.001deg);
+          }
+          100% {
+            transform: translate3d(-45%, 0, 0) rotate(0.001deg);
+          }
+        }
+
+        .ui-kickers {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 14px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.86);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 800;
+        }
+
+        .ui-kicker-muted {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.70);
+        }
+
+        .ui-title {
+          font-size: clamp(30px, 4vw, 56px);
+          line-height: 1.02;
+          letter-spacing: -0.05em;
+          margin-bottom: 10px;
+          color: rgba(255, 255, 255, 0.98);
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-subtitle {
+          font-size: 14px;
+          line-height: 1.75;
+          color: rgba(255, 255, 255, 0.76);
+          max-width: 72ch;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-cta-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 18px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-trust {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-top: 14px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.66);
+          position: relative;
+          z-index: 1;
+        }
+        .ui-trust-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .ui-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.22);
+        }
+
+        .ui-sectionHead {
+          margin-bottom: 16px;
+        }
+        .ui-eyebrow {
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.62);
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+        .ui-h2 {
+          font-size: clamp(22px, 2.6vw, 34px);
+          letter-spacing: -0.04em;
+          color: rgba(255, 255, 255, 0.96);
+          margin-bottom: 8px;
+        }
+        .ui-lead {
+          font-size: 13px;
+          line-height: 1.75;
+          color: rgba(255, 255, 255, 0.72);
+          max-width: 75ch;
+        }
+
+        .ui-cardGrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          margin-top: 14px;
+        }
+        @media (min-width: 920px) {
+          .ui-cardGrid {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+        }
+
+        .ui-card {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+          padding: 16px;
+          transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+        }
+        .ui-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255, 255, 255, 0.20);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .ui-cardTop {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+        }
+        .ui-cardIcon {
+          width: 40px;
+          height: 40px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.90);
+          flex: 0 0 auto;
+        }
+        .ui-cardTitle {
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.92);
+          margin-bottom: 6px;
+        }
+        .ui-cardBody {
+          font-size: 12px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.70);
+        }
+
+        .ui-split {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          align-items: start;
+        }
+        @media (min-width: 980px) {
+          .ui-split {
+            grid-template-columns: 1.2fr 0.8fr;
+          }
+        }
+
+        .ui-steps {
+          margin-top: 14px;
+          display: grid;
+          gap: 10px;
+        }
+        .ui-step {
+          display: flex;
+          gap: 12px;
+          padding: 12px 12px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .ui-stepNum {
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.62);
+          padding-top: 2px;
+        }
+        .ui-stepTitle {
+          font-size: 12px;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.92);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          margin-bottom: 3px;
+        }
+        .ui-stepBody {
+          font-size: 12px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.70);
+        }
+
+        .ui-sideCard {
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+          padding: 16px;
+          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65);
+          position: sticky;
+          top: 92px;
+        }
+        .ui-sideTag {
+          display: inline-flex;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.70);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 999px;
+          padding: 6px 10px;
+          margin-bottom: 12px;
+        }
+        .ui-sideList {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 14px;
+          display: grid;
+          gap: 10px;
+          color: rgba(255, 255, 255, 0.74);
+          font-size: 12px;
+        }
+        .ui-sideDot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.25);
+          margin-right: 10px;
+          transform: translateY(1px);
+        }
+        .ui-sideBtns {
+          display: grid;
+          gap: 10px;
+        }
+
+        .ui-faq {
+          display: grid;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .ui-faqItem {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          overflow: hidden;
+        }
+        .ui-faqQ {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 14px;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.88);
+        }
+        .ui-faqChevron {
+          color: rgba(255, 255, 255, 0.60);
+          font-weight: 900;
+          font-size: 18px;
+        }
+        .ui-faqA {
+          overflow: hidden;
+          transition: max-height 220ms ease;
+        }
+        .ui-faqAText {
+          padding: 0 14px 14px;
+          font-size: 12px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.72);
+        }
+
+        .ui-ready {
+          border-radius: 22px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 30px 120px rgba(0, 0, 0, 0.65);
+          padding: 18px;
+        }
+
+        .ui-footer {
+          padding: 26px 0 34px;
+          text-align: center;
+          color: rgba(255, 255, 255, 0.55);
+        }
+        .ui-footerLinks {
+          display: flex;
+          gap: 18px;
+          justify-content: center;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+          margin-bottom: 10px;
+        }
+        .ui-footnote {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.44);
+          max-width: 85ch;
+          margin: 0 auto;
+        }
+
+        /* Reveal animation */
+        .ui-reveal {
+          opacity: 0;
+          transform: translateY(10px);
+          transition: opacity 420ms ease, transform 420ms ease;
+        }
+        .ui-reveal.ui-reveal-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Chat bubbles — tool-like */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           color: rgba(255, 255, 255, 0.92);
-          backdrop-filter: blur(14px) saturate(140%);
-          -webkit-backdrop-filter: blur(14px) saturate(140%);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
@@ -1642,47 +1569,25 @@ export default function Page() {
           border-color: rgba(255, 255, 255, 0.22);
         }
 
-        [data-reveal] {
-          opacity: 0;
-          transform: translate3d(0, 10px, 0);
-          transition: opacity 520ms ease, transform 520ms ease;
-          will-change: opacity, transform;
-        }
-        .ui-reveal-in {
-          opacity: 1;
-          transform: translate3d(0, 0, 0);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          body.ui-enterprise-bg::before {
-            animation: none !important;
-          }
-          .ui-shell {
-            transform: none !important;
-          }
-          .ui-metal-stripe::before {
-            animation: none !important;
-          }
-          [data-reveal] {
-            opacity: 1 !important;
-            transform: none !important;
-            transition: none !important;
-          }
+        .ui-empty {
+          color: rgba(255, 255, 255, 0.70);
         }
       `}</style>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <div className="ui-bg" aria-hidden="true" />
+      <div className="ui-stage">
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      <div className="h-[100dvh] min-h-0 flex flex-col">
-        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
+        {/* HEADER (sticky on BOTH landing + app) */}
+        <header className="sticky top-0 z-40 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/60 ${inter.className}`}>Active · site license</span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/65 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
@@ -1741,19 +1646,13 @@ export default function Page() {
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 flex flex-col">
-          {!isAuthenticated ? (
-            <div ref={landingWrapRef} className="flex-1 min-h-0 overflow-y-auto" onScroll={handleLandingScroll}>
-              <div ref={landingRootRef} className="h-full">
-                <LandingPage
-                  landingRootRef={landingRootRef}
-                  shellRef={shellParallaxRef}
-                  onShowPricing={() => setShowPricingModal(true)}
-                  onShowAuth={() => setShowAuthModal(true)}
-                />
-              </div>
-            </div>
-          ) : (
+        {/* CONTENT */}
+        {!isAuthenticated ? (
+          <main className="pb-10">
+            <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+          </main>
+        ) : (
+          <main className="h-[100dvh] min-h-0 flex flex-col">
             <div className="flex-1 min-h-0 flex flex-col">
               <div
                 ref={scrollRef}
@@ -1764,7 +1663,7 @@ export default function Page() {
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
                     <div className="max-w-xl text-center">
-                      <p className={`text-sm leading-relaxed text-white/62 ${inter.className}`}>
+                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
                         Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for an inspection-grade risk scan.
                       </p>
                     </div>
@@ -1783,9 +1682,9 @@ export default function Page() {
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1840,14 +1739,14 @@ export default function Page() {
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/45 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/50 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
               </div>
             </div>
-          )}
-        </main>
+          </main>
+        )}
       </div>
     </>
   )
