@@ -1,170 +1,179 @@
 'use client'
-// Force Update: 2025-12-08
-import Link from 'next/link'
-import { Outfit } from 'next/font/google'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+import { useEffect } from 'react'
+import Link from 'next/link'
+import { Outfit, Inter } from 'next/font/google'
+
+const outfit = Outfit({ subsets: ['latin'], weight: ['600', '700', '800'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 export default function TermsOfService() {
+  useEffect(() => {
+    document.body.classList.add('ui-enterprise-bg')
+    return () => document.body.classList.remove('ui-enterprise-bg')
+  }, [])
+
   return (
-    <div
-      className={`min-h-screen bg-[#FAFAFA] font-sans text-slate-600 selection:bg-blue-100 selection:text-blue-900 ${outfit.className}`}
-    >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12 text-center md:text-left border-b border-slate-200 pb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3 tracking-tight">
-            Terms of Service
-          </h1>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
-            Last updated: December 8, 2025
-          </p>
-        </div>
+    <div className={`min-h-screen px-4 py-10 ${inter.className}`}>
+      <style jsx global>{`
+        body.ui-enterprise-bg {
+          overflow-x: hidden;
+          background: #050608;
+          color: rgba(255, 255, 255, 0.94);
+          --ui-lamp: 1.08;
+          --ui-vignette: 0.93;
+        }
+        body.ui-enterprise-bg::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.11), transparent 58%),
+            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.05), transparent 60%),
+            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.05), transparent 60%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 12px),
+            repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 24px);
+          opacity: 0.9;
+          filter: brightness(var(--ui-lamp));
+          transform: translateZ(0);
+        }
+        body.ui-enterprise-bg::after {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
+          opacity: var(--ui-vignette);
+          transform: translateZ(0);
+        }
+      `}</style>
 
-        <div className="space-y-6">
-          <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">
-              1. Acceptance of Terms
-            </h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              By accessing or using protocolLM (&quot;the Service&quot;), you agree to be
-              bound by these Terms of Service. These Terms constitute a legally binding
-              agreement between you and protocolLM.
-            </p>
-          </section>
-
-          {/* CRITICAL LIABILITY SECTION */}
-          <section className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-red-700">
-              2. Critical Disclaimers
-            </h2>
-
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg mb-6">
-              <p className="text-red-800 font-bold mb-2 text-xs uppercase tracking-wide">
-                Not Legal or Health Advice
-              </p>
-              <p className="text-red-700 text-sm leading-relaxed">
-                protocolLM is a reference tool only. It does <strong>NOT</strong> replace
-                professional legal advice, official health department guidance, or
-                licensed food safety consultants. You are solely responsible for
-                verifying all information with the Washtenaw County Health Department or
-                other applicable authorities.
-              </p>
-            </div>
-
-            <h3 className="text-slate-900 font-bold mb-2 text-sm">
-              2.1 Automated Analysis Limitations
-            </h3>
-            <p className="text-slate-600 text-sm mb-4">
-              Our Service uses automated software and a large language model accessed
-              through an application programming interface (&quot;API&quot;) provided by
-              OpenAI or similar vendors to analyze text and images and to generate
-              responses. You acknowledge that:
-            </p>
-            <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
-              <li>
-                Automated responses may contain inaccuracies, omissions, or
-                misinterpretations of statutes, rules, or local enforcement practices.
-              </li>
-              <li>
-                The Service may not reflect real-time changes to county or state
-                policies, inspection procedures, or interpretive guidance.
-              </li>
-              <li>
-                Output is probabilistic and may differ when the same question or image is
-                submitted more than once.
-              </li>
-              <li>
-                <strong>Human Review Required:</strong> Compliance decisions, equipment
-                purchases, staffing changes, and operational adjustments must not be based
-                solely on responses generated by the Service.
-              </li>
-            </ul>
-          </section>
-
-          <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">
-              3. Indemnification (Hold Harmless)
-            </h2>
-            <p className="text-slate-600 text-sm leading-relaxed mb-4">
-              You agree to defend, indemnify, and hold harmless protocolLM, its owners,
-              and affiliates from and against any claims, liabilities, damages,
-              judgments, awards, losses, costs, expenses, or fees (including reasonable
-              attorneys&apos; fees) arising out of or relating to:
-            </p>
-            <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
-              <li>Your use of the Service.</li>
-              <li>
-                Any violation of health codes, fines, closures, or legal action taken
-                against your business.
-              </li>
-              <li>Your reliance on any information provided by the Service.</li>
-            </ul>
-            <p className="text-slate-600 text-sm mt-4 font-bold">
-              You acknowledge that you maintain sole responsibility for your
-              establishment&apos;s compliance with applicable laws and regulations.
-            </p>
-          </section>
-
-          <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">
-              4. Limitation of Liability
-            </h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT WILL PROTOCOLLM BE
-              LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
-              DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, REVENUE, GOODWILL,
-              OR BUSINESS INTERRUPTION.
-            </p>
-            <p className="text-slate-600 text-sm mt-3 leading-relaxed">
-              OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM THESE TERMS OR THE SERVICE
-              SHALL NOT EXCEED THE FEES YOU PAID TO US IN THE TWELVE (12) MONTHS
-              PRECEDING THE EVENT GIVING RISE TO THE CLAIM.
-            </p>
-          </section>
-
-          <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">
-              5. Subscription &amp; Cancellation
-            </h2>
-            <ul className="list-disc pl-5 text-slate-500 space-y-2 text-sm">
-              <li>
-                <strong>Free Trial:</strong> A time-limited trial may be offered. Unless
-                cancelled before the trial ends, your subscription will convert to a paid
-                plan.
-              </li>
-              <li>
-                <strong>Cancellation:</strong> You may cancel at any time via the
-                self-service billing portal to stop future billing cycles.
-              </li>
-              <li>
-                <strong>Refunds:</strong> We do not provide refunds for partial months or
-                unused portions of the Service.
-              </li>
-            </ul>
-          </section>
-
-          <section className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-xl font-bold mb-4 text-slate-900">6. Contact</h2>
-            <p className="text-slate-500 text-sm">
-              For questions about these Terms, contact:
-              <br />
-              <a
-                href="mailto:austinrnorthrop@gmail.com"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                austinrnorthrop@gmail.com
-              </a>
-            </p>
-          </section>
-        </div>
-
-        <div className="mt-16 pt-8 border-t border-slate-200 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest transition-colors"
-          >
-            <span>←</span> Return Home
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <Link href="/" className={`inline-flex items-baseline gap-0 select-none ${outfit.className}`}>
+            <span className="text-[15px] sm:text-[16px] font-extrabold tracking-[-0.03em] text-white/90">protocol</span>
+            <span className="text-[15px] sm:text-[16px] font-black tracking-[-0.03em] text-white/90">LM</span>
           </Link>
+
+          <div className="hidden sm:block text-[12px] text-white/65">
+            Made in Washtenaw County for Washtenaw County.
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-white/12 bg-white/[0.03] shadow-[0_40px_120px_rgba(0,0,0,0.7)] overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-white/10">
+            <h1 className={`text-3xl sm:text-4xl font-extrabold tracking-tight text-white ${outfit.className}`}>Terms of Service</h1>
+            <p className="mt-2 text-[12px] text-white/60 font-semibold uppercase tracking-[0.18em]">
+              Last updated: December 8, 2025
+            </p>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-6">
+            <section className="rounded-2xl border border-white/12 bg-white/[0.02] p-6">
+              <h2 className={`text-lg font-bold text-white ${outfit.className}`}>1. Acceptance of Terms</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                By accessing or using protocolLM (&quot;the Service&quot;), you agree to be bound by these Terms of Service.
+                These Terms constitute a legally binding agreement between you and protocolLM.
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-red-400/25 bg-red-500/10 p-6">
+              <h2 className={`text-lg font-bold text-red-200 ${outfit.className}`}>2. Critical Disclaimers</h2>
+
+              <div className="mt-4 rounded-xl border border-red-400/25 bg-black/20 p-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] font-bold text-red-200">Not Legal or Health Advice</p>
+                <p className="mt-2 text-[13px] leading-relaxed text-red-100/90">
+                  protocolLM is a reference tool only. It does <strong>NOT</strong> replace professional legal advice, official health department
+                  guidance, or licensed food safety consultants. You are solely responsible for verifying all information with the Washtenaw County
+                  Health Department or other applicable authorities.
+                </p>
+              </div>
+
+              <h3 className={`mt-5 text-[13px] font-bold text-white ${outfit.className}`}>2.1 Automated Analysis Limitations</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                Our Service uses automated software and a large language model accessed through an application programming interface (&quot;API&quot;)
+                provided by OpenAI or similar vendors to analyze text and images and to generate responses. You acknowledge that:
+              </p>
+              <ul className="mt-3 list-disc pl-5 space-y-2 text-[13px] text-white/70">
+                <li>Automated responses may contain inaccuracies, omissions, or misinterpretations of statutes, rules, or local enforcement practices.</li>
+                <li>The Service may not reflect real-time changes to county or state policies, inspection procedures, or interpretive guidance.</li>
+                <li>Output is probabilistic and may differ when the same question or image is submitted more than once.</li>
+                <li>
+                  <strong>Human Review Required:</strong> Compliance decisions, equipment purchases, staffing changes, and operational adjustments must not
+                  be based solely on responses generated by the Service.
+                </li>
+              </ul>
+            </section>
+
+            <section className="rounded-2xl border border-white/12 bg-white/[0.02] p-6">
+              <h2 className={`text-lg font-bold text-white ${outfit.className}`}>3. Indemnification (Hold Harmless)</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                You agree to defend, indemnify, and hold harmless protocolLM, its owners, and affiliates from and against any claims, liabilities,
+                damages, judgments, awards, losses, costs, expenses, or fees (including reasonable attorneys&apos; fees) arising out of or relating to:
+              </p>
+              <ul className="mt-3 list-disc pl-5 space-y-2 text-[13px] text-white/70">
+                <li>Your use of the Service.</li>
+                <li>Any violation of health codes, fines, closures, or legal action taken against your business.</li>
+                <li>Your reliance on any information provided by the Service.</li>
+              </ul>
+              <p className="mt-3 text-[13px] font-semibold text-white/85">
+                You acknowledge that you maintain sole responsibility for your establishment&apos;s compliance with applicable laws and regulations.
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-white/12 bg-white/[0.02] p-6">
+              <h2 className={`text-lg font-bold text-white ${outfit.className}`}>4. Limitation of Liability</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT WILL PROTOCOLLM BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
+                OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, REVENUE, GOODWILL, OR BUSINESS INTERRUPTION.
+              </p>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/75">
+                OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE FEES YOU PAID TO US IN THE TWELVE (12)
+                MONTHS PRECEDING THE EVENT GIVING RISE TO THE CLAIM.
+              </p>
+            </section>
+
+            <section className="rounded-2xl border border-white/12 bg-white/[0.02] p-6">
+              <h2 className={`text-lg font-bold text-white ${outfit.className}`}>5. Subscription &amp; Cancellation</h2>
+              <ul className="mt-3 list-disc pl-5 space-y-2 text-[13px] text-white/70">
+                <li>
+                  <strong>Free Trial:</strong> A time-limited trial may be offered. Unless cancelled before the trial ends, your subscription will
+                  convert to a paid plan.
+                </li>
+                <li>
+                  <strong>Cancellation:</strong> You may cancel at any time via the self-service billing portal to stop future billing cycles.
+                </li>
+                <li>
+                  <strong>Refunds:</strong> We do not provide refunds for partial months or unused portions of the Service.
+                </li>
+              </ul>
+            </section>
+
+            <section className="rounded-2xl border border-white/12 bg-white/[0.02] p-6">
+              <h2 className={`text-lg font-bold text-white ${outfit.className}`}>6. Contact</h2>
+              <p className="mt-2 text-[13px] text-white/70">
+                For questions about these Terms, contact:
+                <br />
+                <a href="mailto:austinrnorthrop@gmail.com" className="text-white/90 hover:text-white underline underline-offset-4">
+                  austinrnorthrop@gmail.com
+                </a>
+              </p>
+            </section>
+
+            <div className="pt-4">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.02] px-4 py-2 text-[12px] font-bold uppercase tracking-[0.16em] text-white/80 hover:text-white hover:bg-white/[0.05] transition-colors"
+              >
+                <span>←</span> Return Home
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="sm:hidden mt-6 text-center text-[12px] text-white/65">
+          Made in Washtenaw County for Washtenaw County.
         </div>
       </div>
     </div>
