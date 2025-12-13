@@ -128,7 +128,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
       <div className="max-w-6xl w-full">
         <div className="ui-shell">
-          {/* HERO */}
           <section className="ui-hero">
             <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
@@ -151,7 +150,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
-          {/* FEATURE ROW (Photo Analysis + Document search) */}
           <section className="ui-section">
             <div className="ui-featuregrid">
               <div className="ui-stepcard">
@@ -182,7 +180,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
-          {/* FAQ */}
           <section className="ui-section">
             <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
             <div className="ui-faq">
@@ -200,7 +197,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
-          {/* FINAL CTA (second/last CTA block) */}
           <section className="ui-final">
             <div className="ui-finalinner">
               <div>
@@ -255,7 +251,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [messageKind, setMessageKind] = useState('info') // 'ok' | 'err' | 'info'
+  const [messageKind, setMessageKind] = useState('info')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
   useEffect(() => {
@@ -663,7 +659,7 @@ export default function Page() {
       const { data } = await supabase.auth.getSession()
       if (!data.session) {
         setShowPricingModal(false)
-        setAuthInitialMode('signup') // ✅ trial flow = create account
+        setAuthInitialMode('signup')
         setShowAuthModal(true)
         return
       }
@@ -842,14 +838,10 @@ export default function Page() {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-
-          /* 🔆 Brightness knob:
-             1.00 = original, 1.06 = ~6% brighter (current), try 1.10 if you want more. */
           --ui-lamp: 1.28;
           --ui-vignette: 0.93;
         }
 
-        /* Background: same as your version, just slightly brighter via opacity knob */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
@@ -874,7 +866,6 @@ export default function Page() {
           transform: translateZ(0);
         }
 
-        /* Scrollbars */
         :root {
           scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
           scrollbar-width: thin;
@@ -890,7 +881,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           background: rgba(5, 6, 8, 0.78);
@@ -898,7 +888,6 @@ export default function Page() {
           -webkit-backdrop-filter: blur(14px);
         }
 
-        /* Logo (no pill) */
         .ui-logo {
           display: inline-flex;
           align-items: baseline;
@@ -918,7 +907,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Shell */
         .ui-shell {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
@@ -928,7 +916,6 @@ export default function Page() {
           position: relative;
         }
 
-        /* Subtle sheen */
         .ui-shell::before {
           content: '';
           position: absolute;
@@ -1014,7 +1001,6 @@ export default function Page() {
           max-width: 72ch;
         }
 
-        /* Feature grid (2-up on desktop) */
         .ui-featuregrid {
           display: grid;
           grid-template-columns: 1fr;
@@ -1065,7 +1051,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.55);
         }
 
-        /* FAQ */
         .ui-faq {
           margin-top: 12px;
           border-radius: 16px;
@@ -1144,7 +1129,6 @@ export default function Page() {
           font-size: 12px;
         }
 
-        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1199,7 +1183,6 @@ export default function Page() {
           outline-offset: 2px;
         }
 
-        /* Icon buttons (touch target 44x44) */
         .ui-icon-btn {
           width: 44px;
           height: 44px;
@@ -1219,7 +1202,6 @@ export default function Page() {
           transform: scale(1.02);
         }
 
-        /* Modals / backdrop */
         .ui-backdrop {
           background: rgba(0, 0, 0, 0.8);
           backdrop-filter: blur(10px);
@@ -1269,7 +1251,6 @@ export default function Page() {
           box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
         }
 
-        /* Toast */
         .ui-toast {
           display: flex;
           gap: 10px;
@@ -1295,7 +1276,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.7);
         }
 
-        /* Pricing */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1340,23 +1320,52 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Chat bubbles */
+        /* ✅ CHAT: remove borders around any message text, thinking, and images */
         .ui-bubble {
-          border-radius: 14px;
-          padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
           color: rgba(255, 255, 255, 0.94);
         }
         .ui-bubble-user {
-          background: rgba(255, 255, 255, 0.92);
-          color: #000;
-          border-color: rgba(255, 255, 255, 0.2);
+          border: none !important;
+          background: rgba(255, 255, 255, 0.92) !important;
+          color: #000 !important;
+          padding: 12px 14px !important;
+          border-radius: 14px !important;
+        }
+
+        .ui-chatimgwrap {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          border-radius: 16px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+        .ui-chatimg {
+          display: block;
+          width: 100%;
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          border-radius: 0 !important; /* wrapper handles rounding */
+          max-height: 280px;
+          object-fit: contain;
+        }
+
+        .ui-thinking {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
         }
 
         .ui-emptywrap {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: none !important;
+          background: rgba(255, 255, 255, 0.02) !important;
           border-radius: 18px;
           padding: 16px;
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
@@ -1364,34 +1373,14 @@ export default function Page() {
           width: 100%;
         }
 
-        .ui-emptyicon {
-          width: 44px;
-          height: 44px;
+        .ui-attachpill {
+          border: none !important;
+          background: rgba(255, 255, 255, 0.04) !important;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          padding: 10px 12px;
           color: rgba(255, 255, 255, 0.75);
-          margin-bottom: 10px;
         }
 
-        .ui-emptytitle {
-          font-size: 13px;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.92);
-          margin-bottom: 6px;
-          letter-spacing: 0.02em;
-        }
-
-        .ui-emptytext {
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
-        }
-
-        /* Spinners */
         .ui-spinner {
           width: 14px;
           height: 14px;
@@ -1452,18 +1441,15 @@ export default function Page() {
 
             <div className="flex items-center gap-2">
               {!isAuthenticated ? (
-                <>
-                  {/* Keep header minimal (no duplicate Start trial) */}
-                  <button
-                    onClick={() => {
-                      setAuthInitialMode('signin')
-                      setShowAuthModal(true)
-                    }}
-                    className="ui-btn ui-btn-secondary"
-                  >
-                    <span className="ui-btn-inner">Sign in</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => {
+                    setAuthInitialMode('signin')
+                    setShowAuthModal(true)
+                  }}
+                  className="ui-btn ui-btn-secondary"
+                >
+                  <span className="ui-btn-inner">Sign in</span>
+                </button>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
@@ -1543,11 +1529,7 @@ export default function Page() {
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="ui-btn ui-btn-secondary"
-                        >
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-btn ui-btn-secondary">
                           <span className="ui-btn-inner">
                             <Icons.Camera />
                             Attach photo
@@ -1564,16 +1546,15 @@ export default function Page() {
                   <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[75%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                        <div className={`max-w-[78%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
                           {msg.image && (
-                            <img
-                              src={msg.image}
-                              alt="Uploaded"
-                              className="mb-3 rounded-xl border border-white/10 max-h-64 object-contain bg-black/30"
-                            />
+                            <div className="ui-chatimgwrap">
+                              <img src={msg.image} alt="Uploaded" className="ui-chatimg" />
+                            </div>
                           )}
+
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-2 items-center">
+                            <div className="ui-thinking flex gap-2 items-center">
                               <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
                               <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
                               <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
@@ -1594,9 +1575,14 @@ export default function Page() {
                   style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
                 >
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-10 !h-10" aria-label="Remove image">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="ui-icon-btn !w-10 !h-10"
+                        aria-label="Remove image"
+                        title="Remove"
+                      >
                         <Icons.X />
                       </button>
                     </div>
@@ -1604,6 +1590,7 @@ export default function Page() {
 
                   <div className="flex items-end gap-2">
                     <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
+
                     <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
                       <Icons.Camera />
                     </button>
