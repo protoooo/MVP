@@ -15,6 +15,8 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
+const UNICORN_PROJECT_ID = 'qF3qXhdiOxdUeQYH8wCK' // ✅ Chrome Ribbon / UnicornStudio
+
 const Icons = {
   Camera: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -29,8 +31,8 @@ const Icons = {
   ),
   X: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y1="18" />
+      <line x1="6" y1="6" x2="18" y1="18" />
     </svg>
   ),
   Check: () => (
@@ -585,7 +587,7 @@ export default function Page() {
         return
       }
 
-      // ✅ Enforce Accept Terms before app usage
+      // ✅ Enforce Accept Terms before app usage (only AFTER a session exists)
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -602,7 +604,6 @@ export default function Page() {
           return
         }
       } catch (e) {
-        // If the profile fetch fails, fail safe → require accept-terms
         console.error('Policy check error', e)
         setHasActiveSubscription(false)
         setIsLoading(false)
@@ -664,6 +665,34 @@ export default function Page() {
     return () => {
       document.body.classList.remove('ui-enterprise-bg')
     }
+  }, [])
+
+  // ✅ UnicornStudio background loader (NO installs, just a CDN script)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // dev/strict-mode safe: don’t inject twice
+    const existing = document.querySelector('script[data-unicornstudio="1"]')
+    if (existing) return
+
+    // stub to match their embed pattern
+    if (!window.UnicornStudio) window.UnicornStudio = { isInitialized: false }
+
+    const s = document.createElement('script')
+    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js'
+    s.async = true
+    s.dataset.unicornstudio = '1'
+    s.onload = () => {
+      try {
+        if (!window.UnicornStudio?.isInitialized && window.UnicornStudio?.init) {
+          window.UnicornStudio.init()
+          window.UnicornStudio.isInitialized = true
+        }
+      } catch (e) {
+        console.error('UnicornStudio init failed', e)
+      }
+    }
+    ;(document.head || document.body).appendChild(s)
   }, [])
 
   useEffect(() => {
@@ -856,6 +885,11 @@ export default function Page() {
 
   return (
     <>
+      {/* ✅ Motion Chrome (behind everything) */}
+      <div id="ui-motion-bg" aria-hidden="true">
+        <div data-us-project={UNICORN_PROJECT_ID} />
+      </div>
+
       <style jsx global>{`
         html,
         body {
@@ -863,62 +897,67 @@ export default function Page() {
           width: 100%;
         }
 
+        /* ======= AMEX / BLACK AURORA BACKGROUND (NO lattice) ======= */
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-          --ui-lamp: 1.08;
-          --ui-vignette: 0.93;
+          --ui-lamp: 1.06;
+          --ui-vignette: 0.92;
         }
 
-        /* ✅ NEW: “Black Aurora / Black Hole” background (no lattice) */
+        /* UnicornStudio layer (desaturated + premium) */
+        #ui-motion-bg {
+          position: fixed;
+          inset: 0;
+          z-index: -30;
+          pointer-events: none;
+          overflow: hidden;
+          transform: translateZ(0);
+        }
+        #ui-motion-bg [data-us-project] {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          /* kill the rainbow, keep the chrome highlights */
+          filter: grayscale(1) saturate(0) contrast(1.08) brightness(0.78);
+          opacity: 0.82;
+        }
+
+        /* subtle “black aurora / black hole” light shaping */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
-          inset: -12%;
+          inset: 0;
+          z-index: -20;
           pointer-events: none;
           background:
-            radial-gradient(1200px 560px at 50% -14%, rgba(255, 255, 255, 0.12), transparent 62%),
-            radial-gradient(980px 600px at 16% 6%, rgba(0, 255, 210, 0.06), transparent 64%),
-            radial-gradient(980px 600px at 86% 4%, rgba(140, 110, 255, 0.06), transparent 66%),
-            radial-gradient(1200px 820px at 50% 118%, rgba(255, 255, 255, 0.03), transparent 66%),
-            conic-gradient(
-              from 210deg at 50% 32%,
-              rgba(0, 255, 210, 0.05),
-              rgba(140, 110, 255, 0.05),
-              rgba(255, 255, 255, 0.02),
-              rgba(0, 255, 210, 0.05)
-            );
-          opacity: 0.88;
-          filter: brightness(var(--ui-lamp)) saturate(1.15);
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
+            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
+            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%);
+          opacity: 0.95;
+          filter: brightness(var(--ui-lamp));
           transform: translateZ(0);
-          will-change: transform;
-          animation: uiAurora 18s ease-in-out infinite alternate;
         }
 
-        @keyframes uiAurora {
-          0% {
-            transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
-          }
-          50% {
-            transform: translate3d(-2%, -1%, 0) scale(1.04) rotate(1.5deg);
-          }
-          100% {
-            transform: translate3d(2%, 0%, 0) scale(1.08) rotate(-1.5deg);
-          }
-        }
-
-        /* ✅ NEW: stronger “black hole” vignette */
+        /* vignette (keeps the “Amex black” focus) */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
+          z-index: -10;
           pointer-events: none;
-          background:
-            radial-gradient(380px 320px at 50% 34%, rgba(0, 0, 0, 0.0) 0%, rgba(0, 0, 0, 0.55) 62%, rgba(0, 0, 0, 0.88) 100%),
-            radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.72) 70%);
           opacity: var(--ui-vignette);
           transform: translateZ(0);
+        }
+
+        /* If user prefers reduced motion, just hide the animated background */
+        @media (prefers-reduced-motion: reduce) {
+          #ui-motion-bg {
+            display: none;
+          }
         }
 
         :root {
