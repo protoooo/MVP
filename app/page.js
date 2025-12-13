@@ -17,150 +17,87 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
   X: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Check: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   LogOut: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   Settings: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
   Plus: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
   Shield: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
       <path d="M9 12l2 2 4-5" />
     </svg>
   ),
   Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
   ),
   Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
       <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
     </svg>
   ),
 }
 
-/**
- * UI/UX-only landing behavior:
- * - Big “Liquid Glass” card stays visually independent (sticky + subtle drift).
- * - Top header stays fixed, bottom landing bar stays fixed.
- * - No functional / data / auth changes.
- */
-function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
-  const shellRef = useRef(null)
-  const rafRef = useRef(null)
-
-  useEffect(() => {
-    const scroller = scrollElRef?.current
-    const shell = shellRef.current
-    if (!scroller || !shell) return
-
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReduced) return
-
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
-
-    const update = () => {
-      rafRef.current = null
-
-      // Use scroll to move the *light* and apply micro drift/tilt. Card itself is sticky (independent).
-      const t = clamp(scroller.scrollTop, 0, 1200)
-      const p = clamp(t / 900, 0, 1)
-
-      // micro motion: feels like an object under glass, not content moving
-      const driftY = (p * 10).toFixed(2) // px
-      const tiltX = (p * 1.4).toFixed(3) // deg
-      const tiltY = (p * -0.9).toFixed(3) // deg
-
-      // Move a specular highlight across the glass (Apple-esque)
-      const sheenX = (20 + p * 60).toFixed(2) // %
-      const sheenY = (8 + p * 18).toFixed(2) // %
-
-      shell.style.setProperty('--lg-drift-y', `${driftY}px`)
-      shell.style.setProperty('--lg-tilt-x', `${tiltX}deg`)
-      shell.style.setProperty('--lg-tilt-y', `${tiltY}deg`)
-      shell.style.setProperty('--lg-sheen-x', `${sheenX}%`)
-      shell.style.setProperty('--lg-sheen-y', `${sheenY}%`)
-
-      shell.style.boxShadow = `0 40px 120px rgba(0,0,0,0.72), 0 ${22 + p * 10}px ${60 + p * 50}px rgba(0,0,0,0.55)`
-    }
-
-    const onScroll = () => {
-      if (rafRef.current != null) return
-      rafRef.current = window.requestAnimationFrame(update)
-    }
-
-    update()
-    scroller.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      scroller.removeEventListener('scroll', onScroll)
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
-    }
-  }, [scrollElRef])
-
+function LandingPage({ onShowPricing, onShowAuth, shellRef }) {
   return (
-    <div className="ui-landing-stage">
-      {/* Spacer above gives scroll room while card remains visually “separate” */}
-      <div className="ui-landing-spacer" aria-hidden="true" />
-
-      <div className="ui-landing-stickwrap">
-        <div ref={shellRef} className="ui-shell ui-shell--liquid ui-shell--sticky">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-14 sm:py-16">
+      <div className="max-w-6xl w-full">
+        <div className="ui-shell" ref={shellRef}>
           <div className="ui-hero">
             <div className="ui-kickers">
               <span className={`ui-kicker ${inter.className}`}>
                 <Icons.Shield /> Inspection-grade
               </span>
-              <span className={`ui-kicker-muted ${inter.className}`}>Michigan-first · enterprise posture</span>
+              <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>Inspection-grade compliance, operationalized.</h1>
+            <h1 className={`ui-title ${outfit.className}`}>Compliance you can run your restaurant on.</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
-              Serious answers grounded in Michigan Food Code and Washtenaw guidance. Photo risk scans, concise checklists, and a workflow
-              your team can run without guesswork.
+              A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans, and
+              actionable close/open checklists — without digging through manuals.
             </p>
 
-            <div className="ui-cta-row">
+            <div className="ui-cta-row" aria-label="Primary actions">
               <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
                 Start trial
               </button>
@@ -169,60 +106,61 @@ function LandingPage({ onShowPricing, onShowAuth, scrollElRef }) {
               </button>
             </div>
 
-            <div className={`ui-trust ${inter.className}`}>
+            <div className={`ui-trust ${inter.className}`} aria-label="Product highlights">
               <span className="ui-trust-item">
                 <Icons.Lock /> Secure by design
               </span>
-              <span className="ui-dot" />
+              <span className="ui-dot" aria-hidden="true" />
               <span className="ui-trust-item">
                 <Icons.Spark /> Operator-focused
               </span>
-              <span className="ui-dot" />
+              <span className="ui-dot" aria-hidden="true" />
               <span className="ui-trust-item">
                 <Icons.Shield /> Built for audits
               </span>
             </div>
           </div>
 
-          <div className="ui-specgrid">
-            <div className="ui-spec">
+          <div className="ui-specgrid" role="list" aria-label="Features">
+            <div className="ui-spec" role="listitem">
               <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
-              <div className={`ui-spec-body ${inter.className}`}>Upload a walk-in or line photo. Verify the likely issues fast.</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Upload a walk-in or line photo. Get a tight list of likely issues to verify — fast.
+              </div>
             </div>
 
-            <div className="ui-spec">
+            <div className="ui-spec" role="listitem">
               <div className={`ui-spec-title ${inter.className}`}>Grounded answers</div>
-              <div className={`ui-spec-body ${inter.className}`}>Ask normal questions. Get rulebook-backed guidance you can cite.</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
+              </div>
             </div>
 
-            <div className="ui-spec">
+            <div className="ui-spec" role="listitem">
               <div className={`ui-spec-title ${inter.className}`}>Action checklist</div>
-              <div className={`ui-spec-body ${inter.className}`}>Convert concerns into a short open/close list your lead can run today.</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Convert concerns into a short close/open list your lead can run — today.
+              </div>
             </div>
           </div>
 
           <div className={`ui-footerline ${inter.className}`}>One site license per restaurant · 7-day trial · Cancel anytime</div>
         </div>
+
+        <footer className="pt-10 text-xs text-white/55">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/terms" className="hover:text-white/80 focus-visible:ui-focus">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-white/80 focus-visible:ui-focus">
+              Privacy
+            </Link>
+            <Link href="/contact" className="hover:text-white/80 focus-visible:ui-focus">
+              Contact
+            </Link>
+          </div>
+        </footer>
       </div>
-
-      {/* Footer is real content that scrolls “behind” the sticky card */}
-      <footer className="ui-landing-footer text-xs">
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/terms" className="hover:text-white/75 text-white/55">
-            Terms
-          </Link>
-          <Link href="/privacy" className="hover:text-white/75 text-white/55">
-            Privacy
-          </Link>
-          <Link href="/contact" className="hover:text-white/75 text-white/55">
-            Contact
-          </Link>
-        </div>
-        <div className={`mt-3 text-center text-white/40 ${inter.className}`}>Built for operators. Not for hobbyists.</div>
-      </footer>
-
-      {/* Spacer below gives more scroll so you can feel the card independence */}
-      <div className="ui-landing-spacer ui-landing-spacer--bottom" aria-hidden="true" />
     </div>
   )
 }
@@ -235,6 +173,15 @@ function AuthModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const { isLoaded, executeRecaptcha } = useRecaptcha()
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, onClose])
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault()
@@ -303,8 +250,18 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal p-7" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-[999] ui-overlay flex items-center justify-center px-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-md ui-modal p-7"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'}
+      >
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
@@ -312,20 +269,20 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/60 ${inter.className}`}>
+            <p className={`text-xs text-white/70 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
-          <button onClick={onClose} className="ui-icon-btn" aria-label="Close">
+          <button onClick={onClose} className="ui-icon-btn focus-visible:ui-focus" aria-label="Close">
             <Icons.X />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-white/70 mb-2">Email</label>
+            <label className="block text-xs font-semibold text-white/75 mb-2">Email</label>
             <input
               type="email"
               value={email}
@@ -333,12 +290,13 @@ function AuthModal({ isOpen, onClose }) {
               placeholder="gm@restaurant.com"
               required
               className={`ui-input ${inter.className}`}
+              autoComplete="email"
             />
           </div>
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-white/70 mb-2">Password</label>
+              <label className="block text-xs font-semibold text-white/75 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -347,11 +305,13 @@ function AuthModal({ isOpen, onClose }) {
                   placeholder="••••••••"
                   required
                   className={`ui-input pr-16 ${inter.className}`}
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-xs focus-visible:ui-focus rounded-md px-1"
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -359,7 +319,11 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+          <button
+            type="submit"
+            disabled={loading || !isLoaded}
+            className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+          >
             {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
@@ -370,24 +334,24 @@ function AuthModal({ isOpen, onClose }) {
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/70">
+        <div className="mt-4 text-center space-y-1 text-xs text-white/75">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/70 hover:text-white">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full hover:text-white focus-visible:ui-focus rounded-md py-1">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/70 hover:text-white">
+              <button type="button" onClick={() => setMode('signup')} className="block w-full hover:text-white focus-visible:ui-focus rounded-md py-1">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="hover:text-white focus-visible:ui-focus rounded-md py-1">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="hover:text-white focus-visible:ui-focus rounded-md py-1">
               Back to sign in
             </button>
           )}
@@ -400,19 +364,36 @@ function AuthModal({ isOpen, onClose }) {
 }
 
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
+  useEffect(() => {
+    if (!isOpen) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal p-7 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6" aria-label="Close pricing">
+    <div className="fixed inset-0 z-[900] ui-overlay flex items-center justify-center px-4" onClick={onClose} role="presentation">
+      <div
+        className="w-full max-w-xl ui-modal p-7 relative"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Pricing"
+      >
+        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6 focus-visible:ui-focus" aria-label="Close pricing">
           <Icons.X />
         </button>
 
         <div className="mb-6">
           <div className={`ui-tag ${inter.className}`}>Enterprise • Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>For operators who want inspection-grade confidence. Includes full chat + photo scanning.</p>
+          <p className={`text-sm text-white/70 ${inter.className}`}>
+            For operators who want inspection-grade confidence. Includes full chat + photo scanning.
+          </p>
         </div>
 
         <div className="ui-pricewrap p-6">
@@ -420,10 +401,11 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/60">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
+              <p className={`text-xs text-white/70 mt-2 ${inter.className}`}>
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check;
+                photo analyses count as two.
               </p>
             </div>
 
@@ -435,7 +417,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="ui-divider my-5" />
 
-          <ul className="text-xs text-white/70 space-y-2">
+          <ul className="text-xs text-white/80 space-y-2">
             <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Text + photo compliance checks</span>
@@ -471,7 +453,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>Not for hobbyists. Built for real operators who want inspection-ready workflows.</p>
+            <p className={`text-[11px] text-white/60 text-center ${inter.className}`}>
+              Not for hobbyists. Built for real operators who want inspection-ready workflows.
+            </p>
           </div>
         </div>
       </div>
@@ -504,8 +488,9 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
-  // Landing scroll container ref (for sticky card lighting/micro motion)
+  // Landing-only parallax refs (independent “card motion”)
   const landingScrollRef = useRef(null)
+  const landingShellRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
 
@@ -613,6 +598,38 @@ export default function Page() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  // Landing-only: scroll parallax to make the glass card feel independent of the scroll layer.
+  useEffect(() => {
+    const scroller = landingScrollRef.current
+    const shell = landingShellRef.current
+    if (!scroller || !shell) return
+
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    if (reduce) return
+
+    let raf = 0
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        const y = scroller.scrollTop
+        // Subtle “lag”: card moves a little as you scroll, capped to stay premium (not gimmicky).
+        const parallaxPx = Math.min(26, y * 0.085)
+        shell.style.setProperty('--shell-parallax-y', `${parallaxPx}px`)
+
+        // Micro tilt adds that iOS “layered glass” feeling without looking like a game UI.
+        const tilt = Math.max(-0.5, Math.min(0.5, (y - 120) * 0.0012))
+        shell.style.setProperty('--shell-tilt', `${tilt}deg`)
+      })
+    }
+
+    onScroll()
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      cancelAnimationFrame(raf)
+      scroller.removeEventListener('scroll', onScroll)
+    }
+  }, [isLoading, session])
 
   const handleCheckout = async (priceId, planName) => {
     try {
@@ -777,7 +794,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" aria-label="Loading" />
       </div>
     )
   }
@@ -793,36 +810,97 @@ export default function Page() {
           width: 100%;
         }
 
-        body.ui-enterprise-bg {
-          overflow: hidden;
-          background: #050608;
-          color: rgba(255, 255, 255, 0.92);
+        /* --- Premium “Amex black” base + Liquid Glass system tokens --- */
+        :root {
+          --bg: #050607;
+          --bg-2: #07080b;
+          --text: rgba(255, 255, 255, 0.92);
+          --muted: rgba(255, 255, 255, 0.72);
+          --muted-2: rgba(255, 255, 255, 0.62);
+          --hairline: rgba(255, 255, 255, 0.10);
+
+          /* Glass tuning (Apple-esque: bright rim, inner highlight, strong blur) */
+          --glass-fill: rgba(255, 255, 255, 0.06);
+          --glass-fill-2: rgba(255, 255, 255, 0.04);
+          --glass-stroke: rgba(255, 255, 255, 0.14);
+          --glass-stroke-soft: rgba(255, 255, 255, 0.09);
+
+          --shadow-1: 0 24px 80px rgba(0, 0, 0, 0.60);
+          --shadow-2: 0 40px 120px rgba(0, 0, 0, 0.78);
+
+          /* Accent (subtle, not neon) */
+          --accent-cyan: rgba(0, 255, 200, 0.18);
+          --accent-indigo: rgba(120, 90, 255, 0.18);
         }
 
-        /* Background: calm, premium, no grid */
+        body.ui-enterprise-bg {
+          overflow: hidden;
+          background: var(--bg);
+          color: var(--text);
+        }
+
+        /* Background: no visible grid. Studio gradients + vignette + optional noise. */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
+
+          /* “Black card” studio lighting */
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.13), transparent 56%),
-            radial-gradient(980px 560px at 18% 6%, rgba(0, 255, 200, 0.085), transparent 58%),
-            radial-gradient(980px 560px at 86% 8%, rgba(120, 90, 255, 0.085), transparent 60%),
-            radial-gradient(900px 900px at 50% 72%, rgba(255, 255, 255, 0.035), transparent 62%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.016) 0px, rgba(255, 255, 255, 0.016) 1px, transparent 1px, transparent 10px);
+            radial-gradient(900px 520px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
+            radial-gradient(900px 520px at 82% 10%, rgba(120, 90, 255, 0.06), transparent 60%),
+            radial-gradient(1100px 520px at 50% -6%, rgba(255, 255, 255, 0.10), transparent 55%),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 30%, rgba(0, 0, 0, 0.25));
+
           opacity: 1;
-          mask-image: radial-gradient(circle at 50% 20%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+          transform: translateZ(0);
+          animation: bgDrift 14s ease-in-out infinite;
         }
 
-        /* Vignette */
+        /* Subtle vignette to anchor content */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.64) 74%);
-          opacity: 0.96;
+          background: radial-gradient(circle at 50% 30%, transparent 0%, rgba(0, 0, 0, 0.62) 72%);
+          opacity: 0.95;
+        }
+
+        /* Optional: “film grain” noise (no external assets). Keep very subtle. */
+        .ui-noise {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          opacity: 0.05;
+          mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+          background-size: 220px 220px;
+        }
+
+        @keyframes bgDrift {
+          0% {
+            transform: translate3d(0, 0, 0) scale(1);
+            filter: saturate(1) contrast(1);
+          }
+          50% {
+            transform: translate3d(0, -6px, 0) scale(1.01);
+            filter: saturate(1.04) contrast(1.02);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+            filter: saturate(1) contrast(1);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          body.ui-enterprise-bg::before {
+            animation: none !important;
+          }
+          .ui-noise {
+            display: none;
+          }
         }
 
         ::-webkit-scrollbar {
@@ -833,15 +911,28 @@ export default function Page() {
           border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.20);
         }
 
-        /* Header (fixed feel) */
+        /* Accessible focus helper */
+        .ui-focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12), 0 0 0 6px rgba(0, 255, 200, 0.08);
+        }
+
+        /* Overlay */
+        .ui-overlay {
+          background: rgba(0, 0, 0, 0.66);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Header: glass bar */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.68);
-          backdrop-filter: blur(18px) saturate(1.2);
-          -webkit-backdrop-filter: blur(18px) saturate(1.2);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(7, 8, 11, 0.58);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
         }
 
         .ui-brand {
@@ -850,108 +941,73 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          border: 1px solid var(--glass-stroke-soft);
           background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+          position: relative;
+          overflow: hidden;
         }
 
-        /* Landing scroll stage */
-        .ui-landing-stage {
-          max-width: 1100px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 18px 14px;
+        .ui-brand::before {
+          content: '';
+          position: absolute;
+          inset: -60% -40%;
+          background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.14), transparent 45%);
+          transform: translate3d(0, 0, 0);
+          pointer-events: none;
+          opacity: 0.7;
         }
 
-        /* Create scroll space so sticky card feels “independent” */
-        .ui-landing-spacer {
-          height: clamp(24px, 6vh, 70px);
-        }
-        .ui-landing-spacer--bottom {
-          height: clamp(120px, 18vh, 220px);
-        }
-
-        /* The sticky wrapper keeps the card visible while other content scrolls */
-        .ui-landing-stickwrap {
-          position: sticky;
-          top: calc(72px + 10px); /* header height + breathing room */
-          z-index: 5;
-          display: flex;
-          justify-content: center;
-        }
-
-        /* Footer scrolls beneath the card */
-        .ui-landing-footer {
-          margin-top: 18px;
-          padding: 18px 10px 0;
-        }
-
-        /* Premium “Apple-esque” Liquid Glass shell */
+        /* Liquid Glass Shell (Landing card) */
         .ui-shell {
           position: relative;
           border-radius: 22px;
           overflow: hidden;
-          width: min(980px, 100%);
+
+          /* Glass recipe: fill + blur + inner highlight + edge stroke */
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.035));
+          border: 1px solid var(--glass-stroke);
+          box-shadow: var(--shadow-2);
+          backdrop-filter: blur(22px);
+          -webkit-backdrop-filter: blur(22px);
+
+          /* Independent layer motion variables */
+          --shell-parallax-y: 0px;
+          --shell-tilt: 0deg;
+          transform: translate3d(0, var(--shell-parallax-y), 0) rotate(var(--shell-tilt));
+          transform-origin: 50% 18%;
+          will-change: transform;
         }
 
-        .ui-shell--liquid {
-          /* CSS vars controlled by JS */
-          --lg-drift-y: 0px;
-          --lg-tilt-x: 0deg;
-          --lg-tilt-y: 0deg;
-          --lg-sheen-x: 35%;
-          --lg-sheen-y: 12%;
-
-          transform: translate3d(0, var(--lg-drift-y), 0) rotateX(var(--lg-tilt-x)) rotateY(var(--lg-tilt-y));
-          transform-style: preserve-3d;
-          will-change: transform, box-shadow;
-
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(22px) saturate(1.3);
-          -webkit-backdrop-filter: blur(22px) saturate(1.3);
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72);
-
-          /* subtle internal contrast to make it easy to see */
-          outline: 1px solid rgba(0, 0, 0, 0.38);
-          outline-offset: -2px;
-        }
-
-        /* Specular highlight + edge glow */
-        .ui-shell--liquid::before {
+        /* Specular highlight band (Apple glass vibe) */
+        .ui-shell::before {
           content: '';
           position: absolute;
           inset: -1px;
           pointer-events: none;
           background:
-            radial-gradient(900px 340px at var(--lg-sheen-x) var(--lg-sheen-y), rgba(255, 255, 255, 0.20), transparent 58%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.11), transparent 34%),
-            radial-gradient(700px 420px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
-            radial-gradient(700px 420px at 86% 12%, rgba(120, 90, 255, 0.06), transparent 60%);
-          opacity: 0.95;
-          mix-blend-mode: screen;
+            radial-gradient(800px 320px at 50% 0%, rgba(255, 255, 255, 0.14), transparent 55%),
+            radial-gradient(600px 280px at 18% 16%, rgba(0, 255, 200, 0.08), transparent 58%),
+            radial-gradient(700px 320px at 86% 14%, rgba(120, 90, 255, 0.08), transparent 58%);
+          opacity: 0.9;
+          filter: blur(10px);
         }
 
-        /* Noise + inner rim light (keeps it “real glass”, not flat) */
-        .ui-shell--liquid::after {
+        /* Inner stroke for that “machined premium” edge */
+        .ui-shell::after {
           content: '';
           position: absolute;
           inset: 0;
           pointer-events: none;
-          background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 36%),
-            radial-gradient(1200px 520px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 62%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
-          background-size: auto, auto, 160px 160px;
-          opacity: 0.22;
+          border-radius: 22px;
           box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.10),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-            inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+            inset 0 1px 0 rgba(255, 255, 255, 0.16),
+            inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+          opacity: 1;
         }
 
         .ui-hero {
-          padding: clamp(18px, 2.6vw, 28px) clamp(16px, 2.4vw, 22px) 18px;
+          padding: 28px 22px 20px;
           position: relative;
           z-index: 1;
         }
@@ -970,10 +1026,10 @@ export default function Page() {
           gap: 8px;
           padding: 7px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.04);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.86);
+          color: rgba(255, 255, 255, 0.88);
           letter-spacing: 0.14em;
           text-transform: uppercase;
           font-weight: 800;
@@ -981,7 +1037,7 @@ export default function Page() {
 
         .ui-kicker-muted {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.62);
+          color: rgba(255, 255, 255, 0.68);
         }
 
         .ui-title {
@@ -990,9 +1046,9 @@ export default function Page() {
           letter-spacing: -0.05em;
           margin-bottom: 10px;
           color: rgba(255, 255, 255, 0.98);
-          text-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
         }
 
+        /* Increased contrast for readability */
         .ui-subtitle {
           font-size: 14px;
           line-height: 1.75;
@@ -1014,19 +1070,17 @@ export default function Page() {
           align-items: center;
           margin-top: 14px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.62);
+          color: rgba(255, 255, 255, 0.68);
         }
-
         .ui-trust-item {
           display: inline-flex;
           align-items: center;
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.03);
         }
-
         .ui-dot {
           width: 4px;
           height: 4px;
@@ -1034,7 +1088,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.22);
         }
 
-        /* Spec grid */
         .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
@@ -1042,16 +1095,13 @@ export default function Page() {
           position: relative;
           z-index: 1;
         }
-
         .ui-spec {
           padding: 18px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-
         .ui-spec:first-child {
           border-top: none;
         }
-
         .ui-spec-title {
           font-size: 12px;
           font-weight: 800;
@@ -1059,14 +1109,12 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.94);
           margin-bottom: 6px;
         }
-
         .ui-spec-body {
           font-size: 12px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.68);
+          color: rgba(255, 255, 255, 0.70);
           max-width: 76ch;
         }
-
         @media (min-width: 920px) {
           .ui-specgrid {
             grid-template-columns: 1fr 1fr 1fr;
@@ -1083,13 +1131,13 @@ export default function Page() {
         .ui-footerline {
           padding: 14px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.10);
-          color: rgba(255, 255, 255, 0.52);
+          color: rgba(255, 255, 255, 0.62);
           font-size: 12px;
           position: relative;
           z-index: 1;
         }
 
-        /* Buttons */
+        /* Buttons: premium contrast, glass secondary */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1100,97 +1148,119 @@ export default function Page() {
           transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
           user-select: none;
         }
-
         .ui-btn:active {
           transform: translateY(1px);
         }
-
-        .ui-btn-primary {
-          background: #ffffff;
-          color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        .ui-btn:focus-visible {
+          /* Tailwind class hook below uses ui-focus, but keep safety here */
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14), 0 0 0 6px rgba(0, 255, 200, 0.10);
         }
 
+        .ui-btn-primary {
+          background: rgba(255, 255, 255, 0.92);
+          color: #000000;
+          border: 1px solid rgba(255, 255, 255, 0.20);
+          box-shadow: 0 18px 60px rgba(0, 0, 0, 0.52);
+        }
         .ui-btn-primary:hover {
-          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
+          background: #ffffff;
+          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62);
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           color: rgba(255, 255, 255, 0.92);
           border: 1px solid rgba(255, 255, 255, 0.14);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
-
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.18);
         }
 
         .ui-icon-btn {
-          width: 38px;
-          height: 38px;
+          width: 40px;
+          height: 40px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.84);
-          transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.90);
+          transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
-
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.2);
-          color: rgba(255, 255, 255, 0.96);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.20);
+          color: rgba(255, 255, 255, 1);
+        }
+        .ui-icon-btn:active {
+          transform: translateY(1px);
         }
 
-        /* Modals / panels */
+        /* Modals: liquid glass panel */
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(6, 7, 9, 0.86);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px) saturate(1.2);
-          -webkit-backdrop-filter: blur(18px) saturate(1.2);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.04));
+          box-shadow: var(--shadow-2);
+          backdrop-filter: blur(22px);
+          -webkit-backdrop-filter: blur(22px);
+          position: relative;
+          overflow: hidden;
+        }
+        .ui-modal::before {
+          content: '';
+          position: absolute;
+          inset: -40% -30%;
+          background:
+            radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.14), transparent 45%),
+            radial-gradient(circle at 78% 20%, rgba(0, 255, 200, 0.08), transparent 55%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.08), transparent 55%);
+          pointer-events: none;
+          filter: blur(16px);
+          opacity: 0.85;
         }
 
         .ui-input {
           width: 100%;
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
-
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.42);
+          color: rgba(255, 255, 255, 0.46);
         }
-
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.24);
-          background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.28);
+          background: rgba(255, 255, 255, 0.04);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06), 0 0 0 8px rgba(0, 255, 200, 0.06);
         }
 
         .ui-toast {
           border: 1px solid rgba(255, 255, 255, 0.14);
           background: rgba(255, 255, 255, 0.04);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
-
         .ui-toast-ok {
-          border-color: rgba(34, 197, 94, 0.35);
+          border-color: rgba(34, 197, 94, 0.40);
         }
-
         .ui-toast-err {
-          border-color: rgba(239, 68, 68, 0.35);
+          border-color: rgba(239, 68, 68, 0.40);
         }
 
-        /* Pricing surfaces */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1198,9 +1268,9 @@ export default function Page() {
           padding: 6px 10px;
           border-radius: 999px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.78);
+          color: rgba(255, 255, 255, 0.84);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1210,21 +1280,22 @@ export default function Page() {
         .ui-pricewrap {
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.016));
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+          box-shadow: var(--shadow-1);
           position: relative;
           overflow: hidden;
         }
-
         .ui-pricewrap::before {
           content: '';
           position: absolute;
           inset: -40% -30%;
           background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.07), transparent 55%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.07), transparent 55%);
+            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.14), transparent 45%),
+            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.08), transparent 55%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.08), transparent 55%);
           pointer-events: none;
+          filter: blur(16px);
+          opacity: 0.85;
         }
 
         .ui-badge {
@@ -1234,105 +1305,69 @@ export default function Page() {
           padding: 8px 10px;
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.86);
           font-size: 12px;
           font-weight: 700;
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
 
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.09);
+          background: rgba(255, 255, 255, 0.10);
         }
 
-        /* Chat bubbles — tool-like */
+        /* Chat bubbles: slightly clearer for legibility on glass */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
-
         .ui-bubble-user {
-          background: rgba(255, 255, 255, 0.94);
+          background: rgba(255, 255, 255, 0.92);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.22);
+          border-color: rgba(255, 255, 255, 0.20);
         }
 
         .ui-empty {
-          color: rgba(255, 255, 255, 0.62);
-        }
-
-        /* Fixed bottom bar for landing (top+bottom fixed, middle scroll) */
-        .ui-landing-bottombar {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 60;
-          border-top: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(5, 6, 8, 0.58);
-          backdrop-filter: blur(20px) saturate(1.25);
-          -webkit-backdrop-filter: blur(20px) saturate(1.25);
-        }
-
-        .ui-landing-bottombar-inner {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 10px 14px;
-          padding-bottom: max(10px, env(safe-area-inset-bottom));
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-        }
-
-        .ui-landing-bottombar-note {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.50);
-          line-height: 1.3;
-        }
-
-        @media (max-width: 520px) {
-          .ui-landing-bottombar-inner {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          .ui-landing-bottombar-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-          }
-          .ui-landing-bottombar-note {
-            text-align: center;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            scroll-behavior: auto !important;
-          }
-          .ui-shell--liquid {
-            transform: none !important;
-          }
+          color: rgba(255, 255, 255, 0.70);
         }
       `}</style>
 
+      {/* Premium subtle noise layer (optional but matches Apple/Amex vibe) */}
+      <div className="ui-noise" aria-hidden="true" />
+
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
-        {/* Top header stays fixed */}
-        <header className="sticky top-0 z-50 flex-shrink-0 ui-header">
+        {/* Skip link for keyboard users */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 ui-btn ui-btn-secondary"
+        >
+          Skip to content
+        </a>
+
+        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`ui-brand ${outfit.className}`}>
-                <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
+              <div className={`ui-brand ${outfit.className}`} aria-label="protocolLM">
+                <span className="text-white/95 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/70 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
@@ -1356,28 +1391,32 @@ export default function Page() {
                   <div className="relative" ref={userMenuRef}>
                     <button
                       onClick={() => setShowUserMenu((v) => !v)}
-                      className="ui-icon-btn"
+                      className="ui-icon-btn focus-visible:ui-focus"
                       aria-label="User menu"
+                      aria-haspopup="menu"
+                      aria-expanded={showUserMenu ? 'true' : 'false'}
                       title={session?.user?.email || 'User'}
                     >
                       <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-52 ui-modal overflow-hidden">
+                      <div className="absolute right-0 mt-2 w-52 ui-modal overflow-hidden" role="menu" aria-label="User menu">
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/85 hover:text-white hover:bg-white/5 transition-colors focus-visible:ui-focus"
+                          role="menuitem"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
                         </button>
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-red-200 hover:bg-white/5 transition-colors focus-visible:ui-focus"
+                          role="menuitem"
                         >
                           <Icons.LogOut />
                           <span>Log out</span>
@@ -1391,39 +1430,15 @@ export default function Page() {
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 flex flex-col">
+        <main id="main" className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <>
-              {/* Middle scroll area (between fixed top + fixed bottom) */}
-              <div
-                ref={landingScrollRef}
-                className="flex-1 min-h-0 overflow-y-auto"
-                style={{
-                  overscrollBehavior: 'contain',
-                  scrollbarGutter: 'stable',
-                  paddingBottom: 'calc(88px + env(safe-area-inset-bottom))', // room for bottom bar
-                }}
-              >
-                <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} scrollElRef={landingScrollRef} />
-              </div>
-
-              {/* Fixed bottom bar */}
-              <div className="ui-landing-bottombar">
-                <div className="ui-landing-bottombar-inner">
-                  <div className={`ui-landing-bottombar-note ${inter.className}`}>
-                    Inspection workflows for operators. Grounded, auditable output.
-                  </div>
-                  <div className="ui-landing-bottombar-actions flex gap-2">
-                    <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
-                      Sign in
-                    </button>
-                    <button onClick={() => setShowPricingModal(true)} className="ui-btn ui-btn-primary">
-                      Start trial
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
+            <div ref={landingScrollRef} className="flex-1 min-h-0 overflow-y-auto">
+              <LandingPage
+                shellRef={landingShellRef}
+                onShowPricing={() => setShowPricingModal(true)}
+                onShowAuth={() => setShowAuthModal(true)}
+              />
+            </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
               <div
@@ -1453,10 +1468,10 @@ export default function Page() {
                             />
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                            <div className="flex gap-1 items-center" aria-label="Assistant is typing">
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1471,9 +1486,13 @@ export default function Page() {
               <div className="flex-shrink-0 ui-header border-t border-white/10">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/12 bg-white/5 text-[12px] text-white/80 backdrop-blur">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="ui-icon-btn !w-9 !h-9 focus-visible:ui-focus"
+                        aria-label="Remove image"
+                      >
                         <Icons.X />
                       </button>
                     </div>
@@ -1481,7 +1500,12 @@ export default function Page() {
 
                   <div className="flex items-end gap-2">
                     <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="ui-icon-btn focus-visible:ui-focus"
+                      aria-label="Attach image"
+                    >
                       <Icons.Camera />
                     </button>
 
@@ -1491,27 +1515,32 @@ export default function Page() {
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
+                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
                             handleSend(e)
                           }
                         }}
+                        aria-label="Message"
                       />
 
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`ui-icon-btn focus-visible:ui-focus ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
                         aria-label="Send"
                       >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
+                        {isSending ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/90 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Icons.ArrowUp />
+                        )}
                       </button>
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/55 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
