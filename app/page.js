@@ -130,8 +130,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="ui-shell">
           {/* HERO */}
           <section className="ui-hero">
-            <div className={`ui-meta ${inter.className}`}>Washtenaw compliance database</div>
-
             <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>Catch violations before the health inspector.</p>
@@ -151,63 +149,27 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </section>
 
-          <div className="ui-section-divider" />
-
-          {/* WORKFLOW */}
-          <section className="ui-section">
-            <div className="ui-grid-2">
-              <div>
-                <h2 className={`ui-h2 ${outfit.className}`}>A calm workflow for real ops.</h2>
-                <p className={`ui-p ${inter.className}`}>
-                  Verify compliance before inspections. Built for operators who need answers mid-shift.
-                </p>
-
-                <div className="ui-includedcard">
-                  <div className={`ui-includedtitle ${inter.className}`}>Included</div>
-                  <ul className={`ui-includedlist ${inter.className}`}>
-                    <li>Photo checks + document search</li>
-                    <li>One site license per restaurant</li>
-                    <li>7-day trial · cancel anytime</li>
-                  </ul>
-                </div>
+          {/* TWO FEATURE CARDS (directly under hero) */}
+          <section className="ui-feature-row">
+            <div className="ui-stepcard">
+              <div className="ui-stephead">
+                <span className="ui-stepicon" aria-hidden="true">
+                  <Icons.Camera />
+                </span>
+                <div className={`ui-steptitle ${inter.className}`}>Photo check</div>
               </div>
+              <div className={`ui-stepbody ${inter.className}`}>Take a picture. Get a tight checklist of likely issues to verify.</div>
+            </div>
 
-              <div className="ui-steps">
-                <div className="ui-stepcard">
-                  <div className="ui-stephead">
-                    <span className="ui-stepicon" aria-hidden="true">
-                      <Icons.Camera />
-                    </span>
-                    <div className={`ui-steptitle ${inter.className}`}>Photo check</div>
-                  </div>
-                  <div className={`ui-stepbody ${inter.className}`}>
-                    Take a picture. Get a tight checklist of likely issues to verify.
-                  </div>
-                </div>
-
-                <div className="ui-stepcard">
-                  <div className="ui-stephead">
-                    <span className="ui-stepicon" aria-hidden="true">
-                      <Icons.Lock />
-                    </span>
-                    <div className={`ui-steptitle ${inter.className}`}>Document search</div>
-                  </div>
-                  <div className={`ui-stepbody ${inter.className}`}>
-                    Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
-                  </div>
-                </div>
-
-                <div className="ui-stepcard">
-                  <div className="ui-stephead">
-                    <span className="ui-stepicon" aria-hidden="true">
-                      <Icons.Check />
-                    </span>
-                    <div className={`ui-steptitle ${inter.className}`}>Action checklist</div>
-                  </div>
-                  <div className={`ui-stepbody ${inter.className}`}>
-                    Turn risks into a short close/open list your lead can run today.
-                  </div>
-                </div>
+            <div className="ui-stepcard">
+              <div className="ui-stephead">
+                <span className="ui-stepicon" aria-hidden="true">
+                  <Icons.Lock />
+                </span>
+                <div className={`ui-steptitle ${inter.className}`}>Document search</div>
+              </div>
+              <div className={`ui-stepbody ${inter.className}`}>
+                Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
               </div>
             </div>
           </section>
@@ -216,7 +178,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           {/* FAQ */}
           <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
+            <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
             <div className="ui-faq">
               {faqs.map((f, i) => (
                 <FAQItem
@@ -232,7 +194,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
-          {/* FINAL CTA (second/last CTA block) */}
+          {/* FINAL CTA */}
           <section className="ui-final">
             <div className="ui-finalinner">
               <div>
@@ -258,7 +220,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
         </div>
 
-        <footer className="pt-8 text-xs text-white/40">
+        <footer className="pt-8 text-xs text-white/45">
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/terms" className="hover:text-white/70">
               Terms
@@ -271,7 +233,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </Link>
           </div>
 
-          <div className="mt-4 text-center text-[11px] text-white/35">
+          <div className="mt-4 text-center text-[11px] text-white/40">
             Made in Washtenaw County for Washtenaw County.
           </div>
         </footer>
@@ -373,7 +335,7 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/55 ${inter.className}`}>
+            <p className={`text-xs text-white/60 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
@@ -386,7 +348,7 @@ function AuthModal({ isOpen, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-white/55 mb-2">Email</label>
+            <label className="block text-xs font-semibold text-white/60 mb-2">Email</label>
             <input
               type="email"
               value={email}
@@ -399,7 +361,7 @@ function AuthModal({ isOpen, onClose }) {
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-white/55 mb-2">Password</label>
+              <label className="block text-xs font-semibold text-white/60 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -412,7 +374,7 @@ function AuthModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/55 hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -420,11 +382,7 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading || !isLoaded}
-            className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed">
             <span className="ui-btn-inner">
               {loading && <span className="ui-spinner" aria-hidden="true" />}
               {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
@@ -441,24 +399,24 @@ function AuthModal({ isOpen, onClose }) {
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/55">
+        <div className="mt-4 text-center space-y-1 text-xs text-white/60">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/55 hover:text-white">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/60 hover:text-white">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/55 hover:text-white">
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/60 hover:text-white">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/60 hover:text-white">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/60 hover:text-white">
               Back to sign in
             </button>
           )}
@@ -483,7 +441,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-5">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/55 ${inter.className}`}>
+          <p className={`text-sm text-white/60 ${inter.className}`}>
             Photo checks + document search—built specifically for Washtenaw County operators.
           </p>
         </div>
@@ -493,9 +451,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
+                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/45">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+              <p className={`text-xs text-white/60 mt-2 ${inter.className}`}>
                 Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Photos count as two checks.
               </p>
             </div>
@@ -531,7 +489,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               </span>
             </button>
 
-            <p className={`text-[11px] text-white/40 text-center ${inter.className}`}>
+            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>
               7-day trial · cancel anytime · one restaurant site license
             </p>
           </div>
@@ -863,21 +821,21 @@ export default function Page() {
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
-          color: rgba(255, 255, 255, 0.94);
+          color: rgba(255, 255, 255, 0.96);
         }
 
-        /* Background: simplified (fewer layers, fewer edge-case glitches) */
+        /* Brighter background (10–15%) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.11), transparent 58%),
-            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.05), transparent 60%),
-            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.05), transparent 60%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 11px);
-          opacity: 0.9;
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.13), transparent 58%),
+            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.06), transparent 60%),
+            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.06), transparent 60%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 11px);
+          opacity: 0.92;
           transform: translateZ(0);
         }
 
@@ -886,12 +844,11 @@ export default function Page() {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
-          opacity: 0.95;
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.52) 70%);
+          opacity: 0.85;
           transform: translateZ(0);
         }
 
-        /* Scrollbars */
         :root {
           scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
           scrollbar-width: thin;
@@ -907,7 +864,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           background: rgba(5, 6, 8, 0.78);
@@ -915,48 +871,54 @@ export default function Page() {
           -webkit-backdrop-filter: blur(14px);
         }
 
-        .ui-brand {
+        /* Logo (no pill) */
+        .ui-logo {
           display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 12px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+          align-items: baseline;
+          gap: 2px;
+          color: rgba(255, 255, 255, 0.96);
+          user-select: none;
+        }
+        .ui-logo .word {
+          font-size: 14px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          text-transform: lowercase;
+        }
+        .ui-logo .lm {
+          font-size: 14px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
         }
 
-        /* Shell */
+        .ui-topmeta {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.78);
+          letter-spacing: 0.02em;
+          line-height: 1.2;
+        }
+
         .ui-shell {
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
           border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
           position: relative;
         }
 
-        /* Subtle sheen (simplified, less “glitchy”) */
         .ui-shell::before {
           content: '';
           position: absolute;
           inset: -1px;
           pointer-events: none;
-          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
-          opacity: 0.8;
+          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.075), transparent 60%);
+          opacity: 0.9;
         }
 
         .ui-hero {
           padding: 32px;
-        }
-
-        .ui-meta {
-          font-size: 9px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.4);
-          font-weight: 700;
-          margin-bottom: 10px;
         }
 
         .ui-title {
@@ -964,13 +926,13 @@ export default function Page() {
           line-height: 1.05;
           letter-spacing: -0.05em;
           margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.97);
         }
 
         .ui-subtitle {
           font-size: 16px;
           line-height: 1.4;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.78);
           margin-bottom: 10px;
           max-width: 70ch;
         }
@@ -978,7 +940,7 @@ export default function Page() {
         .ui-body {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.64);
           max-width: 78ch;
         }
 
@@ -1014,67 +976,28 @@ export default function Page() {
         .ui-h2 {
           font-size: 20px;
           letter-spacing: -0.02em;
-          color: rgba(255, 255, 255, 0.94);
-          margin-bottom: 8px;
+          color: rgba(255, 255, 255, 0.95);
+          margin-bottom: 10px;
         }
 
         .ui-p {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.64);
           max-width: 72ch;
         }
 
-        .ui-grid-2 {
+        /* Feature row under hero */
+        .ui-feature-row {
+          padding: 0 32px 24px;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 18px;
-        }
-        @media (min-width: 980px) {
-          .ui-grid-2 {
-            grid-template-columns: 1fr 1fr;
-            gap: 22px;
-            align-items: start;
-          }
-        }
-
-        .ui-includedcard {
-          margin-top: 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 12px;
-        }
-
-        .ui-includedtitle {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 8px;
-        }
-
-        .ui-includedlist {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-          line-height: 1.65;
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .ui-includedlist li {
-          padding: 6px 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .ui-includedlist li:first-child {
-          border-top: none;
-          padding-top: 0;
-        }
-
-        .ui-steps {
-          display: grid;
           gap: 10px;
+        }
+        @media (min-width: 920px) {
+          .ui-feature-row {
+            grid-template-columns: 1fr 1fr;
+          }
         }
 
         .ui-stepcard {
@@ -1100,23 +1023,22 @@ export default function Page() {
           justify-content: center;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.8);
         }
 
         .ui-steptitle {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
         }
 
         .ui-stepbody {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.64);
         }
 
-        /* FAQ */
         .ui-faq {
           margin-top: 12px;
           border-radius: 16px;
@@ -1141,7 +1063,7 @@ export default function Page() {
           justify-content: space-between;
           gap: 12px;
           background: transparent;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           outline: none;
         }
 
@@ -1152,7 +1074,7 @@ export default function Page() {
         .ui-faqq {
           font-size: 12px;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.92);
         }
 
         .ui-faqchev {
@@ -1164,7 +1086,7 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.78);
           transition: transform 140ms ease;
           flex-shrink: 0;
         }
@@ -1185,17 +1107,16 @@ export default function Page() {
           padding: 0 12px 12px;
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.64);
         }
 
         .ui-footerline {
           padding: 14px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.5);
           font-size: 12px;
         }
 
-        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1234,7 +1155,7 @@ export default function Page() {
 
         .ui-btn-secondary {
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.92);
           border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .ui-btn-secondary:hover {
@@ -1250,7 +1171,6 @@ export default function Page() {
           outline-offset: 2px;
         }
 
-        /* Icon buttons (touch target 44x44) */
         .ui-icon-btn {
           width: 44px;
           height: 44px;
@@ -1260,17 +1180,16 @@ export default function Page() {
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.86);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
         }
         .ui-icon-btn:hover {
           background: rgba(255, 255, 255, 0.05);
           border-color: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.95);
+          color: rgba(255, 255, 255, 0.96);
           transform: scale(1.02);
         }
 
-        /* Modals / backdrop */
         .ui-backdrop {
           background: rgba(0, 0, 0, 0.8);
           backdrop-filter: blur(10px);
@@ -1307,20 +1226,19 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.94);
+          color: rgba(255, 255, 255, 0.96);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.45);
         }
         .ui-input:focus {
           border-color: rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.09);
         }
 
-        /* Toast */
         .ui-toast {
           display: flex;
           gap: 10px;
@@ -1338,15 +1256,14 @@ export default function Page() {
         }
         .ui-toasticon {
           margin-top: 1px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.8);
         }
         .ui-toasttext {
           font-size: 12px;
           line-height: 1.5;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.75);
         }
 
-        /* Pricing */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1356,7 +1273,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.75);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1380,7 +1297,7 @@ export default function Page() {
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.75);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1391,13 +1308,12 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Chat bubbles */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.94);
+          color: rgba(255, 255, 255, 0.96);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
@@ -1424,14 +1340,14 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.82);
           margin-bottom: 10px;
         }
 
         .ui-emptytitle {
           font-size: 13px;
           font-weight: 800;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           margin-bottom: 6px;
           letter-spacing: 0.02em;
         }
@@ -1439,10 +1355,9 @@ export default function Page() {
         .ui-emptytext {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.64);
         }
 
-        /* Spinners */
         .ui-spinner {
           width: 14px;
           height: 14px;
@@ -1456,7 +1371,7 @@ export default function Page() {
           height: 34px;
           border-radius: 999px;
           border: 2px solid rgba(255, 255, 255, 0.16);
-          border-top-color: rgba(255, 255, 255, 0.75);
+          border-top-color: rgba(255, 255, 255, 0.8);
           animation: spin 700ms linear infinite;
         }
         @keyframes spin {
@@ -1475,33 +1390,29 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`ui-brand ${outfit.className}`}>
-                <span className="text-white/90 text-[12px] font-semibold tracking-[0.12em] uppercase">protocolLM</span>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className={`ui-logo ${outfit.className}`} aria-label="protocolLM">
+                <span className="word">protocol</span>
+                <span className="lm">LM</span>
               </div>
+
+              <div className={`ui-topmeta ${inter.className}`}>Washtenaw compliance database · Other counties 2026</div>
+
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/40 ${inter.className}`}>Active · site license</span>
+                <span className={`text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
               {!isAuthenticated ? (
-                <>
-                  {/* Keep header minimal (no duplicate Start trial) */}
-                  <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
-                    <span className="ui-btn-inner">Sign in</span>
-                  </button>
-                </>
+                <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
+                  <span className="ui-btn-inner">Sign in</span>
+                </button>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
@@ -1523,13 +1434,13 @@ export default function Page() {
 
                     {showUserMenu && (
                       <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
-                        <div className="px-3 pt-3 pb-2 text-[11px] text-white/40">Press Esc to close</div>
+                        <div className="px-3 pt-3 pb-2 text-[11px] text-white/45">Press Esc to close</div>
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
@@ -1575,22 +1486,14 @@ export default function Page() {
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="ui-btn ui-btn-secondary"
-                        >
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-btn ui-btn-secondary">
                           <span className="ui-btn-inner">
                             <Icons.Camera />
                             Attach photo
                           </span>
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => textAreaRef.current?.focus()}
-                          className="ui-btn ui-btn-secondary"
-                        >
+                        <button type="button" onClick={() => textAreaRef.current?.focus()} className="ui-btn ui-btn-secondary">
                           <span className="ui-btn-inner">Ask a question</span>
                         </button>
                       </div>
@@ -1625,12 +1528,9 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div
-                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
-                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-                >
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/75">
                       <span>Image attached</span>
                       <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-10 !h-10" aria-label="Remove image">
                         <Icons.X />
@@ -1671,7 +1571,7 @@ export default function Page() {
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/45 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
