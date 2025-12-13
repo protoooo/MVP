@@ -13,31 +13,58 @@ export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-// ✅ Keep this as your main model
-const OPENAI_CHAT_MODEL = 'gpt-5.2'
+// ✅ Main model
+const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2'
 
-// Output controls (GPT-5.2: use reasoning_effort + verbosity; DO NOT send temperature/top_p when reasoning_effort != "none")
+// Output controls
+// NOTE: GPT-5 reasoning efforts are: low | medium | high (no xhigh)
 const GENERATION_CONFIG = {
-  maxCompletionTokens: 560,
-  reasoningEffort: 'high', // 'medium' | 'high' | 'xhigh'
-  verbosity: 'low',        // 'low' | 'medium' | 'high'
+  reasoningEffort: 'high', // 'low' | 'medium' | 'high' (we will normalize xhigh -> high)
+  // This is TOTAL budget (reasoning + visible output) for Responses API
+  maxOutputTokensByEffort: {
+    low: 1600,
+    medium: 2400,
+    high: 3400,
+  },
 }
 
 const VISION_CONFIG = {
-  maxCompletionTokens: 220,
-  reasoningEffort: 'none',
-  verbosity: 'low',
+  reasoningEffort: 'low',
+  maxOutputTokens: 700,
 }
 
 const MAX_CONTEXT_LENGTH = 22000
 const MAX_IMAGE_SIZE_MB = 10
 
 // Timeouts
-const VISION_TIMEOUT = 10000
-const GENERATION_TIMEOUT = 25000
+const VISION_TIMEOUT = 12000
+const GENERATION_TIMEOUT = 30000
 
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+
+// --------------------------
+// Helpers: normalize config
+// --------------------------
+function normalizeEffort(effort) {
+  const v = String(effort || '')
+    .toLowerCase()
+    .replace(/[\s_-]/g, '')
+
+  if (v === 'xhigh') return 'high'
+  if (v === 'high' || v === 'medium' || v === 'low') return v
+  if (v === 'none') return 'low' // safety fallback
+  return 'high'
+}
+
+function getTokenBudgetForEffort(effort) {
+  const e = normalizeEffort(effort)
+  return (
+    GENERATION_CONFIG.maxOutputTokensByEffort?.[e] ||
+    GENERATION_CONFIG.maxOutputTokensByEffort.high ||
+    3400
+  )
+}
 
 // --------------------------
 // Input sanitization
@@ -76,8 +103,12 @@ function validateMessages(messages) {
 function validateImage(base64String) {
   if (!base64String) return null
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-  const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
+  const cleanBase64 = base64String.includes(',')
+    ? base64String.split(',')[1]
+    : base64String
+
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
+
   const sizeInBytes = (cleanBase64.length * 3) / 4
   if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
     throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
@@ -89,37 +120,31 @@ function validateImage(base64String) {
 // Confidence parsing
 // --------------------------
 function extractConfidence(text) {
-  const match = text.match(/^\s*\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]\s*/i)
+  const t = typeof text === 'string' ? text : ''
+  const match = t.match(/^\s*\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]\s*/i)
   if (match) {
     return {
       confidence: match[1].toUpperCase(),
-      text: text.replace(match[0], '').trim(),
+      text: t.replace(match[0], '').trim(),
     }
   }
-  return { confidence: 'UNKNOWN', text: (text || '').trim() }
+  return { confidence: 'UNKNOWN', text: (t || '').trim() }
 }
 
-// Remove markdown headings (# / ## / ###)
 function stripMarkdownHeadings(text) {
   if (!text) return text
   return text.replace(/^#{1,6}\s+/gm, '')
 }
 
-// Reduce format noise and keep output clean
 function cleanModelText(text) {
   if (!text) return ''
   return stripMarkdownHeadings(
-    text
-      .replace(/\*\*/g, '')
-      .replace(/\*/g, '')
-      .replace(/`/g, '')
-      .replace(/\r/g, '')
+    text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/`/g, '').replace(/\r/g, '')
   )
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
-// Ensure we always return a confidence line (even if the model forgets)
 function ensureConfidenceLine(confidence, cleanText) {
   const c =
     confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW'
@@ -141,9 +166,10 @@ function ensureThreeSections(text) {
 
   if (hasLikely && hasDoNow && hasConfirm) return safe
 
-  // If model produced bullets but forgot headers, wrap it.
-  // Minimal + conservative repair (no re-LLM call).
-  const lines = safe.split('\n').map((l) => l.trim()).filter(Boolean)
+  const lines = safe
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
 
   const bullets = lines.filter((l) => l.startsWith('-'))
   const nonBullets = lines.filter((l) => !l.startsWith('-'))
@@ -163,7 +189,6 @@ function ensureThreeSections(text) {
     ...(confirm.length ? confirm : ['- Ask manager / check policy / verify temps with thermometer']),
   ].join('\n')
 
-  // Preserve any strong non-bullet content by appending it to Need to confirm
   if (nonBullets.length > 0) {
     return repaired + '\n- ' + nonBullets.join(' ').slice(0, 240)
   }
@@ -172,7 +197,6 @@ function ensureThreeSections(text) {
 }
 
 function normalizeBulletCounts(text) {
-  // Hard cap bullets to keep “entry-level scannable”
   const sections = [
     { name: 'Likely issues (visible):', max: 4 },
     { name: 'What to do now:', max: 4 },
@@ -181,10 +205,7 @@ function normalizeBulletCounts(text) {
 
   let out = text
   for (const s of sections) {
-    const re = new RegExp(
-      `(${escapeRegExp(s.name)}\\n)([\\s\\S]*?)(\\n\\n|$)`,
-      'i'
-    )
+    const re = new RegExp(`(${escapeRegExp(s.name)}\\n)([\\s\\S]*?)(\\n\\n|$)`, 'i')
     out = out.replace(re, (_, header, body, tail) => {
       const lines = body.split('\n').filter((l) => l.trim().length > 0)
       const bullets = lines.filter((l) => l.trim().startsWith('-')).slice(0, s.max)
@@ -202,7 +223,6 @@ function escapeRegExp(s) {
 // --------------------------
 // Local enforcement rules context (short excerpts)
 // --------------------------
-// NOTE: Keep these SHORT. They are “official context” you are explicitly passing in every time.
 const LOCAL_ENFORCEMENT_RULES = `
 LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
 - Violations are Priority (P), Priority Foundation (Pf), or Core.
@@ -213,6 +233,53 @@ LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
 - A "Risk Control Plan" is used to correct a priority/Pf violation repeated on two or more consecutive inspections.
 - If a safe operation cannot be maintained during an imminent health hazard, discontinue/close and notify the regulatory authority.
 `.trim()
+
+// --------------------------
+// OpenAI (Responses API) wrapper with retry
+// --------------------------
+async function callResponses({
+  model,
+  instructions,
+  input,
+  reasoningEffort,
+  maxOutputTokens,
+  timeoutMs,
+}) {
+  const effort = normalizeEffort(reasoningEffort)
+
+  const req = openai.responses.create({
+    model,
+    instructions,
+    input,
+    reasoning: { effort },
+    max_output_tokens: maxOutputTokens,
+  })
+
+  const resp = await Promise.race([req, timeoutPromise(timeoutMs, 'OPENAI_TIMEOUT')])
+
+  const outputText =
+    typeof resp?.output_text === 'string' ? resp.output_text.trim() : ''
+
+  // Some responses can be "incomplete" or return empty text if token budget is exhausted during reasoning.
+  const status = resp?.status || null
+
+  return { resp, outputText, status, effort }
+}
+
+function fallbackAnswer(reason = 'Temporary model output issue. Please retry.') {
+  return [
+    '[CONFIDENCE: LOW]',
+    '',
+    'Likely issues (visible):',
+    '- (none listed)',
+    '',
+    'What to do now:',
+    `- ${reason}`,
+    '',
+    'Need to confirm:',
+    '- Retry the request. If it keeps failing, reduce reasoning level or shorten the question/photo set.',
+  ].join('\n')
+}
 
 export async function POST(req) {
   const requestId = crypto.randomUUID()
@@ -242,6 +309,12 @@ export async function POST(req) {
     }
 
     const body = await req.json()
+
+    // Optional overrides from client (if you ever send them)
+    const requestedEffort = normalizeEffort(
+      body?.reasoningEffort || body?.settings?.reasoningEffort || GENERATION_CONFIG.reasoningEffort
+    )
+
     const messages = validateMessages(body.messages || [])
     const historyText = getHistoryContext(messages)
     const lastMsgObj = messages[messages.length - 1] || {}
@@ -295,7 +368,9 @@ export async function POST(req) {
     }
 
     const chatId = body.chatId || null
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
@@ -389,33 +464,27 @@ export async function POST(req) {
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
       try {
-        const messagesVision = [
-          {
-            role: 'system',
-            content:
-              'Describe only what is visible in this restaurant photo. Focus on cleanliness/buildup, storage order, separation, labeling, and obvious contamination risks. No guesses. No markdown.',
-          },
+        const visionInput = [
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Write a short, plain description (2–6 bullets). No headings.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
+              { type: 'input_text', text: 'Write a short, plain description (2–6 bullets). No headings.' },
+              { type: 'input_image', image_url: `data:image/jpeg;base64,${imageBase64}` },
             ],
           },
         ]
 
-        const visionResult = await Promise.race([
-          openai.chat.completions.create({
-            model: OPENAI_CHAT_MODEL,
-            messages: messagesVision,
-            max_completion_tokens: VISION_CONFIG.maxCompletionTokens,
-            reasoning_effort: VISION_CONFIG.reasoningEffort,
-            verbosity: VISION_CONFIG.verbosity,
-          }),
-          timeoutPromise(VISION_TIMEOUT, 'VISION_TIMEOUT'),
-        ])
+        const { outputText } = await callResponses({
+          model: OPENAI_CHAT_MODEL,
+          instructions:
+            'Describe only what is visible in this restaurant photo. Focus on cleanliness/buildup, storage order, separation, labeling, and obvious contamination risks. No guesses. No markdown.',
+          input: visionInput,
+          reasoningEffort: VISION_CONFIG.reasoningEffort,
+          maxOutputTokens: VISION_CONFIG.maxOutputTokens,
+          timeoutMs: VISION_TIMEOUT,
+        })
 
-        searchTerms = visionResult?.choices?.[0]?.message?.content?.trim() || ''
+        searchTerms = (outputText || '').trim()
         logger.info('Vision analysis completed', { requestId, length: searchTerms.length })
       } catch (visionError) {
         logger.error('Vision analysis failed', { requestId, error: visionError.message })
@@ -433,7 +502,6 @@ export async function POST(req) {
       logger.info('Document search started', { requestId })
       let searchResults = []
       try {
-        // More targeted query (helps pull Violation Types + Enforcement Action language)
         const searchQuery = [
           searchTerms,
           'Washtenaw County',
@@ -476,7 +544,10 @@ export async function POST(req) {
 
     // Hard rule: never answer without doc context
     if (!context) {
-      logger.warn('No regulatory context; refusing to answer from general model', { requestId, searchTerms })
+      logger.warn('No regulatory context; refusing to answer from general model', {
+        requestId,
+        searchTerms,
+      })
       return NextResponse.json(
         {
           error:
@@ -489,10 +560,11 @@ export async function POST(req) {
       )
     }
 
-    // Prepend local enforcement rules every time (still “provided context”)
     const fullContext = `${LOCAL_ENFORCEMENT_RULES}\n\n${context}`
     const clippedContext =
-      fullContext.length > MAX_CONTEXT_LENGTH ? fullContext.slice(0, MAX_CONTEXT_LENGTH) : fullContext
+      fullContext.length > MAX_CONTEXT_LENGTH
+        ? fullContext.slice(0, MAX_CONTEXT_LENGTH)
+        : fullContext
 
     // --------------------------
     // System prompt
@@ -543,30 +615,80 @@ ${lastMessageText || '[No additional text provided. Base your answer on the imag
 ${imageBase64 ? `VISIBLE DESCRIPTION (from vision):
 ${searchTerms}` : ''}`
 
-    logger.info('Generating response', { requestId })
+    logger.info('Generating response', { requestId, reasoningEffort: requestedEffort })
 
-    const messagesFinal = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: finalUserPrompt },
-    ]
+    const generationInput = [{ role: 'user', content: finalUserPrompt }]
 
-    const result = await Promise.race([
-      openai.chat.completions.create({
+    // --------------------------
+    // Generate (Responses API) with retry if output is empty/incomplete
+    // --------------------------
+    let rawText = ''
+    let usedEffort = requestedEffort
+
+    try {
+      const firstBudget = getTokenBudgetForEffort(requestedEffort)
+
+      const first = await callResponses({
         model: OPENAI_CHAT_MODEL,
-        messages: messagesFinal,
-        max_completion_tokens: GENERATION_CONFIG.maxCompletionTokens,
-        reasoning_effort: GENERATION_CONFIG.reasoningEffort,
-        verbosity: GENERATION_CONFIG.verbosity,
-      }),
-      timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
-    ])
+        instructions: SYSTEM_PROMPT,
+        input: generationInput,
+        reasoningEffort: requestedEffort,
+        maxOutputTokens: firstBudget,
+        timeoutMs: GENERATION_TIMEOUT,
+      })
 
-    let rawText = result?.choices?.[0]?.message?.content || ''
+      rawText = first.outputText || ''
+      usedEffort = first.effort
+
+      // If empty or suspiciously short, retry once with a safer combo:
+      // - reduce effort to medium
+      // - keep token budget high enough to ensure visible output
+      if (!rawText || rawText.trim().length < 10 || first.status === 'incomplete') {
+        logger.warn('Empty/incomplete model output; retrying once', {
+          requestId,
+          firstStatus: first.status || null,
+          firstEffort: first.effort,
+          firstLen: rawText ? rawText.length : 0,
+        })
+
+        const retryEffort = requestedEffort === 'high' ? 'medium' : 'low'
+        const retryBudget = Math.max(getTokenBudgetForEffort(retryEffort), 2600)
+
+        const retry = await callResponses({
+          model: OPENAI_CHAT_MODEL,
+          instructions: SYSTEM_PROMPT,
+          input: generationInput,
+          reasoningEffort: retryEffort,
+          maxOutputTokens: retryBudget,
+          timeoutMs: GENERATION_TIMEOUT,
+        })
+
+        rawText = retry.outputText || ''
+        usedEffort = retry.effort
+      }
+    } catch (e) {
+      logger.error('OpenAI generation failed', { requestId, error: e.message })
+      // NO 500: return a safe fallback message (still 200 so UI doesn't hard-fail)
+      const msg = fallbackAnswer(
+        e.message === 'OPENAI_TIMEOUT'
+          ? 'Request timed out. Please try again.'
+          : 'Temporary model output issue. Please retry.'
+      )
+      return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
+    }
+
+    // Parse + clean
     const parsed = extractConfidence(rawText)
     let cleaned = cleanModelText(parsed.text)
 
     if (!cleaned || cleaned.length < 10) {
-      throw new Error('Empty or invalid response from model')
+      // NO 500: return a safe fallback instead of throwing
+      logger.warn('Model output still empty after retry; returning fallback', {
+        requestId,
+        effort: usedEffort,
+      })
+      const msg = fallbackAnswer('Temporary model output issue. Please retry.')
+      return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
 
     // Repair format if needed
@@ -581,6 +703,7 @@ ${searchTerms}` : ''}`
       durationMs: duration,
       responseLength: ensured.message.length,
       confidence: ensured.confidence,
+      reasoningEffortUsed: usedEffort,
     })
 
     // Save messages
@@ -598,33 +721,25 @@ ${searchTerms}` : ''}`
             chat_id: chatId,
             role: 'assistant',
             content: ensured.message,
-            metadata: { confidence: ensured.confidence },
+            metadata: { confidence: ensured.confidence, reasoning_effort: usedEffort },
           },
         ])
       )
     }
     await Promise.allSettled(dbTasks)
 
-    return NextResponse.json({ message: ensured.message, confidence: ensured.confidence })
+    return NextResponse.json({ message: ensured.message, confidence: ensured.confidence }, { status: 200 })
   } catch (err) {
     const duration = Date.now() - startTime
     logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
 
-    let msg = 'System error. Please try again.'
-    let statusCode = 500
+    // NO 500: return a safe fallback message so your UI never shows a hard 500 here
+    const msg =
+      err.message && err.message.includes('TIMEOUT')
+        ? fallbackAnswer('Request timed out. Please try again.')
+        : fallbackAnswer('System error. Please try again.')
 
-    if (err.message.includes('TIMEOUT')) {
-      msg = 'Request timed out. Please try again.'
-      statusCode = 504
-    } else if (err.message.includes('Invalid image')) {
-      msg = err.message
-      statusCode = 400
-    } else if (err.message.includes('Unsupported')) {
-      msg = err.message
-      statusCode = 400
-    }
-
-    return NextResponse.json({ error: msg }, { status: statusCode })
+    return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
   }
 }
 
