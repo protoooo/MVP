@@ -77,11 +77,11 @@ const Icons = {
   ),
 }
 
-function LandingPage({ onShowPricing, onShowAuth }) {
+function LandingPage({ onShowPricing, onShowAuth, shellRef }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-6xl w-full">
-        <div className="ui-shell">
+        <div ref={shellRef} className="ui-shell ui-shell-parallax">
           <div className="ui-hero">
             <div className="ui-kickers">
               <span className={`ui-kicker ${inter.className}`}>
@@ -90,9 +90,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw-first · enterprise posture</span>
             </div>
 
-            <h1 className={`ui-title ${outfit.className}`}>
-              Compliance you can run your restaurant on.
-            </h1>
+            <h1 className={`ui-title ${outfit.className}`}>Compliance you can run your restaurant on.</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
               A premium compliance console built for operators who take inspections seriously. Get grounded answers, photo risk scans,
@@ -123,7 +121,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          {/* Minimal, enterprise “spec rows” (not playful cards) */}
           <div className="ui-specgrid">
             <div className="ui-spec">
               <div className={`ui-spec-title ${inter.className}`}>Photo risk scan</div>
@@ -147,9 +144,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </div>
 
-          <div className={`ui-footerline ${inter.className}`}>
-            One site license per restaurant · 7-day trial · Cancel anytime
-          </div>
+          <div className={`ui-footerline ${inter.className}`}>One site license per restaurant · 7-day trial · Cancel anytime</div>
         </div>
 
         <footer className="pt-10 text-xs text-white/45">
@@ -294,7 +289,7 @@ function AuthModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70 hover:text-white text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -355,7 +350,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-6">
           <div className={`ui-tag ${inter.className}`}>Enterprise • Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>
+          <p className={`text-sm text-white/65 ${inter.className}`}>
             For operators who want inspection-grade confidence. Includes full chat + photo scanning.
           </p>
         </div>
@@ -365,9 +360,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/55">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+              <p className={`text-xs text-white/62 mt-2 ${inter.className}`}>
                 Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
               </p>
             </div>
@@ -380,7 +375,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="ui-divider my-5" />
 
-          <ul className="text-xs text-white/70 space-y-2">
+          <ul className="text-xs text-white/75 space-y-2">
             <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Text + photo compliance checks</span>
@@ -416,7 +411,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>
+            <p className={`text-[11px] text-white/50 text-center ${inter.className}`}>
               Not for hobbyists. Built for real operators who want inspection-ready workflows.
             </p>
           </div>
@@ -451,6 +446,11 @@ export default function Page() {
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
 
+  // Landing-only: make the liquid glass shell drift independently of the scroll container
+  const landingWrapRef = useRef(null)
+  const shellParallaxRef = useRef(null)
+  const parallaxRafRef = useRef(null)
+
   const shouldAutoScrollRef = useRef(true)
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -467,6 +467,20 @@ export default function Page() {
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
 
+  const applyShellParallax = (scrollTop) => {
+    const shell = shellParallaxRef.current
+    if (!shell) return
+    const max = 18
+    const ty = Math.min(max, Math.max(0, scrollTop * 0.06))
+    shell.style.setProperty('--ui-shell-parallax', `${ty.toFixed(2)}px`)
+  }
+
+  const handleLandingScroll = () => {
+    const y = landingWrapRef.current?.scrollTop || 0
+    if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current)
+    parallaxRafRef.current = requestAnimationFrame(() => applyShellParallax(y))
+  }
+
   useEffect(() => {
     requestAnimationFrame(() => scrollToBottom('auto'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -477,6 +491,15 @@ export default function Page() {
       requestAnimationFrame(() => scrollToBottom('auto'))
     }
   }, [messages])
+
+  useEffect(() => {
+    // init parallax position
+    applyShellParallax(0)
+    return () => {
+      if (parallaxRafRef.current) cancelAnimationFrame(parallaxRafRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -743,21 +766,33 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Enterprise glow + grid (subtle, expensive) */
+        /* Cleaner liquid background (no heavy grid) + subtle animated drift */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
-          inset: 0;
+          inset: -12%;
           pointer-events: none;
           background:
-            radial-gradient(1100px 500px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 55%),
-            radial-gradient(900px 520px at 20% 10%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(900px 520px at 85% 10%, rgba(120, 90, 255, 0.06), transparent 55%),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+            radial-gradient(900px 520px at 50% 0%, rgba(255, 255, 255, 0.16), transparent 60%),
+            radial-gradient(900px 520px at 18% 12%, rgba(0, 255, 200, 0.11), transparent 62%),
+            radial-gradient(900px 520px at 86% 12%, rgba(120, 90, 255, 0.11), transparent 62%),
+            radial-gradient(800px 520px at 50% 110%, rgba(255, 255, 255, 0.06), transparent 65%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 60%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.0));
           opacity: 1;
+          filter: saturate(1.15) contrast(1.05);
+          transform: translate3d(0, 0, 0) scale(1);
+          animation: ui-bg-float 16s ease-in-out infinite alternate;
           mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+        }
+
+        @keyframes ui-bg-float {
+          from {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          to {
+            transform: translate3d(0, -22px, 0) scale(1.02);
+          }
         }
 
         /* soft vignette */
@@ -766,27 +801,27 @@ export default function Page() {
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.55) 70%);
-          opacity: 0.9;
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 72%);
+          opacity: 0.92;
         }
 
         ::-webkit-scrollbar {
           width: 9px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.14);
           border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.2);
         }
 
         /* Header */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(5, 6, 8, 0.78);
+          backdrop-filter: blur(18px) saturate(150%);
+          -webkit-backdrop-filter: blur(18px) saturate(150%);
         }
 
         .ui-brand {
@@ -795,18 +830,55 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
-        /* Premium “shell” */
+        /* Premium “shell” — clearer + more glass */
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          position: relative;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.05);
           border-radius: 22px;
           overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72);
+          backdrop-filter: blur(20px) saturate(165%);
+          -webkit-backdrop-filter: blur(20px) saturate(165%);
+          transform: translate3d(0, var(--ui-shell-parallax, 0px), 0);
+          will-change: transform;
+        }
+
+        /* glass edge highlight */
+        .ui-shell::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          border-radius: inherit;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0.02));
+          opacity: 0.75;
+          mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+          -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+          padding: 1px;
+          mask-composite: exclude;
+          -webkit-mask-composite: xor;
+        }
+
+        /* slight inner glow to separate from bg */
+        .ui-shell::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          border-radius: inherit;
+          background: radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.08), transparent 55%);
+          opacity: 0.7;
+        }
+
+        .ui-shell > * {
+          position: relative;
+          z-index: 1;
         }
 
         .ui-hero {
@@ -827,10 +899,10 @@ export default function Page() {
           gap: 8px;
           padding: 7px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.88);
           letter-spacing: 0.14em;
           text-transform: uppercase;
           font-weight: 800;
@@ -838,7 +910,7 @@ export default function Page() {
 
         .ui-kicker-muted {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.68);
         }
 
         .ui-title {
@@ -846,13 +918,14 @@ export default function Page() {
           line-height: 1.02;
           letter-spacing: -0.05em;
           margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.98);
+          text-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
         }
 
         .ui-subtitle {
           font-size: 14px;
           line-height: 1.75;
-          color: rgba(255, 255, 255, 0.64);
+          color: rgba(255, 255, 255, 0.72);
           max-width: 72ch;
         }
 
@@ -870,7 +943,7 @@ export default function Page() {
           align-items: center;
           margin-top: 14px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
         .ui-trust-item {
           display: inline-flex;
@@ -878,25 +951,25 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.02);
         }
         .ui-dot {
           width: 4px;
           height: 4px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.22);
         }
 
         /* Spec grid (enterprise separators) */
         .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         .ui-spec {
           padding: 18px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.06);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
         .ui-spec:first-child {
           border-top: none;
@@ -905,13 +978,13 @@ export default function Page() {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           margin-bottom: 6px;
         }
         .ui-spec-body {
           font-size: 12px;
           line-height: 1.7;
-          color: rgba(255, 255, 255, 0.58);
+          color: rgba(255, 255, 255, 0.68);
           max-width: 76ch;
         }
         @media (min-width: 920px) {
@@ -920,7 +993,7 @@ export default function Page() {
           }
           .ui-spec {
             border-top: none;
-            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
           }
           .ui-spec:first-child {
             border-left: none;
@@ -929,8 +1002,8 @@ export default function Page() {
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.45);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.55);
           font-size: 12px;
         }
 
@@ -952,7 +1025,7 @@ export default function Page() {
         .ui-btn-primary {
           background: #ffffff;
           color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.22);
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
         .ui-btn-primary:hover {
@@ -960,13 +1033,13 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
+          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.14);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
         .ui-icon-btn {
@@ -976,55 +1049,55 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.9);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
-          color: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.22);
+          color: rgba(255, 255, 255, 0.98);
         }
 
         /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.86);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(6, 7, 9, 0.9);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
+          backdrop-filter: blur(20px) saturate(150%);
+          -webkit-backdrop-filter: blur(20px) saturate(150%);
         }
 
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.04);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.96);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(255, 255, 255, 0.45);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.26);
+          background: rgba(255, 255, 255, 0.055);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
         }
 
         .ui-toast {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.04);
         }
         .ui-toast-ok {
-          border-color: rgba(34, 197, 94, 0.35);
+          border-color: rgba(34, 197, 94, 0.4);
         }
         .ui-toast-err {
-          border-color: rgba(239, 68, 68, 0.35);
+          border-color: rgba(239, 68, 68, 0.4);
         }
 
         /* Pricing premium surfaces */
@@ -1034,10 +1107,10 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.82);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1046,20 +1119,22 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.05);
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
+          backdrop-filter: blur(18px) saturate(150%);
+          -webkit-backdrop-filter: blur(18px) saturate(150%);
         }
         .ui-pricewrap::before {
           content: '';
           position: absolute;
           inset: -40% -30%;
           background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
+            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.12), transparent 48%),
+            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.08), transparent 58%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.08), transparent 58%);
           pointer-events: none;
         }
 
@@ -1069,9 +1144,9 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.78);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.03);
+          color: rgba(255, 255, 255, 0.84);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1079,28 +1154,36 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.1);
         }
 
         /* Chat bubbles — tool-like (less playful) */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.04);
+          color: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(14px) saturate(140%);
+          -webkit-backdrop-filter: blur(14px) saturate(140%);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.22);
         }
 
         .ui-empty {
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         @media (prefers-reduced-motion: reduce) {
+          body.ui-enterprise-bg::before {
+            animation: none !important;
+          }
+          .ui-shell {
+            transform: none !important;
+          }
           * {
             scroll-behavior: auto !important;
           }
@@ -1118,7 +1201,7 @@ export default function Page() {
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/60 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
@@ -1156,7 +1239,7 @@ export default function Page() {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
@@ -1179,8 +1262,12 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+            <div ref={landingWrapRef} onScroll={handleLandingScroll} className="flex-1 min-h-0 overflow-y-auto">
+              <LandingPage
+                shellRef={shellParallaxRef}
+                onShowPricing={() => setShowPricingModal(true)}
+                onShowAuth={() => setShowAuthModal(true)}
+              />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
@@ -1212,9 +1299,9 @@ export default function Page() {
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1229,7 +1316,7 @@ export default function Page() {
               <div className="flex-shrink-0 ui-header border-t border-white/10">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/75">
                       <span>Image attached</span>
                       <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
                         <Icons.X />
@@ -1269,7 +1356,7 @@ export default function Page() {
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/45 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
