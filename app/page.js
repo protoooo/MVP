@@ -75,152 +75,62 @@ const Icons = {
       <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
     </svg>
   ),
-  ChevronDown: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-}
-
-function FAQItem({ q, a, isOpen, onToggle }) {
-  return (
-    <div className="ui-faqitem">
-      <button type="button" onClick={onToggle} className="ui-faqbtn" aria-expanded={isOpen}>
-        <span className={`ui-faqq ${inter.className}`}>{q}</span>
-        <span className={`ui-faqchev ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
-          <Icons.ChevronDown />
-        </span>
-      </button>
-      <div className={`ui-faqpanel ${isOpen ? 'is-open' : ''}`} role="region">
-        <div className={`ui-faqa ${inter.className}`}>{a}</div>
-      </div>
-    </div>
-  )
 }
 
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const [openFaq, setOpenFaq] = useState(null)
-
-  const faqs = [
-    {
-      q: 'Is this only for Washtenaw County?',
-      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
-    },
-    {
-      q: 'What should my team upload for photo checks?',
-      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
-    },
-    {
-      q: 'How should we use the document side?',
-      a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
-    },
-    {
-      q: 'Will it replace training or a manager?',
-      a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
-    },
-    {
-      q: 'Do I need it every day?',
-      a: 'Most teams use it before rushes, during closes/opens, after new hires, or when they want to tighten up the line.',
-    },
-  ]
-
   return (
-    <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
+    <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-6xl w-full">
         <div className="ui-shell">
-          {/* HERO */}
-          <section className="ui-hero">
+          <div className="ui-hero">
+            <div className="ui-kickers">
+              <span className={`ui-kicker ${inter.className}`}>
+                <Icons.Shield /> Inspection-grade
+              </span>
+              <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw County database · built for operators</span>
+            </div>
+
             <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>Catch violations before the health inspector.</p>
 
-            <p className={`ui-body ${inter.className}`}>
-              Photo scans for instant violation checks. Document search for Washtenaw-specific enforcement and food-code guidance.
-            </p>
-
             <div className="ui-cta-row">
               <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                <span className="ui-btn-inner">Start trial</span>
+                Start trial
               </button>
-
               <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                <span className="ui-btn-inner">Sign in</span>
+                Sign in
               </button>
             </div>
-          </section>
-
-          {/* TWO FEATURE CARDS (directly under hero) */}
-          <section className="ui-feature-row">
-            <div className="ui-stepcard">
-              <div className="ui-stephead">
-                <span className="ui-stepicon" aria-hidden="true">
-                  <Icons.Camera />
-                </span>
-                <div className={`ui-steptitle ${inter.className}`}>Photo check</div>
-              </div>
-              <div className={`ui-stepbody ${inter.className}`}>Take a picture. Get a tight checklist of likely issues to verify.</div>
-            </div>
-
-            <div className="ui-stepcard">
-              <div className="ui-stephead">
-                <span className="ui-stepicon" aria-hidden="true">
-                  <Icons.Lock />
-                </span>
-                <div className={`ui-steptitle ${inter.className}`}>Document search</div>
-              </div>
-              <div className={`ui-stepbody ${inter.className}`}>
-                Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
-              </div>
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* FAQ */}
-          <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
-            <div className="ui-faq">
-              {faqs.map((f, i) => (
-                <FAQItem
-                  key={i}
-                  q={f.q}
-                  a={f.a}
-                  isOpen={openFaq === i}
-                  onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
-                />
-              ))}
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* FINAL CTA */}
-          <section className="ui-final">
-            <div className="ui-finalinner">
-              <div>
-                <h3 className={`ui-h2 ${outfit.className}`}>Be inspection-ready on your next shift.</h3>
-                <p className={`ui-p ${inter.className}`}>
-                  Start the trial, run a quick scan, and keep the checklist on a manager clipboard.
-                </p>
-              </div>
-
-              <div className="ui-cta-row">
-                <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                  <span className="ui-btn-inner">Start trial</span>
-                </button>
-                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                  <span className="ui-btn-inner">Sign in</span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <div className={`ui-footerline ${inter.className}`}>
-            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
           </div>
+
+          <div className="ui-specgrid">
+            <div className="ui-spec">
+              <div className={`ui-spec-title ${inter.className}`}>Photo Analysis</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Take a photo. Get likely violations to verify against Washtenaw County requirements.
+              </div>
+            </div>
+
+            <div className="ui-spec">
+              <div className={`ui-spec-title ${inter.className}`}>Document search</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Ask questions and pull answers from Washtenaw enforcement guidance and the food codes your team actually uses.
+              </div>
+            </div>
+
+            <div className="ui-spec">
+              <div className={`ui-spec-title ${inter.className}`}>Operator-ready output</div>
+              <div className={`ui-spec-body ${inter.className}`}>
+                Clear, checkable steps you can use mid-shift — without digging through manuals.
+              </div>
+            </div>
+          </div>
+
+          <div className={`ui-footerline ${inter.className}`}>One site license · 7-day trial · Cancel anytime</div>
         </div>
 
-        <footer className="pt-8 text-xs text-white/45">
+        <footer className="pt-10 text-xs text-white/45">
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/terms" className="hover:text-white/70">
               Terms
@@ -232,25 +142,27 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               Contact
             </Link>
           </div>
-
-          <div className="mt-4 text-center text-[11px] text-white/40">
-            Made in Washtenaw County for Washtenaw County.
-          </div>
         </footer>
       </div>
     </div>
   )
 }
 
-function AuthModal({ isOpen, onClose }) {
-  const [mode, setMode] = useState('signin')
+function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
+  const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [messageKind, setMessageKind] = useState('info') // 'ok' | 'err' | 'info'
   const { isLoaded, executeRecaptcha } = useRecaptcha()
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode)
+      setMessage('')
+    }
+  }, [isOpen, initialMode])
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault()
@@ -258,13 +170,11 @@ function AuthModal({ isOpen, onClose }) {
 
     setLoading(true)
     setMessage('')
-    setMessageKind('info')
 
     try {
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken) {
-        setMessageKind('err')
-        setMessage('Security verification failed. Please try again.')
+        setMessage('Error: Security verification failed. Please try again.')
         return
       }
 
@@ -287,37 +197,32 @@ function AuthModal({ isOpen, onClose }) {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setMessageKind('err')
-        setMessage(data.error || 'Authentication failed.')
+        setMessage(`Error: ${data.error || 'Authentication failed'}`)
         return
       }
 
       if (mode === 'reset') {
-        setMessageKind('ok')
-        setMessage('Check your email for reset instructions.')
+        setMessage('✓ Check your email for password reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
-        }, 1200)
+        }, 2200)
       } else if (mode === 'signup') {
-        setMessageKind('ok')
-        setMessage('Account created. Check your email to verify.')
+        setMessage('✓ Account created. Check your email to verify.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
-        }, 1200)
+        }, 2200)
       } else {
-        setMessageKind('ok')
-        setMessage('Signed in. Redirecting…')
+        setMessage('✓ Signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
-        }, 450)
+        }, 600)
       }
     } catch (error) {
       console.error('Auth error:', error)
-      setMessageKind('err')
-      setMessage('Unexpected issue. Please try again.')
+      setMessage('Error: Unexpected issue. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -326,9 +231,9 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal ui-modal-anim p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-5">
+    <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-md ui-modal p-7" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
               {mode === 'signin' && 'Sign in'}
@@ -337,7 +242,7 @@ function AuthModal({ isOpen, onClose }) {
             </h2>
             <p className={`text-xs text-white/60 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
-              {mode === 'signup' && 'Best with an owner / GM email for your site.'}
+              {mode === 'signup' && 'Use an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
             </p>
           </div>
@@ -348,7 +253,7 @@ function AuthModal({ isOpen, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-white/60 mb-2">Email</label>
+            <label className="block text-xs font-semibold text-white/70 mb-2">Email</label>
             <input
               type="email"
               value={email}
@@ -361,7 +266,7 @@ function AuthModal({ isOpen, onClose }) {
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-white/60 mb-2">Password</label>
+              <label className="block text-xs font-semibold text-white/70 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -382,41 +287,35 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed">
-            <span className="ui-btn-inner">
-              {loading && <span className="ui-spinner" aria-hidden="true" />}
-              {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-            </span>
+          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+            {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 ui-toast ${messageKind === 'err' ? 'ui-toast-err' : messageKind === 'ok' ? 'ui-toast-ok' : ''}`}>
-            <span className="ui-toasticon" aria-hidden="true">
-              {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
-            </span>
-            <span className={`ui-toasttext ${inter.className}`}>{message}</span>
+          <div className={`mt-4 text-xs rounded-lg px-3 py-2 ui-toast ${message.startsWith('Error') ? 'ui-toast-err' : 'ui-toast-ok'}`}>
+            {message}
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/60">
+        <div className="mt-4 text-center space-y-1 text-xs text-white/70">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/60 hover:text-white">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/70 hover:text-white">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/60 hover:text-white">
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/70 hover:text-white">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/60 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/60 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
               Back to sign in
             </button>
           )}
@@ -432,29 +331,27 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal ui-modal-anim p-6 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close pricing">
+    <div className="fixed inset-0 z-[900] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-xl ui-modal p-7 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6" aria-label="Close pricing">
           <Icons.X />
         </button>
 
-        <div className="mb-5">
+        <div className="mb-6">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>
-            Photo checks + document search—built specifically for Washtenaw County operators.
-          </p>
+          <p className={`text-sm text-white/60 ${inter.className}`}>Photo analysis + document search for Washtenaw County compliance.</p>
         </div>
 
         <div className="ui-pricewrap p-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/45">/ month</span>
+                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
-              <p className={`text-xs text-white/60 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Photos count as two checks.
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+                One restaurant license. Use it mid-shift to verify potential issues before inspections.
               </p>
             </div>
 
@@ -466,32 +363,43 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="ui-divider my-5" />
 
-          <div className="space-y-3">
+          <ul className="text-xs text-white/70 space-y-2">
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>Photo analysis + document search</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>Washtenaw enforcement guidance + food code references</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>One restaurant site license</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icons.Check />
+              <span>7-day free trial · cancel anytime</span>
+            </li>
+          </ul>
+
+          <div className="space-y-3 pt-5">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="ui-btn-inner">
-                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
-                Start trial
-              </span>
+              {loading === 'monthly' ? 'Processing…' : 'Start $100/mo trial'}
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              className="ui-btn ui-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="ui-btn-inner">
-                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-                Annual · save 15%
-              </span>
+              {loading === 'annual' ? 'Processing…' : 'Annual · $1,000/yr'}
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>
-              7-day trial · cancel anytime · one restaurant site license
-            </p>
+            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>Built for real operators. Not a toy.</p>
           </div>
         </div>
       </div>
@@ -509,6 +417,7 @@ export default function Page() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
 
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authInitialMode, setAuthInitialMode] = useState('signin')
   const [showPricingModal, setShowPricingModal] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
 
@@ -523,7 +432,6 @@ export default function Page() {
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
-  const textAreaRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
 
@@ -628,15 +536,8 @@ export default function Page() {
         setShowUserMenu(false)
       }
     }
-    function handleKey(event) {
-      if (event.key === 'Escape') setShowUserMenu(false)
-    }
     document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
+    return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
   const handleCheckout = async (priceId, planName) => {
@@ -644,6 +545,7 @@ export default function Page() {
       const { data } = await supabase.auth.getSession()
       if (!data.session) {
         setShowPricingModal(false)
+        setAuthInitialMode('signup')
         setShowAuthModal(true)
         return
       }
@@ -802,7 +704,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="ui-spinner-lg" aria-label="Loading" />
+        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
       </div>
     )
   }
@@ -821,38 +723,36 @@ export default function Page() {
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.94);
         }
 
-        /* Brighter background (10–15%) */
+        /* Enterprise glow + grid (slightly brighter ~6%) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.13), transparent 58%),
-            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.06), transparent 60%),
-            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.06), transparent 60%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 11px);
-          opacity: 0.92;
-          transform: translateZ(0);
+            radial-gradient(1100px 500px at 50% 0%, rgba(255, 255, 255, 0.107), transparent 55%),
+            radial-gradient(900px 520px at 20% 10%, rgba(0, 255, 200, 0.064), transparent 55%),
+            radial-gradient(900px 520px at 85% 10%, rgba(120, 90, 255, 0.064), transparent 55%),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.064) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.053) 1px, transparent 1px);
+          background-size: auto, auto, auto, 56px 56px, 56px 56px;
+          opacity: 1;
+          mask-image: radial-gradient(circle at 50% 18%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
         }
 
+        /* soft vignette (slightly reduced) */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
           background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.52) 70%);
-          opacity: 0.85;
-          transform: translateZ(0);
+          opacity: 0.86;
         }
 
-        :root {
-          scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
-          scrollbar-width: thin;
-        }
         ::-webkit-scrollbar {
           width: 9px;
         }
@@ -864,84 +764,87 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
+        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.78);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
+          background: rgba(5, 6, 8, 0.72);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }
 
         /* Logo (no pill) */
         .ui-logo {
           display: inline-flex;
           align-items: baseline;
-          gap: 2px;
-          color: rgba(255, 255, 255, 0.96);
+          gap: 0;
+          font-size: 14px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: rgba(255, 255, 255, 0.92);
           user-select: none;
         }
-        .ui-logo .word {
-          font-size: 14px;
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          text-transform: lowercase;
+        .ui-logo span {
+          letter-spacing: -0.03em;
         }
-        .ui-logo .lm {
-          font-size: 14px;
+        .ui-logo .ui-logoLM {
           font-weight: 800;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
+          margin-left: 0px;
         }
 
-        .ui-topmeta {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.78);
-          letter-spacing: 0.02em;
-          line-height: 1.2;
-        }
-
+        /* Premium “shell” */
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
-          position: relative;
-        }
-
-        .ui-shell::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          pointer-events: none;
-          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.075), transparent 60%);
-          opacity: 0.9;
         }
 
         .ui-hero {
-          padding: 32px;
+          padding: 28px 22px 20px;
+        }
+
+        .ui-kickers {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        .ui-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.82);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 800;
+        }
+
+        .ui-kicker-muted {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
         }
 
         .ui-title {
-          font-size: clamp(32px, 4vw, 52px);
-          line-height: 1.05;
+          font-size: clamp(30px, 4vw, 56px);
+          line-height: 1.02;
           letter-spacing: -0.05em;
           margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.97);
+          color: rgba(255, 255, 255, 0.96);
         }
 
         .ui-subtitle {
-          font-size: 16px;
-          line-height: 1.4;
-          color: rgba(255, 255, 255, 0.78);
-          margin-bottom: 10px;
-          max-width: 70ch;
-        }
-
-        .ui-body {
-          font-size: 13px;
+          font-size: 14px;
           line-height: 1.65;
           color: rgba(255, 255, 255, 0.64);
-          max-width: 78ch;
+          max-width: 72ch;
         }
 
         .ui-cta-row {
@@ -951,196 +854,65 @@ export default function Page() {
           margin-top: 18px;
         }
 
-        .ui-section-divider {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.08);
-        }
-
-        .ui-section {
-          padding: 28px 32px;
-        }
-
-        .ui-final {
-          padding: 28px 32px 26px;
-        }
-
-        .ui-finalinner {
-          display: flex;
-          gap: 18px;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-        }
-
-        .ui-h2 {
-          font-size: 20px;
-          letter-spacing: -0.02em;
-          color: rgba(255, 255, 255, 0.95);
-          margin-bottom: 10px;
-        }
-
-        .ui-p {
-          font-size: 13px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.64);
-          max-width: 72ch;
-        }
-
-        /* Feature row under hero */
-        .ui-feature-row {
-          padding: 0 32px 24px;
+        /* Spec grid (enterprise separators) */
+        .ui-specgrid {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 10px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-        @media (min-width: 920px) {
-          .ui-feature-row {
-            grid-template-columns: 1fr 1fr;
-          }
+        .ui-spec {
+          padding: 18px 22px;
+          border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
-
-        .ui-stepcard {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 12px;
+        .ui-spec:first-child {
+          border-top: none;
         }
-
-        .ui-stephead {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
-        }
-
-        .ui-stepicon {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        .ui-steptitle {
+        .ui-spec-title {
           font-size: 12px;
           font-weight: 800;
           letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.94);
-        }
-
-        .ui-stepbody {
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.64);
-        }
-
-        .ui-faq {
-          margin-top: 12px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.01);
-          overflow: hidden;
-        }
-
-        .ui-faqitem {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .ui-faqitem:first-child {
-          border-top: none;
-        }
-
-        .ui-faqbtn {
-          width: 100%;
-          text-align: left;
-          padding: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          background: transparent;
-          color: rgba(255, 255, 255, 0.94);
-          outline: none;
-        }
-
-        .ui-faqbtn:hover {
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .ui-faqq {
-          font-size: 12px;
-          font-weight: 700;
           color: rgba(255, 255, 255, 0.92);
+          margin-bottom: 6px;
         }
-
-        .ui-faqchev {
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.78);
-          transition: transform 140ms ease;
-          flex-shrink: 0;
-        }
-        .ui-faqchev.is-open {
-          transform: rotate(180deg);
-        }
-
-        .ui-faqpanel {
-          max-height: 0px;
-          overflow: hidden;
-          transition: max-height 180ms ease;
-        }
-        .ui-faqpanel.is-open {
-          max-height: 240px;
-        }
-
-        .ui-faqa {
-          padding: 0 12px 12px;
+        .ui-spec-body {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.64);
+          color: rgba(255, 255, 255, 0.58);
+          max-width: 76ch;
+        }
+        @media (min-width: 920px) {
+          .ui-specgrid {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+          .ui-spec {
+            border-top: none;
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+          }
+          .ui-spec:first-child {
+            border-left: none;
+          }
         }
 
         .ui-footerline {
           padding: 14px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.5);
+          color: rgba(255, 255, 255, 0.45);
           font-size: 12px;
         }
 
+        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
-            color 120ms ease, opacity 120ms ease;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
           user-select: none;
         }
-
-        .ui-btn-inner {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .ui-btn:hover {
-          transform: scale(1.02);
-        }
         .ui-btn:active {
-          transform: scale(1.01);
+          transform: translateY(1px);
         }
 
         .ui-btn-primary {
@@ -1155,20 +927,12 @@ export default function Page() {
 
         .ui-btn-secondary {
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.9);
           border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .ui-btn-secondary:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .ui-btn:focus-visible,
-        .ui-icon-btn:focus-visible,
-        .ui-faqbtn:focus-visible,
-        .ui-input:focus-visible {
-          outline: 2px solid rgba(255, 255, 255, 0.22);
-          outline-offset: 2px;
+          border-color: rgba(255, 255, 255, 0.18);
         }
 
         .ui-icon-btn {
@@ -1177,47 +941,26 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 14px;
+          border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.86);
-          transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+          color: rgba(255, 255, 255, 0.82);
+          transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
         .ui-icon-btn:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.96);
-          transform: scale(1.02);
+          border-color: rgba(255, 255, 255, 0.18);
+          color: rgba(255, 255, 255, 0.95);
         }
 
-        .ui-backdrop {
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-        }
-
+        /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.88);
+          background: rgba(6, 7, 9, 0.86);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-        }
-
-        .ui-modal-anim {
-          animation: uiPop 180ms ease-out both;
-          transform-origin: 50% 40%;
-        }
-        @keyframes uiPop {
-          from {
-            opacity: 0;
-            transform: scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
         }
 
         .ui-input {
@@ -1226,25 +969,20 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.92);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(255, 255, 255, 0.35);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.22);
           background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.09);
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
 
         .ui-toast {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          border-radius: 12px;
-          padding: 10px 12px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.03);
         }
@@ -1254,16 +992,8 @@ export default function Page() {
         .ui-toast-err {
           border-color: rgba(239, 68, 68, 0.35);
         }
-        .ui-toasticon {
-          margin-top: 1px;
-          color: rgba(255, 255, 255, 0.8);
-        }
-        .ui-toasttext {
-          font-size: 12px;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.75);
-        }
 
+        /* Pricing premium surfaces */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1282,11 +1012,21 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.10);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
+        }
+        .ui-pricewrap::before {
+          content: '';
+          position: absolute;
+          inset: -40% -30%;
+          background:
+            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
+            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
+            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
+          pointer-events: none;
         }
 
         .ui-badge {
@@ -1297,7 +1037,7 @@ export default function Page() {
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.78);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1308,118 +1048,74 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
+        /* Chat bubbles — tool-like */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.10);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.96);
+          color: rgba(255, 255, 255, 0.9);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.18);
         }
 
-        .ui-emptywrap {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 18px;
-          padding: 16px;
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
-          max-width: 520px;
-          width: 100%;
-        }
-
-        .ui-emptyicon {
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.82);
-          margin-bottom: 10px;
-        }
-
-        .ui-emptytitle {
-          font-size: 13px;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.94);
-          margin-bottom: 6px;
-          letter-spacing: 0.02em;
-        }
-
-        .ui-emptytext {
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.64);
-        }
-
-        .ui-spinner {
-          width: 14px;
-          height: 14px;
-          border-radius: 999px;
-          border: 2px solid rgba(0, 0, 0, 0.18);
-          border-top-color: rgba(0, 0, 0, 0.65);
-          animation: spin 700ms linear infinite;
-        }
-        .ui-spinner-lg {
-          width: 34px;
-          height: 34px;
-          border-radius: 999px;
-          border: 2px solid rgba(255, 255, 255, 0.16);
-          border-top-color: rgba(255, 255, 255, 0.8);
-          animation: spin 700ms linear infinite;
-        }
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+        .ui-empty {
+          color: rgba(255, 255, 255, 0.55);
         }
 
         @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
-            animation: none !important;
-            transition: none !important;
           }
         }
       `}</style>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div className={`ui-logo ${outfit.className}`} aria-label="protocolLM">
-                <span className="word">protocol</span>
-                <span className="lm">LM</span>
+                <span>protocol</span>
+                <span className="ui-logoLM">LM</span>
               </div>
 
-              <div className={`ui-topmeta ${inter.className}`}>Washtenaw compliance database · Other counties 2026</div>
+              <span className={`text-[11px] text-white/70 ${inter.className}`}>Additional Counties Coming 2026</span>
 
               {hasActiveSubscription && (
-                <span className={`text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
               {!isAuthenticated ? (
-                <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
-                  <span className="ui-btn-inner">Sign in</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => {
+                      setAuthInitialMode('signin')
+                      setShowAuthModal(true)
+                    }}
+                    className="ui-btn ui-btn-secondary"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => setShowPricingModal(true)}
+                    className="ui-btn ui-btn-primary"
+                  >
+                    Start trial
+                  </button>
+                </>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
                     <Icons.Plus />
-                    <span className="ui-btn-inner" style={{ gap: 8 }}>
-                      New chat
-                    </span>
+                    New chat
                   </button>
 
                   <div className="relative" ref={userMenuRef}>
@@ -1433,8 +1129,7 @@ export default function Page() {
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
-                        <div className="px-3 pt-3 pb-2 text-[11px] text-white/45">Press Esc to close</div>
+                      <div className="absolute right-0 mt-2 w-52 ui-modal overflow-hidden">
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
@@ -1464,7 +1159,13 @@ export default function Page() {
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+              <LandingPage
+                onShowPricing={() => setShowPricingModal(true)}
+                onShowAuth={() => {
+                  setAuthInitialMode('signin')
+                  setShowAuthModal(true)
+                }}
+              />
             </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
@@ -1476,34 +1177,17 @@ export default function Page() {
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
-                    <div className="ui-emptywrap text-left">
-                      <div className="ui-emptyicon" aria-hidden="true">
-                        <Icons.Shield />
-                      </div>
-                      <div className={`ui-emptytitle ${inter.className}`}>Upload a photo or ask a question.</div>
-                      <div className={`ui-emptytext ${inter.className}`}>
-                        Use photo checks to spot likely issues fast—or search the Washtenaw-backed database when you need a clear answer.
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-btn ui-btn-secondary">
-                          <span className="ui-btn-inner">
-                            <Icons.Camera />
-                            Attach photo
-                          </span>
-                        </button>
-
-                        <button type="button" onClick={() => textAreaRef.current?.focus()} className="ui-btn ui-btn-secondary">
-                          <span className="ui-btn-inner">Ask a question</span>
-                        </button>
-                      </div>
+                    <div className="max-w-xl text-center">
+                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
+                        Upload a photo for analysis, or ask a question and search the Washtenaw compliance database.
+                      </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
+                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[75%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                        <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
                           {msg.image && (
                             <img
                               src={msg.image}
@@ -1512,10 +1196,10 @@ export default function Page() {
                             />
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-2 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                            <div className="flex gap-1 items-center">
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1530,9 +1214,9 @@ export default function Page() {
               <div className="flex-shrink-0 ui-header border-t border-white/10">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/75">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-10 !h-10" aria-label="Remove image">
+                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
                         <Icons.X />
                       </button>
                     </div>
@@ -1546,12 +1230,11 @@ export default function Page() {
 
                     <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
                       <textarea
-                        ref={textAreaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
+                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1563,15 +1246,15 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
                         aria-label="Send"
                       >
-                        {isSending ? <div className="ui-spinner-lg" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/45 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
