@@ -13,18 +13,20 @@ export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-// Use Responses API with GPT-5.x
-const OPENAI_MODEL = 'gpt-5.2'
+// ✅ Keep this as your main model
+const OPENAI_CHAT_MODEL = 'gpt-5.2'
 
-// Output tuning (smart + concise)
+// Output controls (GPT-5.2: use reasoning_effort + verbosity; DO NOT send temperature/top_p when reasoning_effort != "none")
 const GENERATION_CONFIG = {
-  maxOutputTokens: 520,
-  reasoningEffort: 'xhigh', // 'high' or 'xhigh' (more thinking)
-  verbosity: 'low', // concise
+  maxCompletionTokens: 520, // total completion budget (includes any internal reasoning + visible output)
+  reasoningEffort: 'high',  // 'medium' | 'high' | 'xhigh' (use 'xhigh' if you want max)
+  verbosity: 'low',         // 'low' | 'medium' | 'high'
 }
 
 const VISION_CONFIG = {
-  maxOutputTokens: 240,
+  maxCompletionTokens: 220,
+  // Vision description should be fast & literal; do NOT pass temperature/top_p.
+  reasoningEffort: 'none',
   verbosity: 'low',
 }
 
@@ -32,12 +34,13 @@ const MAX_CONTEXT_LENGTH = 20000
 const MAX_IMAGE_SIZE_MB = 10
 
 // Timeouts
-const VISION_TIMEOUT = 12000
-const GENERATION_TIMEOUT = 30000
+const VISION_TIMEOUT = 10000
+const GENERATION_TIMEOUT = 25000
 
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
 
+// Input sanitization
 function sanitizeInput(input, maxLength = 4000) {
   if (typeof input !== 'string') return ''
   return input
@@ -72,12 +75,8 @@ function validateMessages(messages) {
 function validateImage(base64String) {
   if (!base64String) return null
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-  const cleanBase64 = base64String.includes(',')
-    ? base64String.split(',')[1]
-    : base64String
-
+  const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
-
   const sizeInBytes = (cleanBase64.length * 3) / 4
   if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
     throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
@@ -85,16 +84,16 @@ function validateImage(base64String) {
   return cleanBase64
 }
 
-// Confidence marker
+// Confidence parsing
 function extractConfidence(text) {
-  const match = text.match(/\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]/i)
+  const match = text.match(/^\s*\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]\s*/i)
   if (match) {
     return {
       confidence: match[1].toUpperCase(),
       text: text.replace(match[0], '').trim(),
     }
   }
-  return { confidence: 'UNKNOWN', text }
+  return { confidence: 'UNKNOWN', text: (text || '').trim() }
 }
 
 // Remove markdown headings (# / ## / ###)
@@ -103,7 +102,7 @@ function stripMarkdownHeadings(text) {
   return text.replace(/^#{1,6}\s+/gm, '')
 }
 
-// Reduce format noise
+// Reduce format noise and keep output clean
 function cleanModelText(text) {
   if (!text) return ''
   return stripMarkdownHeadings(
@@ -117,24 +116,12 @@ function cleanModelText(text) {
     .trim()
 }
 
-// Robust text extraction for Responses API
-function getOutputText(response) {
-  if (!response) return ''
-  if (typeof response.output_text === 'string' && response.output_text.trim()) {
-    return response.output_text.trim()
-  }
-  // Fallback: walk output items
-  try {
-    const parts = []
-    for (const item of response.output || []) {
-      for (const c of item.content || []) {
-        if (c.type === 'output_text' && c.text) parts.push(c.text)
-      }
-    }
-    return parts.join('\n').trim()
-  } catch {
-    return ''
-  }
+// Ensure we always return a confidence line (even if the model forgets)
+function ensureConfidenceLine(confidence, cleanText) {
+  const c = confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW'
+    ? confidence
+    : 'MEDIUM'
+  return { confidence: c, message: cleanText }
 }
 
 export async function POST(req) {
@@ -144,14 +131,11 @@ export async function POST(req) {
   logger.info('Chat request started', { requestId })
 
   try {
-    // Feature flags
+    // Feature flag: service enabled
     const serviceEnabled = await isServiceEnabled()
     if (!serviceEnabled) {
       const message = await getMaintenanceMessage()
-      return NextResponse.json(
-        { error: message, maintenance: true },
-        { status: 503 }
-      )
+      return NextResponse.json({ error: message, maintenance: true }, { status: 503 })
     }
 
     // CSRF
@@ -173,12 +157,9 @@ export async function POST(req) {
     const lastMsgObj = messages[messages.length - 1] || {}
     let lastMessageText = lastMsgObj.content || ''
 
-    const wantsCitations = /\b(cite|citation|source|sources)\b/i.test(lastMessageText)
-
     if (!lastMessageText && !body.image) {
       if (!historyText && messages.length > 0) {
-        messages[messages.length - 1].content =
-          'Analyze safety status based on previous image.'
+        messages[messages.length - 1].content = 'Analyze safety status based on previous image.'
         lastMessageText = messages[messages.length - 1].content
       }
     }
@@ -192,7 +173,7 @@ export async function POST(req) {
       return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
-    // Supabase
+    // Supabase user
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -224,15 +205,12 @@ export async function POST(req) {
     }
 
     const chatId = body.chatId || null
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    const adminEmail =
-      process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
-    // Subscription gate
+    // Subscription check (non-admin)
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -261,9 +239,7 @@ export async function POST(req) {
 
       // Grace periods
       if (!hasActiveSub && profile?.created_at) {
-        if (Date.now() - new Date(profile.created_at).getTime() < 600000) {
-          hasActiveSub = true
-        }
+        if (Date.now() - new Date(profile.created_at).getTime() < 600000) hasActiveSub = true
       }
 
       if (!hasActiveSub) {
@@ -275,10 +251,7 @@ export async function POST(req) {
           .limit(1)
           .maybeSingle()
 
-        if (
-          recentCheckout &&
-          Date.now() - new Date(recentCheckout.created_at).getTime() < 300000
-        ) {
+        if (recentCheckout && Date.now() - new Date(recentCheckout.created_at).getTime() < 300000) {
           hasActiveSub = true
         }
       }
@@ -290,7 +263,7 @@ export async function POST(req) {
         )
       }
 
-      // Usage limits
+      // Usage logging
       try {
         await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
       } catch (err) {
@@ -319,54 +292,40 @@ export async function POST(req) {
       }
     }
 
-    // Vision summary → search terms (describe only what’s visible)
+    // Vision analysis (literal description ONLY)
     let searchTerms = ''
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
       try {
-        const visionResp = await Promise.race([
-          openai.responses.create({
-            model: OPENAI_MODEL,
-            text: { verbosity: VISION_CONFIG.verbosity },
-            max_output_tokens: VISION_CONFIG.maxOutputTokens,
-            // keep reasoning minimal for vision description
-            reasoning: { effort: 'low' },
-            input: [
-              {
-                role: 'system',
-                content: [
-                  {
-                    type: 'input_text',
-                    text:
-                      'Describe only what is visible in a single restaurant photo. Focus on cleanliness, buildup, storage order, separation, labeling, and obvious contamination risks. No guesses. No markdown.',
-                  },
-                ],
-              },
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'input_text',
-                    text: 'Describe visible food safety conditions in plain text (short, scannable).',
-                  },
-                  {
-                    type: 'input_image',
-                    image_url: `data:image/jpeg;base64,${imageBase64}`,
-                    // "low" reduces token use/cost; bump to "high" only if you truly need detail
-                    detail: 'low',
-                  },
-                ],
-              },
+        const messagesVision = [
+          {
+            role: 'system',
+            content:
+              'Describe only what is visible in this restaurant photo. Focus on cleanliness/buildup, storage order, separation, labeling, and obvious contamination risks. No guesses. No markdown.',
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Write a short, plain description (2–6 bullets). No headings.' },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
             ],
+          },
+        ]
+
+        const visionResult = await Promise.race([
+          openai.chat.completions.create({
+            model: OPENAI_CHAT_MODEL,
+            messages: messagesVision,
+            max_completion_tokens: VISION_CONFIG.maxCompletionTokens,
+            reasoning_effort: VISION_CONFIG.reasoningEffort, // ✅ none
+            verbosity: VISION_CONFIG.verbosity,              // ✅ low
+            // ✅ DO NOT pass temperature/top_p here
           }),
           timeoutPromise(VISION_TIMEOUT, 'VISION_TIMEOUT'),
         ])
 
-        searchTerms = getOutputText(visionResp)
-        logger.info('Vision analysis completed', {
-          requestId,
-          length: searchTerms.length,
-        })
+        searchTerms = visionResult?.choices?.[0]?.message?.content?.trim() || ''
+        logger.info('Vision analysis completed', { requestId, length: searchTerms.length })
       } catch (visionError) {
         logger.error('Vision analysis failed', { requestId, error: visionError.message })
         searchTerms = lastMessageText || 'general food safety equipment cleanliness'
@@ -403,27 +362,21 @@ export async function POST(req) {
               doc.document_name ||
               doc.title ||
               'Washtenaw food code'
-            // Keep sources for grounding, but we’ll tell the model not to cite unless asked / LOW confidence.
+            // Keep source tags for internal grounding, but we instruct the model not to cite unless asked.
             return `[SOURCE: ${source}]\n${text}`
           })
           .filter(Boolean)
           .join('\n\n')
 
-        logger.info('Search completed', {
-          requestId,
-          resultsCount: normalizedResults.length,
-        })
+        logger.info('Search completed', { requestId, resultsCount: normalizedResults.length })
       } else {
         logger.warn('No search results; no regulatory context available', { requestId })
       }
     }
 
-    // HARD RULE: never answer without document context
+    // Hard rule: never answer without doc context
     if (!context) {
-      logger.warn('No regulatory context; refusing to answer from general model', {
-        requestId,
-        searchTerms,
-      })
+      logger.warn('No regulatory context; refusing to answer from general model', { requestId, searchTerms })
       return NextResponse.json(
         {
           error:
@@ -436,11 +389,9 @@ export async function POST(req) {
       )
     }
 
-    if (context.length > MAX_CONTEXT_LENGTH) {
-      context = context.slice(0, MAX_CONTEXT_LENGTH)
-    }
+    if (context.length > MAX_CONTEXT_LENGTH) context = context.slice(0, MAX_CONTEXT_LENGTH)
 
-    // System prompt: concise, scannable, operator-friendly
+    // System prompt: concise, scannable, no headings, no default citations
     const SYSTEM_PROMPT = `You are ProtocolLM, a food-safety assistant for restaurants in Washtenaw County, Michigan.
 
 Hard rules:
@@ -448,7 +399,6 @@ Hard rules:
 - Describe ONLY what is visible in photos. No guessing.
 - NO markdown headings. Do NOT use # or ## anywhere.
 - Keep the whole answer short and scannable for an entry-level employee.
-- Avoid absolutes like "will fail inspection".
 
 Output format (MANDATORY):
 Line 1: [CONFIDENCE: HIGH] or [CONFIDENCE: MEDIUM] or [CONFIDENCE: LOW]
@@ -465,10 +415,11 @@ Need to confirm:
 
 Citations:
 - Do NOT cite sources by default.
-- Only include citations if the user explicitly asked for citations OR if confidence is LOW.
-If you include citations, add a final section:
-Sources:
-- (SOURCE: ...) short reference only (1–3 max).`
+- Only include citations if the user explicitly asks ("cite") OR if confidence is LOW.
+
+Tone:
+- Calm, direct, operational.
+- Avoid "will fail inspection" / absolutes.`
 
     const finalUserPrompt = `OFFICIAL REGULATORY CONTEXT:
 ${context}
@@ -480,99 +431,82 @@ USER QUERY:
 ${lastMessageText || '[No additional text provided. Base your answer on the image and context.]'}
 
 ${imageBase64 ? `VISIBLE DESCRIPTION (from vision):
-${searchTerms}` : ''}
-
-User asked for citations: ${wantsCitations ? 'YES' : 'NO'}`
+${searchTerms}` : ''}`
 
     logger.info('Generating response', { requestId })
 
-    try {
-      const genResp = await Promise.race([
-        openai.responses.create({
-          model: OPENAI_MODEL,
-          reasoning: { effort: GENERATION_CONFIG.reasoningEffort },
-          text: { verbosity: GENERATION_CONFIG.verbosity },
-          max_output_tokens: GENERATION_CONFIG.maxOutputTokens,
-          input: [
-            { role: 'system', content: [{ type: 'input_text', text: SYSTEM_PROMPT }] },
-            { role: 'user', content: [{ type: 'input_text', text: finalUserPrompt }] },
-          ],
-        }),
-        timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
-      ])
+    const messagesFinal = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: finalUserPrompt },
+    ]
 
-      let rawText = getOutputText(genResp)
+    const result = await Promise.race([
+      openai.chat.completions.create({
+        model: OPENAI_CHAT_MODEL,
+        messages: messagesFinal,
+        max_completion_tokens: GENERATION_CONFIG.maxCompletionTokens,
+        reasoning_effort: GENERATION_CONFIG.reasoningEffort, // ✅ high (or xhigh)
+        verbosity: GENERATION_CONFIG.verbosity,              // ✅ low
+        // ✅ DO NOT pass temperature/top_p here
+      }),
+      timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
+    ])
 
-      const { confidence, text } = extractConfidence(rawText)
-      const cleanText = cleanModelText(text)
+    let rawText = result?.choices?.[0]?.message?.content || ''
+    const parsed = extractConfidence(rawText)
+    const cleaned = cleanModelText(parsed.text)
 
-      if (!cleanText || cleanText.length < 10) {
-        throw new Error('Empty or invalid response from model')
-      }
-
-      const duration = Date.now() - startTime
-      logger.info('Response generated successfully', {
-        requestId,
-        durationMs: duration,
-        responseLength: cleanText.length,
-        confidence,
-      })
-
-      // Save to DB
-      const dbTasks = []
-      if (user && chatId && lastMessageText) {
-        dbTasks.push(
-          supabase.from('messages').insert([
-            {
-              chat_id: chatId,
-              role: 'user',
-              content: lastMessageText,
-              image: imageBase64 ? 'stored' : null,
-            },
-            {
-              chat_id: chatId,
-              role: 'assistant',
-              content: cleanText,
-              metadata: { confidence },
-            },
-          ])
-        )
-      }
-
-      await Promise.allSettled(dbTasks)
-
-      return NextResponse.json({ message: cleanText, confidence })
-    } catch (genError) {
-      logger.error('Generation failed', { requestId, error: genError.message })
-
-      let errorMsg = 'Unable to generate response. Please try again.'
-      let statusCode = 500
-
-      if (genError.message.includes('TIMEOUT')) {
-        errorMsg = 'Request took too long. Please try a simpler query.'
-        statusCode = 504
-      } else if (genError.message.includes('Empty')) {
-        errorMsg = 'No response generated. Please rephrase your question.'
-        statusCode = 500
-      }
-
-      return NextResponse.json({ error: errorMsg }, { status: statusCode })
+    if (!cleaned || cleaned.length < 10) {
+      throw new Error('Empty or invalid response from model')
     }
+
+    const ensured = ensureConfidenceLine(parsed.confidence, cleaned)
+
+    const duration = Date.now() - startTime
+    logger.info('Response generated successfully', {
+      requestId,
+      durationMs: duration,
+      responseLength: ensured.message.length,
+      confidence: ensured.confidence,
+    })
+
+    // Save messages
+    const dbTasks = []
+    if (user && chatId && lastMessageText) {
+      dbTasks.push(
+        supabase.from('messages').insert([
+          {
+            chat_id: chatId,
+            role: 'user',
+            content: lastMessageText,
+            image: imageBase64 ? 'stored' : null,
+          },
+          {
+            chat_id: chatId,
+            role: 'assistant',
+            content: ensured.message,
+            metadata: { confidence: ensured.confidence },
+          },
+        ])
+      )
+    }
+    await Promise.allSettled(dbTasks)
+
+    return NextResponse.json({ message: ensured.message, confidence: ensured.confidence })
   } catch (err) {
     const duration = Date.now() - startTime
-    logger.error('Fatal error in chat', {
-      requestId,
-      error: err.message,
-      durationMs: duration,
-    })
+    logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
 
     let msg = 'System error. Please try again.'
     let statusCode = 500
 
     if (err.message.includes('TIMEOUT')) {
-      msg = 'Request timed out. The system is busy, please try again in a moment.'
+      msg = 'Request timed out. Please try again.'
       statusCode = 504
     } else if (err.message.includes('Invalid image')) {
+      msg = err.message
+      statusCode = 400
+    } else if (err.message.includes('Unsupported')) {
       msg = err.message
       statusCode = 400
     }
