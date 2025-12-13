@@ -77,7 +77,7 @@ const Icons = {
   ),
 }
 
-function LandingPage({ onShowPricing, onShowAuth, shellRef, onLandingScroll, landingRootRef }) {
+function LandingPage({ onShowPricing, onShowAuth, shellRef, landingRootRef }) {
   useEffect(() => {
     const root = landingRootRef?.current
     if (!root) return
@@ -105,6 +105,9 @@ function LandingPage({ onShowPricing, onShowAuth, shellRef, onLandingScroll, lan
         <div className="max-w-6xl w-full">
           {/* HERO SHELL */}
           <div ref={shellRef} className="ui-shell ui-shell-parallax ui-blackcard">
+            {/* platinum shimmer stripe */}
+            <div className="ui-metal-stripe" aria-hidden="true" />
+
             <div className="ui-hero">
               <div className="ui-kickers">
                 <span className={`ui-kicker ${inter.className}`}>
@@ -144,7 +147,7 @@ function LandingPage({ onShowPricing, onShowAuth, shellRef, onLandingScroll, lan
               </div>
             </div>
 
-            {/* SPEC STRIP (Amex-ish) */}
+            {/* SPEC STRIP */}
             <div className="ui-specstrip">
               <div className={`ui-specpill ${inter.className}`}>Photo scan</div>
               <div className={`ui-specpill ${inter.className}`}>Rulebook-backed answers</div>
@@ -735,7 +738,7 @@ export default function Page() {
         const { data } = await supabase.auth.getSession()
         await loadSessionAndSub(data.session || null)
       } catch (e) {
-        console.error('Auth init error', e)
+        console.error('Auth init error:', e)
         if (isMounted) setIsLoading(false)
       }
     }
@@ -755,9 +758,7 @@ export default function Page() {
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('ui-enterprise-bg')
-    return () => {
-      document.body.classList.remove('ui-enterprise-bg')
-    }
+    return () => document.body.classList.remove('ui-enterprise-bg')
   }, [])
 
   useEffect(() => {
@@ -787,10 +788,7 @@ export default function Page() {
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session.access_token}` },
         body: JSON.stringify({ priceId }),
       })
 
@@ -800,11 +798,8 @@ export default function Page() {
       }
 
       const payload = await res.json()
-      if (payload.url) {
-        window.location.href = payload.url
-      } else {
-        throw new Error('No checkout URL returned')
-      }
+      if (payload.url) window.location.href = payload.url
+      else throw new Error('No checkout URL returned')
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
@@ -855,10 +850,7 @@ export default function Page() {
       if (session && !activeChatId) {
         const { data: created } = await supabase
           .from('chats')
-          .insert({
-            user_id: session.user.id,
-            title: (question || 'New chat').slice(0, 40),
-          })
+          .insert({ user_id: session.user.id, title: (question || 'New chat').slice(0, 40) })
           .select()
           .single()
 
@@ -871,11 +863,7 @@ export default function Page() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, newUserMessage],
-          image,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({ messages: [...messages, newUserMessage], image, chatId: activeChatId }),
       })
 
       if (!res.ok) {
@@ -897,20 +885,14 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: data.message || 'No response.',
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: `Error: ${error.message}`,
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
         return updated
       })
     } finally {
@@ -955,7 +937,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Black-card premium backdrop + subtle drift */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
@@ -992,7 +973,6 @@ export default function Page() {
           opacity: 0.92;
         }
 
-        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           background: rgba(6, 7, 9, 0.78);
@@ -1011,7 +991,6 @@ export default function Page() {
           box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
-        /* Shell */
         .ui-shell {
           position: relative;
           border-radius: 22px;
@@ -1020,7 +999,6 @@ export default function Page() {
           will-change: transform;
         }
 
-        /* Black card feel: darker plate + metal edge + micro texture */
         .ui-blackcard {
           border: 1px solid rgba(255, 255, 255, 0.14);
           background:
@@ -1058,8 +1036,63 @@ export default function Page() {
           mix-blend-mode: overlay;
         }
 
+        /* Black-card “metal” stripe (subtle shimmer) */
+        .ui-metal-stripe {
+          position: absolute;
+          left: 18px;
+          right: 18px;
+          top: 14px;
+          height: 2px;
+          border-radius: 999px;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.04),
+            rgba(255, 255, 255, 0.14),
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.12),
+            rgba(255, 255, 255, 0.04)
+          );
+          opacity: 0.7;
+          overflow: hidden;
+          pointer-events: none;
+          filter: saturate(1.1);
+          z-index: 2;
+        }
+
+        .ui-metal-stripe::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0) 35%,
+            rgba(255, 255, 255, 0.85) 50%,
+            rgba(255, 255, 255, 0) 65%,
+            transparent 100%
+          );
+          transform: translateX(-70%);
+          animation: ui-stripe-shimmer 5.2s ease-in-out infinite;
+          opacity: 0.55;
+          mix-blend-mode: screen;
+        }
+
+        @keyframes ui-stripe-shimmer {
+          0% {
+            transform: translateX(-70%);
+          }
+          45% {
+            transform: translateX(120%);
+          }
+          100% {
+            transform: translateX(120%);
+          }
+        }
+
         .ui-hero {
           padding: 28px 22px 18px;
+          position: relative;
+          z-index: 3;
         }
 
         .ui-kickers {
@@ -1146,6 +1179,8 @@ export default function Page() {
           gap: 10px;
           padding: 14px 18px 18px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
+          position: relative;
+          z-index: 3;
         }
 
         .ui-specpill {
@@ -1159,7 +1194,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.78);
         }
 
-        /* Section headings */
         .ui-sectionhead {
           max-width: 70ch;
         }
@@ -1195,7 +1229,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.68);
         }
 
-        /* Tiles */
         .ui-tilegrid {
           display: grid;
           grid-template-columns: 1fr;
@@ -1246,7 +1279,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.68);
         }
 
-        /* Steps */
         .ui-steps {
           display: grid;
           grid-template-columns: 1fr;
@@ -1294,7 +1326,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.68);
         }
 
-        /* Band */
         .ui-band {
           border-radius: 22px;
           border: 1px solid rgba(255, 255, 255, 0.14);
@@ -1371,7 +1402,6 @@ export default function Page() {
           gap: 10px;
         }
 
-        /* FAQ */
         .ui-faq {
           display: grid;
           gap: 10px;
@@ -1406,7 +1436,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.68);
         }
 
-        /* Final CTA */
         .ui-final {
           border-radius: 22px;
           border: 1px solid rgba(255, 255, 255, 0.14);
@@ -1462,7 +1491,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1515,7 +1543,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.98);
         }
 
-        /* Modals / inputs */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.14);
@@ -1600,7 +1627,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Chat bubbles (unchanged) */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
@@ -1616,7 +1642,6 @@ export default function Page() {
           border-color: rgba(255, 255, 255, 0.22);
         }
 
-        /* Reveal animation */
         [data-reveal] {
           opacity: 0;
           transform: translate3d(0, 10px, 0);
@@ -1634,6 +1659,9 @@ export default function Page() {
           }
           .ui-shell {
             transform: none !important;
+          }
+          .ui-metal-stripe::before {
+            animation: none !important;
           }
           [data-reveal] {
             opacity: 1 !important;
@@ -1720,7 +1748,6 @@ export default function Page() {
                 <LandingPage
                   landingRootRef={landingRootRef}
                   shellRef={shellParallaxRef}
-                  onLandingScroll={handleLandingScroll}
                   onShowPricing={() => setShowPricingModal(true)}
                   onShowAuth={() => setShowAuthModal(true)}
                 />
