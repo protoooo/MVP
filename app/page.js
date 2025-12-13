@@ -845,7 +845,7 @@ export default function Page() {
 
           /* 🔆 Brightness knob:
              1.00 = original, 1.06 = ~6% brighter (current), try 1.10 if you want more. */
-          --ui-lamp: 1.06;
+          --ui-lamp: 1.14;
           --ui-vignette: 0.93;
         }
 
