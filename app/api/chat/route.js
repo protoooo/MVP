@@ -12,23 +12,26 @@ import { validateCSRF } from '@/lib/csrfProtection'
 export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2'
 
-// Generation limits (short, operator-friendly output).
-// NOTE: max_completion_tokens includes BOTH visible output + reasoning tokens.  [oai_citation:2‡OpenAI Platform](https://platform.openai.com/docs/api-reference/chat)
+/**
+ * NOTE:
+ * - Use Responses API for GPT-5.x reasoning controls (reasoning.effort).
+ * - Model name can be 'gpt-5.2' as you’re using, or you can swap later if you add variants.
+ */
+const OPENAI_CHAT_MODEL = 'gpt-5.2'
+const OPENAI_VISION_MODEL = 'gpt-5.2'
+
+// Generation limits (tuned for short, operator-friendly output)
 const GENERATION_CONFIG = {
-  maxCompletionTokens: 420,
+  // Includes visible + reasoning tokens (billed as output tokens). Cap this to control cost + verbosity.
+  maxOutputTokens: 520,
   temperature: 0.1,
-  topP: 0.8,
-  reasoningEffort: 'xhigh', // minimal | low | medium | high | xhigh  [oai_citation:3‡OpenAI Platform](https://platform.openai.com/docs/api-reference/chat)
-  verbosity: 'low', // keep responses concise 
+  reasoningEffort: 'high', // 'low' | 'medium' | 'high'
 }
 
 const VISION_CONFIG = {
-  maxCompletionTokens: 220,
+  maxOutputTokens: 220,
   temperature: 0.1,
-  reasoningEffort: 'minimal',
-  verbosity: 'low',
 }
 
 const MAX_CONTEXT_LENGTH = 20000
@@ -79,7 +82,9 @@ function validateImage(base64String) {
   const cleanBase64 = base64String.includes(',')
     ? base64String.split(',')[1]
     : base64String
+
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
+
   const sizeInBytes = (cleanBase64.length * 3) / 4
   if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
     throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
@@ -87,7 +92,7 @@ function validateImage(base64String) {
   return cleanBase64
 }
 
-// Confidence tag parser (HIGH / MEDIUM / LOW)
+// Now uses HIGH / MEDIUM / LOW only
 function extractConfidence(text) {
   const match = text.match(/\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]/i)
   if (match) {
@@ -119,35 +124,23 @@ function cleanModelText(text) {
     .trim()
 }
 
-// If user explicitly asks for citations, detect it.
-function userAskedForCitations(userText) {
-  const t = (userText || '').toLowerCase()
-  return (
-    t.includes('cite') ||
-    t.includes('citation') ||
-    t.includes('source') ||
-    t.includes('show me the code section') ||
-    t.includes('what section says that')
-  )
+// Responses API helper: safely extract plain text
+function getOutputText(resp) {
+  if (!resp) return ''
+  if (typeof resp.output_text === 'string') return resp.output_text
+  // Fallback (defensive): try common shapes
+  try {
+    const maybe = resp.output?.[0]?.content?.[0]?.text
+    return typeof maybe === 'string' ? maybe : ''
+  } catch {
+    return ''
+  }
 }
 
-// Ensure the response is always scannable and doesn’t drift into big essays.
-function enforceScannableFormat(bodyText) {
-  const t = (bodyText || '').trim()
-  if (!t) return t
-
-  const hasLikely = /Likely issues $begin:math:text$visible$end:math:text$:/i.test(t)
-  const hasDo = /What to do now:/i.test(t)
-  const hasConfirm = /Need to confirm:/i.test(t)
-
-  if (hasLikely && hasDo && hasConfirm) return t
-
-  // Fallback: wrap whatever we got into the required template.
-  // Keep it short; do not invent new claims.
-  const lines = t.split('\n').map((s) => s.trim()).filter(Boolean)
-  const bullets = lines.slice(0, 6).map((s) => (s.startsWith('-') ? s : `- ${s}`))
-
-  return `Likely issues (visible):\n${bullets.slice(0, 2).join('\n') || '- (none clearly visible)'}\n\nWhat to do now:\n- Clean/verify the area in question.\n- If unsure, ask a manager and re-check with the code.\n\nNeed to confirm:\n- Exact item/temperature/timing details (not visible here).`
+// If user asks for citations explicitly
+function userWantsCitations(text) {
+  if (!text) return false
+  return /\b(cite|citation|citations|source|sources)\b/i.test(text)
 }
 
 export async function POST(req) {
@@ -157,7 +150,7 @@ export async function POST(req) {
   logger.info('Chat request started', { requestId })
 
   try {
-    // Feature flags
+    // Check feature flags
     const serviceEnabled = await isServiceEnabled()
     if (!serviceEnabled) {
       const message = await getMaintenanceMessage()
@@ -170,7 +163,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    // Payload size
+    // Validate payload size
     const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
     if (contentLength > 12 * 1024 * 1024) {
       logger.warn('Payload too large', { requestId, size: contentLength })
@@ -183,12 +176,15 @@ export async function POST(req) {
     const lastMsgObj = messages[messages.length - 1] || {}
     let lastMessageText = lastMsgObj.content || ''
 
+    // If they upload just an image and no text prompt, keep the flow moving
     if (!lastMessageText && !body.image) {
       if (!historyText && messages.length > 0) {
         messages[messages.length - 1].content = 'Analyze safety status based on previous image.'
         lastMessageText = messages[messages.length - 1].content
       }
     }
+
+    const wantsCitations = userWantsCitations(lastMessageText)
 
     // Validate image
     let imageBase64 = null
@@ -199,7 +195,7 @@ export async function POST(req) {
       return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
-    // Supabase auth
+    // Get authenticated user
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -238,7 +234,7 @@ export async function POST(req) {
     const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
     const isAdmin = !!user && user.email === adminEmail
 
-    // Subscription check (non-admin)
+    // Check subscription for non-admin users
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -267,7 +263,9 @@ export async function POST(req) {
 
       // Grace periods
       if (!hasActiveSub && profile?.created_at) {
-        if (Date.now() - new Date(profile.created_at).getTime() < 600000) hasActiveSub = true
+        if (Date.now() - new Date(profile.created_at).getTime() < 600000) {
+          hasActiveSub = true
+        }
       }
 
       if (!hasActiveSub) {
@@ -291,7 +289,7 @@ export async function POST(req) {
         )
       }
 
-      // Usage logging (with limits)
+      // Log usage (with limits)
       try {
         await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
       } catch (err) {
@@ -301,55 +299,57 @@ export async function POST(req) {
             { status: 402 }
           )
         }
+
         if (err.code === 'USAGE_LIMIT_REACHED') {
-          logger.warn('Usage limit reached for user', { requestId, userId: user.id, meta: err.meta || null })
+          logger.warn('Usage limit reached for user', {
+            requestId,
+            userId: user.id,
+            meta: err.meta || null,
+          })
           return NextResponse.json(
             {
-              error: 'Monthly usage limit reached for your plan. Contact support if you need a higher limit.',
+              error:
+                'Monthly usage limit reached for your plan. Contact support if you need a higher limit.',
               code: 'USAGE_LIMIT_REACHED',
             },
             { status: 429 }
           )
         }
+
         logger.error('Usage logging failed', { requestId, error: err.message })
       }
     }
 
-    // Vision analysis: describe only what’s visible (no markdown)
+    // Vision analysis (only: describe what is visible)
     let searchTerms = ''
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
       try {
-        const messagesVision = [
-          {
-            role: 'system',
-            content:
-              'Describe ONLY what is visible in a single restaurant photo. Focus on cleanliness, buildup, storage order, separation, labeling, and obvious contamination risks. No guessing. No markdown.',
-          },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Describe visible food safety conditions in plain text. No headings.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
-            ],
-          },
-        ]
+        const visionPrompt =
+          'Describe ONLY what is visible. Focus on cleanliness, buildup, spills, storage order, separation, labels/date marks if visible, and obvious contamination risks. No guesses. No markdown.'
 
         const visionResult = await Promise.race([
-          openai.chat.completions.create({
-            model: OPENAI_CHAT_MODEL,
-            messages: messagesVision,
+          openai.responses.create({
+            model: OPENAI_VISION_MODEL,
             temperature: VISION_CONFIG.temperature,
-            top_p: 0.8,
-            max_completion_tokens: VISION_CONFIG.maxCompletionTokens,
-            reasoning_effort: VISION_CONFIG.reasoningEffort,
-            verbosity: VISION_CONFIG.verbosity,
+            max_output_tokens: VISION_CONFIG.maxOutputTokens,
+            input: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'input_text', text: visionPrompt },
+                  {
+                    type: 'input_image',
+                    image_url: `data:image/jpeg;base64,${imageBase64}`,
+                  },
+                ],
+              },
+            ],
           }),
           timeoutPromise(VISION_TIMEOUT, 'VISION_TIMEOUT'),
         ])
 
-        searchTerms = visionResult?.choices?.[0]?.message?.content?.trim() || ''
-        searchTerms = cleanModelText(searchTerms)
+        searchTerms = (getOutputText(visionResult) || '').trim()
         logger.info('Vision analysis completed', { requestId, length: searchTerms.length })
       } catch (visionError) {
         logger.error('Vision analysis failed', { requestId, error: visionError.message })
@@ -415,9 +415,7 @@ export async function POST(req) {
 
     if (context.length > MAX_CONTEXT_LENGTH) context = context.slice(0, MAX_CONTEXT_LENGTH)
 
-    const wantsCitations = userAskedForCitations(lastMessageText)
-
-    // System prompt: concise, no headings, structured output
+    // System prompt: concise, no markdown headings, no citations unless asked (or LOW confidence)
     const SYSTEM_PROMPT = `You are ProtocolLM, a food-safety assistant for restaurants in Washtenaw County, Michigan.
 
 Hard rules:
@@ -425,6 +423,7 @@ Hard rules:
 - Describe ONLY what is visible in photos. No guessing.
 - NO markdown headings. Do NOT use # or ## anywhere.
 - Keep the whole answer short and scannable for an entry-level employee.
+- Prefer the fewest bullets possible.
 
 Output format (MANDATORY):
 Line 1: [CONFIDENCE: HIGH] or [CONFIDENCE: MEDIUM] or [CONFIDENCE: LOW]
@@ -440,12 +439,12 @@ Need to confirm:
 - ...
 
 Citations:
-- ${wantsCitations ? 'User asked for citations: include 1–3 short citations at the end as: (Source: <SOURCE NAME>)' : 'Do NOT cite sources by default.'}
-- If confidence is LOW, include 1–3 short citations at the end as: (Source: <SOURCE NAME>)
+- ${wantsCitations ? 'User asked for citations: include short source names in parentheses at the END of bullets when relevant.' : 'Do NOT include citations.'}
+- If confidence is LOW, you MAY include brief source names in parentheses even if the user did not ask.
 
 Tone:
 - Calm, direct, operational.
-- Avoid absolutes like "will fail inspection".`
+- Avoid "will fail inspection" / absolutes.`
 
     const finalUserPrompt = `OFFICIAL REGULATORY CONTEXT:
 ${context}
@@ -463,49 +462,46 @@ ${searchTerms}` : ''}`
 
     try {
       const result = await Promise.race([
-        openai.chat.completions.create({
+        openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: finalUserPrompt },
-          ],
+          instructions: SYSTEM_PROMPT,
           temperature: GENERATION_CONFIG.temperature,
-          top_p: GENERATION_CONFIG.topP,
-          max_completion_tokens: GENERATION_CONFIG.maxCompletionTokens,
-          reasoning_effort: GENERATION_CONFIG.reasoningEffort,
-          verbosity: GENERATION_CONFIG.verbosity,
+          max_output_tokens: GENERATION_CONFIG.maxOutputTokens,
+          reasoning: { effort: GENERATION_CONFIG.reasoningEffort },
+          input: [{ role: 'user', content: [{ type: 'input_text', text: finalUserPrompt }] }],
         }),
         timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
       ])
 
-      let rawText = result?.choices?.[0]?.message?.content || ''
-      rawText = rawText.replace(/\r/g, '')
+      let rawText = (getOutputText(result) || '').trim()
+      if (!rawText) throw new Error('Empty or invalid response from model')
 
+      // Extract confidence + cleanup
       const { confidence, text } = extractConfidence(rawText)
 
-      // Clean + enforce structure
-      let cleanText = cleanModelText(text)
+      // If model forgot confidence header, default to MEDIUM (safest)
+      const ensuredText =
+        confidence === 'UNKNOWN'
+          ? `[CONFIDENCE: MEDIUM]\n${rawText}`
+          : `[CONFIDENCE: ${confidence}]\n${text}`
 
-      // Never allow stray headings
-      cleanText = cleanText.replace(/^#{1,6}\s+/gm, '')
-      // Extra: remove any leftover "##" lines
-      cleanText = cleanText.replace(/^\s*##+\s*/gm, '')
+      let cleanText = cleanModelText(ensuredText)
 
-      cleanText = enforceScannableFormat(cleanText)
+      // If citations are not allowed, hard-strip any "Citations:" lines if they appear
+      if (!wantsCitations) {
+        cleanText = cleanText.replace(/^Citations:\s*[\s\S]*$/im, '').trim()
+      }
 
-      const finalConfidence = confidence === 'UNKNOWN' ? 'MEDIUM' : confidence
-      const finalMessage = `[CONFIDENCE: ${finalConfidence}]\n${cleanText}`
-
-      if (!finalMessage || finalMessage.length < 20) {
-        throw new Error('Empty or invalid response from model')
+      if (!cleanText || cleanText.length < 10) {
+        throw new Error('Empty or invalid response after cleanup')
       }
 
       const duration = Date.now() - startTime
       logger.info('Response generated successfully', {
         requestId,
         durationMs: duration,
-        responseLength: finalMessage.length,
-        confidence: finalConfidence,
+        responseLength: cleanText.length,
+        confidence: confidence === 'UNKNOWN' ? 'MEDIUM' : confidence,
       })
 
       // Save to database
@@ -522,15 +518,19 @@ ${searchTerms}` : ''}`
             {
               chat_id: chatId,
               role: 'assistant',
-              content: finalMessage,
-              metadata: { confidence: finalConfidence },
+              content: cleanText,
+              metadata: { confidence: confidence === 'UNKNOWN' ? 'MEDIUM' : confidence },
             },
           ])
         )
       }
+
       await Promise.allSettled(dbTasks)
 
-      return NextResponse.json({ message: finalMessage, confidence: finalConfidence })
+      return NextResponse.json({
+        message: cleanText,
+        confidence: confidence === 'UNKNOWN' ? 'MEDIUM' : confidence,
+      })
     } catch (genError) {
       logger.error('Generation failed', { requestId, error: genError.message })
 
@@ -549,7 +549,11 @@ ${searchTerms}` : ''}`
     }
   } catch (err) {
     const duration = Date.now() - startTime
-    logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
+    logger.error('Fatal error in chat', {
+      requestId,
+      error: err.message,
+      durationMs: duration,
+    })
 
     let msg = 'System error. Please try again.'
     let statusCode = 500
