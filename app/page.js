@@ -867,35 +867,56 @@ export default function Page() {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-          /* ✅ +8% lamp brightness (real brightness, not clamped opacity) */
           --ui-lamp: 1.08;
           --ui-vignette: 0.93;
         }
 
+        /* ✅ NEW: “Black Aurora / Black Hole” background (no lattice) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
-          inset: 0;
+          inset: -12%;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.11), transparent 58%),
-            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.05), transparent 60%),
-            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.05), transparent 60%),
-            /* slightly smoother diagonals */
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 12px),
-            /* ultra subtle secondary layer to reduce “chopped” feel */
-            repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 24px);
-          opacity: 0.9;
-          filter: brightness(var(--ui-lamp));
+            radial-gradient(1200px 560px at 50% -14%, rgba(255, 255, 255, 0.12), transparent 62%),
+            radial-gradient(980px 600px at 16% 6%, rgba(0, 255, 210, 0.06), transparent 64%),
+            radial-gradient(980px 600px at 86% 4%, rgba(140, 110, 255, 0.06), transparent 66%),
+            radial-gradient(1200px 820px at 50% 118%, rgba(255, 255, 255, 0.03), transparent 66%),
+            conic-gradient(
+              from 210deg at 50% 32%,
+              rgba(0, 255, 210, 0.05),
+              rgba(140, 110, 255, 0.05),
+              rgba(255, 255, 255, 0.02),
+              rgba(0, 255, 210, 0.05)
+            );
+          opacity: 0.88;
+          filter: brightness(var(--ui-lamp)) saturate(1.15);
           transform: translateZ(0);
+          will-change: transform;
+          animation: uiAurora 18s ease-in-out infinite alternate;
         }
 
+        @keyframes uiAurora {
+          0% {
+            transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg);
+          }
+          50% {
+            transform: translate3d(-2%, -1%, 0) scale(1.04) rotate(1.5deg);
+          }
+          100% {
+            transform: translate3d(2%, 0%, 0) scale(1.08) rotate(-1.5deg);
+          }
+        }
+
+        /* ✅ NEW: stronger “black hole” vignette */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
+          background:
+            radial-gradient(380px 320px at 50% 34%, rgba(0, 0, 0, 0.0) 0%, rgba(0, 0, 0, 0.55) 62%, rgba(0, 0, 0, 0.88) 100%),
+            radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
           opacity: var(--ui-vignette);
           transform: translateZ(0);
         }
@@ -928,7 +949,6 @@ export default function Page() {
           gap: 0;
           user-select: none;
         }
-        /* ✅ logo +2 “sizes” */
         .ui-logo-protocol {
           font-size: 15px;
           font-weight: 800;
@@ -1163,7 +1183,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.55);
         }
 
-        /* ✅ footer line now white + slightly larger */
         .ui-footerline {
           padding: 14px 22px;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -1362,7 +1381,6 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        /* ✅ CHAT: remove borders around any message text, thinking, and images */
         .ui-bubble {
           border: none !important;
           background: transparent !important;
@@ -1371,7 +1389,6 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.94);
         }
 
-        /* ✅ USER message: no bubble, just readable white text */
         .ui-bubble-user {
           border: none !important;
           background: transparent !important;
@@ -1396,7 +1413,7 @@ export default function Page() {
           outline: none !important;
           background: transparent !important;
           box-shadow: none !important;
-          border-radius: 0 !important; /* wrapper handles rounding */
+          border-radius: 0 !important;
           max-height: 280px;
           object-fit: contain;
         }
@@ -1485,7 +1502,6 @@ export default function Page() {
                 )}
               </div>
 
-              {/* ✅ moved “Made in Washtenaw…” into the sticky header */}
               <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
                 Made in Washtenaw County for Washtenaw County.
               </div>
