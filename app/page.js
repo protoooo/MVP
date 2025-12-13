@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -57,236 +57,223 @@ const Icons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
-  Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  ),
   Shield: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
       <path d="M9 12l2 2 4-5" />
     </svg>
   ),
-  Chevron: ({ open }) => (
-    <svg
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.4"
-      viewBox="0 0 24 24"
-      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 160ms ease' }}
-    >
+  Lock: () => (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  ),
+  Spark: () => (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
+      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
+    </svg>
+  ),
+  ChevronDown: () => (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }
 
-function LandingPage({ onShowPricing, onShowAuth }) {
-  const faqs = useMemo(
-    () => [
-      {
-        q: 'What does the photo scan actually return?',
-        a: 'A short, checkable list of likely violations to verify from your photo—built for speed during a shift.',
-      },
-      {
-        q: 'What’s in the “rulebook” behind the answers?',
-        a: 'Washtenaw enforcement guidance plus Michigan Modified Food Code and FDA Food Code references—so your team isn’t guessing.',
-      },
-      {
-        q: 'Will my staff need training to use it?',
-        a: 'No. It’s built for plain language. If someone can text a question, they can use it.',
-      },
-      {
-        q: 'Can multiple people use it at one location?',
-        a: 'Yes—one site license per restaurant. Owners and managers can share access with their team.',
-      },
-      {
-        q: 'What kinds of photos work best?',
-        a: 'Walk-ins, prep tables, hot-hold/cold-hold setups, storage shelves, sanitizer stations—anything you’d want to sanity-check before an inspection.',
-      },
-      {
-        q: 'Does this replace the health inspector?',
-        a: 'No. It helps you catch issues earlier and stay consistent. You still confirm critical decisions with official guidance.',
-      },
-    ],
-    []
+function FAQItem({ q, a, isOpen, onToggle }) {
+  return (
+    <div className="ui-faqitem">
+      <button type="button" onClick={onToggle} className="ui-faqbtn" aria-expanded={isOpen}>
+        <span className={`ui-faqq ${inter.className}`}>{q}</span>
+        <span className={`ui-faqchev ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
+          <Icons.ChevronDown />
+        </span>
+      </button>
+      <div className={`ui-faqpanel ${isOpen ? 'is-open' : ''}`} role="region">
+        <div className={`ui-faqa ${inter.className}`}>{a}</div>
+      </div>
+    </div>
   )
+}
 
-  const [openIdx, setOpenIdx] = useState(0)
+function LandingPage({ onShowPricing, onShowAuth }) {
+  const [openFaq, setOpenFaq] = useState(null)
+
+  const faqs = [
+    {
+      q: 'Is this only for Washtenaw County?',
+      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
+    },
+    {
+      q: 'What should my team upload for photo checks?',
+      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
+    },
+    {
+      q: 'How should we use the document side?',
+      a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
+    },
+    {
+      q: 'Will it replace training or a manager?',
+      a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
+    },
+    {
+      q: 'Do I need it every day?',
+      a: 'Most teams use it before rushes, during closes/opens, after new hires, or when they want to tighten up the line.',
+    },
+  ]
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16">
-        {/* HERO */}
-        <section className="ui-shell ui-sheen p-7 sm:p-9">
-          <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
+    <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
+      <div className="max-w-6xl w-full">
+        <div className="ui-shell">
+          {/* HERO */}
+          <section className="ui-hero">
+            <div className={`ui-meta ${inter.className}`}>Washtenaw compliance database</div>
 
-          <p className={`ui-subtitle ${inter.className}`} style={{ marginTop: 6 }}>
-            Catch violations before the health inspector.
-          </p>
+            <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
-          <p className={`ui-hero-body ${inter.className}`}>
-            Upload a photo for a fast compliance scan, or use document chat to get grounded answers from Washtenaw enforcement guidance and the food codes your
-            team actually needs.
-          </p>
+            <p className={`ui-subtitle ${inter.className}`}>Catch violations before the health inspector.</p>
 
-          <div className="ui-hero-bottom">
-            <div className="ui-cta-row">
-              <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                Start trial
-              </button>
-              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                Sign in
-              </button>
-            </div>
-
-            <div className={`ui-trust ${inter.className}`}>
-              <span className="ui-trust-item">
-                <Icons.Lock /> Secure by design
-              </span>
-              <span className="ui-trust-item">
-                <Icons.Shield /> Washtenaw-grounded
-              </span>
-              <span className="ui-trust-item">
-                <Icons.Check /> 7-day trial
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* WORKFLOW */}
-        <section className="mt-10 ui-workgrid">
-          <div className="ui-workleft">
-            <div className={`ui-sectioneyebrow ${inter.className}`}>WORKFLOW</div>
-            <h2 className={`ui-h2 ${outfit.className}`}>Use it in three steps.</h2>
-            <p className={`ui-p ${inter.className}`}>
-              Built for owner-operators, GMs, and shift leads—so you can verify fast, fix issues early, and walk into inspections calm.
+            <p className={`ui-body ${inter.className}`}>
+              Photo scans for instant violation checks. Document search for Washtenaw-specific enforcement and food-code guidance.
             </p>
 
-            <div className="ui-steps">
-              <div className="ui-step ui-sheen">
-                <div className={`ui-stepnum ${inter.className}`}>01</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Photo compliance scan</div>
-                  <div className={`ui-stepbody ${inter.className}`}>Take a picture. Catch likely violations before they become write-ups.</div>
-                </div>
-              </div>
-
-              <div className="ui-step ui-sheen">
-                <div className={`ui-stepnum ${inter.className}`}>02</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Document-backed answers</div>
-                  <div className={`ui-stepbody ${inter.className}`}>
-                    Ask questions and get grounded guidance from Washtenaw enforcement actions, Michigan Modified Food Code, and FDA Food Code references.
-                  </div>
-                </div>
-              </div>
-
-              <div className="ui-step ui-sheen">
-                <div className={`ui-stepnum ${inter.className}`}>03</div>
-                <div>
-                  <div className={`ui-steptitle ${inter.className}`}>Stay inspection-ready</div>
-                  <div className={`ui-stepbody ${inter.className}`}>
-                    Know what to fix, what to verify, and what to document—without digging through binders mid-shift.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <aside className="ui-workright ui-sheen">
-            <div className={`ui-cardtag ${inter.className}`}>INCLUDED</div>
-            <ul className={`ui-included ${inter.className}`}>
-              <li>
-                <Icons.Check /> Photo + document chat
-              </li>
-              <li>
-                <Icons.Check /> One site license per restaurant
-              </li>
-              <li>
-                <Icons.Check /> 7-day trial · cancel anytime
-              </li>
-              <li>
-                <Icons.Check /> Fast, grounded responses
-              </li>
-            </ul>
-
-            <div className="ui-rightcta">
-              <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
-                Start trial
+            <div className="ui-cta-row">
+              <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+                <span className="ui-btn-inner">Start trial</span>
               </button>
-              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full mt-2">
-                Sign in
+
+              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+                <span className="ui-btn-inner">Sign in</span>
               </button>
             </div>
-          </aside>
-        </section>
+          </section>
 
-        {/* FAQ */}
-        <section className="mt-12">
-          <div className={`ui-sectioneyebrow ${inter.className}`}>FAQ</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Real questions. Real answers.</h2>
+          <div className="ui-section-divider" />
 
-          <div className="ui-faqwrap">
-            {faqs.map((item, idx) => {
-              const open = openIdx === idx
-              return (
-                <div key={idx} className={`ui-faqrow ${open ? 'is-open' : ''}`}>
-                  <button
-                    className="ui-faqbtn"
-                    onClick={() => setOpenIdx((v) => (v === idx ? -1 : idx))}
-                    aria-expanded={open}
-                  >
-                    <span className={`ui-faqq ${inter.className}`}>{item.q}</span>
-                    <span className="ui-faqchev">
-                      <Icons.Chevron open={open} />
+          {/* WORKFLOW */}
+          <section className="ui-section">
+            <div className="ui-grid-2">
+              <div>
+                <h2 className={`ui-h2 ${outfit.className}`}>A calm workflow for real ops.</h2>
+                <p className={`ui-p ${inter.className}`}>
+                  Verify compliance before inspections. Built for operators who need answers mid-shift.
+                </p>
+
+                <div className="ui-includedcard">
+                  <div className={`ui-includedtitle ${inter.className}`}>Included</div>
+                  <ul className={`ui-includedlist ${inter.className}`}>
+                    <li>Photo checks + document search</li>
+                    <li>One site license per restaurant</li>
+                    <li>7-day trial · cancel anytime</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="ui-steps">
+                <div className="ui-stepcard">
+                  <div className="ui-stephead">
+                    <span className="ui-stepicon" aria-hidden="true">
+                      <Icons.Camera />
                     </span>
-                  </button>
-
-                  <div className="ui-faqpanel" style={{ maxHeight: open ? 260 : 0 }}>
-                    <div className={`ui-faqqa ${inter.className}`}>{item.a}</div>
+                    <div className={`ui-steptitle ${inter.className}`}>Photo check</div>
+                  </div>
+                  <div className={`ui-stepbody ${inter.className}`}>
+                    Take a picture. Get a tight checklist of likely issues to verify.
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </section>
 
-        {/* FINAL CTA */}
-        <section className="mt-12 ui-shell ui-sheen p-7 sm:p-9">
-          <div className={`ui-sectioneyebrow ${inter.className}`}>READY</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Run one scan tonight.</h2>
-          <p className={`ui-p ${inter.className}`}>
-            Start a trial, run a real photo scan in your walk-in, and use the answer as a checklist for your next close/open.
-          </p>
-          <div className="ui-cta-row mt-5">
-            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-              Start trial
-            </button>
-            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-              Sign in
-            </button>
-          </div>
-        </section>
+                <div className="ui-stepcard">
+                  <div className="ui-stephead">
+                    <span className="ui-stepicon" aria-hidden="true">
+                      <Icons.Lock />
+                    </span>
+                    <div className={`ui-steptitle ${inter.className}`}>Document search</div>
+                  </div>
+                  <div className={`ui-stepbody ${inter.className}`}>
+                    Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
+                  </div>
+                </div>
 
-        <footer className="pt-10">
-          <div className="flex flex-wrap gap-4 justify-center text-xs text-white/55">
-            <Link href="/terms" className="hover:text-white/80">
+                <div className="ui-stepcard">
+                  <div className="ui-stephead">
+                    <span className="ui-stepicon" aria-hidden="true">
+                      <Icons.Check />
+                    </span>
+                    <div className={`ui-steptitle ${inter.className}`}>Action checklist</div>
+                  </div>
+                  <div className={`ui-stepbody ${inter.className}`}>
+                    Turn risks into a short close/open list your lead can run today.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* FAQ */}
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
+            <div className="ui-faq">
+              {faqs.map((f, i) => (
+                <FAQItem
+                  key={i}
+                  q={f.q}
+                  a={f.a}
+                  isOpen={openFaq === i}
+                  onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
+                />
+              ))}
+            </div>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* FINAL CTA (second/last CTA block) */}
+          <section className="ui-final">
+            <div className="ui-finalinner">
+              <div>
+                <h3 className={`ui-h2 ${outfit.className}`}>Be inspection-ready on your next shift.</h3>
+                <p className={`ui-p ${inter.className}`}>
+                  Start the trial, run a quick scan, and keep the checklist on a manager clipboard.
+                </p>
+              </div>
+
+              <div className="ui-cta-row">
+                <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+                  <span className="ui-btn-inner">Start trial</span>
+                </button>
+                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+                  <span className="ui-btn-inner">Sign in</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <div className={`ui-footerline ${inter.className}`}>
+            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
+          </div>
+        </div>
+
+        <footer className="pt-8 text-xs text-white/40">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/terms" className="hover:text-white/70">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-white/80">
+            <Link href="/privacy" className="hover:text-white/70">
               Privacy
             </Link>
-            <Link href="/contact" className="hover:text-white/80">
+            <Link href="/contact" className="hover:text-white/70">
               Contact
             </Link>
           </div>
-          <p className={`mt-6 text-[11px] text-center text-white/35 ${inter.className}`}>
-            protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
-          </p>
+
+          <div className="mt-4 text-center text-[11px] text-white/35">
+            Made in Washtenaw County for Washtenaw County.
+          </div>
         </footer>
       </div>
     </div>
@@ -300,6 +287,7 @@ function AuthModal({ isOpen, onClose }) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageKind, setMessageKind] = useState('info') // 'ok' | 'err' | 'info'
   const { isLoaded, executeRecaptcha } = useRecaptcha()
 
   const handleSubmit = async (e) => {
@@ -308,11 +296,13 @@ function AuthModal({ isOpen, onClose }) {
 
     setLoading(true)
     setMessage('')
+    setMessageKind('info')
 
     try {
       const captchaToken = await executeRecaptcha(mode)
       if (!captchaToken) {
-        setMessage('Error: Security verification failed. Please try again.')
+        setMessageKind('err')
+        setMessage('Security verification failed. Please try again.')
         return
       }
 
@@ -335,32 +325,37 @@ function AuthModal({ isOpen, onClose }) {
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setMessage(`Error: ${data.error || 'Authentication failed'}`)
+        setMessageKind('err')
+        setMessage(data.error || 'Authentication failed.')
         return
       }
 
       if (mode === 'reset') {
-        setMessage('✓ Check your email for password reset instructions.')
+        setMessageKind('ok')
+        setMessage('Check your email for reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
-        }, 2200)
+        }, 1200)
       } else if (mode === 'signup') {
-        setMessage('✓ Account created. Check your email to verify.')
+        setMessageKind('ok')
+        setMessage('Account created. Check your email to verify.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
-        }, 2200)
+        }, 1200)
       } else {
-        setMessage('✓ Signed in. Redirecting…')
+        setMessageKind('ok')
+        setMessage('Signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
-        }, 600)
+        }, 450)
       }
     } catch (error) {
       console.error('Auth error:', error)
-      setMessage('Error: Unexpected issue. Please try again.')
+      setMessageKind('err')
+      setMessage('Unexpected issue. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -369,16 +364,16 @@ function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal p-7" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-6">
+    <div className="fixed inset-0 z-[999] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-md ui-modal ui-modal-anim p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-5">
           <div>
             <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/60 ${inter.className}`}>
+            <p className={`text-xs text-white/55 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
@@ -391,7 +386,7 @@ function AuthModal({ isOpen, onClose }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-white/70 mb-2">Email</label>
+            <label className="block text-xs font-semibold text-white/55 mb-2">Email</label>
             <input
               type="email"
               value={email}
@@ -404,7 +399,7 @@ function AuthModal({ isOpen, onClose }) {
 
           {mode !== 'reset' && (
             <div>
-              <label className="block text-xs font-semibold text-white/70 mb-2">Password</label>
+              <label className="block text-xs font-semibold text-white/55 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -417,7 +412,7 @@ function AuthModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/60 hover:text-white text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/55 hover:text-white text-xs"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -425,35 +420,45 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          <button type="submit" disabled={loading || !isLoaded} className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
-            {loading ? 'Processing…' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+          <button
+            type="submit"
+            disabled={loading || !isLoaded}
+            className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className="ui-btn-inner">
+              {loading && <span className="ui-spinner" aria-hidden="true" />}
+              {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+            </span>
           </button>
         </form>
 
         {message && (
-          <div className={`mt-4 text-xs rounded-lg px-3 py-2 ui-toast ${message.startsWith('Error') ? 'ui-toast-err' : 'ui-toast-ok'}`}>
-            {message}
+          <div className={`mt-4 ui-toast ${messageKind === 'err' ? 'ui-toast-err' : messageKind === 'ok' ? 'ui-toast-ok' : ''}`}>
+            <span className="ui-toasticon" aria-hidden="true">
+              {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
+            </span>
+            <span className={`ui-toasttext ${inter.className}`}>{message}</span>
           </div>
         )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/70">
+        <div className="mt-4 text-center space-y-1 text-xs text-white/55">
           {mode === 'signin' && (
             <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/70 hover:text-white">
+              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/55 hover:text-white">
                 Forgot password?
               </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/70 hover:text-white">
+              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/55 hover:text-white">
                 Need an account? <span className="font-semibold">Sign up</span>
               </button>
             </>
           )}
           {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
               Already have an account? <span className="font-semibold">Sign in</span>
             </button>
           )}
           {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/70 hover:text-white">
+            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
               Back to sign in
             </button>
           )}
@@ -469,28 +474,29 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal p-7 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-6 top-6" aria-label="Close pricing">
+    <div className="fixed inset-0 z-[900] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
+      <div className="w-full max-w-xl ui-modal ui-modal-anim p-6 relative" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close pricing">
           <Icons.X />
         </button>
 
-        <div className="mb-6">
+        <div className="mb-5">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/60 ${inter.className}`}>Full chat + photo scanning.</p>
+          <p className={`text-sm text-white/55 ${inter.className}`}>
+            Photo checks + document search—built specifically for Washtenaw County operators.
+          </p>
         </div>
 
-        <div className="ui-pricewrap p-6 ui-sheen">
+        <div className="ui-pricewrap p-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
+                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
               <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as
-                two.
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Photos count as two checks.
               </p>
             </div>
 
@@ -502,43 +508,32 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="ui-divider my-5" />
 
-          <ul className="text-xs text-white/70 space-y-2">
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Photo + document chat</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>Grounded in Washtenaw guidance + food codes</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>One restaurant site license</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Icons.Check />
-              <span>7-day free trial · cancel anytime</span>
-            </li>
-          </ul>
-
-          <div className="space-y-3 pt-5">
+          <div className="space-y-3">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading && loading !== 'monthly'}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {loading === 'monthly' ? 'Processing…' : 'Start $200/mo trial'}
+              <span className="ui-btn-inner">
+                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
+                Start trial
+              </span>
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading && loading !== 'annual'}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
+              <span className="ui-btn-inner">
+                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
+                Annual · save 15%
+              </span>
             </button>
 
-            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>Cancel anytime.</p>
+            <p className={`text-[11px] text-white/40 text-center ${inter.className}`}>
+              7-day trial · cancel anytime · one restaurant site license
+            </p>
           </div>
         </div>
       </div>
@@ -570,6 +565,7 @@ export default function Page() {
   const scrollRef = useRef(null)
   const fileInputRef = useRef(null)
   const userMenuRef = useRef(null)
+  const textAreaRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
 
@@ -674,8 +670,15 @@ export default function Page() {
         setShowUserMenu(false)
       }
     }
+    function handleKey(event) {
+      if (event.key === 'Escape') setShowUserMenu(false)
+    }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [])
 
   const handleCheckout = async (priceId, planName) => {
@@ -841,7 +844,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+        <div className="ui-spinner-lg" aria-label="Loading" />
       </div>
     )
   }
@@ -860,36 +863,39 @@ export default function Page() {
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
         }
 
-        .ui-bg {
+        /* Background: simplified (fewer layers, fewer edge-case glitches) */
+        body.ui-enterprise-bg::before {
+          content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          z-index: 0;
-          background: radial-gradient(1100px 600px at 50% -10%, rgba(255, 255, 255, 0.1), transparent 55%),
-            radial-gradient(900px 560px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
-            radial-gradient(900px 560px at 86% 14%, rgba(120, 90, 255, 0.06), transparent 60%),
-            radial-gradient(900px 700px at 50% 100%, rgba(255, 255, 255, 0.04), transparent 60%),
-            linear-gradient(135deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-          background-size: auto, auto, auto, auto, 14px 14px;
+          background:
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.11), transparent 58%),
+            radial-gradient(900px 540px at 18% 0%, rgba(0, 255, 200, 0.05), transparent 60%),
+            radial-gradient(900px 540px at 85% 0%, rgba(120, 90, 255, 0.05), transparent 60%),
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 11px);
+          opacity: 0.9;
+          transform: translateZ(0);
         }
 
-        .ui-vignette {
+        body.ui-enterprise-bg::after {
+          content: '';
           position: fixed;
           inset: 0;
           pointer-events: none;
-          z-index: 0;
-          background: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.62) 72%);
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
+          opacity: 0.95;
+          transform: translateZ(0);
         }
 
-        .ui-app {
-          position: relative;
-          z-index: 1;
-          height: 100%;
+        /* Scrollbars */
+        :root {
+          scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+          scrollbar-width: thin;
         }
-
         ::-webkit-scrollbar {
           width: 9px;
         }
@@ -901,119 +907,78 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
+        /* Header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.62);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+          background: rgba(5, 6, 8, 0.78);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
 
         .ui-brand {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 8px 12px;
+          padding: 9px 12px;
           border-radius: 999px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
+          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
         }
 
+        /* Shell */
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012));
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
           position: relative;
         }
 
-        .ui-sheen::before {
+        /* Subtle sheen (simplified, less “glitchy”) */
+        .ui-shell::before {
           content: '';
           position: absolute;
-          inset: -40% -30%;
-          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1), transparent 45%),
-            radial-gradient(circle at 85% 15%, rgba(0, 255, 200, 0.05), transparent 55%),
-            radial-gradient(circle at 70% 85%, rgba(120, 90, 255, 0.05), transparent 55%);
-          opacity: 0.45;
-          transform: translate3d(-2%, -1%, 0);
-          will-change: transform, opacity;
-          animation: uiSheen 12s ease-in-out infinite;
+          inset: -1px;
           pointer-events: none;
+          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
+          opacity: 0.8;
         }
 
-        @keyframes uiSheen {
-          0% {
-            transform: translate3d(-2%, -1%, 0);
-            opacity: 0.38;
-          }
-          50% {
-            transform: translate3d(2%, 1.2%, 0);
-            opacity: 0.52;
-          }
-          100% {
-            transform: translate3d(-2%, -1%, 0);
-            opacity: 0.38;
-          }
+        .ui-hero {
+          padding: 32px;
         }
 
-        .ui-sheen > * {
-          position: relative;
-          z-index: 1;
+        .ui-meta {
+          font-size: 9px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.4);
+          font-weight: 700;
+          margin-bottom: 10px;
         }
 
         .ui-title {
-          font-size: clamp(34px, 4.6vw, 60px);
-          line-height: 1.02;
-          letter-spacing: -0.06em;
-          margin-bottom: 6px;
+          font-size: clamp(32px, 4vw, 52px);
+          line-height: 1.05;
+          letter-spacing: -0.05em;
+          margin-bottom: 10px;
           color: rgba(255, 255, 255, 0.96);
         }
 
         .ui-subtitle {
           font-size: 16px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.72);
-          font-weight: 600;
-          max-width: 72ch;
-        }
-
-        .ui-hero-body {
-          font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.62);
-          max-width: 84ch;
-          margin-top: 12px;
-        }
-
-        .ui-hero-bottom {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-top: 18px;
-        }
-
-        .ui-sectioneyebrow {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.5);
+          line-height: 1.4;
+          color: rgba(255, 255, 255, 0.7);
           margin-bottom: 10px;
+          max-width: 70ch;
         }
 
-        .ui-h2 {
-          font-size: clamp(24px, 2.2vw, 34px);
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.95);
-          margin-bottom: 8px;
-        }
-
-        .ui-p {
+        .ui-body {
           font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.62);
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
           max-width: 78ch;
         }
 
@@ -1021,187 +986,240 @@ export default function Page() {
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
+          margin-top: 18px;
         }
 
-        .ui-trust {
+        .ui-section-divider {
+          height: 1px;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ui-section {
+          padding: 28px 32px;
+        }
+
+        .ui-final {
+          padding: 28px 32px 26px;
+        }
+
+        .ui-finalinner {
           display: flex;
+          gap: 18px;
+          align-items: center;
+          justify-content: space-between;
           flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-        }
-        .ui-trust-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.015);
         }
 
-        .ui-workgrid {
+        .ui-h2 {
+          font-size: 20px;
+          letter-spacing: -0.02em;
+          color: rgba(255, 255, 255, 0.94);
+          margin-bottom: 8px;
+        }
+
+        .ui-p {
+          font-size: 13px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
+          max-width: 72ch;
+        }
+
+        .ui-grid-2 {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 14px;
-          align-items: start;
+          gap: 18px;
         }
         @media (min-width: 980px) {
-          .ui-workgrid {
-            grid-template-columns: 1.35fr 0.85fr;
+          .ui-grid-2 {
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            align-items: start;
           }
         }
 
-        .ui-steps {
+        .ui-includedcard {
           margin-top: 14px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 12px;
+        }
+
+        .ui-includedtitle {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 8px;
+        }
+
+        .ui-includedlist {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+          line-height: 1.65;
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .ui-includedlist li {
+          padding: 6px 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .ui-includedlist li:first-child {
+          border-top: none;
+          padding-top: 0;
+        }
+
+        .ui-steps {
           display: grid;
           gap: 10px;
         }
 
-        .ui-step {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        .ui-stepcard {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          padding: 14px;
-          display: grid;
-          grid-template-columns: 44px 1fr;
-          gap: 10px;
-          position: relative;
-          overflow: hidden;
+          padding: 12px;
         }
-        .ui-stepnum {
+
+        .ui-stephead {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+
+        .ui-stepicon {
           width: 36px;
           height: 36px;
           border-radius: 12px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.14em;
+          color: rgba(255, 255, 255, 0.7);
         }
+
         .ui-steptitle {
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 6px;
+          letter-spacing: 0.02em;
+          color: rgba(255, 255, 255, 0.92);
         }
+
         .ui-stepbody {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.6);
+          color: rgba(255, 255, 255, 0.55);
         }
 
-        .ui-workright {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 18px;
-          position: relative;
-          overflow: hidden;
-          align-self: start;
-          justify-self: stretch;
-        }
-
-        .ui-cardtag {
-          display: inline-flex;
-          align-items: center;
-          padding: 6px 10px;
-          border-radius: 999px;
+        /* FAQ */
+        .ui-faq {
+          margin-top: 12px;
+          border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.72);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-          width: fit-content;
-          margin-bottom: 12px;
-        }
-
-        .ui-included {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: grid;
-          gap: 10px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 12px;
-        }
-        .ui-included li {
-          display: flex;
-          gap: 8px;
-          align-items: flex-start;
-        }
-
-        .ui-faqwrap {
-          margin-top: 14px;
-          display: grid;
-          gap: 10px;
-        }
-
-        .ui-faqrow {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(255, 255, 255, 0.01);
           overflow: hidden;
+        }
+
+        .ui-faqitem {
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .ui-faqitem:first-child {
+          border-top: none;
         }
 
         .ui-faqbtn {
           width: 100%;
           text-align: left;
+          padding: 12px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          padding: 14px 14px;
+          gap: 12px;
           background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.9);
-          cursor: pointer;
+          color: rgba(255, 255, 255, 0.92);
+          outline: none;
+        }
+
+        .ui-faqbtn:hover {
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .ui-faqq {
           font-size: 12px;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.86);
+          color: rgba(255, 255, 255, 0.9);
         }
 
         .ui-faqchev {
-          color: rgba(255, 255, 255, 0.55);
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
           display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.7);
+          transition: transform 140ms ease;
+          flex-shrink: 0;
+        }
+        .ui-faqchev.is-open {
+          transform: rotate(180deg);
         }
 
         .ui-faqpanel {
+          max-height: 0px;
           overflow: hidden;
-          transition: max-height 220ms ease;
+          transition: max-height 180ms ease;
+        }
+        .ui-faqpanel.is-open {
+          max-height: 240px;
         }
 
-        .ui-faqqa {
-          padding: 0 14px 14px;
+        .ui-faqa {
+          padding: 0 12px 12px;
           font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.62);
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
         }
 
+        .ui-footerline {
+          padding: 14px 22px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 12px;
+        }
+
+        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
+            color 120ms ease, opacity 120ms ease;
           user-select: none;
         }
+
+        .ui-btn-inner {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+
+        .ui-btn:hover {
+          transform: scale(1.02);
+        }
         .ui-btn:active {
-          transform: translateY(1px);
+          transform: scale(1.01);
         }
 
         .ui-btn-primary {
@@ -1221,34 +1239,66 @@ export default function Page() {
         }
         .ui-btn-secondary:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.12);
         }
 
+        .ui-btn:focus-visible,
+        .ui-icon-btn:focus-visible,
+        .ui-faqbtn:focus-visible,
+        .ui-input:focus-visible {
+          outline: 2px solid rgba(255, 255, 255, 0.22);
+          outline-offset: 2px;
+        }
+
+        /* Icon buttons (touch target 44x44) */
         .ui-icon-btn {
-          width: 38px;
-          height: 38px;
+          width: 44px;
+          height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 12px;
+          border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           color: rgba(255, 255, 255, 0.82);
-          transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+          transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
         }
         .ui-icon-btn:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.12);
           color: rgba(255, 255, 255, 0.95);
+          transform: scale(1.02);
+        }
+
+        /* Modals / backdrop */
+        .ui-backdrop {
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
 
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.86);
+          background: rgba(6, 7, 9, 0.88);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+        }
+
+        .ui-modal-anim {
+          animation: uiPop 180ms ease-out both;
+          transform-origin: 50% 40%;
+        }
+        @keyframes uiPop {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .ui-input {
@@ -1257,20 +1307,26 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
+          color: rgba(255, 255, 255, 0.4);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
+          border-color: rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
         }
 
+        /* Toast */
         .ui-toast {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          border-radius: 12px;
+          padding: 10px 12px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.03);
         }
@@ -1280,7 +1336,17 @@ export default function Page() {
         .ui-toast-err {
           border-color: rgba(239, 68, 68, 0.35);
         }
+        .ui-toasticon {
+          margin-top: 1px;
+          color: rgba(255, 255, 255, 0.75);
+        }
+        .ui-toasttext {
+          font-size: 12px;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.7);
+        }
 
+        /* Pricing */
         .ui-tag {
           display: inline-flex;
           align-items: center;
@@ -1290,7 +1356,7 @@ export default function Page() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.7);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1299,7 +1365,7 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
@@ -1314,7 +1380,7 @@ export default function Page() {
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.78);
+          color: rgba(255, 255, 255, 0.7);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1325,67 +1391,124 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
+        /* Chat bubbles */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.94);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.18);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .ui-empty {
+        .ui-emptywrap {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 18px;
+          padding: 16px;
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+          max-width: 520px;
+          width: 100%;
+        }
+
+        .ui-emptyicon {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.75);
+          margin-bottom: 10px;
+        }
+
+        .ui-emptytitle {
+          font-size: 13px;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.92);
+          margin-bottom: 6px;
+          letter-spacing: 0.02em;
+        }
+
+        .ui-emptytext {
+          font-size: 12px;
+          line-height: 1.65;
           color: rgba(255, 255, 255, 0.55);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          .ui-sheen::before {
-            animation: none !important;
+        /* Spinners */
+        .ui-spinner {
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          border: 2px solid rgba(0, 0, 0, 0.18);
+          border-top-color: rgba(0, 0, 0, 0.65);
+          animation: spin 700ms linear infinite;
+        }
+        .ui-spinner-lg {
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          border: 2px solid rgba(255, 255, 255, 0.16);
+          border-top-color: rgba(255, 255, 255, 0.75);
+          animation: spin 700ms linear infinite;
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
           }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
           * {
             scroll-behavior: auto !important;
+            animation: none !important;
+            transition: none !important;
           }
         }
       `}</style>
 
-      <div className="ui-bg" />
-      <div className="ui-vignette" />
-
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
-      <div className="ui-app h-[100dvh] min-h-0 flex flex-col">
+      <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 grid grid-cols-3 items-center gap-3">
-            <div className="justify-self-start flex items-center gap-3">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div className={`ui-brand ${outfit.className}`}>
-                <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
+                <span className="text-white/90 text-[12px] font-semibold tracking-[0.12em] uppercase">protocolLM</span>
               </div>
+              {hasActiveSubscription && (
+                <span className={`hidden sm:inline-flex text-[11px] text-white/40 ${inter.className}`}>Active · site license</span>
+              )}
             </div>
 
-            <div className="justify-self-center text-[11px] text-white/55 tracking-wide hidden sm:block">
-              Made in Washtenaw County for Washtenaw County
-            </div>
-
-            <div className="justify-self-end flex items-center gap-2">
+            <div className="flex items-center gap-2">
               {!isAuthenticated ? (
                 <>
+                  {/* Keep header minimal (no duplicate Start trial) */}
                   <button onClick={() => setShowAuthModal(true)} className="ui-btn ui-btn-secondary">
-                    Sign in
-                  </button>
-                  <button onClick={() => setShowPricingModal(true)} className="ui-btn ui-btn-primary">
-                    Start trial
+                    <span className="ui-btn-inner">Sign in</span>
                   </button>
                 </>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
                     <Icons.Plus />
-                    New chat
+                    <span className="ui-btn-inner" style={{ gap: 8 }}>
+                      New chat
+                    </span>
                   </button>
 
                   <div className="relative" ref={userMenuRef}>
@@ -1399,13 +1522,14 @@ export default function Page() {
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-52 ui-modal overflow-hidden">
+                      <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
+                        <div className="px-3 pt-3 pb-2 text-[11px] text-white/40">Press Esc to close</div>
                         <button
                           onClick={() => {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
@@ -1428,7 +1552,9 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
+            </div>
           ) : (
             <div className="flex-1 min-h-0 flex flex-col">
               <div
@@ -1439,17 +1565,42 @@ export default function Page() {
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
-                    <div className="max-w-xl text-center">
-                      <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
-                        Ask about Michigan Food Code requirements, Washtenaw guidance, or attach a photo for a scan.
-                      </p>
+                    <div className="ui-emptywrap text-left">
+                      <div className="ui-emptyicon" aria-hidden="true">
+                        <Icons.Shield />
+                      </div>
+                      <div className={`ui-emptytitle ${inter.className}`}>Upload a photo or ask a question.</div>
+                      <div className={`ui-emptytext ${inter.className}`}>
+                        Use photo checks to spot likely issues fast—or search the Washtenaw-backed database when you need a clear answer.
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="ui-btn ui-btn-secondary"
+                        >
+                          <span className="ui-btn-inner">
+                            <Icons.Camera />
+                            Attach photo
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => textAreaRef.current?.focus()}
+                          className="ui-btn ui-btn-secondary"
+                        >
+                          <span className="ui-btn-inner">Ask a question</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-4">
+                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                        <div className={`max-w-[75%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
                           {msg.image && (
                             <img
                               src={msg.image}
@@ -1458,10 +1609,10 @@ export default function Page() {
                             />
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="flex gap-1 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/35 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                            <div className="flex gap-2 items-center">
+                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
+                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1474,11 +1625,14 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                <div
+                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
+                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+                >
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
+                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-10 !h-10" aria-label="Remove image">
                         <Icons.X />
                       </button>
                     </div>
@@ -1492,11 +1646,12 @@ export default function Page() {
 
                     <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
                       <textarea
+                        ref={textAreaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[42px] resize-none ${inter.className}`}
+                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -1508,10 +1663,10 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-40 cursor-not-allowed' : ''}`}
                         aria-label="Send"
                       >
-                        {isSending ? <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="ui-spinner-lg" /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
