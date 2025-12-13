@@ -75,6 +75,259 @@ const Icons = {
       <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
     </svg>
   ),
+  Chevron: ({ open }) => (
+    <svg
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      viewBox="0 0 24 24"
+      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 160ms ease' }}
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+}
+
+function LandingPage({ onShowPricing, onShowAuth }) {
+  const faqs = useMemo(
+    () => [
+      {
+        q: 'Is this built specifically for Washtenaw County?',
+        a: 'Yes. Responses are grounded in Michigan Food Code + local Washtenaw materials you’d normally have to hunt down.',
+      },
+      {
+        q: 'What does a “photo risk scan” return?',
+        a: 'A short list of likely compliance risks to verify (not a novel). It’s designed to be checked quickly during a shift.',
+      },
+      {
+        q: 'How should my team use it day-to-day?',
+        a: 'Use it during opening checks, pre-rush line checks, and closing—plus anytime a new hire asks the same compliance question.',
+      },
+      {
+        q: 'Does it replace the health inspector or my SOPs?',
+        a: 'No. It helps you catch issues earlier and keeps answers consistent. You still confirm critical decisions with official guidance.',
+      },
+    ],
+    []
+  )
+
+  const [openIdx, setOpenIdx] = useState(0)
+
+  return (
+    <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16">
+        {/* HERO */}
+        <section className="ui-shell ui-sheen p-7 sm:p-9">
+          <div className="ui-kickers">
+            <span className={`ui-kicker ${inter.className}`}>
+              <Icons.Shield /> Compliance Console
+            </span>
+            <span className={`ui-kicker-muted ${inter.className}`}>for Washtenaw County restaurant operators</span>
+          </div>
+
+          <h1 className={`ui-title ${outfit.className}`}>Inspection-ready workflows. Calm UI. Clear outputs.</h1>
+
+          <p className={`ui-subtitle ${inter.className}`}>
+            Ask a question, scan a photo, get a short list of what to verify, then turn it into a close/open checklist your lead can run.
+          </p>
+
+          <div className="ui-cta-row">
+            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+              Start trial
+            </button>
+            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+              Sign in
+            </button>
+          </div>
+
+          <div className={`ui-trust ${inter.className}`}>
+            <span className="ui-trust-item">
+              <Icons.Lock /> Secure by design
+            </span>
+            <span className="ui-dot" />
+            <span className="ui-trust-item">
+              <Icons.Spark /> No fluff outputs
+            </span>
+            <span className="ui-dot" />
+            <span className="ui-trust-item">
+              <Icons.Shield /> Built for audits
+            </span>
+          </div>
+        </section>
+
+        {/* CAPABILITIES */}
+        <section className="mt-8">
+          <div className="ui-capgrid">
+            <div className="ui-capcard ui-sheen">
+              <div className="ui-caphead">
+                <span className="ui-capicon">
+                  <Icons.Camera />
+                </span>
+                <div>
+                  <div className={`ui-captitle ${inter.className}`}>Photo risk scan</div>
+                  <div className={`ui-capbody ${inter.className}`}>Upload a walk-in / line photo → get a tight verify list.</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="ui-capcard ui-sheen">
+              <div className="ui-caphead">
+                <span className="ui-capicon">
+                  <Icons.Spark />
+                </span>
+                <div>
+                  <div className={`ui-captitle ${inter.className}`}>Grounded answers</div>
+                  <div className={`ui-capbody ${inter.className}`}>Plain language questions → rulebook-backed guidance.</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="ui-capcard ui-sheen">
+              <div className="ui-caphead">
+                <span className="ui-capicon">
+                  <Icons.Check />
+                </span>
+                <div>
+                  <div className={`ui-captitle ${inter.className}`}>Action checklist</div>
+                  <div className={`ui-capbody ${inter.className}`}>Convert risks into a short close/open list.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* WORKFLOW */}
+        <section className="mt-10 ui-workgrid">
+          <div className="ui-workleft">
+            <div className={`ui-sectioneyebrow ${inter.className}`}>WORKFLOW</div>
+            <h2 className={`ui-h2 ${outfit.className}`}>A black-card vibe for real ops.</h2>
+            <p className={`ui-p ${inter.className}`}>
+              The point is speed + consistency: scan or ask, verify the list, then log actions as a checklist.
+            </p>
+
+            <div className="ui-steps">
+              <div className="ui-step ui-sheen">
+                <div className={`ui-stepnum ${inter.className}`}>01</div>
+                <div>
+                  <div className={`ui-steptitle ${inter.className}`}>Scan or ask</div>
+                  <div className={`ui-stepbody ${inter.className}`}>Photo scan for risks, or ask a question in plain language.</div>
+                </div>
+              </div>
+
+              <div className="ui-step ui-sheen">
+                <div className={`ui-stepnum ${inter.className}`}>02</div>
+                <div>
+                  <div className={`ui-steptitle ${inter.className}`}>Verify the list</div>
+                  <div className={`ui-stepbody ${inter.className}`}>You get a short list of likely issues—tight, not chatty.</div>
+                </div>
+              </div>
+
+              <div className="ui-step ui-sheen">
+                <div className={`ui-stepnum ${inter.className}`}>03</div>
+                <div>
+                  <div className={`ui-steptitle ${inter.className}`}>Turn it into actions</div>
+                  <div className={`ui-stepbody ${inter.className}`}>Convert the important items into a close/open checklist.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside className="ui-workright ui-sheen">
+            <div className={`ui-cardtag ${inter.className}`}>INCLUDED</div>
+            <ul className={`ui-included ${inter.className}`}>
+              <li>
+                <Icons.Check /> Text + photo checks
+              </li>
+              <li>
+                <Icons.Check /> One site license per restaurant
+              </li>
+              <li>
+                <Icons.Check /> 7-day trial · cancel anytime
+              </li>
+              <li>
+                <Icons.Check /> Fast, grounded responses
+              </li>
+            </ul>
+
+            <div className="ui-rightcta">
+              <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
+                Start trial
+              </button>
+              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full mt-2">
+                Sign in
+              </button>
+            </div>
+          </aside>
+        </section>
+
+        {/* FAQ */}
+        <section className="mt-12">
+          <div className={`ui-sectioneyebrow ${inter.className}`}>FAQ</div>
+          <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
+
+          <div className="ui-faqwrap">
+            {faqs.map((item, idx) => {
+              const open = openIdx === idx
+              return (
+                <div key={idx} className={`ui-faqrow ${open ? 'is-open' : ''}`}>
+                  <button
+                    className="ui-faqbtn"
+                    onClick={() => setOpenIdx((v) => (v === idx ? -1 : idx))}
+                    aria-expanded={open}
+                  >
+                    <span className={`ui-faqq ${inter.className}`}>{item.q}</span>
+                    <span className="ui-faqchev">
+                      <Icons.Chevron open={open} />
+                    </span>
+                  </button>
+
+                  <div className="ui-faqpanel" style={{ maxHeight: open ? 240 : 0 }}>
+                    <div className={`ui-faqqa ${inter.className}`}>{item.a}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="mt-12 ui-shell ui-sheen p-7 sm:p-9">
+          <div className={`ui-sectioneyebrow ${inter.className}`}>READY</div>
+          <h2 className={`ui-h2 ${outfit.className}`}>Run a scan. Verify. Close clean.</h2>
+          <p className={`ui-p ${inter.className}`}>
+            Start a trial, run one real scan in your walk-in, then keep the checklist on a manager clipboard.
+          </p>
+          <div className="ui-cta-row mt-5">
+            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+              Start trial
+            </button>
+            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+              Sign in
+            </button>
+          </div>
+        </section>
+
+        <footer className="pt-10">
+          <div className="flex flex-wrap gap-4 justify-center text-xs text-white/55">
+            <Link href="/terms" className="hover:text-white/80">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-white/80">
+              Privacy
+            </Link>
+            <Link href="/contact" className="hover:text-white/80">
+              Contact
+            </Link>
+          </div>
+          <p className={`mt-6 text-[11px] text-center text-white/35 ${inter.className}`}>
+            protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+          </p>
+        </footer>
+      </div>
+    </div>
+  )
 }
 
 function AuthModal({ isOpen, onClose }) {
@@ -162,7 +415,7 @@ function AuthModal({ isOpen, onClose }) {
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/65 ${inter.className}`}>
+            <p className={`text-xs text-white/60 ${inter.className}`}>
               {mode === 'signin' && 'Use your work email to continue.'}
               {mode === 'signup' && 'Best with an owner / GM email for your site.'}
               {mode === 'reset' && "We'll email you a reset link."}
@@ -262,20 +515,18 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-6">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/70 ${inter.className}`}>
-            A calm, inspection-grade console. Includes chat + photo scanning.
-          </p>
+          <p className={`text-sm text-white/60 ${inter.className}`}>Full chat + photo scanning.</p>
         </div>
 
-        <div className="ui-pricewrap p-6">
+        <div className="ui-pricewrap p-6 ui-sheen">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-2">
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/55">/ month</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">/ month</span>
               </div>
-              <p className={`text-xs text-white/65 mt-2 ${inter.className}`}>
-                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text = 1 check; photo = 2.
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+                Includes roughly <span className="font-semibold text-white">2,600 monthly checks</span>. Text questions count as one check; photo analyses count as two.
               </p>
             </div>
 
@@ -287,7 +538,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="ui-divider my-5" />
 
-          <ul className="text-xs text-white/75 space-y-2">
+          <ul className="text-xs text-white/70 space-y-2">
             <li className="flex items-start gap-2">
               <Icons.Check />
               <span>Text + photo compliance checks</span>
@@ -323,290 +574,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               {loading === 'annual' ? 'Processing…' : 'Annual · save 15%'}
             </button>
 
-            <p className={`text-[11px] text-white/55 text-center ${inter.className}`}>
-              Built to feel like a black card product: quiet visuals, clear outputs.
-            </p>
+            <p className={`text-[11px] text-white/45 text-center ${inter.className}`}>Cancel anytime.</p>
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function LandingPage({ onShowPricing, onShowAuth }) {
-  const heroRef = useRef(null)
-
-  const faqs = useMemo(
-    () => [
-      {
-        q: 'Is this made for Washtenaw County specifically?',
-        a: 'Yes. It’s tuned for Washtenaw County operators and grounded in the Michigan Food Code + local guidance used during inspections.',
-      },
-      {
-        q: 'Do I need this every day?',
-        a: 'Not necessarily. Most teams use it when training, tightening routines, or verifying “are we actually OK?” before an inspection window.',
-      },
-      {
-        q: 'How should my team use photo scans?',
-        a: 'Snap a walk-in, prep line, or dish area. You’ll get a short list of likely risks to verify—then convert the important ones into a close/open checklist.',
-      },
-      {
-        q: 'Does it replace a health inspector?',
-        a: 'No—think “inspection-grade second set of eyes.” It helps you catch common issues and get rulebook-backed answers fast.',
-      },
-    ],
-    []
-  )
-
-  const [openFaq, setOpenFaq] = useState(0)
-
-  // Subtle “card moves alone” parallax for the main hero card
-  useEffect(() => {
-    const el = heroRef.current
-    if (!el) return
-
-    let raf = 0
-    const onScroll = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        const y = window.scrollY || 0
-        const p = Math.max(-18, Math.min(18, y * -0.03))
-        el.style.setProperty('--ui-parallax', `${p}px`)
-      })
-    }
-
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('scroll', onScroll)
-    }
-  }, [])
-
-  return (
-    <div className="ui-landing">
-      <section className="ui-section ui-section-hero">
-        <div ref={heroRef} className="ui-heroCard ui-reveal" data-reveal>
-          <div className="ui-kickers">
-            <span className={`ui-kicker ${inter.className}`}>
-              <Icons.Shield /> Inspection-grade
-            </span>
-            <span className={`ui-kicker-muted ${inter.className}`}>Washtenaw County operators · premium posture</span>
-          </div>
-
-          <h1 className={`ui-title ${outfit.className}`}>Compliance that feels like a console.</h1>
-
-          <p className={`ui-subtitle ${inter.className}`}>
-            Quiet visuals. Clear outputs. Photo risk scans, rulebook-backed answers, and fast close/open checklists—without digging through manuals.
-          </p>
-
-          <div className="ui-cta-row">
-            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-              Start trial
-            </button>
-            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-              Sign in
-            </button>
-          </div>
-
-          <div className={`ui-trust ${inter.className}`}>
-            <span className="ui-trust-item">
-              <Icons.Lock /> Secure by design
-            </span>
-            <span className="ui-dot" />
-            <span className="ui-trust-item">
-              <Icons.Spark /> Operator-ready
-            </span>
-            <span className="ui-dot" />
-            <span className="ui-trust-item">
-              <Icons.Shield /> Built for audits
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <section className="ui-section">
-        <div className="ui-sectionHead ui-reveal" data-reveal>
-          <div className={`ui-eyebrow ${inter.className}`}>Capabilities</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Everything you need. Nothing you don’t.</h2>
-          <p className={`ui-lead ${inter.className}`}>
-            The point is speed + certainty—calm workflows that keep you inspection-ready.
-          </p>
-        </div>
-
-        <div className="ui-cardGrid">
-          <div className="ui-card ui-reveal" data-reveal>
-            <div className="ui-cardTop">
-              <div className="ui-cardIcon">
-                <Icons.Camera />
-              </div>
-              <div>
-                <div className={`ui-cardTitle ${inter.className}`}>Photo risk scan</div>
-                <div className={`ui-cardBody ${inter.className}`}>
-                  Upload a walk-in or line photo. Get a tight list of likely issues to verify—fast.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="ui-card ui-reveal" data-reveal>
-            <div className="ui-cardTop">
-              <div className="ui-cardIcon">
-                <Icons.Spark />
-              </div>
-              <div>
-                <div className={`ui-cardTitle ${inter.className}`}>Grounded answers</div>
-                <div className={`ui-cardBody ${inter.className}`}>
-                  Ask normal questions like “How should we store raw poultry?” and get rulebook-backed guidance.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="ui-card ui-reveal" data-reveal>
-            <div className="ui-cardTop">
-              <div className="ui-cardIcon">
-                <Icons.Check />
-              </div>
-              <div>
-                <div className={`ui-cardTitle ${inter.className}`}>Action checklist</div>
-                <div className={`ui-cardBody ${inter.className}`}>
-                  Convert concerns into a short close/open list your lead can run—today.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="ui-section">
-        <div className="ui-split">
-          <div className="ui-reveal" data-reveal>
-            <div className={`ui-eyebrow ${inter.className}`}>Workflow</div>
-            <h2 className={`ui-h2 ${outfit.className}`}>A black-card vibe for real ops.</h2>
-            <p className={`ui-lead ${inter.className}`}>
-              Less chaos. More clarity. Use it before a rush, after a new hire, or when you want to tighten the line.
-            </p>
-
-            <div className="ui-steps">
-              <div className="ui-step">
-                <div className="ui-stepNum">01</div>
-                <div>
-                  <div className={`ui-stepTitle ${inter.className}`}>Scan or ask</div>
-                  <div className={`ui-stepBody ${inter.className}`}>Photo scan for risks, or ask a question in plain language.</div>
-                </div>
-              </div>
-
-              <div className="ui-step">
-                <div className="ui-stepNum">02</div>
-                <div>
-                  <div className={`ui-stepTitle ${inter.className}`}>Verify the list</div>
-                  <div className={`ui-stepBody ${inter.className}`}>You get a short list of likely issues—tight, not fluffy.</div>
-                </div>
-              </div>
-
-              <div className="ui-step">
-                <div className="ui-stepNum">03</div>
-                <div>
-                  <div className={`ui-stepTitle ${inter.className}`}>Turn it into actions</div>
-                  <div className={`ui-stepBody ${inter.className}`}>Convert the important items into a close/open checklist.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="ui-sideCard ui-reveal" data-reveal>
-            <div className={`ui-sideTag ${inter.className}`}>Included</div>
-            <ul className={`ui-sideList ${inter.className}`}>
-              <li>
-                <span className="ui-sideDot" /> Text + photo checks
-              </li>
-              <li>
-                <span className="ui-sideDot" /> One site license per restaurant
-              </li>
-              <li>
-                <span className="ui-sideDot" /> 7-day trial · cancel anytime
-              </li>
-              <li>
-                <span className="ui-sideDot" /> Fast, grounded responses
-              </li>
-            </ul>
-
-            <div className="ui-sideBtns">
-              <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
-                Start trial
-              </button>
-              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full">
-                Sign in
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="ui-section">
-        <div className="ui-sectionHead ui-reveal" data-reveal>
-          <div className={`ui-eyebrow ${inter.className}`}>FAQ</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Short answers. No fluff.</h2>
-        </div>
-
-        <div className="ui-faq">
-          {faqs.map((item, i) => {
-            const open = openFaq === i
-            return (
-              <div key={i} className={`ui-faqItem ${open ? 'is-open' : ''} ui-reveal`} data-reveal>
-                <button
-                  className={`ui-faqQ ${inter.className}`}
-                  onClick={() => setOpenFaq((v) => (v === i ? -1 : i))}
-                  aria-expanded={open}
-                >
-                  <span>{item.q}</span>
-                  <span className="ui-faqChevron">{open ? '–' : '+'}</span>
-                </button>
-                <div className="ui-faqA" style={{ maxHeight: open ? 220 : 0 }}>
-                  <div className={`ui-faqAText ${inter.className}`}>{item.a}</div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="ui-section ui-section-bottom">
-        <div className="ui-ready ui-reveal" data-reveal>
-          <div className={`ui-eyebrow ${inter.className}`}>Ready</div>
-          <h2 className={`ui-h2 ${outfit.className}`}>Make inspections boring again.</h2>
-          <p className={`ui-lead ${inter.className}`}>
-            Start the trial, run a scan in your walk-in, and keep the checklist on a manager clipboard.
-          </p>
-
-          <div className="ui-cta-row">
-            <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-              Start trial
-            </button>
-            <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-              Sign in
-            </button>
-          </div>
-        </div>
-
-        <footer className="ui-footer">
-          <div className="ui-footerLinks">
-            <Link href="/terms" className="hover:text-white/80">
-              Terms
-            </Link>
-            <Link href="/privacy" className="hover:text-white/80">
-              Privacy
-            </Link>
-            <Link href="/contact" className="hover:text-white/80">
-              Contact
-            </Link>
-          </div>
-          <div className={`ui-footnote ${inter.className}`}>
-            protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
-          </div>
-        </footer>
-      </section>
     </div>
   )
 }
@@ -725,44 +696,13 @@ export default function Page() {
     }
   }, [supabase, searchParams])
 
-  // ✅ Background + iOS-safe layering (no more body ::after overlay)
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('ui-enterprise-bg')
     return () => {
       document.body.classList.remove('ui-enterprise-bg')
-      document.body.classList.remove('ui-appmode')
     }
   }, [])
-
-  // ✅ Only lock body scroll in app/chat mode (fixes iPad landing weirdness)
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    if (session) document.body.classList.add('ui-appmode')
-    else document.body.classList.remove('ui-appmode')
-  }, [session])
-
-  // Reveal animations (subtle)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const els = Array.from(document.querySelectorAll('[data-reveal]'))
-    if (els.length === 0) return
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            e.target.classList.add('ui-reveal-in')
-            io.unobserve(e.target)
-          }
-        }
-      },
-      { threshold: 0.12, rootMargin: '80px' }
-    )
-
-    els.forEach((el) => io.observe(el))
-    return () => io.disconnect()
-  }, [session, isLoading])
 
   useEffect(() => {
     function handleClick(event) {
@@ -951,56 +891,62 @@ export default function Page() {
         body {
           height: 100%;
           width: 100%;
-          -webkit-text-size-adjust: 100%;
         }
 
         body.ui-enterprise-bg {
+          overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.92);
         }
 
-        /* Only lock scroll in app mode (chat) */
-        body.ui-appmode {
-          overflow: hidden;
-        }
-
-        /* ✅ iPad-safe background layer BEHIND content (no body ::after overlay) */
+        /* Background layer (no body pseudo-elements -> avoids “dark film” bugs) */
         .ui-bg {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: 0;
           background:
-            radial-gradient(900px 520px at 50% 0%, rgba(255, 255, 255, 0.10), transparent 62%),
-            radial-gradient(900px 520px at 18% 12%, rgba(0, 255, 200, 0.05), transparent 62%),
-            radial-gradient(900px 520px at 85% 12%, rgba(120, 90, 255, 0.06), transparent 62%),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 9px);
-          opacity: 0.95;
-          filter: saturate(110%);
+            radial-gradient(1100px 600px at 50% -10%, rgba(255, 255, 255, 0.10), transparent 55%),
+            radial-gradient(900px 560px at 18% 12%, rgba(0, 255, 200, 0.06), transparent 60%),
+            radial-gradient(900px 560px at 86% 14%, rgba(120, 90, 255, 0.06), transparent 60%),
+            radial-gradient(900px 700px at 50% 100%, rgba(255, 255, 255, 0.04), transparent 60%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+          background-size: auto, auto, auto, auto, 14px 14px;
+          opacity: 1;
         }
 
-        .ui-stage {
+        .ui-vignette {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          background: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.62) 72%);
+        }
+
+        .ui-app {
           position: relative;
           z-index: 1;
+          height: 100%;
         }
 
         ::-webkit-scrollbar {
           width: 9px;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.12);
           border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.20);
+          background: rgba(255, 255, 255, 0.18);
         }
 
         /* Header */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           background: rgba(5, 6, 8, 0.62);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
         }
 
         .ui-brand {
@@ -1009,26 +955,364 @@ export default function Page() {
           gap: 10px;
           padding: 8px 12px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 14px 40px rgba(0, 0, 0, 0.40);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Premium surfaces */
+        .ui-shell {
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012));
+          border-radius: 22px;
+          overflow: hidden;
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+          position: relative;
+        }
+
+        /* Subtle “alive” sheen (transform-only, less glitchy) */
+        .ui-sheen::before {
+          content: '';
+          position: absolute;
+          inset: -40% -30%;
+          background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 45%),
+            radial-gradient(circle at 85% 15%, rgba(0, 255, 200, 0.06), transparent 55%),
+            radial-gradient(circle at 70% 85%, rgba(120, 90, 255, 0.06), transparent 55%);
+          opacity: 0.55;
+          transform: translate3d(-2%, -1%, 0);
+          will-change: transform, opacity;
+          animation: uiSheen 10s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        @keyframes uiSheen {
+          0% {
+            transform: translate3d(-2%, -1%, 0);
+            opacity: 0.45;
+          }
+          50% {
+            transform: translate3d(2%, 1.2%, 0);
+            opacity: 0.6;
+          }
+          100% {
+            transform: translate3d(-2%, -1%, 0);
+            opacity: 0.45;
+          }
+        }
+
+        .ui-sheen > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-kickers {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-bottom: 14px;
+        }
+
+        .ui-kicker {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 7px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.86);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 800;
+        }
+
+        .ui-kicker-muted {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.58);
+        }
+
+        .ui-title {
+          font-size: clamp(30px, 4vw, 56px);
+          line-height: 1.02;
+          letter-spacing: -0.05em;
+          margin-bottom: 10px;
+          color: rgba(255, 255, 255, 0.96);
+        }
+
+        .ui-subtitle {
+          font-size: 14px;
+          line-height: 1.75;
+          color: rgba(255, 255, 255, 0.66);
+          max-width: 72ch;
+        }
+
+        .ui-sectioneyebrow {
+          font-size: 11px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.5);
+          margin-bottom: 10px;
+        }
+
+        .ui-h2 {
+          font-size: clamp(24px, 2.2vw, 34px);
+          letter-spacing: -0.03em;
+          color: rgba(255, 255, 255, 0.95);
+          margin-bottom: 8px;
+        }
+
+        .ui-p {
+          font-size: 13px;
+          line-height: 1.75;
+          color: rgba(255, 255, 255, 0.62);
+          max-width: 78ch;
+        }
+
+        .ui-cta-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 18px;
+        }
+
+        .ui-trust {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+          margin-top: 14px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+        }
+        .ui-trust-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.015);
+        }
+        .ui-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Capability cards (equal height) */
+        .ui-capgrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          align-items: stretch;
+        }
+        @media (min-width: 920px) {
+          .ui-capgrid {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+        }
+        .ui-capcard {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 16px;
+          position: relative;
+          overflow: hidden;
+          min-height: 84px;
+        }
+        .ui-caphead {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+        }
+        .ui-capicon {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.8);
+          flex: 0 0 auto;
+        }
+        .ui-captitle {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 6px;
+        }
+        .ui-capbody {
+          font-size: 12px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Workflow layout */
+        .ui-workgrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          align-items: start;
+        }
+        @media (min-width: 980px) {
+          .ui-workgrid {
+            grid-template-columns: 1.35fr 0.85fr;
+          }
+        }
+
+        .ui-steps {
+          margin-top: 14px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .ui-step {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 14px;
+          display: grid;
+          grid-template-columns: 44px 1fr;
+          gap: 10px;
+          position: relative;
+          overflow: hidden;
+        }
+        .ui-stepnum {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.72);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+        }
+        .ui-steptitle {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 6px;
+        }
+        .ui-stepbody {
+          font-size: 12px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .ui-workright {
+          border-radius: 22px;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 18px;
+          position: relative;
+          overflow: hidden;
+          align-self: start;
+        }
+
+        .ui-cardtag {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.72);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 800;
+          width: fit-content;
+          margin-bottom: 12px;
+        }
+
+        .ui-included {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: grid;
+          gap: 10px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 12px;
+        }
+        .ui-included li {
+          display: flex;
+          gap: 8px;
+          align-items: flex-start;
+        }
+
+        /* FAQ (robust accordion) */
+        .ui-faqwrap {
+          margin-top: 14px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .ui-faqrow {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          overflow: hidden; /* keeps it clean */
+        }
+
+        .ui-faqbtn {
+          width: 100%;
+          text-align: left;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 14px 14px;
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.9);
+          cursor: pointer;
+        }
+
+        .ui-faqq {
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.86);
+        }
+
+        .ui-faqchev {
+          color: rgba(255, 255, 255, 0.55);
+          display: inline-flex;
+        }
+
+        .ui-faqpanel {
+          overflow: hidden;
+          transition: max-height 220ms ease;
+        }
+
+        .ui-faqqa {
+          padding: 0 14px 14px;
+          font-size: 12px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.62);
         }
 
         /* Buttons */
         .ui-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
           border-radius: 12px;
           padding: 11px 14px;
           font-size: 12px;
           font-weight: 800;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
           transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
           user-select: none;
-          white-space: nowrap;
         }
         .ui-btn:active {
           transform: translateY(1px);
@@ -1037,21 +1321,21 @@ export default function Page() {
         .ui-btn-primary {
           background: #ffffff;
           color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.22);
-          box-shadow: 0 22px 70px rgba(0, 0, 0, 0.55);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
         .ui-btn-primary:hover {
-          box-shadow: 0 28px 90px rgba(0, 0, 0, 0.65);
+          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.20);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.18);
         }
 
         .ui-icon-btn {
@@ -1061,22 +1345,22 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.86);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.82);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.20);
-          color: rgba(255, 255, 255, 0.98);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.18);
+          color: rgba(255, 255, 255, 0.95);
         }
 
         /* Modals / panels */
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(6, 7, 9, 0.88);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(6, 7, 9, 0.86);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
           backdrop-filter: blur(18px);
           -webkit-backdrop-filter: blur(18px);
@@ -1085,25 +1369,25 @@ export default function Page() {
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.94);
+          color: rgba(255, 255, 255, 0.92);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.42);
+          color: rgba(255, 255, 255, 0.35);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.26);
-          background: rgba(255, 255, 255, 0.04);
-          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.05);
         }
 
         .ui-toast {
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
         }
         .ui-toast-ok {
           border-color: rgba(34, 197, 94, 0.35);
@@ -1119,10 +1403,10 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.78);
+          color: rgba(255, 255, 255, 0.75);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
@@ -1131,21 +1415,11 @@ export default function Page() {
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
-        }
-        .ui-pricewrap::before {
-          content: '';
-          position: absolute;
-          inset: -40% -30%;
-          background:
-            radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.10), transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(0, 255, 200, 0.06), transparent 55%),
-            radial-gradient(circle at 60% 80%, rgba(120, 90, 255, 0.06), transparent 55%);
-          pointer-events: none;
         }
 
         .ui-badge {
@@ -1154,9 +1428,9 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.80);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.78);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1164,430 +1438,52 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.10);
-        }
-
-        /* Landing layout */
-        .ui-landing {
-          width: 100%;
-          max-width: 72rem;
-          margin: 0 auto;
-          padding: 26px 16px 0;
-        }
-
-        .ui-section {
-          padding: 36px 0;
-        }
-        .ui-section-hero {
-          padding-top: 22px;
-        }
-        .ui-section-bottom {
-          padding-bottom: 40px;
-        }
-
-        .ui-heroCard {
-          position: relative;
-          border-radius: 22px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
-            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0px, rgba(255, 255, 255, 0.035) 1px, transparent 1px, transparent 10px);
-          box-shadow: 0 55px 170px rgba(0, 0, 0, 0.75);
-          padding: 26px 22px 20px;
-          transform: translate3d(0, var(--ui-parallax, 0px), 0);
-          will-change: transform;
-        }
-        .ui-heroCard::before {
-          /* “liquid glass” motion only on the card */
-          content: '';
-          position: absolute;
-          inset: -60% -40%;
-          background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.16) 42%, transparent 60%);
-          opacity: 0.22;
-          transform: translate3d(-40%, 0, 0);
-          animation: uiSheen 7.5s ease-in-out infinite;
-          pointer-events: none;
-          mix-blend-mode: overlay;
-        }
-        @keyframes uiSheen {
-          0% {
-            transform: translate3d(-45%, 0, 0) rotate(0.001deg);
-          }
-          50% {
-            transform: translate3d(45%, 0, 0) rotate(0.001deg);
-          }
-          100% {
-            transform: translate3d(-45%, 0, 0) rotate(0.001deg);
-          }
-        }
-
-        .ui-kickers {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 14px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 7px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.86);
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
-        .ui-kicker-muted {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.70);
-        }
-
-        .ui-title {
-          font-size: clamp(30px, 4vw, 56px);
-          line-height: 1.02;
-          letter-spacing: -0.05em;
-          margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.98);
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-subtitle {
-          font-size: 14px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.76);
-          max-width: 72ch;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-cta-row {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-top: 18px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-trust {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          margin-top: 14px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.66);
-          position: relative;
-          z-index: 1;
-        }
-        .ui-trust-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.10);
-          background: rgba(255, 255, 255, 0.02);
-        }
-        .ui-dot {
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.22);
-        }
-
-        .ui-sectionHead {
-          margin-bottom: 16px;
-        }
-        .ui-eyebrow {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.62);
-          font-weight: 800;
-          margin-bottom: 8px;
-        }
-        .ui-h2 {
-          font-size: clamp(22px, 2.6vw, 34px);
-          letter-spacing: -0.04em;
-          color: rgba(255, 255, 255, 0.96);
-          margin-bottom: 8px;
-        }
-        .ui-lead {
-          font-size: 13px;
-          line-height: 1.75;
-          color: rgba(255, 255, 255, 0.72);
-          max-width: 75ch;
-        }
-
-        .ui-cardGrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-          margin-top: 14px;
-        }
-        @media (min-width: 920px) {
-          .ui-cardGrid {
-            grid-template-columns: 1fr 1fr 1fr;
-          }
-        }
-
-        .ui-card {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
-          padding: 16px;
-          transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
-        }
-        .ui-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(255, 255, 255, 0.20);
-          background: rgba(255, 255, 255, 0.04);
-        }
-
-        .ui-cardTop {
-          display: flex;
-          gap: 12px;
-          align-items: flex-start;
-        }
-        .ui-cardIcon {
-          width: 40px;
-          height: 40px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.90);
-          flex: 0 0 auto;
-        }
-        .ui-cardTitle {
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.92);
-          margin-bottom: 6px;
-        }
-        .ui-cardBody {
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.70);
-        }
-
-        .ui-split {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 14px;
-          align-items: start;
-        }
-        @media (min-width: 980px) {
-          .ui-split {
-            grid-template-columns: 1.2fr 0.8fr;
-          }
-        }
-
-        .ui-steps {
-          margin-top: 14px;
-          display: grid;
-          gap: 10px;
-        }
-        .ui-step {
-          display: flex;
-          gap: 12px;
-          padding: 12px 12px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-        }
-        .ui-stepNum {
-          font-size: 11px;
-          letter-spacing: 0.18em;
-          font-weight: 900;
-          color: rgba(255, 255, 255, 0.62);
-          padding-top: 2px;
-        }
-        .ui-stepTitle {
-          font-size: 12px;
-          font-weight: 900;
-          color: rgba(255, 255, 255, 0.92);
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          margin-bottom: 3px;
-        }
-        .ui-stepBody {
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.70);
-        }
-
-        .ui-sideCard {
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-          padding: 16px;
-          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65);
-          position: sticky;
-          top: 92px;
-        }
-        .ui-sideTag {
-          display: inline-flex;
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.70);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 999px;
-          padding: 6px 10px;
-          margin-bottom: 12px;
-        }
-        .ui-sideList {
-          list-style: none;
-          padding: 0;
-          margin: 0 0 14px;
-          display: grid;
-          gap: 10px;
-          color: rgba(255, 255, 255, 0.74);
-          font-size: 12px;
-        }
-        .ui-sideDot {
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.25);
-          margin-right: 10px;
-          transform: translateY(1px);
-        }
-        .ui-sideBtns {
-          display: grid;
-          gap: 10px;
-        }
-
-        .ui-faq {
-          display: grid;
-          gap: 10px;
-          margin-top: 10px;
-        }
-        .ui-faqItem {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          overflow: hidden;
-        }
-        .ui-faqQ {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 14px 14px;
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.88);
-        }
-        .ui-faqChevron {
-          color: rgba(255, 255, 255, 0.60);
-          font-weight: 900;
-          font-size: 18px;
-        }
-        .ui-faqA {
-          overflow: hidden;
-          transition: max-height 220ms ease;
-        }
-        .ui-faqAText {
-          padding: 0 14px 14px;
-          font-size: 12px;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.72);
-        }
-
-        .ui-ready {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 30px 120px rgba(0, 0, 0, 0.65);
-          padding: 18px;
-        }
-
-        .ui-footer {
-          padding: 26px 0 34px;
-          text-align: center;
-          color: rgba(255, 255, 255, 0.55);
-        }
-        .ui-footerLinks {
-          display: flex;
-          gap: 18px;
-          justify-content: center;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-          margin-bottom: 10px;
-        }
-        .ui-footnote {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.44);
-          max-width: 85ch;
-          margin: 0 auto;
-        }
-
-        /* Reveal animation */
-        .ui-reveal {
-          opacity: 0;
-          transform: translateY(10px);
-          transition: opacity 420ms ease, transform 420ms ease;
-        }
-        .ui-reveal.ui-reveal-in {
-          opacity: 1;
-          transform: translateY(0);
+          background: rgba(255, 255, 255, 0.08);
         }
 
         /* Chat bubbles — tool-like */
         .ui-bubble {
           border-radius: 14px;
           padding: 12px 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.9);
         }
         .ui-bubble-user {
           background: rgba(255, 255, 255, 0.92);
           color: #000;
-          border-color: rgba(255, 255, 255, 0.22);
+          border-color: rgba(255, 255, 255, 0.18);
         }
 
         .ui-empty {
-          color: rgba(255, 255, 255, 0.70);
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ui-sheen::before {
+            animation: none !important;
+          }
+          * {
+            scroll-behavior: auto !important;
+          }
         }
       `}</style>
 
-      <div className="ui-bg" aria-hidden="true" />
-      <div className="ui-stage">
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <div className="ui-bg" />
+      <div className="ui-vignette" />
 
-        {/* HEADER (sticky on BOTH landing + app) */}
-        <header className="sticky top-0 z-40 ui-header">
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+
+      <div className="ui-app h-[100dvh] min-h-0 flex flex-col">
+        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`ui-brand ${outfit.className}`}>
                 <span className="text-white/92 text-[12px] font-semibold tracking-[0.14em] uppercase">protocolLM</span>
               </div>
               {hasActiveSubscription && (
-                <span className={`hidden sm:inline-flex text-[11px] text-white/65 ${inter.className}`}>Active · site license</span>
+                <span className={`hidden sm:inline-flex text-[11px] text-white/55 ${inter.className}`}>Active · site license</span>
               )}
             </div>
 
@@ -1625,7 +1521,7 @@ export default function Page() {
                             setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-white/75 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icons.Settings />
                           <span>Subscription</span>
@@ -1646,13 +1542,10 @@ export default function Page() {
           </div>
         </header>
 
-        {/* CONTENT */}
-        {!isAuthenticated ? (
-          <main className="pb-10">
+        <main className="flex-1 min-h-0 flex flex-col">
+          {!isAuthenticated ? (
             <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
-          </main>
-        ) : (
-          <main className="h-[100dvh] min-h-0 flex flex-col">
+          ) : (
             <div className="flex-1 min-h-0 flex flex-col">
               <div
                 ref={scrollRef}
@@ -1664,7 +1557,7 @@ export default function Page() {
                   <div className="h-full flex items-center justify-center px-4">
                     <div className="max-w-xl text-center">
                       <p className={`text-sm leading-relaxed ui-empty ${inter.className}`}>
-                        Ask about Michigan Food Code requirements, Washtenaw enforcement actions, or attach a photo for an inspection-grade risk scan.
+                        Ask about Michigan Food Code requirements, Washtenaw guidance, or attach a photo for a risk scan.
                       </p>
                     </div>
                   </div>
@@ -1699,7 +1592,7 @@ export default function Page() {
               <div className="flex-shrink-0 ui-header border-t border-white/10">
                 <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/75">
+                    <div className="mb-2 inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-[12px] text-white/70">
                       <span>Image attached</span>
                       <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-8 !h-8" aria-label="Remove image">
                         <Icons.X />
@@ -1739,14 +1632,14 @@ export default function Page() {
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/50 ${inter.className}`}>
+                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
                     protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
                   </p>
                 </div>
               </div>
             </div>
-          </main>
-        )}
+          )}
+        </main>
       </div>
     </>
   )
