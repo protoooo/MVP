@@ -18,19 +18,18 @@ const OPENAI_CHAT_MODEL = 'gpt-5.2'
 
 // Output controls (GPT-5.2: use reasoning_effort + verbosity; DO NOT send temperature/top_p when reasoning_effort != "none")
 const GENERATION_CONFIG = {
-  maxCompletionTokens: 520, // total completion budget (includes any internal reasoning + visible output)
-  reasoningEffort: 'high',  // 'medium' | 'high' | 'xhigh' (use 'xhigh' if you want max)
-  verbosity: 'low',         // 'low' | 'medium' | 'high'
+  maxCompletionTokens: 560,
+  reasoningEffort: 'high', // 'medium' | 'high' | 'xhigh'
+  verbosity: 'low',        // 'low' | 'medium' | 'high'
 }
 
 const VISION_CONFIG = {
   maxCompletionTokens: 220,
-  // Vision description should be fast & literal; do NOT pass temperature/top_p.
   reasoningEffort: 'none',
   verbosity: 'low',
 }
 
-const MAX_CONTEXT_LENGTH = 20000
+const MAX_CONTEXT_LENGTH = 22000
 const MAX_IMAGE_SIZE_MB = 10
 
 // Timeouts
@@ -40,7 +39,9 @@ const GENERATION_TIMEOUT = 25000
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
 
+// --------------------------
 // Input sanitization
+// --------------------------
 function sanitizeInput(input, maxLength = 4000) {
   if (typeof input !== 'string') return ''
   return input
@@ -84,7 +85,9 @@ function validateImage(base64String) {
   return cleanBase64
 }
 
+// --------------------------
 // Confidence parsing
+// --------------------------
 function extractConfidence(text) {
   const match = text.match(/^\s*\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]\s*/i)
   if (match) {
@@ -118,11 +121,98 @@ function cleanModelText(text) {
 
 // Ensure we always return a confidence line (even if the model forgets)
 function ensureConfidenceLine(confidence, cleanText) {
-  const c = confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW'
-    ? confidence
-    : 'MEDIUM'
+  const c =
+    confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW'
+      ? confidence
+      : 'MEDIUM'
   return { confidence: c, message: cleanText }
 }
+
+// --------------------------
+// Output repair (server-side)
+// --------------------------
+function ensureThreeSections(text) {
+  const safe = (text || '').trim()
+  if (!safe) return safe
+
+  const hasLikely = /(^|\n)Likely issues \(visible\):/i.test(safe)
+  const hasDoNow = /(^|\n)What to do now:/i.test(safe)
+  const hasConfirm = /(^|\n)Need to confirm:/i.test(safe)
+
+  if (hasLikely && hasDoNow && hasConfirm) return safe
+
+  // If model produced bullets but forgot headers, wrap it.
+  // Minimal + conservative repair (no re-LLM call).
+  const lines = safe.split('\n').map((l) => l.trim()).filter(Boolean)
+
+  const bullets = lines.filter((l) => l.startsWith('-'))
+  const nonBullets = lines.filter((l) => !l.startsWith('-'))
+
+  const likely = bullets.slice(0, 3)
+  const doNow = bullets.slice(3, 6)
+  const confirm = bullets.slice(6, 9)
+
+  const repaired = [
+    'Likely issues (visible):',
+    ...(likely.length ? likely : ['- (none listed)']),
+    '',
+    'What to do now:',
+    ...(doNow.length ? doNow : ['- (none listed)']),
+    '',
+    'Need to confirm:',
+    ...(confirm.length ? confirm : ['- Ask manager / check policy / verify temps with thermometer']),
+  ].join('\n')
+
+  // Preserve any strong non-bullet content by appending it to Need to confirm
+  if (nonBullets.length > 0) {
+    return repaired + '\n- ' + nonBullets.join(' ').slice(0, 240)
+  }
+
+  return repaired
+}
+
+function normalizeBulletCounts(text) {
+  // Hard cap bullets to keep “entry-level scannable”
+  const sections = [
+    { name: 'Likely issues (visible):', max: 4 },
+    { name: 'What to do now:', max: 4 },
+    { name: 'Need to confirm:', max: 4 },
+  ]
+
+  let out = text
+  for (const s of sections) {
+    const re = new RegExp(
+      `(${escapeRegExp(s.name)}\\n)([\\s\\S]*?)(\\n\\n|$)`,
+      'i'
+    )
+    out = out.replace(re, (_, header, body, tail) => {
+      const lines = body.split('\n').filter((l) => l.trim().length > 0)
+      const bullets = lines.filter((l) => l.trim().startsWith('-')).slice(0, s.max)
+      const fallback = bullets.length ? bullets : ['- (none)']
+      return header + fallback.join('\n') + (tail || '\n\n')
+    })
+  }
+  return out.trim()
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// --------------------------
+// Local enforcement rules context (short excerpts)
+// --------------------------
+// NOTE: Keep these SHORT. They are “official context” you are explicitly passing in every time.
+const LOCAL_ENFORCEMENT_RULES = `
+LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
+- Violations are Priority (P), Priority Foundation (Pf), or Core.
+- Priority and Priority Foundation must be corrected immediately or within 10 days.
+- Core must be corrected within 90 days.
+- "Continuous violation": a priority/Pf violation documented on two or more consecutive routine inspections.
+- "Chronic violation": a priority/Pf violation documented on three of the last five routine inspections.
+- A "Risk Control Plan" is used to correct a priority/Pf violation repeated on two or more consecutive inspections.
+- If a safe operation cannot be maintained during an imminent health hazard, discontinue/close and notify the regulatory authority.
+`.trim()
 
 export async function POST(req) {
   const requestId = crypto.randomUUID()
@@ -292,7 +382,9 @@ export async function POST(req) {
       }
     }
 
+    // --------------------------
     // Vision analysis (literal description ONLY)
+    // --------------------------
     let searchTerms = ''
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
@@ -317,9 +409,8 @@ export async function POST(req) {
             model: OPENAI_CHAT_MODEL,
             messages: messagesVision,
             max_completion_tokens: VISION_CONFIG.maxCompletionTokens,
-            reasoning_effort: VISION_CONFIG.reasoningEffort, // ✅ none
-            verbosity: VISION_CONFIG.verbosity,              // ✅ low
-            // ✅ DO NOT pass temperature/top_p here
+            reasoning_effort: VISION_CONFIG.reasoningEffort,
+            verbosity: VISION_CONFIG.verbosity,
           }),
           timeoutPromise(VISION_TIMEOUT, 'VISION_TIMEOUT'),
         ])
@@ -334,14 +425,24 @@ export async function POST(req) {
       searchTerms = lastMessageText || 'food safety code'
     }
 
+    // --------------------------
     // Document search
+    // --------------------------
     let context = ''
     if (searchTerms) {
       logger.info('Document search started', { requestId })
       let searchResults = []
       try {
-        const searchQuery = `${searchTerms} Washtenaw County Michigan food service inspection enforcement actions`
-        searchResults = await searchDocuments(searchQuery, 'washtenaw', 25)
+        // More targeted query (helps pull Violation Types + Enforcement Action language)
+        const searchQuery = [
+          searchTerms,
+          'Washtenaw County',
+          'Priority Priority Foundation Core',
+          'violation types',
+          'enforcement action',
+          'Michigan Modified Food Code',
+        ].join(' | ')
+        searchResults = await searchDocuments(searchQuery, 'washtenaw', 30)
       } catch (err) {
         logger.error('Search failed', { requestId, error: err.message })
       }
@@ -362,7 +463,6 @@ export async function POST(req) {
               doc.document_name ||
               doc.title ||
               'Washtenaw food code'
-            // Keep source tags for internal grounding, but we instruct the model not to cite unless asked.
             return `[SOURCE: ${source}]\n${text}`
           })
           .filter(Boolean)
@@ -389,23 +489,33 @@ export async function POST(req) {
       )
     }
 
-    if (context.length > MAX_CONTEXT_LENGTH) context = context.slice(0, MAX_CONTEXT_LENGTH)
+    // Prepend local enforcement rules every time (still “provided context”)
+    const fullContext = `${LOCAL_ENFORCEMENT_RULES}\n\n${context}`
+    const clippedContext =
+      fullContext.length > MAX_CONTEXT_LENGTH ? fullContext.slice(0, MAX_CONTEXT_LENGTH) : fullContext
 
-    // System prompt: concise, scannable, no headings, no default citations
+    // --------------------------
+    // System prompt
+    // --------------------------
     const SYSTEM_PROMPT = `You are ProtocolLM, a food-safety assistant for restaurants in Washtenaw County, Michigan.
 
 Hard rules:
 - Use ONLY the provided OFFICIAL REGULATORY CONTEXT. If it doesn't support a claim, put it under "Need to confirm".
-- Describe ONLY what is visible in photos. No guessing.
+- For photos: describe ONLY what is visible. No guessing.
 - NO markdown headings. Do NOT use # or ## anywhere.
 - Keep the whole answer short and scannable for an entry-level employee.
+
+Very important:
+- When you list a likely issue, tag it as (P), (Pf), or (Core) if the context supports it. If unsure, do not guess—put it in "Need to confirm".
+- If something sounds like an imminent health hazard / unsafe-to-operate situation, say "Stop and get a manager" and recommend pausing the process until verified.
 
 Output format (MANDATORY):
 Line 1: [CONFIDENCE: HIGH] or [CONFIDENCE: MEDIUM] or [CONFIDENCE: LOW]
 Then EXACTLY these 3 sections, each 1–4 bullets max:
 
 Likely issues (visible):
-- ...
+- (P) ...
+- (Core) ...
 
 What to do now:
 - ...
@@ -419,10 +529,10 @@ Citations:
 
 Tone:
 - Calm, direct, operational.
-- Avoid "will fail inspection" / absolutes.`
+- Avoid absolutes like "will fail inspection".`
 
     const finalUserPrompt = `OFFICIAL REGULATORY CONTEXT:
-${context}
+${clippedContext}
 
 CHAT HISTORY:
 ${historyText || 'None.'}
@@ -445,20 +555,23 @@ ${searchTerms}` : ''}`
         model: OPENAI_CHAT_MODEL,
         messages: messagesFinal,
         max_completion_tokens: GENERATION_CONFIG.maxCompletionTokens,
-        reasoning_effort: GENERATION_CONFIG.reasoningEffort, // ✅ high (or xhigh)
-        verbosity: GENERATION_CONFIG.verbosity,              // ✅ low
-        // ✅ DO NOT pass temperature/top_p here
+        reasoning_effort: GENERATION_CONFIG.reasoningEffort,
+        verbosity: GENERATION_CONFIG.verbosity,
       }),
       timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT'),
     ])
 
     let rawText = result?.choices?.[0]?.message?.content || ''
     const parsed = extractConfidence(rawText)
-    const cleaned = cleanModelText(parsed.text)
+    let cleaned = cleanModelText(parsed.text)
 
     if (!cleaned || cleaned.length < 10) {
       throw new Error('Empty or invalid response from model')
     }
+
+    // Repair format if needed
+    cleaned = ensureThreeSections(cleaned)
+    cleaned = normalizeBulletCounts(cleaned)
 
     const ensured = ensureConfidenceLine(parsed.confidence, cleaned)
 
