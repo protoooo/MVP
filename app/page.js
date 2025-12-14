@@ -578,94 +578,120 @@ export default function Page() {
     }
   }, [searchParams])
 
-  useEffect(() => {
-    let isMounted = true
+  // app/page.js - FIXED: Safe profile check (excerpt)
 
-    async function loadSessionAndSub(s) {
-      if (!isMounted) return
-      setSession(s)
+// Around line 474 in your useEffect:
 
-      if (!s) {
-        setHasActiveSubscription(false)
-        setShowPricingModal(false)
-        setIsLoading(false)
-        return
-      }
+useEffect(() => {
+  let isMounted = true
 
-      // ✅ Enforce Accept Terms before app usage
-      try {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('accepted_terms, accepted_privacy')
-          .eq('id', s.user.id)
-          .maybeSingle()
+  async function loadSessionAndSub(s) {
+    if (!isMounted) return
+    setSession(s)
 
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
+    if (!s) {
+      setHasActiveSubscription(false)
+      setShowPricingModal(false)
+      setIsLoading(false)
+      return
+    }
 
-        if (!accepted) {
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-      } catch (e) {
-        console.error('Policy check error', e)
+    // ✅ FIXED: Handle missing profile gracefully
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('accepted_terms, accepted_privacy')
+        .eq('id', s.user.id)
+        .maybeSingle()
+
+      // ✅ If profile doesn't exist, redirect to accept-terms
+      // This creates the profile with UPSERT
+      if (!profile) {
+        console.log('⚠️ No profile found, redirecting to accept-terms')
         setHasActiveSubscription(false)
         setIsLoading(false)
         router.replace('/accept-terms')
         return
       }
 
-      let active = false
-      try {
-        if (s.user.email === ADMIN_EMAIL) {
-          active = true
-        } else {
-          const { data: sub } = await supabase
-  .from('subscriptions')
-  .select('status,current_period_end')
-  .eq('user_id', s.user.id)
-  .in('status', ['active', 'trialing'])
-  .order('current_period_end', { ascending: false })
-  .limit(1)
-  .maybeSingle()
-
-
-          if (sub && sub.current_period_end) {
-            const end = new Date(sub.current_period_end)
-            if (end > new Date()) active = true
-          }
-        }
-      } catch (e) {
-        console.error('Subscription check error', e)
+      // ✅ If profile exists but terms not accepted
+      const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
+      if (!accepted) {
+        console.log('⚠️ Terms not accepted, redirecting')
+        setHasActiveSubscription(false)
+        setIsLoading(false)
+        router.replace('/accept-terms')
+        return
       }
 
-      if (!isMounted) return
-      setHasActiveSubscription(active)
+      // ✅ Check if there was a profile error (DB issue)
+      if (profileError) {
+        console.error('❌ Profile check error:', profileError)
+        // Still redirect to accept-terms, which will try to create it
+        setHasActiveSubscription(false)
+        setIsLoading(false)
+        router.replace('/accept-terms')
+        return
+      }
+
+    } catch (e) {
+      console.error('❌ Policy check exception:', e)
+      setHasActiveSubscription(false)
       setIsLoading(false)
+      router.replace('/accept-terms')
+      return
     }
 
-    async function init() {
-      try {
-        const { data } = await supabase.auth.getSession()
-        await loadSessionAndSub(data.session || null)
-      } catch (e) {
-        console.error('Auth init error', e)
-        if (isMounted) setIsLoading(false)
+    // Now check subscription (rest of your code continues unchanged)
+    let active = false
+    try {
+      if (s.user.email === ADMIN_EMAIL) {
+        active = true
+      } else {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status,current_period_end')
+          .eq('user_id', s.user.id)
+          .in('status', ['active', 'trialing'])
+          .order('current_period_end', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (sub && sub.current_period_end) {
+          const end = new Date(sub.current_period_end)
+          if (end > new Date()) active = true
+        }
       }
+    } catch (e) {
+      console.error('Subscription check error', e)
     }
 
-    init()
+    if (!isMounted) return
+    setHasActiveSubscription(active)
+    setIsLoading(false)
+  }
 
-    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      loadSessionAndSub(newSession)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription?.unsubscribe()
+  async function init() {
+    try {
+      const { data } = await supabase.auth.getSession()
+      await loadSessionAndSub(data.session || null)
+    } catch (e) {
+      console.error('Auth init error', e)
+      if (isMounted) setIsLoading(false)
     }
-  }, [supabase, searchParams, router])
+  }
+
+  init()
+
+  const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    loadSessionAndSub(newSession)
+  })
+
+  return () => {
+    isMounted = false
+    data.subscription?.unsubscribe()
+  }
+}, [supabase, searchParams, router])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
