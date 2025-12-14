@@ -198,59 +198,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
-          <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>Built for Washtenaw County</h2>
-
-            <div className="mt-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="ui-stepcard">
-                  <div className="text-center py-2">
-                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>1,353</div>
-                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Regulation Chunks Embedded</div>
-                  </div>
-                </div>
-
-                <div className="ui-stepcard">
-                  <div className="text-center py-2">
-                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>100%</div>
-                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Washtenaw County Focused</div>
-                  </div>
-                </div>
-
-                <div className="ui-stepcard">
-                  <div className="text-center py-2">
-                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>10 sec</div>
-                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Average Check Time</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ui-stepcard p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/15 border border-white/10 flex items-center justify-center">
-                    <Icons.Shield />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className={`text-base font-bold text-white mb-2 ${outfit.className}`}>First 100 Restaurants Get Priority Support</h3>
-                    <p className={`text-sm leading-relaxed text-white/70 ${inter.className}`}>
-                      As an early adopter, you'll get direct access to our team, free training sessions for your staff, and input on new
-                      features. We're building this with Washtenaw County operators, for Washtenaw County operators.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ui-stepcard p-6 border-dashed opacity-70">
-                <div className="text-center py-4">
-                  <p className={`text-sm text-white/50 italic ${inter.className}`}>“Testimonials from Ann Arbor restaurants coming soon”</p>
-                  <p className={`text-xs text-white/40 mt-2 ${inter.className}`}>Be one of the first to try protocolLM and share your experience</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
           <section className="ui-final">
             <div className="ui-finalinner">
               <div>
@@ -294,7 +241,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-// ✅ Claude AuthModal (full)
+// ✅ REPLACED AuthModal (Claude version)
 function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -522,9 +469,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
                 <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes generous monthly usage. Photos count as two checks.
-              </p>
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Includes generous monthly usage. Photos count as two checks.</p>
             </div>
 
             <div className={`ui-badge ${inter.className}`}>
@@ -622,9 +567,12 @@ export default function Page() {
     }
   }, [messages])
 
+  // ✅ Make /?showPricing=true actually open the pricing modal (used by accept-terms flow)
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
-    if (showPricing === 'true') setShowPricingModal(true)
+    if (showPricing === 'true') {
+      setShowPricingModal(true)
+    }
   }, [searchParams])
 
   useEffect(() => {
@@ -641,7 +589,7 @@ export default function Page() {
         return
       }
 
-      // ✅ only force accept-terms if profile exists and says NOT accepted
+      // ✅ Enforce Accept Terms before app usage
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -650,7 +598,8 @@ export default function Page() {
           .maybeSingle()
 
         const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
-        if (profile && !accepted) {
+
+        if (!accepted) {
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -658,7 +607,10 @@ export default function Page() {
         }
       } catch (e) {
         console.error('Policy check error', e)
-        // fail-open: do NOT block user on accept-terms if query fails
+        setHasActiveSubscription(false)
+        setIsLoading(false)
+        router.replace('/accept-terms')
+        return
       }
 
       let active = false
@@ -673,7 +625,7 @@ export default function Page() {
             .in('status', ['active', 'trialing'])
             .maybeSingle()
 
-          if (sub?.current_period_end) {
+          if (sub && sub.current_period_end) {
             const end = new Date(sub.current_period_end)
             if (end > new Date()) active = true
           }
@@ -707,17 +659,21 @@ export default function Page() {
       isMounted = false
       data.subscription?.unsubscribe()
     }
-  }, [supabase, router])
+  }, [supabase, searchParams, router])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
     document.body.classList.add('ui-enterprise-bg')
-    return () => document.body.classList.remove('ui-enterprise-bg')
+    return () => {
+      document.body.classList.remove('ui-enterprise-bg')
+    }
   }, [])
 
   useEffect(() => {
     function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false)
+      }
     }
     function handleKey(event) {
       if (event.key === 'Escape') setShowUserMenu(false)
@@ -761,8 +717,11 @@ export default function Page() {
       }
 
       const payload = await res.json()
-      if (payload.url) window.location.href = payload.url
-      else throw new Error('No checkout URL returned')
+      if (payload.url) {
+        window.location.href = payload.url
+      } else {
+        throw new Error('No checkout URL returned')
+      }
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
@@ -770,42 +729,34 @@ export default function Page() {
     }
   }
 
-  // ✅ Billing portal button (for active subscribers)
+  // ✅ Stripe Billing Portal (replaces Manage Subscription button)
   const handleManageBilling = async () => {
-    let toastEl = null
     try {
       setShowUserMenu(false)
 
-      if (typeof document !== 'undefined') {
-        toastEl = document.createElement('div')
-        toastEl.textContent = 'Opening billing portal...'
-        toastEl.className = 'ui-floating-toast'
-        document.body.appendChild(toastEl)
-      }
+      // Show loading state
+      const loadingToast = document.createElement('div')
+      loadingToast.textContent = 'Opening billing portal...'
+      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
+      document.body.appendChild(loadingToast)
 
-      const { data } = await supabase.auth.getSession()
-      const headers = { 'Content-Type': 'application/json' }
-      if (data?.session?.access_token) headers.Authorization = `Bearer ${data.session.access_token}`
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
 
-      const res = await fetch('/api/create-portal-session', { method: 'POST', headers })
-      const payload = await res.json().catch(() => ({}))
-
-      if (toastEl && typeof document !== 'undefined' && document.body.contains(toastEl)) document.body.removeChild(toastEl)
+      document.body.removeChild(loadingToast)
 
       if (!res.ok) {
-        alert(payload.error || 'Failed to open billing portal')
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Failed to open billing portal')
         return
       }
 
-      if (!payload.url) {
-        alert('Failed to open billing portal')
-        return
-      }
-
-      window.location.href = payload.url
-    } catch (e) {
-      console.error('Billing portal error:', e)
-      if (toastEl && typeof document !== 'undefined' && document.body.contains(toastEl)) document.body.removeChild(toastEl)
+      const { url } = await res.json()
+      window.location.href = url
+    } catch (error) {
+      console.error('Billing portal error:', error)
       alert('Failed to open billing portal')
     }
   }
@@ -846,6 +797,7 @@ export default function Page() {
     if (fileInputRef.current) fileInputRef.current.value = ''
 
     shouldAutoScrollRef.current = true
+
     let activeChatId = currentChatId
 
     try {
@@ -894,14 +846,20 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: data.message || 'No response.',
+        }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
+        updated[updated.length - 1] = {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+        }
         return updated
       })
     } finally {
@@ -934,174 +892,358 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        :root {
-          --bg0: #05050b;
-          --bg1: #070814;
-          --glass: rgba(255, 255, 255, 0.06);
-          --glass2: rgba(255, 255, 255, 0.09);
-          --line: rgba(255, 255, 255, 0.12);
-          --line2: rgba(255, 255, 255, 0.16);
-          --text: rgba(255, 255, 255, 0.92);
-          --muted: rgba(255, 255, 255, 0.55);
-          --muted2: rgba(255, 255, 255, 0.4);
-          --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
-          --shadow2: 0 14px 36px rgba(0, 0, 0, 0.45);
-          --r: 22px;
-        }
-
         html,
         body {
           height: 100%;
-          background: var(--bg0);
+          width: 100%;
         }
 
-        .ui-enterprise-bg {
-          background: radial-gradient(1200px 600px at 20% -10%, rgba(102, 51, 255, 0.18), transparent 60%),
-            radial-gradient(900px 600px at 95% 0%, rgba(0, 255, 200, 0.1), transparent 55%),
-            radial-gradient(1000px 700px at 60% 120%, rgba(0, 140, 255, 0.14), transparent 55%),
-            linear-gradient(180deg, var(--bg0), var(--bg1));
-          color: var(--text);
+        body.ui-enterprise-bg {
+          overflow: hidden;
+          background: #050608;
+          color: rgba(255, 255, 255, 0.94);
+          --ui-lamp: 1.04;
+          --ui-vignette: 0.94;
+          background-image: none !important; /* ✅ kill any grid background-image */
         }
 
-        /* subtle tacky grid */
-        .ui-enterprise-bg:before {
+        /* ✅ Clean black aurora (NO conic / NO grid feel) */
+        body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
-          inset: 0;
+          inset: -12%;
           pointer-events: none;
-          opacity: 0.22;
-          background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-          background-size: 34px 34px;
-          mask-image: radial-gradient(900px 600px at 50% 10%, black 50%, transparent 100%);
-          z-index: 0;
+          background: radial-gradient(1100px 560px at 50% -16%, rgba(255, 255, 255, 0.11), transparent 62%),
+            radial-gradient(980px 600px at 16% 6%, rgba(0, 255, 210, 0.05), transparent 64%),
+            radial-gradient(980px 600px at 86% 4%, rgba(140, 110, 255, 0.05), transparent 66%),
+            radial-gradient(1200px 820px at 50% 118%, rgba(255, 255, 255, 0.03), transparent 66%);
+          opacity: 0.9;
+          filter: brightness(var(--ui-lamp)) saturate(1.12);
+          transform: translateZ(0);
+          will-change: transform;
+          animation: uiAurora 18s ease-in-out infinite alternate;
+          background-repeat: no-repeat;
         }
 
-        /* floating ribbon glow */
-        .ui-enterprise-bg:after {
-          content: '';
-          position: fixed;
-          inset: -200px;
-          pointer-events: none;
-          background: conic-gradient(
-            from 120deg at 50% 40%,
-            rgba(102, 51, 255, 0.18),
-            rgba(0, 255, 200, 0.08),
-            rgba(0, 140, 255, 0.14),
-            rgba(255, 120, 0, 0.06),
-            rgba(102, 51, 255, 0.18)
-          );
-          filter: blur(80px);
-          opacity: 0.25;
-          animation: uiGlow 18s linear infinite;
-          z-index: 0;
-        }
-
-        @keyframes uiGlow {
+        @keyframes uiAurora {
           0% {
-            transform: translate3d(0, 0, 0) rotate(0deg);
+            transform: translate3d(0%, 0%, 0) scale(1);
           }
           50% {
-            transform: translate3d(40px, -30px, 0) rotate(180deg);
+            transform: translate3d(-2%, -1%, 0) scale(1.04);
           }
           100% {
-            transform: translate3d(0, 0, 0) rotate(360deg);
+            transform: translate3d(2%, 0%, 0) scale(1.08);
           }
         }
 
-        /* Shell */
-        .ui-shell {
-          position: relative;
-          z-index: 1;
-          border-radius: calc(var(--r) + 6px);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: var(--shadow);
-          overflow: hidden;
-          backdrop-filter: blur(18px);
-        }
-
-        .ui-shell:before {
+        /* ✅ Vignette */
+        body.ui-enterprise-bg::after {
           content: '';
-          position: absolute;
+          position: fixed;
           inset: 0;
           pointer-events: none;
-          background: radial-gradient(900px 500px at 20% 0%, rgba(255, 255, 255, 0.08), transparent 60%),
-            radial-gradient(700px 450px at 90% 10%, rgba(255, 255, 255, 0.06), transparent 55%);
-          opacity: 0.8;
+          background: radial-gradient(
+              420px 360px at 50% 34%,
+              rgba(0, 0, 0, 0) 0%,
+              rgba(0, 0, 0, 0.55) 62%,
+              rgba(0, 0, 0, 0.9) 100%
+            ),
+            radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
+          opacity: var(--ui-vignette);
+          transform: translateZ(0);
+          background-image: none !important; /* ✅ kill any grid overlay */
         }
 
-        /* Header */
+        :root {
+          scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+          scrollbar-width: thin;
+        }
+        ::-webkit-scrollbar {
+          width: 9px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.12);
+          border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.18);
+        }
+
         .ui-header {
-          position: relative;
-          z-index: 10;
-          background: rgba(8, 9, 18, 0.42);
-          backdrop-filter: blur(18px);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(5, 6, 8, 0.78);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
         }
 
+        /* ✅ Force “no pill” logo + slightly bigger */
         .ui-logo {
           display: inline-flex;
           align-items: baseline;
           gap: 0;
-          padding: 8px 12px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+          user-select: none;
+          background: transparent !important;
+          border: none !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
         }
         .ui-logo-protocol {
-          letter-spacing: -0.02em;
-          font-weight: 800;
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.95);
+          font-size: 17px;
+          font-weight: 900;
+          letter-spacing: -0.04em;
+          color: rgba(255, 255, 255, 0.92);
+          line-height: 1;
         }
         .ui-logo-lm {
-          letter-spacing: -0.02em;
-          font-weight: 800;
-          font-size: 14px;
-          color: rgba(180, 220, 255, 0.95);
+          font-size: 17px;
+          font-weight: 950;
+          letter-spacing: -0.04em;
+          color: rgba(255, 255, 255, 0.92);
+          line-height: 1;
+        }
+        @media (min-width: 640px) {
+          .ui-logo-protocol,
+          .ui-logo-lm {
+            font-size: 18px;
+          }
         }
 
-        /* Buttons */
-        .ui-btn {
+        .ui-shell {
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          border-radius: 22px;
+          overflow: hidden;
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+          position: relative;
+        }
+
+        .ui-shell::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          pointer-events: none;
+          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
+          opacity: 0.8;
+        }
+
+        .ui-hero {
+          padding: 32px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-title {
+          font-size: clamp(32px, 4vw, 52px);
+          line-height: 1.05;
+          letter-spacing: -0.05em;
+          margin-bottom: 10px;
+          color: rgba(255, 255, 255, 0.96);
+        }
+
+        .ui-subtitle {
+          font-size: 16px;
+          line-height: 1.4;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 10px;
+          max-width: 70ch;
+        }
+
+        .ui-body {
+          font-size: 13px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
+          max-width: 78ch;
+        }
+
+        .ui-cta-row {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 18px;
+        }
+
+        .ui-section-divider {
+          height: 1px;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ui-section {
+          padding: 28px 32px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-final {
+          padding: 28px 32px 26px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .ui-finalinner {
+          display: flex;
+          gap: 18px;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+        }
+
+        .ui-h2 {
+          font-size: 20px;
+          letter-spacing: -0.02em;
+          color: rgba(255, 255, 255, 0.94);
+          margin-bottom: 8px;
+        }
+
+        .ui-p {
+          font-size: 13px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
+          max-width: 72ch;
+        }
+
+        .ui-featuregrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        @media (min-width: 980px) {
+          .ui-featuregrid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        .ui-stepcard {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 12px;
+        }
+
+        .ui-stephead {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+        }
+
+        .ui-stepicon {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
-          border-radius: 14px;
-          padding: 10px 14px;
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease,
-            opacity 160ms ease;
-          user-select: none;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.92);
-        }
-        .ui-btn:hover {
-          transform: translateY(-1px);
-          border-color: rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: var(--shadow2);
-        }
-        .ui-btn:active {
-          transform: translateY(0px);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.7);
+          flex-shrink: 0;
         }
 
-        .ui-btn-primary {
-          background: linear-gradient(135deg, rgba(100, 140, 255, 0.35), rgba(102, 51, 255, 0.25));
-          border-color: rgba(170, 200, 255, 0.22);
+        /* ✅ Slightly bigger text so it balances the icon */
+        .ui-steptitle {
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          color: rgba(255, 255, 255, 0.92);
         }
-        .ui-btn-primary:hover {
-          background: linear-gradient(135deg, rgba(110, 150, 255, 0.42), rgba(120, 70, 255, 0.3));
-          border-color: rgba(190, 220, 255, 0.32);
+
+        .ui-stepbody {
+          font-size: 13px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
         }
-        .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.14);
+
+        .ui-faq {
+          margin-top: 12px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.01);
+          overflow: hidden;
+        }
+
+        .ui-faqitem {
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .ui-faqitem:first-child {
+          border-top: none;
+        }
+
+        .ui-faqbtn {
+          width: 100%;
+          text-align: left;
+          padding: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.92);
+          outline: none;
+        }
+
+        .ui-faqbtn:hover {
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .ui-faqq {
+          font-size: 12px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .ui-faqchev {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.7);
+          transition: transform 140ms ease;
+          flex-shrink: 0;
+        }
+        .ui-faqchev.is-open {
+          transform: rotate(180deg);
+        }
+
+        .ui-faqpanel {
+          max-height: 0px;
+          overflow: hidden;
+          transition: max-height 180ms ease;
+        }
+        .ui-faqpanel.is-open {
+          max-height: 240px;
+        }
+
+        .ui-faqa {
+          padding: 0 12px 12px;
+          font-size: 12px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        .ui-footerline {
+          padding: 14px 22px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 13px;
+        }
+
+        .ui-btn {
+          border-radius: 12px;
+          padding: 11px 14px;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease,
+            opacity 120ms ease;
+          user-select: none;
         }
 
         .ui-btn-inner {
@@ -1109,7 +1251,43 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          min-height: 20px;
+        }
+
+        .ui-btn:hover {
+          transform: scale(1.02);
+        }
+        .ui-btn:active {
+          transform: scale(1.01);
+        }
+
+        .ui-btn-primary {
+          background: #ffffff;
+          color: #000000;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        }
+        .ui-btn-primary:hover {
+          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
+        }
+
+        .ui-btn-secondary {
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .ui-btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .ui-btn:focus-visible,
+        .ui-icon-btn:focus-visible,
+        .ui-faqbtn:focus-visible,
+        .ui-input:focus-visible,
+        .ui-menuitem:focus-visible,
+        .ui-avatar-btn:focus-visible {
+          outline: 2px solid rgba(255, 255, 255, 0.22);
+          outline-offset: 2px;
         }
 
         .ui-icon-btn {
@@ -1120,318 +1298,244 @@ export default function Page() {
           justify-content: center;
           border-radius: 14px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.85);
-          transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.82);
+          transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
         }
         .ui-icon-btn:hover {
-          transform: translateY(-1px);
-          background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.18);
-        }
-
-        .ui-avatar-btn {
-          width: 44px;
-          height: 44px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(80, 120, 255, 0.12));
-          color: rgba(255, 255, 255, 0.9);
-          font-weight: 800;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* User menu */
-        .ui-usermenu {
-          position: absolute;
-          right: 0;
-          top: 52px;
-          width: 260px;
-          border-radius: 18px;
-          background: rgba(10, 12, 22, 0.6);
-          backdrop-filter: blur(18px);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          box-shadow: var(--shadow2);
-          overflow: hidden;
-          z-index: 50;
-        }
-        .ui-menuheader {
-          padding: 12px 12px 10px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .ui-useremail {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.86);
-          word-break: break-word;
-        }
-        .ui-userstatus {
-          margin-top: 4px;
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.55);
-        }
-        .ui-menuitem {
-          width: 100%;
-          text-align: left;
-          padding: 10px 12px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.84);
-          background: transparent;
-          border: 0;
-          cursor: pointer;
-          transition: background 140ms ease;
-        }
-        .ui-menuitem:hover {
-          background: rgba(255, 255, 255, 0.06);
-        }
-        .ui-menuitem-logout {
-          color: rgba(255, 170, 170, 0.95);
-        }
-        .ui-menuitem-icon {
-          width: 28px;
-          height: 28px;
-          border-radius: 10px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .ui-menudivider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.1);
-          margin: 6px 0;
-        }
-        .ui-menufooter {
-          padding: 10px 12px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .ui-menuhelp {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Hero + sections */
-        .ui-hero {
-          padding: 28px 22px 10px;
-          position: relative;
-          z-index: 1;
-        }
-        .ui-title {
-          font-size: clamp(32px, 4.2vw, 46px);
-          letter-spacing: -0.04em;
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.12);
           color: rgba(255, 255, 255, 0.95);
-          line-height: 1.05;
-        }
-        .ui-subtitle {
-          margin-top: 10px;
-          font-size: 15px;
-          color: rgba(255, 255, 255, 0.66);
-        }
-        .ui-body {
-          margin-top: 14px;
-          font-size: 14px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.72);
-          max-width: 60ch;
-        }
-        .ui-cta-row {
-          margin-top: 18px;
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .ui-section-divider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.08);
-          margin: 18px 0;
-        }
-        .ui-section {
-          padding: 0 22px 18px;
-        }
-        .ui-h2 {
-          font-size: 18px;
-          letter-spacing: -0.02em;
-          color: rgba(255, 255, 255, 0.92);
-        }
-        .ui-p {
-          margin-top: 8px;
-          font-size: 13px;
-          line-height: 1.55;
-          color: rgba(255, 255, 255, 0.7);
-          max-width: 60ch;
+          transform: scale(1.02);
         }
 
-        /* feature cards */
-        .ui-featuregrid {
-          display: grid;
-          grid-template-columns: repeat(1, minmax(0, 1fr));
-          gap: 12px;
-        }
-        @media (min-width: 640px) {
-          .ui-featuregrid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        .ui-stepcard {
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
-          position: relative;
-          overflow: hidden;
-        }
-        .ui-stepcard:before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background: radial-gradient(600px 220px at 10% 0%, rgba(255, 255, 255, 0.07), transparent 60%),
-            radial-gradient(500px 240px at 80% 20%, rgba(255, 255, 255, 0.05), transparent 60%);
-          opacity: 0.9;
-        }
-        .ui-stephead {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 14px 14px 8px;
-          position: relative;
-          z-index: 1;
-        }
-        .ui-stepicon {
-          width: 38px;
-          height: 38px;
-          border-radius: 14px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(140, 190, 255, 0.06));
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .ui-steptitle {
-          font-weight: 700;
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .ui-stepbody {
-          padding: 0 14px 14px;
-          font-size: 13px;
-          line-height: 1.55;
-          color: rgba(255, 255, 255, 0.68);
-          position: relative;
-          z-index: 1;
-        }
-
-        /* FAQ */
-        .ui-faq {
-          margin-top: 10px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          overflow: hidden;
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .ui-faqitem + .ui-faqitem {
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .ui-faqbtn {
-          width: 100%;
-          padding: 12px 12px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          background: transparent;
-          border: 0;
-          cursor: pointer;
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .ui-faqq {
-          text-align: left;
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.86);
-          font-weight: 600;
-        }
-        .ui-faqchev {
-          width: 34px;
-          height: 34px;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: transform 160ms ease;
-          color: rgba(255, 255, 255, 0.75);
-        }
-        .ui-faqchev.is-open {
-          transform: rotate(180deg);
-        }
-        .ui-faqpanel {
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 220ms ease;
-        }
-        .ui-faqpanel.is-open {
-          max-height: 240px;
-        }
-        .ui-faqa {
-          padding: 0 12px 12px;
-          font-size: 13px;
-          line-height: 1.55;
-          color: rgba(255, 255, 255, 0.66);
-        }
-
-        /* Footerline */
-        .ui-footerline {
-          padding: 14px 22px 18px;
-          color: rgba(255, 255, 255, 0.55);
-          font-size: 12px;
-          text-align: center;
-        }
-
-        /* Final CTA */
-        .ui-final {
-          padding: 0 22px 22px;
-        }
-        .ui-finalinner {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(135deg, rgba(90, 130, 255, 0.14), rgba(255, 255, 255, 0.04));
-          padding: 18px;
-          display: flex;
-          gap: 14px;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-        }
-
-        /* Modals */
         .ui-backdrop {
-          background: rgba(0, 0, 0, 0.66);
+          background: rgba(0, 0, 0, 0.8);
           backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
         }
+
         .ui-modal {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(10, 12, 22, 0.62);
-          box-shadow: var(--shadow);
-          backdrop-filter: blur(18px);
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(6, 7, 9, 0.88);
+          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }
+
         .ui-modal-anim {
           animation: uiPop 180ms ease-out both;
+          transform-origin: 50% 40%;
         }
         @keyframes uiPop {
           from {
             opacity: 0;
-            transform: translateY(10px) scale(0.98);
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .ui-input {
+          width: 100%;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 10px 12px;
+          color: rgba(255, 255, 255, 0.94);
+          outline: none;
+          transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+        }
+        .ui-input::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+        .ui-input:focus {
+          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+        }
+
+        .ui-toast {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          border-radius: 12px;
+          padding: 10px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .ui-toast-ok {
+          border-color: rgba(34, 197, 94, 0.35);
+        }
+        .ui-toast-err {
+          border-color: rgba(239, 68, 68, 0.35);
+        }
+        .ui-toasticon {
+          margin-top: 1px;
+          color: rgba(255, 255, 255, 0.75);
+        }
+        .ui-toasttext {
+          font-size: 12px;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .ui-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.7);
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          font-weight: 800;
+          width: fit-content;
+        }
+
+        .ui-pricewrap {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .ui-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .ui-divider {
+          height: 1px;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ui-bubble {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          color: rgba(255, 255, 255, 0.94);
+        }
+
+        .ui-bubble-user {
+          border: none !important;
+          background: transparent !important;
+          color: rgba(255, 255, 255, 0.94) !important;
+          padding: 0 !important;
+          border-radius: 0 !important;
+          font-weight: 600;
+        }
+
+        .ui-chatimgwrap {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          border-radius: 16px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+        .ui-chatimg {
+          display: block;
+          width: 100%;
+          border: none !important;
+          outline: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          max-height: 280px;
+          object-fit: contain;
+        }
+
+        .ui-thinking {
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+
+        .ui-emptywrap {
+          border: none !important;
+          background: rgba(255, 255, 255, 0.02) !important;
+          border-radius: 18px;
+          padding: 16px;
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+          max-width: 520px;
+          width: 100%;
+        }
+
+        .ui-attachpill {
+          border: none !important;
+          background: rgba(255, 255, 255, 0.04) !important;
+          border-radius: 14px;
+          padding: 10px 12px;
+          color: rgba(255, 255, 255, 0.75);
+        }
+
+        .ui-spinner {
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          border: 2px solid rgba(0, 0, 0, 0.18);
+          border-top-color: rgba(0, 0, 0, 0.65);
+          animation: spin 700ms linear infinite;
+        }
+        .ui-spinner-lg {
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          border: 2px solid rgba(255, 255, 255, 0.16);
+          border-top-color: rgba(255, 255, 255, 0.75);
+          animation: spin 700ms linear infinite;
+        }
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* =========================
+           PREMIUM USER MENU STYLES
+           ========================= */
+
+        .ui-usermenu {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 8px);
+          width: 280px;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.98));
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) inset, 0 20px 80px rgba(0, 0, 0, 0.7);
+          overflow: hidden;
+          animation: uiMenuSlide 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+          transform-origin: top right;
+          z-index: 1000;
+        }
+
+        @keyframes uiMenuSlide {
+          from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.96);
           }
           to {
             opacity: 1;
@@ -1439,204 +1543,191 @@ export default function Page() {
           }
         }
 
-        /* inputs */
-        .ui-input {
-          width: 100%;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.9);
-          padding: 12px 12px;
-          outline: none;
-          transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
-        }
-        .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.35);
-        }
-        .ui-input:focus {
-          border-color: rgba(170, 200, 255, 0.35);
-          box-shadow: 0 0 0 4px rgba(100, 140, 255, 0.12);
-          background: rgba(255, 255, 255, 0.07);
+        .ui-usermenu::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: 18px;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+          opacity: 0.6;
         }
 
-        /* Pricing bits */
-        .ui-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
+        .ui-menuheader {
+          padding: 16px 18px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+        }
+
+        .ui-useremail {
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.95);
+          margin-bottom: 4px;
+          letter-spacing: -0.01em;
+          word-break: break-word;
+        }
+
+        .ui-userstatus {
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.72);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-          padding: 6px 10px;
-          border-radius: 999px;
-        }
-        .ui-pricewrap {
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .ui-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 12px;
+          color: rgba(255, 255, 255, 0.5);
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
           font-weight: 600;
         }
-        .ui-divider {
+
+        .ui-menudivider {
           height: 1px;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
+          margin: 8px 0;
         }
 
-        /* Chat */
-        .ui-emptywrap {
-          max-width: 520px;
-          padding: 22px;
-          border-radius: 22px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.04);
-          box-shadow: var(--shadow2);
-        }
-        .ui-emptyicon {
-          width: 52px;
-          height: 52px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.06);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .ui-emptytitle {
-          font-size: 14px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.9);
-        }
-        .ui-emptytext {
-          margin-top: 6px;
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.65);
-          line-height: 1.55;
-        }
-
-        .ui-bubble {
-          border-radius: 18px;
-          padding: 12px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-          color: rgba(255, 255, 255, 0.86);
-          box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
-          line-height: 1.55;
-          font-size: 13.5px;
-        }
-        .ui-bubble-user {
-          background: linear-gradient(135deg, rgba(90, 130, 255, 0.18), rgba(255, 255, 255, 0.05));
-          border-color: rgba(170, 200, 255, 0.18);
-        }
-
-        .ui-chatimgwrap {
-          margin-bottom: 8px;
-          border-radius: 14px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(0, 0, 0, 0.3);
-        }
-        .ui-chatimg {
+        .ui-menuitem {
           width: 100%;
-          height: auto;
-          display: block;
-        }
-
-        .ui-attachpill {
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.06);
-          padding: 6px 10px;
-          color: rgba(255, 255, 255, 0.75);
-        }
-
-        /* Toast + spinners */
-        .ui-toast {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-          padding: 10px 10px;
           display: flex;
           align-items: center;
-          gap: 10px;
-          color: rgba(255, 255, 255, 0.8);
+          gap: 12px;
+          padding: 12px 18px;
+          text-align: left;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.85);
+          transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
+          background: transparent;
+          border: none;
+          cursor: pointer;
         }
-        .ui-toast-err {
-          border-color: rgba(255, 120, 120, 0.24);
-          background: rgba(255, 120, 120, 0.08);
+
+        .ui-menuitem::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 3px;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
+          transform: translateX(-3px);
+          transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .ui-toast-ok {
-          border-color: rgba(120, 255, 180, 0.22);
-          background: rgba(120, 255, 180, 0.07);
+
+        .ui-menuitem:hover {
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.98);
+          transform: translateX(2px);
         }
-        .ui-toasticon {
-          width: 34px;
-          height: 34px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
+
+        .ui-menuitem:hover::before {
+          transform: translateX(0);
+        }
+
+        .ui-menuitem:active {
+          transform: translateX(2px) scale(0.99);
+        }
+
+        .ui-menuitem-icon {
+          width: 20px;
+          height: 20px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-        }
-        .ui-toasttext {
-          font-size: 13px;
-          line-height: 1.4;
+          opacity: 0.7;
+          transition: opacity 140ms ease;
         }
 
-        .ui-spinner,
-        .ui-spinner-lg {
-          display: inline-block;
-          border-radius: 999px;
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          border-top-color: rgba(255, 255, 255, 0.85);
-          animation: uiSpin 0.9s linear infinite;
-        }
-        .ui-spinner {
-          width: 16px;
-          height: 16px;
-        }
-        .ui-spinner-lg {
-          width: 28px;
-          height: 28px;
-          border-width: 3px;
-        }
-        @keyframes uiSpin {
-          to {
-            transform: rotate(360deg);
-          }
+        .ui-menuitem:hover .ui-menuitem-icon {
+          opacity: 1;
         }
 
-        .ui-floating-toast {
-          position: fixed;
-          top: 14px;
-          right: 14px;
-          z-index: 9999;
-          padding: 10px 12px;
+        .ui-menuitem-logout {
+          color: rgba(239, 68, 68, 0.85);
+        }
+
+        .ui-menuitem-logout:hover {
+          background: rgba(239, 68, 68, 0.08);
+          color: rgba(239, 68, 68, 0.95);
+        }
+
+        .ui-menuitem-logout::before {
+          background: linear-gradient(180deg, rgba(239, 68, 68, 0.8), rgba(239, 68, 68, 0.5));
+        }
+
+        .ui-menufooter {
+          padding: 12px 18px 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(0, 0, 0, 0.3);
+        }
+
+        .ui-menuhelp {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.4);
+          text-align: center;
+          letter-spacing: 0.04em;
+        }
+
+        .ui-avatar-btn {
+          width: 44px;
+          height: 44px;
           border-radius: 14px;
-          background: rgba(10, 12, 22, 0.72);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          backdrop-filter: blur(16px);
-          color: rgba(255, 255, 255, 0.86);
-          box-shadow: var(--shadow2);
-          font-size: 13px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+          color: rgba(255, 255, 255, 0.9);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 15px;
+          font-weight: 700;
+          transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+          position: relative;
+          overflow: hidden;
+          user-select: none;
+        }
+
+        .ui-avatar-btn::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+          opacity: 0;
+          transition: opacity 140ms ease;
+        }
+
+        .ui-avatar-btn:hover {
+          transform: scale(1.04);
+          border-color: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        }
+
+        .ui-avatar-btn:hover::before {
+          opacity: 1;
+        }
+
+        .ui-avatar-btn:active {
+          transform: scale(1.02);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            scroll-behavior: auto !important;
+            animation: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onCheckout={handleCheckout}
+        loading={checkoutLoading}
+      />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
@@ -1658,9 +1749,12 @@ export default function Page() {
                 )}
               </div>
 
-              <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
-                Made in Washtenaw County for Washtenaw County.
-              </div>
+              {/* ✅ Landing page only (remove when signed in) */}
+              {!isAuthenticated && (
+                <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
+                  Made in Washtenaw County for Washtenaw County.
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 {!isAuthenticated ? (
@@ -1696,7 +1790,9 @@ export default function Page() {
                         <div className="ui-usermenu">
                           <div className="ui-menuheader">
                             <div className={`ui-useremail ${inter.className}`}>{session?.user?.email || 'Signed in'}</div>
-                            <div className={`ui-userstatus ${inter.className}`}>{hasActiveSubscription ? '● Active Premium' : 'Free Account'}</div>
+                            <div className={`ui-userstatus ${inter.className}`}>
+                              {hasActiveSubscription ? '● Active Premium' : 'Free Account'}
+                            </div>
                           </div>
 
                           <div>
@@ -1718,7 +1814,7 @@ export default function Page() {
                                 <span className="ui-menuitem-icon">
                                   <Icons.Settings />
                                 </span>
-                                <span>Start Trial / Upgrade</span>
+                                <span>Start Trial</span>
                               </button>
                             )}
 
@@ -1762,9 +1858,12 @@ export default function Page() {
               </div>
             </div>
 
-            <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
-              Made in Washtenaw County for Washtenaw County.
-            </div>
+            {/* ✅ Landing page only (remove when signed in) */}
+            {!isAuthenticated && (
+              <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
+                Made in Washtenaw County for Washtenaw County.
+              </div>
+            )}
           </div>
         </header>
 
@@ -1847,7 +1946,12 @@ export default function Page() {
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
-                      <button onClick={() => setSelectedImage(null)} className="ui-icon-btn !w-10 !h-10" aria-label="Remove image" title="Remove">
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="ui-icon-btn !w-10 !h-10"
+                        aria-label="Remove image"
+                        title="Remove"
+                      >
                         <Icons.X />
                       </button>
                     </div>
