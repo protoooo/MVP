@@ -482,26 +482,26 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="space-y-3">
             <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading && loading !== 'monthly'}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="ui-btn-inner">
-                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
-                Start trial
-              </span>
-            </button>
+  onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+  disabled={!!loading}
+  className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+>
+  <span className="ui-btn-inner">
+    {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
+    Start trial
+  </span>
+</button>
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading && loading !== 'annual'}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="ui-btn-inner">
-                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-                Annual · $1,000/yr
-              </span>
-            </button>
+<button
+  onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+  disabled={!!loading}
+  className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+>
+  <span className="ui-btn-inner">
+    {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
+    Annual · $1,000/yr
+  </span>
+</button>
 
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
@@ -622,11 +622,14 @@ export default function Page() {
           active = true
         } else {
           const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('status,current_period_end')
-            .eq('user_id', s.user.id)
-            .in('status', ['active', 'trialing'])
-            .maybeSingle()
+  .from('subscriptions')
+  .select('status,current_period_end')
+  .eq('user_id', s.user.id)
+  .in('status', ['active', 'trialing'])
+  .order('current_period_end', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+
 
           if (sub && sub.current_period_end) {
             const end = new Date(sub.current_period_end)
