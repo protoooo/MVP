@@ -1,5 +1,3 @@
-// REPLACE your package.json with this (adds missing tailwindcss):
-
 {
   "name": "compliance-hub",
   "version": "1.0.0",
