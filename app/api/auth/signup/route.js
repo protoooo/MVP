@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - Fixed with better error handling
+// app/api/auth/signup/route.js - Fixed version
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -100,7 +100,7 @@ export async function POST(request) {
       }
     )
 
-    // Create user profile with service role
+    // Create user profile with service role (NO EMAIL COLUMN)
     const now = new Date().toISOString()
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
