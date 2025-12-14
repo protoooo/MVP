@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - Complete webhook with email integration + dev mode fix
+// app/api/webhook/route.js - FIXED (Idempotent profile creation)
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -14,7 +14,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Map price IDs to plan names
 const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY]: 'business',
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL]: 'business',
@@ -22,11 +21,6 @@ const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
 
-// ============================================================================
-// HELPER FUNCTIONS (MUST BE DEFINED BEFORE MAIN HANDLER)
-// ============================================================================
-
-// Database-backed idempotency
 async function isEventProcessed(eventId) {
   const { data } = await supabase
     .from('processed_webhook_events')
@@ -48,7 +42,6 @@ async function markEventProcessed(eventId, eventType) {
     .onConflict('event_id')
 }
 
-// Get user email from subscription
 async function getUserEmail(userId) {
   try {
     const { data: authData } = await supabase.auth.admin.getUserById(userId)
@@ -59,7 +52,6 @@ async function getUserEmail(userId) {
   }
 }
 
-// Get user ID from subscription ID
 async function getUserIdFromSubscription(subscriptionId) {
   const { data } = await supabase
     .from('subscriptions')
@@ -70,10 +62,6 @@ async function getUserIdFromSubscription(subscriptionId) {
   return data?.user_id || null
 }
 
-// ============================================================================
-// MAIN WEBHOOK HANDLER
-// ============================================================================
-
 export async function POST(req) {
   const body = await req.text()
   const signature = headers().get('stripe-signature')
@@ -83,7 +71,6 @@ export async function POST(req) {
     return NextResponse.json({ error: 'No signature' }, { status: 401 })
   }
 
-  // Verify webhook signature
   let event
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
@@ -92,7 +79,6 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  // Check idempotency
   if (await isEventProcessed(event.id)) {
     logger.info('Duplicate webhook event ignored', { eventId: event.id })
     return NextResponse.json({ received: true, duplicate: true })
@@ -102,9 +88,6 @@ export async function POST(req) {
 
   try {
     switch (event.type) {
-      // ========================================================================
-      // CHECKOUT COMPLETED - User finished checkout, subscription created
-      // ========================================================================
       case 'checkout.session.completed': {
         const session = event.data.object
         const userId = session.metadata?.userId
@@ -115,16 +98,14 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
-        // ✅ NEW: Detect fake/test subscription IDs for development
         const isFakeId = String(subscriptionId).includes('fake') || 
                          String(subscriptionId).includes('test') || 
                          String(subscriptionId).includes('local') ||
                          String(subscriptionId).startsWith('cust_local')
 
         let subscription
-        
+
         if (isFakeId) {
-          // ✅ NEW: Use mock data for development/testing
           logger.warn('Development mode: using mock subscription data', { subscriptionId })
           
           subscription = {
@@ -143,7 +124,6 @@ export async function POST(req) {
             cancel_at_period_end: false,
           }
         } else {
-          // Fetch real subscription from Stripe
           subscription = await stripe.subscriptions.retrieve(subscriptionId)
         }
 
@@ -156,10 +136,40 @@ export async function POST(req) {
           subscriptionId,
           status: subscription.status,
           trialEnd: subscription.trial_end,
-          isFakeId // ✅ NEW: Log if using mock data
+          isFakeId
         })
 
-        // Upsert subscription to database
+        // ✅ FIXED: Create profile using UPSERT (safe from duplicates)
+        const now = new Date().toISOString()
+        
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert(
+            {
+              id: userId,
+              accepted_terms: true,
+              accepted_privacy: true,
+              terms_accepted_at: now,
+              privacy_accepted_at: now,
+              is_subscribed: true,
+              created_at: now,
+              updated_at: now
+            },
+            { 
+              onConflict: 'id',
+              ignoreDuplicates: false 
+            }
+          )
+
+        if (profileError) {
+          logger.error('Failed to upsert user profile', { 
+            error: profileError.message,
+            userId 
+          })
+          // Don't fail the webhook - profile might already exist
+        }
+
+        // ✅ Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
@@ -180,12 +190,6 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Update user profile
-        await supabase.from('user_profiles').update({ 
-          is_subscribed: true,
-          updated_at: new Date().toISOString()
-        }).eq('id', userId)
-
         logger.audit('Subscription created', { 
           userId, 
           plan: planName, 
@@ -193,7 +197,7 @@ export async function POST(req) {
           status: subscription.status
         })
 
-        // ✅ Send welcome email
+        // Send welcome email
         const userEmail = await getUserEmail(userId)
         if (userEmail) {
           const userName = userEmail.split('@')[0]
@@ -204,9 +208,6 @@ export async function POST(req) {
         break
       }
 
-      // ========================================================================
-      // SUBSCRIPTION UPDATED - Status changes (trialing → active, active → past_due, etc.)
-      // ========================================================================
       case 'customer.subscription.updated': {
         const subscription = event.data.object
         const priceId = subscription.items.data[0].price.id
@@ -223,7 +224,6 @@ export async function POST(req) {
           cancelAtPeriodEnd: subscription.cancel_at_period_end
         })
 
-        // Update subscription in database
         const { error: updateError } = await supabase.from('subscriptions').update({
           status: newStatus,
           plan: planName,
@@ -240,7 +240,6 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        // Update user profile based on subscription status
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -248,7 +247,6 @@ export async function POST(req) {
           .single()
         
         if (sub) {
-          // User has access if status is 'active' or 'trialing'
           const isActive = ['active', 'trialing'].includes(newStatus)
           
           await supabase.from('user_profiles').update({ 
@@ -261,31 +259,6 @@ export async function POST(req) {
             isSubscribed: isActive,
             status: newStatus
           })
-
-          // ✅ Email notifications for important transitions
-          const userEmail = await getUserEmail(sub.user_id)
-          if (userEmail) {
-            const userName = userEmail.split('@')[0]
-
-            // Trial converted to paid
-            if (previousStatus === 'trialing' && newStatus === 'active') {
-              logger.audit('Trial converted to paid', { 
-                userId: sub.user_id,
-                subscriptionId: subscription.id 
-              })
-              // Optional: Send "thank you for subscribing" email
-              // await emails.trialConverted(userEmail, userName)
-            }
-
-            // Subscription went past_due (payment failed)
-            if (previousStatus === 'active' && newStatus === 'past_due') {
-              logger.audit('Subscription past due - access blocked', { 
-                userId: sub.user_id,
-                subscriptionId: subscription.id 
-              })
-              // Email sent in payment_failed handler instead
-            }
-          }
         }
 
         logger.audit('Subscription status updated', { 
@@ -297,9 +270,6 @@ export async function POST(req) {
         break
       }
 
-      // ========================================================================
-      // SUBSCRIPTION DELETED - User canceled or subscription ended
-      // ========================================================================
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
         
@@ -309,7 +279,6 @@ export async function POST(req) {
           endedAt: subscription.ended_at
         })
 
-        // Mark as canceled in database
         const { error: cancelError } = await supabase.from('subscriptions').update({
           status: 'canceled',
           updated_at: new Date().toISOString(),
@@ -319,7 +288,6 @@ export async function POST(req) {
           logger.error('Failed to cancel subscription', { error: cancelError.message })
         }
 
-        // Update user profile - remove access
         const { data: sub } = await supabase
           .from('subscriptions')
           .select('user_id')
@@ -337,7 +305,6 @@ export async function POST(req) {
             subscriptionId: subscription.id
           })
 
-          // ✅ Send cancellation feedback request
           const userEmail = await getUserEmail(sub.user_id)
           if (userEmail) {
             const userName = userEmail.split('@')[0]
@@ -349,9 +316,6 @@ export async function POST(req) {
         break
       }
 
-      // ========================================================================
-      // PAYMENT FAILED - Card declined, insufficient funds, etc.
-      // ========================================================================
       case 'invoice.payment_failed': {
         const invoice = event.data.object
         
@@ -363,15 +327,12 @@ export async function POST(req) {
           nextPaymentAttempt: invoice.next_payment_attempt
         })
 
-        // Stripe automatically retries up to 3 times
-        // After 3 attempts, block access
         if (invoice.attempt_count >= 3) {
           logger.warn('Payment failed after 3 attempts - blocking access', {
             subscriptionId: invoice.subscription,
             attemptCount: invoice.attempt_count
           })
 
-          // Update subscription status to past_due
           const { error: statusError } = await supabase
             .from('subscriptions')
             .update({
@@ -386,7 +347,6 @@ export async function POST(req) {
             })
           }
 
-          // Block user access
           const userId = await getUserIdFromSubscription(invoice.subscription)
           
           if (userId) {
@@ -401,7 +361,6 @@ export async function POST(req) {
               attempts: invoice.attempt_count
             })
 
-            // ✅ Send urgent payment failure email
             const userEmail = await getUserEmail(userId)
             if (userEmail) {
               const userName = userEmail.split('@')[0]
@@ -412,23 +371,11 @@ export async function POST(req) {
               })
             }
           }
-        } else {
-          // First or second attempt - log but don't block access yet
-          logger.info('Payment failed - Stripe will retry', {
-            subscriptionId: invoice.subscription,
-            attemptCount: invoice.attempt_count,
-            nextAttempt: invoice.next_payment_attempt 
-              ? new Date(invoice.next_payment_attempt * 1000).toISOString() 
-              : 'unknown'
-          })
         }
 
         break
       }
 
-      // ========================================================================
-      // PAYMENT SUCCEEDED - Successful charge
-      // ========================================================================
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object
         
@@ -439,7 +386,6 @@ export async function POST(req) {
           currency: invoice.currency
         })
 
-        // If this was a recovery payment after past_due, restore access
         if (invoice.billing_reason === 'subscription_cycle' || invoice.billing_reason === 'subscription_update') {
           const { data: sub } = await supabase
             .from('subscriptions')
@@ -448,13 +394,11 @@ export async function POST(req) {
             .single()
           
           if (sub && sub.status === 'past_due') {
-            // Restore subscription status to active
             await supabase.from('subscriptions').update({
               status: 'active',
               updated_at: new Date().toISOString(),
             }).eq('stripe_subscription_id', invoice.subscription)
 
-            // Restore user access
             await supabase.from('user_profiles').update({ 
               is_subscribed: true,
               updated_at: new Date().toISOString()
@@ -465,7 +409,6 @@ export async function POST(req) {
               subscriptionId: invoice.subscription
             })
 
-            // ✅ Send "payment successful, access restored" email
             const userEmail = await getUserEmail(sub.user_id)
             if (userEmail) {
               const userName = userEmail.split('@')[0]
@@ -480,9 +423,6 @@ export async function POST(req) {
         break
       }
 
-      // ========================================================================
-      // DEFAULT - Log unhandled events
-      // ========================================================================
       default:
         logger.info('Unhandled webhook event', { 
           type: event.type,
@@ -490,7 +430,6 @@ export async function POST(req) {
         })
     }
 
-    // Mark event as processed
     await markEventProcessed(event.id, event.type)
 
     return NextResponse.json({ received: true })
