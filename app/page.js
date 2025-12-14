@@ -16,7 +16,17 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
+// ===== Background mode toggle (no installs) =====
+// 'unicorn' = your Chrome Ribbon (default)
+// 'blackhole' = pure CSS purple black hole (nice + smooth)
+const BACKGROUND_MODE = 'unicorn'
+
 const UNICORN_PROJECT_ID = 'qF3qXhdiOxdUeQYH8wCK' // ✅ Chrome Ribbon / UnicornStudio
+
+// Unicorn perf knobs (biggest impact on iPad stutter)
+const UNICORN_FPS = 20 // ~3x slower than 60fps (also lowers GPU load)
+const UNICORN_SCALE = 0.72
+const UNICORN_DPI = 1.0
 
 const Icons = {
   Camera: () => (
@@ -33,7 +43,7 @@ const Icons = {
   X: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y1="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="6" y1="6" x2="18" y1="18" />
     </svg>
   ),
   Check: () => (
@@ -671,6 +681,7 @@ export default function Page() {
   // ✅ UnicornStudio background loader (NO installs, just a CDN script)
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (BACKGROUND_MODE !== 'unicorn') return
 
     // dev/strict-mode safe: don’t inject twice
     const existing = document.querySelector('script[data-unicornstudio="1"]')
@@ -680,9 +691,9 @@ export default function Page() {
     if (!window.UnicornStudio) window.UnicornStudio = { isInitialized: false }
 
     const s = document.createElement('script')
-    // ✅ Updated version (still just CDN, no npm installs)
-    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.5.2/dist/unicornStudio.umd.js'
+    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js'
     s.async = true
+    s.defer = true
     s.dataset.unicornstudio = '1'
     s.onload = () => {
       try {
@@ -887,20 +898,23 @@ export default function Page() {
 
   return (
     <>
-      {/* ✅ Motion Chrome (behind everything) */}
-      <div id="ui-motion-bg" aria-hidden="true">
-        <div
-          data-us-project={UNICORN_PROJECT_ID}
-          data-us-production="true"
-          data-us-fixed="true"
-          data-us-disablemobile="true"
-          /* 3x slower than ~60fps */
-          data-us-fps="20"
-          /* reduce render load to avoid iPad Safari stutter */
-          data-us-scale="0.82"
-          data-us-dpi="1"
-        />
-      </div>
+      {/* ========= BACKGROUND LAYERS ========= */}
+      {BACKGROUND_MODE === 'unicorn' && (
+        <div id="ui-motion-bg" aria-hidden="true">
+          <div
+            data-us-project={UNICORN_PROJECT_ID}
+            data-us-fps={String(UNICORN_FPS)}
+            data-us-scale={String(UNICORN_SCALE)}
+            data-us-dpi={String(UNICORN_DPI)}
+            data-us-fixed="true"
+            data-us-disablemobile="true"
+            data-us-production="true"
+            data-us-lazyload="true"
+          />
+        </div>
+      )}
+
+      {BACKGROUND_MODE === 'blackhole' && <div id="ui-blackhole-bg" aria-hidden="true" />}
 
       <style jsx global>{`
         html,
@@ -909,26 +923,35 @@ export default function Page() {
           width: 100%;
         }
 
-        /* ======= AMEX / BLACK AURORA BACKGROUND (NO lattice) ======= */
+        /* ======= PREMIUM DARK BASE ======= */
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-          --ui-lamp: 1.06;
-          --ui-vignette: 0.92;
+
+          /* glass tuning */
+          --glass-blur: 10px;
+          --glass-sat: 110%;
+          --glass-bg: rgba(255, 255, 255, 0.06);
+          --glass-border: rgba(255, 255, 255, 0.18);
+          --glass-inner: inset 0 0 30px rgba(0, 0, 0, 0.45);
+          --glass-sheen: linear-gradient(to top right, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0));
         }
 
-        /* UnicornStudio layer (optimized: NO full-screen filter; reduce repaints) */
+        /* ======= UNICORN BACKGROUND (LESS STUTTER) ======= */
         #ui-motion-bg {
           position: fixed;
           inset: 0;
-          z-index: -30;
+          z-index: -60;
           pointer-events: none;
           overflow: hidden;
+
+          /* key: isolate blending + keep GPU layers stable */
+          isolation: isolate;
           transform: translateZ(0);
-          will-change: transform;
-          contain: paint;
-          background: #050608;
+          backface-visibility: hidden;
+          -webkit-transform: translateZ(0);
+          contain: strict;
         }
 
         #ui-motion-bg [data-us-project] {
@@ -936,48 +959,147 @@ export default function Page() {
           inset: 0;
           width: 100%;
           height: 100%;
-          opacity: 0.55;
+          opacity: 0.88;
           transform: translateZ(0);
+          backface-visibility: hidden;
         }
 
-        /* Dark “veil” to mute color without using GPU-heavy filter on the animation */
+        /* Replace heavy CSS filter() with lighter overlays */
+        #ui-motion-bg::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          /* desaturate via blending (instead of filter) */
+          background: rgba(0, 0, 0, 0.92);
+          mix-blend-mode: saturation;
+          pointer-events: none;
+        }
         #ui-motion-bg::after {
           content: '';
           position: absolute;
           inset: 0;
+          /* darken + premium contrast */
+          background: radial-gradient(1200px 700px at 60% 10%, rgba(255, 255, 255, 0.08), transparent 60%),
+            radial-gradient(900px 800px at 15% 0%, rgba(255, 255, 255, 0.05), transparent 65%),
+            rgba(0, 0, 0, 0.55);
+          mix-blend-mode: multiply;
+          pointer-events: none;
+        }
+
+        /* ======= PURE CSS PURPLE BLACK HOLE (OPTION) ======= */
+        #ui-blackhole-bg {
+          position: fixed;
+          inset: 0;
+          z-index: -60;
+          pointer-events: none;
+          overflow: hidden;
+          background: #050608;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          contain: strict;
+        }
+
+        /* halo + disk */
+        #ui-blackhole-bg::before {
+          content: '';
+          position: absolute;
+          inset: -20%;
+          /* place it on the right like the Backseasy hero */
+          transform: translate3d(18%, 2%, 0);
+          background:
+            radial-gradient(circle at 72% 52%, rgba(210, 160, 255, 0.30) 0%, rgba(150, 70, 255, 0.18) 14%, rgba(80, 10, 190, 0.10) 26%, transparent 58%),
+            radial-gradient(circle at 72% 52%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 18%, transparent 44%),
+            radial-gradient(circle at 72% 52%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.95) 11%, transparent 12%),
+            conic-gradient(
+              from 20deg at 72% 52%,
+              rgba(255, 255, 255, 0) 0deg,
+              rgba(200, 140, 255, 0.0) 40deg,
+              rgba(190, 120, 255, 0.85) 85deg,
+              rgba(255, 255, 255, 0.9) 110deg,
+              rgba(170, 90, 255, 0.7) 145deg,
+              rgba(255, 255, 255, 0) 200deg,
+              rgba(255, 255, 255, 0) 360deg
+            );
+          filter: blur(10px);
+          opacity: 0.95;
+          mix-blend-mode: screen;
+          will-change: transform;
+          animation: bhSpin 10s linear infinite;
+        }
+
+        /* lensing streak */
+        #ui-blackhole-bg::after {
+          content: '';
+          position: absolute;
+          left: 46%;
+          top: 46%;
+          width: 1100px;
+          height: 6px;
+          transform: translate3d(0, 0, 0) rotate(-12deg);
+          background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(170, 90, 255, 0.3) 30%,
+            rgba(255, 255, 255, 0.95) 55%,
+            rgba(170, 90, 255, 0.35) 72%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          filter: blur(1.5px);
+          opacity: 0.8;
+          mix-blend-mode: screen;
+          animation: bhPulse 3.8s ease-in-out infinite;
+        }
+
+        @keyframes bhSpin {
+          to {
+            transform: translate3d(18%, 2%, 0) rotate(360deg);
+          }
+        }
+
+        @keyframes bhPulse {
+          0%,
+          100% {
+            opacity: 0.65;
+            transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(0.96);
+          }
+          50% {
+            opacity: 0.9;
+            transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(1.02);
+          }
+        }
+
+        /* ======= LIGHT SHAPING + VIGNETTE ======= */
+        body.ui-enterprise-bg::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          z-index: -50;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
-            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
-            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%),
-            rgba(0, 0, 0, 0.62);
-          opacity: 0.95;
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.10), transparent 60%),
+            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.05), transparent 62%),
+            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.04), transparent 64%);
           transform: translateZ(0);
         }
 
-        /* vignette (keeps the “Amex black” focus) */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
-          z-index: -10;
+          z-index: -40;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.72) 70%);
-          opacity: var(--ui-vignette);
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.75) 70%);
           transform: translateZ(0);
         }
 
-        /* If user prefers reduced motion, just hide the animated background */
+        /* Reduced motion = stop the heavy stuff */
         @media (prefers-reduced-motion: reduce) {
           #ui-motion-bg {
             display: none;
           }
-        }
-
-        /* Mobile: even calmer */
-        @media (max-width: 768px) {
-          #ui-motion-bg [data-us-project] {
-            opacity: 0.42;
+          #ui-blackhole-bg::before,
+          #ui-blackhole-bg::after {
+            animation: none !important;
           }
         }
 
@@ -996,73 +1118,60 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* === Backseasy-style frosted glass base === */
-        .ui-frosted {
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
-          background-color: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
-          background-size: cover;
-          background-repeat: no-repeat;
-        }
-
+        /* ======= FROSTED GLASS SYSTEM ======= */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.62);
-          backdrop-filter: blur(14px) saturate(120%);
-          -webkit-backdrop-filter: blur(14px) saturate(120%);
-        }
-
-        .ui-logo {
-          display: inline-flex;
-          align-items: baseline;
-          gap: 0;
-          user-select: none;
-        }
-        .ui-logo-protocol {
-          font-size: 15px;
-          font-weight: 800;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.92);
-        }
-        .ui-logo-lm {
-          font-size: 15px;
-          font-weight: 900;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.92);
-        }
-        @media (min-width: 640px) {
-          .ui-logo-protocol,
-          .ui-logo-lm {
-            font-size: 16px;
-          }
+          border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+          background-color: rgba(6, 7, 10, 0.55);
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
         }
 
         .ui-shell {
+          border: 1px solid var(--glass-border);
+          background-color: var(--glass-bg);
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+          background-image: var(--glass-sheen);
           border-radius: 22px;
           overflow: hidden;
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72), var(--glass-inner);
           position: relative;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
-          /* frosted */
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-          background-color: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.42), 0 40px 120px rgba(0, 0, 0, 0.7);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
         }
 
-        .ui-shell::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          pointer-events: none;
-          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
-          opacity: 0.85;
+        .ui-section-divider {
+          height: 1px;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.10);
         }
 
+        .ui-stepcard,
+        .ui-faq,
+        .ui-pricewrap,
+        .ui-emptywrap {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background-color: rgba(255, 255, 255, 0.06);
+          background-image: var(--glass-sheen);
+          box-shadow: var(--glass-inner);
+        }
+
+        .ui-modal {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background-color: rgba(8, 9, 12, 0.70);
+          backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-sat));
+          -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-sat));
+          background-image: var(--glass-sheen);
+          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.78), var(--glass-inner);
+        }
+
+        .ui-backdrop {
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* ======= TYPOGRAPHY / SPACING ======= */
         .ui-hero {
           padding: 32px;
           position: relative;
@@ -1080,7 +1189,7 @@ export default function Page() {
         .ui-subtitle {
           font-size: 16px;
           line-height: 1.4;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.72);
           margin-bottom: 10px;
           max-width: 70ch;
         }
@@ -1088,7 +1197,7 @@ export default function Page() {
         .ui-body {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.58);
           max-width: 78ch;
         }
 
@@ -1097,12 +1206,6 @@ export default function Page() {
           gap: 10px;
           flex-wrap: wrap;
           margin-top: 18px;
-        }
-
-        .ui-section-divider {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.08);
         }
 
         .ui-section {
@@ -1135,7 +1238,7 @@ export default function Page() {
         .ui-p {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.58);
           max-width: 72ch;
         }
 
@@ -1148,18 +1251,6 @@ export default function Page() {
           .ui-featuregrid {
             grid-template-columns: 1fr 1fr;
           }
-        }
-
-        .ui-stepcard {
-          border-radius: 16px;
-          padding: 12px;
-          /* frosted */
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
-          background-color: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
         }
 
         .ui-stephead {
@@ -1176,11 +1267,10 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.7);
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          color: rgba(255, 255, 255, 0.82);
+          box-shadow: var(--glass-inner);
         }
 
         .ui-steptitle {
@@ -1193,24 +1283,17 @@ export default function Page() {
         .ui-stepbody {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.62);
+          color: rgba(255, 255, 255, 0.60);
         }
 
+        /* FAQ */
         .ui-faq {
           margin-top: 12px;
-          border-radius: 16px;
           overflow: hidden;
-          /* frosted */
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
-          background-color: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-faqitem {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid rgba(255, 255, 255, 0.10);
         }
         .ui-faqitem:first-child {
           border-top: none;
@@ -1236,23 +1319,22 @@ export default function Page() {
         .ui-faqq {
           font-size: 12px;
           font-weight: 700;
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.92);
         }
 
         .ui-faqchev {
           width: 44px;
           height: 44px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.82);
           transition: transform 140ms ease;
           flex-shrink: 0;
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          box-shadow: var(--glass-inner);
         }
         .ui-faqchev.is-open {
           transform: rotate(180deg);
@@ -1271,19 +1353,17 @@ export default function Page() {
           padding: 0 12px 12px;
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.62);
+          color: rgba(255, 255, 255, 0.60);
         }
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.8);
+          border-top: 1px solid rgba(255, 255, 255, 0.10);
+          color: rgba(255, 255, 255, 0.82);
           font-size: 13px;
-          background: rgba(0, 0, 0, 0.12);
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
+        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
@@ -1313,7 +1393,7 @@ export default function Page() {
         .ui-btn-primary {
           background: #ffffff;
           color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.25);
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
         .ui-btn-primary:hover {
@@ -1321,15 +1401,14 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.04);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: var(--glass-inner);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.09);
+          border-color: rgba(255, 255, 255, 0.22);
         }
 
         .ui-btn:focus-visible,
@@ -1347,70 +1426,38 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.88);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          box-shadow: var(--glass-inner);
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.09);
-          border-color: rgba(255, 255, 255, 0.16);
-          color: rgba(255, 255, 255, 0.95);
+          background: rgba(255, 255, 255, 0.10);
+          border-color: rgba(255, 255, 255, 0.22);
+          color: rgba(255, 255, 255, 0.98);
           transform: scale(1.02);
         }
 
-        .ui-backdrop {
-          background: rgba(0, 0, 0, 0.82);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-        }
-
-        .ui-modal {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(6, 7, 9, 0.62);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(16px) saturate(120%);
-          -webkit-backdrop-filter: blur(16px) saturate(120%);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
-        }
-
-        .ui-modal-anim {
-          animation: uiPop 180ms ease-out both;
-          transform-origin: 50% 40%;
-        }
-        @keyframes uiPop {
-          from {
-            opacity: 0;
-            transform: scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
+        /* Inputs */
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.06);
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          box-shadow: var(--glass-inner);
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.42);
+          color: rgba(255, 255, 255, 0.45);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.07);
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.10), var(--glass-inner);
         }
 
         .ui-toast {
@@ -1419,11 +1466,9 @@ export default function Page() {
           align-items: flex-start;
           border-radius: 12px;
           padding: 10px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
+          box-shadow: var(--glass-inner);
         }
         .ui-toast-ok {
           border-color: rgba(34, 197, 94, 0.35);
@@ -1433,12 +1478,12 @@ export default function Page() {
         }
         .ui-toasticon {
           margin-top: 1px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.85);
         }
         .ui-toasttext {
           font-size: 12px;
           line-height: 1.5;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.72);
         }
 
         .ui-tag {
@@ -1447,29 +1492,15 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
+          box-shadow: var(--glass-inner);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.74);
+          color: rgba(255, 255, 255, 0.76);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
           width: fit-content;
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
-        }
-
-        .ui-pricewrap {
-          border-radius: 16px;
-          position: relative;
-          overflow: hidden;
-          /* frosted */
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
-          background-color: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 30px 90px rgba(0, 0, 0, 0.6);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-badge {
@@ -1478,21 +1509,21 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.74);
+          box-shadow: var(--glass-inner);
+          color: rgba(255, 255, 255, 0.76);
           font-size: 12px;
           font-weight: 700;
-          backdrop-filter: blur(10px) saturate(115%);
-          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.10);
         }
 
+        /* Chat bubble styles (keep your “no bubble” look) */
         .ui-bubble {
           border: none !important;
           background: transparent !important;
@@ -1538,31 +1569,18 @@ export default function Page() {
         }
 
         .ui-emptywrap {
-          border-radius: 18px;
           padding: 16px;
           max-width: 520px;
           width: 100%;
-          /* frosted */
-          backdrop-filter: blur(14px) saturate(125%);
-          -webkit-backdrop-filter: blur(14px) saturate(125%);
-          background-color: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 30px 90px rgba(0, 0, 0, 0.45);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-attachpill {
           border: none !important;
+          background: rgba(255, 255, 255, 0.06) !important;
           border-radius: 14px;
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.78);
-          /* frosted */
-          backdrop-filter: blur(12px) saturate(120%);
-          -webkit-backdrop-filter: blur(12px) saturate(120%);
-          background-color: rgba(255, 255, 255, 0.06) !important;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
-          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
+          box-shadow: var(--glass-inner);
         }
 
         .ui-spinner {
@@ -1694,7 +1712,7 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
               <LandingPage
                 onShowPricing={() => setShowPricingModal(true)}
                 onShowAuth={() => {
@@ -1709,12 +1727,7 @@ export default function Page() {
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{
-                  overscrollBehavior: 'contain',
-                  scrollbarGutter: 'stable',
-                  paddingBottom: '2px',
-                  WebkitOverflowScrolling: 'touch',
-                }}
+                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px', WebkitOverflowScrolling: 'touch' }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
