@@ -680,8 +680,6 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  // ✅ Removed ui-enterprise-bg body class (was overriding AmexBackground in layout)
-
   useEffect(() => {
     function handleClick(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -930,6 +928,7 @@ export default function Page() {
 
   return (
     <>
+      {/* ✅ REPLACED: global styles (removed ui-enterprise-bg aurora so AmexBackground can show through) */}
       <style jsx global>{`
         html,
         body {
@@ -937,11 +936,7 @@ export default function Page() {
           width: 100%;
         }
 
-        /* ✅ No ui-enterprise-bg aurora/pseudo-elements here anymore.
-           AmexBackground in app/layout.js now shows through. */
-        html {
-          background: #050608;
-        }
+        /* ✅ Let AmexBackground from layout.js show through */
         body {
           overflow: hidden;
           background: transparent;
