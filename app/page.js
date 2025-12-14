@@ -1,3 +1,4 @@
+// app/page.js
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -32,7 +33,7 @@ const Icons = {
   X: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y1="18" />
-      <line x1="6" y1="6" x2="18" y1="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Check: () => (
@@ -679,7 +680,8 @@ export default function Page() {
     if (!window.UnicornStudio) window.UnicornStudio = { isInitialized: false }
 
     const s = document.createElement('script')
-    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js'
+    // ✅ Updated version (still just CDN, no npm installs)
+    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.5.2/dist/unicornStudio.umd.js'
     s.async = true
     s.dataset.unicornstudio = '1'
     s.onload = () => {
@@ -887,7 +889,17 @@ export default function Page() {
     <>
       {/* ✅ Motion Chrome (behind everything) */}
       <div id="ui-motion-bg" aria-hidden="true">
-        <div data-us-project={UNICORN_PROJECT_ID} />
+        <div
+          data-us-project={UNICORN_PROJECT_ID}
+          data-us-production="true"
+          data-us-fixed="true"
+          data-us-disablemobile="true"
+          /* 3x slower than ~60fps */
+          data-us-fps="20"
+          /* reduce render load to avoid iPad Safari stutter */
+          data-us-scale="0.82"
+          data-us-dpi="1"
+        />
       </div>
 
       <style jsx global>{`
@@ -906,7 +918,7 @@ export default function Page() {
           --ui-vignette: 0.92;
         }
 
-        /* UnicornStudio layer (desaturated + premium) */
+        /* UnicornStudio layer (optimized: NO full-screen filter; reduce repaints) */
         #ui-motion-bg {
           position: fixed;
           inset: 0;
@@ -914,30 +926,32 @@ export default function Page() {
           pointer-events: none;
           overflow: hidden;
           transform: translateZ(0);
+          will-change: transform;
+          contain: paint;
+          background: #050608;
         }
+
         #ui-motion-bg [data-us-project] {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
-          /* kill the rainbow, keep the chrome highlights */
-          filter: grayscale(1) saturate(0) contrast(1.08) brightness(0.78);
-          opacity: 0.82;
+          opacity: 0.55;
+          transform: translateZ(0);
         }
 
-        /* subtle “black aurora / black hole” light shaping */
-        body.ui-enterprise-bg::before {
+        /* Dark “veil” to mute color without using GPU-heavy filter on the animation */
+        #ui-motion-bg::after {
           content: '';
-          position: fixed;
+          position: absolute;
           inset: 0;
-          z-index: -20;
           pointer-events: none;
           background:
             radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
             radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
-            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%);
+            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%),
+            rgba(0, 0, 0, 0.62);
           opacity: 0.95;
-          filter: brightness(var(--ui-lamp));
           transform: translateZ(0);
         }
 
@@ -960,6 +974,13 @@ export default function Page() {
           }
         }
 
+        /* Mobile: even calmer */
+        @media (max-width: 768px) {
+          #ui-motion-bg [data-us-project] {
+            opacity: 0.42;
+          }
+        }
+
         :root {
           scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
           scrollbar-width: thin;
@@ -975,11 +996,23 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
+        /* === Backseasy-style frosted glass base === */
+        .ui-frosted {
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          background-color: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
+          background-size: cover;
+          background-repeat: no-repeat;
+        }
+
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.78);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
+          background: rgba(5, 6, 8, 0.62);
+          backdrop-filter: blur(14px) saturate(120%);
+          -webkit-backdrop-filter: blur(14px) saturate(120%);
         }
 
         .ui-logo {
@@ -1008,12 +1041,17 @@ export default function Page() {
         }
 
         .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
           border-radius: 22px;
           overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
           position: relative;
+          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
+          /* frosted */
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
+          background-color: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.42), 0 40px 120px rgba(0, 0, 0, 0.7);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
         }
 
         .ui-shell::before {
@@ -1022,7 +1060,7 @@ export default function Page() {
           inset: -1px;
           pointer-events: none;
           background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
-          opacity: 0.8;
+          opacity: 0.85;
         }
 
         .ui-hero {
@@ -1114,9 +1152,14 @@ export default function Page() {
 
         .ui-stepcard {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
           padding: 12px;
+          /* frosted */
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          background-color: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
         }
 
         .ui-stephead {
@@ -1133,9 +1176,11 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
           color: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
         .ui-steptitle {
@@ -1148,15 +1193,20 @@ export default function Page() {
         .ui-stepbody {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         .ui-faq {
           margin-top: 12px;
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.01);
           overflow: hidden;
+          /* frosted */
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          background-color: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-faqitem {
@@ -1180,7 +1230,7 @@ export default function Page() {
         }
 
         .ui-faqbtn:hover {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
         }
 
         .ui-faqq {
@@ -1193,14 +1243,16 @@ export default function Page() {
           width: 44px;
           height: 44px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
           display: inline-flex;
           align-items: center;
           justify-content: center;
           color: rgba(255, 255, 255, 0.7);
           transition: transform 140ms ease;
           flex-shrink: 0;
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
         .ui-faqchev.is-open {
           transform: rotate(180deg);
@@ -1219,14 +1271,17 @@ export default function Page() {
           padding: 0 12px 12px;
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
           color: rgba(255, 255, 255, 0.8);
           font-size: 13px;
+          background: rgba(0, 0, 0, 0.12);
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
         .ui-btn {
@@ -1266,13 +1321,15 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(255, 255, 255, 0.04);
           color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(255, 255, 255, 0.16);
         }
 
         .ui-btn:focus-visible,
@@ -1290,31 +1347,34 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
           color: rgba(255, 255, 255, 0.82);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.09);
+          border-color: rgba(255, 255, 255, 0.16);
           color: rgba(255, 255, 255, 0.95);
           transform: scale(1.02);
         }
 
         .ui-backdrop {
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0, 0, 0, 0.82);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
         }
 
         .ui-modal {
           border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.88);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(6, 7, 9, 0.62);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 36px 120px rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(16px) saturate(120%);
+          -webkit-backdrop-filter: blur(16px) saturate(120%);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
         }
 
         .ui-modal-anim {
@@ -1335,19 +1395,21 @@ export default function Page() {
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.05);
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.42);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.07);
           box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
         }
 
@@ -1357,8 +1419,11 @@ export default function Page() {
           align-items: flex-start;
           border-radius: 12px;
           padding: 10px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
         }
         .ui-toast-ok {
           border-color: rgba(34, 197, 94, 0.35);
@@ -1382,23 +1447,29 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.74);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
           width: fit-content;
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
         .ui-pricewrap {
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
+          /* frosted */
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          background-color: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 30px 90px rgba(0, 0, 0, 0.6);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-badge {
@@ -1407,17 +1478,19 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.74);
           font-size: 12px;
           font-weight: 700;
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
         }
 
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.1);
         }
 
         .ui-bubble {
@@ -1465,21 +1538,31 @@ export default function Page() {
         }
 
         .ui-emptywrap {
-          border: none !important;
-          background: rgba(255, 255, 255, 0.02) !important;
           border-radius: 18px;
           padding: 16px;
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
           max-width: 520px;
           width: 100%;
+          /* frosted */
+          backdrop-filter: blur(14px) saturate(125%);
+          -webkit-backdrop-filter: blur(14px) saturate(125%);
+          background-color: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.45), 0 30px 90px rgba(0, 0, 0, 0.45);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0));
         }
 
         .ui-attachpill {
           border: none !important;
-          background: rgba(255, 255, 255, 0.04) !important;
           border-radius: 14px;
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.75);
+          color: rgba(255, 255, 255, 0.78);
+          /* frosted */
+          backdrop-filter: blur(12px) saturate(120%);
+          -webkit-backdrop-filter: blur(12px) saturate(120%);
+          background-color: rgba(255, 255, 255, 0.06) !important;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
         }
 
         .ui-spinner {
@@ -1626,7 +1709,12 @@ export default function Page() {
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
+                style={{
+                  overscrollBehavior: 'contain',
+                  scrollbarGutter: 'stable',
+                  paddingBottom: '2px',
+                  WebkitOverflowScrolling: 'touch',
+                }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
