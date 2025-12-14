@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - COMPLETE FIXED VERSION
+// app/api/webhook/route.js - COMPLETE FILE with ALL security fixes
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -74,6 +74,18 @@ export async function POST(req) {
   let event
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+    
+    // ✅ SECURITY FIX: Check event age (prevent replay attacks)
+    const eventAge = Date.now() - (event.created * 1000)
+    if (eventAge > 5 * 60 * 1000) { // 5 minutes
+      logger.security('Webhook event too old - possible replay attack', {
+        eventId: event.id,
+        ageMs: eventAge,
+        ageMinutes: (eventAge / 60000).toFixed(2)
+      })
+      return NextResponse.json({ error: 'Event too old' }, { status: 400 })
+    }
+    
   } catch (err) {
     logger.security('Webhook signature verification failed', { error: err.message })
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
@@ -94,7 +106,7 @@ export async function POST(req) {
         const subscriptionId = session.subscription
         const customerId = session.customer
 
-        // ✅ SECURITY FIX: Validate all required fields
+        // ✅ SECURITY: Validate all required fields
         if (!userId || !subscriptionId || !customerId) {
           logger.error('Missing required data in checkout.session.completed', { 
             userId, 
@@ -154,7 +166,7 @@ export async function POST(req) {
           isFakeId
         })
 
-        // ✅ Create/update profile with customer ID
+        // Create/update profile with customer ID
         const now = new Date().toISOString()
         
         const { error: profileError } = await supabase
@@ -184,7 +196,7 @@ export async function POST(req) {
           })
         }
 
-        // ✅ Create subscription record
+        // Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
