@@ -17,10 +17,13 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
+  height: 100%;              /* ✅ ensure full-height root */
   background: transparent;
 }
 
 body {
+  position: relative;        /* ✅ helps stacking context behave predictably */
+  z-index: 0;                /* ✅ ensures bg z=0 sits behind content wrapper */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -292,23 +295,21 @@ select:focus-visible {
    AMEX BLACK CARD DEPTH STYLING - DRAMATIC VERSION
    ========================================================= */
 
-/* DRAMATIC card shadows for intense depth */
 .ui-shell {
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.1),
     0 30px 60px rgba(0, 0, 0, 0.7),
     0 60px 120px rgba(0, 0, 0, 0.6),
     0 100px 160px rgba(0, 0, 0, 0.5),
     0 0 80px rgba(255, 255, 255, 0.02);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Dramatic card hover lift */
 .ui-shell:hover {
   transform: translateY(-8px);
-  box-shadow: 
+  box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.15),
     0 40px 80px rgba(0, 0, 0, 0.8),
     0 80px 160px rgba(0, 0, 0, 0.7),
@@ -316,7 +317,6 @@ select:focus-visible {
     0 0 120px rgba(255, 255, 255, 0.05);
 }
 
-/* Intense metallic sheen at top */
 .ui-shell::before {
   content: '';
   position: absolute;
@@ -335,7 +335,6 @@ select:focus-visible {
   z-index: 1;
 }
 
-/* Premium metallic sheen at bottom */
 .ui-shell::after {
   content: '';
   position: absolute;
@@ -353,9 +352,8 @@ select:focus-visible {
   z-index: 1;
 }
 
-/* DRAMATIC modal depth */
 .ui-modal {
-  box-shadow: 
+  box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
     0 40px 80px rgba(0, 0, 0, 0.8),
     0 80px 160px rgba(0, 0, 0, 0.7),
@@ -363,22 +361,20 @@ select:focus-visible {
     0 0 100px rgba(255, 255, 255, 0.03);
 }
 
-/* Intense button glow */
 .ui-btn-primary {
-  box-shadow: 
+  box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.4),
     0 0 40px rgba(255, 255, 255, 0.05);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ui-btn-primary:hover {
-  box-shadow: 
+  box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.6),
     0 0 60px rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
 }
 
-/* Dramatic card texture overlay */
 .ui-pricewrap {
   position: relative;
 }
@@ -397,17 +393,15 @@ select:focus-visible {
   border-radius: inherit;
 }
 
-/* Enhanced header depth with glow */
 .ui-header {
-  box-shadow: 
+  box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.1),
     0 8px 24px rgba(0, 0, 0, 0.5),
     0 0 60px rgba(255, 255, 255, 0.02);
 }
 
-/* Dramatic step cards */
 .ui-stepcard {
-  box-shadow: 
+  box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),
     0 0 40px rgba(255, 255, 255, 0.02),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -415,36 +409,32 @@ select:focus-visible {
 }
 
 .ui-stepcard:hover {
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 0 60px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transform: translateY(-4px);
 }
 
-/* Glowing FAQ items on hover */
 .ui-faqbtn:hover {
   background: rgba(255, 255, 255, 0.06);
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
 }
 
-/* Premium FAQ chevron button */
 .ui-faqchev {
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Dramatic empty state card */
 .ui-emptywrap {
-  box-shadow: 
+  box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.6),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     0 0 60px rgba(255, 255, 255, 0.03),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Strong ambient occlusion */
 .ui-shell .ui-section {
   position: relative;
 }
@@ -463,24 +453,22 @@ select:focus-visible {
   pointer-events: none;
 }
 
-/* Dramatic icon button depth */
 .ui-icon-btn {
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ui-icon-btn:hover {
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.4),
     0 0 30px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Glowing avatar button */
 .ui-avatar-btn {
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.5),
     0 0 40px rgba(255, 255, 255, 0.05),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -488,112 +476,106 @@ select:focus-visible {
 }
 
 .ui-avatar-btn:hover {
-  box-shadow: 
+  box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.6),
     0 0 60px rgba(255, 255, 255, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-/* Secondary buttons with depth */
 .ui-btn-secondary {
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ui-btn-secondary:hover {
-  box-shadow: 
+  box-shadow:
     0 6px 18px rgba(0, 0, 0, 0.4),
     0 0 30px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Dramatic input fields */
 .ui-input {
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 2px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
 
 .ui-input:focus {
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.3),
     0 0 40px rgba(255, 255, 255, 0.05),
     inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Premium tag/badge depth */
 .ui-tag,
 .ui-badge {
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Dramatic toast notifications */
 .ui-toast {
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 0 60px rgba(255, 255, 255, 0.03),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .ui-toast-ok {
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 0 60px rgba(34, 197, 94, 0.1),
     inset 0 1px 0 rgba(34, 197, 94, 0.1);
 }
 
 .ui-toast-err {
-  box-shadow: 
+  box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 0 60px rgba(239, 68, 68, 0.1),
     inset 0 1px 0 rgba(239, 68, 68, 0.1);
 }
 
-/* User menu dramatic depth */
 .ui-usermenu {
-  box-shadow: 
+  box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.8),
     0 0 80px rgba(255, 255, 255, 0.03),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-/* Menu items with subtle glow on hover */
 .ui-menuitem:hover {
   box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.6);
 }
 
 /* Amex Background Animations */
 @keyframes float {
-  0%, 100% { 
+  0%, 100% {
     transform: translate(0, 0) scale(1);
   }
-  25% { 
+  25% {
     transform: translate(30px, -30px) scale(1.1);
   }
-  50% { 
+  50% {
     transform: translate(-20px, 40px) scale(0.9);
   }
-  75% { 
+  75% {
     transform: translate(40px, 20px) scale(1.05);
   }
 }
 
 @keyframes float-reverse {
-  0%, 100% { 
+  0%, 100% {
     transform: translate(0, 0) scale(1);
   }
-  25% { 
+  25% {
     transform: translate(-30px, 30px) scale(1.1);
   }
-  50% { 
+  50% {
     transform: translate(20px, -40px) scale(0.9);
   }
-  75% { 
+  75% {
     transform: translate(-40px, -20px) scale(1.05);
   }
 }
