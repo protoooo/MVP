@@ -10,19 +10,21 @@ export default function AmexBackground() {
       <div className="fixed inset-0 -z-40 overflow-hidden pointer-events-none">
         {/* Top-left dramatic glow */}
         <div 
-          className="absolute -top-[30%] -left-[15%] w-[70%] h-[70%] opacity-[0.25]"
+          className="absolute -top-[30%] -left-[15%] w-[70%] h-[70%] opacity-[0.25] animate-float"
           style={{
             background: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 65%)',
-            filter: 'blur(120px)'
+            filter: 'blur(120px)',
+            animationDuration: '20s'
           }}
         />
         
         {/* Bottom-right purple accent (more intense) */}
         <div 
-          className="absolute -bottom-[30%] -right-[15%] w-[70%] h-[70%] opacity-[0.22]"
+          className="absolute -bottom-[30%] -right-[15%] w-[70%] h-[70%] opacity-[0.22] animate-float-reverse"
           style={{
             background: 'radial-gradient(circle, rgba(120, 100, 160, 0.25) 0%, transparent 65%)',
-            filter: 'blur(140px)'
+            filter: 'blur(140px)',
+            animationDuration: '25s'
           }}
         />
         
@@ -37,20 +39,20 @@ export default function AmexBackground() {
         
         {/* Animated floating orbs for depth */}
         <div 
-          className="absolute top-[20%] left-[30%] w-[300px] h-[300px] opacity-[0.08]"
+          className="absolute top-[20%] left-[30%] w-[300px] h-[300px] opacity-[0.08] animate-float"
           style={{
             background: 'radial-gradient(circle, rgba(100, 200, 255, 0.3) 0%, transparent 70%)',
             filter: 'blur(80px)',
-            animation: 'float 20s ease-in-out infinite'
+            animationDuration: '20s'
           }}
         />
         
         <div 
-          className="absolute bottom-[25%] right-[35%] w-[250px] h-[250px] opacity-[0.06]"
+          className="absolute bottom-[25%] right-[35%] w-[250px] h-[250px] opacity-[0.06] animate-float-reverse"
           style={{
             background: 'radial-gradient(circle, rgba(200, 100, 255, 0.3) 0%, transparent 70%)',
             filter: 'blur(90px)',
-            animation: 'float 25s ease-in-out infinite reverse'
+            animationDuration: '25s'
           }}
         />
         
@@ -90,23 +92,6 @@ export default function AmexBackground() {
           }}
         />
       </div>
-      
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { 
-            transform: translate(0, 0) scale(1);
-          }
-          25% { 
-            transform: translate(30px, -30px) scale(1.1);
-          }
-          50% { 
-            transform: translate(-20px, 40px) scale(0.9);
-          }
-          75% { 
-            transform: translate(40px, 20px) scale(1.05);
-          }
-        }
-      `}</style>
     </>
   )
 }
