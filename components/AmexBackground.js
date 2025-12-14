@@ -3,200 +3,207 @@
 
 export default function AmexBackground() {
   return (
-    <div
-      aria-hidden="true"
-      className="plm-amex-bg"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: -50,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        backgroundColor: '#000000',
-      }}
-    >
-      {/* Base matte-black + subtle steel undertones */}
-      <div
-        className="plm-amex-layer plm-amex-base"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            [
-              'radial-gradient(1200px 680px at 18% 0%, rgba(255,255,255,0.05) 0%, transparent 58%)',
-              'radial-gradient(900px 520px at 85% 28%, rgba(90,110,140,0.10) 0%, transparent 62%)',
-              'radial-gradient(800px 520px at 55% 72%, rgba(255,255,255,0.025) 0%, transparent 60%)',
-              'linear-gradient(180deg, #050608 0%, #000000 100%)',
-            ].join(','),
-        }}
-      />
+    <div aria-hidden="true" className="amx-root">
+      {/* Base matte black */}
+      <div className="amx-base" />
 
-      {/* Very subtle “Aceternity-ish” beams (kept soft + low contrast) */}
-      <div
-        className="plm-amex-layer plm-amex-beams"
-        style={{
-          position: 'absolute',
-          inset: '-20%',
-          background:
-            'repeating-linear-gradient(115deg, rgba(255,255,255,0.028) 0px, rgba(255,255,255,0.028) 1px, transparent 1px, transparent 72px)',
-          opacity: 0.22,
-          filter: 'blur(0.6px)',
-          transform: 'translate3d(0,0,0)',
-        }}
-      />
+      {/* Top specular “card sheen” */}
+      <div className="amx-sheen" />
 
-      {/* Soft center “card surface” depth */}
-      <div
-        className="plm-amex-layer plm-amex-depth"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'radial-gradient(ellipse 62% 42% at 50% 46%, rgba(255,255,255,0.04) 0%, transparent 60%)',
-          opacity: 0.9,
-        }}
-      />
+      {/* Subtle dot grid (very low contrast) */}
+      <div className="amx-grid" />
 
-      {/* Sheen sweep (subtle, like a card reflection) */}
-      <div
-        className="plm-amex-layer plm-amex-sheen"
-        style={{
-          position: 'absolute',
-          top: '-35%',
-          left: '-60%',
-          width: '140%',
-          height: '170%',
-          background:
-            'linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.06) 42%, rgba(255,255,255,0.012) 50%, transparent 58%)',
-          opacity: 0.55,
-          filter: 'blur(1px)',
-          transform: 'translate3d(0,0,0)',
-          mixBlendMode: 'screen',
-        }}
-      />
+      {/* Soft moving beams (aceternity-ish, but restrained) */}
+      <div className="amx-beam amx-beam1" />
+      <div className="amx-beam amx-beam2" />
 
-      {/* Secondary micro-sheen (adds premium movement without “AI aurora”) */}
-      <div
-        className="plm-amex-layer plm-amex-sheen-2"
-        style={{
-          position: 'absolute',
-          bottom: '-35%',
-          right: '-65%',
-          width: '150%',
-          height: '170%',
-          background:
-            'linear-gradient(250deg, transparent 0%, rgba(140,170,210,0.05) 40%, rgba(255,255,255,0.01) 50%, transparent 60%)',
-          opacity: 0.45,
-          filter: 'blur(1.2px)',
-          transform: 'translate3d(0,0,0)',
-          mixBlendMode: 'screen',
-        }}
-      />
+      {/* Bottom geometry plate (matte-tech linework) */}
+      <div className="amx-plate">
+        <svg viewBox="0 0 1200 260" preserveAspectRatio="none" className="amx-plateSvg">
+          <defs>
+            <linearGradient id="amxStroke" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="rgba(255,255,255,0.00)" />
+              <stop offset="0.35" stopColor="rgba(255,255,255,0.14)" />
+              <stop offset="0.70" stopColor="rgba(255,255,255,0.08)" />
+              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
+            </linearGradient>
 
-      {/* Fine grain / matte texture */}
-      <div
-        className="plm-amex-layer plm-amex-noise"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.085,
-          mixBlendMode: 'overlay',
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.8%27 numOctaves=%273%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%2760%27 height=%2760%27 filter=%27url(%23n)%27 opacity=%270.9%27/%3E%3C/svg%3E")',
-        }}
-      />
+            <pattern id="amxDiag" width="26" height="26" patternUnits="userSpaceOnUse">
+              <path d="M-6 26 L26 -6" stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+              <path d="M6 32 L32 6" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            </pattern>
 
-      {/* Vignette + edge falloff (premium photography look) */}
-      <div
-        className="plm-amex-layer plm-amex-vignette"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            [
-              'radial-gradient(ellipse 70% 55% at 50% 42%, transparent 0%, rgba(0,0,0,0.62) 100%)',
-              'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 14%, transparent 86%, rgba(0,0,0,0.35) 100%)',
-            ].join(','),
-          opacity: 0.95,
-        }}
-      />
+            <clipPath id="amxClip">
+              <polygon points="0,260 1200,260 820,0 380,0" />
+            </clipPath>
 
-      {/* Tiny edge glints (super subtle) */}
-      <div
-        className="plm-amex-layer plm-amex-edges"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(90deg, rgba(255,255,255,0.018) 0%, transparent 4%, transparent 96%, rgba(255,255,255,0.018) 100%)',
-          opacity: 0.55,
-        }}
-      />
+            <linearGradient id="amxFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="rgba(255,255,255,0.05)" />
+              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
+            </linearGradient>
+          </defs>
+
+          {/* Soft filled plate */}
+          <polygon points="0,260 1200,260 820,0 380,0" fill="url(#amxFill)" opacity="0.55" />
+
+          {/* Diagonal micro-lines inside the plate */}
+          <rect x="0" y="0" width="1200" height="260" fill="url(#amxDiag)" clipPath="url(#amxClip)" opacity="0.55" />
+
+          {/* Main outlines */}
+          <polygon points="0,260 1200,260 820,0 380,0" fill="none" stroke="url(#amxStroke)" strokeWidth="1.25" opacity="0.9" />
+          <polygon points="80,260 1120,260 785,35 415,35" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" opacity="0.8" />
+
+          {/* A few internal rails */}
+          <path d="M140 260 L470 35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+          <path d="M240 260 L520 35" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <path d="M960 260 L680 35" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <path d="M1060 260 L730 35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+        </svg>
+      </div>
+
+      {/* Vignette for “photographed card” edges */}
+      <div className="amx-vignette" />
 
       <style jsx>{`
-        .plm-amex-layer {
+        .amx-root {
+          position: fixed;
+          inset: 0;
+          z-index: -10;
+          pointer-events: none;
+          overflow: hidden;
+          background: #000;
+        }
+
+        .amx-base {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(1200px 800px at 50% 20%, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0) 55%),
+            radial-gradient(900px 700px at 15% 55%, rgba(120, 140, 170, 0.06), rgba(0, 0, 0, 0) 60%),
+            radial-gradient(900px 700px at 85% 60%, rgba(80, 95, 120, 0.05), rgba(0, 0, 0, 0) 62%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0) 35%),
+            #000;
+        }
+
+        .amx-sheen {
+          position: absolute;
+          inset: -20%;
+          background: radial-gradient(ellipse 40% 22% at 50% 10%, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0) 70%);
+          filter: blur(2px);
+          opacity: 0.75;
+          transform: translateZ(0);
+          animation: amxSheen 18s ease-in-out infinite;
           will-change: transform, opacity;
         }
 
-        /* Keep beams barely moving so it feels “alive” but not “aurora” */
-        .plm-amex-beams {
-          animation: plmBeams 38s ease-in-out infinite;
+        .amx-grid {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+          background-size: 26px 26px;
+          background-position: 0 0;
+          opacity: 0.18;
+          mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
+          -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
         }
-        @keyframes plmBeams {
+
+        .amx-beam {
+          position: absolute;
+          inset: -40% -60%;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.08) 45%,
+            rgba(255, 255, 255, 0.14) 50%,
+            rgba(255, 255, 255, 0.08) 55%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          filter: blur(10px);
+          opacity: 0.35;
+          mix-blend-mode: screen;
+          transform: rotate(12deg) translate3d(0, 0, 0);
+          animation: amxSweep 12s linear infinite;
+          will-change: transform, opacity;
+        }
+
+        .amx-beam1 {
+          animation-duration: 14s;
+          opacity: 0.26;
+          transform: rotate(14deg);
+        }
+
+        .amx-beam2 {
+          animation-duration: 18s;
+          animation-delay: -6s;
+          opacity: 0.18;
+          transform: rotate(-10deg);
+        }
+
+        .amx-plate {
+          position: absolute;
+          left: 50%;
+          bottom: -110px;
+          width: 130%;
+          max-width: 1600px;
+          transform: translateX(-50%);
+          opacity: 0.55;
+          filter: blur(0.2px);
+        }
+
+        .amx-plateSvg {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+
+        .amx-vignette {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 75% 55% at 50% 35%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 100%),
+            linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.35));
+          opacity: 0.95;
+        }
+
+        @keyframes amxSweep {
           0% {
-            transform: translate3d(-1.5%, -1%, 0) rotate(-2deg);
+            transform: rotate(12deg) translate3d(-6%, -2%, 0);
+            opacity: 0.05;
+          }
+          25% {
+            opacity: 0.28;
           }
           50% {
-            transform: translate3d(1.5%, 1%, 0) rotate(2deg);
+            transform: rotate(12deg) translate3d(6%, 2%, 0);
+            opacity: 0.18;
           }
-          100% {
-            transform: translate3d(-1.5%, -1%, 0) rotate(-2deg);
-          }
-        }
-
-        /* Main sheen sweep */
-        .plm-amex-sheen {
-          animation: plmSheen 26s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-        }
-        @keyframes plmSheen {
-          0% {
-            transform: translate3d(-18%, -6%, 0) rotate(-8deg);
-            opacity: 0.38;
-          }
-          45% {
-            transform: translate3d(22%, 6%, 0) rotate(-8deg);
-            opacity: 0.6;
-          }
-          100% {
-            transform: translate3d(36%, 10%, 0) rotate(-8deg);
-            opacity: 0.35;
-          }
-        }
-
-        /* Secondary sheen (counter motion) */
-        .plm-amex-sheen-2 {
-          animation: plmSheen2 32s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-        }
-        @keyframes plmSheen2 {
-          0% {
-            transform: translate3d(18%, 8%, 0) rotate(10deg);
-            opacity: 0.25;
-          }
-          55% {
-            transform: translate3d(-18%, -8%, 0) rotate(10deg);
-            opacity: 0.5;
-          }
-          100% {
-            transform: translate3d(-30%, -12%, 0) rotate(10deg);
+          75% {
             opacity: 0.26;
           }
+          100% {
+            transform: rotate(12deg) translate3d(-6%, -2%, 0);
+            opacity: 0.05;
+          }
         }
 
-        /* Reduce motion respect */
+        @keyframes amxSheen {
+          0% {
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 0.55;
+          }
+          50% {
+            transform: translate3d(0, 14px, 0) scale(1.02);
+            opacity: 0.85;
+          }
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+            opacity: 0.55;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .plm-amex-beams,
-          .plm-amex-sheen,
-          .plm-amex-sheen-2 {
+          .amx-sheen,
+          .amx-beam {
             animation: none !important;
           }
         }
