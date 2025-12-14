@@ -1,3 +1,4 @@
+// app/page.js
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -15,8 +16,6 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-const UNICORN_PROJECT_ID = 'qF3qXhdiOxdUeQYH8wCK' // ✅ Chrome Ribbon / UnicornStudio
-
 const Icons = {
   Camera: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -31,8 +30,8 @@ const Icons = {
   ),
   X: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y1="18" />
-      <line x1="6" y1="6" x2="18" y1="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Check: () => (
@@ -587,7 +586,7 @@ export default function Page() {
         return
       }
 
-      // ✅ Enforce Accept Terms before app usage (only AFTER a session exists)
+      // ✅ Enforce Accept Terms before app usage
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -604,6 +603,7 @@ export default function Page() {
           return
         }
       } catch (e) {
+        // If the profile fetch fails, fail safe → require accept-terms
         console.error('Policy check error', e)
         setHasActiveSubscription(false)
         setIsLoading(false)
@@ -665,34 +665,6 @@ export default function Page() {
     return () => {
       document.body.classList.remove('ui-enterprise-bg')
     }
-  }, [])
-
-  // ✅ UnicornStudio background loader (NO installs, just a CDN script)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // dev/strict-mode safe: don’t inject twice
-    const existing = document.querySelector('script[data-unicornstudio="1"]')
-    if (existing) return
-
-    // stub to match their embed pattern
-    if (!window.UnicornStudio) window.UnicornStudio = { isInitialized: false }
-
-    const s = document.createElement('script')
-    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js'
-    s.async = true
-    s.dataset.unicornstudio = '1'
-    s.onload = () => {
-      try {
-        if (!window.UnicornStudio?.isInitialized && window.UnicornStudio?.init) {
-          window.UnicornStudio.init()
-          window.UnicornStudio.isInitialized = true
-        }
-      } catch (e) {
-        console.error('UnicornStudio init failed', e)
-      }
-    }
-    ;(document.head || document.body).appendChild(s)
   }, [])
 
   useEffect(() => {
@@ -885,11 +857,6 @@ export default function Page() {
 
   return (
     <>
-      {/* ✅ Motion Chrome (behind everything) */}
-      <div id="ui-motion-bg" aria-hidden="true">
-        <div data-us-project={UNICORN_PROJECT_ID} />
-      </div>
-
       <style jsx global>{`
         html,
         body {
@@ -897,67 +864,66 @@ export default function Page() {
           width: 100%;
         }
 
-        /* ======= AMEX / BLACK AURORA BACKGROUND (NO lattice) ======= */
+        /* ✅ NEW: “Black Hole + Aurora Drift” (no lattice) */
         body.ui-enterprise-bg {
           overflow: hidden;
-          background: #050608;
+
+          /* Black Hole base (inspired by Backseasy Black Hole) */
+          background:
+            radial-gradient(circle at 50% 120%, #000000 34%, #07080c 56%, #000000 78%),
+            #050608;
+
           color: rgba(255, 255, 255, 0.94);
-          --ui-lamp: 1.06;
+
+          /* overall knobs */
+          --ui-lamp: 1.02;
           --ui-vignette: 0.92;
+
+          /* slow drift (≈ 28% slower feel) */
+          --ui-drift: 72s;
         }
 
-        /* UnicornStudio layer (desaturated + premium) */
-        #ui-motion-bg {
-          position: fixed;
-          inset: 0;
-          z-index: -30;
-          pointer-events: none;
-          overflow: hidden;
-          transform: translateZ(0);
-        }
-        #ui-motion-bg [data-us-project] {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          /* kill the rainbow, keep the chrome highlights */
-          filter: grayscale(1) saturate(0) contrast(1.08) brightness(0.78);
-          opacity: 0.82;
-        }
-
-        /* subtle “black aurora / black hole” light shaping */
+        /* Aurora “sheen” layer (transform-only animation to avoid scroll jank) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
-          inset: 0;
-          z-index: -20;
+          inset: -12%;
           pointer-events: none;
+
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
-            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
-            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%);
-          opacity: 0.95;
+            radial-gradient(1100px 560px at 50% -10%, rgba(255, 255, 255, 0.10), transparent 58%),
+            radial-gradient(900px 560px at 18% 0%, rgba(210, 245, 255, 0.045), transparent 62%),
+            radial-gradient(900px 560px at 85% 0%, rgba(240, 220, 255, 0.040), transparent 62%),
+            radial-gradient(1200px 900px at 50% 110%, rgba(255, 255, 255, 0.040), transparent 70%);
+
+          opacity: 0.86;
           filter: brightness(var(--ui-lamp));
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+          backface-visibility: hidden;
+
+          animation: uiAuroraDrift var(--ui-drift) ease-in-out infinite alternate;
         }
 
-        /* vignette (keeps the “Amex black” focus) */
+        @keyframes uiAuroraDrift {
+          from {
+            transform: translate3d(-1.6%, -0.8%, 0) scale(1.02);
+          }
+          to {
+            transform: translate3d(1.6%, 1.0%, 0) scale(1.05);
+          }
+        }
+
+        /* Vignette + depth */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
-          z-index: -10;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.72) 70%);
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.70) 72%);
           opacity: var(--ui-vignette);
           transform: translateZ(0);
-        }
-
-        /* If user prefers reduced motion, just hide the animated background */
-        @media (prefers-reduced-motion: reduce) {
-          #ui-motion-bg {
-            display: none;
-          }
+          backface-visibility: hidden;
         }
 
         :root {
@@ -1611,7 +1577,7 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
               <LandingPage
                 onShowPricing={() => setShowPricingModal(true)}
                 onShowAuth={() => {
@@ -1626,7 +1592,12 @@ export default function Page() {
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
+                style={{
+                  overscrollBehavior: 'contain',
+                  scrollbarGutter: 'stable',
+                  paddingBottom: '2px',
+                  WebkitOverflowScrolling: 'touch',
+                }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
