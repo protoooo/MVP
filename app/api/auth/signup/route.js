@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - Fixed version
+// app/api/auth/signup/route.js - Minimal safe version
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -21,7 +21,6 @@ export async function POST(request) {
     const body = await request.json()
     const { email, password, captchaToken } = body
 
-    // Validate input
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
     }
@@ -30,7 +29,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
     }
 
-    // Verify CAPTCHA
     const captchaResult = await verifyCaptcha(captchaToken, 'signup', ip)
     
     if (!captchaResult.success) {
@@ -48,7 +46,6 @@ export async function POST(request) {
 
     const cookieStore = cookies()
     
-    // Use anon key for user creation
     const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -68,7 +65,6 @@ export async function POST(request) {
       }
     )
 
-    // Create user
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
@@ -86,7 +82,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
-    // Use service role for profile creation (bypasses RLS)
     const supabaseAdmin = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -100,36 +95,34 @@ export async function POST(request) {
       }
     )
 
-    // ✅ FIXED: Match exact schema from your database
+    // ✅ MINIMAL PROFILE CREATION - Only required fields
     const now = new Date().toISOString()
-    const { error: profileError } = await supabaseAdmin
-      .from('user_profiles')
-      .insert({
-        id: data.user.id,
-        is_subscribed: false,
-        requests_used: 0,
-        created_at: now,
-        updated_at: now,
-        images_used: 0,
-        county: 'washtenaw',
-        accepted_terms: false,
-        accepted_privacy: false,
-        terms_accepted_at: null,
-        privacy_accepted_at: null,
-        active_session_id: null,
-        stripe_customer_id: null
-      })
+    
+    try {
+      const { error: profileError } = await supabaseAdmin
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          created_at: now,
+          updated_at: now
+        })
 
-    if (profileError) {
-      logger.error('Failed to create user profile', { 
-        error: profileError.message,
-        userId: data.user.id,
-        code: profileError.code
+      if (profileError) {
+        logger.error('Profile creation failed', { 
+          error: profileError.message,
+          code: profileError.code,
+          details: profileError.details,
+          hint: profileError.hint,
+          userId: data.user.id
+        })
+      } else {
+        logger.info('User profile created successfully', { userId: data.user.id })
+      }
+    } catch (profileException) {
+      logger.error('Profile creation exception', {
+        error: profileException.message,
+        userId: data.user.id
       })
-      // Don't fail signup - profile will be created on first login
-      logger.warn('Profile creation skipped, will be created on login', { userId: data.user.id })
-    } else {
-      logger.info('User profile created', { userId: data.user.id })
     }
 
     logger.audit('User signed up', {
@@ -144,7 +137,7 @@ export async function POST(request) {
     })
 
   } catch (error) {
-    logger.error('Signup exception', { error: error.message, ip })
+    logger.error('Signup exception', { error: error.message, stack: error.stack, ip })
     return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 })
   }
 }
