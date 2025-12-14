@@ -1,3 +1,6 @@
+// app/accept-terms/page.js - REPLACE ENTIRE FILE
+// ✅ Fixed: Only shows once, handles existing subscriptions
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -29,20 +32,25 @@ export default function AcceptTermsPage() {
           return
         }
 
-        // If already accepted, don’t show this page
-        const { data: profile } = await supabase
+        // ✅ Check if already accepted
+        const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('accepted_terms, accepted_privacy')
           .eq('id', session.user.id)
           .maybeSingle()
 
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
-        if (accepted) {
+        // If profile doesn't exist, that's OK - we'll create it when they accept
+        // If profile exists and already accepted, redirect to home
+        if (profile && profile.accepted_terms && profile.accepted_privacy) {
+          console.log('✅ Terms already accepted, redirecting home')
           router.replace('/')
           return
         }
+
+        console.log('📋 Terms need acceptance')
+        
       } catch (e) {
-        console.error(e)
+        console.error('Accept terms check error:', e)
       } finally {
         if (mounted) setLoading(false)
       }
@@ -59,20 +67,29 @@ export default function AcceptTermsPage() {
     setError('')
 
     try {
-      const res = await fetch('/api/accept-terms', { method: 'POST' })
+      const res = await fetch('/api/accept-terms', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
       const data = await res.json().catch(() => ({}))
 
       if (!res.ok) {
+        console.error('Accept terms API error:', data)
         setError(data.error || 'Could not save your acceptance. Please try again.')
+        setSaving(false)
         return
       }
 
+      console.log('✅ Terms accepted successfully')
+      
+      // ✅ Redirect to home
       router.replace('/')
       router.refresh()
+      
     } catch (e) {
-      console.error(e)
+      console.error('Accept terms exception:', e)
       setError('Could not save your acceptance. Please try again.')
-    } finally {
       setSaving(false)
     }
   }
@@ -102,14 +119,16 @@ export default function AcceptTermsPage() {
         <div className="mt-4 space-y-3">
           <Link
             href="/terms"
-            className="block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white/85 hover:bg-white/[0.05] transition"
+            target="_blank"
+            className="block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white/85 hover:bg-white/[0.05] transition text-center"
           >
             Terms of Service
           </Link>
 
           <Link
             href="/privacy"
-            className="block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white/85 hover:bg-white/[0.05] transition"
+            target="_blank"
+            className="block w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-white/85 hover:bg-white/[0.05] transition text-center"
           >
             Privacy Policy
           </Link>
@@ -117,7 +136,7 @@ export default function AcceptTermsPage() {
           <button
             onClick={handleAccept}
             disabled={saving}
-            className="w-full rounded-xl bg-white text-black font-semibold py-3 disabled:opacity-50"
+            className="w-full rounded-xl bg-white text-black font-semibold py-3 disabled:opacity-50 hover:bg-white/90 transition"
           >
             {saving ? 'Saving…' : 'I AGREE & CONTINUE'}
           </button>
