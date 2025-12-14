@@ -1,3 +1,4 @@
+// app/api/auth/signup/route.js - Fixed to create profile
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -77,6 +78,31 @@ export async function POST(request) {
     if (error) {
       logger.error('Signup error', { error: error.message, email: email.substring(0, 3) + '***' })
       return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    // CRITICAL FIX: Create user profile immediately
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          accepted_terms: false, // Will be set to true on /accept-terms
+          accepted_privacy: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (profileError) {
+        logger.error('Failed to create user profile', { 
+          error: profileError.message,
+          userId: data.user.id 
+        })
+        // Don't fail signup if profile creation fails - it will be created on first login
+      } else {
+        logger.info('User profile created', { userId: data.user.id })
+      }
     }
 
     logger.audit('User signed up', {
