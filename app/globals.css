@@ -289,114 +289,162 @@ select:focus-visible {
 }
 
 /* =========================================================
-   AMEX BLACK CARD DEPTH STYLING
+   AMEX BLACK CARD DEPTH STYLING - DRAMATIC VERSION
    ========================================================= */
 
-/* Enhanced card shadows for premium depth */
+/* DRAMATIC card shadows for intense depth */
 .ui-shell {
   position: relative;
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 20px 40px rgba(0, 0, 0, 0.5),
-    0 40px 80px rgba(0, 0, 0, 0.4),
-    0 80px 120px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 30px 60px rgba(0, 0, 0, 0.7),
+    0 60px 120px rgba(0, 0, 0, 0.6),
+    0 100px 160px rgba(0, 0, 0, 0.5),
+    0 0 80px rgba(255, 255, 255, 0.02);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Subtle card hover lift (optional - remove if you don't want hover effect) */
+/* Dramatic card hover lift */
 .ui-shell:hover {
-  transform: translateY(-2px);
+  transform: translateY(-8px);
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 24px 48px rgba(0, 0, 0, 0.6),
-    0 48px 96px rgba(0, 0, 0, 0.5),
-    0 96px 144px rgba(0, 0, 0, 0.4);
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 40px 80px rgba(0, 0, 0, 0.8),
+    0 80px 160px rgba(0, 0, 0, 0.7),
+    0 120px 200px rgba(0, 0, 0, 0.6),
+    0 0 120px rgba(255, 255, 255, 0.05);
 }
 
-/* Premium metallic sheen on top of cards */
-.ui-shell::after {
+/* Intense metallic sheen at top */
+.ui-shell::before {
   content: '';
   position: absolute;
   top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+/* Premium metallic sheen at bottom */
+.ui-shell::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
   left: 0;
   right: 0;
   height: 1px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.15) 50%,
     transparent 100%
   );
   pointer-events: none;
+  z-index: 1;
 }
 
-/* Enhanced depth for modals */
+/* DRAMATIC modal depth */
 .ui-modal {
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 30px 60px rgba(0, 0, 0, 0.6),
-    0 60px 120px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 40px 80px rgba(0, 0, 0, 0.8),
+    0 80px 160px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 100px rgba(255, 255, 255, 0.03);
 }
 
-/* Subtle glow for buttons on hover */
+/* Intense button glow */
+.ui-btn-primary {
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .ui-btn-primary:hover {
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    0 0 20px rgba(255, 255, 255, 0.1);
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
-/* Premium card texture overlay */
+/* Dramatic card texture overlay */
+.ui-pricewrap {
+  position: relative;
+}
+
 .ui-pricewrap::before {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    transparent 50%,
-    rgba(255, 255, 255, 0.02) 100%
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.05) 100%
   );
   pointer-events: none;
   border-radius: inherit;
 }
 
-/* Enhanced header depth */
+/* Enhanced header depth with glow */
 .ui-header {
   box-shadow: 
-    0 1px 0 rgba(255, 255, 255, 0.05),
-    0 4px 12px rgba(0, 0, 0, 0.3);
+    0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 255, 255, 0.02);
 }
 
-/* Subtle ambient lighting on step cards */
+/* Dramatic step cards */
 .ui-stepcard {
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ui-stepcard:hover {
   box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+}
+
+/* Glowing FAQ items on hover */
+.ui-faqbtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+/* Premium FAQ chevron button */
+.ui-faqchev {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transform: translateY(-1px);
-  transition: all 0.2s ease;
 }
 
-/* Premium FAQ item depth */
-.ui-faqitem {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-}
-
-/* Enhanced empty state card */
+/* Dramatic empty state card */
 .ui-emptywrap {
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 30px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 60px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Ambient occlusion effect for nested elements */
+/* Strong ambient occlusion */
 .ui-shell .ui-section {
   position: relative;
 }
@@ -407,10 +455,114 @@ select:focus-visible {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.02) 0%,
-    transparent 20%,
-    transparent 80%,
-    rgba(0, 0, 0, 0.02) 100%
+    rgba(0, 0, 0, 0.08) 0%,
+    transparent 15%,
+    transparent 85%,
+    rgba(0, 0, 0, 0.08) 100%
   );
   pointer-events: none;
+}
+
+/* Dramatic icon button depth */
+.ui-icon-btn {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ui-icon-btn:hover {
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Glowing avatar button */
+.ui-avatar-btn {
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ui-avatar-btn:hover {
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Secondary buttons with depth */
+.ui-btn-secondary {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ui-btn-secondary:hover {
+  box-shadow: 
+    0 6px 18px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Dramatic input fields */
+.ui-input {
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.ui-input:focus {
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(255, 255, 255, 0.05),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Premium tag/badge depth */
+.ui-tag,
+.ui-badge {
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Dramatic toast notifications */
+.ui-toast {
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.ui-toast-ok {
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(34, 197, 94, 0.1),
+    inset 0 1px 0 rgba(34, 197, 94, 0.1);
+}
+
+.ui-toast-err {
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(239, 68, 68, 0.1),
+    inset 0 1px 0 rgba(239, 68, 68, 0.1);
+}
+
+/* User menu dramatic depth */
+.ui-usermenu {
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 80px rgba(255, 255, 255, 0.03),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+/* Menu items with subtle glow on hover */
+.ui-menuitem:hover {
+  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.6);
 }
