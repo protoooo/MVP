@@ -1,3 +1,4 @@
+// app/page.js
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -11,9 +12,13 @@ import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
+
+// ✅ SECURITY FIX: Removed client-side admin check
+// Admin features now only accessible via /admin routes with server-side validation
+// eslint-disable-next-line no-unused-vars
+const isAdmin = false
 
 const Icons = {
   Camera: () => (
@@ -134,8 +139,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <p className={`ui-subtitle ${inter.className}`}>Train faster. Avoid violations. Pass inspections.</p>
 
             <p className={`ui-body ${inter.className}`}>
-              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector arrives.
-              Plus, search Washtenaw County regulations instantly when your team has questions.
+              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector
+              arrives. Plus, search Washtenaw County regulations instantly when your team has questions.
             </p>
 
             <div className="ui-cta-row">
@@ -185,13 +190,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
             <div className="ui-faq">
               {faqs.map((f, i) => (
-                <FAQItem
-                  key={i}
-                  q={f.q}
-                  a={f.a}
-                  isOpen={openFaq === i}
-                  onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
-                />
+                <FAQItem key={i} q={f.q} a={f.a} isOpen={openFaq === i} onToggle={() => setOpenFaq((v) => (v === i ? null : i))} />
               ))}
             </div>
           </section>
@@ -403,11 +402,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
         </form>
 
         {message && (
-          <div
-            className={`mt-4 ui-toast ${
-              messageKind === 'err' ? 'ui-toast-err' : messageKind === 'ok' ? 'ui-toast-ok' : ''
-            }`}
-          >
+          <div className={`mt-4 ui-toast ${messageKind === 'err' ? 'ui-toast-err' : messageKind === 'ok' ? 'ui-toast-ok' : ''}`}>
             <span className="ui-toasticon" aria-hidden="true">
               {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
             </span>
@@ -469,7 +464,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
                 <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Includes generous monthly usage. Photos count as two checks.</p>
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+                Includes generous monthly usage. Photos count as two checks.
+              </p>
             </div>
 
             <div className={`ui-badge ${inter.className}`}>
@@ -620,7 +617,7 @@ export default function Page() {
           return
         }
 
-        // ✅ Check if there was a profile error (DB issue)
+        // ✅ If profile error (DB issue)
         if (profileError) {
           console.error('❌ Profile check error:', profileError)
           setHasActiveSubscription(false)
@@ -636,25 +633,21 @@ export default function Page() {
         return
       }
 
-      // Check subscription
+      // Check subscription (no admin bypass)
       let active = false
       try {
-        if (s.user.email === ADMIN_EMAIL) {
-          active = true
-        } else {
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('status,current_period_end')
-            .eq('user_id', s.user.id)
-            .in('status', ['active', 'trialing'])
-            .order('current_period_end', { ascending: false })
-            .limit(1)
-            .maybeSingle()
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('status,current_period_end')
+          .eq('user_id', s.user.id)
+          .in('status', ['active', 'trialing'])
+          .order('current_period_end', { ascending: false })
+          .limit(1)
+          .maybeSingle()
 
-          if (sub && sub.current_period_end) {
-            const end = new Date(sub.current_period_end)
-            if (end > new Date()) active = true
-          }
+        if (sub && sub.current_period_end) {
+          const end = new Date(sub.current_period_end)
+          if (end > new Date()) active = true
         }
       } catch (e) {
         console.error('Subscription check error', e)
@@ -1293,8 +1286,8 @@ export default function Page() {
           font-weight: 800;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
-            color 120ms ease, opacity 120ms ease;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease,
+            opacity 120ms ease;
           user-select: none;
         }
 
@@ -1602,7 +1595,12 @@ export default function Page() {
           inset: -1px;
           border-radius: 18px;
           padding: 1px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.15),
+            rgba(255, 255, 255, 0.02),
+            rgba(255, 255, 255, 0.08)
+          );
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
@@ -1843,9 +1841,7 @@ export default function Page() {
                         <div className="ui-usermenu">
                           <div className="ui-menuheader">
                             <div className={`ui-useremail ${inter.className}`}>{session?.user?.email || 'Signed in'}</div>
-                            <div className={`ui-userstatus ${inter.className}`}>
-                              {hasActiveSubscription ? '● Active Premium' : 'Free Account'}
-                            </div>
+                            <div className={`ui-userstatus ${inter.className}`}>{hasActiveSubscription ? '● Active Premium' : 'Free Account'}</div>
                           </div>
 
                           <div>
@@ -1978,8 +1974,14 @@ export default function Page() {
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="ui-thinking flex gap-2 items-center">
                               <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                              <span
+                                className="w-2 h-2 rounded-full bg-white/30 animate-bounce"
+                                style={{ animationDelay: '0.12s' }}
+                              />
+                              <span
+                                className="w-2 h-2 rounded-full bg-white/30 animate-bounce"
+                                style={{ animationDelay: '0.24s' }}
+                              />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1992,10 +1994,7 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div
-                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
-                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-                >
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
