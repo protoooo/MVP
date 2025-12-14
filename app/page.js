@@ -196,7 +196,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </section>
 
-          {/* ✅ Added section AFTER FAQ and BEFORE final CTA */}
+          {/* ✅ NEW SECTION: Built for Washtenaw County */}
           <div className="ui-section-divider" />
 
           <section className="ui-section">
@@ -243,8 +243,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                   <div className="flex-1">
                     <h3 className={`text-base font-bold text-white mb-2 ${outfit.className}`}>First 100 Restaurants Get Priority Support</h3>
                     <p className={`text-sm leading-relaxed text-white/70 ${inter.className}`}>
-                      As an early adopter, you'll get direct access to our team, free training sessions for your staff, and input on new
-                      features. We're building this with Washtenaw County operators, for Washtenaw County operators.
+                      As an early adopter, you'll get direct access to our team, free training sessions for your staff, and input on new features.
+                      We're building this with Washtenaw County operators, for Washtenaw County operators.
                     </p>
                   </div>
                 </div>
@@ -750,6 +750,48 @@ export default function Page() {
     }
   }, [])
 
+  // ✅ Stripe Billing Portal button (replaces “Manage Subscription”)
+  const handleManageBilling = async () => {
+    let loadingToast
+    try {
+      setShowUserMenu(false)
+
+      // Optional: avoid confusing admin billing
+      if (session?.user?.email && session.user.email === ADMIN_EMAIL) {
+        alert('Admin access has no billing portal.')
+        return
+      }
+
+      // Show loading state
+      loadingToast = document.createElement('div')
+      loadingToast.textContent = 'Opening billing portal...'
+      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
+      document.body.appendChild(loadingToast)
+
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (loadingToast && loadingToast.parentNode) document.body.removeChild(loadingToast)
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Failed to open billing portal')
+        return
+      }
+
+      const { url } = await res.json()
+      window.location.href = url
+    } catch (error) {
+      console.error('Billing portal error:', error)
+      try {
+        if (loadingToast && loadingToast.parentNode) document.body.removeChild(loadingToast)
+      } catch {}
+      alert('Failed to open billing portal')
+    }
+  }
+
   const handleCheckout = async (priceId, planName) => {
     try {
       const { data } = await supabase.auth.getSession()
@@ -790,54 +832,6 @@ export default function Page() {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       setCheckoutLoading(null)
-    }
-  }
-
-  // ✅ Stripe Billing Portal (Manage Billing)
-  const handleManageBilling = async () => {
-    let loadingToast = null
-    try {
-      setShowUserMenu(false)
-
-      // If they don't have an active subscription yet, send them to pricing.
-      if (!hasActiveSubscription) {
-        setShowPricingModal(true)
-        return
-      }
-
-      // Show loading state
-      if (typeof document !== 'undefined') {
-        loadingToast = document.createElement('div')
-        loadingToast.textContent = 'Opening billing portal...'
-        loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
-        document.body.appendChild(loadingToast)
-      }
-
-      const res = await fetch('/api/create-portal-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      if (loadingToast && typeof document !== 'undefined' && document.body.contains(loadingToast)) {
-        document.body.removeChild(loadingToast)
-        loadingToast = null
-      }
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        alert(data.error || 'Failed to open billing portal')
-        return
-      }
-
-      const { url } = await res.json()
-      window.location.href = url
-    } catch (error) {
-      console.error('Billing portal error:', error)
-      alert('Failed to open billing portal')
-    } finally {
-      if (loadingToast && typeof document !== 'undefined' && document.body.contains(loadingToast)) {
-        document.body.removeChild(loadingToast)
-      }
     }
   }
 
@@ -1867,12 +1861,19 @@ export default function Page() {
 
                           {/* Menu Items */}
                           <div>
-                            {/* ✅ Replaced "Manage Subscription" with Billing Portal */}
-                            <button onClick={handleManageBilling} className={`ui-menuitem ${inter.className}`}>
+                            {/* ✅ Replace “Manage Subscription” with Billing Portal */}
+                            <button
+                              onClick={() => {
+                                if (hasActiveSubscription) return handleManageBilling()
+                                setShowPricingModal(true)
+                                setShowUserMenu(false)
+                              }}
+                              className={`ui-menuitem ${inter.className}`}
+                            >
                               <span className="ui-menuitem-icon">
                                 <Icons.Settings />
                               </span>
-                              <span>Manage Billing</span>
+                              <span>{hasActiveSubscription ? 'Manage Billing' : 'Start Subscription'}</span>
                             </button>
 
                             <button
@@ -1994,7 +1995,10 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                <div
+                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
+                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+                >
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
