@@ -1,4 +1,4 @@
-// app/api/chat/route.js
+// app/api/chat/route.js - COMPLETE FILE with ALL security fixes
 import OpenAI from 'openai'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { NextResponse } from 'next/server'
@@ -13,14 +13,13 @@ export const dynamic = 'force-dynamic'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-// ✅ Main model
+// ✅ Main model - GPT-5.2
 const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2'
 
 // Output controls
 // NOTE: GPT-5 reasoning efforts are: low | medium | high (no xhigh)
 const GENERATION_CONFIG = {
-  reasoningEffort: 'high', // 'low' | 'medium' | 'high' (we will normalize xhigh -> high)
-  // This is TOTAL budget (reasoning + visible output) for Responses API
+  reasoningEffort: 'high', // 'low' | 'medium' | 'high'
   maxOutputTokensByEffort: {
     low: 1600,
     medium: 2400,
@@ -53,7 +52,7 @@ function normalizeEffort(effort) {
 
   if (v === 'xhigh') return 'high'
   if (v === 'high' || v === 'medium' || v === 'low') return v
-  if (v === 'none') return 'low' // safety fallback
+  if (v === 'none') return 'low'
   return 'high'
 }
 
@@ -260,7 +259,6 @@ async function callResponses({
   const outputText =
     typeof resp?.output_text === 'string' ? resp.output_text.trim() : ''
 
-  // Some responses can be "incomplete" or return empty text if token budget is exhausted during reasoning.
   const status = resp?.status || null
 
   return { resp, outputText, status, effort }
@@ -310,7 +308,6 @@ export async function POST(req) {
 
     const body = await req.json()
 
-    // Optional overrides from client (if you ever send them)
     const requestedEffort = normalizeEffort(
       body?.reasoningEffort || body?.settings?.reasoningEffort || GENERATION_CONFIG.reasoningEffort
     )
@@ -372,14 +369,15 @@ export async function POST(req) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL
-    const isAdmin = !!user && user.email === adminEmail
+    // ✅ SECURITY FIX: Removed NEXT_PUBLIC fallback
+    const adminEmail = process.env.ADMIN_EMAIL
+    const isAdmin = !!user && !!adminEmail && user.email === adminEmail
 
     // Subscription check (non-admin)
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('accepted_terms, created_at')
+        .select('accepted_terms')
         .eq('id', user.id)
         .single()
 
@@ -402,22 +400,31 @@ export async function POST(req) {
         hasActiveSub = true
       }
 
-      // Grace periods
-      if (!hasActiveSub && profile?.created_at) {
-        if (Date.now() - new Date(profile.created_at).getTime() < 600000) hasActiveSub = true
-      }
+      // ✅ SECURITY FIX: REMOVED 10-minute signup grace period (was exploitable)
+      // Users now need active subscription from day 1
 
+      // ✅ SECURITY FIX: Verify checkout grace period with actual subscription
       if (!hasActiveSub) {
         const { data: recentCheckout } = await supabase
           .from('checkout_attempts')
-          .select('created_at')
+          .select('created_at, stripe_session_id')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
 
         if (recentCheckout && Date.now() - new Date(recentCheckout.created_at).getTime() < 300000) {
-          hasActiveSub = true
+          // Verify the checkout actually completed
+          const { data: completedSub } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', user.id)
+            .limit(1)
+            .maybeSingle()
+          
+          if (completedSub) {
+            hasActiveSub = true
+          }
         }
       }
 
@@ -640,9 +647,7 @@ ${searchTerms}` : ''}`
       rawText = first.outputText || ''
       usedEffort = first.effort
 
-      // If empty or suspiciously short, retry once with a safer combo:
-      // - reduce effort to medium
-      // - keep token budget high enough to ensure visible output
+      // If empty or suspiciously short, retry once
       if (!rawText || rawText.trim().length < 10 || first.status === 'incomplete') {
         logger.warn('Empty/incomplete model output; retrying once', {
           requestId,
@@ -668,7 +673,6 @@ ${searchTerms}` : ''}`
       }
     } catch (e) {
       logger.error('OpenAI generation failed', { requestId, error: e.message })
-      // NO 500: return a safe fallback message (still 200 so UI doesn't hard-fail)
       const msg = fallbackAnswer(
         e.message === 'OPENAI_TIMEOUT'
           ? 'Request timed out. Please try again.'
@@ -682,7 +686,6 @@ ${searchTerms}` : ''}`
     let cleaned = cleanModelText(parsed.text)
 
     if (!cleaned || cleaned.length < 10) {
-      // NO 500: return a safe fallback instead of throwing
       logger.warn('Model output still empty after retry; returning fallback', {
         requestId,
         effort: usedEffort,
@@ -733,7 +736,6 @@ ${searchTerms}` : ''}`
     const duration = Date.now() - startTime
     logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
 
-    // NO 500: return a safe fallback message so your UI never shows a hard 500 here
     const msg =
       err.message && err.message.includes('TIMEOUT')
         ? fallbackAnswer('Request timed out. Please try again.')
