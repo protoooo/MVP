@@ -17,13 +17,16 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
-  height: 100%;              /* ✅ ensure full-height root */
+  height: 100%;
   background: transparent;
 }
 
 body {
-  position: relative;        /* ✅ helps stacking context behave predictably */
-  z-index: 0;                /* ✅ ensures bg z=0 sits behind content wrapper */
+  /* ✅ CRITICAL: ensure negative z-index background is still visible */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -50,25 +53,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes content-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .animate-slideDown {
@@ -98,54 +89,20 @@ h1, h2, h3, h4, h5, h6 {
   animation: content-fade-in 0.5s ease-out 1s forwards;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-steel-blue); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-steel-blue-dark); }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-steel-blue);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-steel-blue-dark);
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-steel-blue);
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-steel-blue-dark);
-}
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-steel-blue); border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--color-steel-blue-dark); }
 
 @keyframes dot-flashing {
-  0% {
-    opacity: 0.2;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
+  0% { opacity: 0.2; }
+  20% { opacity: 1; }
+  100% { opacity: 0.2; }
 }
 
 .loading-dots {
@@ -162,28 +119,13 @@ h1, h2, h3, h4, h5, h6 {
   animation: dot-flashing 1.4s infinite;
 }
 
-.loading-dots .dot:nth-child(1) {
-  background-color: var(--color-steel-blue);
-  animation-delay: 0s;
-}
+.loading-dots .dot:nth-child(1) { background-color: var(--color-steel-blue); animation-delay: 0s; }
+.loading-dots .dot:nth-child(2) { background-color: #64748b; animation-delay: 0.2s; }
+.loading-dots .dot:nth-child(3) { background-color: #94a3b8; animation-delay: 0.4s; }
 
-.loading-dots .dot:nth-child(2) {
-  background-color: #64748b;
-  animation-delay: 0.2s;
-}
+.matte-background { background: #f8fafc; }
 
-.loading-dots .dot:nth-child(3) {
-  background-color: #94a3b8;
-  animation-delay: 0.4s;
-}
-
-.matte-background {
-  background: #f8fafc;
-}
-
-button, a, input, textarea, select {
-  transition: all 0.2s ease-in-out;
-}
+button, a, input, textarea, select { transition: all 0.2s ease-in-out; }
 
 button:focus-visible,
 a:focus-visible,
@@ -195,18 +137,9 @@ select:focus-visible {
 }
 
 @media (max-width: 768px) {
-  * {
-    max-width: 100vw;
-  }
-
-  body {
-    overflow-x: hidden;
-    position: relative;
-  }
-
-  input, textarea, select, button {
-    max-width: 100%;
-  }
+  * { max-width: 100vw; }
+  body { overflow-x: hidden; position: relative; }
+  input, textarea, select, button { max-width: 100%; }
 }
 
 /* =========================================================
@@ -263,327 +196,26 @@ select:focus-visible {
 }
 
 @layer utilities {
-  .plm-no-border {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .plm-no-frame {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .plm-image-plain {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .plm-image-plain img {
-    display: block;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-}
-
-/* =========================================================
-   AMEX BLACK CARD DEPTH STYLING - DRAMATIC VERSION
-   ========================================================= */
-
-.ui-shell {
-  position: relative;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 30px 60px rgba(0, 0, 0, 0.7),
-    0 60px 120px rgba(0, 0, 0, 0.6),
-    0 100px 160px rgba(0, 0, 0, 0.5),
-    0 0 80px rgba(255, 255, 255, 0.02);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-shell:hover {
-  transform: translateY(-8px);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.15),
-    0 40px 80px rgba(0, 0, 0, 0.8),
-    0 80px 160px rgba(0, 0, 0, 0.7),
-    0 120px 200px rgba(0, 0, 0, 0.6),
-    0 0 120px rgba(255, 255, 255, 0.05);
-}
-
-.ui-shell::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  opacity: 0.8;
-  z-index: 1;
-}
-
-.ui-shell::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-
-.ui-modal {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 40px 80px rgba(0, 0, 0, 0.8),
-    0 80px 160px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 100px rgba(255, 255, 255, 0.03);
-}
-
-.ui-btn-primary {
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-btn-primary:hover {
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-.ui-pricewrap {
-  position: relative;
-}
-
-.ui-pricewrap::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.ui-header {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.1),
-    0 8px 24px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(255, 255, 255, 0.02);
-}
-
-.ui-stepcard {
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.4),
-    0 0 40px rgba(255, 255, 255, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-stepcard:hover {
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transform: translateY(-4px);
-}
-
-.ui-faqbtn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
-}
-
-.ui-faqchev {
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.ui-emptywrap {
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 60px rgba(255, 255, 255, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.ui-shell .ui-section {
-  position: relative;
-}
-
-.ui-shell .ui-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.08) 0%,
-    transparent 15%,
-    transparent 85%,
-    rgba(0, 0, 0, 0.08) 100%
-  );
-  pointer-events: none;
-}
-
-.ui-icon-btn {
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-icon-btn:hover {
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.4),
-    0 0 30px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.ui-avatar-btn {
-  box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-avatar-btn:hover {
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.ui-btn-secondary {
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.ui-btn-secondary:hover {
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.4),
-    0 0 30px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.ui-input {
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-
-.ui-input:focus {
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    0 0 40px rgba(255, 255, 255, 0.05),
-    inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.ui-tag,
-.ui-badge {
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.ui-toast {
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(255, 255, 255, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-.ui-toast-ok {
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(34, 197, 94, 0.1),
-    inset 0 1px 0 rgba(34, 197, 94, 0.1);
-}
-
-.ui-toast-err {
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(239, 68, 68, 0.1),
-    inset 0 1px 0 rgba(239, 68, 68, 0.1);
-}
-
-.ui-usermenu {
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.8),
-    0 0 80px rgba(255, 255, 255, 0.03),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-}
-
-.ui-menuitem:hover {
-  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.6);
+  .plm-no-border { border: none !important; outline: none !important; box-shadow: none !important; }
+  .plm-no-frame { padding: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+  .plm-image-plain { padding: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+  .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
 /* Amex Background Animations */
 @keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-  50% {
-    transform: translate(-20px, 40px) scale(0.9);
-  }
-  75% {
-    transform: translate(40px, 20px) scale(1.05);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 40px) scale(0.9); }
+  75% { transform: translate(40px, 20px) scale(1.05); }
 }
 
 @keyframes float-reverse {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  25% {
-    transform: translate(-30px, 30px) scale(1.1);
-  }
-  50% {
-    transform: translate(20px, -40px) scale(0.9);
-  }
-  75% {
-    transform: translate(-40px, -20px) scale(1.05);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30px, 30px) scale(1.1); }
+  50% { transform: translate(20px, -40px) scale(0.9); }
+  75% { transform: translate(-40px, -20px) scale(1.05); }
 }
 
-.animate-float {
-  animation: float ease-in-out infinite;
-}
-
-.animate-float-reverse {
-  animation: float-reverse ease-in-out infinite;
-}
+.animate-float { animation: float ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse ease-in-out infinite; }
