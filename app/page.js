@@ -119,8 +119,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
     },
     {
-      q: 'Do I need it every day?',
-      a: 'Most teams use it before rushes, during closes/opens, after new hires, or when they want to tighten up the line.',
+      q: 'How often should my team use it?',
+      a: 'Smart teams run quick checks before health inspection windows (usually 9am-2pm weekdays), after training new staff, and whenever something looks "off" during a shift. Takes 30 seconds per check.',
     },
   ]
 
@@ -131,10 +131,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <section className="ui-hero">
             <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
-            <p className={`ui-subtitle ${inter.className}`}>Catch violations before the health inspector.</p>
+            <p className={`ui-subtitle ${inter.className}`}>Train faster. Avoid violations. Pass inspections.</p>
 
             <p className={`ui-body ${inter.className}`}>
-              Photo scans for instant violation checks. Document search for Washtenaw-specific enforcement and food-code guidance.
+              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector arrives. Plus,
+              search Washtenaw County regulations instantly when your team has questions.
             </p>
 
             <div className="ui-cta-row">
@@ -195,14 +196,78 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </section>
 
+          {/* ✅ Added section AFTER FAQ and BEFORE final CTA */}
+          <div className="ui-section-divider" />
+
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Built for Washtenaw County</h2>
+
+            <div className="mt-6 space-y-4">
+              {/* Stat Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="ui-stepcard">
+                  <div className="text-center py-2">
+                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>1,353</div>
+                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Regulation Chunks Embedded</div>
+                  </div>
+                </div>
+
+                <div className="ui-stepcard">
+                  <div className="text-center py-2">
+                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>100%</div>
+                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Washtenaw County Focused</div>
+                  </div>
+                </div>
+
+                <div className="ui-stepcard">
+                  <div className="text-center py-2">
+                    <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>10 sec</div>
+                    <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Average Check Time</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trust Signal */}
+              <div className="ui-stepcard p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`text-base font-bold text-white mb-2 ${outfit.className}`}>First 100 Restaurants Get Priority Support</h3>
+                    <p className={`text-sm leading-relaxed text-white/70 ${inter.className}`}>
+                      As an early adopter, you'll get direct access to our team, free training sessions for your staff, and input on new
+                      features. We're building this with Washtenaw County operators, for Washtenaw County operators.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Placeholder for testimonials - update after you get customers */}
+              <div className="ui-stepcard p-6 border-dashed opacity-60">
+                <div className="text-center py-4">
+                  <p className={`text-sm text-white/50 italic ${inter.className}`}>"Testimonials from Ann Arbor restaurants coming soon"</p>
+                  <p className={`text-xs text-white/40 mt-2 ${inter.className}`}>Be one of the first to try protocolLM and share your experience</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <div className="ui-section-divider" />
 
           <section className="ui-final">
             <div className="ui-finalinner">
               <div>
-                <h3 className={`ui-h2 ${outfit.className}`}>Be inspection-ready on your next shift.</h3>
+                <h3 className={`ui-h2 ${outfit.className}`}>Start Your 7-Day Trial Today</h3>
                 <p className={`ui-p ${inter.className}`}>
-                  Start the trial, run a quick scan, and keep the checklist on a manager clipboard.
+                  No credit card required. Takes 2 minutes to set up. Start catching violations before the inspector does.
                 </p>
               </div>
 
@@ -725,6 +790,54 @@ export default function Page() {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
       setCheckoutLoading(null)
+    }
+  }
+
+  // ✅ Stripe Billing Portal (Manage Billing)
+  const handleManageBilling = async () => {
+    let loadingToast = null
+    try {
+      setShowUserMenu(false)
+
+      // If they don't have an active subscription yet, send them to pricing.
+      if (!hasActiveSubscription) {
+        setShowPricingModal(true)
+        return
+      }
+
+      // Show loading state
+      if (typeof document !== 'undefined') {
+        loadingToast = document.createElement('div')
+        loadingToast.textContent = 'Opening billing portal...'
+        loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
+        document.body.appendChild(loadingToast)
+      }
+
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (loadingToast && typeof document !== 'undefined' && document.body.contains(loadingToast)) {
+        document.body.removeChild(loadingToast)
+        loadingToast = null
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Failed to open billing portal')
+        return
+      }
+
+      const { url } = await res.json()
+      window.location.href = url
+    } catch (error) {
+      console.error('Billing portal error:', error)
+      alert('Failed to open billing portal')
+    } finally {
+      if (loadingToast && typeof document !== 'undefined' && document.body.contains(loadingToast)) {
+        document.body.removeChild(loadingToast)
+      }
     }
   }
 
@@ -1685,12 +1798,7 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
@@ -1759,17 +1867,12 @@ export default function Page() {
 
                           {/* Menu Items */}
                           <div>
-                            <button
-                              onClick={() => {
-                                setShowPricingModal(true)
-                                setShowUserMenu(false)
-                              }}
-                              className={`ui-menuitem ${inter.className}`}
-                            >
+                            {/* ✅ Replaced "Manage Subscription" with Billing Portal */}
+                            <button onClick={handleManageBilling} className={`ui-menuitem ${inter.className}`}>
                               <span className="ui-menuitem-icon">
                                 <Icons.Settings />
                               </span>
-                              <span>Manage Subscription</span>
+                              <span>Manage Billing</span>
                             </button>
 
                             <button
