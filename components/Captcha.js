@@ -2,14 +2,20 @@
 import { useEffect, useState, useRef } from 'react'
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+const TURNSTILE_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
 
 export function useRecaptcha() {
   const [isLoaded, setIsLoaded] = useState(false)
-  const widgetIdRef = useRef(null)
+  const didAttachListenersRef = useRef(false)
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) {
       console.warn('Turnstile site key not configured')
+      setIsLoaded(true)
+      return
+    }
+
+    if (typeof window === 'undefined') {
       setIsLoaded(true)
       return
     }
@@ -19,26 +25,45 @@ export function useRecaptcha() {
       return
     }
 
-    const script = document.createElement('script')
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
-    script.async = true
-    script.defer = true
-    
-    script.onload = () => {
-      setIsLoaded(true)
-    }
-    
-    script.onerror = () => {
+    const existingScript = document.querySelector(`script[src="${TURNSTILE_SRC}"]`)
+
+    const handleLoad = () => setIsLoaded(true)
+    const handleError = () => {
       console.error('Failed to load Turnstile')
       setIsLoaded(true)
     }
 
+    if (existingScript) {
+      // If script already exists, just listen for it (don’t remove it on cleanup)
+      existingScript.addEventListener('load', handleLoad)
+      existingScript.addEventListener('error', handleError)
+      didAttachListenersRef.current = true
+
+      // If it’s already loaded but window.turnstile not set yet, give it a tick
+      setTimeout(() => {
+        if (window.turnstile) setIsLoaded(true)
+      }, 0)
+
+      return () => {
+        existingScript.removeEventListener('load', handleLoad)
+        existingScript.removeEventListener('error', handleError)
+      }
+    }
+
+    const script = document.createElement('script')
+    script.src = TURNSTILE_SRC
+    script.async = true
+    script.defer = true
+    script.onload = handleLoad
+    script.onerror = handleError
     document.head.appendChild(script)
 
+    // ✅ IMPORTANT: do NOT remove the script on unmount.
+    // AuthModal mount/unmount would nuke Turnstile for checkout later.
     return () => {
-      const existingScript = document.querySelector(`script[src*="turnstile"]`)
-      if (existingScript) {
-        document.head.removeChild(existingScript)
+      if (!didAttachListenersRef.current) {
+        script.onload = null
+        script.onerror = null
       }
     }
   }, [])
@@ -50,26 +75,60 @@ export function useRecaptcha() {
     }
 
     return new Promise((resolve, reject) => {
-      try {
-        // Create invisible container
-        const container = document.createElement('div')
-        container.style.display = 'none'
-        document.body.appendChild(container)
+      // Invisible container
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.width = '1px'
+      container.style.height = '1px'
+      container.style.opacity = '0'
+      container.style.pointerEvents = 'none'
+      container.style.left = '-9999px'
+      container.style.top = '-9999px'
+      document.body.appendChild(container)
 
-        window.turnstile.render(container, {
+      let widgetId = null
+      let done = false
+
+      const cleanup = () => {
+        if (done) return
+        done = true
+        try {
+          if (widgetId !== null && window.turnstile?.remove) window.turnstile.remove(widgetId)
+        } catch {}
+        try {
+          container.remove()
+        } catch {}
+      }
+
+      const timeout = setTimeout(() => {
+        cleanup()
+        reject(new Error('Turnstile timeout'))
+      }, 15000)
+
+      try {
+        widgetId = window.turnstile.render(container, {
           sitekey: TURNSTILE_SITE_KEY,
+          action,
           callback: (token) => {
-            document.body.removeChild(container)
+            clearTimeout(timeout)
+            cleanup()
             resolve(token)
           },
           'error-callback': () => {
-            document.body.removeChild(container)
+            clearTimeout(timeout)
+            cleanup()
             reject(new Error('Turnstile challenge failed'))
           },
+          'expired-callback': () => {
+            clearTimeout(timeout)
+            cleanup()
+            reject(new Error('Turnstile challenge expired'))
+          },
         })
-      } catch (error) {
-        console.error('Turnstile execution error:', error)
-        reject(error)
+      } catch (err) {
+        clearTimeout(timeout)
+        cleanup()
+        reject(err)
       }
     })
   }
