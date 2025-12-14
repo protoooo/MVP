@@ -3,207 +3,121 @@
 
 export default function AmexBackground() {
   return (
-    <div aria-hidden="true" className="amx-root">
-      {/* Base matte black */}
-      <div className="amx-base" />
-
-      {/* Top specular “card sheen” */}
-      <div className="amx-sheen" />
-
-      {/* Subtle dot grid (very low contrast) */}
-      <div className="amx-grid" />
-
-      {/* Soft moving beams (aceternity-ish, but restrained) */}
-      <div className="amx-beam amx-beam1" />
-      <div className="amx-beam amx-beam2" />
-
-      {/* Bottom geometry plate (matte-tech linework) */}
-      <div className="amx-plate">
-        <svg viewBox="0 0 1200 260" preserveAspectRatio="none" className="amx-plateSvg">
-          <defs>
-            <linearGradient id="amxStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="rgba(255,255,255,0.00)" />
-              <stop offset="0.35" stopColor="rgba(255,255,255,0.14)" />
-              <stop offset="0.70" stopColor="rgba(255,255,255,0.08)" />
-              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
-            </linearGradient>
-
-            <pattern id="amxDiag" width="26" height="26" patternUnits="userSpaceOnUse">
-              <path d="M-6 26 L26 -6" stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
-              <path d="M6 32 L32 6" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            </pattern>
-
-            <clipPath id="amxClip">
-              <polygon points="0,260 1200,260 820,0 380,0" />
-            </clipPath>
-
-            <linearGradient id="amxFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(255,255,255,0.05)" />
-              <stop offset="1" stopColor="rgba(255,255,255,0.00)" />
-            </linearGradient>
-          </defs>
-
-          {/* Soft filled plate */}
-          <polygon points="0,260 1200,260 820,0 380,0" fill="url(#amxFill)" opacity="0.55" />
-
-          {/* Diagonal micro-lines inside the plate */}
-          <rect x="0" y="0" width="1200" height="260" fill="url(#amxDiag)" clipPath="url(#amxClip)" opacity="0.55" />
-
-          {/* Main outlines */}
-          <polygon points="0,260 1200,260 820,0 380,0" fill="none" stroke="url(#amxStroke)" strokeWidth="1.25" opacity="0.9" />
-          <polygon points="80,260 1120,260 785,35 415,35" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="1" opacity="0.8" />
-
-          {/* A few internal rails */}
-          <path d="M140 260 L470 35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-          <path d="M240 260 L520 35" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-          <path d="M960 260 L680 35" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-          <path d="M1060 260 L730 35" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-        </svg>
+    <div aria-hidden="true" className="amxRoot">
+      {/* Spline iframe layer */}
+      <div className="splineWrap">
+        <iframe
+          title="Background"
+          src="https://my.spline.design/3dgradient-AcpgG6LxFkpnJSoowRHPfcbO"
+          className="splineFrame"
+          frameBorder="0"
+          loading="eager"
+          referrerPolicy="no-referrer-when-downgrade"
+          tabIndex={-1}
+        />
       </div>
 
-      {/* Vignette for “photographed card” edges */}
-      <div className="amx-vignette" />
+      {/* Amex-black-card matte tuning overlays */}
+      <div className="matteBase" />
+      <div className="sheen" />
+      <div className="grain" />
+      <div className="vignette" />
 
       <style jsx>{`
-        .amx-root {
+        .amxRoot {
           position: fixed;
           inset: 0;
           z-index: -10;
-          pointer-events: none;
           overflow: hidden;
+          pointer-events: none;
           background: #000;
         }
 
-        .amx-base {
+        .splineWrap {
           position: absolute;
           inset: 0;
-          background:
-            radial-gradient(1200px 800px at 50% 20%, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0) 55%),
-            radial-gradient(900px 700px at 15% 55%, rgba(120, 140, 170, 0.06), rgba(0, 0, 0, 0) 60%),
-            radial-gradient(900px 700px at 85% 60%, rgba(80, 95, 120, 0.05), rgba(0, 0, 0, 0) 62%),
-            linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0) 35%),
-            #000;
         }
 
-        .amx-sheen {
-          position: absolute;
-          inset: -20%;
-          background: radial-gradient(ellipse 40% 22% at 50% 10%, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0) 70%);
-          filter: blur(2px);
-          opacity: 0.75;
-          transform: translateZ(0);
-          animation: amxSheen 18s ease-in-out infinite;
-          will-change: transform, opacity;
-        }
-
-        .amx-grid {
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px);
-          background-size: 26px 26px;
-          background-position: 0 0;
-          opacity: 0.18;
-          mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-          -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%);
-        }
-
-        .amx-beam {
-          position: absolute;
-          inset: -40% -60%;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.08) 45%,
-            rgba(255, 255, 255, 0.14) 50%,
-            rgba(255, 255, 255, 0.08) 55%,
-            rgba(255, 255, 255, 0) 100%
-          );
-          filter: blur(10px);
-          opacity: 0.35;
-          mix-blend-mode: screen;
-          transform: rotate(12deg) translate3d(0, 0, 0);
-          animation: amxSweep 12s linear infinite;
-          will-change: transform, opacity;
-        }
-
-        .amx-beam1 {
-          animation-duration: 14s;
-          opacity: 0.26;
-          transform: rotate(14deg);
-        }
-
-        .amx-beam2 {
-          animation-duration: 18s;
-          animation-delay: -6s;
-          opacity: 0.18;
-          transform: rotate(-10deg);
-        }
-
-        .amx-plate {
-          position: absolute;
-          left: 50%;
-          bottom: -110px;
-          width: 130%;
-          max-width: 1600px;
-          transform: translateX(-50%);
-          opacity: 0.55;
-          filter: blur(0.2px);
-        }
-
-        .amx-plateSvg {
+        .splineFrame {
           width: 100%;
-          height: auto;
+          height: 100%;
+          border: none;
           display: block;
+          pointer-events: none;
+
+          /* Make it “black card” subtle */
+          filter: saturate(0.85) contrast(1.05) brightness(0.72);
+          transform: translateZ(0);
         }
 
-        .amx-vignette {
+        /* Matte black base to unify/quiet the Spline colors */
+        .matteBase {
           position: absolute;
           inset: 0;
           background:
-            radial-gradient(ellipse 75% 55% at 50% 35%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 100%),
-            linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.35));
+            radial-gradient(1200px 700px at 50% 15%, rgba(255, 255, 255, 0.05), transparent 60%),
+            radial-gradient(900px 600px at 18% 55%, rgba(90, 110, 140, 0.10), transparent 62%),
+            radial-gradient(900px 600px at 82% 55%, rgba(70, 85, 115, 0.08), transparent 64%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.72) 55%, rgba(0, 0, 0, 0.82) 100%);
+          mix-blend-mode: multiply;
+          opacity: 0.9;
+        }
+
+        /* Subtle top reflection like a photographed card */
+        .sheen {
+          position: absolute;
+          top: -30%;
+          left: 50%;
+          width: 120%;
+          height: 70%;
+          transform: translateX(-50%);
+          background: radial-gradient(
+            ellipse 45% 32% at 50% 35%,
+            rgba(255, 255, 255, 0.09) 0%,
+            rgba(255, 255, 255, 0.03) 30%,
+            transparent 70%
+          );
+          filter: blur(2px);
+          opacity: 0.5;
+          animation: sheenFloat 20s ease-in-out infinite;
+        }
+
+        /* Fine grain for “matte black” texture */
+        .grain {
+          position: absolute;
+          inset: 0;
+          opacity: 0.08;
+          mix-blend-mode: overlay;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
+        }
+
+        /* Premium vignette edges */
+        .vignette {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 70% 55% at 50% 40%, transparent 0%, rgba(0, 0, 0, 0.68) 100%),
+            linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, transparent 18%, transparent 82%, rgba(0, 0, 0, 0.35) 100%);
           opacity: 0.95;
         }
 
-        @keyframes amxSweep {
+        @keyframes sheenFloat {
           0% {
-            transform: rotate(12deg) translate3d(-6%, -2%, 0);
-            opacity: 0.05;
-          }
-          25% {
-            opacity: 0.28;
+            transform: translateX(-50%) translateY(0) scale(1);
+            opacity: 0.42;
           }
           50% {
-            transform: rotate(12deg) translate3d(6%, 2%, 0);
-            opacity: 0.18;
-          }
-          75% {
-            opacity: 0.26;
+            transform: translateX(-50%) translateY(14px) scale(1.02);
+            opacity: 0.58;
           }
           100% {
-            transform: rotate(12deg) translate3d(-6%, -2%, 0);
-            opacity: 0.05;
-          }
-        }
-
-        @keyframes amxSheen {
-          0% {
-            transform: translate3d(0, 0, 0) scale(1);
-            opacity: 0.55;
-          }
-          50% {
-            transform: translate3d(0, 14px, 0) scale(1.02);
-            opacity: 0.85;
-          }
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-            opacity: 0.55;
+            transform: translateX(-50%) translateY(0) scale(1);
+            opacity: 0.42;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .amx-sheen,
-          .amx-beam {
+          .sheen {
             animation: none !important;
           }
         }
