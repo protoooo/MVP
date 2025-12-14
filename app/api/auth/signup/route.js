@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - Fixed to create profile
+// app/api/auth/signup/route.js - Fixed with better error handling
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -47,7 +47,9 @@ export async function POST(request) {
     }
 
     const cookieStore = cookies()
-    const supabase = createServerClient(
+    
+    // Use anon key for user creation
+    const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
@@ -67,7 +69,7 @@ export async function POST(request) {
     )
 
     // Create user
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
       options: {
@@ -80,34 +82,51 @@ export async function POST(request) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    // CRITICAL FIX: Create user profile immediately
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: data.user.id,
-          accepted_terms: false, // Will be set to true on /accept-terms
-          accepted_privacy: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single()
+    if (!data.user) {
+      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
+    }
 
-      if (profileError) {
-        logger.error('Failed to create user profile', { 
-          error: profileError.message,
-          userId: data.user.id 
-        })
-        // Don't fail signup if profile creation fails - it will be created on first login
-      } else {
-        logger.info('User profile created', { userId: data.user.id })
+    // Use service role for profile creation (bypasses RLS)
+    const supabaseAdmin = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll() {},
+        },
       }
+    )
+
+    // Create user profile with service role
+    const now = new Date().toISOString()
+    const { error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .insert({
+        id: data.user.id,
+        accepted_terms: false,
+        accepted_privacy: false,
+        created_at: now,
+        updated_at: now
+      })
+
+    if (profileError) {
+      logger.error('Failed to create user profile', { 
+        error: profileError.message,
+        userId: data.user.id,
+        code: profileError.code
+      })
+      // Don't fail signup - profile will be created on first login
+      logger.warn('Profile creation skipped, will be created on login', { userId: data.user.id })
+    } else {
+      logger.info('User profile created', { userId: data.user.id })
     }
 
     logger.audit('User signed up', {
       email: email.substring(0, 3) + '***',
-      userId: data.user?.id,
+      userId: data.user.id,
       ip
     })
 
