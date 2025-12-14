@@ -1,3 +1,5 @@
+// REPLACE your package.json with this (adds missing tailwindcss):
+
 {
   "name": "compliance-hub",
   "version": "1.0.0",
@@ -13,7 +15,8 @@
     "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
     "lint": "next lint",
     "ingest": "node scripts/ingest-documents.js",
-    "test-search": "node scripts/test-search.js"
+    "test-search": "node scripts/test-search.js",
+    "send-trial-reminders": "node scripts/send-trial-reminders.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
@@ -27,13 +30,13 @@
     "pdf-parse": "^1.1.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stripe": "^14.10.0"
+    "stripe": "^14.10.0",
+    "tailwindcss": "^3.4.4",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.5",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4"
+    "eslint-config-next": "14.2.5"
   }
 }
