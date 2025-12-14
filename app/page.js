@@ -518,6 +518,9 @@ export default function Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // ✅ Needed for checkout CAPTCHA token
+  const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
+
   const [isLoading, setIsLoading] = useState(true)
   const [session, setSession] = useState(null)
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
@@ -700,7 +703,18 @@ export default function Page() {
         return
       }
 
+      // ✅ CAPTCHA must be loaded and included for checkout
+      if (!captchaLoaded) {
+        alert('Security verification is still loading. Please try again in a moment.')
+        return
+      }
+
       setCheckoutLoading(planName)
+
+      const captchaToken = await executeRecaptcha('checkout')
+      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
+        throw new Error('Security verification failed. Please refresh and try again.')
+      }
 
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
@@ -708,15 +722,15 @@ export default function Page() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${data.session.access_token}`,
         },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, captchaToken }),
       })
 
+      const payload = await res.json().catch(() => ({}))
+
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.error || 'Checkout failed')
+        throw new Error(payload.error || 'Checkout failed')
       }
 
-      const payload = await res.json()
       if (payload.url) {
         window.location.href = payload.url
       } else {
@@ -725,6 +739,7 @@ export default function Page() {
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
+    } finally {
       setCheckoutLoading(null)
     }
   }
