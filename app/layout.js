@@ -15,15 +15,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={outfit.className}>
-        {/* Background sits at z-index: 0 */}
         <AmexBackground />
-
-        {/* ✅ App content sits above at z-index: 10 */}
-        <div className="relative z-10 min-h-screen w-full">
-          <SessionGuard />
-          {children}
-          <CookieConsent />
-        </div>
+        <SessionGuard />
+        {children}
+        <CookieConsent />
       </body>
     </html>
   )
