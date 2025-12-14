@@ -1,8 +1,10 @@
+// app/api/webhook/route.js - Complete webhook with email integration
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { emails } from '@/lib/emails'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -19,6 +21,10 @@ const PRICE_TO_PLAN = {
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY]: 'enterprise',
   [process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_ANNUAL]: 'enterprise',
 }
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
 // Database-backed idempotency
 async function isEventProcessed(eventId) {
@@ -41,6 +47,32 @@ async function markEventProcessed(eventId, eventType) {
     })
     .onConflict('event_id')
 }
+
+// Get user email from subscription
+async function getUserEmail(userId) {
+  try {
+    const { data: authData } = await supabase.auth.admin.getUserById(userId)
+    return authData?.user?.email || null
+  } catch (error) {
+    logger.error('Failed to get user email', { error: error.message, userId })
+    return null
+  }
+}
+
+// Get user ID from subscription ID
+async function getUserIdFromSubscription(subscriptionId) {
+  const { data } = await supabase
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_subscription_id', subscriptionId)
+    .single()
+  
+  return data?.user_id || null
+}
+
+// ============================================================================
+// MAIN WEBHOOK HANDLER
+// ============================================================================
 
 export async function POST(req) {
   const body = await req.text()
@@ -130,8 +162,13 @@ export async function POST(req) {
           status: subscription.status
         })
 
-        // TODO: Send welcome email
-        // await emails.trialStarted(session.customer_email, userName)
+        // ✅ Send welcome email
+        const userEmail = await getUserEmail(userId)
+        if (userEmail) {
+          const userName = userEmail.split('@')[0]
+          await emails.trialStarted(userEmail, userName)
+          logger.info('Welcome email sent', { email: userEmail.substring(0, 3) + '***' })
+        }
 
         break
       }
@@ -194,21 +231,29 @@ export async function POST(req) {
             status: newStatus
           })
 
-          // Log important status transitions
-          if (previousStatus === 'trialing' && newStatus === 'active') {
-            logger.audit('Trial converted to paid', { 
-              userId: sub.user_id,
-              subscriptionId: subscription.id 
-            })
-          }
+          // ✅ Email notifications for important transitions
+          const userEmail = await getUserEmail(sub.user_id)
+          if (userEmail) {
+            const userName = userEmail.split('@')[0]
 
-          if (previousStatus === 'active' && newStatus === 'past_due') {
-            logger.audit('Subscription past due - access blocked', { 
-              userId: sub.user_id,
-              subscriptionId: subscription.id 
-            })
-            // TODO: Send email notification
-            // await emails.paymentFailed(userEmail, userName)
+            // Trial converted to paid
+            if (previousStatus === 'trialing' && newStatus === 'active') {
+              logger.audit('Trial converted to paid', { 
+                userId: sub.user_id,
+                subscriptionId: subscription.id 
+              })
+              // Optional: Send "thank you for subscribing" email
+              // await emails.trialConverted(userEmail, userName)
+            }
+
+            // Subscription went past_due (payment failed)
+            if (previousStatus === 'active' && newStatus === 'past_due') {
+              logger.audit('Subscription past due - access blocked', { 
+                userId: sub.user_id,
+                subscriptionId: subscription.id 
+              })
+              // Email sent in payment_failed handler instead
+            }
           }
         }
 
@@ -260,10 +305,15 @@ export async function POST(req) {
             userId: sub.user_id,
             subscriptionId: subscription.id
           })
-        }
 
-        // TODO: Send cancellation confirmation email
-        // await emails.subscriptionCanceled(userEmail, userName)
+          // ✅ Send cancellation feedback request
+          const userEmail = await getUserEmail(sub.user_id)
+          if (userEmail) {
+            const userName = userEmail.split('@')[0]
+            await emails.subscriptionCanceled(userEmail, userName)
+            logger.info('Cancellation email sent', { email: userEmail.substring(0, 3) + '***' })
+          }
+        }
 
         break
       }
@@ -306,26 +356,30 @@ export async function POST(req) {
           }
 
           // Block user access
-          const { data: sub } = await supabase
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_subscription_id', invoice.subscription)
-            .single()
+          const userId = await getUserIdFromSubscription(invoice.subscription)
           
-          if (sub) {
+          if (userId) {
             await supabase.from('user_profiles').update({ 
               is_subscribed: false,
               updated_at: new Date().toISOString()
-            }).eq('id', sub.user_id)
+            }).eq('id', userId)
 
             logger.audit('User access blocked - payment failed after 3 attempts', { 
-              userId: sub.user_id,
+              userId,
               subscriptionId: invoice.subscription,
               attempts: invoice.attempt_count
             })
 
-            // TODO: Send urgent payment failure email
-            // await emails.paymentFailed(userEmail, userName)
+            // ✅ Send urgent payment failure email
+            const userEmail = await getUserEmail(userId)
+            if (userEmail) {
+              const userName = userEmail.split('@')[0]
+              await emails.paymentFailed(userEmail, userName, invoice.attempt_count)
+              logger.info('Payment failed email sent', { 
+                email: userEmail.substring(0, 3) + '***',
+                attemptCount: invoice.attempt_count 
+              })
+            }
           }
         } else {
           // First or second attempt - log but don't block access yet
@@ -380,8 +434,15 @@ export async function POST(req) {
               subscriptionId: invoice.subscription
             })
 
-            // TODO: Send "payment successful, access restored" email
-            // await emails.paymentSuccessful(userEmail, userName)
+            // ✅ Send "payment successful, access restored" email
+            const userEmail = await getUserEmail(sub.user_id)
+            if (userEmail) {
+              const userName = userEmail.split('@')[0]
+              await emails.paymentSucceeded(userEmail, userName)
+              logger.info('Payment success email sent', { 
+                email: userEmail.substring(0, 3) + '***' 
+              })
+            }
           }
         }
 
