@@ -98,29 +98,26 @@ function FAQItem({ q, a, isOpen, onToggle }) {
   )
 }
 
+// ✅ REPLACED LandingPage (Final Version)
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
   const faqs = [
     {
       q: 'Is this only for Washtenaw County?',
-      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
+      a: 'Yes. Built specifically for Washtenaw County enforcement patterns and Michigan Modified Food Code.',
     },
     {
-      q: 'What should my team upload for photo checks?',
-      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
+      q: 'When should we use it?',
+      a: 'Morning checks before 9am, after training new staff, or whenever something looks questionable.',
     },
     {
-      q: 'How should we use the document side?',
-      a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
+      q: 'What about accuracy?',
+      a: "We flag likely issues based on Washtenaw County enforcement history. Verify anything critical with your manager or the health department (734-222-3800).",
     },
     {
-      q: 'Will it replace training or a manager?',
-      a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
-    },
-    {
-      q: 'How often should my team use it?',
-      a: 'Smart teams run quick checks before health inspection windows (usually 9am-2pm weekdays), after training new staff, and whenever something looks "off" during a shift. Takes 30 seconds per check.',
+      q: 'Can we cancel?',
+      a: 'Yes. Cancel anytime through your billing portal.',
     },
   ]
 
@@ -129,13 +126,14 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="max-w-6xl w-full">
         <div className="ui-shell">
           <section className="ui-hero">
-            <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
+            <h1 className={`ui-title ${outfit.className}`}>Washtenaw County Health Code Compliance</h1>
 
-            <p className={`ui-subtitle ${inter.className}`}>Train faster. Avoid violations. Pass inspections.</p>
+            <p className={`ui-subtitle ${inter.className}`}>
+              Check your facility against county enforcement patterns. Fix violations before inspection.
+            </p>
 
             <p className={`ui-body ${inter.className}`}>
-              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector arrives.
-              Plus, search Washtenaw County regulations instantly when your team has questions.
+              Photo analysis and regulation lookup for Washtenaw County food establishments. 10-second checks. Unlimited usage.
             </p>
 
             <div className="ui-cta-row">
@@ -155,25 +153,21 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <div className="ui-featuregrid">
               <div className="ui-stepcard">
                 <div className="ui-stephead">
-                  <span className="ui-stepicon" aria-hidden="true">
-                    <Icons.Camera />
-                  </span>
-                  <div className={`ui-steptitle ${inter.className}`}>Photo analysis</div>
+                  <span className="ui-stepicon">📸</span>
+                  <div className={`ui-steptitle ${inter.className}`}>Photo Analysis</div>
                 </div>
                 <div className={`ui-stepbody ${inter.className}`}>
-                  Take a picture. Cross-check against Washtenaw County requirements for likely violations to verify.
+                  Upload facility photos. Get flagged issues based on Washtenaw County violation patterns. Takes 10 seconds.
                 </div>
               </div>
 
               <div className="ui-stepcard">
                 <div className="ui-stephead">
-                  <span className="ui-stepicon" aria-hidden="true">
-                    <Icons.Lock />
-                  </span>
-                  <div className={`ui-steptitle ${inter.className}`}>Document search</div>
+                  <span className="ui-stepicon">📋</span>
+                  <div className={`ui-steptitle ${inter.className}`}>Regulation Lookup</div>
                 </div>
                 <div className={`ui-stepbody ${inter.className}`}>
-                  Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
+                  Search Michigan Modified Food Code and Washtenaw County enforcement actions. Get specific answers.
                 </div>
               </div>
             </div>
@@ -182,8 +176,127 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="ui-section-divider" />
 
           <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
-            <div className="ui-faq">
+            <h2 className={`ui-h2 ${outfit.className}`}>How It Works</h2>
+
+            <div className="ui-featuregrid mt-6">
+              <div className="ui-stepcard">
+                <div className="ui-stephead">
+                  <span className="ui-stepicon">1</span>
+                  <div className={`ui-steptitle ${inter.className}`}>Take Photo</div>
+                </div>
+                <div className={`ui-stepbody ${inter.className}`}>Walk-in cooler, prep station, dish area. Use your phone.</div>
+              </div>
+
+              <div className="ui-stepcard">
+                <div className="ui-stephead">
+                  <span className="ui-stepicon">2</span>
+                  <div className={`ui-steptitle ${inter.className}`}>Review Results</div>
+                </div>
+                <div className={`ui-stepbody ${inter.className}`}>
+                  Flagged issues, recommended actions, items to verify with management.
+                </div>
+              </div>
+
+              <div className="ui-stepcard">
+                <div className="ui-stephead">
+                  <span className="ui-stepicon">3</span>
+                  <div className={`ui-steptitle ${inter.className}`}>Make Corrections</div>
+                </div>
+                <div className={`ui-stepbody ${inter.className}`}>Address issues before inspection. Document for records.</div>
+              </div>
+            </div>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Coverage</h2>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="ui-stepcard">
+                <div className="text-center py-2">
+                  <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>1,116</div>
+                  <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>
+                    County establishments tracked
+                  </div>
+                </div>
+              </div>
+
+              <div className="ui-stepcard">
+                <div className="text-center py-2">
+                  <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>1,353</div>
+                  <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>
+                    Regulation sections indexed
+                  </div>
+                </div>
+              </div>
+
+              <div className="ui-stepcard">
+                <div className="text-center py-2">
+                  <div className={`text-3xl font-bold text-white mb-1 ${outfit.className}`}>10s</div>
+                  <div className={`text-xs text-white/60 uppercase tracking-wider ${inter.className}`}>Average check time</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Pricing</h2>
+            <p className={`ui-p ${inter.className}`}>Single plan. Unlimited usage. No tiers or limits.</p>
+
+            <div className="mt-6 ui-stepcard p-6">
+              <div className="flex items-start justify-between gap-6 flex-wrap">
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className={`text-4xl font-bold text-white ${outfit.className}`}>$50</span>
+                    <span className="text-sm text-white/50">/month</span>
+                  </div>
+
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-start gap-2">
+                      <span className="text-white">—</span>
+                      <span className="text-sm text-white/80">Unlimited photo checks</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-white">—</span>
+                      <span className="text-sm text-white/80">Unlimited regulation searches</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-white">—</span>
+                      <span className="text-sm text-white/80">Washtenaw County database access</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-white">—</span>
+                      <span className="text-sm text-white/80">Mobile browser access</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-white">—</span>
+                      <span className="text-sm text-white/80">Email support</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+                    <span className="ui-btn-inner">Start trial</span>
+                  </button>
+                  <p className="text-xs text-white/50 text-center">7 days free</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <p className="text-sm text-white/60">One Priority violation fine: $200-500. This service: $50/month.</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Questions</h2>
+            <div className="ui-faq mt-4">
               {faqs.map((f, i) => (
                 <FAQItem
                   key={i}
@@ -201,25 +314,20 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <section className="ui-final">
             <div className="ui-finalinner">
               <div>
-                <h3 className={`ui-h2 ${outfit.className}`}>Start Your 7-Day Trial Today</h3>
-                <p className={`ui-p ${inter.className}`}>
-                  No credit card required. Takes 2 minutes to set up. Start catching violations before the inspector does.
-                </p>
+                <h3 className={`ui-h2 ${outfit.className}`}>Start Trial</h3>
+                <p className={`ui-p ${inter.className}`}>7 days free. No credit card required.</p>
               </div>
 
               <div className="ui-cta-row">
                 <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
                   <span className="ui-btn-inner">Start trial</span>
                 </button>
-                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                  <span className="ui-btn-inner">Sign in</span>
-                </button>
               </div>
             </div>
           </section>
 
           <div className={`ui-footerline ${inter.className}`}>
-            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
+            <span>$50/month · Unlimited usage · Cancel anytime</span>
           </div>
         </div>
 
@@ -444,69 +552,71 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   )
 }
 
+// ✅ UPDATED PricingModal
 function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-[900] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
       <div className="w-full max-w-xl ui-modal ui-modal-anim p-6 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close pricing">
+        <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close">
           <Icons.X />
         </button>
 
-        <div className="mb-5">
-          <div className={`ui-tag ${inter.className}`}>Single site license</div>
-          <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/55 ${inter.className}`}>
-            Photo checks + document search—built specifically for Washtenaw County operators.
-          </p>
+        <div className="mb-6">
+          <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>Washtenaw County Access</h3>
+          <p className={`text-sm text-white/55 ${inter.className}`}>Unlimited photo checks and regulation searches.</p>
         </div>
 
         <div className="ui-pricewrap p-6">
-          <div className="flex items-end justify-between gap-4 flex-wrap">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
-              </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Includes generous monthly usage. Photos count as two checks.</p>
-            </div>
+          <div className="flex items-baseline gap-2 mb-6">
+            <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$50</span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
+          </div>
 
-            <div className={`ui-badge ${inter.className}`}>
-              <Icons.Shield />
-              Premium tier
+          <div className="space-y-2 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">Unlimited photo analysis</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">Unlimited regulation searches</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">Washtenaw County enforcement database</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">10-second violation checks</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">Mobile browser access</span>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-white/60 mt-0.5">—</span>
+              <span className="text-sm text-white/80">Email support</span>
             </div>
           </div>
 
           <div className="ui-divider my-5" />
 
-          <div className="space-y-3">
-            <button
-              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-              disabled={!!loading && loading !== 'monthly'}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="ui-btn-inner">
-                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
-                Start trial
-              </span>
-            </button>
+          <button
+            onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+            disabled={!!loading}
+            className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+          >
+            <span className="ui-btn-inner">
+              {loading && <span className="ui-spinner" aria-hidden="true" />}
+              Start 7-Day Trial
+            </span>
+          </button>
 
-            <button
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading && loading !== 'annual'}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="ui-btn-inner">
-                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-                Annual · $1,000/yr
-              </span>
-            </button>
-
-            <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
-              One site license per restaurant · 7-day trial · Cancel anytime
-            </p>
-          </div>
+          <p className={`text-[12px] text-white/70 text-center ${inter.className}`}>
+            No credit card required · 7 days free · Then $50/month
+          </p>
         </div>
       </div>
     </div>
@@ -2003,3 +2113,4 @@ export default function Page() {
     </>
   )
 }
+```
