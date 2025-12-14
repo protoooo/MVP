@@ -1,5 +1,5 @@
 {
-  "name": "compliance-hub",
+  "name": "protocollm",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,9 @@
     "lint": "next lint",
     "ingest": "node scripts/ingest-documents.js",
     "test-search": "node scripts/test-search.js",
-    "send-trial-reminders": "node scripts/send-trial-reminders.js"
+    "send-reminders": "node scripts/send-trial-reminders.js",
+    "test-emails": "node scripts/test-emails.js",
+    "setup-stripe": "node scripts/setup-stripe.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
