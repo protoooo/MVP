@@ -1,4 +1,4 @@
-// app/api/create-portal-session/route.js - SECURITY FIX
+// app/api/create-portal-session/route.js - SECURITY FIX: User ID verification
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -97,7 +97,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }
 
-    // ✅ SECURITY: Double-check user_id matches (paranoid check)
+    // ✅ SECURITY FIX: Double-check user_id matches (paranoid check)
     if (subscription.user_id !== user.id) {
       logger.security('User ID mismatch in portal', {
         authUserId: user.id,
