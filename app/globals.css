@@ -17,7 +17,6 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
-  /* CHANGED: Set to transparent so the 3D background is visible */
   background: transparent;
 }
 
@@ -211,7 +210,6 @@ select:focus-visible {
    ProtocolLM Chat – remove borders/frames (global-safe)
    ========================================================= */
 
-/* Common “chat bubble / thinking / message container” classnames (if they exist) */
 .chat-bubble,
 .chat-message,
 .message-bubble,
@@ -228,7 +226,6 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
-/* If your chat uses data attributes (recommended), these are rock-solid */
 [data-chat-bubble],
 [data-chat-message],
 [data-chat-thinking],
@@ -238,7 +235,6 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
-/* Remove the “white frame” around uploaded images (wrapper + image) */
 .chat-image-frame,
 .message-image-frame,
 .image-preview-frame,
@@ -263,7 +259,6 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
-/* Tailwind-ish utility escape hatches (add these classNames in JSX if needed) */
 @layer utilities {
   .plm-no-border {
     border: none !important;
@@ -291,4 +286,131 @@ select:focus-visible {
     background: transparent !important;
     box-shadow: none !important;
   }
+}
+
+/* =========================================================
+   AMEX BLACK CARD DEPTH STYLING
+   ========================================================= */
+
+/* Enhanced card shadows for premium depth */
+.ui-shell {
+  position: relative;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 20px 40px rgba(0, 0, 0, 0.5),
+    0 40px 80px rgba(0, 0, 0, 0.4),
+    0 80px 120px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Subtle card hover lift (optional - remove if you don't want hover effect) */
+.ui-shell:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 24px 48px rgba(0, 0, 0, 0.6),
+    0 48px 96px rgba(0, 0, 0, 0.5),
+    0 96px 144px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium metallic sheen on top of cards */
+.ui-shell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Enhanced depth for modals */
+.ui-modal {
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 30px 60px rgba(0, 0, 0, 0.6),
+    0 60px 120px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle glow for buttons on hover */
+.ui-btn-primary:hover {
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+/* Premium card texture overlay */
+.ui-pricewrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Enhanced header depth */
+.ui-header {
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Subtle ambient lighting on step cards */
+.ui-stepcard {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ui-stepcard:hover {
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Premium FAQ item depth */
+.ui-faqitem {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Enhanced empty state card */
+.ui-emptywrap {
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Ambient occlusion effect for nested elements */
+.ui-shell .ui-section {
+  position: relative;
+}
+
+.ui-shell .ui-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.02) 0%,
+    transparent 20%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.02) 100%
+  );
+  pointer-events: none;
 }
