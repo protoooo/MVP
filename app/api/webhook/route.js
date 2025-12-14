@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - FIXED (Idempotent profile creation)
+// app/api/webhook/route.js - COMPLETE FIXED VERSION
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -92,10 +92,24 @@ export async function POST(req) {
         const session = event.data.object
         const userId = session.metadata?.userId
         const subscriptionId = session.subscription
+        const customerId = session.customer
 
-        if (!userId || !subscriptionId) {
-          logger.error('Missing data in checkout.session.completed', { userId, subscriptionId })
+        // ✅ SECURITY FIX: Validate all required fields
+        if (!userId || !subscriptionId || !customerId) {
+          logger.error('Missing required data in checkout.session.completed', { 
+            userId, 
+            subscriptionId,
+            customerId,
+            sessionId: session.id 
+          })
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
+        }
+
+        // ✅ SECURITY: Validate userId format (UUID)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        if (!uuidRegex.test(userId)) {
+          logger.security('Invalid userId format in webhook', { userId, sessionId: session.id })
+          return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
         }
 
         const isFakeId = String(subscriptionId).includes('fake') || 
@@ -134,12 +148,13 @@ export async function POST(req) {
           userId, 
           plan: planName, 
           subscriptionId,
+          customerId,
           status: subscription.status,
           trialEnd: subscription.trial_end,
           isFakeId
         })
 
-        // ✅ FIXED: Create profile using UPSERT (safe from duplicates)
+        // ✅ Create/update profile with customer ID
         const now = new Date().toISOString()
         
         const { error: profileError } = await supabase
@@ -147,7 +162,7 @@ export async function POST(req) {
           .upsert(
             {
               id: userId,
-              stripe_customer_id: session.customer, // ✅ Add customer ID
+              stripe_customer_id: customerId,
               accepted_terms: true,
               accepted_privacy: true,
               terms_accepted_at: now,
@@ -167,14 +182,13 @@ export async function POST(req) {
             error: profileError.message,
             userId 
           })
-          // Don't fail the webhook - profile might already exist
         }
 
         // ✅ Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
-          stripe_customer_id: session.customer,
+          stripe_customer_id: customerId,
           plan: planName,
           price_id: priceId,
           status: subscription.status,
