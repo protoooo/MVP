@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - Minimal safe version
+// app/api/auth/signup/route.js - FIXED (No profile creation)
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -65,6 +65,7 @@ export async function POST(request) {
       }
     )
 
+    // ✅ ONLY create the auth user - NO profile creation here
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
@@ -82,58 +83,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
-    const supabaseAdmin = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll() {},
-        },
-      }
-    )
-
-    // ✅ MINIMAL PROFILE CREATION - Only required fields
-    const now = new Date().toISOString()
-    
-    try {
-      const { error: profileError } = await supabaseAdmin
-        .from('user_profiles')
-        .insert({
-          id: data.user.id,
-          created_at: now,
-          updated_at: now
-        })
-
-      if (profileError) {
-        logger.error('Profile creation failed', { 
-          error: profileError.message,
-          code: profileError.code,
-          details: profileError.details,
-          hint: profileError.hint,
-          userId: data.user.id
-        })
-      } else {
-        logger.info('User profile created successfully', { userId: data.user.id })
-      }
-    } catch (profileException) {
-      logger.error('Profile creation exception', {
-        error: profileException.message,
-        userId: data.user.id
-      })
-    }
-
     logger.audit('User signed up', {
       email: email.substring(0, 3) + '***',
       userId: data.user.id,
       ip
     })
 
+    // ✅ Profile will be created by webhook when they complete checkout
     return NextResponse.json({
       success: true,
-      message: 'Check your email to verify your account'
+      message: 'Account created! Please check your email to verify, then start your trial.'
     })
 
   } catch (error) {
