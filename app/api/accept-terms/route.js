@@ -1,5 +1,4 @@
-// app/api/accept-terms/route.js - REPLACE ENTIRE FILE
-
+// app/api/accept-terms/route.js - FIXED with service role
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -10,42 +9,52 @@ export const dynamic = 'force-dynamic'
 export async function POST(request) {
   try {
     const cookieStore = cookies()
-    const supabase = createServerClient(
+    
+    // First, authenticate the user with anon key
+    const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY, // ✅ Use service role for write access
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
             return cookieStore.getAll()
           },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {}
-          },
+          setAll() {},
         },
       }
     )
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    // ✅ First check if profile exists
+    // Use service role for database operations
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll() {},
+        },
+      }
+    )
+
+    const now = new Date().toISOString()
+
+    // Check if profile exists
     const { data: existingProfile } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('id', user.id)
       .maybeSingle()
 
-    const now = new Date().toISOString()
-
     if (existingProfile) {
-      // Profile exists - update it
+      // Update existing profile
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({
@@ -65,7 +74,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Failed to save acceptance' }, { status: 500 })
       }
     } else {
-      // Profile doesn't exist - create it
+      // Create new profile
       const { error: insertError } = await supabase
         .from('user_profiles')
         .insert({
@@ -81,6 +90,7 @@ export async function POST(request) {
       if (insertError) {
         logger.error('Failed to create user profile', { 
           error: insertError.message,
+          code: insertError.code,
           userId: user.id 
         })
         return NextResponse.json({ error: 'Failed to save acceptance' }, { status: 500 })
