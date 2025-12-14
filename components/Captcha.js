@@ -1,3 +1,4 @@
+// components/Captcha.js - IMPROVED: Clearer error handling
 'use client'
 import { useEffect, useState, useRef } from 'react'
 
@@ -34,12 +35,10 @@ export function useRecaptcha() {
     }
 
     if (existingScript) {
-      // If script already exists, just listen for it (don’t remove it on cleanup)
       existingScript.addEventListener('load', handleLoad)
       existingScript.addEventListener('error', handleError)
       didAttachListenersRef.current = true
 
-      // If it’s already loaded but window.turnstile not set yet, give it a tick
       setTimeout(() => {
         if (window.turnstile) setIsLoaded(true)
       }, 0)
@@ -58,8 +57,6 @@ export function useRecaptcha() {
     script.onerror = handleError
     document.head.appendChild(script)
 
-    // ✅ IMPORTANT: do NOT remove the script on unmount.
-    // AuthModal mount/unmount would nuke Turnstile for checkout later.
     return () => {
       if (!didAttachListenersRef.current) {
         script.onload = null
@@ -69,13 +66,13 @@ export function useRecaptcha() {
   }, [])
 
   const executeRecaptcha = async (action = 'submit') => {
+    // ✅ SECURITY FIX: Return null instead of sentinel string
     if (!isLoaded || !window.turnstile || !TURNSTILE_SITE_KEY) {
-      console.warn('Turnstile not available')
-      return 'turnstile_unavailable'
+      console.error('Turnstile not available - cannot proceed')
+      return null  // Changed from 'turnstile_unavailable'
     }
 
     return new Promise((resolve, reject) => {
-      // Invisible container
       const container = document.createElement('div')
       container.style.position = 'fixed'
       container.style.width = '1px'
