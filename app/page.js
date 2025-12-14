@@ -918,7 +918,7 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black">
+      <div className="fixed inset-0 flex items-center justify-center">
         <div className="ui-spinner-lg" aria-label="Loading" />
       </div>
     )
