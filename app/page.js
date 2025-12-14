@@ -241,7 +241,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   )
 }
 
-// ✅ REPLACED AuthModal (Claude version)
+// ✅ REPLACED AuthModal (fixed turnstile_unavailable handling)
 function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -270,7 +270,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
     try {
       const captchaToken = await executeRecaptcha(mode)
-      if (!captchaToken) {
+      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
         setMessageKind('err')
         setMessage('Security verification failed. Please try again.')
         return
@@ -723,6 +723,7 @@ export default function Page() {
           Authorization: `Bearer ${data.session.access_token}`,
         },
         body: JSON.stringify({ priceId, captchaToken }),
+        credentials: 'include',
       })
 
       const payload = await res.json().catch(() => ({}))
@@ -744,35 +745,48 @@ export default function Page() {
     }
   }
 
-  // ✅ Stripe Billing Portal (replaces Manage Subscription button)
+  // ✅ Stripe Billing Portal (fixed: auth header + single json parse)
   const handleManageBilling = async () => {
-    try {
-      setShowUserMenu(false)
+    setShowUserMenu(false)
 
-      // Show loading state
-      const loadingToast = document.createElement('div')
+    let loadingToast = null
+    try {
+      loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
       loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
       document.body.appendChild(loadingToast)
 
+      const { data } = await supabase.auth.getSession()
+      const accessToken = data?.session?.access_token
+
       const res = await fetch('/api/create-portal-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        credentials: 'include',
       })
 
-      document.body.removeChild(loadingToast)
+      const payload = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        alert(data.error || 'Failed to open billing portal')
+        alert(payload.error || 'Failed to open billing portal')
         return
       }
 
-      const { url } = await res.json()
-      window.location.href = url
+      if (payload.url) {
+        window.location.href = payload.url
+      } else {
+        alert('No billing portal URL returned')
+      }
     } catch (error) {
       console.error('Billing portal error:', error)
       alert('Failed to open billing portal')
+    } finally {
+      try {
+        if (loadingToast) document.body.removeChild(loadingToast)
+      } catch {}
     }
   }
 
