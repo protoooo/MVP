@@ -1,4 +1,4 @@
-// app/api/create-checkout-session/route.js - SECURITY FIX: Non-bypassable rate limiting
+// app/api/create-checkout-session/route.js - WITH EMAIL VERIFICATION
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -12,7 +12,6 @@ export const runtime = 'nodejs'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-// Your Stripe price IDs
 const BUSINESS_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const BUSINESS_ANNUAL = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 const ENTERPRISE_MONTHLY = process.env.NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE_MONTHLY
@@ -41,7 +40,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
     }
 
-    // CSRF validation
     if (!validateCSRF(request)) {
       logger.security('CSRF validation failed in checkout', { ip })
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
@@ -63,7 +61,6 @@ export async function POST(request) {
       )
     }
 
-    // Verify CAPTCHA
     const captchaResult = await verifyCaptcha(captchaToken, 'checkout', ip)
 
     if (!captchaResult.success) {
@@ -82,7 +79,6 @@ export async function POST(request) {
 
     logger.info('Checkout CAPTCHA verified', { ip, score: captchaResult.score, priceId })
 
-    // Supabase server client (cookie-based) + ALSO support Bearer token fallback
     const cookieStore = cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
       cookies: {
@@ -108,7 +104,22 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // ✅ SECURITY FIX: Rate limit check that BLOCKS on failure (not best-effort)
+    // ✅ NEW: Email verification check
+    if (!user.email_confirmed_at) {
+      logger.security('Unverified email attempted checkout', { 
+        userId: user.id, 
+        email: user.email?.substring(0, 3) + '***',
+        ip 
+      })
+      return NextResponse.json({ 
+        error: 'Please verify your email before starting a trial. Check your inbox for the verification link.',
+        code: 'EMAIL_NOT_VERIFIED' 
+      }, { status: 403 })
+    }
+
+    logger.info('Email verification confirmed', { userId: user.id })
+
+    // Rate limit check
     try {
       const { data: recent, error: rateLimitError } = await supabase
         .from('checkout_attempts')
@@ -116,7 +127,6 @@ export async function POST(request) {
         .eq('user_id', user.id)
         .gte('created_at', new Date(Date.now() - 60_000).toISOString())
 
-      // ✅ If rate limit check fails, BLOCK the request
       if (rateLimitError) {
         logger.error('Checkout rate-limit check failed - blocking request', { 
           msg: rateLimitError?.message,
@@ -132,7 +142,6 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Too many checkout attempts. Please wait 1 minute.' }, { status: 429 })
       }
 
-      // Log the attempt
       const { error: insertError } = await supabase.from('checkout_attempts').insert({
         user_id: user.id,
         price_id: priceId,
@@ -143,10 +152,8 @@ export async function POST(request) {
 
       if (insertError) {
         logger.warn('Failed to log checkout attempt', { msg: insertError?.message })
-        // Don't block on logging failure, but log it
       }
     } catch (e) {
-      // ✅ CRITICAL: On any exception during rate limiting, BLOCK the request
       logger.error('Checkout rate-limit exception - blocking request', { 
         msg: e?.message,
         userId: user.id 
