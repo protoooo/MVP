@@ -100,16 +100,24 @@ export async function POST(request) {
       }
     )
 
-    // Create user profile with service role (NO EMAIL COLUMN)
+    // ✅ FIXED: Match exact schema from your database
     const now = new Date().toISOString()
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .insert({
         id: data.user.id,
+        is_subscribed: false,
+        requests_used: 0,
+        created_at: now,
+        updated_at: now,
+        images_used: 0,
+        county: 'washtenaw',
         accepted_terms: false,
         accepted_privacy: false,
-        created_at: now,
-        updated_at: now
+        terms_accepted_at: null,
+        privacy_accepted_at: null,
+        active_session_id: null,
+        stripe_customer_id: null
       })
 
     if (profileError) {
