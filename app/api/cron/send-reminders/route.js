@@ -8,7 +8,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Secret to prevent unauthorized access
 const CRON_SECRET = process.env.CRON_SECRET || 'CHANGE_THIS_IN_PRODUCTION'
 
 async function getUserEmail(userId) {
@@ -16,12 +15,12 @@ async function getUserEmail(userId) {
     const { data } = await supabase.auth.admin.getUserById(userId)
     return data?.user?.email || null
   } catch (error) {
+    logger.error('Failed to get user email', { error: error.message, userId })
     return null
   }
 }
 
 export async function GET(request) {
-  // Verify authorization
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
   
@@ -40,9 +39,6 @@ export async function GET(request) {
   const results = { day3: 0, day5: 0, day7: 0 }
   
   try {
-    // ========================================================================
-    // DAY 3 REMINDERS (Trial midpoint - 4 days remaining)
-    // ========================================================================
     const day3Start = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000)
     const day3End = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000)
     
@@ -63,13 +59,10 @@ export async function GET(request) {
         results.day3++
         emailsSent++
         logger.info('Sent day-3 reminder', { email: userEmail.substring(0, 3) + '***' })
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
     }
     
-    // ========================================================================
-    // DAY 5 REMINDERS (Trial ending soon - 2 days remaining)
-    // ========================================================================
     const day5Start = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)
     const day5End = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
     
@@ -94,9 +87,6 @@ export async function GET(request) {
       }
     }
     
-    // ========================================================================
-    // DAY 7 REMINDERS (Trial ends today - last chance)
-    // ========================================================================
     const todayStart = new Date(now.setHours(0, 0, 0, 0))
     const todayEnd = new Date(now.setHours(23, 59, 59, 999))
     
@@ -142,7 +132,6 @@ export async function GET(request) {
   }
 }
 
-// Also support POST for testing
 export async function POST(request) {
   return GET(request)
 }
