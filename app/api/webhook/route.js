@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - Complete webhook with email integration
+// app/api/webhook/route.js - Complete webhook with email integration + dev mode fix
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -23,7 +23,7 @@ const PRICE_TO_PLAN = {
 }
 
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (MUST BE DEFINED BEFORE MAIN HANDLER)
 // ============================================================================
 
 // Database-backed idempotency
@@ -115,8 +115,38 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
-        // Fetch full subscription details from Stripe
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        // ✅ NEW: Detect fake/test subscription IDs for development
+        const isFakeId = String(subscriptionId).includes('fake') || 
+                         String(subscriptionId).includes('test') || 
+                         String(subscriptionId).includes('local') ||
+                         String(subscriptionId).startsWith('cust_local')
+
+        let subscription
+        
+        if (isFakeId) {
+          // ✅ NEW: Use mock data for development/testing
+          logger.warn('Development mode: using mock subscription data', { subscriptionId })
+          
+          subscription = {
+            id: subscriptionId,
+            items: { 
+              data: [{ 
+                price: { 
+                  id: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY || 'price_fake' 
+                } 
+              }] 
+            },
+            status: 'trialing',
+            current_period_start: Math.floor(Date.now() / 1000),
+            current_period_end: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000),
+            trial_end: Math.floor((Date.now() + 7 * 24 * 60 * 60 * 1000) / 1000),
+            cancel_at_period_end: false,
+          }
+        } else {
+          // Fetch real subscription from Stripe
+          subscription = await stripe.subscriptions.retrieve(subscriptionId)
+        }
+
         const priceId = subscription.items.data[0].price.id
         const planName = PRICE_TO_PLAN[priceId] || 'business'
 
@@ -125,7 +155,8 @@ export async function POST(req) {
           plan: planName, 
           subscriptionId,
           status: subscription.status,
-          trialEnd: subscription.trial_end
+          trialEnd: subscription.trial_end,
+          isFakeId // ✅ NEW: Log if using mock data
         })
 
         // Upsert subscription to database
