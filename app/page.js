@@ -1,4 +1,3 @@
-// app/page.js
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -16,17 +15,10 @@ const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// ===== Background mode toggle (no installs) =====
-// 'unicorn' = your Chrome Ribbon (default)
-// 'blackhole' = pure CSS purple black hole (nice + smooth)
-const BACKGROUND_MODE = 'unicorn'
-
 const UNICORN_PROJECT_ID = 'qF3qXhdiOxdUeQYH8wCK' // ✅ Chrome Ribbon / UnicornStudio
 
-// Unicorn perf knobs (biggest impact on iPad stutter)
-const UNICORN_FPS = 20 // ~3x slower than 60fps (also lowers GPU load)
-const UNICORN_SCALE = 0.72
-const UNICORN_DPI = 1.0
+// Boot screen behavior
+const BOOT_ONCE_PER_TAB = true // set false if you want the power button every refresh
 
 const Icons = {
   Camera: () => (
@@ -67,7 +59,7 @@ const Icons = {
   Plus: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
+      <line x1="5" y1="12" x2="19" y1="12" />
     </svg>
   ),
   Shield: () => (
@@ -91,6 +83,12 @@ const Icons = {
   ChevronDown: () => (
     <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Power: () => (
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+      <path d="M12 2v10" strokeLinecap="round" />
+      <path d="M6.2 5.2a9 9 0 1 0 11.6 0" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
 }
@@ -140,8 +138,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
       <div className="max-w-6xl w-full">
-        <div className="ui-shell">
+        <div className="ui-shell ui-frost">
           <section className="ui-hero">
+            {/* subtle purple “black hole” accent (optional) */}
+            <div className="ui-blackhole" aria-hidden="true" />
+
             <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>Catch violations before the health inspector.</p>
@@ -165,7 +166,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <section className="ui-section">
             <div className="ui-featuregrid">
-              <div className="ui-stepcard">
+              <div className="ui-stepcard ui-frost">
                 <div className="ui-stephead">
                   <span className="ui-stepicon" aria-hidden="true">
                     <Icons.Camera />
@@ -177,7 +178,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 </div>
               </div>
 
-              <div className="ui-stepcard">
+              <div className="ui-stepcard ui-frost">
                 <div className="ui-stephead">
                   <span className="ui-stepicon" aria-hidden="true">
                     <Icons.Lock />
@@ -195,7 +196,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <section className="ui-section">
             <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
-            <div className="ui-faq">
+            <div className="ui-faq ui-frost">
               {faqs.map((f, i) => (
                 <FAQItem
                   key={i}
@@ -346,7 +347,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
   return (
     <div className="fixed inset-0 z-[999] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal ui-modal-anim p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md ui-modal ui-modal-anim ui-frost p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-5">
           <div>
             <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
@@ -456,7 +457,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
   return (
     <div className="fixed inset-0 z-[900] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal ui-modal-anim p-6 relative" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-xl ui-modal ui-modal-anim ui-frost p-6 relative" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close pricing">
           <Icons.X />
         </button>
@@ -469,7 +470,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </p>
         </div>
 
-        <div className="ui-pricewrap p-6">
+        <div className="ui-pricewrap ui-frost p-6">
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-2">
@@ -522,6 +523,46 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   )
 }
 
+function BootOverlay({ state, isLoading, onPower }) {
+  // state: 'off' | 'powering' | 'on'
+  if (state === 'on') return null
+
+  return (
+    <div className={`ui-boot ${state === 'powering' ? 'is-powering' : ''}`} aria-hidden="true">
+      <div className="ui-boot-grid" />
+      <div className="ui-boot-vignette" />
+
+      <div className="ui-boot-center">
+        <button
+          type="button"
+          onClick={onPower}
+          className={`ui-powerbtn ui-frost ${state === 'powering' ? 'is-on' : ''}`}
+          aria-label="Power on"
+        >
+          <span className="ui-powerbtn-ring" />
+          <span className="ui-powerbtn-icon">
+            <Icons.Power />
+          </span>
+        </button>
+
+        <div className={`ui-boottext ${inter.className}`}>
+          {state === 'off' ? (
+            <>
+              <div className="ui-bootline1">Power on console</div>
+              <div className="ui-bootline2">protocolLM · Compliance Database</div>
+            </>
+          ) : (
+            <>
+              <div className="ui-bootline1">Starting…</div>
+              <div className="ui-bootline2">{isLoading ? 'Connecting & loading session…' : 'Console ready.'}</div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Page() {
   const [supabase] = useState(() => createClient())
   const router = useRouter()
@@ -551,6 +592,10 @@ export default function Page() {
 
   const shouldAutoScrollRef = useRef(true)
 
+  // Boot / background controls
+  const [bootState, setBootState] = useState('off') // 'off' | 'powering' | 'on'
+  const [enableMotionBg, setEnableMotionBg] = useState(false)
+
   const scrollToBottom = (behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
@@ -576,7 +621,7 @@ export default function Page() {
     }
   }, [messages])
 
-  // ✅ Make /?showPricing=true actually open the pricing modal (used by accept-terms flow)
+  // ✅ Make /?showPricing=true open pricing modal
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') {
@@ -584,6 +629,30 @@ export default function Page() {
     }
   }, [searchParams])
 
+  // Boot: skip if already powered (per-tab)
+  useEffect(() => {
+    try {
+      if (!BOOT_ONCE_PER_TAB) return
+      const v = sessionStorage.getItem('plm_booted')
+      if (v === '1') {
+        setBootState('on')
+        setEnableMotionBg(true)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  // Body background class
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.classList.add('ui-enterprise-bg')
+    return () => {
+      document.body.classList.remove('ui-enterprise-bg')
+    }
+  }, [])
+
+  // Load session + subscription + accept terms enforcement
   useEffect(() => {
     let isMounted = true
 
@@ -598,7 +667,7 @@ export default function Page() {
         return
       }
 
-      // ✅ Enforce Accept Terms before app usage (only AFTER a session exists)
+      // ✅ Enforce Accept Terms before app usage
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -670,30 +739,19 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.body.classList.add('ui-enterprise-bg')
-    return () => {
-      document.body.classList.remove('ui-enterprise-bg')
-    }
-  }, [])
-
-  // ✅ UnicornStudio background loader (NO installs, just a CDN script)
+  // ✅ UnicornStudio background loader (delayed until powered on)
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (BACKGROUND_MODE !== 'unicorn') return
+    if (!enableMotionBg) return
 
-    // dev/strict-mode safe: don’t inject twice
     const existing = document.querySelector('script[data-unicornstudio="1"]')
     if (existing) return
 
-    // stub to match their embed pattern
     if (!window.UnicornStudio) window.UnicornStudio = { isInitialized: false }
 
     const s = document.createElement('script')
     s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js'
     s.async = true
-    s.defer = true
     s.dataset.unicornstudio = '1'
     s.onload = () => {
       try {
@@ -706,8 +764,9 @@ export default function Page() {
       }
     }
     ;(document.head || document.body).appendChild(s)
-  }, [])
+  }, [enableMotionBg])
 
+  // User menu close handlers
   useEffect(() => {
     function handleClick(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -724,6 +783,67 @@ export default function Page() {
       document.removeEventListener('keydown', handleKey)
     }
   }, [])
+
+  // Boot power behavior (haptic + subtle chime)
+  const playBootFX = () => {
+    try {
+      if (navigator?.vibrate) navigator.vibrate(18)
+    } catch {
+      // ignore
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext
+      if (!AudioCtx) return
+      const ctx = new AudioCtx()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(196, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(392, ctx.currentTime + 0.14)
+
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start()
+      osc.stop(ctx.currentTime + 0.24)
+
+      setTimeout(() => {
+        try {
+          ctx.close()
+        } catch {
+          // ignore
+        }
+      }, 350)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handlePower = () => {
+    if (bootState !== 'off') return
+    setBootState('powering')
+    setEnableMotionBg(true)
+    playBootFX()
+    try {
+      if (BOOT_ONCE_PER_TAB) sessionStorage.setItem('plm_booted', '1')
+    } catch {
+      // ignore
+    }
+  }
+
+  // When powered and loading finishes, fade into UI
+  useEffect(() => {
+    if (bootState !== 'powering') return
+    if (isLoading) return
+    const t = setTimeout(() => setBootState('on'), 520)
+    return () => clearTimeout(t)
+  }, [bootState, isLoading])
 
   const handleCheckout = async (priceId, planName) => {
     try {
@@ -886,35 +1006,26 @@ export default function Page() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black">
-        <div className="ui-spinner-lg" aria-label="Loading" />
-      </div>
-    )
-  }
-
   const isAuthenticated = !!session
 
   return (
     <>
-      {/* ========= BACKGROUND LAYERS ========= */}
-      {BACKGROUND_MODE === 'unicorn' && (
+      {/* Boot overlay (power button) */}
+      <BootOverlay state={bootState} isLoading={isLoading} onPower={handlePower} />
+
+      {/* ✅ Motion Chrome (behind everything) */}
+      {enableMotionBg && (
         <div id="ui-motion-bg" aria-hidden="true">
           <div
             data-us-project={UNICORN_PROJECT_ID}
-            data-us-fps={String(UNICORN_FPS)}
-            data-us-scale={String(UNICORN_SCALE)}
-            data-us-dpi={String(UNICORN_DPI)}
-            data-us-fixed="true"
-            data-us-disablemobile="true"
-            data-us-production="true"
-            data-us-lazyload="true"
+            // Performance tuning (big stutter killer on iOS):
+            data-us-fps="24"
+            data-us-scale="0.72"
+            data-us-dpi="1"
+            data-us-interaction="false"
           />
         </div>
       )}
-
-      {BACKGROUND_MODE === 'blackhole' && <div id="ui-blackhole-bg" aria-hidden="true" />}
 
       <style jsx global>{`
         html,
@@ -923,183 +1034,89 @@ export default function Page() {
           width: 100%;
         }
 
-        /* ======= PREMIUM DARK BASE ======= */
+        /* ======= BACKGROUND (stable + premium) ======= */
         body.ui-enterprise-bg {
           overflow: hidden;
           background: #050608;
           color: rgba(255, 255, 255, 0.94);
-
-          /* glass tuning */
-          --glass-blur: 10px;
-          --glass-sat: 110%;
-          --glass-bg: rgba(255, 255, 255, 0.06);
-          --glass-border: rgba(255, 255, 255, 0.18);
-          --glass-inner: inset 0 0 30px rgba(0, 0, 0, 0.45);
-          --glass-sheen: linear-gradient(to top right, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0));
+          --ui-vignette: 0.92;
+          --ui-grid: 0.06;
+          --ui-grid-on: 0.14;
         }
 
-        /* ======= UNICORN BACKGROUND (LESS STUTTER) ======= */
+        /* Frosted glass helper (Backseasy-inspired) */
+        .ui-frost {
+          backdrop-filter: blur(10px) saturate(115%);
+          -webkit-backdrop-filter: blur(10px) saturate(115%);
+          background-color: rgba(12, 14, 18, 0.42);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.38);
+          background-image: linear-gradient(to top right, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0));
+          background-size: cover;
+          background-repeat: no-repeat;
+        }
+
+        /* UnicornStudio layer */
         #ui-motion-bg {
           position: fixed;
           inset: 0;
-          z-index: -60;
+          z-index: -30;
           pointer-events: none;
           overflow: hidden;
-
-          /* key: isolate blending + keep GPU layers stable */
-          isolation: isolate;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          -webkit-transform: translateZ(0);
-          contain: strict;
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+          contain: paint;
         }
-
         #ui-motion-bg [data-us-project] {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
-          opacity: 0.88;
-          transform: translateZ(0);
-          backface-visibility: hidden;
+          /* IMPORTANT: removing full-screen filters reduces iOS jitter a lot */
+          opacity: 0.78;
         }
 
-        /* Replace heavy CSS filter() with lighter overlays */
-        #ui-motion-bg::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          /* desaturate via blending (instead of filter) */
-          background: rgba(0, 0, 0, 0.92);
-          mix-blend-mode: saturation;
-          pointer-events: none;
-        }
-        #ui-motion-bg::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          /* darken + premium contrast */
-          background: radial-gradient(1200px 700px at 60% 10%, rgba(255, 255, 255, 0.08), transparent 60%),
-            radial-gradient(900px 800px at 15% 0%, rgba(255, 255, 255, 0.05), transparent 65%),
-            rgba(0, 0, 0, 0.55);
-          mix-blend-mode: multiply;
-          pointer-events: none;
-        }
-
-        /* ======= PURE CSS PURPLE BLACK HOLE (OPTION) ======= */
-        #ui-blackhole-bg {
-          position: fixed;
-          inset: 0;
-          z-index: -60;
-          pointer-events: none;
-          overflow: hidden;
-          background: #050608;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          contain: strict;
-        }
-
-        /* halo + disk */
-        #ui-blackhole-bg::before {
-          content: '';
-          position: absolute;
-          inset: -20%;
-          /* place it on the right like the Backseasy hero */
-          transform: translate3d(18%, 2%, 0);
-          background:
-            radial-gradient(circle at 72% 52%, rgba(210, 160, 255, 0.30) 0%, rgba(150, 70, 255, 0.18) 14%, rgba(80, 10, 190, 0.10) 26%, transparent 58%),
-            radial-gradient(circle at 72% 52%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 18%, transparent 44%),
-            radial-gradient(circle at 72% 52%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.95) 11%, transparent 12%),
-            conic-gradient(
-              from 20deg at 72% 52%,
-              rgba(255, 255, 255, 0) 0deg,
-              rgba(200, 140, 255, 0.0) 40deg,
-              rgba(190, 120, 255, 0.85) 85deg,
-              rgba(255, 255, 255, 0.9) 110deg,
-              rgba(170, 90, 255, 0.7) 145deg,
-              rgba(255, 255, 255, 0) 200deg,
-              rgba(255, 255, 255, 0) 360deg
-            );
-          filter: blur(10px);
-          opacity: 0.95;
-          mix-blend-mode: screen;
-          will-change: transform;
-          animation: bhSpin 10s linear infinite;
-        }
-
-        /* lensing streak */
-        #ui-blackhole-bg::after {
-          content: '';
-          position: absolute;
-          left: 46%;
-          top: 46%;
-          width: 1100px;
-          height: 6px;
-          transform: translate3d(0, 0, 0) rotate(-12deg);
-          background: linear-gradient(
-            to right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(170, 90, 255, 0.3) 30%,
-            rgba(255, 255, 255, 0.95) 55%,
-            rgba(170, 90, 255, 0.35) 72%,
-            rgba(255, 255, 255, 0) 100%
-          );
-          filter: blur(1.5px);
-          opacity: 0.8;
-          mix-blend-mode: screen;
-          animation: bhPulse 3.8s ease-in-out infinite;
-        }
-
-        @keyframes bhSpin {
-          to {
-            transform: translate3d(18%, 2%, 0) rotate(360deg);
-          }
-        }
-
-        @keyframes bhPulse {
-          0%,
-          100% {
-            opacity: 0.65;
-            transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(0.96);
-          }
-          50% {
-            opacity: 0.9;
-            transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(1.02);
-          }
-        }
-
-        /* ======= LIGHT SHAPING + VIGNETTE ======= */
+        /* subtle light shaping (keeps the “Amex black” focus) */
         body.ui-enterprise-bg::before {
           content: '';
           position: fixed;
           inset: 0;
-          z-index: -50;
+          z-index: -20;
           pointer-events: none;
           background:
-            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.10), transparent 60%),
-            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.05), transparent 62%),
-            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.04), transparent 64%);
-          transform: translateZ(0);
+            radial-gradient(1100px 520px at 50% -10%, rgba(255, 255, 255, 0.12), transparent 60%),
+            radial-gradient(900px 700px at 20% 0%, rgba(255, 255, 255, 0.055), transparent 62%),
+            radial-gradient(900px 700px at 85% 0%, rgba(255, 255, 255, 0.045), transparent 64%);
+          opacity: 0.95;
+          transform: translate3d(0, 0, 0);
         }
 
+        /* vignette */
         body.ui-enterprise-bg::after {
           content: '';
           position: fixed;
           inset: 0;
-          z-index: -40;
+          z-index: -10;
           pointer-events: none;
-          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.75) 70%);
-          transform: translateZ(0);
+          background: radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.74) 70%);
+          opacity: var(--ui-vignette);
+          transform: translate3d(0, 0, 0);
         }
 
-        /* Reduced motion = stop the heavy stuff */
+        /* iOS/Safari: extra smoothing */
+        .overflow-y-auto {
+          -webkit-overflow-scrolling: touch;
+        }
+
+        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
           #ui-motion-bg {
             display: none;
           }
-          #ui-blackhole-bg::before,
-          #ui-blackhole-bg::after {
+          * {
+            scroll-behavior: auto !important;
             animation: none !important;
+            transition: none !important;
           }
         }
 
@@ -1118,64 +1135,89 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
-        /* ======= FROSTED GLASS SYSTEM ======= */
         .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-          background-color: rgba(6, 7, 10, 0.55);
-          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(7, 8, 11, 0.52);
+          backdrop-filter: blur(14px) saturate(115%);
+          -webkit-backdrop-filter: blur(14px) saturate(115%);
+        }
+
+        .ui-logo {
+          display: inline-flex;
+          align-items: baseline;
+          gap: 0;
+          user-select: none;
+        }
+        .ui-logo-protocol {
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: rgba(255, 255, 255, 0.92);
+        }
+        .ui-logo-lm {
+          font-size: 15px;
+          font-weight: 900;
+          letter-spacing: -0.03em;
+          color: rgba(255, 255, 255, 0.92);
+        }
+        @media (min-width: 640px) {
+          .ui-logo-protocol,
+          .ui-logo-lm {
+            font-size: 16px;
+          }
         }
 
         .ui-shell {
-          border: 1px solid var(--glass-border);
-          background-color: var(--glass-bg);
-          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-          -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-          background-image: var(--glass-sheen);
           border-radius: 22px;
           overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.72), var(--glass-inner);
           position: relative;
         }
 
-        .ui-section-divider {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.10);
-        }
-
-        .ui-stepcard,
-        .ui-faq,
-        .ui-pricewrap,
-        .ui-emptywrap {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background-color: rgba(255, 255, 255, 0.06);
-          background-image: var(--glass-sheen);
-          box-shadow: var(--glass-inner);
-        }
-
-        .ui-modal {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background-color: rgba(8, 9, 12, 0.70);
-          backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-sat));
-          -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-sat));
-          background-image: var(--glass-sheen);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.78), var(--glass-inner);
-        }
-
-        .ui-backdrop {
-          background: rgba(0, 0, 0, 0.82);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-        }
-
-        /* ======= TYPOGRAPHY / SPACING ======= */
         .ui-hero {
           padding: 32px;
           position: relative;
           z-index: 1;
+        }
+
+        /* subtle purple black-hole accent */
+        .ui-blackhole {
+          position: absolute;
+          right: -120px;
+          top: -120px;
+          width: 420px;
+          height: 420px;
+          pointer-events: none;
+          opacity: 0.32;
+          filter: blur(0.2px);
+        }
+        .ui-blackhole::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 999px;
+          background:
+            radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 1) 0 28%, transparent 29%),
+            radial-gradient(circle at 50% 50%, rgba(166, 110, 255, 0.0) 0 34%, rgba(166, 110, 255, 0.75) 48%, rgba(255, 255, 255, 0.25) 55%, rgba(166, 110, 255, 0) 68%),
+            conic-gradient(from 0deg, rgba(166, 110, 255, 0) 0 40%, rgba(210, 160, 255, 0.55) 52%, rgba(166, 110, 255, 0) 70% 100%);
+          box-shadow: 0 0 120px rgba(150, 90, 255, 0.35);
+          animation: uiHoleSpin 6.4s linear infinite;
+        }
+        .ui-blackhole::after {
+          content: '';
+          position: absolute;
+          left: -30%;
+          top: 50%;
+          width: 160%;
+          height: 18px;
+          transform: translateY(-50%) rotate(-12deg);
+          background: linear-gradient(90deg, transparent, rgba(190, 140, 255, 0.15), rgba(255, 255, 255, 0.32), rgba(190, 140, 255, 0.15), transparent);
+          filter: blur(0.6px);
+          opacity: 0.8;
+        }
+        @keyframes uiHoleSpin {
+          to {
+            transform: rotate(360deg);
+          }
         }
 
         .ui-title {
@@ -1189,7 +1231,7 @@ export default function Page() {
         .ui-subtitle {
           font-size: 16px;
           line-height: 1.4;
-          color: rgba(255, 255, 255, 0.72);
+          color: rgba(255, 255, 255, 0.7);
           margin-bottom: 10px;
           max-width: 70ch;
         }
@@ -1197,7 +1239,7 @@ export default function Page() {
         .ui-body {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.58);
+          color: rgba(255, 255, 255, 0.62);
           max-width: 78ch;
         }
 
@@ -1206,6 +1248,12 @@ export default function Page() {
           gap: 10px;
           flex-wrap: wrap;
           margin-top: 18px;
+        }
+
+        .ui-section-divider {
+          height: 1px;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.08);
         }
 
         .ui-section {
@@ -1238,7 +1286,7 @@ export default function Page() {
         .ui-p {
           font-size: 13px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.58);
+          color: rgba(255, 255, 255, 0.62);
           max-width: 72ch;
         }
 
@@ -1253,6 +1301,11 @@ export default function Page() {
           }
         }
 
+        .ui-stepcard {
+          border-radius: 16px;
+          padding: 12px;
+        }
+
         .ui-stephead {
           display: flex;
           align-items: center;
@@ -1261,21 +1314,24 @@ export default function Page() {
         }
 
         .ui-stepicon {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
+          width: 38px;
+          height: 38px;
+          border-radius: 14px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.82);
-          box-shadow: var(--glass-inner);
+          color: rgba(255, 255, 255, 0.78);
+          flex-shrink: 0;
+        }
+        .ui-stepicon svg {
+          width: 18px;
+          height: 18px;
+          display: block;
         }
 
         .ui-steptitle {
           font-size: 12px;
-          font-weight: 800;
+          font-weight: 850;
           letter-spacing: 0.02em;
           color: rgba(255, 255, 255, 0.92);
         }
@@ -1283,17 +1339,17 @@ export default function Page() {
         .ui-stepbody {
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.60);
+          color: rgba(255, 255, 255, 0.62);
         }
 
-        /* FAQ */
         .ui-faq {
           margin-top: 12px;
+          border-radius: 16px;
           overflow: hidden;
         }
 
         .ui-faqitem {
-          border-top: 1px solid rgba(255, 255, 255, 0.10);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
         .ui-faqitem:first-child {
           border-top: none;
@@ -1313,28 +1369,29 @@ export default function Page() {
         }
 
         .ui-faqbtn:hover {
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .ui-faqq {
           font-size: 12px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.92);
+          font-weight: 720;
+          color: rgba(255, 255, 255, 0.9);
         }
 
         .ui-faqchev {
           width: 44px;
           height: 44px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.82);
+          color: rgba(255, 255, 255, 0.7);
           transition: transform 140ms ease;
           flex-shrink: 0;
-          box-shadow: var(--glass-inner);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
         .ui-faqchev.is-open {
           transform: rotate(180deg);
@@ -1353,22 +1410,21 @@ export default function Page() {
           padding: 0 12px 12px;
           font-size: 12px;
           line-height: 1.65;
-          color: rgba(255, 255, 255, 0.60);
+          color: rgba(255, 255, 255, 0.62);
         }
 
         .ui-footerline {
           padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.10);
-          color: rgba(255, 255, 255, 0.82);
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.8);
           font-size: 13px;
         }
 
-        /* Buttons */
         .ui-btn {
           border-radius: 12px;
           padding: 11px 14px;
           font-size: 12px;
-          font-weight: 800;
+          font-weight: 850;
           letter-spacing: 0.06em;
           text-transform: uppercase;
           transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
@@ -1393,7 +1449,7 @@ export default function Page() {
         .ui-btn-primary {
           background: #ffffff;
           color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.25);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
         .ui-btn-primary:hover {
@@ -1401,14 +1457,13 @@ export default function Page() {
         }
 
         .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.02);
           color: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          box-shadow: var(--glass-inner);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
         .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.09);
-          border-color: rgba(255, 255, 255, 0.22);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.12);
         }
 
         .ui-btn:focus-visible,
@@ -1426,38 +1481,65 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.88);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: rgba(255, 255, 255, 0.82);
           transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
-          box-shadow: var(--glass-inner);
         }
         .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.10);
-          border-color: rgba(255, 255, 255, 0.22);
-          color: rgba(255, 255, 255, 0.98);
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.16);
+          color: rgba(255, 255, 255, 0.95);
           transform: scale(1.02);
         }
 
-        /* Inputs */
+        .ui-backdrop {
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+
+        .ui-modal {
+          border-radius: 18px;
+          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
+        }
+
+        .ui-modal-anim {
+          animation: uiPop 180ms ease-out both;
+          transform-origin: 50% 40%;
+        }
+        @keyframes uiPop {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
         .ui-input {
           width: 100%;
           border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           padding: 10px 12px;
           color: rgba(255, 255, 255, 0.94);
           outline: none;
           transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-          box-shadow: var(--glass-inner);
         }
         .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.45);
+          color: rgba(255, 255, 255, 0.4);
         }
         .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.10), var(--glass-inner);
+          border-color: rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
         }
 
         .ui-toast {
@@ -1466,9 +1548,8 @@ export default function Page() {
           align-items: flex-start;
           border-radius: 12px;
           padding: 10px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
-          box-shadow: var(--glass-inner);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
         }
         .ui-toast-ok {
           border-color: rgba(34, 197, 94, 0.35);
@@ -1478,12 +1559,12 @@ export default function Page() {
         }
         .ui-toasticon {
           margin-top: 1px;
-          color: rgba(255, 255, 255, 0.85);
+          color: rgba(255, 255, 255, 0.75);
         }
         .ui-toasttext {
           font-size: 12px;
           line-height: 1.5;
-          color: rgba(255, 255, 255, 0.72);
+          color: rgba(255, 255, 255, 0.7);
         }
 
         .ui-tag {
@@ -1492,15 +1573,23 @@ export default function Page() {
           gap: 8px;
           padding: 6px 10px;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
-          box-shadow: var(--glass-inner);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.76);
+          color: rgba(255, 255, 255, 0.7);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           font-weight: 800;
           width: fit-content;
+        }
+
+        .ui-pricewrap {
+          border-radius: 16px;
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+          position: relative;
+          overflow: hidden;
         }
 
         .ui-badge {
@@ -1509,10 +1598,11 @@ export default function Page() {
           gap: 8px;
           padding: 8px 10px;
           border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(255, 255, 255, 0.06);
-          box-shadow: var(--glass-inner);
-          color: rgba(255, 255, 255, 0.76);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          color: rgba(255, 255, 255, 0.7);
           font-size: 12px;
           font-weight: 700;
         }
@@ -1520,25 +1610,20 @@ export default function Page() {
         .ui-divider {
           height: 1px;
           width: 100%;
-          background: rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Chat bubble styles (keep your “no bubble” look) */
-        .ui-bubble {
+        /* chat bubbles are intentionally “open space” */
+        .ui-bubble,
+        .ui-bubble-user {
           border: none !important;
           background: transparent !important;
           box-shadow: none !important;
           padding: 0 !important;
-          color: rgba(255, 255, 255, 0.94);
         }
-
         .ui-bubble-user {
-          border: none !important;
-          background: transparent !important;
           color: rgba(255, 255, 255, 0.94) !important;
-          padding: 0 !important;
-          border-radius: 0 !important;
-          font-weight: 600;
+          font-weight: 650;
         }
 
         .ui-chatimgwrap {
@@ -1569,18 +1654,16 @@ export default function Page() {
         }
 
         .ui-emptywrap {
+          border-radius: 18px;
           padding: 16px;
           max-width: 520px;
           width: 100%;
         }
 
         .ui-attachpill {
-          border: none !important;
-          background: rgba(255, 255, 255, 0.06) !important;
           border-radius: 14px;
           padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.78);
-          box-shadow: var(--glass-inner);
+          color: rgba(255, 255, 255, 0.8);
         }
 
         .ui-spinner {
@@ -1605,12 +1688,120 @@ export default function Page() {
           }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            scroll-behavior: auto !important;
-            animation: none !important;
-            transition: none !important;
+        /* ======= BOOT OVERLAY (GPU grid + power button) ======= */
+        .ui-boot {
+          position: fixed;
+          inset: 0;
+          z-index: 2000;
+          display: grid;
+          place-items: center;
+          background: rgba(5, 6, 8, 0.94);
+        }
+
+        .ui-boot-grid {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(to right, rgba(255, 255, 255, var(--ui-grid)) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, var(--ui-grid)) 1px, transparent 1px);
+          background-size: 56px 56px;
+          opacity: 0.95;
+          transform: translate3d(0, 0, 0);
+          transition: filter 520ms ease, opacity 520ms ease;
+          filter: brightness(0.9);
+          mask-image: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.2) 68%, rgba(0, 0, 0, 0) 92%);
+        }
+
+        .ui-boot.is-powering .ui-boot-grid {
+          background-image:
+            linear-gradient(to right, rgba(255, 255, 255, var(--ui-grid-on)) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, var(--ui-grid-on)) 1px, transparent 1px);
+          filter: brightness(1.06);
+        }
+
+        .ui-boot-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at 50% 45%, transparent 0%, rgba(0, 0, 0, 0.72) 70%);
+          opacity: 0.9;
+          pointer-events: none;
+        }
+
+        .ui-boot-center {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .ui-powerbtn {
+          width: 92px;
+          height: 92px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          color: rgba(255, 255, 255, 0.9);
+          position: relative;
+          transition: transform 180ms ease;
+        }
+        .ui-powerbtn:hover {
+          transform: scale(1.03);
+        }
+
+        .ui-powerbtn-ring {
+          position: absolute;
+          inset: -2px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+          opacity: 0.9;
+        }
+
+        .ui-powerbtn.is-on .ui-powerbtn-ring {
+          border-color: rgba(210, 160, 255, 0.38);
+          box-shadow:
+            0 0 0 1px rgba(210, 160, 255, 0.16) inset,
+            0 0 44px rgba(170, 110, 255, 0.18);
+          animation: uiPulse 1.15s ease-in-out infinite;
+        }
+
+        @keyframes uiPulse {
+          0% {
+            transform: scale(1);
+            opacity: 0.85;
           }
+          50% {
+            transform: scale(1.02);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0.85;
+          }
+        }
+
+        .ui-powerbtn-icon {
+          display: grid;
+          place-items: center;
+        }
+
+        .ui-boottext {
+          text-align: center;
+          line-height: 1.3;
+        }
+        .ui-bootline1 {
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.86);
+        }
+        .ui-bootline2 {
+          margin-top: 4px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
         }
       `}</style>
 
@@ -1622,6 +1813,7 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
+      {/* NOTE: we still render the page behind the boot overlay so session loads in the background */}
       <div className="h-[100dvh] min-h-0 flex flex-col">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
@@ -1673,11 +1865,11 @@ export default function Page() {
                         aria-label="User menu"
                         title={session?.user?.email || 'User'}
                       >
-                        <span className="text-xs font-semibold">{session.user.email?.[0]?.toUpperCase() || 'U'}</span>
+                        <span className="text-xs font-semibold">{session?.user?.email?.[0]?.toUpperCase() || 'U'}</span>
                       </button>
 
                       {showUserMenu && (
-                        <div className="absolute right-0 mt-2 w-56 ui-modal overflow-hidden">
+                        <div className="absolute right-0 mt-2 w-56 ui-modal ui-frost overflow-hidden">
                           <div className="px-3 pt-3 pb-2 text-[11px] text-white/40">Press Esc to close</div>
                           <button
                             onClick={() => {
@@ -1712,7 +1904,7 @@ export default function Page() {
 
         <main className="flex-1 min-h-0 flex flex-col">
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <LandingPage
                 onShowPricing={() => setShowPricingModal(true)}
                 onShowAuth={() => {
@@ -1727,11 +1919,11 @@ export default function Page() {
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px', WebkitOverflowScrolling: 'touch' }}
+                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
               >
                 {messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center px-4">
-                    <div className="ui-emptywrap text-left">
+                    <div className="ui-emptywrap ui-frost text-left">
                       <div className="ui-emptyicon" aria-hidden="true">
                         <Icons.Shield />
                       </div>
@@ -1787,7 +1979,7 @@ export default function Page() {
                   style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
                 >
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
+                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill ui-frost text-[12px]">
                       <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
