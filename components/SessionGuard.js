@@ -36,7 +36,8 @@ export default function SessionGuard() {
         }
 
         const lastCheck = localStorage.getItem('token_last_check')
-        if (!initRef.current || !lastCheck || (now - new Date(lastCheck)) > 30000) {
+        // FIXED: Increased check interval from 30s to 5 minutes for better UX
+        if (!initRef.current || !lastCheck || (now - new Date(lastCheck)) > 300000) {
           
           const { data: dbSession } = await supabase
             .from('user_sessions')
@@ -48,7 +49,9 @@ export default function SessionGuard() {
             const tokenAge = new Date(dbSession.updated_at)
             const minutesSinceChange = (now - tokenAge) / 1000 / 60
 
-            if (minutesSinceChange > 5) {
+            // FIXED: Increased grace period from 5 to 30 minutes
+            // This prevents logout when users have multiple tabs or return after short breaks
+            if (minutesSinceChange > 30) {
               await supabase.auth.signOut()
               localStorage.removeItem('session_token')
               router.push('/?error=session_conflict')
@@ -70,7 +73,8 @@ export default function SessionGuard() {
     }
 
     manageSession()
-    const interval = setInterval(manageSession, 30000)
+    // FIXED: Increased interval from 30s to 5 minutes
+    const interval = setInterval(manageSession, 300000)
 
     return () => clearInterval(interval)
   }, [supabase, router])
