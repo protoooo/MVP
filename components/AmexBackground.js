@@ -8,16 +8,16 @@ export default function AmexBackground() {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 0,
+        zIndex: -1, // ✅ behind content, but visible because body is isolated/stacking context (see globals.css)
         overflow: 'hidden',
         pointerEvents: 'none',
         backgroundColor: '#000000',
-        // A tiny base sheen so it never reads as “flat black”
+        // subtle base sheen so it never reads as flat black
         backgroundImage:
           'radial-gradient(1200px 700px at 50% 15%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,1) 65%)',
       }}
     >
-      {/* Subtle platinum sheen - top center (like card reflection) */}
+      {/* Top-center sheen (wrap so animation doesn't overwrite centering transform) */}
       <div
         style={{
           position: 'absolute',
@@ -33,8 +33,7 @@ export default function AmexBackground() {
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'radial-gradient(ellipse, rgba(255, 255, 255, 0.14) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.14) 0%, transparent 60%)',
             opacity: 0.85,
             animationDuration: '25s',
             willChange: 'transform',
@@ -43,7 +42,7 @@ export default function AmexBackground() {
         />
       </div>
 
-      {/* Dark gunmetal accent - left side */}
+      {/* Left gunmetal bloom */}
       <div
         style={{
           position: 'absolute',
@@ -58,8 +57,7 @@ export default function AmexBackground() {
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'radial-gradient(ellipse, rgba(80, 80, 110, 0.22) 0%, transparent 68%)',
+            background: 'radial-gradient(ellipse, rgba(80, 80, 110, 0.22) 0%, transparent 68%)',
             opacity: 0.6,
             animationDuration: '30s',
             willChange: 'transform',
@@ -67,7 +65,7 @@ export default function AmexBackground() {
         />
       </div>
 
-      {/* Cool steel blue - right side (subtle) */}
+      {/* Right steel-blue bloom */}
       <div
         style={{
           position: 'absolute',
@@ -82,8 +80,7 @@ export default function AmexBackground() {
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'radial-gradient(ellipse, rgba(90, 120, 170, 0.18) 0%, transparent 72%)',
+            background: 'radial-gradient(ellipse, rgba(90, 120, 170, 0.18) 0%, transparent 72%)',
             opacity: 0.55,
             animationDuration: '28s',
             willChange: 'transform',
@@ -91,7 +88,7 @@ export default function AmexBackground() {
         />
       </div>
 
-      {/* Center depth - creates card surface illusion */}
+      {/* Center depth */}
       <div
         style={{
           position: 'absolute',
@@ -100,14 +97,13 @@ export default function AmexBackground() {
           transform: 'translateX(-50%)',
           width: '72%',
           height: '42%',
-          background:
-            'radial-gradient(ellipse, rgba(255, 255, 255, 0.06) 0%, transparent 62%)',
+          background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.06) 0%, transparent 62%)',
           opacity: 0.9,
           mixBlendMode: 'screen',
         }}
       />
 
-      {/* Premium vignette - toned down so accents are visible */}
+      {/* Vignette (toned down so accents are visible) */}
       <div
         style={{
           position: 'absolute',
@@ -120,7 +116,7 @@ export default function AmexBackground() {
         }}
       />
 
-      {/* Subtle edge glow - like brushed metal edge */}
+      {/* Edge glow */}
       <div
         style={{
           position: 'absolute',
