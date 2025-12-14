@@ -1,6 +1,4 @@
-// app/accept-terms/page.js - REPLACE ENTIRE FILE
-// ✅ Fixed: Only shows once, handles existing subscriptions
-
+// app/accept-terms/page.js - FIXED (Works with webhook profile creation)
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -32,22 +30,22 @@ export default function AcceptTermsPage() {
           return
         }
 
-        // ✅ Check if already accepted
-        const { data: profile, error: profileError } = await supabase
+        // ✅ Check if profile exists AND if already accepted
+        const { data: profile } = await supabase
           .from('user_profiles')
           .select('accepted_terms, accepted_privacy')
           .eq('id', session.user.id)
           .maybeSingle()
 
-        // If profile doesn't exist, that's OK - we'll create it when they accept
-        // If profile exists and already accepted, redirect to home
+        // If profile exists and already accepted, redirect home
         if (profile && profile.accepted_terms && profile.accepted_privacy) {
           console.log('✅ Terms already accepted, redirecting home')
           router.replace('/')
           return
         }
 
-        console.log('📋 Terms need acceptance')
+        // ✅ If no profile yet (webhook hasn't fired), that's OK - we'll create it when they accept
+        console.log('📋 Terms need acceptance or profile needs creation')
         
       } catch (e) {
         console.error('Accept terms check error:', e)
