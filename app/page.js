@@ -139,8 +139,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <p className={`ui-subtitle ${inter.className}`}>Train faster. Avoid violations. Pass inspections.</p>
 
             <p className={`ui-body ${inter.className}`}>
-              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector
-              arrives. Plus, search Washtenaw County regulations instantly when your team has questions.
+              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector arrives.
+              Plus, search Washtenaw County regulations instantly when your team has questions.
             </p>
 
             <div className="ui-cta-row">
@@ -680,13 +680,7 @@ export default function Page() {
     }
   }, [supabase, searchParams, router])
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.body.classList.add('ui-enterprise-bg')
-    return () => {
-      document.body.classList.remove('ui-enterprise-bg')
-    }
-  }, [])
+  // ✅ Removed ui-enterprise-bg body class (was overriding AmexBackground in layout)
 
   useEffect(() => {
     function handleClick(event) {
@@ -943,61 +937,15 @@ export default function Page() {
           width: 100%;
         }
 
-        body.ui-enterprise-bg {
-          overflow: hidden;
+        /* ✅ No ui-enterprise-bg aurora/pseudo-elements here anymore.
+           AmexBackground in app/layout.js now shows through. */
+        html {
           background: #050608;
+        }
+        body {
+          overflow: hidden;
+          background: transparent;
           color: rgba(255, 255, 255, 0.94);
-          --ui-lamp: 1.04;
-          --ui-vignette: 0.94;
-          background-image: none !important; /* ✅ kill any grid background-image */
-        }
-
-        /* ✅ Clean black aurora (NO conic / NO grid feel) */
-        body.ui-enterprise-bg::before {
-          content: '';
-          position: fixed;
-          inset: -12%;
-          pointer-events: none;
-          background: radial-gradient(1100px 560px at 50% -16%, rgba(255, 255, 255, 0.11), transparent 62%),
-            radial-gradient(980px 600px at 16% 6%, rgba(0, 255, 210, 0.05), transparent 64%),
-            radial-gradient(980px 600px at 86% 4%, rgba(140, 110, 255, 0.05), transparent 66%),
-            radial-gradient(1200px 820px at 50% 118%, rgba(255, 255, 255, 0.03), transparent 66%);
-          opacity: 0.9;
-          filter: brightness(var(--ui-lamp)) saturate(1.12);
-          transform: translateZ(0);
-          will-change: transform;
-          animation: uiAurora 18s ease-in-out infinite alternate;
-          background-repeat: no-repeat;
-        }
-
-        @keyframes uiAurora {
-          0% {
-            transform: translate3d(0%, 0%, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(-2%, -1%, 0) scale(1.04);
-          }
-          100% {
-            transform: translate3d(2%, 0%, 0) scale(1.08);
-          }
-        }
-
-        /* ✅ Vignette */
-        body.ui-enterprise-bg::after {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background: radial-gradient(
-              420px 360px at 50% 34%,
-              rgba(0, 0, 0, 0) 0%,
-              rgba(0, 0, 0, 0.55) 62%,
-              rgba(0, 0, 0, 0.9) 100%
-            ),
-            radial-gradient(circle at 50% 25%, transparent 0%, rgba(0, 0, 0, 0.62) 70%);
-          opacity: var(--ui-vignette);
-          transform: translateZ(0);
-          background-image: none !important; /* ✅ kill any grid overlay */
         }
 
         :root {
@@ -1974,14 +1922,8 @@ export default function Page() {
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
                             <div className="ui-thinking flex gap-2 items-center">
                               <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
-                              <span
-                                className="w-2 h-2 rounded-full bg-white/30 animate-bounce"
-                                style={{ animationDelay: '0.12s' }}
-                              />
-                              <span
-                                className="w-2 h-2 rounded-full bg-white/30 animate-bounce"
-                                style={{ animationDelay: '0.24s' }}
-                              />
+                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
+                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1994,7 +1936,10 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                <div
+                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
+                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
+                >
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
