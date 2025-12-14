@@ -147,6 +147,7 @@ export async function POST(req) {
           .upsert(
             {
               id: userId,
+              stripe_customer_id: session.customer, // ✅ Add customer ID
               accepted_terms: true,
               accepted_privacy: true,
               terms_accepted_at: now,
