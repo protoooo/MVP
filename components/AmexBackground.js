@@ -1,93 +1,126 @@
+// components/AmexBackground.js - iOS Safari Optimized
 'use client'
 
 export default function AmexBackground() {
   return (
     <>
       {/* Base deep black layer */}
-      <div className="fixed inset-0 -z-50 bg-[#000000]" />
+      <div 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: -50,
+          backgroundColor: '#000000'
+        }} 
+      />
       
-      {/* Dramatic depth layers */}
-      <div className="fixed inset-0 -z-40 overflow-hidden pointer-events-none">
+      {/* Animated gradient layer - simplified for iOS */}
+      <div 
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: -40,
+          overflow: 'hidden',
+          pointerEvents: 'none'
+        }}
+      >
         {/* Top-left dramatic glow */}
         <div 
-          className="absolute -top-[30%] -left-[15%] w-[70%] h-[70%] opacity-[0.25] animate-float"
+          className="animate-float"
           style={{
+            position: 'absolute',
+            top: '-30%',
+            left: '-15%',
+            width: '70%',
+            height: '70%',
             background: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 65%)',
             filter: 'blur(120px)',
+            opacity: 0.25,
             animationDuration: '20s'
           }}
         />
         
-        {/* Bottom-right purple accent (more intense) */}
+        {/* Bottom-right purple accent */}
         <div 
-          className="absolute -bottom-[30%] -right-[15%] w-[70%] h-[70%] opacity-[0.22] animate-float-reverse"
+          className="animate-float-reverse"
           style={{
+            position: 'absolute',
+            bottom: '-30%',
+            right: '-15%',
+            width: '70%',
+            height: '70%',
             background: 'radial-gradient(circle, rgba(120, 100, 160, 0.25) 0%, transparent 65%)',
             filter: 'blur(140px)',
+            opacity: 0.22,
             animationDuration: '25s'
           }}
         />
         
-        {/* Center spotlight effect */}
+        {/* Center spotlight */}
         <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] opacity-[0.15]"
           style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '70%',
+            height: '70%',
             background: 'radial-gradient(ellipse, rgba(255, 255, 255, 0.12) 0%, transparent 55%)',
-            filter: 'blur(150px)'
+            filter: 'blur(150px)',
+            opacity: 0.15
           }}
         />
         
-        {/* Animated floating orbs for depth */}
+        {/* Floating orbs */}
         <div 
-          className="absolute top-[20%] left-[30%] w-[300px] h-[300px] opacity-[0.08] animate-float"
+          className="animate-float"
           style={{
+            position: 'absolute',
+            top: '20%',
+            left: '30%',
+            width: '300px',
+            height: '300px',
             background: 'radial-gradient(circle, rgba(100, 200, 255, 0.3) 0%, transparent 70%)',
             filter: 'blur(80px)',
+            opacity: 0.08,
             animationDuration: '20s'
           }}
         />
         
         <div 
-          className="absolute bottom-[25%] right-[35%] w-[250px] h-[250px] opacity-[0.06] animate-float-reverse"
+          className="animate-float-reverse"
           style={{
+            position: 'absolute',
+            bottom: '25%',
+            right: '35%',
+            width: '250px',
+            height: '250px',
             background: 'radial-gradient(circle, rgba(200, 100, 255, 0.3) 0%, transparent 70%)',
             filter: 'blur(90px)',
+            opacity: 0.06,
             animationDuration: '25s'
           }}
         />
         
-        {/* More visible grid overlay */}
+        {/* Grid overlay - removed for iOS compatibility */}
+        
+        {/* Noise texture - removed for iOS performance */}
+        
+        {/* Vignette (stronger for iOS) */}
         <div 
-          className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: `
-              linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px)
-            `,
-            backgroundSize: '80px 80px'
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%)',
+            opacity: 0.8
           }}
         />
         
-        {/* Enhanced noise texture */}
+        {/* Edge shadows */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-          }}
-        />
-        
-        {/* Stronger vignette */}
-        <div 
-          className="absolute inset-0 opacity-80"
-          style={{
-            background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%)'
-          }}
-        />
-        
-        {/* Dramatic edge shadows */}
-        <div 
-          className="absolute inset-0"
-          style={{
+            position: 'absolute',
+            inset: 0,
             boxShadow: 'inset 0 0 200px rgba(0, 0, 0, 0.8)'
           }}
         />
