@@ -482,26 +482,26 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="space-y-3">
             <button
-  onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-  disabled={!!loading}
-  className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
->
-  <span className="ui-btn-inner">
-    {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
-    Start trial
-  </span>
-</button>
+              onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+              disabled={!!loading}
+              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="ui-btn-inner">
+                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
+                Start trial
+              </span>
+            </button>
 
-<button
-  onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-  disabled={!!loading}
-  className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
->
-  <span className="ui-btn-inner">
-    {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-    Annual · $1,000/yr
-  </span>
-</button>
+            <button
+              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+              disabled={!!loading}
+              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="ui-btn-inner">
+                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
+                Annual · $1,000/yr
+              </span>
+            </button>
 
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
@@ -578,120 +578,114 @@ export default function Page() {
     }
   }, [searchParams])
 
-  // app/page.js - FIXED: Safe profile check (excerpt)
+  // ✅ Handles session + profile terms gate + subscription check (SINGLE useEffect)
+  useEffect(() => {
+    let isMounted = true
 
-// Around line 474 in your useEffect:
+    async function loadSessionAndSub(s) {
+      if (!isMounted) return
+      setSession(s)
 
-useEffect(() => {
-  let isMounted = true
-
-  async function loadSessionAndSub(s) {
-    if (!isMounted) return
-    setSession(s)
-
-    if (!s) {
-      setHasActiveSubscription(false)
-      setShowPricingModal(false)
-      setIsLoading(false)
-      return
-    }
-
-    // ✅ FIXED: Handle missing profile gracefully
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('accepted_terms, accepted_privacy')
-        .eq('id', s.user.id)
-        .maybeSingle()
-
-      // ✅ If profile doesn't exist, redirect to accept-terms
-      // This creates the profile with UPSERT
-      if (!profile) {
-        console.log('⚠️ No profile found, redirecting to accept-terms')
+      if (!s) {
         setHasActiveSubscription(false)
+        setShowPricingModal(false)
         setIsLoading(false)
-        router.replace('/accept-terms')
         return
       }
 
-      // ✅ If profile exists but terms not accepted
-      const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
-      if (!accepted) {
-        console.log('⚠️ Terms not accepted, redirecting')
-        setHasActiveSubscription(false)
-        setIsLoading(false)
-        router.replace('/accept-terms')
-        return
-      }
-
-      // ✅ Check if there was a profile error (DB issue)
-      if (profileError) {
-        console.error('❌ Profile check error:', profileError)
-        // Still redirect to accept-terms, which will try to create it
-        setHasActiveSubscription(false)
-        setIsLoading(false)
-        router.replace('/accept-terms')
-        return
-      }
-
-    } catch (e) {
-      console.error('❌ Policy check exception:', e)
-      setHasActiveSubscription(false)
-      setIsLoading(false)
-      router.replace('/accept-terms')
-      return
-    }
-
-    // Now check subscription (rest of your code continues unchanged)
-    let active = false
-    try {
-      if (s.user.email === ADMIN_EMAIL) {
-        active = true
-      } else {
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status,current_period_end')
-          .eq('user_id', s.user.id)
-          .in('status', ['active', 'trialing'])
-          .order('current_period_end', { ascending: false })
-          .limit(1)
+      // ✅ FIXED: Handle missing profile gracefully
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('accepted_terms, accepted_privacy')
+          .eq('id', s.user.id)
           .maybeSingle()
 
-        if (sub && sub.current_period_end) {
-          const end = new Date(sub.current_period_end)
-          if (end > new Date()) active = true
+        // ✅ If profile doesn't exist, redirect to accept-terms
+        if (!profile) {
+          console.log('⚠️ No profile found, redirecting to accept-terms')
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
         }
+
+        // ✅ If profile exists but terms not accepted
+        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
+        if (!accepted) {
+          console.log('⚠️ Terms not accepted, redirecting')
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+
+        // ✅ Check if there was a profile error (DB issue)
+        if (profileError) {
+          console.error('❌ Profile check error:', profileError)
+          setHasActiveSubscription(false)
+          setIsLoading(false)
+          router.replace('/accept-terms')
+          return
+        }
+      } catch (e) {
+        console.error('❌ Policy check exception:', e)
+        setHasActiveSubscription(false)
+        setIsLoading(false)
+        router.replace('/accept-terms')
+        return
       }
-    } catch (e) {
-      console.error('Subscription check error', e)
+
+      // Check subscription
+      let active = false
+      try {
+        if (s.user.email === ADMIN_EMAIL) {
+          active = true
+        } else {
+          const { data: sub } = await supabase
+            .from('subscriptions')
+            .select('status,current_period_end')
+            .eq('user_id', s.user.id)
+            .in('status', ['active', 'trialing'])
+            .order('current_period_end', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (sub && sub.current_period_end) {
+            const end = new Date(sub.current_period_end)
+            if (end > new Date()) active = true
+          }
+        }
+      } catch (e) {
+        console.error('Subscription check error', e)
+      }
+
+      if (!isMounted) return
+      setHasActiveSubscription(active)
+      setIsLoading(false)
     }
 
-    if (!isMounted) return
-    setHasActiveSubscription(active)
-    setIsLoading(false)
-  }
-
-  async function init() {
-    try {
-      const { data } = await supabase.auth.getSession()
-      await loadSessionAndSub(data.session || null)
-    } catch (e) {
-      console.error('Auth init error', e)
-      if (isMounted) setIsLoading(false)
+    async function init() {
+      try {
+        const { data } = await supabase.auth.getSession()
+        await loadSessionAndSub(data.session || null)
+      } catch (e) {
+        console.error('Auth init error', e)
+        if (isMounted) setIsLoading(false)
+      }
     }
-  }
 
-  init()
+    init()
 
-  const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
-    loadSessionAndSub(newSession)
-  })
+    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      loadSessionAndSub(newSession)
+    })
 
-  return () => {
-    isMounted = false
-    data.subscription?.unsubscribe()
-  }
-}, [supabase, searchParams, router])
+    return () => {
+      isMounted = false
+      data.subscription?.unsubscribe()
+    }
+  }, [supabase, searchParams, router])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -1299,8 +1293,8 @@ useEffect(() => {
           font-weight: 800;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease,
-            opacity 120ms ease;
+          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease,
+            color 120ms ease, opacity 120ms ease;
           user-select: none;
         }
 
@@ -1583,7 +1577,8 @@ useEffect(() => {
           background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.98));
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) inset, 0 20px 80px rgba(0, 0, 0, 0.7);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+            0 20px 80px rgba(0, 0, 0, 0.7);
           overflow: hidden;
           animation: uiMenuSlide 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
           transform-origin: top right;
