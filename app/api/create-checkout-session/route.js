@@ -1,3 +1,4 @@
+// app/api/create-checkout-session/route.js - SECURITY FIX: Non-bypassable rate limiting
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -107,33 +108,53 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // Rate limit (best-effort; don’t hard-fail if table missing)
+    // ✅ SECURITY FIX: Rate limit check that BLOCKS on failure (not best-effort)
     try {
-      const { data: recent } = await supabase
+      const { data: recent, error: rateLimitError } = await supabase
         .from('checkout_attempts')
         .select('created_at')
         .eq('user_id', user.id)
         .gte('created_at', new Date(Date.now() - 60_000).toISOString())
+
+      // ✅ If rate limit check fails, BLOCK the request
+      if (rateLimitError) {
+        logger.error('Checkout rate-limit check failed - blocking request', { 
+          msg: rateLimitError?.message,
+          userId: user.id 
+        })
+        return NextResponse.json({ 
+          error: 'Service temporarily unavailable. Please try again.' 
+        }, { status: 503 })
+      }
 
       if (recent && recent.length >= 5) {
         logger.security('Checkout rate limit exceeded', { userId: user.id, email: user.email, ip })
         return NextResponse.json({ error: 'Too many checkout attempts. Please wait 1 minute.' }, { status: 429 })
       }
 
-      await supabase.from('checkout_attempts').insert({
+      // Log the attempt
+      const { error: insertError } = await supabase.from('checkout_attempts').insert({
         user_id: user.id,
         price_id: priceId,
         captcha_score: captchaResult.score,
         ip_address: ip,
         created_at: new Date().toISOString(),
       })
-    } catch (e) {
-      logger.warn('Checkout rate-limit logging failed (non-blocking)', { msg: e?.message })
-    }
 
-    // NOTE: If you truly want "No credit card required", you can add:
-    // payment_method_collection: 'if_required'
-    // But many businesses prefer collecting card up-front to avoid churn at day 7.
+      if (insertError) {
+        logger.warn('Failed to log checkout attempt', { msg: insertError?.message })
+        // Don't block on logging failure, but log it
+      }
+    } catch (e) {
+      // ✅ CRITICAL: On any exception during rate limiting, BLOCK the request
+      logger.error('Checkout rate-limit exception - blocking request', { 
+        msg: e?.message,
+        userId: user.id 
+      })
+      return NextResponse.json({ 
+        error: 'Service temporarily unavailable. Please try again.' 
+      }, { status: 503 })
+    }
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'subscription',
