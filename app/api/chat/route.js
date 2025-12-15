@@ -1,4 +1,4 @@
-// app/api/chat/route.js - FIXED SYNTAX + Extended High
+// app/api/chat/route.js - FIXED: Removed response_format + better JSON parsing
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -15,18 +15,12 @@ export const runtime = 'nodejs'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-// Main model
 const OPENAI_CHAT_MODEL = 'gpt-5.2'
-
-// Timeouts (ms)
 const VISION_TIMEOUT_MS = 30000
 const ANSWER_TIMEOUT_MS = 45000
-
-// Retrieval
 const TOPK = 24
 const PRIORITY_TOPK = 10
 
-// Priority sources
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
@@ -122,17 +116,7 @@ function buildContextString(docs) {
 async function safeLogUsage(payload) {
   try {
     if (typeof logUsageForAnalytics !== 'function') return
-    if (logUsageForAnalytics.length <= 1) {
-      await logUsageForAnalytics(payload)
-    } else {
-      await logUsageForAnalytics(
-        payload.userId,
-        payload.plan || 'unknown',
-        payload.mode || 'chat',
-        payload.success === true,
-        payload.durationMs || null
-      )
-    }
+    await logUsageForAnalytics(payload)
   } catch (e) {
     logger.warn('Usage logging failed (non-blocking)', { error: e?.message })
   }
@@ -197,7 +181,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // Vision pre-pass
+    // Vision pre-pass - FIXED: No response_format parameter
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionIssues = []
@@ -212,14 +196,13 @@ export async function POST(request) {
             reasoning_effort: 'high',
             verbosity: 'low',
             max_output_tokens: 800,
-            response_format: { type: 'json_object' },
             input: [
               {
                 role: 'system',
                 content: [
                   {
                     type: 'input_text',
-                    text: 'You are a food-safety inspection assistant. Return STRICT JSON only. Schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. summary = 2-3 sentences describing what is visible. search_terms = short keyword string for retrieving relevant regulations (no prose). issues_spotted = array of specific potential violations you can see (e.g., "uncovered food", "improper storage order").',
+                    text: 'You are a food-safety inspection assistant. Return ONLY valid JSON with this schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. No markdown, no code blocks, just raw JSON.',
                   },
                 ],
               },
@@ -237,12 +220,21 @@ export async function POST(request) {
         )
 
         const vt = extractTextFromOpenAI(visionResp)
+        
         try {
-          const parsed = JSON.parse(vt)
+          // Try to extract JSON (handles markdown code blocks)
+          let jsonText = vt.trim()
+          const jsonMatch = vt.match(/```json\s*([\s\S]*?)\s*```/) || vt.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            jsonText = jsonMatch[1] || jsonMatch[0]
+          }
+          
+          const parsed = JSON.parse(jsonText)
           visionSummary = safeText(parsed?.summary || '')
           visionSearchTerms = safeText(parsed?.search_terms || '')
           visionIssues = Array.isArray(parsed?.issues_spotted) ? parsed.issues_spotted : []
-        } catch {
+        } catch (parseError) {
+          logger.warn('JSON parse failed, using raw text', { error: parseError.message })
           visionSummary = safeText(vt).slice(0, 500)
           visionSearchTerms = ''
           visionIssues = []
@@ -280,7 +272,6 @@ export async function POST(request) {
     let docs = await searchDocuments(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    // Force-fetch priority docs if missing
     const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
     if (priorityHits < 2) {
       logger.warn('Priority docs missing, fetching manually', { priorityHits })
@@ -294,7 +285,6 @@ export async function POST(request) {
       }
     }
 
-    // Boost priority sources
     docs.sort((a, b) => {
       const ap = isPrioritySource(a.source) ? 1 : 0
       const bp = isPrioritySource(b.source) ? 1 : 0
@@ -345,7 +335,7 @@ Output format (exact sections, concise):
 **Need to confirm:**
 - <questions to raise certainty, 1-2 items max>
 
-Only include "Sources used:" if user explicitly asks for citations.`.trim()
+Only include "Sources used:" if user explicitly asks for citations.`
 
     const issuesSection = visionIssues.length > 0 
       ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}\n` 
@@ -359,7 +349,7 @@ ${visionSummary || '[No photo analysis available]'}
 
 ${issuesSection}
 REGULATORY EXCERPTS:
-${context}`.trim()
+${context}`
 
     let finalText = ''
     try {
