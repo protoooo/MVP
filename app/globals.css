@@ -9,6 +9,7 @@
   margin: 0;
 }
 
+/* ✅ CRITICAL: Allow background to show */
 html,
 body {
   max-width: 100vw;
@@ -18,16 +19,14 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background: transparent; /* ✅ Allows Amex background to show */
+  background: #050608 !important; /* Fallback if 3D fails */
 }
 
 body {
-  /* ✅ CRITICAL: ensure negative z-index background is still visible */
   position: relative;
   z-index: 0;
   isolation: isolate;
-  background: transparent; /* ✅ Must be transparent */
-
+  
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -39,13 +38,22 @@ body {
 #__next {
   min-height: 100%;
   width: 100%;
-  background: transparent; /* ✅ Keep transparent */
+  background: transparent !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
+}
+
+/* ✅ FIXED: Lighter veil so background shows through */
+.ui-appveil {
+  background: linear-gradient(
+    180deg, 
+    rgba(0, 0, 0, 0.45) 0%,  /* Was 0.58 - now lighter */
+    rgba(0, 0, 0, 0.62) 100% /* Was 0.76 - now lighter */
+  );
 }
 
 :root {
@@ -144,10 +152,7 @@ select:focus-visible {
   input, textarea, select, button { max-width: 100%; }
 }
 
-/* =========================================================
-   ProtocolLM Chat – remove borders/frames (global-safe)
-   ========================================================= */
-
+/* Chat styling - keep borderless */
 .chat-bubble,
 .chat-message,
 .message-bubble,
@@ -204,74 +209,35 @@ select:focus-visible {
   .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
-/* =========================================================
-   Amex Centurion Background Animations
-   ========================================================= */
-
+/* ✅ Amex/Galaxy animations (used by Three.js stars) */
 @keyframes amexFloat {
-  0% {
-    transform: translate3d(0px, 0px, 0) scale(1);
-  }
-  35% {
-    transform: translate3d(18px, -14px, 0) scale(1.03);
-  }
-  70% {
-    transform: translate3d(-14px, 16px, 0) scale(0.99);
-  }
-  100% {
-    transform: translate3d(0px, 0px, 0) scale(1);
-  }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  35% { transform: translate3d(18px, -14px, 0) scale(1.03); }
+  70% { transform: translate3d(-14px, 16px, 0) scale(0.99); }
+  100% { transform: translate3d(0px, 0px, 0) scale(1); }
 }
 
 @keyframes amexFloatReverse {
-  0% {
-    transform: translate3d(0px, 0px, 0) scale(1);
-  }
-  40% {
-    transform: translate3d(-20px, 12px, 0) scale(1.02);
-  }
-  75% {
-    transform: translate3d(16px, -10px, 0) scale(0.99);
-  }
-  100% {
-    transform: translate3d(0px, 0px, 0) scale(1);
-  }
+  0% { transform: translate3d(0px, 0px, 0) scale(1); }
+  40% { transform: translate3d(-20px, 12px, 0) scale(1.02); }
+  75% { transform: translate3d(16px, -10px, 0) scale(0.99); }
+  100% { transform: translate3d(0px, 0px, 0) scale(1); }
 }
 
 @keyframes amexSheenDrift {
-  0% {
-    transform: translate3d(-50%, 0, 0) rotate(0.001deg);
-    opacity: 0.65;
-  }
-  50% {
-    transform: translate3d(calc(-50% + 14px), -10px, 0) rotate(0.001deg);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate3d(-50%, 0, 0) rotate(0.001deg);
-    opacity: 0.65;
-  }
+  0% { transform: translate3d(-50%, 0, 0) rotate(0.001deg); opacity: 0.65; }
+  50% { transform: translate3d(calc(-50% + 14px), -10px, 0) rotate(0.001deg); opacity: 0.8; }
+  100% { transform: translate3d(-50%, 0, 0) rotate(0.001deg); opacity: 0.65; }
 }
 
 @keyframes amexGrain {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  25% {
-    transform: translate3d(-1.5%, 1%, 0);
-  }
-  50% {
-    transform: translate3d(1%, -1.5%, 0);
-  }
-  75% {
-    transform: translate3d(-1%, -0.5%, 0);
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
+  0% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(-1.5%, 1%, 0); }
+  50% { transform: translate3d(1%, -1.5%, 0); }
+  75% { transform: translate3d(-1%, -0.5%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
 
-/* Apply Amex animations */
 .animate-float {
   animation: amexFloat 26s ease-in-out infinite;
   will-change: transform;
