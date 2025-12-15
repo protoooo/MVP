@@ -49,6 +49,11 @@ function safeText(x) {
   return x.replace(/[\x00-\x1F\x7F]/g, '').trim()
 }
 
+function safeArray(x) {
+  if (!Array.isArray(x)) return []
+  return x.map((v) => safeText(String(v))).filter(Boolean)
+}
+
 function getLastUserText(messages) {
   if (!Array.isArray(messages)) return ''
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -82,11 +87,20 @@ function extractTextFromOpenAI(resp) {
   }
 }
 
-// ✅ IMPORTANT: your "source" is often "Unknown Source" right now.
-// So treat “priority” as source OR the beginning of the text.
+function getDocSourceString(d) {
+  const src =
+    d?.source ||
+    d?.metadata?.source ||
+    d?.metadata?.filename ||
+    d?.metadata?.title ||
+    ''
+  return safeText(String(src || ''))
+}
+
+// ✅ Treat “priority” as source OR filename OR early text (handles null/unknown source)
 function isPriorityDoc(d) {
-  const src = d?.source || ''
-  const textHead = (d?.text || '').slice(0, 3000)
+  const src = getDocSourceString(d)
+  const textHead = safeText((d?.text || '').slice(0, 3000))
   const hay = `${src}\n${textHead}`
   return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(hay))
 }
@@ -108,9 +122,10 @@ function buildContextString(docs) {
   const MAX_CHARS = 60000
   let buf = ''
   for (const d of docs) {
-    const src = d.source || 'Unknown'
-    const pg = d.page ?? 'N/A'
-    const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | SCORE: ${Number(d.score || 0).toFixed(3)}]\n${d.text}\n`
+    const src = getDocSourceString(d) || 'Unknown'
+    const pg = d?.page ?? d?.metadata?.page ?? 'N/A'
+    const score = Number(d?.score || 0)
+    const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | SCORE: ${Number.isFinite(score) ? score.toFixed(3) : '0.000'}]\n${d?.text || ''}\n`
     if ((buf.length + chunk.length) > MAX_CHARS) break
     buf += chunk
   }
@@ -124,6 +139,43 @@ async function safeLogUsage(payload) {
   } catch (e) {
     logger.warn('Usage logging failed (non-blocking)', { error: e?.message })
   }
+}
+
+function buildClarifyingFallback({
+  scene = 'unknown',
+  visionSummary = '',
+  clarify = [],
+  hasImage = false,
+}) {
+  const sceneLine =
+    scene && scene !== 'unknown'
+      ? `This looks like **${scene}**.`
+      : 'This environment is unclear from the photo.'
+
+  const summaryLine = visionSummary ? `- ${visionSummary}` : '- (No vision summary available)'
+
+  const clarifyQs = (clarify?.length ? clarify : [
+    'What area is this (kitchen line, dish, walk-in, storage, front counter, food truck, delivery/transport vehicle)?',
+    'Is any food (open or packaged) being stored/handled/transported here?',
+  ]).slice(0, 2)
+
+  // Keep your same format, but allow N/A classification when context is non-food/unclear
+  return `**Likely issues (visible):**
+- **(N/A)** [ODDS: 0–20%] No clear food-handling violation is confirmed from this image alone. ${sceneLine}
+
+**Correction windows:**
+- Priority/Priority Foundation: Fix immediately or within 10 days
+- Core: Fix within 90 days
+
+**What to do now:**
+1. If this is a food-handling area or food transport, re-take the photo closer to the food/contact surfaces (2 angles).
+2. If food is present, keep it **covered**, **protected from contamination**, and **temperature-controlled** until confirmed compliant.
+
+**Need to confirm:**
+- ${clarifyQs[0]}
+- ${clarifyQs[1] || 'Is this an active food area right now (during prep/service)?'}
+
+(Internal note: Vision ran=${hasImage ? 'yes' : 'no'} | Summary: ${summaryLine})`
 }
 
 export async function POST(request) {
@@ -148,6 +200,13 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}))
     const messages = Array.isArray(body?.messages) ? body.messages : []
     const county = safeText(body?.county || 'washtenaw') || 'washtenaw'
+
+    // ✅ Fix analytics insert plan=null (safe default)
+    const plan =
+      safeText(body?.plan) ||
+      safeText(body?.subscriptionPlan) ||
+      safeText(body?.tier) ||
+      'unknown'
 
     const imageDataUrl = asDataUrl(body?.image || body?.imageBase64 || body?.image_url)
     const hasImage = Boolean(imageDataUrl)
@@ -179,18 +238,27 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
+
+    // ✅ Stronger default prompt: not just kitchens
     const effectiveUserPrompt =
       lastUserText ||
-      (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
+      (hasImage
+        ? 'Analyze this photo for possible food safety / health inspection violations. Consider non-kitchen contexts too: dish area, walk-ins, storage, front counter/POS, food trucks, and food transport/delivery vehicles.'
+        : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // Vision pre-pass
+    // ------------------------
+    // Vision pre-pass (now includes scene + food-context + clarify questions)
+    // ------------------------
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionIssues = []
+    let visionScene = 'unknown'
+    let visionFoodContext = 'unclear' // "yes" | "no" | "unclear"
+    let visionClarify = []
 
     if (hasImage) {
       try {
@@ -199,12 +267,9 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_CHAT_MODEL,
-
-            // ✅ FIXED: correct GPT-5.x Responses parameters
             reasoning: { effort: 'high' },
             text: { verbosity: 'low' },
-
-            max_output_tokens: 800,
+            max_output_tokens: 900,
             input: [
               {
                 role: 'system',
@@ -212,7 +277,7 @@ export async function POST(request) {
                   {
                     type: 'input_text',
                     text:
-                      'You are a food-safety inspection assistant. Return ONLY valid JSON with this schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. No markdown, no code blocks, just raw JSON.',
+                      'You are a food-safety inspection assistant. Return ONLY valid JSON. Schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."], "scene":"kitchen|dish|walk-in|storage|front_counter|food_truck|vehicle_transport|outdoors|unknown", "food_context":"yes|no|unclear", "clarify":["...","..."]}. No markdown. No code blocks. Raw JSON only.',
                   },
                 ],
               },
@@ -237,14 +302,26 @@ export async function POST(request) {
           if (jsonMatch) jsonText = jsonMatch[1] || jsonMatch[0]
 
           const parsed = JSON.parse(jsonText)
+
           visionSummary = safeText(parsed?.summary || '')
           visionSearchTerms = safeText(parsed?.search_terms || '')
-          visionIssues = Array.isArray(parsed?.issues_spotted) ? parsed.issues_spotted : []
+          visionIssues = safeArray(parsed?.issues_spotted)
+
+          const scene = safeText(parsed?.scene || '')
+          visionScene = scene || 'unknown'
+
+          const fc = safeText(parsed?.food_context || '')
+          visionFoodContext = fc || 'unclear'
+
+          visionClarify = safeArray(parsed?.clarify)
         } catch (parseError) {
           logger.warn('JSON parse failed, using raw text', { error: parseError.message })
           visionSummary = safeText(vt).slice(0, 500)
           visionSearchTerms = ''
           visionIssues = []
+          visionScene = 'unknown'
+          visionFoodContext = 'unclear'
+          visionClarify = []
         }
 
         logger.info('Vision analysis ok', {
@@ -252,19 +329,27 @@ export async function POST(request) {
           summaryLen: visionSummary.length,
           searchTermsLen: visionSearchTerms.length,
           issuesCount: visionIssues.length,
+          scene: visionScene,
+          foodContext: visionFoodContext,
         })
       } catch (e) {
         logger.error('Vision analysis failed', { env, error: e?.message || String(e) })
       }
     }
 
-    // Retrieval
+    // ------------------------
+    // Retrieval (still prioritizes your 2 key docs, but keeps full corpus available)
+    // ------------------------
     const retrievalQuery =
       safeText(
         [
           visionSearchTerms || '',
           effectiveUserPrompt || '',
+          // Always include these anchor terms so the two key docs stay in play:
           'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
+          // If the scene suggests transport/FOH/dish/etc, help retrieval:
+          visionScene ? `scene:${visionScene}` : '',
+          visionFoodContext ? `food_context:${visionFoodContext}` : '',
         ]
           .filter(Boolean)
           .join('\n')
@@ -279,7 +364,8 @@ export async function POST(request) {
     if (priorityHits < 2) {
       logger.warn('Priority docs missing, fetching manually', { priorityHits })
 
-      const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
+      const priorityQuery =
+        'Violation Types Priority Foundation Core correction window Enforcement Action Washtenaw County'
       const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
 
       if (extra && extra.length > 0) {
@@ -288,46 +374,66 @@ export async function POST(request) {
       }
     }
 
+    // Priority first, then score
     docs.sort((a, b) => {
       const ap = isPriorityDoc(a) ? 1 : 0
       const bp = isPriorityDoc(b) ? 1 : 0
       if (ap !== bp) return bp - ap
-      return (b.score || 0) - (a.score || 0)
+      return (b?.score || 0) - (a?.score || 0)
     })
 
     const context = buildContextString(docs)
 
     if (!context) {
+      // Still respond (don’t return “no docs” dead-end)
+      const fallback = buildClarifyingFallback({
+        scene: visionScene,
+        visionSummary,
+        clarify: visionClarify,
+        hasImage,
+      })
+
+      await safeLogUsage({
+        userId,
+        plan,
+        mode: hasImage ? 'vision' : 'chat',
+        success: true,
+        durationMs: Date.now() - startedAt,
+        note: 'no_context_fallback',
+      })
+
       return NextResponse.json(
-        {
-          message:
-            'I could not retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
-          confidence: 'LOW',
-        },
+        { message: fallback, confidence: 'LOW' },
         { status: 200 }
       )
     }
 
-    // Final answer
+    // ------------------------
+    // Final answer (ALWAYS respond, even if not obviously a kitchen)
+    // ------------------------
     const systemPrompt = `You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
 
-CRITICAL CONTEXT SOURCES (always reference these):
-1. "Violation Types" document → tells you Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
-2. "Enforcement Action" document → tells you progressive enforcement (warnings → conferences → hearings)
+CRITICAL CONTEXT SOURCES (always reference these when classifying/time windows):
+1. "Violation Types" document → Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
+2. "Enforcement Action" document → progressive enforcement (warnings → conferences → hearings)
+
+Key behavior:
+- Analyze ANY environment where food could be present: kitchen line, dish, walk-in, storage, front counter/POS, food trucks, and transport/delivery vehicles.
+- If the scene is NOT clearly a food environment, DO NOT output nothing. Instead:
+  (a) Provide conditional risks with low odds, and
+  (b) Ask 1–2 targeted clarifying questions to raise certainty.
+- If you cannot responsibly classify P/Pf/C because food context is unclear, you may use (N/A) and put the classification under **Need to confirm**.
 
 Rules:
-- ALWAYS classify violations as Priority (P), Priority Foundation (Pf), or Core (C) using Violation Types doc
-- ALWAYS state correction window: immediate/10 days (P/Pf) or 90 days (Core)
-- Use ONLY the provided "REGULATORY EXCERPTS" for claims about rules, categories, time windows, etc.
-- You MAY describe what is visible in the photo directly (your vision analysis)
-- If the photo is unclear, say what is unclear and what you would need to confirm
-- Provide probabilities as ranges for each suspected issue (e.g., 70–90%)
-- Do NOT ask "what do you see?" — proactively find issues
-- Keep responses SHORT and ACTIONABLE. No long paragraphs. Bullet points only.
+- Use ONLY the provided REGULATORY EXCERPTS for claims about categories/time windows/enforcement.
+- You MAY describe what is visible in the photo directly (vision).
+- Provide probabilities as ranges for each suspected issue (e.g., 70–90%).
+- Keep responses SHORT and ACTIONABLE. Bullet points only.
+- NEVER return an empty response.
 
 Output format (exact sections, concise):
 **Likely issues (visible):**
-- **(P/Pf/C)** [ODDS: xx–yy%] <one-sentence issue + why>
+- **(P/Pf/C/N/A)** [ODDS: xx–yy%] <one-sentence issue + why>
 
 **Correction windows:**
 - Priority/Priority Foundation: Fix immediately or within 10 days
@@ -343,16 +449,22 @@ Only include "Sources used:" if user explicitly asks for citations.`
 
     const issuesSection =
       visionIssues.length > 0
-        ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map((i) => `- ${i}`).join('\n')}\n`
+        ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map((i) => `- ${safeText(i)}`).join('\n')}\n`
         : ''
 
     const userBlock = `USER REQUEST:
 ${effectiveUserPrompt || '[No additional text provided]'}
 
+SCENE:
+${visionScene || 'unknown'} | FOOD CONTEXT: ${visionFoodContext || 'unclear'}
+
 VISION SUMMARY (what I can see in the photo):
 ${visionSummary || '[No photo analysis available]'}
 
 ${issuesSection}
+SUGGESTED CLARIFICATIONS:
+${(visionClarify?.length ? visionClarify.slice(0, 2) : []).map((q) => `- ${q}`).join('\n') || '- (none)'}
+
 REGULATORY EXCERPTS:
 ${context}`
 
@@ -363,11 +475,8 @@ ${context}`
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-
-          // ✅ FIXED: correct GPT-5.x Responses parameters
           reasoning: { effort: 'high' },
           text: { verbosity: 'low' },
-
           max_output_tokens: 1200,
           input: [
             { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
@@ -389,10 +498,23 @@ ${context}`
       finalText = extractTextFromOpenAI(answerResp)
     } catch (e) {
       logger.error('Answer generation failed', { env, error: e?.message || String(e) })
-      return NextResponse.json(
-        { message: 'The analysis timed out. Please try again (or re-send 1–2 clearer angles).', confidence: 'LOW' },
-        { status: 200 }
-      )
+      // Still respond with a clean fallback
+      finalText = buildClarifyingFallback({
+        scene: visionScene,
+        visionSummary,
+        clarify: visionClarify,
+        hasImage,
+      })
+    }
+
+    // ✅ Hard guarantee: never send “No response text returned.”
+    if (!safeText(finalText)) {
+      finalText = buildClarifyingFallback({
+        scene: visionScene,
+        visionSummary,
+        clarify: visionClarify,
+        hasImage,
+      })
     }
 
     const priorityDocsUsed = docs.filter((d) => isPriorityDoc(d)).length
@@ -403,10 +525,13 @@ ${context}`
       totalDocsUsed: docs.length,
       hasImage,
       visionIssuesCount: visionIssues.length,
+      scene: visionScene,
+      foodContext: visionFoodContext,
     })
 
     await safeLogUsage({
       userId,
+      plan,
       mode: hasImage ? 'vision' : 'chat',
       success: true,
       durationMs: Date.now() - startedAt,
@@ -414,12 +539,14 @@ ${context}`
 
     return NextResponse.json(
       {
-        message: finalText || 'No response text returned.',
+        message: finalText,
         confidence: 'HIGH',
         _meta: {
           priorityDocsUsed,
           totalDocsRetrieved: docs.length,
           visionIssuesSpotted: visionIssues.length,
+          scene: visionScene,
+          foodContext: visionFoodContext,
           reasoningLevel: 'high',
         },
       },
