@@ -57,42 +57,6 @@ h1, h2, h3, h4, h5, h6 {
   );
 }
 
-/* ✅ FROSTED GLASS CARDS - Better readability, premium look */
-.ui-shell,
-.ui-modal,
-.ui-emptywrap,
-.ui-pricewrap,
-.ui-stepcard,
-.ui-faq {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-/* Darker frosted glass for modals (more emphasis) */
-.ui-modal {
-  background: rgba(0, 0, 0, 0.60) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-}
-
-/* Header gets subtle frost */
-.ui-header {
-  background: rgba(5, 6, 8, 0.70) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-}
-
-/* Nested cards (inside shell) get lighter frost */
-.ui-shell .ui-stepcard,
-.ui-shell .ui-faq,
-.ui-shell .ui-pricewrap {
-  background: rgba(255, 255, 255, 0.02) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-}
-
 :root {
   --color-steel-blue: #4F759B;
   --color-steel-blue-dark: #3e5c7a;
