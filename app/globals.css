@@ -47,12 +47,12 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* ✅ FIXED: Lighter veil so background shows through */
+/* ✅ FIXED: Much lighter veil so galaxy shows through */
 .ui-appveil {
   background: linear-gradient(
     180deg, 
-    rgba(0, 0, 0, 0.45) 0%,  /* Was 0.58 - now lighter */
-    rgba(0, 0, 0, 0.62) 100% /* Was 0.76 - now lighter */
+    rgba(0, 0, 0, 0.25) 0%,  /* Very light at top */
+    rgba(0, 0, 0, 0.40) 100% /* Slightly darker at bottom */
   );
 }
 
