@@ -1,4 +1,4 @@
-// app/api/chat/route.js - UPDATED: Extended High reasoning + concise outputs
+// app/api/chat/route.js - FIXED SYNTAX + Extended High
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -19,14 +19,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const OPENAI_CHAT_MODEL = 'gpt-5.2'
 
 // Timeouts (ms)
-const VISION_TIMEOUT_MS = 30000 // Increased from 22s
-const ANSWER_TIMEOUT_MS = 45000 // Increased for extended high
+const VISION_TIMEOUT_MS = 30000
+const ANSWER_TIMEOUT_MS = 45000
 
 // Retrieval
 const TOPK = 24
 const PRIORITY_TOPK = 10
 
-// "Always include" priority sources (fuzzy match)
+// Priority sources
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
@@ -107,7 +107,6 @@ function dedupeByText(items) {
 }
 
 function buildContextString(docs) {
-  // Increased from 22k to 60k chars (~80k tokens)
   const MAX_CHARS = 60000
   let buf = ''
   for (const d of docs) {
@@ -198,9 +197,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // ---------------------------
-    // 1) Vision pre-pass (best-effort) - UPDATED: Extended High + JSON
-    // ---------------------------
+    // Vision pre-pass
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionIssues = []
@@ -212,22 +209,17 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_CHAT_MODEL,
-            reasoning_effort: 'high', // ✅ Extended High for better extraction
+            reasoning_effort: 'high',
             verbosity: 'low',
-            max_output_tokens: 800, // More room for structured output
-            response_format: { type: 'json_object' }, // ✅ FORCE JSON
+            max_output_tokens: 800,
+            response_format: { type: 'json_object' },
             input: [
               {
                 role: 'system',
                 content: [
                   {
                     type: 'input_text',
-                    text:
-                      'You are a food-safety inspection assistant. Return STRICT JSON only. ' +
-                      'Schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. ' +
-                      'summary = 2-3 sentences describing what is visible. ' +
-                      'search_terms = short keyword string for retrieving relevant regulations (no prose). ' +
-                      'issues_spotted = array of specific potential violations you can see (e.g., "uncovered food", "improper storage order").',
+                    text: 'You are a food-safety inspection assistant. Return STRICT JSON only. Schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. summary = 2-3 sentences describing what is visible. search_terms = short keyword string for retrieving relevant regulations (no prose). issues_spotted = array of specific potential violations you can see (e.g., "uncovered food", "improper storage order").',
                   },
                 ],
               },
@@ -267,20 +259,16 @@ export async function POST(request) {
       }
     }
 
-    // ---------------------------
-    // 2) Retrieval (vector search) - UPDATED: Better query + fallback
-    // ---------------------------
-    const retrievalQuery =
-      safeText(
-        [
-          visionSearchTerms || '',
-          effectiveUserPrompt || '',
-          // ✅ Force-include document titles + key classification terms
-          'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
-        ]
-          .filter(Boolean)
-          .join('\n')
-      ) || 'Violation Types Enforcement Action Washtenaw County'
+    // Retrieval
+    const retrievalQuery = safeText(
+      [
+        visionSearchTerms || '',
+        effectiveUserPrompt || '',
+        'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
+      ]
+        .filter(Boolean)
+        .join('\n')
+    ) || 'Violation Types Enforcement Action Washtenaw County'
 
     logger.info('Document search started', {
       env,
@@ -290,11 +278,9 @@ export async function POST(request) {
     })
 
     let docs = await searchDocuments(retrievalQuery, county, TOPK)
-
-    // Dedupe
     docs = dedupeByText(docs || [])
 
-    // ✅ FORCE-FETCH priority docs if missing
+    // Force-fetch priority docs if missing
     const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
     if (priorityHits < 2) {
       logger.warn('Priority docs missing, fetching manually', { priorityHits })
@@ -308,7 +294,7 @@ export async function POST(request) {
       }
     }
 
-    // Boost priority sources to the top
+    // Boost priority sources
     docs.sort((a, b) => {
       const ap = isPrioritySource(a.source) ? 1 : 0
       const bp = isPrioritySource(b.source) ? 1 : 0
@@ -321,19 +307,15 @@ export async function POST(request) {
     if (!context) {
       return NextResponse.json(
         {
-          message:
-            'I couldn't retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
+          message: 'I could not retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
           confidence: 'LOW',
         },
         { status: 200 }
       )
     }
 
-    // ---------------------------
-    // 3) Final answer - UPDATED: Extended High + concise instructions
-    // ---------------------------
-    const systemPrompt = `
-You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
+    // Final answer
+    const systemPrompt = `You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
 
 CRITICAL CONTEXT SOURCES (always reference these):
 1. "Violation Types" document → tells you Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
@@ -363,21 +345,21 @@ Output format (exact sections, concise):
 **Need to confirm:**
 - <questions to raise certainty, 1-2 items max>
 
-Only include "Sources used:" if user explicitly asks for citations.
-`.trim()
+Only include "Sources used:" if user explicitly asks for citations.`.trim()
 
-    const userBlock = `
-USER REQUEST:
+    const issuesSection = visionIssues.length > 0 
+      ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}\n` 
+      : ''
+
+    const userBlock = `USER REQUEST:
 ${effectiveUserPrompt || '[No additional text provided]'}
 
 VISION SUMMARY (what I can see in the photo):
 ${visionSummary || '[No photo analysis available]'}
 
-${visionIssues.length > 0 ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}\n` : ''}
-
+${issuesSection}
 REGULATORY EXCERPTS:
-${context}
-`.trim()
+${context}`.trim()
 
     let finalText = ''
     try {
@@ -386,9 +368,9 @@ ${context}
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-          reasoning_effort: 'high', // ✅ Extended High (X-high)
-          verbosity: 'low', // ✅ Forces concise output
-          max_output_tokens: 1200, // Enough for structured answer
+          reasoning_effort: 'high',
+          verbosity: 'low',
+          max_output_tokens: 1200,
           input: [
             {
               role: 'system',
@@ -421,7 +403,6 @@ ${context}
       )
     }
 
-    // Count priority docs used
     const priorityDocsUsed = docs.filter(d => isPrioritySource(d.source)).length
 
     logger.info('Final answer generated', {
@@ -432,7 +413,6 @@ ${context}
       visionIssuesCount: visionIssues.length,
     })
 
-    // Non-blocking usage log
     await safeLogUsage({
       userId,
       mode: hasImage ? 'vision' : 'chat',
@@ -445,10 +425,10 @@ ${context}
         message: finalText || 'No response text returned.',
         confidence: 'HIGH',
         _meta: {
-          priorityDocsUsed,
+          priorityDocsUsed: priorityDocsUsed,
           totalDocsRetrieved: docs.length,
           visionIssuesSpotted: visionIssues.length,
-          reasoningLevel: 'extended_high',
+          reasoningLevel: 'extended_high'
         }
       },
       { status: 200 }
