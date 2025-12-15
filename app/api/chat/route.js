@@ -1,4 +1,4 @@
-// app/api/chat/route.js - FIXED: Removed response_format + better JSON parsing
+// app/api/chat/route.js
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -82,9 +82,13 @@ function extractTextFromOpenAI(resp) {
   }
 }
 
-function isPrioritySource(source) {
-  if (!source) return false
-  return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(source))
+// ✅ IMPORTANT: your "source" is often "Unknown Source" right now.
+// So treat “priority” as source OR the beginning of the text.
+function isPriorityDoc(d) {
+  const src = d?.source || ''
+  const textHead = (d?.text || '').slice(0, 3000)
+  const hay = `${src}\n${textHead}`
+  return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(hay))
 }
 
 function dedupeByText(items) {
@@ -175,17 +179,19 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
+    const effectiveUserPrompt =
+      lastUserText ||
+      (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // Vision pre-pass - FIXED: No response_format parameter
+    // Vision pre-pass
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionIssues = []
-    
+
     if (hasImage) {
       try {
         logger.info('Vision analysis started', { env })
@@ -193,8 +199,11 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_CHAT_MODEL,
-            reasoning_effort: 'high',
-            verbosity: 'low',
+
+            // ✅ FIXED: correct GPT-5.x Responses parameters
+            reasoning: { effort: 'high' },
+            text: { verbosity: 'low' },
+
             max_output_tokens: 800,
             input: [
               {
@@ -202,7 +211,8 @@ export async function POST(request) {
                 content: [
                   {
                     type: 'input_text',
-                    text: 'You are a food-safety inspection assistant. Return ONLY valid JSON with this schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. No markdown, no code blocks, just raw JSON.',
+                    text:
+                      'You are a food-safety inspection assistant. Return ONLY valid JSON with this schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. No markdown, no code blocks, just raw JSON.',
                   },
                 ],
               },
@@ -220,15 +230,12 @@ export async function POST(request) {
         )
 
         const vt = extractTextFromOpenAI(visionResp)
-        
+
         try {
-          // Try to extract JSON (handles markdown code blocks)
           let jsonText = vt.trim()
           const jsonMatch = vt.match(/```json\s*([\s\S]*?)\s*```/) || vt.match(/\{[\s\S]*\}/)
-          if (jsonMatch) {
-            jsonText = jsonMatch[1] || jsonMatch[0]
-          }
-          
+          if (jsonMatch) jsonText = jsonMatch[1] || jsonMatch[0]
+
           const parsed = JSON.parse(jsonText)
           visionSummary = safeText(parsed?.summary || '')
           visionSearchTerms = safeText(parsed?.search_terms || '')
@@ -252,33 +259,29 @@ export async function POST(request) {
     }
 
     // Retrieval
-    const retrievalQuery = safeText(
-      [
-        visionSearchTerms || '',
-        effectiveUserPrompt || '',
-        'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
-      ]
-        .filter(Boolean)
-        .join('\n')
-    ) || 'Violation Types Enforcement Action Washtenaw County'
+    const retrievalQuery =
+      safeText(
+        [
+          visionSearchTerms || '',
+          effectiveUserPrompt || '',
+          'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
+        ]
+          .filter(Boolean)
+          .join('\n')
+      ) || 'Violation Types Enforcement Action Washtenaw County'
 
-    logger.info('Document search started', {
-      env,
-      county,
-      queryLength: retrievalQuery.length,
-      topK: TOPK,
-    })
+    logger.info('Document search started', { env, county, queryLength: retrievalQuery.length, topK: TOPK })
 
     let docs = await searchDocuments(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
+    const priorityHits = (docs || []).filter((d) => isPriorityDoc(d)).length
     if (priorityHits < 2) {
       logger.warn('Priority docs missing, fetching manually', { priorityHits })
-      
+
       const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
       const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
-      
+
       if (extra && extra.length > 0) {
         docs = dedupeByText([...extra, ...(docs || [])])
         logger.info('Added priority docs via fallback', { count: extra.length })
@@ -286,8 +289,8 @@ export async function POST(request) {
     }
 
     docs.sort((a, b) => {
-      const ap = isPrioritySource(a.source) ? 1 : 0
-      const bp = isPrioritySource(b.source) ? 1 : 0
+      const ap = isPriorityDoc(a) ? 1 : 0
+      const bp = isPriorityDoc(b) ? 1 : 0
       if (ap !== bp) return bp - ap
       return (b.score || 0) - (a.score || 0)
     })
@@ -297,7 +300,8 @@ export async function POST(request) {
     if (!context) {
       return NextResponse.json(
         {
-          message: 'I could not retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
+          message:
+            'I could not retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
           confidence: 'LOW',
         },
         { status: 200 }
@@ -337,9 +341,10 @@ Output format (exact sections, concise):
 
 Only include "Sources used:" if user explicitly asks for citations.`
 
-    const issuesSection = visionIssues.length > 0 
-      ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}\n` 
-      : ''
+    const issuesSection =
+      visionIssues.length > 0
+        ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map((i) => `- ${i}`).join('\n')}\n`
+        : ''
 
     const userBlock = `USER REQUEST:
 ${effectiveUserPrompt || '[No additional text provided]'}
@@ -358,14 +363,14 @@ ${context}`
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-          reasoning_effort: 'high',
-          verbosity: 'low',
+
+          // ✅ FIXED: correct GPT-5.x Responses parameters
+          reasoning: { effort: 'high' },
+          text: { verbosity: 'low' },
+
           max_output_tokens: 1200,
           input: [
-            {
-              role: 'system',
-              content: [{ type: 'input_text', text: systemPrompt }],
-            },
+            { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
             {
               role: 'user',
               content: hasImage
@@ -385,15 +390,12 @@ ${context}`
     } catch (e) {
       logger.error('Answer generation failed', { env, error: e?.message || String(e) })
       return NextResponse.json(
-        {
-          message: 'The analysis timed out. Please try again (or re-send 1–2 clearer angles).',
-          confidence: 'LOW',
-        },
+        { message: 'The analysis timed out. Please try again (or re-send 1–2 clearer angles).', confidence: 'LOW' },
         { status: 200 }
       )
     }
 
-    const priorityDocsUsed = docs.filter(d => isPrioritySource(d.source)).length
+    const priorityDocsUsed = docs.filter((d) => isPriorityDoc(d)).length
 
     logger.info('Final answer generated', {
       env,
@@ -415,11 +417,11 @@ ${context}`
         message: finalText || 'No response text returned.',
         confidence: 'HIGH',
         _meta: {
-          priorityDocsUsed: priorityDocsUsed,
+          priorityDocsUsed,
           totalDocsRetrieved: docs.length,
           visionIssuesSpotted: visionIssues.length,
-          reasoningLevel: 'extended_high'
-        }
+          reasoningLevel: 'high',
+        },
       },
       { status: 200 }
     )
