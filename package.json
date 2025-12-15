@@ -23,7 +23,7 @@
     "@supabase/supabase-js": "^2.87.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.6.1",
-    "framer-motion": "^11.11.17",
+    "framer-motion": "^10.18.0",
     "lucide-react": "^0.263.1",
     "next": "14.2.5",
     "openai": "^6.10.0",
@@ -32,9 +32,9 @@
     "react-dom": "^18.3.1",
     "stripe": "^14.10.0",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss": "^3.4.4",
     "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38"
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
