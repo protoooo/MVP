@@ -3,7 +3,7 @@ nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
 cmds = [
-  'npm ci --prefer-offline --no-audit --legacy-peer-deps'
+  'npm install --prefer-offline --no-audit --legacy-peer-deps'
 ]
 
 [phases.build]
