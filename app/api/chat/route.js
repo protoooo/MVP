@@ -16,16 +16,18 @@ export const runtime = 'nodejs'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 const OPENAI_CHAT_MODEL = 'gpt-5.2'
+const VISION_TIMEOUT_MS = 30000
+const ANSWER_TIMEOUT_MS = 45000
 
-// Timeouts
-const VISION_TIMEOUT_MS = 25000
-const ANSWER_TIMEOUT_MS = 35000
+// Retrieval sizing
+const TOPK = 24
+const PRIORITY_TOPK = 6 // per pinned query
 
-// Retrieval
-const TOPK = 22
-const PINNED_TOPK = 4 // small so the pinned docs don't crowd out the other 23
+// Context window sizing (prevents pinned docs from crowding out the other 23)
+const PRIORITY_CONTEXT_COUNT = 8
+const OTHER_CONTEXT_COUNT = 18
 
-// Priority doc detection by source OR early text
+// Priority docs: detect by source OR early text
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
@@ -53,6 +55,12 @@ function asDataUrl(maybeBase64) {
 function safeText(x) {
   if (typeof x !== 'string') return ''
   return x.replace(/[\x00-\x1F\x7F]/g, '').trim()
+}
+
+function clamp(s, maxLen) {
+  const t = safeText(s)
+  if (t.length <= maxLen) return t
+  return t.slice(0, maxLen)
 }
 
 function getLastUserText(messages) {
@@ -88,6 +96,18 @@ function extractTextFromOpenAI(resp) {
   }
 }
 
+function parseJsonLoose(text) {
+  const t = safeText(text)
+  if (!t) return null
+  const jsonMatch = t.match(/```json\s*([\s\S]*?)\s*```/) || t.match(/\{[\s\S]*\}/)
+  const jsonText = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : t
+  try {
+    return JSON.parse(jsonText)
+  } catch {
+    return null
+  }
+}
+
 function isPriorityDoc(d) {
   const src = d?.source || ''
   const textHead = (d?.text || '').slice(0, 3000)
@@ -99,7 +119,7 @@ function dedupeByText(items) {
   const seen = new Set()
   const out = []
   for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 3000)
+    const key = (it?.text || '').slice(0, 2500)
     if (!key) continue
     if (seen.has(key)) continue
     seen.add(key)
@@ -108,51 +128,73 @@ function dedupeByText(items) {
   return out
 }
 
-function buildContextString(docs) {
-  // Keep enough to answer, but not so much that pinned docs drown everything else
-  const MAX_CHARS = 52000
+function sortByScoreDesc(items) {
+  return [...(items || [])].sort((a, b) => (b?.score || 0) - (a?.score || 0))
+}
+
+/**
+ * Force a balanced context window:
+ * - some pinned/priority chunks (Violation Types + Enforcement Action)
+ * - plus many "other" chunks (the remaining docs)
+ */
+function selectContextDocs(allDocs) {
+  const priority = sortByScoreDesc((allDocs || []).filter((d) => isPriorityDoc(d)))
+  const other = sortByScoreDesc((allDocs || []).filter((d) => !isPriorityDoc(d)))
+
+  const picked = dedupeByText([
+    ...priority.slice(0, PRIORITY_CONTEXT_COUNT),
+    ...other.slice(0, OTHER_CONTEXT_COUNT),
+  ])
+
+  // Fallback: if other is empty for some reason, at least return something
+  if (picked.length > 0) return picked
+  return dedupeByText(allDocs || [])
+}
+
+/**
+ * IMPORTANT: Don’t include SOURCE/PAGE/SCORE labels in the prompt.
+ * Those labels tend to “leak” into the model’s language.
+ */
+function buildRuleContext(docs) {
+  const MAX_CHARS = 55000
   let buf = ''
-  for (const d of docs) {
-    const src = d.source || 'Unknown'
-    const pg = d.page ?? 'N/A'
-    const chunk =
-      `\n\n[REF: ${src} | PAGE: ${pg} | SCORE: ${Number(d.score || 0).toFixed(3)}]\n` +
-      `${d.text}\n`
+  for (const d of docs || []) {
+    const chunk = `\n\n---\n${safeText(d?.text || '')}\n`
+    if (!safeText(d?.text || '')) continue
     if (buf.length + chunk.length > MAX_CHARS) break
     buf += chunk
   }
   return buf.trim()
 }
 
-function normalizeList(arr, limit = 8) {
+function normalizeArrayStrings(arr, max = 6) {
   if (!Array.isArray(arr)) return []
-  return arr.map(safeText).filter(Boolean).slice(0, limit)
+  return arr.map(safeText).filter(Boolean).slice(0, max)
 }
 
-function clampQuery(q, maxLen = 1600) {
-  const s = safeText(q)
-  if (s.length <= maxLen) return s
-  return s.slice(0, maxLen)
-}
+/**
+ * Strip markdown-y junk, odds/percents, and forbidden “meta” words.
+ * (We still rely on the system prompt first—this is just a safety net.)
+ */
+function sanitizeFinalText(txt) {
+  let s = safeText(txt)
+  if (!s) return ''
 
-function sanitizeAssistantText(s) {
-  let out = safeText(s)
+  // remove asterisks / bold markers
+  s = s.replace(/\*/g, '')
 
-  // Strip common markdown artifacts if the model slips
-  out = out.replace(/```[\s\S]*?```/g, '')
-  out = out.replace(/`([^`]*)`/g, '$1')
-  out = out.replace(/\*\*(.*?)\*\*/g, '$1')
-  out = out.replace(/\*(.*?)\*/g, '$1')
+  // remove Odds/percent patterns if they slip through
+  s = s.replace(/\bOdds:\s*[^|\n]+(\||$)/gi, (m) => (m.endsWith('|') ? '|' : ''))
+  s = s.replace(/\b\d{1,3}\s*-\s*\d{1,3}%\b/g, '')
+  s = s.replace(/\b\d{1,3}\s*–\s*\d{1,3}%\b/g, '')
+  s = s.replace(/\b\d{1,3}%\b/g, '')
 
-  // Remove any accidental "sources/documents/excerpts" talk
-  out = out.replace(/sources used\s*:\s*.*$/gim, '')
-  out = out.replace(/provided (regulatory )?excerpts?/gim, 'rules')
-  out = out.replace(/\b(documents?|excerpts?|sources?|vector search|retrieval)\b/gi, 'rules')
+  // prevent “I used the documents/excerpts…” wording
+  s = s.replace(/\b(excerpts?|documents?|sources?|database|retrieval)\b/gi, 'rules')
 
-  // Reduce excess spacing
-  out = out.replace(/\n{3,}/g, '\n\n').trim()
-
-  return out
+  // tidy spacing
+  s = s.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()
+  return s
 }
 
 async function safeLogUsage(payload) {
@@ -160,25 +202,24 @@ async function safeLogUsage(payload) {
     if (typeof logUsageForAnalytics !== 'function') return
     await logUsageForAnalytics(payload)
   } catch (e) {
-    // non-blocking
     logger.warn('Usage logging failed (non-blocking)', { error: e?.message })
   }
 }
 
 /**
- * Always pin a small set of chunks from the two priority documents.
- * This eliminates "priority docs missing" variance.
+ * Always pin a small set of priority doc chunks and merge them in.
+ * This reduces “priority docs missing” variance while still retrieving across all docs.
  */
 async function fetchPinnedPriorityDocs(county) {
   const a = await searchDocuments(
-    'Violation Types Washtenaw County Priority Priority Foundation Core correction window immediate 10 days 90 days',
+    'Violation Types Washtenaw County Priority Priority Foundation Core correction window 10 days 90 days',
     county,
-    PINNED_TOPK
+    PRIORITY_TOPK
   )
   const b = await searchDocuments(
     'Enforcement Action Washtenaw County warning conference hearing progressive enforcement',
     county,
-    PINNED_TOPK
+    PRIORITY_TOPK
   )
   return dedupeByText([...(a || []), ...(b || [])])
 }
@@ -209,9 +250,14 @@ export async function POST(request) {
     const imageDataUrl = asDataUrl(body?.image || body?.imageBase64 || body?.image_url)
     const hasImage = Boolean(imageDataUrl)
 
-    // Hard default so analytics can't be NULL even if client sends nothing
-    const planFromBody = safeText(body?.plan || '')
-    const plan = planFromBody || 'unknown'
+    const lastUserText = getLastUserText(messages)
+    const effectiveUserPrompt =
+      lastUserText ||
+      (hasImage ? 'Analyze this photo for food-safety compliance risks and likely violations.' : '')
+
+    if (!effectiveUserPrompt && !hasImage) {
+      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
+    }
 
     // Auth (non-blocking)
     let userId = null
@@ -240,17 +286,6 @@ export async function POST(request) {
       logger.warn('Auth check failed (continuing)', { error: e?.message })
     }
 
-    const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt =
-      lastUserText ||
-      (hasImage
-        ? 'Analyze this photo for possible food safety / health inspection compliance risks and likely violations.'
-        : '')
-
-    if (!effectiveUserPrompt && !hasImage) {
-      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
-    }
-
     // -------------------------
     // Vision pre-pass (JSON)
     // -------------------------
@@ -269,10 +304,9 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_CHAT_MODEL,
-            // Faster pre-pass
-            reasoning: { effort: 'medium' },
+            reasoning: { effort: 'medium' }, // faster; the final answer is still "high"
             text: { verbosity: 'low' },
-            max_output_tokens: 700,
+            max_output_tokens: 650,
             input: [
               {
                 role: 'system',
@@ -282,14 +316,14 @@ export async function POST(request) {
                     text:
                       'Return ONLY valid JSON (no markdown) with schema: ' +
                       '{"summary":"...",' +
-                      '"scene":"kitchen_line|dish_area|walk_in|storage|front_counter|food_truck|vehicle_transport|office|other|unclear",' +
+                      '"scene":"kitchen_line|dish_area|walk_in|storage|front_counter|food_truck|vehicle_transport|other|unclear",' +
                       '"food_context":"food_present|food_adjacent|no_food_visible|unclear",' +
                       '"confidence":"high|medium|low",' +
                       '"search_terms":"...",' +
                       '"issues_spotted":["..."],' +
                       '"needs_confirm":["..."]' +
                       '}. ' +
-                      'Do not guess. If unclear, say what is visible and add 1–2 needs_confirm questions.',
+                      'If not clearly a kitchen, still describe what is visible and include 1–2 short needs_confirm questions that make it relevant to food safety (transport/staging/employee drink near food/packaging).',
                   },
                 ],
               },
@@ -307,30 +341,18 @@ export async function POST(request) {
         )
 
         const vt = extractTextFromOpenAI(visionResp)
+        const parsed = parseJsonLoose(vt)
 
-        try {
-          let jsonText = vt.trim()
-          const jsonMatch = vt.match(/```json\s*([\s\S]*?)\s*```/) || vt.match(/\{[\s\S]*\}/)
-          if (jsonMatch) jsonText = jsonMatch[1] || jsonMatch[0]
-
-          const parsed = JSON.parse(jsonText)
+        if (parsed) {
           visionSummary = safeText(parsed?.summary || '')
           visionSearchTerms = safeText(parsed?.search_terms || '')
-          visionIssues = normalizeList(parsed?.issues_spotted, 8)
-          visionNeedsConfirm = normalizeList(parsed?.needs_confirm, 6)
-
+          visionIssues = normalizeArrayStrings(parsed?.issues_spotted, 6)
+          visionNeedsConfirm = normalizeArrayStrings(parsed?.needs_confirm, 3)
           visionScene = safeText(parsed?.scene || '') || 'unclear'
           visionFoodContext = safeText(parsed?.food_context || '') || 'unclear'
           visionConfidence = safeText(parsed?.confidence || '') || 'low'
-        } catch (parseError) {
-          logger.warn('Vision JSON parse failed, using raw text', { error: parseError.message })
-          visionSummary = safeText(vt).slice(0, 500)
-          visionSearchTerms = ''
-          visionIssues = []
-          visionNeedsConfirm = []
-          visionScene = 'unclear'
-          visionFoodContext = 'unclear'
-          visionConfidence = 'low'
+        } else {
+          visionSummary = clamp(vt, 600)
         }
 
         logger.info('Vision analysis ok', {
@@ -338,7 +360,6 @@ export async function POST(request) {
           scene: visionScene,
           foodContext: visionFoodContext,
           confidence: visionConfidence,
-          issuesCount: visionIssues.length,
         })
       } catch (e) {
         logger.error('Vision analysis failed', { env, error: e?.message || String(e) })
@@ -346,83 +367,91 @@ export async function POST(request) {
     }
 
     // -------------------------
-    // Retrieval (pin priority docs + search all docs)
+    // Retrieval (pin priority + search all docs)
     // -------------------------
     const pinned = await fetchPinnedPriorityDocs(county)
 
     const retrievalQuery =
-      clampQuery(
+      clamp(
         [
           visionSearchTerms,
           effectiveUserPrompt,
-          // Anchors so non-kitchen scenes still retrieve relevant rules across the full library
-          'Washtenaw County food establishment transport delivery vehicle catering food truck storage walk-in dish area sanitizer handwashing employee drink contamination cleaning',
-          'time temperature hot holding cold holding reheating cooling cross contamination bare hand contact',
-          'ill employee vomiting diarrhea reporting exclusion restriction',
-          'Violation Types Priority Priority Foundation Core correction window immediate 10 days 90 days',
-          'Enforcement Action warning conference hearing progressive enforcement',
+          // anchors to keep recall broad (not just the 2 priority docs)
+          'Washtenaw County food establishment dish area walk-in storage sanitizer handwashing contamination cross connection',
+          'time temperature hot holding cold holding cooling reheating',
+          'employee drink storage personal items food prep surfaces',
+          'food transport vehicle catering food truck delivery staging packaging single-use utensils',
+          'pests cleaning and sanitizing equipment facility maintenance',
         ]
           .filter(Boolean)
-          .join('\n')
-      ) || 'Washtenaw County Violation Types Enforcement Action'
+          .join('\n'),
+        1800
+      ) || 'Washtenaw County food establishment violations'
 
     logger.info('Document search started', { env, county, queryLength: retrievalQuery.length, topK: TOPK })
 
-    let docs = await searchDocuments(retrievalQuery, county, TOPK)
-    docs = dedupeByText([...(pinned || []), ...(docs || [])])
+    let retrieved = await searchDocuments(retrievalQuery, county, TOPK)
+    retrieved = dedupeByText(retrieved || [])
 
-    // Sort: priority first, then score
-    docs.sort((a, b) => {
-      const ap = isPriorityDoc(a) ? 1 : 0
-      const bp = isPriorityDoc(b) ? 1 : 0
-      if (ap !== bp) return bp - ap
-      return (b.score || 0) - (a.score || 0)
-    })
+    // Merge pinned + retrieved (pinned doesn’t replace; it just guarantees priority presence)
+    let allDocs = dedupeByText([...(pinned || []), ...(retrieved || [])])
 
-    const context = buildContextString(docs)
+    // If priority still low, log it (rare now)
+    const priorityHits = allDocs.filter((d) => isPriorityDoc(d)).length
+    if (priorityHits < 2) {
+      logger.warn('Priority docs low even after pinning', { priorityHits })
+    }
+
+    // Select balanced context window (priority + other)
+    const contextDocs = selectContextDocs(allDocs)
+    const context = buildRuleContext(contextDocs)
 
     if (!context) {
       const msg = hasImage
-        ? 'I could not load the Washtenaw reference rules right now. Please try again in a moment. If urgent, re-send 1 clearer photo and say where this is (kitchen line, dish area, walk-in, storage, front counter, vehicle transport, etc.).'
-        : 'I could not load the Washtenaw reference rules right now. Please try again in a moment.'
+        ? 'I can see the photo, but I could not load the Washtenaw rules right now. Please try again in a moment.'
+        : 'I could not load the Washtenaw rules right now. Please try again in a moment.'
       return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
 
     // -------------------------
-    // Final answer (short, no odds, no assumptions, no "docs/excerpts")
+    // Final answer (short, plain text, no odds, no doc-talk, no assumptions)
     // -------------------------
     const systemPrompt =
       'You are ProtocolLM: a Washtenaw County food-safety compliance assistant.\n\n' +
       'Hard rules:\n' +
-      '- NEVER mention documents, excerpts, sources, retrieval, or databases.\n' +
-      '- Avoid assumptions. State what is visible. If something depends on context, say so and ask 1–2 short questions.\n' +
-      '- No percentages, no odds numbers. Use a 5-level likelihood scale: Very likely / Likely / Possible / Unclear / Unlikely.\n' +
-      '- Avoid jargon. If you must use an acronym, define it once.\n' +
-      '- Use the internal reference notes to justify Priority/Priority Foundation/Core and timelines, but do not talk about those notes.\n' +
-      '- Keep it concise: max 3 issues, max 3 actions, max 2 confirm questions.\n\n' +
-      'Output template (plain text, exactly these sections):\n' +
-      'LIKELY ISSUES\n' +
-      '- <Likelihood> | Severity: <Critical|Important|Routine|Needs context> (<Priority|Priority Foundation|Core ONLY if confident>) | <one short sentence>\n' +
-      '- ... (max 3)\n\n' +
-      'FIX TIMELINE\n' +
+      '- NEVER mention documents, excerpts, sources, database, retrieval, embeddings, or “rules I was given.”\n' +
+      '- NEVER output percentages, odds, or numbers like 60–80%.\n' +
+      '- Avoid assumptions. If something might be temporary vs storage, phrase it conditionally and ask ONE quick question.\n' +
+      '- Keep it short: max 2 issues, max 2 actions, max 2 questions.\n' +
+      '- No jargon/acronyms. If you must use one, define it once in parentheses.\n\n' +
+      'Likelihood scale (pick one word only): Very likely, Likely, Possible, Unclear, Unlikely.\n' +
+      'Severity labels: Critical, Important, Routine, Needs context.\n\n' +
+      'Output format (plain text only, exactly these sections):\n' +
+      'LIKELY ISSUES (what I can see)\n' +
+      '1) Severity: <...> | Likelihood: <...> | <one sentence>\n' +
+      '2) Severity: <...> | Likelihood: <...> | <one sentence>\n\n' +
+      'TIMELINE\n' +
       '- Critical/Important: fix immediately or within 10 days\n' +
       '- Routine: fix within 90 days\n\n' +
-      'DO THIS NOW\n' +
+      'WHAT TO DO NOW\n' +
       '1) <step>\n' +
-      '2) <step>\n' +
-      '3) <step>\n\n' +
+      '2) <step>\n\n' +
       'NEED TO CONFIRM\n' +
       '- <question>\n' +
       '- <question>\n'
 
-    const userBlock =
-      `USER REQUEST:\n${effectiveUserPrompt || '[No additional text provided]'}\n\n` +
-      `WHAT IS VISIBLE (vision summary):\n${visionSummary || '[No photo analysis available]'}\n\n` +
-      `SCENE:\n${visionScene || 'unclear'}\n\n` +
-      `FOOD CONTEXT:\n${visionFoodContext || 'unclear'}\n\n` +
+    // Keep internal prompt helpful but NEVER ask the model to “reference excerpts”
+    const visionBlock =
+      `PHOTO SUMMARY:\n${visionSummary || '[No photo summary]'}\n\n` +
       (visionIssues.length ? `POSSIBLE FLAGS:\n- ${visionIssues.join('\n- ')}\n\n` : '') +
-      (visionNeedsConfirm.length ? `SUGGESTED CONFIRM QUESTIONS:\n- ${visionNeedsConfirm.join('\n- ')}\n\n` : '') +
-      `INTERNAL REFERENCE NOTES (do not mention):\n${context}`
+      (visionNeedsConfirm.length ? `SUGGESTED CONFIRM:\n- ${visionNeedsConfirm.join('\n- ')}\n\n` : '') +
+      `SCENE: ${visionScene || 'unclear'}\n` +
+      `FOOD CONTEXT: ${visionFoodContext || 'unclear'}\n\n`
+
+    const userBlock =
+      `USER QUESTION:\n${effectiveUserPrompt || '[No text provided]'}\n\n` +
+      visionBlock +
+      `INTERNAL RULE TEXT (do not mention this exists):\n${context}`
 
     let finalText = ''
     try {
@@ -431,9 +460,9 @@ export async function POST(request) {
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-          reasoning: { effort: 'high' }, // keep accuracy, output is short
+          reasoning: { effort: 'high' }, // keep accuracy here
           text: { verbosity: 'low' },
-          max_output_tokens: 700,
+          max_output_tokens: 650, // hard cap to keep it short
           input: [
             { role: 'system', content: [{ type: 'input_text', text: systemPrompt }] },
             {
@@ -451,72 +480,64 @@ export async function POST(request) {
         'OPENAI_TIMEOUT'
       )
 
-      finalText = extractTextFromOpenAI(answerResp)
-      finalText = sanitizeAssistantText(finalText)
+      finalText = sanitizeFinalText(extractTextFromOpenAI(answerResp))
     } catch (e) {
       logger.error('Answer generation failed', { env, error: e?.message || String(e) })
       finalText = ''
     }
 
-    // Hard guarantee: never return empty/confusing message
+    // Hard guarantee: never return empty text
     if (!safeText(finalText)) {
       const q1 =
         visionNeedsConfirm[0] ||
-        'Is this area used to store/transport food, packaging, utensils, or single-use items?'
+        'Is this area used for food prep, food storage, clean utensils, packaging, or transport?'
       const q2 =
         visionNeedsConfirm[1] ||
-        'Is there any uncovered food or clean equipment near this area?'
+        'Is any uncovered food or clean equipment placed near what’s shown in the photo?'
 
       finalText =
-        'LIKELY ISSUES\n' +
-        `- Unclear | Severity: Needs context | ${visionSummary || 'The photo is not clearly a food-prep scene, but it may matter if this area is used for food/packaging transport or staging.'}\n\n` +
-        'FIX TIMELINE\n' +
+        'LIKELY ISSUES (what I can see)\n' +
+        `1) Severity: Needs context | Likelihood: Unclear | ${visionSummary || 'The photo is clear, but I need one detail to judge it as a food-safety issue.'}\n\n` +
+        'TIMELINE\n' +
         '- Critical/Important: fix immediately or within 10 days\n' +
         '- Routine: fix within 90 days\n\n' +
-        'DO THIS NOW\n' +
-        '1) If this area is used for food/packaging transport/staging, clean it and keep it dry.\n' +
-        '2) Keep employee drinks covered and away from food/packaging/clean utensils.\n' +
-        '3) Re-send a wider angle plus a close-up of anything that touches food.\n\n' +
+        'WHAT TO DO NOW\n' +
+        '1) If this area is used for food/packaging/utensils, keep it clean, dry, and free of spills and buildup.\n' +
+        '2) Re-send one wider angle plus one close-up of anything that touches food or clean equipment.\n\n' +
         'NEED TO CONFIRM\n' +
         `- ${q1}\n` +
         `- ${q2}\n`
     }
 
-    const priorityDocsUsed = docs.filter((d) => isPriorityDoc(d)).length
+    const priorityDocsUsed = contextDocs.filter((d) => isPriorityDoc(d)).length
 
     logger.info('Final answer generated', {
       env,
-      priorityDocsUsed,
-      totalDocsUsed: docs.length,
       hasImage,
-      scene: visionScene || 'unclear',
-      foodContext: visionFoodContext || 'unclear',
+      priorityDocsUsed,
+      totalDocsUsedInContext: contextDocs.length,
+      scene: visionScene,
+      foodContext: visionFoodContext,
     })
 
-    // Last-moment hard default so plan can't be NULL even if something upstream is weird
-    const safePlan = safeText(plan) || 'unknown'
-
+    // Keep non-blocking analytics (plan handled in your usage lib / DB default)
     await safeLogUsage({
       userId,
-      plan: safePlan,
       mode: hasImage ? 'vision' : 'chat',
       success: true,
       durationMs: Date.now() - startedAt,
       county,
     })
 
-    const conf =
-      visionConfidence === 'high' ? 'HIGH' : visionConfidence === 'medium' ? 'MEDIUM' : 'LOW'
-
     return NextResponse.json(
       {
         message: finalText,
-        confidence: conf,
+        confidence: visionConfidence === 'high' ? 'HIGH' : visionConfidence === 'medium' ? 'MEDIUM' : 'LOW',
         _meta: {
           priorityDocsUsed,
-          totalDocsRetrieved: docs.length,
-          scene: visionScene || 'unclear',
-          foodContext: visionFoodContext || 'unclear',
+          totalDocsInContext: contextDocs.length,
+          scene: visionScene,
+          foodContext: visionFoodContext,
         },
       },
       { status: 200 }
