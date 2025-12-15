@@ -1,476 +1,429 @@
-// app/api/chat/route.js - FIXED VERSION
+// app/api/chat/route.js
 import OpenAI from 'openai'
-import { logUsageForAnalytics } from '@/lib/usage'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+
 import { searchDocuments } from '@/lib/searchDocs'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
-import { randomUUID } from 'crypto'
+import { logUsageForAnalytics } from '@/lib/usage'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const OPENAI_CHAT_MODEL = 'gpt-5.2' 
 
-const GENERATION_CONFIG = {
-  reasoningEffort: 'high',
-  maxOutputTokens: 3400,
+// Main model
+const OPENAI_CHAT_MODEL = 'gpt-5.2'
+
+// Timeouts (ms)
+const VISION_TIMEOUT_MS = 22000
+const ANSWER_TIMEOUT_MS = 30000
+
+// Retrieval
+const TOPK = 24
+const PRIORITY_TOPK = 10
+
+// “Always include” priority sources (fuzzy match)
+const PRIORITY_SOURCE_MATCHERS = [
+  /violation\s*types/i,
+  /enforcement\s*action/i,
+  /correction\s*windows/i,
+  /washtenaw.*violation/i,
+  /washtenaw.*enforcement/i,
+]
+
+function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutName)), ms)),
+  ])
 }
 
-const VISION_CONFIG = {
-  reasoningEffort: 'low',
-  maxOutputTokens: 800,
+function asDataUrl(maybeBase64) {
+  if (!maybeBase64 || typeof maybeBase64 !== 'string') return null
+  const s = maybeBase64.trim()
+  if (!s) return null
+  // If it already looks like data:image/...;base64, keep it.
+  if (s.startsWith('data:image/')) return s
+  // Otherwise assume raw base64 JPEG.
+  return `data:image/jpeg;base64,${s}`
 }
 
-const MAX_CONTEXT_LENGTH = 22000
-const MAX_IMAGE_SIZE_MB = 10
-const VISION_TIMEOUT = 15000
-const GENERATION_TIMEOUT = 35000
-
-const rateLimits = new Map()
-const RATE_LIMIT_WINDOW_MS = 60000
-const MAX_REQUESTS_PER_WINDOW = 20
-let lastRateLimitCleanupAt = 0
-
-function cleanupRateLimits(now) {
-  if (now - lastRateLimitCleanupAt < 5 * 60 * 1000) return
-  lastRateLimitCleanupAt = now
-  for (const [userId, requests] of rateLimits.entries()) {
-    const recent = (requests || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-    if (recent.length === 0) rateLimits.delete(userId)
-    else rateLimits.set(userId, recent)
-  }
+function safeText(x) {
+  if (typeof x !== 'string') return ''
+  return x.replace(/[\x00-\x1F\x7F]/g, '').trim()
 }
 
-function checkRateLimit(userId) {
-  const now = Date.now()
-  cleanupRateLimits(now)
-  const userRequests = rateLimits.get(userId) || []
-  const recentRequests = userRequests.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
-  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
-    logger.security('Rate limit exceeded', { userId, requestCount: recentRequests.length })
-    return false
-  }
-  recentRequests.push(now)
-  rateLimits.set(userId, recentRequests)
-  return true
-}
-
-const timeoutPromise = (ms, message) =>
-  new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
-
-function sanitizeInput(input, maxLength = 4000) {
-  if (typeof input !== 'string') return ''
-  return input
-    .replace(/\0/g, '')
-    .replace(/[\u202A-\u202E]/g, '')
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .trim()
-    .substring(0, maxLength)
-}
-
-function getHistoryContext(messages) {
-  if (!Array.isArray(messages) || messages.length < 2) return ''
-  const history = messages.slice(-7, -1)
-  return history
-    .map((m) => {
-      const role = m.role === 'user' ? 'USER' : 'AI_ASSISTANT'
-      const imgNote = m.image ? '[User uploaded an image here]' : ''
-      return `${role}: ${m.content} ${imgNote}`.trim()
-    })
-    .join('\n\n')
-}
-
-function validateMessages(messages) {
-  if (!Array.isArray(messages)) return []
-  return messages.slice(-10).map((msg) => ({
-    role: msg.role === 'user' ? 'user' : 'assistant',
-    content: sanitizeInput(msg.content),
-    image: msg.image || null,
-  }))
-}
-
-function validateImage(base64String) {
-  if (!base64String) return null
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-  const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
-  if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
-  const sizeInBytes = (cleanBase64.length * 3) / 4
-  if (sizeInBytes > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
-    throw new Error(`Image too large (Max ${MAX_IMAGE_SIZE_MB}MB)`)
-  }
-  return cleanBase64
-}
-
-function fallbackAnswer(reason = 'Temporary model output issue. Please retry.') {
-  return [
-    'Likely issues (visible):',
-    '- Unable to analyze at this time',
-    '',
-    'What to do now:',
-    `- ${reason}`,
-    '',
-    'Need to confirm:',
-    '- Try again or contact support if issue persists',
-  ].join('\n')
-}
-
-// ✅ CRITICAL FIX: Proper vision analysis using chat completions
-async function analyzeImageWithVision(imageBase64) {
-  try {
-    const response = await Promise.race([
-      openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Describe what you see in this restaurant/kitchen photo. Focus on: cleanliness, food storage, equipment condition, labeling, temperatures (if visible), cross-contamination risks. Be specific but concise (3-6 bullets max). No headings, just bullets starting with dashes.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`,
-                  detail: 'high'
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.3,
-      }),
-      timeoutPromise(VISION_TIMEOUT, 'VISION_TIMEOUT')
-    ])
-
-    const visionText = response.choices[0]?.message?.content || ''
-    logger.info('Vision analysis completed', { length: visionText.length })
-    return visionText.trim()
-  } catch (error) {
-    logger.error('Vision analysis failed', { error: error.message })
-    return 'food safety restaurant kitchen equipment storage'
-  }
-}
-
-// ✅ CRITICAL FIX: Better document retrieval with multi-query approach
-async function retrieveRelevantDocs(searchTerms, imageBase64 = null) {
-  logger.info('Starting document retrieval', { searchTermsLength: searchTerms.length })
-  
-  try {
-    // Build comprehensive search query
-    const queries = [
-      searchTerms,
-      'Washtenaw County violation types Priority Foundation Core',
-      'enforcement action imminent health hazard',
-      'Michigan Modified Food Code',
-    ]
-    
-    // If we have an image, add specific food safety terms
-    if (imageBase64) {
-      queries.push('temperature control time temperature control for safety')
-      queries.push('cross contamination separation storage')
-      queries.push('cleaning sanitizing')
+function getLastUserText(messages) {
+  if (!Array.isArray(messages)) return ''
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i]
+    if (m?.role === 'user') {
+      // support either {content:""} or {content:[...]}
+      if (typeof m.content === 'string') return safeText(m.content)
+      if (Array.isArray(m.content)) {
+        // try to pull text chunks
+        const t = m.content
+          .map((c) => (typeof c === 'string' ? c : c?.text))
+          .filter(Boolean)
+          .join(' ')
+        return safeText(t)
+      }
     }
-    
-    const combinedQuery = queries.join(' | ')
-    
-    const searchResults = await searchDocuments(combinedQuery, 'washtenaw', 40)
-    
-    if (!Array.isArray(searchResults) || searchResults.length === 0) {
-      logger.warn('No search results returned')
-      return ''
-    }
-    
-    logger.info('Documents retrieved', { count: searchResults.length })
-    
-    // Format documents with clear source attribution
-    const formattedDocs = searchResults
-      .map((doc) => {
-        const text = doc.text || doc.content || doc.chunk || ''
-        if (!text || !text.trim()) return ''
-        const source = doc.source || doc.metadata?.source || 'Washtenaw food code'
-        return `[SOURCE: ${source}]\n${text}\n`
-      })
+  }
+  return ''
+}
+
+function extractTextFromOpenAI(resp) {
+  // OpenAI Responses SDK usually exposes output_text
+  if (resp?.output_text) return String(resp.output_text).trim()
+  // Fallback: attempt to read structured output array
+  try {
+    const parts = resp?.output?.flatMap((o) => o?.content || []) || []
+    const text = parts
+      .map((p) => p?.text)
       .filter(Boolean)
-      .join('\n---\n\n')
-    
-    return formattedDocs
-  } catch (error) {
-    logger.error('Document retrieval failed', { error: error.message })
+      .join('\n')
+      .trim()
+    return text
+  } catch {
     return ''
   }
 }
 
-// ✅ CRITICAL FIX: Improved system prompt with better structure
-const SYSTEM_PROMPT = `You are protocolLM, a food safety assistant for Washtenaw County, Michigan restaurants.
+function isPrioritySource(source) {
+  if (!source) return false
+  return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(source))
+}
 
-HARD RULES:
-1. Use ONLY the provided regulatory context below
-2. For photos: describe ONLY what is visible - never guess temperatures, dates, or sanitizer PPM
-3. NO markdown headings (no # or ##)
-4. Keep answers short and scannable for line cooks/managers
+function dedupeByText(items) {
+  const seen = new Set()
+  const out = []
+  for (const it of items || []) {
+    const key = (it?.text || '').slice(0, 3000)
+    if (!key) continue
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(it)
+  }
+  return out
+}
 
-OUTPUT FORMAT (MANDATORY):
-Likely issues (visible):
-- [LIKELIHOOD: HIGH/MED/LOW] (Category if known) Description
-- [LIKELIHOOD: HIGH/MED/LOW] (Category if known) Description
+function buildContextString(docs) {
+  // Keep context compact-ish; your model can handle more, but don’t send megabytes.
+  const MAX_CHARS = 22000
+  let buf = ''
+  for (const d of docs) {
+    const src = d.source || 'Unknown'
+    const pg = d.page ?? 'N/A'
+    const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | SCORE: ${Number(d.score || 0).toFixed(3)}]\n${d.text}\n`
+    if ((buf.length + chunk.length) > MAX_CHARS) break
+    buf += chunk
+  }
+  return buf.trim()
+}
 
-What to do now:
-- Immediate action step 1
-- Immediate action step 2
+async function safeLogUsage(payload) {
+  try {
+    if (typeof logUsageForAnalytics !== 'function') return
+    // Support either object-style or positional-style implementations.
+    if (logUsageForAnalytics.length <= 1) {
+      await logUsageForAnalytics(payload)
+    } else {
+      await logUsageForAnalytics(
+        payload.userId,
+        payload.plan || 'unknown',
+        payload.mode || 'chat',
+        payload.success === true,
+        payload.durationMs || null
+      )
+    }
+  } catch (e) {
+    logger.warn('Usage logging failed (non-blocking)', { error: e?.message })
+  }
+}
 
-Need to confirm:
-- Item that requires verification 1
-- Item that requires verification 2
-
-VIOLATION CATEGORIES:
-- Priority (P): Most serious - directly reduces foodborne illness (temps, handwashing)
-- Priority Foundation (Pf): Supports Priority compliance (thermometers, test strips, soap)
-- Core: General sanitation (cleaning, facility maintenance)
-
-Only tag violations with (P), (Pf), or (Core) if the context explicitly supports it.
-
-LIKELIHOOD TAGS:
-- HIGH (~70-90%): Clear visual evidence of likely violation
-- MED (~40-70%): Possible violation, needs closer look
-- LOW (~10-40%): Minor concern or unclear from photo
-
-If you see potential imminent health hazard (no water, sewage backup, severe pest infestation), say "STOP - Get manager immediately" first.`
-
-export async function POST(req) {
-  const requestId = randomUUID()
-  const startTime = Date.now()
-
-  logger.info('Chat request started', { requestId })
+export async function POST(request) {
+  const startedAt = Date.now()
+  const env = process.env.NODE_ENV || 'unknown'
 
   try {
-    const serviceEnabled = await isServiceEnabled()
-    if (!serviceEnabled) {
-      const message = await getMaintenanceMessage()
-      return NextResponse.json({ error: message, maintenance: true }, { status: 503 })
-    }
-
-    if (!validateCSRF(req)) {
-      logger.security('CSRF validation failed in chat', { requestId })
-      return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
-    }
-
-    const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
-    if (contentLength > 12 * 1024 * 1024) {
-      logger.warn('Payload too large', { requestId, size: contentLength })
-      return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
-    }
-
-    const body = await req.json()
-    const messages = validateMessages(body.messages || [])
-    const historyText = getHistoryContext(messages)
-    const lastMsgObj = messages[messages.length - 1] || {}
-    let lastMessageText = lastMsgObj.content || ''
-
-    let imageBase64 = null
-    try {
-      if (body.image) imageBase64 = validateImage(body.image)
-    } catch (e) {
-      logger.warn('Image validation failed', { requestId, error: e.message })
-      return NextResponse.json({ error: e.message }, { status: 400 })
-    }
-
-    // Auto-scan mode for photo-only uploads
-    if (imageBase64 && (!lastMessageText || !lastMessageText.trim())) {
-      lastMessageText =
-        'Scan this photo for food safety violations and risks. Report what you see and what to do.'
-      if (messages.length > 0) {
-        messages[messages.length - 1].content = lastMessageText
-      }
-    }
-
-    const cookieStore = cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll() {},
-        },
-      }
-    )
-
-    const chatId = body.chatId || null
-    const { data: { user } } = await supabase.auth.getUser()
-
-    const adminEmail = process.env.ADMIN_EMAIL
-    const isAdmin = !!user && !!adminEmail && user.email === adminEmail
-
-    // Rate limiting (non-admin only)
-    if (user && !isAdmin) {
-      if (!checkRateLimit(user.id)) {
-        logger.security('Rate limit exceeded for user', { userId: user.id, requestId })
-        return NextResponse.json(
-          { error: 'Too many requests. Please wait before trying again.', code: 'RATE_LIMIT_EXCEEDED' },
-          { status: 429 }
-        )
-      }
-    }
-
-    // Auth/subscription gates (non-admin only)
-    if (user && !isAdmin) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('accepted_terms')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile?.accepted_terms) {
-        return NextResponse.json({ error: 'Terms not accepted' }, { status: 403 })
-      }
-
-      const { data: sub } = await supabase
-        .from('subscriptions')
-        .select('status, current_period_end')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      let hasActiveSub = false
-      if (sub && ['active', 'trialing'].includes(sub.status) && new Date(sub.current_period_end) > new Date()) {
-        hasActiveSub = true
-      }
-
-      if (!hasActiveSub) {
-        return NextResponse.json({ error: 'Subscription required', code: 'NO_ACTIVE_SUBSCRIPTION' }, { status: 402 })
-      }
-
-      try {
-        await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
-      } catch (err) {
-        if (err?.code === 'NO_SUBSCRIPTION' || err?.code === 'SUB_EXPIRED') {
-          return NextResponse.json({ error: 'Subscription required or expired.', code: err.code }, { status: 402 })
-        }
-        if (err?.code === 'USAGE_LIMIT_REACHED') {
-          logger.warn('Usage limit reached for user', { requestId, userId: user.id })
-          return NextResponse.json(
-            { error: 'Monthly usage limit reached. Contact support for higher limits.', code: 'USAGE_LIMIT_REACHED' },
-            { status: 429 }
-          )
-        }
-        logger.error('Usage logging failed', { requestId, error: err?.message })
-      }
-    }
-
-    // ✅ STEP 1: Vision analysis (if image)
-    let visionDescription = ''
-    if (imageBase64) {
-      logger.info('Starting vision analysis', { requestId })
-      visionDescription = await analyzeImageWithVision(imageBase64)
-    }
-
-    // ✅ STEP 2: Build search query
-    const searchQuery = visionDescription || lastMessageText || 'food safety violations'
-    
-    // ✅ STEP 3: Retrieve documents
-    const retrievedContext = await retrieveRelevantDocs(searchQuery, imageBase64)
-    
-    if (!retrievedContext || retrievedContext.trim().length < 100) {
-      logger.error('Insufficient regulatory context', { requestId, contextLength: retrievedContext.length })
+    if (!isServiceEnabled()) {
       return NextResponse.json(
-        {
-          error: 'Could not find relevant Washtenaw County regulations for this query. Try rephrasing.',
-          code: 'NO_DOCUMENT_CONTEXT',
-        },
+        { error: getMaintenanceMessage() || 'Service temporarily unavailable.' },
         { status: 503 }
       )
     }
 
-    const clippedContext = retrievedContext.length > MAX_CONTEXT_LENGTH 
-      ? retrievedContext.slice(0, MAX_CONTEXT_LENGTH) 
-      : retrievedContext
-
-    // ✅ STEP 4: Build final prompt
-    const finalUserPrompt = `WASHTENAW COUNTY REGULATIONS (Retrieved from official documents):
-${clippedContext}
-
-${historyText ? `CONVERSATION HISTORY:\n${historyText}\n\n` : ''}
-
-USER QUESTION:
-${lastMessageText}
-
-${visionDescription ? `\nVISIBLE IN PHOTO:\n${visionDescription}` : ''}
-
-Provide your answer in the exact format specified in the system instructions.`
-
-    logger.info('Generating response', { requestId, contextLength: clippedContext.length })
-
-    // ✅ STEP 5: Generate response using standard chat completion
-    let rawText = ''
+    // CSRF (non-fatal if your helper throws; but it should block if configured)
     try {
-      const completion = await Promise.race([
-        openai.chat.completions.create({
-          model: OPENAI_CHAT_MODEL,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: finalUserPrompt }
-          ],
-          max_tokens: GENERATION_CONFIG.maxOutputTokens,
-          temperature: 0.3,
-        }),
-        timeoutPromise(GENERATION_TIMEOUT, 'GENERATION_TIMEOUT')
-      ])
-
-      rawText = completion.choices[0]?.message?.content || ''
-      
-      if (!rawText || rawText.trim().length < 50) {
-        logger.warn('Empty/short model output, using fallback', { requestId, length: rawText.length })
-        rawText = fallbackAnswer('Model returned insufficient output. Please try again.')
-      }
+      await validateCSRF(request)
     } catch (e) {
-      logger.error('OpenAI generation failed', { requestId, error: e.message })
-      rawText = fallbackAnswer(
-        e.message === 'GENERATION_TIMEOUT' ? 'Request timed out. Please try again.' : 'Temporary issue. Please try again.'
+      logger.warn('CSRF validation failed', { error: e?.message })
+      return NextResponse.json({ error: 'Invalid request.' }, { status: 403 })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const messages = Array.isArray(body?.messages) ? body.messages : []
+    const county = safeText(body?.county || 'washtenaw') || 'washtenaw'
+
+    const imageDataUrl = asDataUrl(body?.image || body?.imageBase64 || body?.image_url)
+    const hasImage = Boolean(imageDataUrl)
+
+    // Auth (optional, but keeps your existing behavior)
+    let userId = null
+    try {
+      const cookieStore = cookies()
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            get(name) {
+              return cookieStore.get(name)?.value
+            },
+            set(name, value, options) {
+              cookieStore.set({ name, value, ...options })
+            },
+            remove(name, options) {
+              cookieStore.set({ name, value: '', ...options })
+            },
+          },
+        }
+      )
+      const { data } = await supabase.auth.getUser()
+      userId = data?.user?.id || null
+    } catch (e) {
+      logger.warn('Auth check failed (continuing)', { error: e?.message })
+    }
+
+    const lastUserText = getLastUserText(messages)
+
+    // If user sent ONLY a photo, default prompt (so they don’t have to type “what do you see?”)
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
+
+    if (!effectiveUserPrompt && !hasImage) {
+      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
+    }
+
+    // ---------------------------
+    // 1) Vision pre-pass (best-effort)
+    // ---------------------------
+    let visionSummary = ''
+    let visionSearchTerms = ''
+    if (hasImage) {
+      try {
+        logger.info('Vision analysis started', { env })
+
+        const visionResp = await withTimeout(
+          openai.responses.create({
+            model: OPENAI_CHAT_MODEL,
+            reasoning_effort: 'low',
+            verbosity: 'low',
+            max_output_tokens: 450,
+            input: [
+              {
+                role: 'system',
+                content: [
+                  {
+                    type: 'input_text',
+                    text:
+                      'You are a food-safety inspection assistant. Return STRICT JSON only. ' +
+                      'Schema: {"summary":"...", "search_terms":"...", "notable_details":["..."]}. ' +
+                      'summary = 1-2 sentences describing what is visible. ' +
+                      'search_terms = short keyword string for retrieving relevant regulations (no prose).',
+                  },
+                ],
+              },
+              {
+                role: 'user',
+                content: [
+                  { type: 'input_text', text: effectiveUserPrompt },
+                  { type: 'input_image', image_url: imageDataUrl },
+                ],
+              },
+            ],
+          }),
+          VISION_TIMEOUT_MS,
+          'OPENAI_TIMEOUT'
+        )
+
+        const vt = extractTextFromOpenAI(visionResp)
+        try {
+          const parsed = JSON.parse(vt)
+          visionSummary = safeText(parsed?.summary || '')
+          visionSearchTerms = safeText(parsed?.search_terms || '')
+        } catch {
+          // If model didn’t return JSON, keep a trimmed version as summary
+          visionSummary = safeText(vt).slice(0, 400)
+          visionSearchTerms = ''
+        }
+
+        logger.info('Vision analysis ok', {
+          env,
+          summaryLen: visionSummary.length,
+          searchTermsLen: visionSearchTerms.length,
+        })
+      } catch (e) {
+        logger.error('Vision analysis failed', { env, error: e?.message || String(e) })
+        // IMPORTANT: we continue anyway; final answer call will still include the image.
+      }
+    }
+
+    // ---------------------------
+    // 2) Retrieval (vector search)
+    // ---------------------------
+    const retrievalQuery =
+      safeText(
+        [
+          visionSearchTerms || '',
+          effectiveUserPrompt || '',
+          // force relevant “classification” concepts into retrieval
+          'Priority Priority-Foundation Core violation correction window enforcement action Washtenaw',
+        ]
+          .filter(Boolean)
+          .join('\n')
+      ) || 'food safety violations Washtenaw'
+
+    logger.info('Document search started', {
+      env,
+      county,
+      queryLength: retrievalQuery.length,
+      topK: TOPK,
+    })
+
+    let docs = await searchDocuments(retrievalQuery, county, TOPK)
+
+    // Ensure priority docs appear: if not enough priority hits, do a small priority pull and merge
+    const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
+    if (priorityHits < 4) {
+      const priorityQuery =
+        'WASHTENAW Violation Types correction windows Priority Priority-Foundation Core Enforcement Action'
+      const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
+      docs = dedupeByText([...(extra || []), ...(docs || [])])
+    }
+
+    // Boost priority sources to the top (without deleting relevance ordering entirely)
+    docs.sort((a, b) => {
+      const ap = isPrioritySource(a.source) ? 1 : 0
+      const bp = isPrioritySource(b.source) ? 1 : 0
+      if (ap !== bp) return bp - ap
+      return (b.score || 0) - (a.score || 0)
+    })
+
+    const context = buildContextString(docs)
+
+    if (!context) {
+      // Your product philosophy: don’t answer without regulatory context
+      return NextResponse.json(
+        {
+          message:
+            'I couldn’t retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
+          confidence: 'LOW',
+        },
+        { status: 200 }
       )
     }
 
-    const duration = Date.now() - startTime
-    logger.info('Response generated successfully', {
-      requestId,
-      durationMs: duration,
-      responseLength: rawText.length,
-    })
+    // ---------------------------
+    // 3) Final answer (ALWAYS include image if provided)
+    // ---------------------------
+    const systemPrompt = `
+You are ProtocolLM: a Washtenaw County food-safety compliance assistant.
+Rules:
+- Use ONLY the provided "REGULATORY EXCERPTS" for claims about rules, categories (Priority/Pf/Core), time windows, etc.
+- You MAY describe what is visible in the photo directly.
+- If the photo is unclear, say what is unclear and what you would need to confirm.
+- Provide probabilities as ranges for each suspected issue (e.g., 70–90%).
+- Do NOT ask "what do you see?" — assume the user wants you to proactively find issues.
 
-    // Save to database
-    if (user && chatId && lastMessageText) {
-      await supabase.from('messages').insert([
+Output format (exact sections, concise):
+Likely issues (visible):
+- (Priority|Pf|Core|Unclear) [ODDS: xx–yy%] <one-sentence issue + why, based on photo + excerpts>
+
+What to do now:
+- <action steps>
+
+Need to confirm:
+- <questions to raise certainty>
+
+Only include a "Sources used:" section if the user explicitly asks for citations or sources.
+`.trim()
+
+    const userBlock = `
+USER REQUEST:
+${effectiveUserPrompt || '[No additional text provided]'}
+
+VISION SUMMARY (may be empty if the pre-pass timed out):
+${visionSummary || '[none]'}
+
+REGULATORY EXCERPTS:
+${context}
+`.trim()
+
+    let finalText = ''
+    try {
+      logger.info('Generating response', { env })
+
+      const answerResp = await withTimeout(
+        openai.responses.create({
+          model: OPENAI_CHAT_MODEL,
+          reasoning_effort: 'high',
+          verbosity: 'low',
+          max_output_tokens: 900,
+          input: [
+            {
+              role: 'system',
+              content: [{ type: 'input_text', text: systemPrompt }],
+            },
+            {
+              role: 'user',
+              content: hasImage
+                ? [
+                    { type: 'input_text', text: userBlock },
+                    // ✅ CRITICAL FIX: include image here too, so we can still answer if the vision pre-pass timed out
+                    { type: 'input_image', image_url: imageDataUrl },
+                  ]
+                : [{ type: 'input_text', text: userBlock }],
+            },
+          ],
+        }),
+        ANSWER_TIMEOUT_MS,
+        'OPENAI_TIMEOUT'
+      )
+
+      finalText = extractTextFromOpenAI(answerResp)
+    } catch (e) {
+      logger.error('Answer generation failed', { env, error: e?.message || String(e) })
+      return NextResponse.json(
         {
-          chat_id: chatId,
-          role: 'user',
-          content: lastMessageText,
-          image: imageBase64 ? 'stored' : null,
+          message: 'The analysis timed out. Please try again (or re-send 1–2 clearer angles).',
+          confidence: 'LOW',
         },
-        {
-          chat_id: chatId,
-          role: 'assistant',
-          content: rawText,
-          metadata: { requestId, durationMs: duration },
-        },
-      ])
+        { status: 200 }
+      )
     }
 
-    return NextResponse.json({ message: rawText }, { status: 200 })
+    // Non-blocking usage log (prevents your “plan null” from killing responses)
+    await safeLogUsage({
+      userId,
+      mode: hasImage ? 'vision' : 'chat',
+      success: true,
+      durationMs: Date.now() - startedAt,
+    })
 
-  } catch (err) {
-    const duration = Date.now() - startTime
-    logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
-    const msg = fallbackAnswer('An error occurred. Please try again or contact support.')
-    return NextResponse.json({ message: msg }, { status: 200 })
+    return NextResponse.json(
+      {
+        message: finalText || 'No response text returned.',
+        confidence: 'MEDIUM',
+      },
+      { status: 200 }
+    )
+  } catch (e) {
+    logger.error('Chat route failed', { error: e?.message || String(e) })
+    return NextResponse.json({ error: 'Server error.' }, { status: 500 })
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ status: 'ok' }, { status: 200 })
 }
