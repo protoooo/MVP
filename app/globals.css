@@ -18,7 +18,7 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background: transparent;
+  background: transparent; /* ✅ Allows Amex background to show */
 }
 
 body {
@@ -26,6 +26,7 @@ body {
   position: relative;
   z-index: 0;
   isolation: isolate;
+  background: transparent; /* ✅ Must be transparent */
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -38,6 +39,7 @@ body {
 #__next {
   min-height: 100%;
   width: 100%;
+  background: transparent; /* ✅ Keep transparent */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -202,20 +204,101 @@ select:focus-visible {
   .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
-/* Amex Background Animations */
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -30px) scale(1.1); }
-  50% { transform: translate(-20px, 40px) scale(0.9); }
-  75% { transform: translate(40px, 20px) scale(1.05); }
+/* =========================================================
+   Amex Centurion Background Animations
+   ========================================================= */
+
+@keyframes amexFloat {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+  35% {
+    transform: translate3d(18px, -14px, 0) scale(1.03);
+  }
+  70% {
+    transform: translate3d(-14px, 16px, 0) scale(0.99);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
 }
 
-@keyframes float-reverse {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-30px, 30px) scale(1.1); }
-  50% { transform: translate(20px, -40px) scale(0.9); }
-  75% { transform: translate(-40px, -20px) scale(1.05); }
+@keyframes amexFloatReverse {
+  0% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(-20px, 12px, 0) scale(1.02);
+  }
+  75% {
+    transform: translate3d(16px, -10px, 0) scale(0.99);
+  }
+  100% {
+    transform: translate3d(0px, 0px, 0) scale(1);
+  }
 }
 
-.animate-float { animation: float ease-in-out infinite; }
-.animate-float-reverse { animation: float-reverse ease-in-out infinite; }
+@keyframes amexSheenDrift {
+  0% {
+    transform: translate3d(-50%, 0, 0) rotate(0.001deg);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate3d(calc(-50% + 14px), -10px, 0) rotate(0.001deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0) rotate(0.001deg);
+    opacity: 0.65;
+  }
+}
+
+@keyframes amexGrain {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-1.5%, 1%, 0);
+  }
+  50% {
+    transform: translate3d(1%, -1.5%, 0);
+  }
+  75% {
+    transform: translate3d(-1%, -0.5%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Apply Amex animations */
+.animate-float {
+  animation: amexFloat 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-reverse {
+  animation: amexFloatReverse 32s ease-in-out infinite;
+  will-change: transform;
+}
+
+.amex-sheen-drift {
+  animation: amexSheenDrift 24s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.amex-grain {
+  animation: amexGrain 18s steps(6) infinite;
+  will-change: transform;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-float-reverse,
+  .amex-sheen-drift,
+  .amex-grain {
+    animation: none !important;
+    transform: none !important;
+  }
+}
