@@ -1,4 +1,4 @@
-// app/api/chat/route.js - COMPLETE FILE with rate limiting and error handling fixes
+// app/api/chat/route.js
 import OpenAI from 'openai'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { NextResponse } from 'next/server'
@@ -8,6 +8,7 @@ import { searchDocuments } from '@/lib/searchDocs'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
+import { randomUUID } from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,42 +39,40 @@ const MAX_IMAGE_SIZE_MB = 10
 const VISION_TIMEOUT = 12000
 const GENERATION_TIMEOUT = 30000
 
-// ✅ NEW: Rate limiting
+// ✅ Rate limiting (in-memory best-effort)
 const rateLimits = new Map()
 const RATE_LIMIT_WINDOW_MS = 60000 // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 20 // 20 requests per minute per user
+const MAX_REQUESTS_PER_WINDOW = 20 // per minute per user
+let lastRateLimitCleanupAt = 0
+
+function cleanupRateLimits(now) {
+  // clean up at most once every 5 minutes (avoid setInterval in serverless)
+  if (now - lastRateLimitCleanupAt < 5 * 60 * 1000) return
+  lastRateLimitCleanupAt = now
+
+  for (const [userId, requests] of rateLimits.entries()) {
+    const recent = (requests || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
+    if (recent.length === 0) rateLimits.delete(userId)
+    else rateLimits.set(userId, recent)
+  }
+}
 
 function checkRateLimit(userId) {
   const now = Date.now()
+  cleanupRateLimits(now)
+
   const userRequests = rateLimits.get(userId) || []
-  
-  // Clean old requests outside the window
-  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS)
-  
+  const recentRequests = userRequests.filter((t) => now - t < RATE_LIMIT_WINDOW_MS)
+
   if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
     logger.security('Rate limit exceeded', { userId, requestCount: recentRequests.length })
     return false
   }
-  
-  // Add current request
+
   recentRequests.push(now)
   rateLimits.set(userId, recentRequests)
-  
   return true
 }
-
-// Cleanup old rate limit entries every 5 minutes
-setInterval(() => {
-  const now = Date.now()
-  for (const [userId, requests] of rateLimits.entries()) {
-    const recent = requests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS)
-    if (recent.length === 0) {
-      rateLimits.delete(userId)
-    } else {
-      rateLimits.set(userId, recent)
-    }
-  }
-}, 5 * 60 * 1000)
 
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
@@ -132,9 +131,7 @@ function validateMessages(messages) {
 function validateImage(base64String) {
   if (!base64String) return null
   const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
-  const cleanBase64 = base64String.includes(',')
-    ? base64String.split(',')[1]
-    : base64String
+  const cleanBase64 = base64String.includes(',') ? base64String.split(',')[1] : base64String
 
   if (!base64Regex.test(cleanBase64)) throw new Error('Invalid image format')
 
@@ -172,10 +169,7 @@ function cleanModelText(text) {
 }
 
 function ensureConfidenceLine(confidence, cleanText) {
-  const c =
-    confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW'
-      ? confidence
-      : 'MEDIUM'
+  const c = confidence === 'HIGH' || confidence === 'MEDIUM' || confidence === 'LOW' ? confidence : 'MEDIUM'
   return { confidence: c, message: cleanText }
 }
 
@@ -209,7 +203,7 @@ function ensureThreeSections(text) {
     ...(doNow.length ? doNow : ['- (none listed)']),
     '',
     'Need to confirm:',
-    ...(confirm.length ? confirm : ['- Ask manager / check policy / verify temps with thermometer']),
+    ...(confirm.length ? confirm : ['- Ask manager / verify temps / verify sanitizer with test strips']),
   ].join('\n')
 
   if (nonBullets.length > 0) {
@@ -243,25 +237,29 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-const LOCAL_ENFORCEMENT_RULES = `
-LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
-- Violations are Priority (P), Priority Foundation (Pf), or Core.
-- Priority and Priority Foundation must be corrected immediately or within 10 days.
-- Core must be corrected within 90 days.
-- "Continuous violation": a priority/Pf violation documented on two or more consecutive routine inspections.
-- "Chronic violation": a priority/Pf violation documented on three of the last five routine inspections.
-- A "Risk Control Plan" is used to correct a priority/Pf violation repeated on two or more consecutive inspections.
-- If a safe operation cannot be maintained during an imminent health hazard, discontinue/close and notify the regulatory authority.
+/**
+ * ✅ PINNED CONTEXT (2 docs first)
+ * These two documents define how Washtenaw categorizes violations (P/Pf/Core + correction windows)
+ * and the high-level enforcement framework (imminent health hazard / progressive enforcement).
+ * Source docs:
+ * - "Violation Types | Washtenaw County, MI" :contentReference[oaicite:1]{index=1}
+ * - "Enforcement Action | Washtenaw County, MI" :contentReference[oaicite:2]{index=2}
+ */
+const PINNED_WASHTENAW_CONTEXT = `
+WASHTENAW VIOLATION TYPES + CORRECTION WINDOWS (Violation Types):
+- Violations are categorized as Priority (P), Priority Foundation (Pf), or Core.
+- Priority: most directly reduces foodborne illness hazards (examples include temps, handwashing).
+- Priority Foundation: supports Priority compliance (examples include thermometer, sanitizer test strips, hand soap/paper towels).
+- Core: general sanitation / facility maintenance (examples include dirty floors, lighting, disrepair).
+- Priority + Priority Foundation must be corrected immediately at inspection or within ~10 days; Core within ~90 days.
+
+WASHTENAW ENFORCEMENT ACTION OVERVIEW (Enforcement Action):
+- Summary enforcement is used when violations pose an imminent health hazard (examples include no water/power, sewage backup, severe pest infestation, fire/flood, outbreak, or other immediate danger).
+- In imminent health hazard situations, the operation can be ordered closed and may reopen only after correcting issues.
+- Progressive enforcement: license holders are typically given multiple opportunities to correct via inspection/follow-up, then conference/hearing steps before license limitation/suspension/revocation; formal appeal may be available.
 `.trim()
 
-async function callResponses({
-  model,
-  instructions,
-  input,
-  reasoningEffort,
-  maxOutputTokens,
-  timeoutMs,
-}) {
+async function callResponses({ model, instructions, input, reasoningEffort, maxOutputTokens, timeoutMs }) {
   const effort = normalizeEffort(reasoningEffort)
 
   const req = openai.responses.create({
@@ -274,9 +272,7 @@ async function callResponses({
 
   const resp = await Promise.race([req, timeoutPromise(timeoutMs, 'OPENAI_TIMEOUT')])
 
-  const outputText =
-    typeof resp?.output_text === 'string' ? resp.output_text.trim() : ''
-
+  const outputText = typeof resp?.output_text === 'string' ? resp.output_text.trim() : ''
   const status = resp?.status || null
 
   return { resp, outputText, status, effort }
@@ -293,12 +289,12 @@ function fallbackAnswer(reason = 'Temporary model output issue. Please retry.') 
     `- ${reason}`,
     '',
     'Need to confirm:',
-    '- Retry the request. If it keeps failing, reduce reasoning level or shorten the question/photo set.',
+    '- Retry the request. If it keeps failing, shorten the photo set or ask a more specific question.',
   ].join('\n')
 }
 
 export async function POST(req) {
-  const requestId = crypto.randomUUID()
+  const requestId = randomUUID()
   const startTime = Date.now()
 
   logger.info('Chat request started', { requestId })
@@ -332,19 +328,22 @@ export async function POST(req) {
     const lastMsgObj = messages[messages.length - 1] || {}
     let lastMessageText = lastMsgObj.content || ''
 
-    if (!lastMessageText && !body.image) {
-      if (!historyText && messages.length > 0) {
-        messages[messages.length - 1].content = 'Analyze safety status based on previous image.'
-        lastMessageText = messages[messages.length - 1].content
-      }
-    }
-
     let imageBase64 = null
     try {
       if (body.image) imageBase64 = validateImage(body.image)
     } catch (e) {
       logger.warn('Image validation failed', { requestId, error: e.message })
       return NextResponse.json({ error: e.message }, { status: 400 })
+    }
+
+    // ✅ PHOTO-ONLY MODE: if an image exists and user typed nothing, auto-scan
+    if (imageBase64 && (!lastMessageText || !lastMessageText.trim())) {
+      lastMessageText =
+        'Auto-scan this photo for possible food safety / sanitation violations and operational risks. ' +
+        'Report what you can see, the likelihood it’s a violation, and what to do next.'
+      if (messages.length > 0) {
+        messages[messages.length - 1].content = lastMessageText
+      }
     }
 
     const cookieStore = cookies()
@@ -384,23 +383,18 @@ export async function POST(req) {
     const adminEmail = process.env.ADMIN_EMAIL
     const isAdmin = !!user && !!adminEmail && user.email === adminEmail
 
-    // ✅ NEW: Rate limiting check
+    // ✅ Rate limiting (non-admin only)
     if (user && !isAdmin) {
       if (!checkRateLimit(user.id)) {
-        logger.security('Rate limit exceeded for user', { 
-          userId: user.id, 
-          requestId 
-        })
+        logger.security('Rate limit exceeded for user', { userId: user.id, requestId })
         return NextResponse.json(
-          { 
-            error: 'Too many requests. Please wait a moment before trying again.',
-            code: 'RATE_LIMIT_EXCEEDED' 
-          },
+          { error: 'Too many requests. Please wait a moment before trying again.', code: 'RATE_LIMIT_EXCEEDED' },
           { status: 429 }
         )
       }
     }
 
+    // ✅ Auth/subscription gates (non-admin only)
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -419,11 +413,7 @@ export async function POST(req) {
         .maybeSingle()
 
       let hasActiveSub = false
-      if (
-        sub &&
-        ['active', 'trialing'].includes(sub.status) &&
-        new Date(sub.current_period_end) > new Date()
-      ) {
+      if (sub && ['active', 'trialing'].includes(sub.status) && new Date(sub.current_period_end) > new Date()) {
         hasActiveSub = true
       }
 
@@ -443,48 +433,36 @@ export async function POST(req) {
             .eq('user_id', user.id)
             .limit(1)
             .maybeSingle()
-          
-          if (completedSub) {
-            hasActiveSub = true
-          }
+
+          if (completedSub) hasActiveSub = true
         }
       }
 
       if (!hasActiveSub) {
-        return NextResponse.json(
-          { error: 'Subscription required', code: 'NO_ACTIVE_SUBSCRIPTION' },
-          { status: 402 }
-        )
+        return NextResponse.json({ error: 'Subscription required', code: 'NO_ACTIVE_SUBSCRIPTION' }, { status: 402 })
       }
 
       try {
         await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
       } catch (err) {
-        if (err.code === 'NO_SUBSCRIPTION' || err.code === 'SUB_EXPIRED') {
-          return NextResponse.json(
-            { error: 'Subscription required or expired.', code: err.code },
-            { status: 402 }
-          )
+        if (err?.code === 'NO_SUBSCRIPTION' || err?.code === 'SUB_EXPIRED') {
+          return NextResponse.json({ error: 'Subscription required or expired.', code: err.code }, { status: 402 })
         }
-        if (err.code === 'USAGE_LIMIT_REACHED') {
-          logger.warn('Usage limit reached for user', {
-            requestId,
-            userId: user.id,
-            meta: err.meta || null,
-          })
+        if (err?.code === 'USAGE_LIMIT_REACHED') {
+          logger.warn('Usage limit reached for user', { requestId, userId: user.id, meta: err.meta || null })
           return NextResponse.json(
             {
-              error:
-                'Monthly usage limit reached for your plan. Contact support if you need a higher limit.',
+              error: 'Monthly usage limit reached for your plan. Contact support if you need a higher limit.',
               code: 'USAGE_LIMIT_REACHED',
             },
             { status: 429 }
           )
         }
-        logger.error('Usage logging failed', { requestId, error: err.message })
+        logger.error('Usage logging failed', { requestId, error: err?.message || 'unknown' })
       }
     }
 
+    // 1) Vision → short visible description (for searchTerms)
     let searchTerms = ''
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
@@ -513,13 +491,15 @@ export async function POST(req) {
         logger.info('Vision analysis completed', { requestId, length: searchTerms.length })
       } catch (visionError) {
         logger.error('Vision analysis failed', { requestId, error: visionError.message })
-        searchTerms = lastMessageText || 'general food safety equipment cleanliness'
+        searchTerms = lastMessageText || 'food safety sanitation cleanliness'
       }
     } else {
       searchTerms = lastMessageText || 'food safety code'
     }
 
-    let context = ''
+    // 2) Retrieval → dynamic context (other docs)
+    let dynamicContext = ''
+    let retrievalStatus = 'NOT_ATTEMPTED'
     if (searchTerms) {
       logger.info('Document search started', { requestId })
       let searchResults = []
@@ -528,12 +508,15 @@ export async function POST(req) {
           searchTerms,
           'Washtenaw County',
           'Priority Priority Foundation Core',
-          'violation types',
-          'enforcement action',
+          'correction windows 10 days 90 days',
+          'enforcement action imminent health hazard',
           'Michigan Modified Food Code',
         ].join(' | ')
+
         searchResults = await searchDocuments(searchQuery, 'washtenaw', 30)
+        retrievalStatus = 'OK'
       } catch (err) {
+        retrievalStatus = 'FAILED'
         logger.error('Search failed', { requestId, error: err.message })
       }
 
@@ -543,16 +526,23 @@ export async function POST(req) {
       else if (Array.isArray(searchResults?.matches)) normalizedResults = searchResults.matches
 
       if (normalizedResults.length > 0) {
-        context = normalizedResults
+        // Optional: prioritize chunks that came from the two pinned docs (if present in DB results too)
+        const pinnedSourceHints = ['Violation Types', 'Enforcement Action']
+        normalizedResults.sort((a, b) => {
+          const aSrc = String(a.source || a.metadata?.source || a.title || '')
+          const bSrc = String(b.source || b.metadata?.source || b.title || '')
+          const aPinned = pinnedSourceHints.some((h) => aSrc.toLowerCase().includes(h.toLowerCase()))
+          const bPinned = pinnedSourceHints.some((h) => bSrc.toLowerCase().includes(h.toLowerCase()))
+          if (aPinned !== bPinned) return aPinned ? -1 : 1
+          return (b.score || b.similarity || 0) - (a.score || a.similarity || 0)
+        })
+
+        dynamicContext = normalizedResults
           .map((doc) => {
             const text = doc.text || doc.content || doc.chunk || ''
             if (!text || !text.trim()) return ''
             const source =
-              doc.source ||
-              doc.metadata?.source ||
-              doc.document_name ||
-              doc.title ||
-              'Washtenaw food code'
+              doc.source || doc.metadata?.source || doc.document_name || doc.title || 'Washtenaw food code'
             return `[SOURCE: ${source}]\n${text}`
           })
           .filter(Boolean)
@@ -560,19 +550,21 @@ export async function POST(req) {
 
         logger.info('Search completed', { requestId, resultsCount: normalizedResults.length })
       } else {
-        logger.warn('No search results; no regulatory context available', { requestId })
+        logger.warn('No search results; dynamic context empty', { requestId })
+        retrievalStatus = retrievalStatus === 'FAILED' ? 'FAILED' : 'EMPTY'
       }
     }
 
-    if (!context) {
-      logger.warn('No regulatory context; refusing to answer from general model', {
-        requestId,
-        searchTerms,
-      })
+    // ✅ Pinned context ALWAYS first; dynamic context appended
+    const fullContext = `${PINNED_WASHTENAW_CONTEXT}\n\n${dynamicContext || ''}`.trim()
+
+    // If somehow everything is empty (shouldn’t happen), refuse
+    if (!fullContext) {
+      logger.warn('No regulatory context at all; refusing to answer', { requestId, searchTerms })
       return NextResponse.json(
         {
           error:
-            'ProtocolLM could not find relevant food code passages for this question. ' +
+            'ProtocolLM could not find relevant food code passages for this request. ' +
             'To avoid answering from general AI training data, no answer will be provided. ' +
             'Please try rephrasing your question.',
           code: 'NO_DOCUMENT_CONTEXT',
@@ -581,35 +573,33 @@ export async function POST(req) {
       )
     }
 
-    const fullContext = `${LOCAL_ENFORCEMENT_RULES}\n\n${context}`
     const clippedContext =
-      fullContext.length > MAX_CONTEXT_LENGTH
-        ? fullContext.slice(0, MAX_CONTEXT_LENGTH)
-        : fullContext
+      fullContext.length > MAX_CONTEXT_LENGTH ? fullContext.slice(0, MAX_CONTEXT_LENGTH) : fullContext
 
     const SYSTEM_PROMPT = `You are ProtocolLM, a food-safety assistant for restaurants in Washtenaw County, Michigan.
 
 Hard rules:
 - Use ONLY the provided OFFICIAL REGULATORY CONTEXT. If it doesn't support a claim, put it under "Need to confirm".
-- For photos: describe ONLY what is visible. No guessing.
+- For photos: describe ONLY what is visible. No guessing (no temps, no dates, no sanitizer ppm unless visible).
 - NO markdown headings. Do NOT use # or ## anywhere.
 - Keep the whole answer short and scannable for an entry-level employee.
 
 Very important:
-- When you list a likely issue, tag it as (P), (Pf), or (Core) if the context supports it. If unsure, do not guess—put it in "Need to confirm".
-- If something sounds like an imminent health hazard / unsafe-to-operate situation, say "Stop and get a manager" and recommend pausing the process until verified.
+- When you list a likely issue, tag it as (P), (Pf), or (Core) ONLY if the context supports it.
+- If the category is not supported by the context, do NOT guess — put it in "Need to confirm".
+- Add a likelihood tag to EACH bullet in "Likely issues (visible)":
+  [LIKELIHOOD: HIGH (~70–90%)] or [LIKELIHOOD: MED (~40–70%)] or [LIKELIHOOD: LOW (~10–40%)].
+  Use HIGH only when the photo evidence is very clear.
+- If something looks like an imminent health hazard scenario, say "Stop and get a manager" and recommend pausing until corrected/verified.
 
 Output format (MANDATORY):
 Line 1: [CONFIDENCE: HIGH] or [CONFIDENCE: MEDIUM] or [CONFIDENCE: LOW]
 Then EXACTLY these 3 sections, each 1–4 bullets max:
 
 Likely issues (visible):
-- (P) ...
-- (Core) ...
-
+- [LIKELIHOOD: ...] (P/Pf/Core if supported) ...
 What to do now:
 - ...
-
 Need to confirm:
 - ...
 
@@ -621,8 +611,11 @@ Tone:
 - Calm, direct, operational.
 - Avoid absolutes like "will fail inspection".`
 
-    const finalUserPrompt = `OFFICIAL REGULATORY CONTEXT:
+    const finalUserPrompt = `OFFICIAL REGULATORY CONTEXT (PINNED FIRST, THEN OTHER DOCS):
 ${clippedContext}
+
+RETRIEVAL STATUS:
+${retrievalStatus}
 
 CHAT HISTORY:
 ${historyText || 'None.'}
@@ -681,9 +674,7 @@ ${searchTerms}` : ''}`
     } catch (e) {
       logger.error('OpenAI generation failed', { requestId, error: e.message })
       const msg = fallbackAnswer(
-        e.message === 'OPENAI_TIMEOUT'
-          ? 'Request timed out. Please try again.'
-          : 'Temporary issue. Please try again.'
+        e.message === 'OPENAI_TIMEOUT' ? 'Request timed out. Please try again.' : 'Temporary issue. Please try again.'
       )
       return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
@@ -692,10 +683,7 @@ ${searchTerms}` : ''}`
     let cleaned = cleanModelText(parsed.text)
 
     if (!cleaned || cleaned.length < 10) {
-      logger.warn('Model output still empty after retry; returning fallback', {
-        requestId,
-        effort: usedEffort,
-      })
+      logger.warn('Model output still empty after retry; returning fallback', { requestId, effort: usedEffort })
       const msg = fallbackAnswer('Temporary issue. Please try again.')
       return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
@@ -740,9 +728,7 @@ ${searchTerms}` : ''}`
     const duration = Date.now() - startTime
     logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
 
-    // ✅ FIXED: Generic error message (no leak)
     const msg = fallbackAnswer('An error occurred. Please try again or contact support.')
-
     return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
   }
 }
