@@ -1,222 +1,164 @@
-// components/AmexBackground.js - Premium Amex Centurion Style (subtle motion)
 'use client'
 
-export default function AmexBackground() {
+import { useEffect, useRef } from 'react'
+import * as THREE from 'three'
+
+export default function GalaxyBackground() {
+  const mountRef = useRef(null)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    const mount = mountRef.current
+    if (!mount) return
+
+    // Respect reduced motion
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    if (reduceMotion) return
+
+    // WebGL check (soft fail)
+    const canvasTest = document.createElement('canvas')
+    const gl =
+      canvasTest.getContext('webgl', { alpha: true }) ||
+      canvasTest.getContext('experimental-webgl', { alpha: true })
+    if (!gl) return
+
+    const scene = new THREE.Scene()
+
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 2000)
+    camera.position.z = 420
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: false,
+      powerPreference: 'high-performance',
+    })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    renderer.setClearColor(0x000000, 0) // transparent
+    mount.appendChild(renderer.domElement)
+
+    // Starfield
+    const starCount = 6500
+    const positions = new Float32Array(starCount * 3)
+    const colors = new Float32Array(starCount * 3)
+
+    const colorA = new THREE.Color('#a78bfa') // purple-ish
+    const colorB = new THREE.Color('#60a5fa') // blue-ish
+    const colorC = new THREE.Color('#ffffff')
+
+    for (let i = 0; i < starCount; i++) {
+      // Spread in a big sphere
+      const r = 900 * Math.cbrt(Math.random())
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+
+      const x = r * Math.sin(phi) * Math.cos(theta)
+      const y = r * Math.sin(phi) * Math.sin(theta)
+      const z = r * Math.cos(phi)
+
+      const idx = i * 3
+      positions[idx] = x
+      positions[idx + 1] = y
+      positions[idx + 2] = z
+
+      // Color blend: mostly white with subtle blue/purple
+      const t = Math.random()
+      const c =
+        t < 0.15 ? colorA.clone() : t < 0.35 ? colorB.clone() : colorC.clone()
+      const jitter = (Math.random() - 0.5) * 0.08
+      c.offsetHSL(0, 0, jitter)
+
+      colors[idx] = c.r
+      colors[idx + 1] = c.g
+      colors[idx + 2] = c.b
+    }
+
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+    const material = new THREE.PointsMaterial({
+      size: 1.15,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+
+    const stars = new THREE.Points(geometry, material)
+    scene.add(stars)
+
+    // A soft “nebula” glow (cheap + pretty)
+    const glowGeo = new THREE.SphereGeometry(260, 64, 64)
+    const glowMat = new THREE.MeshBasicMaterial({
+      color: 0x7c3aed,
+      transparent: true,
+      opacity: 0.08,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    const glow = new THREE.Mesh(glowGeo, glowMat)
+    glow.position.set(-120, 60, -280)
+    scene.add(glow)
+
+    const glow2 = glow.clone()
+    glow2.material = glowMat.clone()
+    glow2.material.color = new THREE.Color(0x2563eb)
+    glow2.material.opacity = 0.06
+    glow2.position.set(160, -40, -420)
+    scene.add(glow2)
+
+    const resize = () => {
+      const w = mount.clientWidth || window.innerWidth
+      const h = mount.clientHeight || window.innerHeight
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+      renderer.setSize(w, h, false)
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+
+    let t = 0
+    const animate = () => {
+      t += 0.0012
+      // Slow drift
+      stars.rotation.y = t * 0.6
+      stars.rotation.x = t * 0.25
+      glow.rotation.y = -t * 0.35
+      glow2.rotation.y = t * 0.22
+
+      renderer.render(scene, camera)
+      rafRef.current = requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('resize', resize)
+      renderer.dispose()
+      geometry.dispose()
+      material.dispose()
+      glowGeo.dispose()
+      glowMat.dispose()
+      try {
+        mount.removeChild(renderer.domElement)
+      } catch {}
+    }
+  }, [])
+
   return (
     <div
+      ref={mountRef}
       aria-hidden="true"
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 0, // ✅ keep above root background
-        overflow: 'hidden',
+        zIndex: 0,
         pointerEvents: 'none',
-        backgroundColor: '#000000',
       }}
-    >
-      {/* ✅ Local, self-contained animations (so it always moves even if Tailwind has no class) */}
-      <style jsx global>{`
-        @keyframes amexFloat {
-          0% {
-            transform: translate3d(0px, 0px, 0) scale(1);
-          }
-          35% {
-            transform: translate3d(18px, -14px, 0) scale(1.03);
-          }
-          70% {
-            transform: translate3d(-14px, 16px, 0) scale(0.99);
-          }
-          100% {
-            transform: translate3d(0px, 0px, 0) scale(1);
-          }
-        }
-
-        @keyframes amexFloatReverse {
-          0% {
-            transform: translate3d(0px, 0px, 0) scale(1);
-          }
-          40% {
-            transform: translate3d(-20px, 12px, 0) scale(1.02);
-          }
-          75% {
-            transform: translate3d(16px, -10px, 0) scale(0.99);
-          }
-          100% {
-            transform: translate3d(0px, 0px, 0) scale(1);
-          }
-        }
-
-        @keyframes amexSheenDrift {
-          0% {
-            transform: translate3d(-50%, 0, 0) rotate(0.001deg);
-            opacity: 0.65;
-          }
-          50% {
-            transform: translate3d(calc(-50% + 14px), -10px, 0) rotate(0.001deg);
-            opacity: 0.8;
-          }
-          100% {
-            transform: translate3d(-50%, 0, 0) rotate(0.001deg);
-            opacity: 0.65;
-          }
-        }
-
-        @keyframes amexGrain {
-          0% {
-            transform: translate3d(0, 0, 0);
-          }
-          25% {
-            transform: translate3d(-1.5%, 1%, 0);
-          }
-          50% {
-            transform: translate3d(1%, -1.5%, 0);
-          }
-          75% {
-            transform: translate3d(-1%, -0.5%, 0);
-          }
-          100% {
-            transform: translate3d(0, 0, 0);
-          }
-        }
-
-        /* keep the classnames you already used */
-        .animate-float {
-          animation: amexFloat 26s ease-in-out infinite;
-          will-change: transform;
-        }
-        .animate-float-reverse {
-          animation: amexFloatReverse 32s ease-in-out infinite;
-          will-change: transform;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .animate-float,
-          .animate-float-reverse {
-            animation: none !important;
-            transform: none !important;
-          }
-          .amex-sheen-drift,
-          .amex-grain {
-            animation: none !important;
-            transform: none !important;
-          }
-        }
-      `}</style>
-
-      {/* Subtle platinum sheen - top center (like card reflection) */}
-      <div
-        className="amex-sheen-drift"
-        style={{
-          position: 'absolute',
-          top: '-18%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '56%',
-          height: '56%',
-          background:
-            'radial-gradient(ellipse, rgba(255, 255, 255, 0.09) 0%, transparent 62%)',
-          opacity: 0.7,
-          animation: 'amexSheenDrift 24s ease-in-out infinite',
-          willChange: 'transform, opacity',
-        }}
-      />
-
-      {/* Dark gunmetal accent - left side */}
-      <div
-        className="animate-float-reverse"
-        style={{
-          position: 'absolute',
-          top: '18%',
-          left: '-12%',
-          width: '44%',
-          height: '66%',
-          background:
-            'radial-gradient(ellipse, rgba(60, 60, 80, 0.14) 0%, transparent 66%)',
-          opacity: 0.55,
-          animationDuration: '34s',
-          willChange: 'transform',
-          filter: 'blur(0.2px)',
-        }}
-      />
-
-      {/* Cool steel blue - right side (very subtle) */}
-      <div
-        className="animate-float"
-        style={{
-          position: 'absolute',
-          bottom: '10%',
-          right: '-8%',
-          width: '50%',
-          height: '60%',
-          background:
-            'radial-gradient(ellipse, rgba(80, 100, 130, 0.11) 0%, transparent 72%)',
-          opacity: 0.45,
-          animationDuration: '30s',
-          willChange: 'transform',
-          filter: 'blur(0.2px)',
-        }}
-      />
-
-      {/* Center depth - creates card surface illusion */}
-      <div
-        className="animate-float"
-        style={{
-          position: 'absolute',
-          top: '36%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '72%',
-          height: '40%',
-          background:
-            'radial-gradient(ellipse, rgba(255, 255, 255, 0.03) 0%, transparent 62%)',
-          opacity: 0.85,
-          animationDuration: '40s',
-          willChange: 'transform',
-        }}
-      />
-
-      {/* Premium vignette - darker edges like card photography */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: `
-            radial-gradient(ellipse 70% 50% at 50% 40%, transparent 0%, rgba(0, 0, 0, 0.62) 100%),
-            linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, transparent 16%, transparent 86%, rgba(0, 0, 0, 0.28) 100%)
-          `.replace(/\s+/g, ' '),
-          opacity: 0.95,
-        }}
-      />
-
-      {/* Subtle edge glow - like brushed metal edge */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0%, transparent 6%, transparent 94%, rgba(255, 255, 255, 0.022) 100%)',
-          opacity: 0.6,
-        }}
-      />
-
-      {/* Optional: ultra-subtle grain motion (helps it feel “alive” without being flashy) */}
-      <div
-        className="amex-grain"
-        style={{
-          position: 'absolute',
-          inset: '-20%',
-          opacity: 0.06,
-          mixBlendMode: 'overlay',
-          backgroundImage: `
-            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18) 0%, transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%),
-            radial-gradient(circle at 40% 85%, rgba(255,255,255,0.10) 0%, transparent 55%),
-            repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px)
-          `.replace(/\s+/g, ' '),
-          animation: 'amexGrain 18s steps(6) infinite',
-          willChange: 'transform',
-        }}
-      />
-    </div>
+    />
   )
 }
