@@ -9,7 +9,7 @@
   margin: 0;
 }
 
-/* ✅ CRITICAL: Allow background to show */
+/* ✅ CRITICAL: Deep black base for galaxy stars */
 html,
 body {
   max-width: 100vw;
@@ -19,7 +19,7 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background: #050608 !important; /* Fallback if 3D fails */
+  background: #000000 !important; /* Pure black base */
 }
 
 body {
@@ -47,12 +47,13 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* ✅ FIXED: Much lighter veil so galaxy shows through */
+/* ✅ Minimal veil - just subtle darkening at edges, stars shine through */
 .ui-appveil {
-  background: linear-gradient(
-    180deg, 
-    rgba(0, 0, 0, 0.25) 0%,  /* Very light at top */
-    rgba(0, 0, 0, 0.40) 100% /* Slightly darker at bottom */
+  background: radial-gradient(
+    circle at 50% 30%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.15) 70%,
+    rgba(0, 0, 0, 0.35) 100%
   );
 }
 
