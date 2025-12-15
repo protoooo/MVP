@@ -1,4 +1,4 @@
-// app/api/webhook/route.js - COMPLETE FILE with ALL security fixes
+// app/api/webhook/route.js - COMPLETE FILE with tighter replay attack window
 import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -75,9 +75,9 @@ export async function POST(req) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     
-    // ✅ SECURITY FIX: Check event age (prevent replay attacks)
+    // ✅ FIXED: Tighter replay attack window (3 minutes instead of 5)
     const eventAge = Date.now() - (event.created * 1000)
-    if (eventAge > 5 * 60 * 1000) { // 5 minutes
+    if (eventAge > 3 * 60 * 1000) {
       logger.security('Webhook event too old - possible replay attack', {
         eventId: event.id,
         ageMs: eventAge,
@@ -106,7 +106,6 @@ export async function POST(req) {
         const subscriptionId = session.subscription
         const customerId = session.customer
 
-        // ✅ SECURITY: Validate all required fields
         if (!userId || !subscriptionId || !customerId) {
           logger.error('Missing required data in checkout.session.completed', { 
             userId, 
@@ -117,7 +116,6 @@ export async function POST(req) {
           return NextResponse.json({ error: 'Missing data' }, { status: 400 })
         }
 
-        // ✅ SECURITY: Validate userId format (UUID)
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
         if (!uuidRegex.test(userId)) {
           logger.security('Invalid userId format in webhook', { userId, sessionId: session.id })
@@ -166,7 +164,6 @@ export async function POST(req) {
           isFakeId
         })
 
-        // Create/update profile with customer ID
         const now = new Date().toISOString()
         
         const { error: profileError } = await supabase
@@ -196,7 +193,6 @@ export async function POST(req) {
           })
         }
 
-        // Create subscription record
         const { error: subError } = await supabase.from('subscriptions').upsert({
           user_id: userId,
           stripe_subscription_id: subscriptionId,
@@ -224,7 +220,6 @@ export async function POST(req) {
           status: subscription.status
         })
 
-        // Send welcome email
         const userEmail = await getUserEmail(userId)
         if (userEmail) {
           const userName = userEmail.split('@')[0]
