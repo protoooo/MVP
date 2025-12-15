@@ -134,7 +134,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="max-w-6xl w-full">
         <div className="ui-shell">
           <section className="ui-hero">
-            {/* ✅ UPDATED: Punchier hero copy */}
             <h1 className={`ui-title ${outfit.className}`}>Catch Violations Before the Inspector</h1>
 
             <p className={`ui-subtitle ${inter.className}`}>
@@ -503,7 +502,6 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               </span>
             </button>
 
-            {/* ✅ UPDATED: Pricing psychology footer */}
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
               <br />
@@ -521,7 +519,6 @@ export default function Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // ✅ Needed for checkout CAPTCHA token
   const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
 
   const [isLoading, setIsLoading] = useState(true)
@@ -573,7 +570,6 @@ export default function Page() {
     }
   }, [messages])
 
-  // ✅ Make /?showPricing=true actually open the pricing modal (used by accept-terms flow)
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') {
@@ -581,7 +577,6 @@ export default function Page() {
     }
   }, [searchParams])
 
-  // ✅ Handles session + profile terms gate + subscription check (SINGLE useEffect)
   useEffect(() => {
     let isMounted = true
 
@@ -596,7 +591,6 @@ export default function Page() {
         return
       }
 
-      // ✅ FIXED: Handle missing profile gracefully
       try {
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
@@ -604,7 +598,6 @@ export default function Page() {
           .eq('id', s.user.id)
           .maybeSingle()
 
-        // ✅ If profile doesn't exist, redirect to accept-terms
         if (!profile) {
           console.log('⚠️ No profile found, redirecting to accept-terms')
           setHasActiveSubscription(false)
@@ -613,7 +606,6 @@ export default function Page() {
           return
         }
 
-        // ✅ If profile exists but terms not accepted
         const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
         if (!accepted) {
           console.log('⚠️ Terms not accepted, redirecting')
@@ -623,7 +615,6 @@ export default function Page() {
           return
         }
 
-        // ✅ If profile error (DB issue)
         if (profileError) {
           console.error('❌ Profile check error:', profileError)
           setHasActiveSubscription(false)
@@ -639,7 +630,6 @@ export default function Page() {
         return
       }
 
-      // Check subscription (no admin bypass)
       let active = false
       try {
         const { data: sub } = await supabase
@@ -717,7 +707,6 @@ export default function Page() {
         return
       }
 
-      // ✅ CAPTCHA must be loaded and included for checkout
       if (!captchaLoaded) {
         alert('Security verification is still loading. Please try again in a moment.')
         return
@@ -759,7 +748,6 @@ export default function Page() {
     }
   }
 
-  // ✅ Stripe Billing Portal (fixed: auth header + single json parse)
   const handleManageBilling = async () => {
     setShowUserMenu(false)
 
@@ -934,19 +922,24 @@ export default function Page() {
 
   return (
     <>
-      {/* ✅ REPLACED: global styles (removed ui-enterprise-bg aurora so AmexBackground can show through) */}
       <style jsx global>{`
         html,
         body {
           height: 100%;
           width: 100%;
+          background: transparent !important;
         }
 
         /* ✅ Let AmexBackground from layout.js show through */
         body {
           overflow: hidden;
-          background: transparent;
+          background: transparent !important;
           color: rgba(255, 255, 255, 0.94);
+        }
+
+        /* ✅ NEW: subtle veil so the 3D/Amex background is visible behind the whole app */
+        .ui-appveil {
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.76) 100%);
         }
 
         :root {
@@ -971,7 +964,6 @@ export default function Page() {
           -webkit-backdrop-filter: blur(14px);
         }
 
-        /* ✅ Force “no pill” logo + slightly bigger */
         .ui-logo {
           display: inline-flex;
           align-items: baseline;
@@ -1136,7 +1128,6 @@ export default function Page() {
           flex-shrink: 0;
         }
 
-        /* ✅ Slightly bigger text so it balances the icon */
         .ui-steptitle {
           font-size: 13px;
           font-weight: 800;
@@ -1303,8 +1294,9 @@ export default function Page() {
           transform: scale(1.02);
         }
 
+        /* ✅ Slightly less opaque so background can still glow through */
         .ui-backdrop {
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0, 0, 0, 0.72);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
         }
@@ -1729,7 +1721,8 @@ export default function Page() {
         loading={checkoutLoading}
       />
 
-      <div className="h-[100dvh] min-h-0 flex flex-col">
+      {/* ✅ UPDATED: add ui-appveil so the AmexBackground/3D background is visible */}
+      <div className="h-[100dvh] min-h-0 flex flex-col ui-appveil">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
             <div className="relative flex items-center justify-between">
@@ -1739,19 +1732,16 @@ export default function Page() {
                   <span className="ui-logo-lm">LM</span>
                 </div>
 
-                {/* ✅ FIXED: Hide this stack on mobile to prevent overlap */}
                 <div className="hidden md:flex flex-col leading-tight">
                   <span className={`text-[12px] text-white/80 ${inter.className}`}>Washtenaw Compliance Database</span>
                   <span className={`text-[12px] text-white/55 ${inter.className}`}>Additional Counties Coming 2026</span>
                 </div>
 
-                {/* ✅ FIXED: Only show status on larger screens */}
                 {hasActiveSubscription && (
                   <span className={`hidden lg:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
                 )}
               </div>
 
-              {/* ✅ Landing page only (desktop only center tagline) */}
               {!isAuthenticated && (
                 <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
                   Made in Washtenaw County for Washtenaw County.
@@ -1858,7 +1848,6 @@ export default function Page() {
               </div>
             </div>
 
-            {/* ✅ NEW-ish: Mobile-only tagline below header */}
             {!isAuthenticated && (
               <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
                 Made in Washtenaw County for Washtenaw County.
