@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - FIXED (No profile creation)
+// app/api/auth/signup/route.js - UPDATED: Better verification flow
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -65,12 +65,17 @@ export async function POST(request) {
       }
     )
 
-    // ✅ ONLY create the auth user - NO profile creation here
+    // Create auth user with proper redirect
     const { data, error } = await supabaseAuth.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+        data: {
+          source: 'signup',
+          signup_ip: ip,
+          signup_timestamp: new Date().toISOString()
+        }
       },
     })
 
@@ -86,13 +91,20 @@ export async function POST(request) {
     logger.audit('User signed up', {
       email: email.substring(0, 3) + '***',
       userId: data.user.id,
-      ip
+      ip,
+      emailConfirmed: !!data.user.email_confirmed_at
     })
 
-    // ✅ Profile will be created by webhook when they complete checkout
+    // Return appropriate message based on whether email confirmation is required
+    const needsVerification = !data.user.email_confirmed_at
+
     return NextResponse.json({
       success: true,
-      message: 'Account created! Please check your email to verify, then start your trial.'
+      needsVerification,
+      message: needsVerification 
+        ? 'Account created! Check your email to verify before starting your trial.'
+        : 'Account created! You can now sign in.',
+      userId: data.user.id
     })
 
   } catch (error) {
