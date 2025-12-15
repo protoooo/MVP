@@ -134,13 +134,16 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       <div className="max-w-6xl w-full">
         <div className="ui-shell">
           <section className="ui-hero">
-            <h1 className={`ui-title ${outfit.className}`}>Compliance Console</h1>
+            {/* ✅ UPDATED: Punchier hero copy */}
+            <h1 className={`ui-title ${outfit.className}`}>Catch Violations Before the Inspector</h1>
 
-            <p className={`ui-subtitle ${inter.className}`}>Train faster. Avoid violations. Pass inspections.</p>
+            <p className={`ui-subtitle ${inter.className}`}>
+              Take a photo of any station. Get fast alerts for likely Washtenaw County violations. Pass inspections with confidence.
+            </p>
 
             <p className={`ui-body ${inter.className}`}>
-              Take a photo of any station—coolers, prep tables, dish area—and get instant violation alerts before the inspector arrives.
-              Plus, search Washtenaw County regulations instantly when your team has questions.
+              Built specifically for Washtenaw County restaurants. Photo analysis + regulation search in about 30 seconds. One avoided violation
+              can pay for months.
             </p>
 
             <div className="ui-cta-row">
@@ -500,8 +503,11 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               </span>
             </button>
 
+            {/* ✅ UPDATED: Pricing psychology footer */}
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
+              <br />
+              <span className="text-white/60">💡 First 50 customers locked in at $100/mo forever</span>
             </p>
           </div>
         </div>
@@ -1733,17 +1739,19 @@ export default function Page() {
                   <span className="ui-logo-lm">LM</span>
                 </div>
 
-                <div className="flex flex-col leading-tight">
+                {/* ✅ FIXED: Hide this stack on mobile to prevent overlap */}
+                <div className="hidden md:flex flex-col leading-tight">
                   <span className={`text-[12px] text-white/80 ${inter.className}`}>Washtenaw Compliance Database</span>
                   <span className={`text-[12px] text-white/55 ${inter.className}`}>Additional Counties Coming 2026</span>
                 </div>
 
+                {/* ✅ FIXED: Only show status on larger screens */}
                 {hasActiveSubscription && (
-                  <span className={`hidden sm:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
+                  <span className={`hidden lg:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
                 )}
               </div>
 
-              {/* ✅ Landing page only (remove when signed in) */}
+              {/* ✅ Landing page only (desktop only center tagline) */}
               {!isAuthenticated && (
                 <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
                   Made in Washtenaw County for Washtenaw County.
@@ -1850,7 +1858,7 @@ export default function Page() {
               </div>
             </div>
 
-            {/* ✅ Landing page only (remove when signed in) */}
+            {/* ✅ NEW-ish: Mobile-only tagline below header */}
             {!isAuthenticated && (
               <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
                 Made in Washtenaw County for Washtenaw County.
