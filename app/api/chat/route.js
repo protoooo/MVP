@@ -1,4 +1,4 @@
-// app/api/chat/route.js
+// app/api/chat/route.js - UPDATED: Extended High reasoning + concise outputs
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -19,14 +19,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const OPENAI_CHAT_MODEL = 'gpt-5.2'
 
 // Timeouts (ms)
-const VISION_TIMEOUT_MS = 22000
-const ANSWER_TIMEOUT_MS = 30000
+const VISION_TIMEOUT_MS = 30000 // Increased from 22s
+const ANSWER_TIMEOUT_MS = 45000 // Increased for extended high
 
 // Retrieval
 const TOPK = 24
 const PRIORITY_TOPK = 10
 
-// “Always include” priority sources (fuzzy match)
+// "Always include" priority sources (fuzzy match)
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
@@ -46,9 +46,7 @@ function asDataUrl(maybeBase64) {
   if (!maybeBase64 || typeof maybeBase64 !== 'string') return null
   const s = maybeBase64.trim()
   if (!s) return null
-  // If it already looks like data:image/...;base64, keep it.
   if (s.startsWith('data:image/')) return s
-  // Otherwise assume raw base64 JPEG.
   return `data:image/jpeg;base64,${s}`
 }
 
@@ -62,10 +60,8 @@ function getLastUserText(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i]
     if (m?.role === 'user') {
-      // support either {content:""} or {content:[...]}
       if (typeof m.content === 'string') return safeText(m.content)
       if (Array.isArray(m.content)) {
-        // try to pull text chunks
         const t = m.content
           .map((c) => (typeof c === 'string' ? c : c?.text))
           .filter(Boolean)
@@ -78,9 +74,7 @@ function getLastUserText(messages) {
 }
 
 function extractTextFromOpenAI(resp) {
-  // OpenAI Responses SDK usually exposes output_text
   if (resp?.output_text) return String(resp.output_text).trim()
-  // Fallback: attempt to read structured output array
   try {
     const parts = resp?.output?.flatMap((o) => o?.content || []) || []
     const text = parts
@@ -113,8 +107,8 @@ function dedupeByText(items) {
 }
 
 function buildContextString(docs) {
-  // Keep context compact-ish; your model can handle more, but don’t send megabytes.
-  const MAX_CHARS = 22000
+  // Increased from 22k to 60k chars (~80k tokens)
+  const MAX_CHARS = 60000
   let buf = ''
   for (const d of docs) {
     const src = d.source || 'Unknown'
@@ -129,7 +123,6 @@ function buildContextString(docs) {
 async function safeLogUsage(payload) {
   try {
     if (typeof logUsageForAnalytics !== 'function') return
-    // Support either object-style or positional-style implementations.
     if (logUsageForAnalytics.length <= 1) {
       await logUsageForAnalytics(payload)
     } else {
@@ -158,7 +151,6 @@ export async function POST(request) {
       )
     }
 
-    // CSRF (non-fatal if your helper throws; but it should block if configured)
     try {
       await validateCSRF(request)
     } catch (e) {
@@ -173,7 +165,6 @@ export async function POST(request) {
     const imageDataUrl = asDataUrl(body?.image || body?.imageBase64 || body?.image_url)
     const hasImage = Boolean(imageDataUrl)
 
-    // Auth (optional, but keeps your existing behavior)
     let userId = null
     try {
       const cookieStore = cookies()
@@ -201,8 +192,6 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
-
-    // If user sent ONLY a photo, default prompt (so they don’t have to type “what do you see?”)
     const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
@@ -210,10 +199,12 @@ export async function POST(request) {
     }
 
     // ---------------------------
-    // 1) Vision pre-pass (best-effort)
+    // 1) Vision pre-pass (best-effort) - UPDATED: Extended High + JSON
     // ---------------------------
     let visionSummary = ''
     let visionSearchTerms = ''
+    let visionIssues = []
+    
     if (hasImage) {
       try {
         logger.info('Vision analysis started', { env })
@@ -221,9 +212,10 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.responses.create({
             model: OPENAI_CHAT_MODEL,
-            reasoning_effort: 'low',
+            reasoning_effort: 'high', // ✅ Extended High for better extraction
             verbosity: 'low',
-            max_output_tokens: 450,
+            max_output_tokens: 800, // More room for structured output
+            response_format: { type: 'json_object' }, // ✅ FORCE JSON
             input: [
               {
                 role: 'system',
@@ -232,9 +224,10 @@ export async function POST(request) {
                     type: 'input_text',
                     text:
                       'You are a food-safety inspection assistant. Return STRICT JSON only. ' +
-                      'Schema: {"summary":"...", "search_terms":"...", "notable_details":["..."]}. ' +
-                      'summary = 1-2 sentences describing what is visible. ' +
-                      'search_terms = short keyword string for retrieving relevant regulations (no prose).',
+                      'Schema: {"summary":"...", "search_terms":"...", "issues_spotted":["..."]}. ' +
+                      'summary = 2-3 sentences describing what is visible. ' +
+                      'search_terms = short keyword string for retrieving relevant regulations (no prose). ' +
+                      'issues_spotted = array of specific potential violations you can see (e.g., "uncovered food", "improper storage order").',
                   },
                 ],
               },
@@ -256,37 +249,38 @@ export async function POST(request) {
           const parsed = JSON.parse(vt)
           visionSummary = safeText(parsed?.summary || '')
           visionSearchTerms = safeText(parsed?.search_terms || '')
+          visionIssues = Array.isArray(parsed?.issues_spotted) ? parsed.issues_spotted : []
         } catch {
-          // If model didn’t return JSON, keep a trimmed version as summary
-          visionSummary = safeText(vt).slice(0, 400)
+          visionSummary = safeText(vt).slice(0, 500)
           visionSearchTerms = ''
+          visionIssues = []
         }
 
         logger.info('Vision analysis ok', {
           env,
           summaryLen: visionSummary.length,
           searchTermsLen: visionSearchTerms.length,
+          issuesCount: visionIssues.length,
         })
       } catch (e) {
         logger.error('Vision analysis failed', { env, error: e?.message || String(e) })
-        // IMPORTANT: we continue anyway; final answer call will still include the image.
       }
     }
 
     // ---------------------------
-    // 2) Retrieval (vector search)
+    // 2) Retrieval (vector search) - UPDATED: Better query + fallback
     // ---------------------------
     const retrievalQuery =
       safeText(
         [
           visionSearchTerms || '',
           effectiveUserPrompt || '',
-          // force relevant “classification” concepts into retrieval
-          'Priority Priority-Foundation Core violation correction window enforcement action Washtenaw',
+          // ✅ Force-include document titles + key classification terms
+          'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
         ]
           .filter(Boolean)
           .join('\n')
-      ) || 'food safety violations Washtenaw'
+      ) || 'Violation Types Enforcement Action Washtenaw County'
 
     logger.info('Document search started', {
       env,
@@ -297,16 +291,24 @@ export async function POST(request) {
 
     let docs = await searchDocuments(retrievalQuery, county, TOPK)
 
-    // Ensure priority docs appear: if not enough priority hits, do a small priority pull and merge
+    // Dedupe
+    docs = dedupeByText(docs || [])
+
+    // ✅ FORCE-FETCH priority docs if missing
     const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
-    if (priorityHits < 4) {
-      const priorityQuery =
-        'WASHTENAW Violation Types correction windows Priority Priority-Foundation Core Enforcement Action'
+    if (priorityHits < 2) {
+      logger.warn('Priority docs missing, fetching manually', { priorityHits })
+      
+      const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
       const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
-      docs = dedupeByText([...(extra || []), ...(docs || [])])
+      
+      if (extra && extra.length > 0) {
+        docs = dedupeByText([...extra, ...(docs || [])])
+        logger.info('Added priority docs via fallback', { count: extra.length })
+      }
     }
 
-    // Boost priority sources to the top (without deleting relevance ordering entirely)
+    // Boost priority sources to the top
     docs.sort((a, b) => {
       const ap = isPrioritySource(a.source) ? 1 : 0
       const bp = isPrioritySource(b.source) ? 1 : 0
@@ -317,11 +319,10 @@ export async function POST(request) {
     const context = buildContextString(docs)
 
     if (!context) {
-      // Your product philosophy: don’t answer without regulatory context
       return NextResponse.json(
         {
           message:
-            'I couldn’t retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
+            'I couldn't retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
           confidence: 'LOW',
         },
         { status: 200 }
@@ -329,36 +330,50 @@ export async function POST(request) {
     }
 
     // ---------------------------
-    // 3) Final answer (ALWAYS include image if provided)
+    // 3) Final answer - UPDATED: Extended High + concise instructions
     // ---------------------------
     const systemPrompt = `
-You are ProtocolLM: a Washtenaw County food-safety compliance assistant.
+You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
+
+CRITICAL CONTEXT SOURCES (always reference these):
+1. "Violation Types" document → tells you Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
+2. "Enforcement Action" document → tells you progressive enforcement (warnings → conferences → hearings)
+
 Rules:
-- Use ONLY the provided "REGULATORY EXCERPTS" for claims about rules, categories (Priority/Pf/Core), time windows, etc.
-- You MAY describe what is visible in the photo directly.
-- If the photo is unclear, say what is unclear and what you would need to confirm.
-- Provide probabilities as ranges for each suspected issue (e.g., 70–90%).
-- Do NOT ask "what do you see?" — assume the user wants you to proactively find issues.
+- ALWAYS classify violations as Priority (P), Priority Foundation (Pf), or Core (C) using Violation Types doc
+- ALWAYS state correction window: immediate/10 days (P/Pf) or 90 days (Core)
+- Use ONLY the provided "REGULATORY EXCERPTS" for claims about rules, categories, time windows, etc.
+- You MAY describe what is visible in the photo directly (your vision analysis)
+- If the photo is unclear, say what is unclear and what you would need to confirm
+- Provide probabilities as ranges for each suspected issue (e.g., 70–90%)
+- Do NOT ask "what do you see?" — proactively find issues
+- Keep responses SHORT and ACTIONABLE. No long paragraphs. Bullet points only.
 
 Output format (exact sections, concise):
-Likely issues (visible):
-- (Priority|Pf|Core|Unclear) [ODDS: xx–yy%] <one-sentence issue + why, based on photo + excerpts>
+**Likely issues (visible):**
+- **(P/Pf/C)** [ODDS: xx–yy%] <one-sentence issue + why>
 
-What to do now:
-- <action steps>
+**Correction windows:**
+- Priority/Priority Foundation: Fix immediately or within 10 days
+- Core: Fix within 90 days
 
-Need to confirm:
-- <questions to raise certainty>
+**What to do now:**
+- <action steps, numbered, 1-3 items max>
 
-Only include a "Sources used:" section if the user explicitly asks for citations or sources.
+**Need to confirm:**
+- <questions to raise certainty, 1-2 items max>
+
+Only include "Sources used:" if user explicitly asks for citations.
 `.trim()
 
     const userBlock = `
 USER REQUEST:
 ${effectiveUserPrompt || '[No additional text provided]'}
 
-VISION SUMMARY (may be empty if the pre-pass timed out):
-${visionSummary || '[none]'}
+VISION SUMMARY (what I can see in the photo):
+${visionSummary || '[No photo analysis available]'}
+
+${visionIssues.length > 0 ? `POTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}\n` : ''}
 
 REGULATORY EXCERPTS:
 ${context}
@@ -366,14 +381,14 @@ ${context}
 
     let finalText = ''
     try {
-      logger.info('Generating response', { env })
+      logger.info('Generating response (Extended High)', { env })
 
       const answerResp = await withTimeout(
         openai.responses.create({
           model: OPENAI_CHAT_MODEL,
-          reasoning_effort: 'high',
-          verbosity: 'low',
-          max_output_tokens: 900,
+          reasoning_effort: 'high', // ✅ Extended High (X-high)
+          verbosity: 'low', // ✅ Forces concise output
+          max_output_tokens: 1200, // Enough for structured answer
           input: [
             {
               role: 'system',
@@ -384,7 +399,6 @@ ${context}
               content: hasImage
                 ? [
                     { type: 'input_text', text: userBlock },
-                    // ✅ CRITICAL FIX: include image here too, so we can still answer if the vision pre-pass timed out
                     { type: 'input_image', image_url: imageDataUrl },
                   ]
                 : [{ type: 'input_text', text: userBlock }],
@@ -407,7 +421,18 @@ ${context}
       )
     }
 
-    // Non-blocking usage log (prevents your “plan null” from killing responses)
+    // Count priority docs used
+    const priorityDocsUsed = docs.filter(d => isPrioritySource(d.source)).length
+
+    logger.info('Final answer generated', {
+      env,
+      priorityDocsUsed,
+      totalDocsUsed: docs.length,
+      hasImage,
+      visionIssuesCount: visionIssues.length,
+    })
+
+    // Non-blocking usage log
     await safeLogUsage({
       userId,
       mode: hasImage ? 'vision' : 'chat',
@@ -418,7 +443,13 @@ ${context}
     return NextResponse.json(
       {
         message: finalText || 'No response text returned.',
-        confidence: 'MEDIUM',
+        confidence: 'HIGH',
+        _meta: {
+          priorityDocsUsed,
+          totalDocsRetrieved: docs.length,
+          visionIssuesSpotted: visionIssues.length,
+          reasoningLevel: 'extended_high',
+        }
       },
       { status: 200 }
     )
