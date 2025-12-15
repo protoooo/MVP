@@ -1,4 +1,4 @@
-// app/api/chat/route.js - COMPLETE FILE with ALL security fixes
+// app/api/chat/route.js - COMPLETE FILE with rate limiting and error handling fixes
 import OpenAI from 'openai'
 import { logUsageForAnalytics } from '@/lib/usage'
 import { NextResponse } from 'next/server'
@@ -17,9 +17,8 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2'
 
 // Output controls
-// NOTE: GPT-5 reasoning efforts are: low | medium | high (no xhigh)
 const GENERATION_CONFIG = {
-  reasoningEffort: 'high', // 'low' | 'medium' | 'high'
+  reasoningEffort: 'high',
   maxOutputTokensByEffort: {
     low: 1600,
     medium: 2400,
@@ -39,12 +38,46 @@ const MAX_IMAGE_SIZE_MB = 10
 const VISION_TIMEOUT = 12000
 const GENERATION_TIMEOUT = 30000
 
+// ✅ NEW: Rate limiting
+const rateLimits = new Map()
+const RATE_LIMIT_WINDOW_MS = 60000 // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 20 // 20 requests per minute per user
+
+function checkRateLimit(userId) {
+  const now = Date.now()
+  const userRequests = rateLimits.get(userId) || []
+  
+  // Clean old requests outside the window
+  const recentRequests = userRequests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS)
+  
+  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    logger.security('Rate limit exceeded', { userId, requestCount: recentRequests.length })
+    return false
+  }
+  
+  // Add current request
+  recentRequests.push(now)
+  rateLimits.set(userId, recentRequests)
+  
+  return true
+}
+
+// Cleanup old rate limit entries every 5 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [userId, requests] of rateLimits.entries()) {
+    const recent = requests.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW_MS)
+    if (recent.length === 0) {
+      rateLimits.delete(userId)
+    } else {
+      rateLimits.set(userId, recent)
+    }
+  }
+}, 5 * 60 * 1000)
+
 const timeoutPromise = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
 
-// --------------------------
-// Helpers: normalize config
-// --------------------------
 function normalizeEffort(effort) {
   const v = String(effort || '')
     .toLowerCase()
@@ -65,9 +98,6 @@ function getTokenBudgetForEffort(effort) {
   )
 }
 
-// --------------------------
-// Input sanitization
-// --------------------------
 function sanitizeInput(input, maxLength = 4000) {
   if (typeof input !== 'string') return ''
   return input
@@ -115,9 +145,6 @@ function validateImage(base64String) {
   return cleanBase64
 }
 
-// --------------------------
-// Confidence parsing
-// --------------------------
 function extractConfidence(text) {
   const t = typeof text === 'string' ? text : ''
   const match = t.match(/^\s*\[CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\]\s*/i)
@@ -152,9 +179,6 @@ function ensureConfidenceLine(confidence, cleanText) {
   return { confidence: c, message: cleanText }
 }
 
-// --------------------------
-// Output repair (server-side)
-// --------------------------
 function ensureThreeSections(text) {
   const safe = (text || '').trim()
   if (!safe) return safe
@@ -219,9 +243,6 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// --------------------------
-// Local enforcement rules context (short excerpts)
-// --------------------------
 const LOCAL_ENFORCEMENT_RULES = `
 LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
 - Violations are Priority (P), Priority Foundation (Pf), or Core.
@@ -233,9 +254,6 @@ LOCAL WASHTENAW DEFINITIONS + CORRECTION WINDOWS (official excerpts):
 - If a safe operation cannot be maintained during an imminent health hazard, discontinue/close and notify the regulatory authority.
 `.trim()
 
-// --------------------------
-// OpenAI (Responses API) wrapper with retry
-// --------------------------
 async function callResponses({
   model,
   instructions,
@@ -286,20 +304,17 @@ export async function POST(req) {
   logger.info('Chat request started', { requestId })
 
   try {
-    // Feature flag: service enabled
     const serviceEnabled = await isServiceEnabled()
     if (!serviceEnabled) {
       const message = await getMaintenanceMessage()
       return NextResponse.json({ error: message, maintenance: true }, { status: 503 })
     }
 
-    // CSRF
     if (!validateCSRF(req)) {
       logger.security('CSRF validation failed in chat', { requestId })
       return NextResponse.json({ error: 'Invalid request origin' }, { status: 403 })
     }
 
-    // Payload size
     const contentLength = parseInt(req.headers.get('content-length') || '0', 10)
     if (contentLength > 12 * 1024 * 1024) {
       logger.warn('Payload too large', { requestId, size: contentLength })
@@ -324,7 +339,6 @@ export async function POST(req) {
       }
     }
 
-    // Validate image
     let imageBase64 = null
     try {
       if (body.image) imageBase64 = validateImage(body.image)
@@ -333,7 +347,6 @@ export async function POST(req) {
       return NextResponse.json({ error: e.message }, { status: 400 })
     }
 
-    // Supabase user
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -348,7 +361,6 @@ export async function POST(req) {
       }
     )
 
-    // Feature Flag: Vision
     if (imageBase64) {
       const { data: imageFlag } = await supabase
         .from('feature_flags')
@@ -369,11 +381,26 @@ export async function POST(req) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // ✅ SECURITY FIX: Removed NEXT_PUBLIC fallback
     const adminEmail = process.env.ADMIN_EMAIL
     const isAdmin = !!user && !!adminEmail && user.email === adminEmail
 
-    // Subscription check (non-admin)
+    // ✅ NEW: Rate limiting check
+    if (user && !isAdmin) {
+      if (!checkRateLimit(user.id)) {
+        logger.security('Rate limit exceeded for user', { 
+          userId: user.id, 
+          requestId 
+        })
+        return NextResponse.json(
+          { 
+            error: 'Too many requests. Please wait a moment before trying again.',
+            code: 'RATE_LIMIT_EXCEEDED' 
+          },
+          { status: 429 }
+        )
+      }
+    }
+
     if (user && !isAdmin) {
       const { data: profile } = await supabase
         .from('user_profiles')
@@ -400,10 +427,6 @@ export async function POST(req) {
         hasActiveSub = true
       }
 
-      // ✅ SECURITY FIX: REMOVED 10-minute signup grace period (was exploitable)
-      // Users now need active subscription from day 1
-
-      // ✅ SECURITY FIX: Verify checkout grace period with actual subscription
       if (!hasActiveSub) {
         const { data: recentCheckout } = await supabase
           .from('checkout_attempts')
@@ -414,7 +437,6 @@ export async function POST(req) {
           .maybeSingle()
 
         if (recentCheckout && Date.now() - new Date(recentCheckout.created_at).getTime() < 300000) {
-          // Verify the checkout actually completed
           const { data: completedSub } = await supabase
             .from('subscriptions')
             .select('id')
@@ -435,7 +457,6 @@ export async function POST(req) {
         )
       }
 
-      // Usage logging
       try {
         await logUsageForAnalytics(user.id, { isImage: !!imageBase64 })
       } catch (err) {
@@ -464,9 +485,6 @@ export async function POST(req) {
       }
     }
 
-    // --------------------------
-    // Vision analysis (literal description ONLY)
-    // --------------------------
     let searchTerms = ''
     if (imageBase64) {
       logger.info('Vision analysis started', { requestId })
@@ -501,9 +519,6 @@ export async function POST(req) {
       searchTerms = lastMessageText || 'food safety code'
     }
 
-    // --------------------------
-    // Document search
-    // --------------------------
     let context = ''
     if (searchTerms) {
       logger.info('Document search started', { requestId })
@@ -549,7 +564,6 @@ export async function POST(req) {
       }
     }
 
-    // Hard rule: never answer without doc context
     if (!context) {
       logger.warn('No regulatory context; refusing to answer from general model', {
         requestId,
@@ -573,9 +587,6 @@ export async function POST(req) {
         ? fullContext.slice(0, MAX_CONTEXT_LENGTH)
         : fullContext
 
-    // --------------------------
-    // System prompt
-    // --------------------------
     const SYSTEM_PROMPT = `You are ProtocolLM, a food-safety assistant for restaurants in Washtenaw County, Michigan.
 
 Hard rules:
@@ -626,9 +637,6 @@ ${searchTerms}` : ''}`
 
     const generationInput = [{ role: 'user', content: finalUserPrompt }]
 
-    // --------------------------
-    // Generate (Responses API) with retry if output is empty/incomplete
-    // --------------------------
     let rawText = ''
     let usedEffort = requestedEffort
 
@@ -647,7 +655,6 @@ ${searchTerms}` : ''}`
       rawText = first.outputText || ''
       usedEffort = first.effort
 
-      // If empty or suspiciously short, retry once
       if (!rawText || rawText.trim().length < 10 || first.status === 'incomplete') {
         logger.warn('Empty/incomplete model output; retrying once', {
           requestId,
@@ -676,12 +683,11 @@ ${searchTerms}` : ''}`
       const msg = fallbackAnswer(
         e.message === 'OPENAI_TIMEOUT'
           ? 'Request timed out. Please try again.'
-          : 'Temporary model output issue. Please retry.'
+          : 'Temporary issue. Please try again.'
       )
       return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
 
-    // Parse + clean
     const parsed = extractConfidence(rawText)
     let cleaned = cleanModelText(parsed.text)
 
@@ -690,11 +696,10 @@ ${searchTerms}` : ''}`
         requestId,
         effort: usedEffort,
       })
-      const msg = fallbackAnswer('Temporary model output issue. Please retry.')
+      const msg = fallbackAnswer('Temporary issue. Please try again.')
       return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
     }
 
-    // Repair format if needed
     cleaned = ensureThreeSections(cleaned)
     cleaned = normalizeBulletCounts(cleaned)
 
@@ -709,7 +714,6 @@ ${searchTerms}` : ''}`
       reasoningEffortUsed: usedEffort,
     })
 
-    // Save messages
     const dbTasks = []
     if (user && chatId && lastMessageText) {
       dbTasks.push(
@@ -736,10 +740,8 @@ ${searchTerms}` : ''}`
     const duration = Date.now() - startTime
     logger.error('Fatal error in chat', { requestId, error: err.message, durationMs: duration })
 
-    const msg =
-      err.message && err.message.includes('TIMEOUT')
-        ? fallbackAnswer('Request timed out. Please try again.')
-        : fallbackAnswer('System error. Please try again.')
+    // ✅ FIXED: Generic error message (no leak)
+    const msg = fallbackAnswer('An error occurred. Please try again or contact support.')
 
     return NextResponse.json({ message: msg, confidence: 'LOW' }, { status: 200 })
   }
