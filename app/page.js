@@ -957,11 +957,12 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.18);
         }
 
+        /* 3. ✅ REPLACED .ui-header */
         .ui-header {
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.78);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
+          background: rgba(5, 6, 8, 0.7);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }
 
         .ui-logo {
@@ -996,9 +997,12 @@ export default function Page() {
           }
         }
 
+        /* 1. ✅ REPLACED .ui-shell */
         .ui-shell {
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
           border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
@@ -1101,10 +1105,13 @@ export default function Page() {
           }
         }
 
+        /* 4. ✅ REPLACED .ui-stepcard */
         .ui-stepcard {
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           padding: 12px;
         }
 
@@ -1141,11 +1148,14 @@ export default function Page() {
           color: rgba(255, 255, 255, 0.55);
         }
 
+        /* 5. ✅ REPLACED .ui-faq */
         .ui-faq {
           margin-top: 12px;
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.01);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           overflow: hidden;
         }
 
@@ -1301,13 +1311,14 @@ export default function Page() {
           -webkit-backdrop-filter: blur(10px);
         }
 
+        /* 2. ✅ REPLACED .ui-modal */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(6, 7, 9, 0.88);
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
           box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
         }
 
         .ui-modal-anim {
@@ -1385,10 +1396,13 @@ export default function Page() {
           width: fit-content;
         }
 
+        /* 6. ✅ REPLACED .ui-pricewrap */
         .ui-pricewrap {
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
           position: relative;
           overflow: hidden;
@@ -1457,9 +1471,12 @@ export default function Page() {
           padding: 0 !important;
         }
 
+        /* 7. ✅ REPLACED .ui-emptywrap */
         .ui-emptywrap {
           border: none !important;
-          background: rgba(255, 255, 255, 0.02) !important;
+          background: rgba(255, 255, 255, 0.03) !important;
+          backdrop-filter: blur(16px) !important;
+          -webkit-backdrop-filter: blur(16px) !important;
           border-radius: 18px;
           padding: 16px;
           box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
