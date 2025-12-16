@@ -114,8 +114,9 @@ export async function POST() {
 
         totalChunks += batch.length
         
-        // Longer delay to avoid Cohere rate limits (trial tier)
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // VERY slow to stay within Cohere trial limits (100K tokens/min)
+        // Each batch uses ~50K tokens, so wait 30 seconds between batches
+        await new Promise(resolve => setTimeout(resolve, 30000))
       }
 
       console.log(`Finished ${file}`)
