@@ -100,13 +100,10 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
 
   const cfg = useMemo(() => {
-    return mode === 'vision'
-      ? { baseCap: 88, finalCap: 94, k: 0.03 }
-      : { baseCap: 90, finalCap: 96, k: 0.04 }
+    return mode === 'vision' ? { baseCap: 88, finalCap: 94, k: 0.03 } : { baseCap: 90, finalCap: 96, k: 0.04 }
   }, [mode])
 
   useEffect(() => {
-    // clear any pending hide timer
     if (refs.current.hideTimer) {
       clearTimeout(refs.current.hideTimer)
       refs.current.hideTimer = null
@@ -125,11 +122,9 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
       refs.current.timer = setInterval(() => {
         const elapsed = (Date.now() - refs.current.startedAt) / 1000
 
-        const cap =
-          elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
-
+        const cap = elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
         const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
-        refs.current.pct = Math.max(refs.current.pct, next) // ✅ monotonic
+        refs.current.pct = Math.max(refs.current.pct, next)
 
         const pctInt = Math.min(99, Math.floor(refs.current.pct))
         setProgress(pctInt)
@@ -148,7 +143,6 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
       }
     }
 
-    // finishing state (show 100% briefly)
     if (!active && visible) {
       if (refs.current.timer) clearInterval(refs.current.timer)
       refs.current.timer = null
@@ -179,10 +173,7 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
       </div>
 
       <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-white/60"
-          style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }}
-        />
+        <div className="h-full rounded-full bg-white/60" style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }} />
       </div>
     </div>
   )
@@ -242,8 +233,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </p>
 
             <p className={`ui-body ${inter.className}`}>
-              Built specifically for Washtenaw County restaurants. Photo analysis + regulation search in about 30 seconds. One avoided violation
-              can pay for months.
+              Built specifically for Washtenaw County restaurants. Photo analysis + regulation search in about 30 seconds. One avoided violation can pay for months.
             </p>
 
             <div className="ui-cta-row">
@@ -555,9 +545,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-5">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/55 ${inter.className}`}>
-            Photo checks + document search—built specifically for Washtenaw County operators.
-          </p>
+          <p className={`text-sm text-white/55 ${inter.className}`}>Photo checks + document search—built specifically for Washtenaw County operators.</p>
         </div>
 
         <div className="ui-pricewrap p-6">
@@ -567,9 +555,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
                 <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Includes generous monthly usage. Photos count as two checks.
-              </p>
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Includes generous monthly usage. Photos count as two checks.</p>
             </div>
 
             <div className={`ui-badge ${inter.className}`}>
@@ -637,9 +623,8 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // ✅ NEW: Smooth progress bar controls
   const [sendKey, setSendKey] = useState(0)
-  const [sendMode, setSendMode] = useState('text') // 'text' | 'vision'
+  const [sendMode, setSendMode] = useState('text')
 
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -653,10 +638,16 @@ export default function Page() {
   const isAuthenticated = !!session
 
   // ✅ NEW: Hide Spline background on chat mode (landing keeps it)
-  // IMPORTANT: ensure your Spline background wrapper has class "spline-bg" OR data-spline-bg="true"
   useEffect(() => {
     if (typeof document === 'undefined') return
+
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
+
+    // belt + suspenders: hide the container directly
+    const splineContainer = document.getElementById('plm-spline-bg')
+    if (splineContainer) {
+      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
+    }
   }, [isAuthenticated])
 
   const scrollToBottom = (behavior = 'auto') => {
@@ -679,16 +670,12 @@ export default function Page() {
   }, [])
 
   useEffect(() => {
-    if (shouldAutoScrollRef.current) {
-      requestAnimationFrame(() => scrollToBottom('auto'))
-    }
+    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
   }, [messages])
 
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
-    if (showPricing === 'true') {
-      setShowPricingModal(true)
-    }
+    if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
 
   useEffect(() => {
@@ -713,7 +700,6 @@ export default function Page() {
           .maybeSingle()
 
         if (!profile) {
-          console.log('⚠️ No profile found, redirecting to accept-terms')
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -722,7 +708,6 @@ export default function Page() {
 
         const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
         if (!accepted) {
-          console.log('⚠️ Terms not accepted, redirecting')
           setHasActiveSubscription(false)
           setIsLoading(false)
           router.replace('/accept-terms')
@@ -792,9 +777,7 @@ export default function Page() {
 
   useEffect(() => {
     function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setShowUserMenu(false)
-      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false)
     }
     function handleKey(event) {
       if (event.key === 'Escape') setShowUserMenu(false)
@@ -844,16 +827,10 @@ export default function Page() {
       })
 
       const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload.error || 'Checkout failed')
 
-      if (!res.ok) {
-        throw new Error(payload.error || 'Checkout failed')
-      }
-
-      if (payload.url) {
-        window.location.href = payload.url
-      } else {
-        throw new Error('No checkout URL returned')
-      }
+      if (payload.url) window.location.href = payload.url
+      else throw new Error('No checkout URL returned')
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
@@ -885,17 +862,12 @@ export default function Page() {
       })
 
       const payload = await res.json().catch(() => ({}))
-
       if (!res.ok) {
         alert(payload.error || 'Failed to open billing portal')
         return
       }
-
-      if (payload.url) {
-        window.location.href = payload.url
-      } else {
-        alert('No billing portal URL returned')
-      }
+      if (payload.url) window.location.href = payload.url
+      else alert('No billing portal URL returned')
     } catch (error) {
       console.error('Billing portal error:', error)
       alert('Failed to open billing portal')
@@ -934,7 +906,6 @@ export default function Page() {
     const question = input.trim()
     const image = selectedImage
 
-    // ✅ NEW: start smooth progress
     setSendMode(image ? 'vision' : 'text')
     setSendKey((k) => k + 1)
 
@@ -995,20 +966,14 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: data.message || 'No response.',
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = {
-          role: 'assistant',
-          content: `Error: ${error.message}`,
-        }
+        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
         return updated
       })
     } finally {
@@ -1044,12 +1009,6 @@ export default function Page() {
           height: 100%;
           width: 100%;
           background: transparent !important;
-        }
-
-        /* ✅ NEW: hide Spline background on chat mode only */
-        html[data-view='chat'] .spline-bg,
-        html[data-view='chat'] [data-spline-bg='true'] {
-          display: none !important;
         }
 
         /* ✅ Let AmexBackground from layout.js show through */
@@ -1426,14 +1385,12 @@ export default function Page() {
           transform: scale(1.02);
         }
 
-        /* ✅ Slightly less opaque so background can still glow through */
         .ui-backdrop {
           background: rgba(0, 0, 0, 0.72);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
         }
 
-        /* 2. ✅ REPLACED .ui-modal */
         .ui-modal {
           border-radius: 18px;
           border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1518,7 +1475,6 @@ export default function Page() {
           width: fit-content;
         }
 
-        /* 6. ✅ REPLACED .ui-pricewrap */
         .ui-pricewrap {
           border-radius: 16px;
           border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1593,7 +1549,6 @@ export default function Page() {
           padding: 0 !important;
         }
 
-        /* 7. ✅ REPLACED .ui-emptywrap */
         .ui-emptywrap {
           border: none !important;
           background: rgba(255, 255, 255, 0.03) !important;
@@ -1675,12 +1630,7 @@ export default function Page() {
           inset: -1px;
           border-radius: 18px;
           padding: 1px;
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.15),
-            rgba(255, 255, 255, 0.02),
-            rgba(255, 255, 255, 0.08)
-          );
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
@@ -1853,14 +1803,8 @@ export default function Page() {
       `}</style>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onCheckout={handleCheckout}
-        loading={checkoutLoading}
-      />
+      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      {/* ✅ UPDATED: add ui-appveil so the AmexBackground/3D background is visible */}
       <div className="h-[100dvh] min-h-0 flex flex-col ui-appveil">
         <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
@@ -1876,9 +1820,7 @@ export default function Page() {
                   <span className={`text-[12px] text-white/55 ${inter.className}`}>Additional Counties Coming 2026</span>
                 </div>
 
-                {hasActiveSubscription && (
-                  <span className={`hidden lg:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>
-                )}
+                {hasActiveSubscription && <span className={`hidden lg:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>}
               </div>
 
               {!isAuthenticated && (
@@ -2051,9 +1993,7 @@ export default function Page() {
                           )}
 
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>
-                              Working…
-                            </div>
+                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>Working…</div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
                           )}
@@ -2065,11 +2005,7 @@ export default function Page() {
               </div>
 
               <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div
-                  className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
-                  style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
-                >
-                  {/* ✅ NEW: progress bar replaces the stuttery dots */}
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                   {selectedImage && (
@@ -2132,3 +2068,12 @@ export default function Page() {
     </>
   )
 }
+
+/**
+ * ✅ NOTE (globals.css):
+ * Add these there (NOT in page.js):
+ *
+ * .ui-emptyicon { ... }
+ * .ui-emptytitle { ... }
+ * .ui-emptytext { ... }
+ */
