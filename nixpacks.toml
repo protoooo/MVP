@@ -3,17 +3,15 @@ nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
 cmds = [
-  'echo "🧹 Clearing all caches..."',
-  'rm -rf node_modules',
-  'rm -rf .next',
-  'rm -rf .npm',
-  'echo "📦 Installing dependencies..."',
-  'npm install --prefer-offline --no-audit --legacy-peer-deps'
+  'echo "🧹 Cleaning build artifacts..."',
+  'rm -rf node_modules .next .npm package-lock.json',
+  'echo "📦 Installing dependencies with npm..."',
+  'npm install --legacy-peer-deps --no-audit --prefer-offline --omit=optional'
 ]
 
 [phases.build]
 cmds = [
-  'echo "🏗️ Building application..."',
+  'echo "🏗️ Building Next.js application..."',
   'npm run build'
 ]
 
@@ -27,3 +25,5 @@ NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
 # Force clean build
 NIXPACKS_NO_CACHE = '1'
+# Use legacy peer deps
+NPM_CONFIG_LEGACY_PEER_DEPS = 'true'
