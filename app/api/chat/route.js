@@ -1,4 +1,4 @@
-// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION
+// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION (FIXED BUILD)
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
