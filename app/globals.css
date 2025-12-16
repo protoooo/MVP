@@ -9,17 +9,9 @@
   margin: 0;
 }
 
-/* ✅ NEW: When signed in, hard-disable the Spline background + force solid base */
-html[data-plm-authed='1'],
-body[data-plm-authed='1'] {
-  background: #000000 !important;
-}
+/* ✅ Kill white/gray flashes + make form controls dark */
+:root { color-scheme: dark; }
 
-body[data-plm-authed='1'] #plm-spline-bg {
-  display: none !important;
-}
-
-/* ✅ CRITICAL: Deep black base for galaxy stars */
 html,
 body {
   max-width: 100vw;
@@ -29,7 +21,9 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background: #000000 !important; /* Pure black base */
+
+  /* ✅ Critical base */
+  background: #000;
 }
 
 body {
@@ -37,71 +31,57 @@ body {
   z-index: 0;
   isolation: isolate;
 
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
-    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
 }
 
+/* App router doesn't rely on #__next, but harmless */
 #__next {
   min-height: 100%;
   width: 100%;
-  background: transparent !important;
+  background: transparent;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
-/* ✅ Minimal veil for Spline background - mostly transparent */
+/* ✅ Minimal veil for background (optional utility) */
 .ui-appveil {
-  background: radial-gradient(circle at 50% 30%, transparent 0%, rgba(0, 0, 0, 0.1) 70%, rgba(0, 0, 0, 0.25) 100%);
+  background: radial-gradient(
+    circle at 50% 30%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.10) 70%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
 }
 
 :root {
-  --color-steel-blue: #4f759b;
+  --color-steel-blue: #4F759B;
   --color-steel-blue-dark: #3e5c7a;
   --color-steel-blue-light: #6b8fb3;
 }
 
 @keyframes content-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-.animate-slideDown {
-  animation: slideDown 0.4s ease-out;
-}
+.animate-slideDown { animation: slideDown 0.4s ease-out; }
 
-.card-reveal {
-  position: relative;
-  overflow: visible;
-}
+.card-reveal { position: relative; overflow: visible; }
 
 .card-reveal::after {
   content: '';
@@ -121,48 +101,20 @@ h6 {
   animation: content-fade-in 0.5s ease-out 1s forwards;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-steel-blue);
-  border-radius: 3px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-steel-blue-dark);
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-steel-blue); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-steel-blue-dark); }
 
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-steel-blue);
-  border-radius: 3px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-steel-blue-dark);
-}
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-steel-blue); border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--color-steel-blue-dark); }
 
 @keyframes dot-flashing {
-  0% {
-    opacity: 0.2;
-  }
-  20% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
+  0% { opacity: 0.2; }
+  20% { opacity: 1; }
+  100% { opacity: 0.2; }
 }
 
 .loading-dots {
@@ -179,30 +131,11 @@ h6 {
   animation: dot-flashing 1.4s infinite;
 }
 
-.loading-dots .dot:nth-child(1) {
-  background-color: var(--color-steel-blue);
-  animation-delay: 0s;
-}
-.loading-dots .dot:nth-child(2) {
-  background-color: #64748b;
-  animation-delay: 0.2s;
-}
-.loading-dots .dot:nth-child(3) {
-  background-color: #94a3b8;
-  animation-delay: 0.4s;
-}
+.loading-dots .dot:nth-child(1) { background-color: var(--color-steel-blue); animation-delay: 0s; }
+.loading-dots .dot:nth-child(2) { background-color: #64748b; animation-delay: 0.2s; }
+.loading-dots .dot:nth-child(3) { background-color: #94a3b8; animation-delay: 0.4s; }
 
-.matte-background {
-  background: #f8fafc;
-}
-
-button,
-a,
-input,
-textarea,
-select {
-  transition: all 0.2s ease-in-out;
-}
+button, a, input, textarea, select { transition: all 0.2s ease-in-out; }
 
 button:focus-visible,
 a:focus-visible,
@@ -214,19 +147,9 @@ select:focus-visible {
 }
 
 @media (max-width: 768px) {
-  * {
-    max-width: 100vw;
-  }
-  body {
-    overflow-x: hidden;
-    position: relative;
-  }
-  input,
-  textarea,
-  select,
-  button {
-    max-width: 100%;
-  }
+  * { max-width: 100vw; }
+  body { overflow-x: hidden; position: relative; }
+  input, textarea, select, button { max-width: 100%; }
 }
 
 /* Chat styling - keep borderless */
@@ -280,29 +203,10 @@ select:focus-visible {
 }
 
 @layer utilities {
-  .plm-no-border {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-  .plm-no-frame {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-  .plm-image-plain {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-  .plm-image-plain img {
-    display: block;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
+  .plm-no-border { border: none !important; outline: none !important; box-shadow: none !important; }
+  .plm-no-frame { padding: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+  .plm-image-plain { padding: 0 !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+  .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
 /* Reduced motion support */
