@@ -1,4 +1,4 @@
-// app/api/health/route.js - Enhanced health check
+// app/api/health/route.js - Enhanced health check (FIXED: Anthropic + Cohere)
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
@@ -10,7 +10,8 @@ export async function GET() {
     db: false, 
     env: false,
     stripe: false,
-    openai: false,
+    anthropic: false,
+    cohere: false,
     emails: false
   }
   
@@ -22,7 +23,8 @@ export async function GET() {
     const requiredEnv = [
       'NEXT_PUBLIC_SUPABASE_URL',
       'SUPABASE_SERVICE_ROLE_KEY',
-      'OPENAI_API_KEY',
+      'ANTHROPIC_API_KEY',
+      'COHERE_API_KEY',
       'STRIPE_SECRET_KEY',
       'STRIPE_WEBHOOK_SECRET',
       'TURNSTILE_SECRET_KEY',
@@ -71,19 +73,48 @@ export async function GET() {
       }
     }
 
-    // 4. OpenAI connection
-    if (process.env.OPENAI_API_KEY) {
+    // 4. Anthropic connection (Claude)
+    if (process.env.ANTHROPIC_API_KEY) {
       try {
-        const { default: OpenAI } = await import('openai')
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-        checks.openai = !!openai
+        const Anthropic = (await import('@anthropic-ai/sdk')).default
+        const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        
+        // Simple test call with minimal tokens
+        await anthropic.messages.create({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'hi' }]
+        })
+        
+        checks.anthropic = true
       } catch (err) {
-        errors.push(`OpenAI error: ${err.message}`)
-        logger.error('Health check: OpenAI failed', { error: err.message })
+        errors.push(`Anthropic error: ${err.message}`)
+        logger.error('Health check: Anthropic failed', { error: err.message })
+      }
+    }
+
+    // 5. Cohere connection
+    if (process.env.COHERE_API_KEY) {
+      try {
+        const { CohereClient } = await import('cohere-ai')
+        const cohere = new CohereClient({ token: process.env.COHERE_API_KEY })
+        
+        // Simple embedding test
+        await cohere.embed({
+          texts: ['test'],
+          model: 'embed-english-v3.0',
+          inputType: 'search_query',
+          embeddingTypes: ['float']
+        })
+        
+        checks.cohere = true
+      } catch (err) {
+        errors.push(`Cohere error: ${err.message}`)
+        logger.error('Health check: Cohere failed', { error: err.message })
       }
     }
     
-    // 5. Email service (Resend)
+    // 6. Email service (Resend)
     if (process.env.RESEND_API_KEY) {
       try {
         const res = await fetch('https://api.resend.com/emails', {
@@ -112,7 +143,7 @@ export async function GET() {
       }
     }
 
-    const healthy = checks.db && checks.env && checks.stripe && checks.openai && checks.emails
+    const healthy = checks.db && checks.env && checks.stripe && checks.anthropic && checks.cohere && checks.emails
     const duration = Date.now() - startTime
     
     const response = {
