@@ -1,121 +1,161 @@
-# protocolLM - Food Safety Compliance Platform
+# protocolLM
 
-LLM powered compliance assistant for Washtenaw County restaurants. Analyzes facility photos and answers Michigan Food Code questions.
+> AI-powered food safety compliance assistant for Washtenaw County restaurants
 
-## 🚀 Tech Stack
+Built with **Anthropic Claude** and **Cohere**
 
-- **Framework**: Next.js 14 (App Router)
-- **Database**: Supabase (PostgreSQL + Vector Search)
-- **AI**: OpenAI GPT-4 + Embeddings
-- **Payments**: Stripe (Subscriptions + Webhooks)
-- **Security**: Cloudflare Turnstile, CSRF Protection
-- **Hosting**: Railway
+## 🚀 Quick Start
 
-## 📋 Prerequisites
-
-- Node.js 20+
-- npm 10+
-- Supabase account (with pgvector extension)
-- OpenAI API key (with GPT-4 access)
-- Stripe account (with webhook endpoint)
-- Cloudflare Turnstile keys
-
-## 🔧 Setup Instructions
-
-### 1. Clone and Install
 ```bash
-git clone <repo-url>
+# 1. Clone and install
+git clone <your-repo>
 cd protocollm
-npm install --legacy-peer-deps
+npm install
+
+# 2. Set up environment
+cp .env.local.example .env.local
+# Edit .env.local with your API keys
+
+# 3. Verify setup (important!)
+npm run verify-openai
+# Should show: ✅ No OpenAI references found!
+
+# 4. Run development server
+npm run dev
+# Open http://localhost:3000
 ```
 
-### 2. Environment Variables
-Create `.env.local`:
+## 📚 Documentation
+
+- **[TECH_STACK.md](./TECH_STACK.md)** - Current architecture (Anthropic + Cohere)
+- **[DOCUMENT_INGESTION.md](./DOCUMENT_INGESTION.md)** - How to ingest PDFs
+- **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)** - Deploy to production
+- **[.env.local.example](./.env.local.example)** - Environment variables
+
+## ⚡ Tech Stack
+
+| Component | Service | Purpose |
+|-----------|---------|---------|
+| Chat | Anthropic Claude (`claude-sonnet-4`) | Generate compliance answers |
+| Embeddings | Cohere (`embed-english-v3.0`) | Document search (1024 dims) |
+| Database | Supabase (pgvector) | Vector storage + auth |
+| Hosting | Railway | App deployment |
+| Payments | Stripe | Subscriptions |
+| Email | Resend | Transactional emails |
+| Security | Cloudflare Turnstile | CAPTCHA |
+
+**❌ NOT using OpenAI** - See [TECH_STACK.md](./TECH_STACK.md) for details
+
+## 🔧 Key Commands
+
 ```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+# Development
+npm run dev              # Start dev server
+npm run build            # Build for production
+npm run start            # Start production server
 
-# OpenAI
-OPENAI_API_KEY=sk-proj-...
+# Verification
+npm run verify-openai    # Check for OpenAI references (IMPORTANT!)
 
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY=price_...
-NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL=price_...
+# Documents
+npm run ingest           # Ingest PDFs (uses Cohere)
+npm run test-search      # Test document search
 
-# App
-NEXT_PUBLIC_BASE_URL=https://protocollm.org
-ADMIN_EMAIL=your@email.com
-
-# Security (Cloudflare Turnstile)
-TURNSTILE_SECRET_KEY=0x4A...
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4A...
-
-# Optional
-NODE_ENV=production
+# Emails
+npm run send-reminders   # Send trial reminder emails
+npm run test-emails      # Test email templates
 ```
 
-### 3. Database Setup
+## 📦 Project Structure
 
-Run this SQL in your Supabase SQL editor:
+```
+protocollm/
+├── app/
+│   ├── api/
+│   │   ├── chat/route.js              # ✅ Anthropic Claude
+│   │   ├── health/route.js            # System health check
+│   │   ├── webhook/route.js           # Stripe webhooks
+│   │   └── auth/                      # Authentication endpoints
+│   ├── admin/                         # Admin dashboard
+│   ├── page.js                        # Main app UI
+│   └── (legal pages)/                 # Terms, Privacy, Contact
+├── lib/
+│   ├── searchDocs.js                  # ✅ Cohere embeddings
+│   ├── emails.js                      # Email templates
+│   ├── logger.js                      # Structured logging
+│   └── usage.js                       # Usage tracking
+├── scripts/
+│   ├── ingest-documents.js            # ✅ Cohere batch ingestion
+│   ├── verify-no-openai.js            # ✅ Verification script
+│   └── send-trial-reminders.js        # Cron job
+├── components/                        # React components
+├── public/
+│   └── documents/
+│       └── washtenaw/                 # PDF documents here
+└── docs/                              # Documentation
+```
 
+## 🔐 Environment Setup
+
+### Required Variables
+
+```bash
+# AI Services (NOT OpenAI!)
+ANTHROPIC_API_KEY=sk-ant-api03-...
+COHERE_API_KEY=...
+
+# Database & Auth
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=...
+
+# Payments
+STRIPE_SECRET_KEY=sk_test_... (or sk_live_...)
+STRIPE_WEBHOOK_SECRET=whsec_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+# Security
+TURNSTILE_SECRET_KEY=...
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=...
+
+# Email
+RESEND_API_KEY=re_...
+FROM_EMAIL=protocolLM <hello@protocollm.org>
+```
+
+See [.env.local.example](./.env.local.example) for complete list.
+
+## 🗄️ Database Setup
+
+### 1. Create Supabase Project
+1. Go to [supabase.com](https://supabase.com)
+2. Create new project
+3. Enable pgvector extension:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS vector;
+   ```
+
+### 2. Create Documents Table
 ```sql
--- Enable vector extension
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Users table (handled by Supabase Auth)
-CREATE TABLE IF NOT EXISTS user_profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  accepted_terms BOOLEAN DEFAULT FALSE,
-  accepted_privacy BOOLEAN DEFAULT FALSE,
-  terms_accepted_at TIMESTAMPTZ,
-  privacy_accepted_at TIMESTAMPTZ,
-  is_subscribed BOOLEAN DEFAULT FALSE
-);
-
--- Subscriptions
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  stripe_subscription_id TEXT UNIQUE NOT NULL,
-  stripe_customer_id TEXT NOT NULL,
-  plan TEXT NOT NULL,
-  price_id TEXT NOT NULL,
-  status TEXT NOT NULL,
-  current_period_start TIMESTAMPTZ NOT NULL,
-  current_period_end TIMESTAMPTZ NOT NULL,
-  trial_end TIMESTAMPTZ,
-  cancel_at_period_end BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Documents (RAG)
-CREATE TABLE IF NOT EXISTS documents (
+CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
-  embedding vector(1536) NOT NULL,
-  metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  embedding VECTOR(1024),  -- Cohere uses 1024 dims (NOT 1536!)
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Vector search function
+-- Create vector similarity function
 CREATE OR REPLACE FUNCTION match_documents(
-  query_embedding vector(1536),
-  match_threshold float DEFAULT 0.1,
-  match_count int DEFAULT 20,
-  filter_county text DEFAULT NULL
+  query_embedding VECTOR(1024),
+  match_threshold FLOAT,
+  match_count INT,
+  filter_county TEXT
 )
-RETURNS TABLE (
-  id uuid,
-  content text,
-  metadata jsonb,
-  similarity float
+RETURNS TABLE(
+  id UUID,
+  content TEXT,
+  metadata JSONB,
+  similarity FLOAT
 )
 LANGUAGE plpgsql
 AS $$
@@ -128,200 +168,124 @@ BEGIN
     1 - (documents.embedding <=> query_embedding) AS similarity
   FROM documents
   WHERE 
-    (filter_county IS NULL OR documents.metadata->>'county' = filter_county)
-    AND 1 - (documents.embedding <=> query_embedding) > match_threshold
+    (documents.metadata->>'county' = filter_county OR filter_county IS NULL)
+    AND (1 - (documents.embedding <=> query_embedding)) > match_threshold
   ORDER BY documents.embedding <=> query_embedding
   LIMIT match_count;
 END;
 $$;
 
--- Chats
-CREATE TABLE IF NOT EXISTS chats (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Messages
-CREATE TABLE IF NOT EXISTS messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-  content TEXT NOT NULL,
-  image TEXT,
-  metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Usage tracking
-CREATE TABLE IF NOT EXISTS usage_counters (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  plan_type TEXT NOT NULL,
-  period_start TIMESTAMPTZ NOT NULL,
-  period_end TIMESTAMPTZ NOT NULL,
-  text_count INT DEFAULT 0,
-  image_count INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Feature flags
-CREATE TABLE IF NOT EXISTS feature_flags (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  flag_name TEXT UNIQUE NOT NULL,
-  enabled BOOLEAN DEFAULT TRUE,
-  message TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Webhook idempotency
-CREATE TABLE IF NOT EXISTS processed_webhook_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id TEXT UNIQUE NOT NULL,
-  event_type TEXT NOT NULL,
-  processed_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Session management
-CREATE TABLE IF NOT EXISTS user_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  session_token TEXT NOT NULL,
-  last_seen TIMESTAMPTZ DEFAULT NOW(),
-  device_info TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Checkout attempts (rate limiting)
-CREATE TABLE IF NOT EXISTS checkout_attempts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  price_id TEXT NOT NULL,
-  captcha_score FLOAT,
-  ip_address TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_documents_embedding ON documents USING ivfflat (embedding vector_cosine_ops);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe ON subscriptions(stripe_subscription_id);
-CREATE INDEX IF NOT EXISTS idx_chats_user ON chats(user_id);
-CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id);
-CREATE INDEX IF NOT EXISTS idx_usage_user ON usage_counters(user_id);
-
--- RLS Policies (disable for service role operations)
-ALTER TABLE documents DISABLE ROW LEVEL SECURITY;
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chats ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE usage_counters ENABLE ROW LEVEL SECURITY;
-
--- Policy examples (adjust as needed)
-CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can view own subscription" ON subscriptions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can view own chats" ON chats FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Users can view own messages" ON messages FOR SELECT USING (
-  EXISTS (SELECT 1 FROM chats WHERE chats.id = messages.chat_id AND chats.user_id = auth.uid())
-);
-
--- Insert default feature flag
-INSERT INTO feature_flags (flag_name, enabled, message)
-VALUES ('service_enabled', true, 'Service is operational')
-ON CONFLICT (flag_name) DO NOTHING;
+-- Create index for fast search
+CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
 ```
 
-### 4. Document Ingestion
+### 3. Create Other Tables
+```sql
+-- User profiles
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  stripe_customer_id TEXT,
+  accepted_terms BOOLEAN DEFAULT FALSE,
+  accepted_privacy BOOLEAN DEFAULT FALSE,
+  is_subscribed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-Place PDF documents in `public/documents/washtenaw/`
+-- Subscriptions
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  stripe_subscription_id TEXT UNIQUE NOT NULL,
+  stripe_customer_id TEXT NOT NULL,
+  plan TEXT NOT NULL,
+  price_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  trial_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-Run ingestion script:
+-- Usage counters
+CREATE TABLE usage_counters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  plan TEXT NOT NULL,
+  plan_type TEXT,
+  period_start TIMESTAMP WITH TIME ZONE NOT NULL,
+  period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+  text_count INTEGER DEFAULT 0,
+  image_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+## 📄 Document Ingestion
+
+### 1. Add PDF Documents
+Place PDF files in: `public/documents/washtenaw/`
+
+Recommended files:
+- `violation-types.pdf` - Priority/Foundation/Core classifications
+- `enforcement-actions.pdf` - Progressive enforcement procedures
+- `michigan-food-code.pdf` - State regulations
+
+### 2. Run Ingestion
 ```bash
 npm run ingest
 ```
 
 This will:
-- Parse PDFs
-- Generate embeddings
-- Upload to Supabase
-- Create searchable vector index
+1. Extract text from PDFs
+2. Split into 1000-character chunks
+3. Generate embeddings with Cohere (1024 dims)
+4. Store in Supabase with metadata
 
-### 5. Stripe Setup
+See [DOCUMENT_INGESTION.md](./DOCUMENT_INGESTION.md) for details.
 
-1. Create products in Stripe Dashboard
-2. Copy price IDs to `.env.local`
-3. Set up webhook endpoint: `https://yourdomain.com/api/webhook`
-4. Add webhook events:
-   - `checkout.session.completed`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_failed`
-   - `invoice.payment_succeeded`
+## 🚢 Deployment
 
-### 6. Development
+### Railway (Recommended)
+
+1. **Connect GitHub repo** to Railway
+2. **Set environment variables** in Railway dashboard
+3. **Verify build** completes successfully
+4. **Set up custom domain** (optional)
+5. **Configure Stripe webhook** to production URL
+6. **Add cron job** for trial reminders
+
+See [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md) for step-by-step guide.
+
+### Pre-Deployment Checklist
 
 ```bash
-npm run dev
+# 1. Verify no OpenAI references
+npm run verify-openai
+
+# 2. Run build locally
+npm run build
+
+# 3. Check environment variables
+# See .env.local.example
+
+# 4. Test health endpoint
+npm run start
+curl http://localhost:3000/api/health
 ```
-
-Visit http://localhost:3000
-
-### 7. Production Deployment (Railway)
-
-1. Connect GitHub repo to Railway
-2. Add environment variables (all from `.env.local`)
-3. Railway will auto-deploy using `nixpacks.toml`
-
-## 📁 Project Structure
-
-```
-protocollm/
-├── app/
-│   ├── api/              # API routes
-│   │   ├── chat/         # Main chat endpoint
-│   │   ├── auth/         # Authentication
-│   │   ├── webhook/      # Stripe webhooks
-│   │   └── health/       # Health check
-│   ├── admin/            # Admin dashboard
-│   ├── auth/             # Auth pages
-│   ├── contact/          # Contact page
-│   ├── privacy/          # Privacy policy
-│   ├── terms/            # Terms of service
-│   └── page.js           # Main app
-├── components/           # React components
-├── lib/                  # Utilities
-│   ├── supabase-browser.js
-│   ├── searchDocs.js     # RAG search
-│   ├── usage.js          # Usage tracking
-│   ├── logger.js         # Structured logging
-│   └── captchaVerification.js
-├── public/documents/     # PDF documents
-└── scripts/              # Maintenance scripts
-```
-
-## 🔒 Security Features
-
-- ✅ CSRF protection on all mutations
-- ✅ Cloudflare Turnstile CAPTCHA
-- ✅ Rate limiting on auth endpoints
-- ✅ Input sanitization
-- ✅ Session conflict detection
-- ✅ SQL injection prevention (parameterized queries)
-- ✅ XSS protection (React auto-escaping)
-- ✅ Security headers (CSP, HSTS, etc.)
 
 ## 🧪 Testing
 
 ### Health Check
 ```bash
-curl https://yourdomain.com/api/health
+curl https://protocollm.org/api/health
 ```
 
-Should return:
+Expected response:
 ```json
 {
   "status": "ok",
@@ -329,59 +293,168 @@ Should return:
     "db": true,
     "env": true,
     "stripe": true,
-    "openai": true
+    "anthropic": true,
+    "cohere": true,
+    "emails": true
   }
 }
 ```
 
-### Document Search Test
-Run a test query through the chat interface with an image or text question about Michigan Food Code.
+### Chat Endpoint
+```bash
+curl -X POST https://protocollm.org/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "What is a Priority violation?"}]}'
+```
 
-## 📊 Monitoring
-
-Key metrics to track:
-- Response time: `/api/chat` (should be <30s)
-- Error rate: Check Railway logs
-- Stripe webhook delivery
-- Usage counters accuracy
-- OpenAI API costs
+### Document Search
+```bash
+npm run test-search
+```
 
 ## 🐛 Troubleshooting
 
-### "No active subscription" error
-- Check Stripe webhook delivery
-- Verify subscription status in Supabase
-- Check grace period logic in `lib/usage.js`
+### Build fails with "Module not found"
+**Fix:** 
+```bash
+rm -rf node_modules .next
+npm install
+npm run build
+```
 
-### Document search returns no results
-- Verify embeddings were generated (`npm run ingest`)
-- Check pgvector extension is enabled
-- Test `match_documents` function manually
+### "OpenAI is not defined" error
+**Fix:**
+```bash
+npm run verify-openai  # Find OpenAI references
+# Remove any OpenAI code
+npm run build
+```
 
-### Image uploads fail
-- Check max file size (10MB limit)
-- Verify CORS settings
-- Check OpenAI vision API access
+### Vector search returns no results
+**Fix:**
+```sql
+-- Check if documents exist
+SELECT COUNT(*) FROM documents;
 
-## 💰 Pricing
+-- Check embedding dimensions
+SELECT vector_dims(embedding) FROM documents LIMIT 1;
+-- Should return 1024 (NOT 1536!)
 
-Current plan:
-- **Monthly**: $100/mo (unlimited usage)
-- **Annual**: Contact for pricing
-- **Trial**: 7 days free
+-- Re-run ingestion if needed
+npm run ingest
+```
+
+### "Expected 1536 dimensions, got 1024"
+**Cause:** Database configured for OpenAI embeddings  
+**Fix:**
+```sql
+ALTER TABLE documents DROP COLUMN embedding;
+ALTER TABLE documents ADD COLUMN embedding VECTOR(1024);
+DROP INDEX IF EXISTS documents_embedding_idx;
+CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops);
+npm run ingest  -- Re-ingest documents
+```
+
+## 📊 Monitoring
+
+### Health Check Endpoint
+Monitor `/api/health` for:
+- Database connectivity
+- API key validity (Anthropic + Cohere)
+- Stripe connection
+- Email service
+
+### Logs
+Check Railway deployment logs for:
+- API errors
+- Rate limiting
+- Database queries
+- Webhook events
+
+### Usage Tracking
+Monitor in database:
+```sql
+SELECT 
+  user_id,
+  text_count,
+  image_count,
+  (text_count + (image_count * 2)) as total_units
+FROM usage_counters
+WHERE period_start > NOW() - INTERVAL '30 days';
+```
+
+## 💰 Cost Estimates
+
+Monthly costs for moderate usage (500 requests):
+
+| Service | Cost |
+|---------|------|
+| Railway (Pro) | $20 |
+| Anthropic Claude | $50-200 |
+| Cohere | $5-20 |
+| Supabase | $0 (free tier) |
+| Stripe | 2.9% + $0.30/txn |
+| Resend | $0 (< 3000 emails) |
+| **Total** | **~$80-250/month** |
+
+## 🔒 Security
+
+- ✅ HTTPS only (Railway automatic)
+- ✅ CSRF protection enabled
+- ✅ Rate limiting (per IP)
+- ✅ Cloudflare Turnstile CAPTCHA
+- ✅ Input sanitization
+- ✅ SQL injection prevention (Supabase parameterized queries)
+- ✅ Environment variables never exposed to client
+- ✅ Webhook signature verification (Stripe)
 
 ## 📝 License
 
 Proprietary - All rights reserved
 
-## 👤 Support
+## 🤝 Support
 
-Admin email: Set in `ADMIN_EMAIL` environment variable
+- **Email:** hello@protocollm.org
+- **Documentation:** See `/docs` folder
+- **Issues:** Create GitHub issue
 
-## 🔄 Updates
+## 🔄 Development Workflow
 
-Keep these updated:
-- OpenAI SDK: `npm update openai`
-- Supabase client: `npm update @supabase/supabase-js`
-- Next.js: Check for security patches
-- Stripe SDK: `npm update stripe`
+```bash
+# 1. Create feature branch
+git checkout -b feature/your-feature
+
+# 2. Make changes
+# Edit files...
+
+# 3. Verify no OpenAI references
+npm run verify-openai
+
+# 4. Test locally
+npm run dev
+# Test in browser: http://localhost:3000
+
+# 5. Build and test
+npm run build
+npm run start
+
+# 6. Commit and push
+git add .
+git commit -m "Add feature"
+git push origin feature/your-feature
+
+# 7. Create PR
+# Railway will auto-deploy preview
+```
+
+## 📚 Additional Resources
+
+- [Anthropic Claude Docs](https://docs.anthropic.com)
+- [Cohere Embeddings Guide](https://docs.cohere.com/docs/embeddings)
+- [Supabase pgvector Guide](https://supabase.com/docs/guides/ai/vector-columns)
+- [Railway Deployment Docs](https://docs.railway.app)
+- [Next.js 14 Documentation](https://nextjs.org/docs)
+
+---
+
+Made in Washtenaw County for Washtenaw County 🍽️
