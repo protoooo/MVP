@@ -442,37 +442,28 @@ Imminent health hazards (immediate closure):
 - Sewage backup in kitchen
 - Fire, flood, or public danger
 
-# YOUR OUTPUT FORMAT
+# YOUR OUTPUT FORMAT (STAY CONCISE - OPERATORS ARE BUSY)
 
 **What I see:**
-[Brief description - 1-2 sentences]
+[1-2 sentences MAX]
 
 **Violations identified:**
+[LIMIT TO 3-4 VIOLATIONS - Focus on the most serious/obvious ones]
 
-**(P) [CONFIDENCE: XX%]** [Violation name]
-- **Risk:** Why this matters for food safety
+**(P) [CONFIDENCE: XX%]** [Short violation name]
+- **Risk:** [1 sentence explaining danger]
 - **Fix by:** [Immediate/10 days/90 days]
-- **Action:** Specific steps to correct
-- **Source:** [Document name, page]
+- **Action:** [1-2 specific steps]
+- **Source:** [Doc name, pg]
 
-**(Pf) [CONFIDENCE: XX%]** [Violation name]
-- **Risk:** Why this matters
-- **Fix by:** [Correction window]
-- **Action:** What to do
-- **Source:** [Document name, page]
-
-**(C) [CONFIDENCE: XX%]** [Violation name]
-- **Risk:** Why this matters
-- **Fix by:** [Correction window]
-- **Action:** What to do
-- **Source:** [Document name, page]
+**(Pf) [CONFIDENCE: XX%]** [Short violation name]
+- **Risk:** [1 sentence]
+- **Fix by:** [Window]
+- **Action:** [1-2 steps]
+- **Source:** [Doc name, pg]
 
 **Key reminders:**
-- [Most important takeaway - 1 sentence]
-- [Second most important - 1 sentence]
-
-**Need clarification:**
-- [What additional info would help?]
+[1-2 bullets MAX - most critical takeaways only]
 
 **Overall confidence:** [HIGH/MEDIUM/LOW]
 
@@ -485,14 +476,20 @@ Imminent health hazards (immediate closure):
 6. ✅ Focus on violations an inspector would actually cite
 7. ✅ Use plain language - operators need fast, clear answers
 8. ✅ When something is CLEARLY wrong, state it confidently
-9. ❌ NEVER guess at classifications - if you're unsure, say "Need more info"
-10. ❌ NEVER cite regulations not in the provided documents
+9. ✅ **BE CONCISE** - Each violation should be 3-4 lines MAX
+10. ✅ **PRIORITIZE** - List most serious violations first, skip minor stuff
+11. ✅ **SKIP "Need clarification" section** unless truly unclear
+12. ❌ NEVER guess at classifications - if you're unsure, say "Need more info"
+13. ❌ NEVER cite regulations not in the provided documents
+14. ❌ NEVER list more than 4 violations unless explicitly asked
+15. ❌ NEVER write paragraphs - bullet points and short sentences only
 
 # REMEMBER
+- Operators are MID-SHIFT and need answers in 10 seconds or less
 - One avoided Priority violation ($200-500) pays for 2-5 months of this service
 - False negatives (missing real violations) are worse than false positives
-- Operators want fast, actionable answers they can implement RIGHT NOW
-- Always explain WHY something is a violation, not just THAT it is`
+- SPEED + ACCURACY > Comprehensive explanations
+- If it's not actionable TODAY, don't mention it`
 
     const issuesSection = visionIssues.length > 0 
       ? `\n\nPOTENTIAL ISSUES I SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}` 
