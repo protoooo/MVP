@@ -1,4 +1,4 @@
-// app/api/chat/route.js - PRODUCTION: Washtenaw County Food Safety Assistant
+// app/api/chat/route.js - OPTIMIZED: Maximum effectiveness for Washtenaw County operators
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -36,17 +36,33 @@ async function getSearchDocuments() {
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 const VISION_TIMEOUT_MS = 30000
 const ANSWER_TIMEOUT_MS = 45000
-const TOPK = 24
-const PRIORITY_TOPK = 10
+const TOPK = 30 // Increased from 24 to get more context
+const PRIORITY_TOPK = 12 // Increased from 10
 
-// Keywords that indicate priority documents
+// ✅ CRITICAL: These documents contain violation classification rules
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
-  /correction\s*windows/i,
-  /washtenaw.*violation/i,
-  /washtenaw.*enforcement/i,
 ]
+
+// ✅ NEW: Enhanced query enrichment for better retrieval
+function enrichQuery(originalQuery, visionContext = '') {
+  const enrichments = []
+  
+  // Add classification keywords
+  enrichments.push('Priority Priority-Foundation Core violation classification correction window')
+  
+  // Add enforcement keywords
+  enrichments.push('Enforcement Action Washtenaw County imminent hazard progressive enforcement')
+  
+  // Vision-specific enrichment
+  if (visionContext) {
+    enrichments.push(visionContext)
+  }
+  
+  // Build final query
+  return [originalQuery, ...enrichments].filter(Boolean).join('\n')
+}
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([
@@ -119,16 +135,38 @@ function dedupeByText(items) {
   return out
 }
 
+// ✅ IMPROVED: Better context building with section markers
 function buildContextString(docs) {
-  const MAX_CHARS = 60000
+  const MAX_CHARS = 70000 // Increased from 60000
+  
+  // Separate priority docs from others
+  const priorityDocs = docs.filter(d => isPrioritySource(d.source))
+  const regularDocs = docs.filter(d => !isPrioritySource(d.source))
+  
   let buf = ''
-  for (const d of docs) {
+  
+  // Add priority docs first with special markers
+  if (priorityDocs.length > 0) {
+    buf += '=== CRITICAL CLASSIFICATION & ENFORCEMENT DOCUMENTS ===\n\n'
+    for (const d of priorityDocs) {
+      const src = d.source || 'Unknown'
+      const pg = d.page ?? 'N/A'
+      const chunk = `[SOURCE: ${src} | PAGE: ${pg}]\n${d.text}\n\n`
+      if ((buf.length + chunk.length) > MAX_CHARS) break
+      buf += chunk
+    }
+    buf += '\n=== ADDITIONAL REGULATORY CONTEXT ===\n\n'
+  }
+  
+  // Add regular docs
+  for (const d of regularDocs) {
     const src = d.source || 'Unknown'
     const pg = d.page ?? 'N/A'
-    const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | SCORE: ${Number(d.score || 0).toFixed(3)}]\n${d.text}\n`
+    const chunk = `[SOURCE: ${src} | PAGE: ${pg}]\n${d.text}\n\n`
     if ((buf.length + chunk.length) > MAX_CHARS) break
     buf += chunk
   }
+  
   return buf.trim()
 }
 
@@ -208,7 +246,7 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for possible Washtenaw County health code violations.' : '')
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for Washtenaw County food safety violations and classify them as Priority, Priority Foundation, or Core.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
@@ -243,23 +281,23 @@ export async function POST(request) {
               },
               {
                 type: 'text',
-                text: `You are a Washtenaw County food safety expert. Analyze this image for health code violations.
+                text: `You are a Washtenaw County food safety inspector. Analyze this photo for violations.
 
-Return ONLY a JSON object with this structure:
+Return ONLY a JSON object:
 {
-  "summary": "Brief description of what you see (2-3 sentences)",
-  "search_terms": "Keywords for searching Washtenaw County regulations (e.g., 'temperature control cold holding storage labels')",
-  "issues_spotted": ["Specific violation 1", "Specific violation 2"]
+  "summary": "What you see (2-3 sentences)",
+  "search_terms": "Keywords for finding relevant regulations (e.g., 'temperature control Priority violation cold holding 41F labels date marking')",
+  "issues_spotted": ["Specific issue 1", "Specific issue 2"]
 }
 
-Focus on:
-- Temperature violations (hot holding below 135°F, cold holding above 41°F)
-- Cross-contamination risks (raw meats above ready-to-eat foods)
-- Labeling issues (missing dates, unlabeled containers)
-- Cleanliness concerns (visible dirt, pests, improper storage)
-- Equipment problems (broken seals, damaged surfaces)
+Look for:
+- Temperature violations (cold >41°F, hot <135°F)
+- Cross-contamination (raw meat above ready-to-eat food)
+- Missing labels or date marks
+- Dirty surfaces, pest signs
+- Broken equipment, improper storage
 
-Be specific and actionable.`,
+Be specific about what you see.`,
               },
             ],
           },
@@ -307,17 +345,12 @@ Be specific and actionable.`,
     }
 
     // ========================================================================
-    // PHASE 2: DOCUMENT RETRIEVAL
+    // PHASE 2: ENHANCED DOCUMENT RETRIEVAL
     // ========================================================================
-    const retrievalQuery = safeText(
-      [
-        visionSearchTerms || '',
-        effectiveUserPrompt || '',
-        'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
-      ]
-        .filter(Boolean)
-        .join('\n')
-    ) || 'Violation Types Enforcement Action Washtenaw County'
+    const retrievalQuery = enrichQuery(
+      effectiveUserPrompt,
+      visionSearchTerms
+    )
 
     logger.info('Document search started', {
       county,
@@ -328,12 +361,15 @@ Be specific and actionable.`,
     let docs = await searchDocumentsFn(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    // Ensure we have priority documents
+    // ✅ CRITICAL: Ensure priority documents are present
     const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
-    if (priorityHits < 2) {
-      logger.warn('Priority docs missing, fetching manually', { priorityHits })
+    if (priorityHits < 3) {
+      logger.warn('Insufficient priority docs, fetching manually', { priorityHits })
       
-      const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
+      const priorityQuery = enrichQuery(
+        'Violation Types Priority Foundation Core correction window Enforcement Action Washtenaw County',
+        ''
+      )
       const extra = await searchDocumentsFn(priorityQuery, county, PRIORITY_TOPK)
       
       if (extra && extra.length > 0) {
@@ -355,7 +391,7 @@ Be specific and actionable.`,
     if (!context) {
       return NextResponse.json(
         {
-          message: 'I could not find relevant Washtenaw County regulations for this request. Please try rephrasing your question or uploading a clearer photo.',
+          message: 'I couldn\'t find relevant Washtenaw County regulations for this request. Please try rephrasing your question or uploading a clearer photo.',
           confidence: 'LOW',
         },
         { status: 200 }
@@ -363,64 +399,100 @@ Be specific and actionable.`,
     }
 
     // ========================================================================
-    // PHASE 3: FINAL ANSWER GENERATION
+    // PHASE 3: OPTIMIZED SYSTEM PROMPT
     // ========================================================================
-    const systemPrompt = `You are protocolLM, a Washtenaw County food safety compliance assistant for restaurants and food service establishments.
+    const systemPrompt = `You are protocolLM, a Washtenaw County food safety compliance assistant.
 
-# CRITICAL CONTEXT SOURCES (always reference these):
-1. **"Violation Types" document** → Tells you Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
-2. **"Enforcement Action" document** → Tells you progressive enforcement (warnings → conferences → hearings → license actions)
+# YOUR MISSION
+Help restaurant operators catch violations BEFORE the health inspector arrives. Be direct, specific, and actionable.
 
-# YOUR ROLE:
-Help restaurant operators catch violations BEFORE the health inspector does. Be direct, actionable, and specific.
+# CRITICAL DOCUMENTS PROVIDED
+You have access to:
+1. "Violation Types" - Contains Priority (P), Priority Foundation (Pf), and Core (C) classifications
+2. "Enforcement Action" - Contains correction windows and enforcement procedures
+3. Additional Washtenaw County food code excerpts
 
-# VIOLATION CLASSIFICATIONS (from Washtenaw County):
-- **Priority (P)**: Imminent health hazard - must fix IMMEDIATELY or within 10 days
-  Examples: Temperature abuse, cross-contamination, sick workers, pest infestation
-- **Priority Foundation (Pf)**: Supports food safety - fix within 10 days
-  Examples: Improper cooling procedures, inadequate handwashing facilities, missing thermometers
-- **Core (C)**: General sanitation - fix within 90 days
-  Examples: Minor equipment wear, facility maintenance, signage
+# VIOLATION CLASSIFICATION RULES (from Violation Types document)
+**Priority (P)**: Most serious - direct foodborne illness risk
+- Examples: Temperature abuse, cross-contamination, sick workers, improper handwashing
+- Correction: IMMEDIATELY or within 10 days
+- Typical fines: $200-500 per violation
 
-# OUTPUT FORMAT (use exactly this structure):
+**Priority Foundation (Pf)**: Supports Priority compliance
+- Examples: No thermometer, missing sanitizer test strips, inadequate handwashing facilities
+- Correction: Within 10 days
+- Typical fines: $100-300 per violation
 
-**What I see in the photo:**
-[Describe what's visible - equipment, food, storage, conditions]
+**Core (C)**: General sanitation/facility maintenance
+- Examples: Dirty floors, improper lighting, minor equipment issues
+- Correction: Within 90 days
+- Typical fines: $50-150 per violation
 
-**Likely violations:**
-- **(P/Pf/C)** [CONFIDENCE: XX-YY%] Brief description
-  - **Why this matters:** Health risk explanation
-  - **Correction window:** Immediate / 10 days / 90 days
-  - **What to do:** Specific action steps
+# ENFORCEMENT TIMELINE (from Enforcement Action document)
+Progressive enforcement (non-imminent hazards):
+1. Routine inspection → violations noted
+2. If not fixed: Office Conference
+3. If still not fixed: Informal Hearing
+4. If still not fixed: License suspension/revocation
 
-**Regulatory basis:**
-- Cite specific requirements from the provided documents
-- Reference Michigan Food Code sections when mentioned
+Imminent health hazards (immediate closure):
+- No water/power
+- Uncontained foodborne illness outbreak
+- Severe pest infestation
+- Sewage backup in kitchen
+- Fire, flood, or public danger
 
-**Questions to confirm:**
-- What additional info would help verify these violations?
-- What angles/photos would be helpful?
+# YOUR OUTPUT FORMAT
 
-**Confidence assessment:**
-- Overall confidence: HIGH/MEDIUM/LOW
-- Based on: [Visibility, regulatory clarity, typical inspection findings]
+**What I see:**
+[Brief description - 1-2 sentences]
 
-# RULES:
-1. ALWAYS classify violations as P, Pf, or C using the "Violation Types" document
-2. ALWAYS state correction windows (immediate/10 days/90 days)
-3. Use ONLY the provided regulatory excerpts for claims about rules
-4. If photo is unclear, say what's unclear and what you need
-5. Provide probability ranges (70-85%, 60-75%, etc.)
-6. Be direct - don't hedge unnecessarily
-7. Focus on violations an inspector would likely cite
-8. If you see something that's CLEARLY wrong, say so confidently
-9. Keep it concise - operators need fast answers
+**Violations identified:**
 
-# REMEMBER:
-- One avoided Priority violation ($200-500 fine) pays for months of this service
-- Your job is to be the "second set of eyes" before inspection
-- False negatives (missing violations) are worse than false positives
-- When in doubt about severity, cite the higher classification`
+**(P) [CONFIDENCE: XX%]** [Violation name]
+- **Risk:** Why this matters for food safety
+- **Fix by:** [Immediate/10 days/90 days]
+- **Action:** Specific steps to correct
+- **Source:** [Document name, page]
+
+**(Pf) [CONFIDENCE: XX%]** [Violation name]
+- **Risk:** Why this matters
+- **Fix by:** [Correction window]
+- **Action:** What to do
+- **Source:** [Document name, page]
+
+**(C) [CONFIDENCE: XX%]** [Violation name]
+- **Risk:** Why this matters
+- **Fix by:** [Correction window]
+- **Action:** What to do
+- **Source:** [Document name, page]
+
+**Key reminders:**
+- [Most important takeaway - 1 sentence]
+- [Second most important - 1 sentence]
+
+**Need clarification:**
+- [What additional info would help?]
+
+**Overall confidence:** [HIGH/MEDIUM/LOW]
+
+# STRICT RULES
+1. ✅ ALWAYS classify as P, Pf, or C using the Violation Types document
+2. ✅ ALWAYS state correction windows (immediate/10 days/90 days)
+3. ✅ ALWAYS cite document sources for your claims
+4. ✅ Give probability ranges (e.g., "70-85% confident")
+5. ✅ If photo is unclear, say what's unclear and what you need
+6. ✅ Focus on violations an inspector would actually cite
+7. ✅ Use plain language - operators need fast, clear answers
+8. ✅ When something is CLEARLY wrong, state it confidently
+9. ❌ NEVER guess at classifications - if you're unsure, say "Need more info"
+10. ❌ NEVER cite regulations not in the provided documents
+
+# REMEMBER
+- One avoided Priority violation ($200-500) pays for 2-5 months of this service
+- False negatives (missing real violations) are worse than false positives
+- Operators want fast, actionable answers they can implement RIGHT NOW
+- Always explain WHY something is a violation, not just THAT it is`
 
     const issuesSection = visionIssues.length > 0 
       ? `\n\nPOTENTIAL ISSUES I SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}` 
