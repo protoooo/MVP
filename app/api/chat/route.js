@@ -1,4 +1,4 @@
-// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION (BUILD-SAFE)
+// app/api/chat/route.js - ANTHROPIC ONLY (NO OPENAI)
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -11,7 +11,7 @@ import { logUsageForAnalytics } from '@/lib/usage'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// ✅ Lazy load heavy imports only when route is actually called
+// ✅ Lazy load Anthropic only when route is called
 let Anthropic = null
 let searchDocuments = null
 
@@ -33,18 +33,14 @@ async function getSearchDocuments() {
   return searchDocuments
 }
 
-// Main model
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 
-// Timeouts (ms)
 const VISION_TIMEOUT_MS = 30000
 const ANSWER_TIMEOUT_MS = 45000
 
-// Retrieval
 const TOPK = 24
 const PRIORITY_TOPK = 10
 
-// Priority sources
 const PRIORITY_SOURCE_MATCHERS = [
   /violation\s*types/i,
   /enforcement\s*action/i,
@@ -151,6 +147,15 @@ export async function POST(request) {
   const env = process.env.NODE_ENV || 'unknown'
 
   try {
+    // ✅ Verify Anthropic API key exists
+    if (!process.env.ANTHROPIC_API_KEY) {
+      logger.error('ANTHROPIC_API_KEY not configured')
+      return NextResponse.json(
+        { error: 'AI service not configured. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
     if (!isServiceEnabled()) {
       return NextResponse.json(
         { error: getMaintenanceMessage() || 'Service temporarily unavailable.' },
