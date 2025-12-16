@@ -1,10 +1,8 @@
-// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION (FIXED BUILD)
-import Anthropic from '@anthropic-ai/sdk'
+// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION (BUILD-SAFE)
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-import { searchDocuments } from '@/lib/searchDocs'
 import { isServiceEnabled, getMaintenanceMessage } from '@/lib/featureFlags'
 import { logger } from '@/lib/logger'
 import { validateCSRF } from '@/lib/csrfProtection'
@@ -13,9 +11,27 @@ import { logUsageForAnalytics } from '@/lib/usage'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+// ✅ Lazy load heavy imports only when route is actually called
+let Anthropic = null
+let searchDocuments = null
+
+async function getAnthropicClient() {
+  if (!Anthropic) {
+    const module = await import('@anthropic-ai/sdk')
+    Anthropic = module.default
+  }
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  })
+}
+
+async function getSearchDocuments() {
+  if (!searchDocuments) {
+    const module = await import('@/lib/searchDocs')
+    searchDocuments = module.searchDocuments
+  }
+  return searchDocuments
+}
 
 // Main model
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
@@ -49,13 +65,11 @@ function extractBase64FromDataUrl(dataUrl) {
   const s = dataUrl.trim()
   if (!s) return null
   
-  // Extract base64 part
   if (s.startsWith('data:image/')) {
     const parts = s.split(',')
     return parts[1] || null
   }
   
-  // Already base64
   return s
 }
 
@@ -193,6 +207,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
+    // ✅ Initialize clients only when needed
+    const anthropic = await getAnthropicClient()
+    const searchDocumentsFn = await getSearchDocuments()
+
     // Vision pre-pass with Claude
     let visionSummary = ''
     let visionSearchTerms = ''
@@ -238,7 +256,6 @@ export async function POST(request) {
           .join('')
 
         try {
-          // Try to extract JSON from response
           const jsonMatch = visionText.match(/\{[\s\S]*\}/)
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0])
@@ -283,16 +300,15 @@ export async function POST(request) {
       topK: TOPK,
     })
 
-    let docs = await searchDocuments(retrievalQuery, county, TOPK)
+    let docs = await searchDocumentsFn(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    // Force-fetch priority docs if missing
     const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
     if (priorityHits < 2) {
       logger.warn('Priority docs missing, fetching manually', { priorityHits })
       
       const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
-      const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
+      const extra = await searchDocumentsFn(priorityQuery, county, PRIORITY_TOPK)
       
       if (extra && extra.length > 0) {
         docs = dedupeByText([...extra, ...(docs || [])])
@@ -300,7 +316,6 @@ export async function POST(request) {
       }
     }
 
-    // Boost priority sources
     docs.sort((a, b) => {
       const ap = isPrioritySource(a.source) ? 1 : 0
       const bp = isPrioritySource(b.source) ? 1 : 0
@@ -320,7 +335,6 @@ export async function POST(request) {
       )
     }
 
-    // Final answer with Claude
     const systemPrompt = `You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
 
 CRITICAL CONTEXT SOURCES (always reference these):
