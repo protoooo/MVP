@@ -16,8 +16,7 @@
     "test-search": "node scripts/test-search.js",
     "send-reminders": "node scripts/send-trial-reminders.js",
     "test-emails": "node scripts/test-emails.js",
-    "setup-stripe": "node scripts/setup-stripe.js",
-    "verify-openai": "node scripts/verify-no-openai.js"
+    "verify-stack": "node scripts/verify-no-openai.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
