@@ -5,7 +5,7 @@ nixPkgs = ['nodejs_20', 'python3']
 cmds = [
   'echo "🧹 Cleaning..."',
   'rm -rf node_modules .next package-lock.json',
-  'echo "📦 Installing with npm ci..."',
+  'echo "📦 Installing with npm install..."',
   'npm ci --legacy-peer-deps --no-audit --prefer-offline'
 ]
 
