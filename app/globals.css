@@ -230,6 +230,33 @@ select:focus-visible {
   .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
+/* Empty state components */
+.ui-emptyicon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 16px;
+}
+
+.ui-emptytitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+}
+
+.ui-emptytext {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   * {
