@@ -1,4 +1,4 @@
-// app/api/chat/route.js - FIXED with better context handling
+// app/api/chat/route.js
 import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -15,12 +15,14 @@ export const runtime = 'nodejs'
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-const OPENAI_CHAT_MODEL = 'gpt-5.2'
+// ✅ IMPORTANT: Use the chat model ID for Chat Completions
+const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2-chat-latest'
+
 const VISION_TIMEOUT_MS = 25000
 const ANSWER_TIMEOUT_MS = 35000
 
-const TOPK = 30 // Increased from 24
-const MAX_CONTEXT_CHARS = 80000 // Increased from 60000
+const TOPK = 30
+const MAX_CONTEXT_CHARS = 80000
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([
@@ -67,53 +69,54 @@ function clampQuery(q, maxLen = 1800) {
   return s.slice(0, maxLen)
 }
 
-// NEW: Better context building with metadata
 function buildContextString(docs) {
   if (!docs || docs.length === 0) return ''
-  
+
   let buf = ''
   let usedDocs = 0
-  
-  // Sort by score first
+
   const sorted = [...docs].sort((a, b) => (b.score || 0) - (a.score || 0))
-  
+
   for (const doc of sorted) {
     if (buf.length >= MAX_CONTEXT_CHARS) break
-    
+
     const src = doc.source || 'Unknown'
     const pg = doc.page ?? 'N/A'
     const score = (doc.score || 0).toFixed(3)
-    
+
     const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | RELEVANCE: ${score}]\n${doc.text}\n`
-    
+
     if (buf.length + chunk.length > MAX_CONTEXT_CHARS) break
-    
+
     buf += chunk
     usedDocs++
   }
-  
+
+  const usedSlice = sorted.slice(0, usedDocs)
+  const avg =
+    usedSlice.length > 0
+      ? usedSlice.reduce((sum, d) => sum + (d.score || 0), 0) / usedSlice.length
+      : 0
+
   logger.info('Context built', {
     docsUsed: usedDocs,
     totalChars: buf.length,
-    avgScore: (docs.slice(0, usedDocs).reduce((sum, d) => sum + (d.score || 0), 0) / usedDocs).toFixed(3)
+    avgScore: avg.toFixed(3),
   })
-  
+
   return buf.trim()
 }
 
-// NEW: Build comprehensive search query
 function buildSearchQuery(userPrompt, visionSummary, visionSearchTerms) {
   const parts = []
-  
+
   if (visionSearchTerms) parts.push(visionSearchTerms)
   if (userPrompt) parts.push(userPrompt)
   if (visionSummary) parts.push(visionSummary)
-  
-  // Add context-specific terms
-  parts.push('Washtenaw County food safety health code violation inspection compliance')
-  parts.push('kitchen restaurant preparation storage temperature cleaning sanitization')
-  parts.push('Priority Foundation Core violation immediate 10 days 90 days correction')
-  
+
+  // Keep these minimal so you don’t “force” enforcement docs every time
+  parts.push('Washtenaw County food code compliance')
+
   return clampQuery(parts.filter(Boolean).join(' '))
 }
 
@@ -184,18 +187,17 @@ export async function POST(request) {
     const lastUserText = getLastUserText(messages)
     const effectiveUserPrompt =
       lastUserText ||
-      (hasImage
-        ? 'Analyze this photo for food safety violations in a Washtenaw County restaurant'
-        : '')
+      (hasImage ? 'Analyze this photo for food safety violations in a Washtenaw County restaurant' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // Vision pre-pass if image provided
+    // Vision pre-pass
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionConfidence = 'low'
+    let visionOk = true
 
     if (hasImage) {
       try {
@@ -204,128 +206,142 @@ export async function POST(request) {
         const visionResp = await withTimeout(
           openai.chat.completions.create({
             model: OPENAI_CHAT_MODEL,
-            max_tokens: 600,
+
+            // ✅ FIX: max_tokens -> max_completion_tokens (required for GPT-5.x/o-series)
+            max_completion_tokens: 700,
+
+            // ✅ Force valid JSON so parsing doesn’t randomly fail
+            response_format: { type: 'json_object' },
+
             messages: [
               {
                 role: 'system',
-                content: 'You are a food safety expert. Analyze restaurant photos for potential health code violations. Return JSON: {"summary":"detailed description","search_terms":"keywords for searching regulations","confidence":"high|medium|low"}'
+                content:
+                  'Return ONLY valid JSON with keys: summary (string), search_terms (string), confidence ("high"|"medium"|"low").',
               },
               {
                 role: 'user',
                 content: [
                   { type: 'text', text: effectiveUserPrompt },
-                  { type: 'image_url', image_url: { url: imageDataUrl } }
-                ]
-              }
-            ]
+                  { type: 'image_url', image_url: { url: imageDataUrl } },
+                ],
+              },
+            ],
           }),
           VISION_TIMEOUT_MS,
           'OPENAI_TIMEOUT'
         )
 
-        const visionText = visionResp.choices[0]?.message?.content || ''
-        
+        const visionText = visionResp.choices[0]?.message?.content || '{}'
+
         try {
-          const parsed = JSON.parse(visionText.replace(/```json|```/g, '').trim())
-          visionSummary = parsed.summary || ''
-          visionSearchTerms = parsed.search_terms || ''
-          visionConfidence = parsed.confidence || 'low'
+          const parsed = JSON.parse(visionText)
+          visionSummary = safeText(parsed.summary || '')
+          visionSearchTerms = safeText(parsed.search_terms || '')
+          visionConfidence = safeText(parsed.confidence || 'low') || 'low'
         } catch {
-          visionSummary = visionText.substring(0, 600)
+          // Should be rare with response_format json_object, but keep a safe fallback
+          visionSummary = safeText(visionText).slice(0, 600)
         }
 
         logger.info('Vision analysis complete', { confidence: visionConfidence })
       } catch (e) {
+        visionOk = false
         logger.error('Vision analysis failed', { error: e?.message })
       }
     }
 
-    // Build comprehensive search query
     const searchQuery = buildSearchQuery(effectiveUserPrompt, visionSummary, visionSearchTerms)
-    
-    logger.info('Document search starting', { 
+
+    logger.info('Document search starting', {
       queryLength: searchQuery.length,
-      topK: TOPK 
+      topK: TOPK,
     })
 
-    // Search documents
     const docs = await searchDocuments(searchQuery, county, TOPK)
 
     if (!docs || docs.length === 0) {
       logger.warn('No documents retrieved')
-      return NextResponse.json({
-        message: hasImage
-          ? 'I cannot find relevant Washtenaw County regulations for this image. Please provide more context about what area of your restaurant this is (walk-in, prep station, dish area, etc.) and what you want me to check.'
-          : 'I cannot find relevant Washtenaw County regulations for your question. Please try rephrasing or asking about a specific food safety topic.',
-        confidence: 'LOW'
-      }, { status: 200 })
+      return NextResponse.json(
+        {
+          message: hasImage
+            ? 'I cannot find relevant Washtenaw County regulations for this image. Please add context (walk-in, prep station, dish area, etc.) and what you want checked.'
+            : 'I cannot find relevant Washtenaw County regulations for your question. Please try rephrasing or asking about a specific topic.',
+          confidence: 'LOW',
+        },
+        { status: 200 }
+      )
     }
 
     const context = buildContextString(docs)
 
     if (!context || context.length < 100) {
       logger.warn('Insufficient context built', { contextLength: context.length })
-      return NextResponse.json({
-        message: 'I found some regulations but they may not be relevant. Please be more specific about what you want me to check.',
-        confidence: 'LOW'
-      }, { status: 200 })
+      return NextResponse.json(
+        {
+          message:
+            'I found some regulations but they may not be relevant. Please be more specific about what you want me to check.',
+          confidence: 'LOW',
+        },
+        { status: 200 }
+      )
     }
 
-    // IMPROVED: Better system prompt
     const systemPrompt = `You are protocolLM, a Washtenaw County food safety compliance assistant for restaurants.
 
-Your job is to analyze photos and answer questions using the REGULATORY EXCERPTS provided below.
+Your job is to analyze photos and answer questions using ONLY the REGULATORY EXCERPTS provided below.
 
 CRITICAL RULES:
-1. ALWAYS cite specific violations from the excerpts when you see them
-2. Use the exact categories: Priority, Priority Foundation, or Core
-3. Use exact correction timelines: immediate, 10 days, or 90 days
-4. If you're unsure, say "needs context" - never guess
-5. Keep responses practical and actionable
-
-For photos:
-- Describe what you see
-- List specific violations you can identify from the excerpts
-- Give the violation category and timeline
-- Provide immediate action items
-
-For text questions:
-- Answer using the excerpts
-- Cite specific regulations
-- Give practical guidance
+1) ALWAYS cite specific text from the excerpts when you identify a violation
+2) Use the exact categories: Priority, Priority Foundation, or Core
+3) Use exact correction timelines only if supported by excerpts: immediate, 10 days, or 90 days
+4) If you're unsure, say "needs context" and ask ONE specific question
+5) Keep responses practical and actionable (bullet points are fine)
 
 REGULATORY EXCERPTS:
 ${context}
-
-Remember: You're helping restaurant staff prevent violations and pass inspections. Be direct, specific, and helpful.`
+`
 
     const userBlock = hasImage
       ? [
-          { type: 'text', text: `USER QUESTION: ${effectiveUserPrompt}\n\nVISION ANALYSIS: ${visionSummary || 'N/A'}` },
-          { type: 'image_url', image_url: { url: imageDataUrl } }
+          {
+            type: 'text',
+            text: `USER QUESTION: ${effectiveUserPrompt}\n\nVISION SUMMARY: ${visionSummary || 'N/A'}${
+              visionOk ? '' : '\n\nNOTE: Vision pre-pass failed; rely on the image + excerpts only.'
+            }`,
+          },
+          { type: 'image_url', image_url: { url: imageDataUrl } },
         ]
       : `USER QUESTION: ${effectiveUserPrompt}`
 
     let formatted = ''
+    let answerOk = true
 
     try {
       const answerResp = await withTimeout(
         openai.chat.completions.create({
           model: OPENAI_CHAT_MODEL,
-          max_tokens: 1000,
-          temperature: 0.3,
+
+          // ✅ FIX: max_tokens -> max_completion_tokens
+          // Give room for reasoning + output (this budget includes reasoning tokens)
+          max_completion_tokens: 2200,
+
+          // ✅ IMPORTANT: remove temperature for GPT-5.x reasoning-default compatibility
+          // (If you later set reasoning_effort: "none", you can safely re-add temperature.)
+          // temperature: 0.3,
+
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userBlock }
-          ]
+            { role: 'user', content: userBlock },
+          ],
         }),
         ANSWER_TIMEOUT_MS,
         'OPENAI_TIMEOUT'
       )
 
       formatted = answerResp.choices[0]?.message?.content || ''
-
     } catch (e) {
+      answerOk = false
       logger.error('Answer generation failed', { error: e?.message })
     }
 
@@ -337,7 +353,7 @@ Remember: You're helping restaurant staff prevent violations and pass inspection
       userId,
       plan,
       mode: hasImage ? 'vision' : 'chat',
-      success: true,
+      success: Boolean(answerOk),
       durationMs: Date.now() - startedAt,
       county,
     })
@@ -345,11 +361,13 @@ Remember: You're helping restaurant staff prevent violations and pass inspection
     return NextResponse.json(
       {
         message: formatted,
-        confidence: visionConfidence === 'high' ? 'HIGH' : visionConfidence === 'medium' ? 'MEDIUM' : 'LOW',
+        confidence:
+          visionConfidence === 'high' ? 'HIGH' : visionConfidence === 'medium' ? 'MEDIUM' : 'LOW',
         _meta: {
+          model: OPENAI_CHAT_MODEL,
           docsRetrieved: docs.length,
           topScore: docs[0]?.score?.toFixed(3),
-          avgScore: (docs.reduce((sum, d) => sum + (d.score || 0), 0) / docs.length).toFixed(3)
+          avgScore: (docs.reduce((sum, d) => sum + (d.score || 0), 0) / docs.length).toFixed(3),
         },
       },
       { status: 200 }
