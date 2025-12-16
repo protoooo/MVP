@@ -15,8 +15,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={outfit.className}>
-        {/* ✅ Spline 3D gradient at z-index 0 */}
-        <SplineBackground />
+        {/* ✅ Spline background wrapper (we can hide this via body[data-plm-authed="1"]) */}
+        <div id="plm-spline-bg" className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
+          <SplineBackground />
+        </div>
 
         {/* ✅ App content at z-index 10 (above background) */}
         <div className="relative z-10 min-h-screen w-full">
