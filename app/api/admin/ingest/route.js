@@ -114,8 +114,8 @@ export async function POST() {
 
         totalChunks += batch.length
         
-        // Small delay to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Longer delay to avoid Cohere rate limits (trial tier)
+        await new Promise(resolve => setTimeout(resolve, 2000))
       }
 
       console.log(`Finished ${file}`)
