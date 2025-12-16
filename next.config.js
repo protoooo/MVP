@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove or comment out this line:
-  // output: 'standalone',
-  
   async headers() {
     return [
       {
@@ -51,8 +48,6 @@ const nextConfig = {
   
   compress: true,
   poweredByHeader: false,
-  productionBrowserSourceMaps: false,
-  swcMinify: true,
   reactStrictMode: true,
   
   webpack: (config, { isServer }) => {
