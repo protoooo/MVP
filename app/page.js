@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
+import SplineBackground from '@/components/SplineBackground'
 import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
