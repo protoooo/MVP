@@ -1,7 +1,7 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -85,6 +85,107 @@ const Icons = {
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+}
+
+/**
+ * ✅ Smooth progress bar (never goes backwards / no stutter)
+ * - Holds at ~94–96% while waiting
+ * - Jumps to 100% when request completes, then fades out
+ */
+function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
+  const [visible, setVisible] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState('Starting…')
+
+  const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
+
+  const cfg = useMemo(() => {
+    return mode === 'vision'
+      ? { baseCap: 88, finalCap: 94, k: 0.03 }
+      : { baseCap: 90, finalCap: 96, k: 0.04 }
+  }, [mode])
+
+  useEffect(() => {
+    // clear any pending hide timer
+    if (refs.current.hideTimer) {
+      clearTimeout(refs.current.hideTimer)
+      refs.current.hideTimer = null
+    }
+
+    if (active) {
+      setVisible(true)
+      setProgress(0)
+      setPhase(mode === 'vision' ? 'Uploading image…' : 'Sending…')
+
+      refs.current.pct = 0
+      refs.current.startedAt = Date.now()
+
+      if (refs.current.timer) clearInterval(refs.current.timer)
+
+      refs.current.timer = setInterval(() => {
+        const elapsed = (Date.now() - refs.current.startedAt) / 1000
+
+        const cap =
+          elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
+
+        const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
+        refs.current.pct = Math.max(refs.current.pct, next) // ✅ monotonic
+
+        const pctInt = Math.min(99, Math.floor(refs.current.pct))
+        setProgress(pctInt)
+
+        const p = pctInt
+        if (p < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
+        else if (p < 45) setPhase('Searching Washtenaw excerpts…')
+        else if (p < 70) setPhase('Cross-checking requirements…')
+        else if (p < 90) setPhase('Building the best answer…')
+        else setPhase('Finalizing…')
+      }, 120)
+
+      return () => {
+        if (refs.current.timer) clearInterval(refs.current.timer)
+        refs.current.timer = null
+      }
+    }
+
+    // finishing state (show 100% briefly)
+    if (!active && visible) {
+      if (refs.current.timer) clearInterval(refs.current.timer)
+      refs.current.timer = null
+
+      setProgress(100)
+      setPhase('Done')
+
+      refs.current.hideTimer = setTimeout(() => {
+        setVisible(false)
+        setProgress(0)
+      }, 350)
+
+      return () => {
+        if (refs.current.hideTimer) clearTimeout(refs.current.hideTimer)
+        refs.current.hideTimer = null
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, requestKey, cfg, mode, visible])
+
+  if (!visible) return null
+
+  return (
+    <div className="w-full px-1 pb-2">
+      <div className={`flex items-center justify-between text-[11px] text-white/60 mb-2 ${inter.className}`}>
+        <span className="truncate">{phase}</span>
+        <span className="tabular-nums">{progress}%</span>
+      </div>
+
+      <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-white/60"
+          style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }}
+        />
+      </div>
+    </div>
+  )
 }
 
 function FAQItem({ q, a, isOpen, onToggle }) {
@@ -536,6 +637,10 @@ export default function Page() {
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
 
+  // ✅ NEW: Smooth progress bar controls
+  const [sendKey, setSendKey] = useState(0)
+  const [sendMode, setSendMode] = useState('text') // 'text' | 'vision'
+
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const scrollRef = useRef(null)
@@ -544,6 +649,15 @@ export default function Page() {
   const textAreaRef = useRef(null)
 
   const shouldAutoScrollRef = useRef(true)
+
+  const isAuthenticated = !!session
+
+  // ✅ NEW: Hide Spline background on chat mode (landing keeps it)
+  // IMPORTANT: ensure your Spline background wrapper has class "spline-bg" OR data-spline-bg="true"
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
+  }, [isAuthenticated])
 
   const scrollToBottom = (behavior = 'auto') => {
     const el = scrollRef.current
@@ -820,6 +934,10 @@ export default function Page() {
     const question = input.trim()
     const image = selectedImage
 
+    // ✅ NEW: start smooth progress
+    setSendMode(image ? 'vision' : 'text')
+    setSendKey((k) => k + 1)
+
     const newUserMessage = { role: 'user', content: question, image }
     setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
     setInput('')
@@ -918,8 +1036,6 @@ export default function Page() {
     )
   }
 
-  const isAuthenticated = !!session
-
   return (
     <>
       <style jsx global>{`
@@ -928,6 +1044,12 @@ export default function Page() {
           height: 100%;
           width: 100%;
           background: transparent !important;
+        }
+
+        /* ✅ NEW: hide Spline background on chat mode only */
+        html[data-view='chat'] .spline-bg,
+        html[data-view='chat'] [data-spline-bg='true'] {
+          display: none !important;
         }
 
         /* ✅ Let AmexBackground from layout.js show through */
@@ -1929,10 +2051,8 @@ export default function Page() {
                           )}
 
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className="ui-thinking flex gap-2 items-center">
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.12s' }} />
-                              <span className="w-2 h-2 rounded-full bg-white/30 animate-bounce" style={{ animationDelay: '0.24s' }} />
+                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>
+                              Working…
                             </div>
                           ) : (
                             <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -1949,6 +2069,9 @@ export default function Page() {
                   className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3"
                   style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
                 >
+                  {/* ✅ NEW: progress bar replaces the stuttery dots */}
+                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+
                   {selectedImage && (
                     <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
                       <span>Image attached</span>
