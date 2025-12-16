@@ -3,11 +3,19 @@ nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
 cmds = [
+  'echo "🧹 Clearing all caches..."',
+  'rm -rf node_modules',
+  'rm -rf .next',
+  'rm -rf .npm',
+  'echo "📦 Installing dependencies..."',
   'npm install --prefer-offline --no-audit --legacy-peer-deps'
 ]
 
 [phases.build]
-cmds = ['npm run build']
+cmds = [
+  'echo "🏗️ Building application..."',
+  'npm run build'
+]
 
 [start]
 cmd = 'npm run start'
@@ -17,3 +25,5 @@ NODE_ENV = 'production'
 NPM_CONFIG_PRODUCTION = 'false'
 NEXT_TELEMETRY_DISABLED = '1'
 NODE_OPTIONS = '--max-old-space-size=4096'
+# Force clean build
+NIXPACKS_NO_CACHE = '1'
