@@ -1,5 +1,5 @@
-// app/api/chat/route.js
-import OpenAI from 'openai'
+// app/api/chat/route.js - ANTHROPIC CLAUDE VERSION
+import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -13,35 +13,29 @@ import { logUsageForAnalytics } from '@/lib/usage'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})
 
-// ✅ Best default for “ChatGPT-like” behavior
-const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-5.2-chat-latest'
+// Main model
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
 
-// Reasoning controls (Chat Completions supports reasoning_effort including xhigh) :contentReference[oaicite:3]{index=3}
-const VISION_REASONING_EFFORT = process.env.OPENAI_VISION_EFFORT || 'minimal'
-const ANSWER_REASONING_EFFORT = process.env.OPENAI_ANSWER_EFFORT || 'xhigh'
+// Timeouts (ms)
+const VISION_TIMEOUT_MS = 30000
+const ANSWER_TIMEOUT_MS = 45000
 
-const VISION_TIMEOUT_MS = 25000
-const ANSWER_TIMEOUT_MS = 35000
+// Retrieval
+const TOPK = 24
+const PRIORITY_TOPK = 10
 
-const TOPK = 30
-const MAX_CONTEXT_CHARS = 80000
-
-// Try to avoid “everything comes from one PDF”
-const PER_SOURCE_CAP = 3
-
-// Priority sources: tune these substrings to match your metadata->source values
-const PRIORITY_SOURCE_HINTS = [
-  { key: 'enforcement', label: 'Enforcement Action', rx: /enforcement/i },
-  { key: 'violation_types', label: 'Violation Types', rx: /violation|priority foundation|priority\b|core\b/i },
+// Priority sources
+const PRIORITY_SOURCE_MATCHERS = [
+  /violation\s*types/i,
+  /enforcement\s*action/i,
+  /correction\s*windows/i,
+  /washtenaw.*violation/i,
+  /washtenaw.*enforcement/i,
 ]
-
-// Fallback queries to force-prime those docs into context if retrieval misses them
-const PRIORITY_FALLBACK_QUERIES = {
-  enforcement: 'Washtenaw enforcement action immediate 10 days 90 days priority foundation core',
-  violation_types: 'Priority Priority Foundation Core violation types definitions Washtenaw',
-}
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   return Promise.race([
@@ -50,12 +44,29 @@ function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
   ])
 }
 
-function asDataUrl(maybeBase64) {
-  if (!maybeBase64 || typeof maybeBase64 !== 'string') return null
-  const s = maybeBase64.trim()
+function extractBase64FromDataUrl(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== 'string') return null
+  const s = dataUrl.trim()
   if (!s) return null
-  if (s.startsWith('data:image/')) return s
-  return `data:image/jpeg;base64,${s}`
+  
+  // Extract base64 part
+  if (s.startsWith('data:image/')) {
+    const parts = s.split(',')
+    return parts[1] || null
+  }
+  
+  // Already base64
+  return s
+}
+
+function getMediaTypeFromDataUrl(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== 'string') return 'image/jpeg'
+  
+  if (dataUrl.includes('data:image/png')) return 'image/png'
+  if (dataUrl.includes('data:image/gif')) return 'image/gif'
+  if (dataUrl.includes('data:image/webp')) return 'image/webp'
+  
+  return 'image/jpeg'
 }
 
 function safeText(x) {
@@ -67,169 +78,48 @@ function getLastUserText(messages) {
   if (!Array.isArray(messages)) return ''
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i]
-    if (m?.role !== 'user') continue
-
-    if (typeof m.content === 'string') return safeText(m.content)
-
-    if (Array.isArray(m.content)) {
-      const t = m.content
-        .map((c) => (typeof c === 'string' ? c : c?.text))
-        .filter(Boolean)
-        .join(' ')
-      return safeText(t)
+    if (m?.role === 'user') {
+      if (typeof m.content === 'string') return safeText(m.content)
+      if (Array.isArray(m.content)) {
+        const t = m.content
+          .map((c) => (typeof c === 'string' ? c : c?.text))
+          .filter(Boolean)
+          .join(' ')
+        return safeText(t)
+      }
     }
   }
   return ''
 }
 
-function clampQuery(q, maxLen = 1800) {
-  const s = safeText(q)
-  if (s.length <= maxLen) return s
-  return s.slice(0, maxLen)
+function isPrioritySource(source) {
+  if (!source) return false
+  return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(source))
 }
 
-function normalizeSource(src) {
-  return safeText(src || 'Unknown')
-}
-
-function matchesPriority(source, rx) {
-  try {
-    return rx.test(source)
-  } catch {
-    return false
+function dedupeByText(items) {
+  const seen = new Set()
+  const out = []
+  for (const it of items || []) {
+    const key = (it?.text || '').slice(0, 3000)
+    if (!key) continue
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(it)
   }
-}
-
-function docKey(d) {
-  const src = normalizeSource(d?.source)
-  const pg = String(d?.page ?? 'N/A')
-  const head = safeText(d?.text || '').slice(0, 120)
-  return `${src}||${pg}||${head}`
-}
-
-function buildSearchQuery(userPrompt, visionSummary, visionSearchTerms) {
-  const parts = []
-  if (visionSearchTerms) parts.push(visionSearchTerms)
-  if (userPrompt) parts.push(userPrompt)
-  if (visionSummary) parts.push(visionSummary)
-  parts.push('Washtenaw County food code compliance')
-  return clampQuery(parts.filter(Boolean).join(' '))
-}
-
-async function ensurePriorityDocs(docs, county) {
-  const existing = Array.isArray(docs) ? docs : []
-  const srcs = new Set(existing.map((d) => normalizeSource(d?.source)))
-
-  const have = {
-    enforcement: [...srcs].some((s) => matchesPriority(s, PRIORITY_SOURCE_HINTS[0].rx)),
-    violation_types: [...srcs].some((s) => matchesPriority(s, PRIORITY_SOURCE_HINTS[1].rx)),
-  }
-
-  const extras = []
-  for (const hint of PRIORITY_SOURCE_HINTS) {
-    if (hint.key === 'enforcement' && have.enforcement) continue
-    if (hint.key === 'violation_types' && have.violation_types) continue
-
-    const q = PRIORITY_FALLBACK_QUERIES[hint.key]
-    if (!q) continue
-
-    try {
-      logger.info('Priority-doc fallback search', { key: hint.key, county })
-      const more = await searchDocuments(q, county, 12)
-      if (Array.isArray(more) && more.length) extras.push(...more)
-    } catch (e) {
-      logger.warn('Priority-doc fallback failed', { key: hint.key, error: e?.message })
-    }
-  }
-
-  if (!extras.length) return existing
-
-  const seen = new Set(existing.map(docKey))
-  const merged = [...existing]
-  for (const d of extras) {
-    const k = docKey(d)
-    if (seen.has(k)) continue
-    seen.add(k)
-    merged.push(d)
-  }
-
-  logger.info('Priority-doc merge complete', { before: existing.length, after: merged.length })
-  return merged
+  return out
 }
 
 function buildContextString(docs) {
-  if (!docs || docs.length === 0) return ''
-
-  // Clean + score sort
-  const cleaned = docs
-    .filter((d) => d && safeText(d.text))
-    .map((d) => ({
-      ...d,
-      source: normalizeSource(d.source),
-      score: typeof d.score === 'number' ? d.score : Number(d.score || 0),
-    }))
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
-
-  // Group by source for diversity
-  const bySource = new Map()
-  for (const d of cleaned) {
-    const src = d.source || 'Unknown'
-    if (!bySource.has(src)) bySource.set(src, [])
-    bySource.get(src).push(d)
-  }
-
-  // Order sources:
-  // 1) priority docs first (if present)
-  // 2) then the rest by best chunk score
-  const sources = [...bySource.entries()].map(([src, arr]) => ({
-    src,
-    arr,
-    best: arr[0]?.score || 0,
-    isPriority: PRIORITY_SOURCE_HINTS.some((h) => matchesPriority(src, h.rx)),
-  }))
-
-  const prioritySources = sources
-    .filter((s) => s.isPriority)
-    .sort((a, b) => (b.best || 0) - (a.best || 0))
-
-  const otherSources = sources
-    .filter((s) => !s.isPriority)
-    .sort((a, b) => (b.best || 0) - (a.best || 0))
-
-  const orderedSources = [...prioritySources, ...otherSources]
-
+  const MAX_CHARS = 60000
   let buf = ''
-  let usedDocs = 0
-  let usedScores = []
-
-  for (const s of orderedSources) {
-    const chunks = s.arr.slice(0, PER_SOURCE_CAP)
-    for (const doc of chunks) {
-      if (buf.length >= MAX_CONTEXT_CHARS) break
-
-      const src = doc.source || 'Unknown'
-      const pg = doc.page ?? 'N/A'
-      const score = (doc.score || 0).toFixed(3)
-
-      const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | RELEVANCE: ${score}]\n${doc.text}\n`
-      if (buf.length + chunk.length > MAX_CONTEXT_CHARS) break
-
-      buf += chunk
-      usedDocs++
-      usedScores.push(doc.score || 0)
-    }
-    if (buf.length >= MAX_CONTEXT_CHARS) break
+  for (const d of docs) {
+    const src = d.source || 'Unknown'
+    const pg = d.page ?? 'N/A'
+    const chunk = `\n\n[SOURCE: ${src} | PAGE: ${pg} | SCORE: ${Number(d.score || 0).toFixed(3)}]\n${d.text}\n`
+    if ((buf.length + chunk.length) > MAX_CHARS) break
+    buf += chunk
   }
-
-  const avg = usedScores.length ? usedScores.reduce((a, b) => a + b, 0) / usedScores.length : 0
-
-  logger.info('Context built', {
-    docsUsed: usedDocs,
-    totalChars: buf.length,
-    avgScore: avg.toFixed(3),
-    uniqueSourcesUsed: new Set(cleaned.slice(0, usedDocs).map((d) => d.source)).size,
-  })
-
   return buf.trim()
 }
 
@@ -265,12 +155,11 @@ export async function POST(request) {
     const messages = Array.isArray(body?.messages) ? body.messages : []
     const county = safeText(body?.county || 'washtenaw') || 'washtenaw'
 
-    const imageDataUrl = asDataUrl(body?.image || body?.imageBase64 || body?.image_url)
+    const imageDataUrl = body?.image || body?.imageBase64 || body?.image_url
     const hasImage = Boolean(imageDataUrl)
+    const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
+    const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
-    const plan = safeText(body?.plan) || 'unknown'
-
-    // Auth
     let userId = null
     try {
       const cookieStore = cookies()
@@ -298,212 +187,274 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt =
-      lastUserText ||
-      (hasImage ? 'Analyze this photo for food safety violations in a Washtenaw County food establishment.' : '')
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for possible food safety / health inspection violations.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
 
-    // Vision pre-pass (for search terms + a quick neutral description)
+    // Vision pre-pass with Claude
     let visionSummary = ''
     let visionSearchTerms = ''
-    let visionConfidence = 'low'
-    let visionOk = true
-
-    if (hasImage) {
+    let visionIssues = []
+    
+    if (hasImage && imageBase64) {
       try {
         logger.info('Vision analysis started', { env })
 
-        const visionResp = await withTimeout(
-          openai.chat.completions.create({
-            model: OPENAI_CHAT_MODEL,
-
-            // ✅ Use max_completion_tokens (max_tokens is deprecated/not compatible for these models) :contentReference[oaicite:4]{index=4}
-            max_completion_tokens: 650,
-
-            reasoning_effort: VISION_REASONING_EFFORT,
-
-            response_format: { type: 'json_object' },
-
-            messages: [
+        const visionMessages = [
+          {
+            role: 'user',
+            content: [
               {
-                role: 'system',
-                content:
-                  'Return ONLY valid JSON with keys: summary (string), search_terms (string), confidence ("high"|"medium"|"low"). ' +
-                  'Be literal: describe everything visible, include equipment, surfaces, food contact areas, storage, chemicals, sinks, temps/labels if visible.',
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: imageMediaType,
+                  data: imageBase64,
+                },
               },
               {
-                role: 'user',
-                content: [
-                  { type: 'text', text: effectiveUserPrompt },
-                  { type: 'image_url', image_url: { url: imageDataUrl } },
-                ],
+                type: 'text',
+                text: `${effectiveUserPrompt}\n\nReturn ONLY a JSON object with this exact structure:\n{"summary": "2-3 sentences describing what you see", "search_terms": "keywords for regulation search", "issues_spotted": ["specific violation 1", "specific violation 2"]}`,
               },
             ],
+          },
+        ]
+
+        const visionResp = await withTimeout(
+          anthropic.messages.create({
+            model: CLAUDE_MODEL,
+            max_tokens: 1024,
+            messages: visionMessages,
           }),
           VISION_TIMEOUT_MS,
-          'OPENAI_TIMEOUT'
+          'ANTHROPIC_TIMEOUT'
         )
 
-        const visionText = visionResp.choices[0]?.message?.content || '{}'
+        const visionText = visionResp.content
+          .filter(block => block.type === 'text')
+          .map(block => block.text)
+          .join('')
+
         try {
-          const parsed = JSON.parse(visionText)
-          visionSummary = safeText(parsed.summary || '')
-          visionSearchTerms = safeText(parsed.search_terms || '')
-          visionConfidence = safeText(parsed.confidence || 'low') || 'low'
+          // Try to extract JSON from response
+          const jsonMatch = visionText.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0])
+            visionSummary = safeText(parsed?.summary || '')
+            visionSearchTerms = safeText(parsed?.search_terms || '')
+            visionIssues = Array.isArray(parsed?.issues_spotted) ? parsed.issues_spotted : []
+          } else {
+            visionSummary = safeText(visionText).slice(0, 500)
+          }
         } catch {
-          visionSummary = safeText(visionText).slice(0, 650)
+          visionSummary = safeText(visionText).slice(0, 500)
+          visionSearchTerms = ''
+          visionIssues = []
         }
 
-        logger.info('Vision analysis complete', { confidence: visionConfidence })
+        logger.info('Vision analysis ok', {
+          env,
+          summaryLen: visionSummary.length,
+          searchTermsLen: visionSearchTerms.length,
+          issuesCount: visionIssues.length,
+        })
       } catch (e) {
-        visionOk = false
-        logger.error('Vision analysis failed', { error: e?.message })
+        logger.error('Vision analysis failed', { env, error: e?.message || String(e) })
       }
     }
 
-    // Build retrieval query (don’t stuff it with enforcement words; we’ll force-inject those docs separately)
-    const searchQuery = buildSearchQuery(effectiveUserPrompt, visionSummary, visionSearchTerms)
+    // Retrieval
+    const retrievalQuery = safeText(
+      [
+        visionSearchTerms || '',
+        effectiveUserPrompt || '',
+        'Violation Types Washtenaw County Enforcement Action Priority Priority-Foundation Core correction window 10 days 90 days imminent hazard',
+      ]
+        .filter(Boolean)
+        .join('\n')
+    ) || 'Violation Types Enforcement Action Washtenaw County'
 
-    logger.info('Document search starting', { queryLength: searchQuery.length, topK: TOPK })
+    logger.info('Document search started', {
+      env,
+      county,
+      queryLength: retrievalQuery.length,
+      topK: TOPK,
+    })
 
-    // Search documents
-    let docs = await searchDocuments(searchQuery, county, TOPK)
+    let docs = await searchDocuments(retrievalQuery, county, TOPK)
+    docs = dedupeByText(docs || [])
 
-    // Ensure priority docs are present (Violation Types + Enforcement Action) even if the user asked something else
-    docs = await ensurePriorityDocs(docs, county)
-
-    if (!docs || docs.length === 0) {
-      logger.warn('No documents retrieved')
-      return NextResponse.json(
-        {
-          message: hasImage
-            ? 'I could not find relevant Washtenaw County excerpts for this image. Tell me what area this is (prep line, dish, walk-in, bar, etc.) and what you want checked.'
-            : 'I could not find relevant Washtenaw County excerpts for your question. Try rephrasing with a specific topic.',
-          confidence: 'LOW',
-        },
-        { status: 200 }
-      )
+    // Force-fetch priority docs if missing
+    const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
+    if (priorityHits < 2) {
+      logger.warn('Priority docs missing, fetching manually', { priorityHits })
+      
+      const priorityQuery = 'Violation Types Priority Foundation Core correction Enforcement Action Washtenaw County'
+      const extra = await searchDocuments(priorityQuery, county, PRIORITY_TOPK)
+      
+      if (extra && extra.length > 0) {
+        docs = dedupeByText([...extra, ...(docs || [])])
+        logger.info('Added priority docs via fallback', { count: extra.length })
+      }
     }
+
+    // Boost priority sources
+    docs.sort((a, b) => {
+      const ap = isPrioritySource(a.source) ? 1 : 0
+      const bp = isPrioritySource(b.source) ? 1 : 0
+      if (ap !== bp) return bp - ap
+      return (b.score || 0) - (a.score || 0)
+    })
 
     const context = buildContextString(docs)
 
-    if (!context || context.length < 200) {
-      logger.warn('Insufficient context built', { contextLength: context.length })
+    if (!context) {
       return NextResponse.json(
         {
-          message:
-            'I found some excerpts but they may not match your scenario. Tell me the exact process/food/item and what you want checked.',
+          message: 'I could not retrieve any relevant Washtenaw documents for this request. Please try again, or re-upload the photo with a clearer close-up and re-run.',
           confidence: 'LOW',
         },
         { status: 200 }
       )
     }
 
-    // ✅ Tight inspector-style system prompt
-    const systemPrompt = `
-You are protocolLM — a Washtenaw County food safety compliance assistant.
+    // Final answer with Claude
+    const systemPrompt = `You are ProtocolLM: a Washtenaw County food-safety compliance assistant for restaurants.
 
-MISSION:
-Help food service establishments (restaurants, bars, food trucks, schools, etc.) prevent violations by catching them early.
+CRITICAL CONTEXT SOURCES (always reference these):
+1. "Violation Types" document → tells you Priority (P), Priority Foundation (Pf), Core (C) classifications + correction windows
+2. "Enforcement Action" document → tells you progressive enforcement (warnings → conferences → hearings)
 
-NON-NEGOTIABLE RULES:
-- Use ONLY the REGULATORY EXCERPTS provided below. If you cannot support a claim from excerpts, mark it as "needs context".
-- When you state a VIOLATION, you MUST include: (a) the exact excerpt evidence (short quote <= 25 words) and (b) the SOURCE + PAGE shown in brackets.
-- Only mention enforcement/timelines (immediate / 10 days / 90 days) IF a violation is identified AND the excerpt supports that timeline. Otherwise say "timeline not specified in excerpts".
-- Be concise: no essays. Aim for 6–14 bullets total unless the user asked for detail.
-- Be practical: always give a clear fix.
+Rules:
+- ALWAYS classify violations as Priority (P), Priority Foundation (Pf), or Core (C) using Violation Types doc
+- ALWAYS state correction window: immediate/10 days (P/Pf) or 90 days (Core)
+- Use ONLY the provided "REGULATORY EXCERPTS" for claims about rules, categories, time windows, etc.
+- You MAY describe what is visible in the photo directly (your vision analysis)
+- If the photo is unclear, say what is unclear and what you would need to confirm
+- Provide probabilities as ranges for each suspected issue (e.g., 70–90%)
+- Do NOT ask "what do you see?" — proactively find issues
+- Keep responses SHORT and ACTIONABLE. No long paragraphs. Bullet points only.
 
-OUTPUT FORMAT (always follow):
-1) QUICK VERDICT (1–2 lines): "Clear violations found" OR "No clear violations from excerpts" OR "Needs context"
-2) WHAT I SEE (image) OR KEY FACTS (text): 3–7 bullets
-3) VIOLATIONS (ONLY IF ANY): numbered list
-   Each item:
-   - Issue (plain English)
-   - Category: Priority / Priority Foundation / Core (ONLY if supported; else "needs context")
-   - Timeline: immediate / 10 days / 90 days (ONLY if supported; else "timeline not specified")
-   - Evidence: "short quote" — SOURCE, p.PAGE
-   - Fix: 1–3 bullets
-4) POSSIBLE CONCERNS (NEEDS CONTEXT): only if applicable, 1–4 bullets
-5) NEXT BEST ACTION: 1–3 bullets (what to do right now)
+Output format (exact sections, concise):
+**Likely issues (visible):**
+- **(P/Pf/C)** [ODDS: xx–yy%] <one-sentence issue + why>
+
+**Correction windows:**
+- Priority/Priority Foundation: Fix immediately or within 10 days
+- Core: Fix within 90 days
+
+**What to do now:**
+- <action steps, numbered, 1-3 items max>
+
+**Need to confirm:**
+- <questions to raise certainty, 1-2 items max>
+
+Only include "Sources used:" if user explicitly asks for citations.`
+
+    const issuesSection = visionIssues.length > 0 
+      ? `\n\nPOTENTIAL ISSUES SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}` 
+      : ''
+
+    const userPrompt = `USER REQUEST:
+${effectiveUserPrompt || '[No additional text provided]'}
+
+VISION SUMMARY (what I can see in the photo):
+${visionSummary || '[No photo analysis available]'}${issuesSection}
 
 REGULATORY EXCERPTS:
-${context}
-`.trim()
+${context}`
 
-    const userBlock = hasImage
-      ? [
-          {
-            type: 'text',
-            text:
-              `USER REQUEST: ${effectiveUserPrompt}\n\n` +
-              `VISION SUMMARY (may be incomplete): ${visionSummary || 'N/A'}\n` +
-              (visionOk ? '' : '\nNOTE: Vision pre-pass failed; rely on the image + excerpts only.'),
-          },
-          { type: 'image_url', image_url: { url: imageDataUrl } },
-        ]
-      : `USER REQUEST: ${effectiveUserPrompt}`
-
-    let formatted = ''
-    let answerOk = true
-
+    let finalText = ''
     try {
-      const answerResp = await withTimeout(
-        openai.chat.completions.create({
-          model: OPENAI_CHAT_MODEL,
+      logger.info('Generating response with Claude', { env })
 
-          // ✅ Use max_completion_tokens (not max_tokens) :contentReference[oaicite:5]{index=5}
-          max_completion_tokens: 2200,
-
-          reasoning_effort: ANSWER_REASONING_EFFORT,
-
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userBlock },
+      const finalMessages = []
+      
+      if (hasImage && imageBase64) {
+        finalMessages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: imageMediaType,
+                data: imageBase64,
+              },
+            },
+            {
+              type: 'text',
+              text: userPrompt,
+            },
           ],
+        })
+      } else {
+        finalMessages.push({
+          role: 'user',
+          content: userPrompt,
+        })
+      }
+
+      const answerResp = await withTimeout(
+        anthropic.messages.create({
+          model: CLAUDE_MODEL,
+          max_tokens: 2048,
+          system: systemPrompt,
+          messages: finalMessages,
         }),
         ANSWER_TIMEOUT_MS,
-        'OPENAI_TIMEOUT'
+        'ANTHROPIC_TIMEOUT'
       )
 
-      formatted = answerResp.choices[0]?.message?.content || ''
+      finalText = answerResp.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('')
     } catch (e) {
-      answerOk = false
-      logger.error('Answer generation failed', { error: e?.message })
+      logger.error('Answer generation failed', { env, error: e?.message || String(e) })
+      return NextResponse.json(
+        {
+          message: 'The analysis timed out. Please try again (or re-send 1–2 clearer angles).',
+          confidence: 'LOW',
+        },
+        { status: 200 }
+      )
     }
 
-    if (!safeText(formatted)) {
-      formatted =
-        'I encountered an error generating a response. Please try rephrasing your question or providing one more detail about the scenario.'
-    }
+    const priorityDocsUsed = docs.filter(d => isPrioritySource(d.source)).length
+
+    logger.info('Final answer generated', {
+      env,
+      priorityDocsUsed,
+      totalDocsUsed: docs.length,
+      hasImage,
+      visionIssuesCount: visionIssues.length,
+    })
 
     await safeLogUsage({
       userId,
-      plan,
       mode: hasImage ? 'vision' : 'chat',
-      success: Boolean(answerOk),
+      success: true,
       durationMs: Date.now() - startedAt,
-      county,
     })
 
     return NextResponse.json(
       {
-        message: formatted,
-        confidence:
-          visionConfidence === 'high' ? 'HIGH' : visionConfidence === 'medium' ? 'MEDIUM' : 'LOW',
+        message: finalText || 'No response text returned.',
+        confidence: 'HIGH',
         _meta: {
-          model: OPENAI_CHAT_MODEL,
-          reasoning_effort: ANSWER_REASONING_EFFORT,
-          docsRetrieved: docs.length,
-          topScore: docs[0]?.score?.toFixed?.(3),
-        },
+          priorityDocsUsed: priorityDocsUsed,
+          totalDocsRetrieved: docs.length,
+          visionIssuesSpotted: visionIssues.length,
+          model: 'claude-sonnet-4',
+        }
       },
       { status: 200 }
     )
   } catch (e) {
-    logger.error('Chat route failed', { error: e?.message })
+    logger.error('Chat route failed', { error: e?.message || String(e) })
     return NextResponse.json({ error: 'Server error.' }, { status: 500 })
   }
 }
