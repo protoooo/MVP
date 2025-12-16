@@ -3,23 +3,21 @@ import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
 import path from "path";
 import pdfParse from "pdf-parse";
-import OpenAI from "openai";
+import { CohereClient } from "cohere-ai";
 
-export const runtime = "nodejs"; // make sure we are on Node, not edge
+export const runtime = "nodejs";
 
-const CHUNK_SIZE = 6000; // characters per chunk, keeps us way under the 300k-token limit
+const CHUNK_SIZE = 1000;
 
 export async function POST() {
   try {
-    // --- Supabase client (server-side, use service role) ---
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // --- OpenAI client ---
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+    const cohere = new CohereClient({
+      token: process.env.COHERE_API_KEY,
     });
 
     const docsPath = path.join(process.cwd(), "public/documents/washtenaw");
@@ -41,44 +39,50 @@ export async function POST() {
         continue;
       }
 
-      let chunkIndex = 0;
-
+      const chunks = [];
       for (let start = 0; start < fullText.length; start += CHUNK_SIZE) {
         const chunk = fullText.slice(start, start + CHUNK_SIZE).trim();
-        if (!chunk) continue;
+        if (chunk) chunks.push(chunk);
+      }
 
-        // --- Create embedding for this chunk ---
-        const embedRes = await openai.embeddings.create({
-          model: "text-embedding-3-small",
-          input: chunk,
+      // Batch embed with Cohere (max 96 texts at once)
+      const BATCH_SIZE = 96;
+      for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+        const batch = chunks.slice(i, i + BATCH_SIZE);
+        
+        const embedRes = await cohere.embed({
+          texts: batch,
+          model: "embed-english-v3.0",
+          inputType: "search_document",
+          embeddingTypes: ["float"],
         });
 
-        const embedding = embedRes.data[0].embedding;
+        const embeddings = embedRes.embeddings.float;
 
-        // --- Store in Supabase ---
-        const { error } = await supabase.from("documents").insert({
-          filename: file,
-          chunk_index: chunkIndex,
-          content: chunk,
-          embedding,
-        });
+        const records = batch.map((text, idx) => ({
+          content: text,
+          embedding: embeddings[idx],
+          metadata: {
+            source: file,
+            chunk_index: i + idx,
+            county: "washtenaw",
+          },
+        }));
+
+        const { error } = await supabase.from("documents").insert(records);
 
         if (error) {
           console.error("Supabase insert error:", error);
           return NextResponse.json(
             {
               ok: false,
-              step: "insert",
-              file,
-              chunkIndex,
               error: error.message,
             },
             { status: 500 }
           );
         }
 
-        chunkIndex += 1;
-        totalChunks += 1;
+        totalChunks += batch.length;
       }
 
       console.log(`Finished ${file}`);
