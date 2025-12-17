@@ -1,6 +1,7 @@
 // components/ErrorAlert.js - Reusable error display component
 'use client'
 
+import Link from 'next/link'
 import { Inter } from 'next/font/google'
 import { getErrorMessage } from '@/lib/errorMessages'
 
@@ -33,12 +34,12 @@ export default function ErrorAlert({ error, onAction, onDismiss }) {
           {errorInfo.action && (
             <div className="mt-3 flex gap-2">
               {errorInfo.actionUrl ? (
-                
+                <Link
                   href={errorInfo.actionUrl}
                   className="inline-flex items-center px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200 text-xs font-semibold hover:bg-red-500/30 transition"
                 >
                   {errorInfo.action}
-                </a>
+                </Link>
               ) : onAction ? (
                 <button
                   onClick={onAction}
