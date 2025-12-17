@@ -1,4 +1,4 @@
-// app/api/chat/route.js - OPTIMIZED: Maximum effectiveness for Washtenaw County operators
+// app/api/chat/route.js - OPTIMIZED V2: Maximum effectiveness for Washtenaw County operators
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -34,34 +34,26 @@ async function getSearchDocuments() {
 }
 
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
-const VISION_TIMEOUT_MS = 30000
-const ANSWER_TIMEOUT_MS = 45000
-const TOPK = 30 // Increased from 24 to get more context
-const PRIORITY_TOPK = 12 // Increased from 10
+const VISION_TIMEOUT_MS = 25000
+const ANSWER_TIMEOUT_MS = 40000
+const TOPK = 28
+const PRIORITY_TOPK = 10
 
-// ✅ CRITICAL: These documents contain violation classification rules
-const PRIORITY_SOURCE_MATCHERS = [
-  /violation\s*types/i,
-  /enforcement\s*action/i,
-]
+// Priority source patterns - these contain violation classification rules
+const PRIORITY_SOURCES = {
+  critical: [/violation\s*types/i, /enforcement\s*action/i],
+  high: [/mi.*modified.*food.*code/i, /fda.*food.*code/i, /mcl.*act.*92/i],
+  medium: [/cooking.*temp/i, /cooling.*foods/i, /cross.*contam/i, /date.*mark/i],
+}
 
-// ✅ NEW: Enhanced query enrichment for better retrieval
-function enrichQuery(originalQuery, visionContext = '') {
-  const enrichments = []
-  
-  // Add classification keywords
-  enrichments.push('Priority Priority-Foundation Core violation classification correction window')
-  
-  // Add enforcement keywords
-  enrichments.push('Enforcement Action Washtenaw County imminent hazard progressive enforcement')
-  
-  // Vision-specific enrichment
-  if (visionContext) {
-    enrichments.push(visionContext)
-  }
-  
-  // Build final query
-  return [originalQuery, ...enrichments].filter(Boolean).join('\n')
+// Topic detection for smarter retrieval
+const TOPIC_KEYWORDS = {
+  temperature: ['temp', 'cold', 'hot', 'holding', 'cooling', 'cooking', 'thaw', 'refrigerat', '41', '135', '165', 'thermometer'],
+  sanitation: ['clean', 'sanitiz', 'wash', 'dirty', 'soil', 'debris', 'pest', 'rodent', 'insect', 'roach'],
+  storage: ['storage', 'shelf', 'container', 'label', 'date mark', 'fifo', 'cover', 'raw', 'ready-to-eat'],
+  equipment: ['equipment', 'sink', 'refrigerator', 'freezer', 'hood', 'vent', 'broken', 'repair'],
+  personnel: ['handwash', 'glove', 'hair', 'sick', 'ill', 'vomit', 'diarrhea', 'bare hand'],
+  crosscontam: ['cross', 'contam', 'raw meat', 'above', 'below', 'separate'],
 }
 
 function withTimeout(promise, ms, timeoutName = 'TIMEOUT') {
@@ -75,22 +67,18 @@ function extractBase64FromDataUrl(dataUrl) {
   if (!dataUrl || typeof dataUrl !== 'string') return null
   const s = dataUrl.trim()
   if (!s) return null
-  
   if (s.startsWith('data:image/')) {
     const parts = s.split(',')
     return parts[1] || null
   }
-  
   return s
 }
 
 function getMediaTypeFromDataUrl(dataUrl) {
   if (!dataUrl || typeof dataUrl !== 'string') return 'image/jpeg'
-  
   if (dataUrl.includes('data:image/png')) return 'image/png'
   if (dataUrl.includes('data:image/gif')) return 'image/gif'
   if (dataUrl.includes('data:image/webp')) return 'image/webp'
-  
   return 'image/jpeg'
 }
 
@@ -117,16 +105,70 @@ function getLastUserText(messages) {
   return ''
 }
 
+// Detect topics in user query for smarter retrieval
+function detectTopics(text) {
+  const lower = text.toLowerCase()
+  const detected = []
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) {
+      detected.push(topic)
+    }
+  }
+  return detected
+}
+
+// Build enriched query for better retrieval
+function enrichQuery(originalQuery, visionContext = '', detectedTopics = []) {
+  const parts = [originalQuery]
+  
+  // Always include violation classification context
+  parts.push('Priority Priority-Foundation Core violation classification correction timeframe')
+  
+  // Add topic-specific terms
+  if (detectedTopics.includes('temperature')) {
+    parts.push('temperature control TCS time temperature 41F 135F danger zone')
+  }
+  if (detectedTopics.includes('crosscontam')) {
+    parts.push('cross contamination raw ready-to-eat storage separation')
+  }
+  if (detectedTopics.includes('sanitation')) {
+    parts.push('sanitization cleaning frequency food contact surfaces')
+  }
+  if (detectedTopics.includes('storage')) {
+    parts.push('food storage labeling date marking 7 day rule FIFO')
+  }
+  
+  // Add vision context
+  if (visionContext) {
+    parts.push(visionContext)
+  }
+  
+  return parts.filter(Boolean).join(' ')
+}
+
+function getSourcePriority(source) {
+  if (!source) return 0
+  for (const pattern of PRIORITY_SOURCES.critical) {
+    if (pattern.test(source)) return 3
+  }
+  for (const pattern of PRIORITY_SOURCES.high) {
+    if (pattern.test(source)) return 2
+  }
+  for (const pattern of PRIORITY_SOURCES.medium) {
+    if (pattern.test(source)) return 1
+  }
+  return 0
+}
+
 function isPrioritySource(source) {
-  if (!source) return false
-  return PRIORITY_SOURCE_MATCHERS.some((re) => re.test(source))
+  return getSourcePriority(source) >= 2
 }
 
 function dedupeByText(items) {
   const seen = new Set()
   const out = []
   for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 3000)
+    const key = (it?.text || '').slice(0, 2500)
     if (!key) continue
     if (seen.has(key)) continue
     seen.add(key)
@@ -135,39 +177,83 @@ function dedupeByText(items) {
   return out
 }
 
-// ✅ IMPROVED: Better context building with section markers
+// Build context with clear section markers
 function buildContextString(docs) {
-  const MAX_CHARS = 70000 // Increased from 60000
+  const MAX_CHARS = 65000
   
-  // Separate priority docs from others
-  const priorityDocs = docs.filter(d => isPrioritySource(d.source))
-  const regularDocs = docs.filter(d => !isPrioritySource(d.source))
+  // Group by priority
+  const critical = docs.filter(d => getSourcePriority(d.source) === 3)
+  const high = docs.filter(d => getSourcePriority(d.source) === 2)
+  const medium = docs.filter(d => getSourcePriority(d.source) === 1)
+  const other = docs.filter(d => getSourcePriority(d.source) === 0)
   
   let buf = ''
   
-  // Add priority docs first with special markers
-  if (priorityDocs.length > 0) {
-    buf += '=== CRITICAL CLASSIFICATION & ENFORCEMENT DOCUMENTS ===\n\n'
-    for (const d of priorityDocs) {
-      const src = d.source || 'Unknown'
-      const pg = d.page ?? 'N/A'
-      const chunk = `[SOURCE: ${src} | PAGE: ${pg}]\n${d.text}\n\n`
+  // Critical docs first (Violation Types, Enforcement Action)
+  if (critical.length > 0) {
+    buf += '══════════════════════════════════════════════════════════════\n'
+    buf += '🚨 VIOLATION CLASSIFICATION & ENFORCEMENT RULES\n'
+    buf += '══════════════════════════════════════════════════════════════\n\n'
+    for (const d of critical) {
+      const chunk = `📄 ${d.source || 'Unknown'} (pg ${d.page ?? 'N/A'})\n${d.text}\n\n---\n\n`
+      if ((buf.length + chunk.length) > MAX_CHARS * 0.4) break
+      buf += chunk
+    }
+  }
+  
+  // High priority (Food codes)
+  if (high.length > 0) {
+    buf += '\n══════════════════════════════════════════════════════════════\n'
+    buf += '📋 FOOD CODE REGULATIONS\n'
+    buf += '══════════════════════════════════════════════════════════════\n\n'
+    for (const d of high) {
+      const chunk = `📄 ${d.source || 'Unknown'} (pg ${d.page ?? 'N/A'})\n${d.text}\n\n---\n\n`
+      if ((buf.length + chunk.length) > MAX_CHARS * 0.75) break
+      buf += chunk
+    }
+  }
+  
+  // Medium and other
+  const remaining = [...medium, ...other]
+  if (remaining.length > 0) {
+    buf += '\n══════════════════════════════════════════════════════════════\n'
+    buf += '📚 ADDITIONAL GUIDANCE\n'
+    buf += '══════════════════════════════════════════════════════════════\n\n'
+    for (const d of remaining) {
+      const chunk = `📄 ${d.source || 'Unknown'} (pg ${d.page ?? 'N/A'})\n${d.text}\n\n---\n\n`
       if ((buf.length + chunk.length) > MAX_CHARS) break
       buf += chunk
     }
-    buf += '\n=== ADDITIONAL REGULATORY CONTEXT ===\n\n'
-  }
-  
-  // Add regular docs
-  for (const d of regularDocs) {
-    const src = d.source || 'Unknown'
-    const pg = d.page ?? 'N/A'
-    const chunk = `[SOURCE: ${src} | PAGE: ${pg}]\n${d.text}\n\n`
-    if ((buf.length + chunk.length) > MAX_CHARS) break
-    buf += chunk
   }
   
   return buf.trim()
+}
+
+// Calculate response confidence based on context quality
+function calculateConfidence(docs, visionIssues, hasImage) {
+  let score = 0
+  
+  // Critical docs present?
+  const criticalCount = docs.filter(d => getSourcePriority(d.source) === 3).length
+  if (criticalCount >= 2) score += 40
+  else if (criticalCount === 1) score += 25
+  
+  // High priority docs?
+  const highCount = docs.filter(d => getSourcePriority(d.source) === 2).length
+  if (highCount >= 3) score += 30
+  else if (highCount >= 1) score += 20
+  
+  // Total docs retrieved
+  if (docs.length >= 15) score += 15
+  else if (docs.length >= 8) score += 10
+  
+  // Vision analysis quality
+  if (hasImage && visionIssues.length > 0) score += 15
+  else if (hasImage && visionIssues.length === 0) score -= 10
+  
+  if (score >= 70) return 'HIGH'
+  if (score >= 45) return 'MEDIUM'
+  return 'LOW'
 }
 
 async function safeLogUsage(payload) {
@@ -246,11 +332,14 @@ export async function POST(request) {
     }
 
     const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for Washtenaw County food safety violations and classify them as Priority, Priority Foundation, or Core.' : '')
+    const effectiveUserPrompt = lastUserText || (hasImage ? 'Analyze this photo for health code violations.' : '')
 
     if (!effectiveUserPrompt && !hasImage) {
       return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
     }
+
+    // Detect topics for smarter retrieval
+    const detectedTopics = detectTopics(effectiveUserPrompt)
 
     // 6. Initialize AI clients
     const anthropic = await getAnthropicClient()
@@ -281,23 +370,33 @@ export async function POST(request) {
               },
               {
                 type: 'text',
-                text: `You are a Washtenaw County food safety inspector. Analyze this photo for violations.
+                text: `You are an expert Washtenaw County health inspector doing a walk-through. Analyze this photo.
 
-Return ONLY a JSON object:
+Return ONLY this JSON (no other text):
 {
-  "summary": "What you see (2-3 sentences)",
-  "search_terms": "Keywords for finding relevant regulations (e.g., 'temperature control Priority violation cold holding 41F labels date marking')",
-  "issues_spotted": ["Specific issue 1", "Specific issue 2"]
+  "area": "kitchen/walk-in/prep/storage/dining/restroom/unknown",
+  "summary": "2-3 sentences: what you see, overall cleanliness, any immediate concerns",
+  "search_terms": "regulatory keywords to look up (e.g., 'cold holding temperature 41F TCS food date marking labels')",
+  "issues": [
+    {
+      "description": "Specific issue observed",
+      "severity": "critical/serious/minor",
+      "category": "temperature/sanitation/storage/equipment/personnel/crosscontam"
+    }
+  ],
+  "positives": ["Things done correctly (if any)"],
+  "unclear": ["Things you can't determine from this angle/quality"]
 }
 
-Look for:
-- Temperature violations (cold >41°F, hot <135°F)
-- Cross-contamination (raw meat above ready-to-eat food)
-- Missing labels or date marks
-- Dirty surfaces, pest signs
-- Broken equipment, improper storage
+Focus on:
+- Temperature: anything that should be cold/hot - estimate if visible
+- Storage: raw/cooked separation, containers, labels, dates
+- Cleanliness: surfaces, floors, equipment condition
+- Cross-contamination risks: what's stored above/below what
+- Equipment: working condition, cleanliness
+- Personnel practices: if people visible
 
-Be specific about what you see.`,
+Be specific. If you see a thermometer, read it. If you see dates, note them.`,
               },
             ],
           },
@@ -306,11 +405,11 @@ Be specific about what you see.`,
         const visionResp = await withTimeout(
           anthropic.messages.create({
             model: CLAUDE_MODEL,
-            max_tokens: 1024,
+            max_tokens: 1200,
             messages: visionMessages,
           }),
           VISION_TIMEOUT_MS,
-          'ANTHROPIC_TIMEOUT'
+          'VISION_TIMEOUT'
         )
 
         const visionText = visionResp.content
@@ -324,74 +423,92 @@ Be specific about what you see.`,
             const parsed = JSON.parse(jsonMatch[0])
             visionSummary = safeText(parsed?.summary || '')
             visionSearchTerms = safeText(parsed?.search_terms || '')
-            visionIssues = Array.isArray(parsed?.issues_spotted) ? parsed.issues_spotted : []
+            
+            // Extract issues with severity
+            if (Array.isArray(parsed?.issues)) {
+              visionIssues = parsed.issues.map(i => ({
+                description: safeText(i.description || ''),
+                severity: safeText(i.severity || 'minor'),
+                category: safeText(i.category || 'other'),
+              })).filter(i => i.description)
+            }
+            
+            // Add positives and unclear to summary for context
+            if (parsed?.positives?.length > 0) {
+              visionSummary += ` Positives: ${parsed.positives.join(', ')}.`
+            }
+            if (parsed?.unclear?.length > 0) {
+              visionSummary += ` Unclear from photo: ${parsed.unclear.join(', ')}.`
+            }
+            
+            // Add detected categories to topics
+            visionIssues.forEach(i => {
+              if (i.category && !detectedTopics.includes(i.category)) {
+                detectedTopics.push(i.category)
+              }
+            })
           } else {
-            visionSummary = safeText(visionText).slice(0, 500)
+            visionSummary = safeText(visionText).slice(0, 600)
           }
         } catch {
-          visionSummary = safeText(visionText).slice(0, 500)
-          visionSearchTerms = ''
-          visionIssues = []
+          visionSummary = safeText(visionText).slice(0, 600)
         }
 
         logger.info('Vision analysis complete', {
           summaryLen: visionSummary.length,
-          searchTermsLen: visionSearchTerms.length,
           issuesCount: visionIssues.length,
+          detectedTopics,
         })
       } catch (e) {
         logger.error('Vision analysis failed', { error: e?.message || String(e) })
+        visionSummary = 'Vision analysis unavailable - proceeding with text analysis only.'
       }
     }
 
     // ========================================================================
-    // PHASE 2: ENHANCED DOCUMENT RETRIEVAL
+    // PHASE 2: DOCUMENT RETRIEVAL
     // ========================================================================
-    const retrievalQuery = enrichQuery(
-      effectiveUserPrompt,
-      visionSearchTerms
-    )
+    const retrievalQuery = enrichQuery(effectiveUserPrompt, visionSearchTerms, detectedTopics)
 
     logger.info('Document search started', {
       county,
       queryLength: retrievalQuery.length,
+      detectedTopics,
       topK: TOPK,
     })
 
     let docs = await searchDocumentsFn(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    // ✅ CRITICAL: Ensure priority documents are present
-    const priorityHits = (docs || []).filter((d) => isPrioritySource(d.source)).length
-    if (priorityHits < 3) {
-      logger.warn('Insufficient priority docs, fetching manually', { priorityHits })
+    // Ensure critical documents are present
+    const criticalHits = (docs || []).filter((d) => getSourcePriority(d.source) === 3).length
+    if (criticalHits < 2) {
+      logger.warn('Insufficient critical docs, fetching manually', { criticalHits })
       
-      const priorityQuery = enrichQuery(
-        'Violation Types Priority Foundation Core correction window Enforcement Action Washtenaw County',
-        ''
-      )
+      const priorityQuery = 'Violation Types Priority Foundation Core correction timeframe Enforcement Action progressive enforcement Washtenaw County'
       const extra = await searchDocumentsFn(priorityQuery, county, PRIORITY_TOPK)
       
       if (extra && extra.length > 0) {
         docs = dedupeByText([...extra, ...(docs || [])])
-        logger.info('Added priority docs via fallback', { count: extra.length })
+        logger.info('Added critical docs via fallback', { added: extra.length })
       }
     }
 
-    // Sort: priority sources first, then by score
+    // Sort by priority, then relevance score
     docs.sort((a, b) => {
-      const ap = isPrioritySource(a.source) ? 1 : 0
-      const bp = isPrioritySource(b.source) ? 1 : 0
+      const ap = getSourcePriority(a.source)
+      const bp = getSourcePriority(b.source)
       if (ap !== bp) return bp - ap
       return (b.score || 0) - (a.score || 0)
     })
 
     const context = buildContextString(docs)
+    const confidence = calculateConfidence(docs, visionIssues, hasImage)
 
     if (!context) {
       return NextResponse.json(
         {
-          message: 'I couldn\'t find relevant Washtenaw County regulations for this request. Please try rephrasing your question or uploading a clearer photo.',
+          message: "I couldn't find relevant regulations for your question. Try:\n• Being more specific about the issue\n• Uploading a clearer photo\n• Asking about a specific violation type",
           confidence: 'LOW',
         },
         { status: 200 }
@@ -399,114 +516,111 @@ Be specific about what you see.`,
     }
 
     // ========================================================================
-    // PHASE 3: OPTIMIZED SYSTEM PROMPT
+    // PHASE 3: GENERATE ANSWER
     // ========================================================================
-    const systemPrompt = `You are protocolLM, a Washtenaw County food safety compliance assistant.
+    const systemPrompt = `You are ProtocolLM, an AI compliance assistant for Washtenaw County, Michigan food service establishments.
 
-# YOUR MISSION
-Help restaurant operators catch violations BEFORE the health inspector arrives. Be direct, specific, and actionable.
+## YOUR ROLE
+Help operators catch violations BEFORE the health inspector. Be direct, specific, and actionable.
 
-# CRITICAL DOCUMENTS PROVIDED
-You have access to:
-1. "Violation Types" - Contains Priority (P), Priority Foundation (Pf), and Core (C) classifications
-2. "Enforcement Action" - Contains correction windows and enforcement procedures
-3. Additional Washtenaw County food code excerpts
+## VIOLATION CLASSIFICATION (MEMORIZE THIS)
+**Priority (P)** - Immediate health risk, correct NOW or within 10 days
+Examples: food temp violations, bare hand contact with RTE food, sick employee working, no handwashing
 
-# VIOLATION CLASSIFICATION RULES (from Violation Types document)
-**Priority (P)**: Most serious - direct foodborne illness risk
-- Examples: Temperature abuse, cross-contamination, sick workers, improper handwashing
-- Correction: IMMEDIATELY or within 10 days
-- Typical fines: $200-500 per violation
+**Priority Foundation (Pf)** - Supports Priority compliance, correct within 10 days  
+Examples: no thermometer, missing sanitizer test strips, broken handwash sink
 
-**Priority Foundation (Pf)**: Supports Priority compliance
-- Examples: No thermometer, missing sanitizer test strips, inadequate handwashing facilities
-- Correction: Within 10 days
-- Typical fines: $100-300 per violation
+**Core (C)** - General sanitation, correct within 90 days
+Examples: dirty floors, chipped tiles, minor equipment issues
 
-**Core (C)**: General sanitation/facility maintenance
-- Examples: Dirty floors, improper lighting, minor equipment issues
-- Correction: Within 90 days
-- Typical fines: $50-150 per violation
+## ENFORCEMENT LADDER
+1. Violation cited → correction deadline given
+2. Not fixed → Office Conference
+3. Still not fixed → Informal Hearing  
+4. Still not fixed → License suspension/revocation
 
-# ENFORCEMENT TIMELINE (from Enforcement Action document)
-Progressive enforcement (non-imminent hazards):
-1. Routine inspection → violations noted
-2. If not fixed: Office Conference
-3. If still not fixed: Informal Hearing
-4. If still not fixed: License suspension/revocation
+**Immediate closure triggers:** no water/power, sewage backup, severe pest infestation, foodborne illness outbreak
 
-Imminent health hazards (immediate closure):
-- No water/power
-- Uncontained foodborne illness outbreak
-- Severe pest infestation
-- Sewage backup in kitchen
-- Fire, flood, or public danger
+## OUTPUT FORMAT (OPERATORS ARE BUSY - BE BRIEF)
 
-# YOUR OUTPUT FORMAT (STAY CONCISE - OPERATORS ARE BUSY)
+### 📸 What I See
+[1-2 sentences max describing the photo/situation]
 
-**What I see:**
-[1-2 sentences MAX]
+### 🚨 Violations Found
 
-**Violations identified:**
-[LIMIT TO 3-4 VIOLATIONS - Focus on the most serious/obvious ones]
+**[P] Issue Name** (XX% confidence)
+↳ Risk: [Why this matters - 1 sentence]
+↳ Fix: [Specific action] | Deadline: [Immediate/10 days]
+↳ Ref: [Source document, page]
 
-**(P) [CONFIDENCE: XX%]** [Short violation name]
-- **Risk:** [1 sentence explaining danger]
-- **Fix by:** [Immediate/10 days/90 days]
-- **Action:** [1-2 specific steps]
-- **Source:** [Doc name, pg]
+**[Pf] Issue Name** (XX% confidence)  
+↳ Risk: [Why this matters]
+↳ Fix: [Specific action] | Deadline: 10 days
+↳ Ref: [Source]
 
-**(Pf) [CONFIDENCE: XX%]** [Short violation name]
-- **Risk:** [1 sentence]
-- **Fix by:** [Window]
-- **Action:** [1-2 steps]
-- **Source:** [Doc name, pg]
+**[C] Issue Name** (XX% confidence)
+↳ Risk: [Why this matters]
+↳ Fix: [Specific action] | Deadline: 90 days
+↳ Ref: [Source]
 
-**Key reminders:**
-[1-2 bullets MAX - most critical takeaways only]
+### ✅ What's Good
+[Quick note on anything done correctly - builds trust, shows balanced assessment]
 
-**Overall confidence:** [HIGH/MEDIUM/LOW]
+### ⚡ Action Items
+1. [Most urgent action - do today]
+2. [Next priority]
+3. [Can wait]
 
-# STRICT RULES
-1. ✅ ALWAYS classify as P, Pf, or C using the Violation Types document
-2. ✅ ALWAYS state correction windows (immediate/10 days/90 days)
-3. ✅ ALWAYS cite document sources for your claims
-4. ✅ Give probability ranges (e.g., "70-85% confident")
-5. ✅ If photo is unclear, say what's unclear and what you need
-6. ✅ Focus on violations an inspector would actually cite
-7. ✅ Use plain language - operators need fast, clear answers
-8. ✅ When something is CLEARLY wrong, state it confidently
-9. ✅ **BE CONCISE** - Each violation should be 3-4 lines MAX
-10. ✅ **PRIORITIZE** - List most serious violations first, skip minor stuff
-11. ✅ **SKIP "Need clarification" section** unless truly unclear
-12. ❌ NEVER guess at classifications - if you're unsure, say "Need more info"
-13. ❌ NEVER cite regulations not in the provided documents
-14. ❌ NEVER list more than 4 violations unless explicitly asked
-15. ❌ NEVER write paragraphs - bullet points and short sentences only
+---
 
-# REMEMBER
-- Operators are MID-SHIFT and need answers in 10 seconds or less
-- One avoided Priority violation ($200-500) pays for 2-5 months of this service
-- False negatives (missing real violations) are worse than false positives
-- SPEED + ACCURACY > Comprehensive explanations
-- If it's not actionable TODAY, don't mention it`
+## RULES
+✓ Classify EVERY violation as P, Pf, or C
+✓ State correction deadlines for each violation
+✓ Cite your source documents
+✓ Give confidence % (be honest: 90%+ only for obvious issues)
+✓ Limit to 3-4 most significant violations unless asked for complete list
+✓ List Priority violations first, then Pf, then Core
+✓ If photo is unclear, say specifically what you need to see
+✓ Use bullet points, not paragraphs
+✓ If something is clearly wrong, say so confidently
 
-    const issuesSection = visionIssues.length > 0 
-      ? `\n\nPOTENTIAL ISSUES I SPOTTED:\n${visionIssues.map(i => `- ${i}`).join('\n')}` 
-      : ''
+✗ Don't guess at classifications - say "Need more info" if uncertain
+✗ Don't cite regulations not in the provided documents
+✗ Don't be wishy-washy about clear violations
+✗ Don't write long explanations - operators need fast answers
+✗ Don't say "potential" or "possible" for obvious issues
 
-    const userPrompt = `USER REQUEST:
-${effectiveUserPrompt || '[No additional text provided]'}
+## TEMPERATURE QUICK REFERENCE
+- Cold TCS foods: ≤41°F (danger zone: 41-135°F)
+- Hot holding: ≥135°F
+- Cooking: Poultry 165°F, Ground beef 155°F, Whole cuts 145°F
+- Cooling: 135→70°F in 2hrs, 70→41°F in next 4hrs (6hr total max)
 
-WHAT I SEE IN THE IMAGE:
-${visionSummary || '[No photo provided]'}${issuesSection}
+## REMEMBER
+You're helping prevent foodborne illness outbreaks. One avoided Priority violation saves them $200-500+. Missing a real violation is worse than flagging a false positive.`
 
-WASHTENAW COUNTY REGULATIONS (use these as your authority):
+    // Build issues context for the prompt
+    let issuesContext = ''
+    if (visionIssues.length > 0) {
+      issuesContext = '\n\n### ISSUES SPOTTED IN PRELIMINARY SCAN:\n'
+      visionIssues.forEach((issue, i) => {
+        const severityEmoji = issue.severity === 'critical' ? '🔴' : issue.severity === 'serious' ? '🟠' : '🟡'
+        issuesContext += `${i + 1}. ${severityEmoji} [${issue.severity.toUpperCase()}] ${issue.description} (${issue.category})\n`
+      })
+    }
+
+    const userPrompt = `## USER QUESTION
+${effectiveUserPrompt || '[Photo analysis requested]'}
+
+## PHOTO ANALYSIS
+${visionSummary || '[No photo provided]'}${issuesContext}
+
+## WASHTENAW COUNTY REGULATIONS
 ${context}`
 
     let finalText = ''
     try {
-      logger.info('Generating final answer with Claude')
+      logger.info('Generating final answer')
 
       const finalMessages = []
       
@@ -538,12 +652,12 @@ ${context}`
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
-          max_tokens: 2048,
+          max_tokens: 1800,
           system: systemPrompt,
           messages: finalMessages,
         }),
         ANSWER_TIMEOUT_MS,
-        'ANTHROPIC_TIMEOUT'
+        'ANSWER_TIMEOUT'
       )
 
       finalText = answerResp.content
@@ -552,22 +666,39 @@ ${context}`
         .join('')
     } catch (e) {
       logger.error('Answer generation failed', { error: e?.message || String(e) })
+      
+      // Provide graceful fallback with vision summary if available
+      if (visionSummary && visionIssues.length > 0) {
+        const fallbackIssues = visionIssues.map(i => `- ${i.description} (${i.severity})`).join('\n')
+        return NextResponse.json(
+          {
+            message: `⚠️ Full analysis timed out, but here's what I spotted:\n\n${visionSummary}\n\n**Potential issues:**\n${fallbackIssues}\n\nPlease try again for complete violation classification and code references.`,
+            confidence: 'LOW',
+          },
+          { status: 200 }
+        )
+      }
+      
       return NextResponse.json(
         {
-          message: 'The analysis timed out. Please try again with a clearer photo or simpler question.',
+          message: 'Analysis timed out. Try uploading a clearer photo or asking a more specific question.',
           confidence: 'LOW',
         },
         { status: 200 }
       )
     }
 
-    const priorityDocsUsed = docs.filter(d => isPrioritySource(d.source)).length
+    const criticalDocsUsed = docs.filter(d => getSourcePriority(d.source) === 3).length
+    const highDocsUsed = docs.filter(d => getSourcePriority(d.source) === 2).length
 
-    logger.info('Final answer generated', {
-      priorityDocsUsed,
-      totalDocsUsed: docs.length,
+    logger.info('Response generated', {
+      criticalDocs: criticalDocsUsed,
+      highPriorityDocs: highDocsUsed,
+      totalDocs: docs.length,
       hasImage,
-      visionIssuesCount: visionIssues.length,
+      visionIssues: visionIssues.length,
+      confidence,
+      durationMs: Date.now() - startedAt,
     })
 
     await safeLogUsage({
@@ -580,18 +711,21 @@ ${context}`
     return NextResponse.json(
       {
         message: finalText || 'No response generated.',
-        confidence: 'HIGH',
+        confidence,
         _meta: {
-          priorityDocsUsed: priorityDocsUsed,
+          criticalDocsUsed,
+          highPriorityDocsUsed: highDocsUsed,
           totalDocsRetrieved: docs.length,
           visionIssuesSpotted: visionIssues.length,
-          model: 'claude-sonnet-4',
+          detectedTopics,
+          model: CLAUDE_MODEL,
+          durationMs: Date.now() - startedAt,
         }
       },
       { status: 200 }
     )
   } catch (e) {
     logger.error('Chat route failed', { error: e?.message || String(e) })
-    return NextResponse.json({ error: 'Server error.' }, { status: 500 })
+    return NextResponse.json({ error: 'Server error. Please try again.' }, { status: 500 })
   }
 }
