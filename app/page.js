@@ -2519,4 +2519,96 @@ export default function Page() {
                 ) : (
                   <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
-                      <div
+                      <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[78%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                          {msg.image && (
+                            <div className="ui-chatimgwrap">
+                              <img src={msg.image} alt="Uploaded" className="ui-chatimg" />
+                            </div>
+                          )}
+
+                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
+                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>Working…</div>
+                          ) : (
+                            <span className="whitespace-pre-wrap">{msg.content}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-shrink-0 ui-header border-t border-white/10">
+                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
+
+                  {selectedImage && (
+                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
+                      <span>Image attached</span>
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="ui-icon-btn !w-10 !h-10"
+                        aria-label="Remove image"
+                        title="Remove"
+                      >
+                        <Icons.X />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex items-end gap-2">
+                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
+
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
+                      <Icons.Camera />
+                    </button>
+
+                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
+                      <textarea
+                        ref={textAreaRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Ask a question or attach a photo…"
+                        rows={1}
+                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSend(e)
+                          }
+                        }}
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={(!input.trim() && !selectedImage) || isSending}
+                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        aria-label="Send"
+                      >
+                        {isSending ? <div className="ui-spinner-lg" /> : <Icons.ArrowUp />}
+                      </button>
+                    </form>
+                  </div>
+
+                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
+                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </>
+  )
+}
+
+/**
+ * ✅ NOTE (globals.css):
+ * Add these there (NOT in page.js):
+ *
+ * .ui-emptyicon { ... }
+ * .ui-emptytitle { ... }
+ * .ui-emptytext { ... }
+ */
