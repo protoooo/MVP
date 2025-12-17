@@ -7,14 +7,14 @@ import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
-function getClientIp() {
-  const headersList = headers()
+async function getClientIp() {
+  const headersList = await headers()
   const forwarded = headersList.get('x-forwarded-for')
   return forwarded ? forwarded.split(',')[0].trim() : headersList.get('x-real-ip')
 }
 
 export async function POST(request) {
-  const ip = getClientIp()
+  const ip = await getClientIp()
 
   try {
     const body = await request.json()
@@ -40,7 +40,7 @@ export async function POST(request) {
       )
     }
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -49,13 +49,11 @@ export async function POST(request) {
           getAll() {
             return cookieStore.getAll()
           },
-          setAll() {}, // we don't need to modify cookies here
+          setAll() {},
         },
       }
     )
 
-    // Token-hash flow:
-    // The email template uses {{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&type=recovery
     const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
@@ -64,7 +62,6 @@ export async function POST(request) {
         email: email.substring(0, 3) + '***',
       })
 
-      // Don't reveal if email exists
       return NextResponse.json({
         success: true,
         message: 'If an account exists, you will receive a password reset email',
