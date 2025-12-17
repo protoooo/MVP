@@ -1,4 +1,4 @@
-// app/api/create-portal-session/route.js - SECURITY FIX: User ID verification
+// app/api/create-portal-session/route.js - FIXED for Next.js 15
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -31,7 +31,7 @@ export async function POST(request) {
     }
 
     // Supabase auth (cookie or Bearer)
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -54,7 +54,7 @@ export async function POST(request) {
       ? await supabase.auth.getUser(bearer) 
       : await supabase.auth.getUser()
 
-    // ✅ SECURITY FIX: Explicitly check for auth errors
+    // SECURITY FIX: Explicitly check for auth errors
     if (authError) {
       logger.security('Auth error in portal', { error: authError.message })
       return NextResponse.json({ error: 'Authentication failed' }, { status: 401 })
@@ -65,7 +65,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    // ✅ SECURITY: Verify user still has active session (not revoked)
+    // SECURITY: Verify user still has active session (not revoked)
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     if (sessionError || !session) {
       logger.security('Session validation failed in portal', { 
@@ -97,7 +97,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
     }
 
-    // ✅ SECURITY FIX: Double-check user_id matches (paranoid check)
+    // SECURITY FIX: Double-check user_id matches (paranoid check)
     if (subscription.user_id !== user.id) {
       logger.security('User ID mismatch in portal', {
         authUserId: user.id,
