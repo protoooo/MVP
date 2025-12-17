@@ -27,7 +27,7 @@
     "cohere-ai": "^7.10.0",
     "dotenv": "^16.6.1",
     "lucide-react": "^0.263.1",
-    "next": "15.1.3",
+    "next": "^15.1.0",
     "pdf-parse": "^1.1.4",
     "postcss": "^8.4.38",
     "react": "^19.0.0",
@@ -41,6 +41,9 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^8.57.0",
-    "eslint-config-next": "15.1.3"
+    "eslint-config-next": "^15.1.0"
+  },
+  "resolutions": {
+    "next": "^15.1.0"
   }
 }
