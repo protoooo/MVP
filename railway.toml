@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci --legacy-peer-deps && npm run build"
+buildCommand = "npm install --legacy-peer-deps && npm run build"
 
 [deploy]
 startCommand = "npm run start"
@@ -11,6 +11,5 @@ healthcheckTimeout = 10
 numReplicas = 1
 
 [service]
-# Health check every 60 seconds
 healthCheckInterval = 60
 healthCheckTimeout = 10
