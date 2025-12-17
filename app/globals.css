@@ -9,8 +9,10 @@
   margin: 0;
 }
 
-/* ✅ Kill white/gray flashes + make form controls dark */
-:root { color-scheme: dark; }
+/* ✅ Color scheme based on view */
+:root { 
+  color-scheme: light dark; 
+}
 
 html,
 body {
@@ -21,7 +23,7 @@ body {
   min-height: 100%;
   width: 100%;
   height: 100%;
-  background: #000;
+  background: #F6FAF9; /* Light theme default */
 }
 
 /* Chat gets solid black background */
@@ -29,9 +31,9 @@ html[data-view='chat'] body {
   background: #000 !important;
 }
 
-/* Landing gets solid black background */
+/* Landing gets light background with wave animation */
 html[data-view='landing'] body {
-  background: #000 !important;
+  background: #F6FAF9 !important;
 }
 
 body {
@@ -61,8 +63,8 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.03em;
 }
 
-/* ✅ Minimal veil for background (optional utility) */
-.ui-appveil {
+/* ✅ Optional veil for chat view only */
+html[data-view='chat'] .ui-appveil {
   background: radial-gradient(
     circle at 50% 30%,
     transparent 0%,
@@ -160,37 +162,37 @@ select:focus-visible {
   input, textarea, select, button { max-width: 100%; }
 }
 
-/* Chat styling - keep borderless */
-.chat-bubble,
-.chat-message,
-.message-bubble,
-.message-surface,
-.typing-indicator,
-.thinking-indicator,
-.thinking-pill,
-.thinking-bubble,
-.assistant-thinking,
-.user-message,
-.assistant-message {
+/* ✅ Chat styling - keep borderless (only for chat view) */
+html[data-view='chat'] .chat-bubble,
+html[data-view='chat'] .chat-message,
+html[data-view='chat'] .message-bubble,
+html[data-view='chat'] .message-surface,
+html[data-view='chat'] .typing-indicator,
+html[data-view='chat'] .thinking-indicator,
+html[data-view='chat'] .thinking-pill,
+html[data-view='chat'] .thinking-bubble,
+html[data-view='chat'] .assistant-thinking,
+html[data-view='chat'] .user-message,
+html[data-view='chat'] .assistant-message {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
-[data-chat-bubble],
-[data-chat-message],
-[data-chat-thinking],
-[data-chat-typing] {
+html[data-view='chat'] [data-chat-bubble],
+html[data-view='chat'] [data-chat-message],
+html[data-view='chat'] [data-chat-thinking],
+html[data-view='chat'] [data-chat-typing] {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
-.chat-image-frame,
-.message-image-frame,
-.image-preview-frame,
-.image-frame,
-.chat-upload-preview {
+html[data-view='chat'] .chat-image-frame,
+html[data-view='chat'] .message-image-frame,
+html[data-view='chat'] .image-preview-frame,
+html[data-view='chat'] .image-frame,
+html[data-view='chat'] .chat-upload-preview {
   padding: 0 !important;
   border: none !important;
   outline: none !important;
@@ -198,11 +200,11 @@ select:focus-visible {
   box-shadow: none !important;
 }
 
-.chat-image-frame img,
-.message-image-frame img,
-.image-preview-frame img,
-.image-frame img,
-.chat-upload-preview img {
+html[data-view='chat'] .chat-image-frame img,
+html[data-view='chat'] .message-image-frame img,
+html[data-view='chat'] .image-preview-frame img,
+html[data-view='chat'] .image-frame img,
+html[data-view='chat'] .chat-upload-preview img {
   display: block;
   border: none !important;
   outline: none !important;
@@ -217,8 +219,8 @@ select:focus-visible {
   .plm-image-plain img { display: block; border: none !important; background: transparent !important; box-shadow: none !important; }
 }
 
-/* Empty state components */
-.ui-emptyicon {
+/* ✅ Empty state components (for chat view) */
+html[data-view='chat'] .ui-emptyicon {
   width: 48px;
   height: 48px;
   display: flex;
@@ -231,17 +233,44 @@ select:focus-visible {
   margin-bottom: 16px;
 }
 
-.ui-emptytitle {
+html[data-view='chat'] .ui-emptytitle {
   font-size: 16px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 8px;
 }
 
-.ui-emptytext {
+html[data-view='chat'] .ui-emptytext {
   font-size: 13px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* ✅ Landing page empty state (light theme) */
+html[data-view='landing'] .ui-emptyicon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid rgba(47, 93, 138, 0.2);
+  background: rgba(85, 214, 178, 0.05);
+  color: #2F5D8A;
+  margin-bottom: 16px;
+}
+
+html[data-view='landing'] .ui-emptytitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0B1220;
+  margin-bottom: 8px;
+}
+
+html[data-view='landing'] .ui-emptytext {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #52637A;
 }
 
 /* Reduced motion support */
@@ -250,4 +279,20 @@ select:focus-visible {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ✅ Slide up animation for cookie consent */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
 }
