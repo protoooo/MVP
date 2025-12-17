@@ -21,7 +21,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.87.3",
+    "@supabase/supabase-js": "~2.87.0",
     "autoprefixer": "^10.4.19",
     "clsx": "^2.1.1",
     "cohere-ai": "^7.10.0",
