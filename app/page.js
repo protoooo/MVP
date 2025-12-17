@@ -236,6 +236,13 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               Built specifically for Washtenaw County restaurants. Photo analysis + regulation search in about 30 seconds. One avoided violation can pay for months.
             </p>
 
+            <p className={`ui-powered ${inter.className}`}>
+              Built using leading AI models (Anthropic + Cohere).{' '}
+              <span className="ui-powered-note">
+                Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.
+              </span>
+            </p>
+
             <div className="ui-cta-row">
               <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
                 <span className="ui-btn-inner">Start trial</span>
@@ -279,6 +286,63 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <div className="ui-section-divider" />
 
+          {/* ✅ NEW: Cost of Non-Compliance section (cards only — no screenshots) */}
+          <section className="ui-section">
+            <h2 className={`ui-h2 ${outfit.className}`}>Cost of Non-Compliance (Examples)</h2>
+            <p className={`ui-p ${inter.className}`}>
+              These are common cost buckets operators run into after a bad inspection outcome. Estimates vary by situation, but the pattern is consistent.
+            </p>
+
+            <div className="ui-compliancegrid mt-4">
+              <div className="ui-compliancecard">
+                <div className={`ui-compliancetitle ${inter.className}`}>Monetary fines</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>$200 to $2,500+ per violation</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Minor → serious; can be higher if ongoing.</div>
+              </div>
+
+              <div className="ui-compliancecard">
+                <div className={`ui-compliancetitle ${inter.className}`}>Follow-up inspection fees</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>$150 to $350+ per re-inspection</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Multiple re-checks add up fast.</div>
+              </div>
+
+              <div className="ui-compliancecard">
+                <div className={`ui-compliancetitle ${inter.className}`}>Labor / remediation</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>Hundreds to thousands of dollars</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Deep cleaning, repairs, pest control, retraining.</div>
+              </div>
+
+              <div className="ui-compliancecard">
+                <div className={`ui-compliancetitle ${inter.className}`}>Revenue loss from closure</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>Tens of thousands of dollars</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Partial or full shutdown impact.</div>
+              </div>
+
+              <div className="ui-compliancecard">
+                <div className={`ui-compliancetitle ${inter.className}`}>Reputation damage</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>Hard to quantify</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Slower return of customers + long-term loss.</div>
+              </div>
+
+              <div className="ui-compliancecard ui-compliancecard-emph">
+                <div className={`ui-compliancetitle ${inter.className}`}>Simple comparison</div>
+                <div className={`ui-compliancevalue ${inter.className}`}>$200/month = $2,000/year</div>
+                <div className={`ui-compliancesub ${inter.className}`}>Less than the cost of a single serious issue.</div>
+              </div>
+            </div>
+
+            <div className="ui-callout mt-4">
+              <div className={`ui-callouttext ${inter.className}`}>
+                At <span className="font-semibold">$200/month</span>, this is <span className="font-semibold">$2,000/year</span> — less than the cost of a
+                single serious issue.
+              </div>
+            </div>
+
+            <div className={`ui-disclaimer ${inter.className}`}>Estimates vary by jurisdiction and situation; shown for context.</div>
+          </section>
+
+          <div className="ui-section-divider" />
+
           <section className="ui-section">
             <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
             <div className="ui-faq">
@@ -311,7 +375,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </section>
 
           <div className={`ui-footerline ${inter.className}`}>
-            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
+            <span>One site license per restaurant · 7-day trial · Unlimited usage · Cancel anytime</span>
           </div>
         </div>
 
@@ -326,6 +390,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <Link href="/contact" className="hover:text-white transition-colors">
               Contact
             </Link>
+          </div>
+
+          <div className="pt-4 text-center text-[11px] text-white/45">
+            Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.
           </div>
         </footer>
       </div>
@@ -552,15 +620,34 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           <div className="flex items-end justify-between gap-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$100</span>
+                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
                 <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Includes generous monthly usage. Photos count as two checks.</p>
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
+                Unlimited usage (images + text). <span className="text-white/45">Fair-use applies.</span>
+              </p>
             </div>
 
             <div className={`ui-badge ${inter.className}`}>
               <Icons.Shield />
-              Premium tier
+              Unlimited tier
+            </div>
+          </div>
+
+          <div className="ui-divider my-5" />
+
+          <div className="ui-list">
+            <div className={`ui-listitem ${inter.className}`}>
+              <span className="ui-dot" aria-hidden="true" />
+              Unlimited image checks
+            </div>
+            <div className={`ui-listitem ${inter.className}`}>
+              <span className="ui-dot" aria-hidden="true" />
+              Unlimited text questions
+            </div>
+            <div className={`ui-listitem ${inter.className}`}>
+              <span className="ui-dot" aria-hidden="true" />
+              Washtenaw County-focused compliance guidance
             </div>
           </div>
 
@@ -585,14 +672,16 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             >
               <span className="ui-btn-inner">
                 {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-                Annual · $1,000/yr
+                Annual · $2,000/yr
               </span>
             </button>
 
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
               <br />
-              <span className="text-white/60">💡 First 50 customers locked in at $100/mo forever</span>
+              <span className="text-white/55">Built using leading AI models (Anthropic + Cohere).</span>
+              <br />
+              <span className="text-white/45">Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.</span>
             </p>
           </div>
         </div>
@@ -1128,6 +1217,18 @@ export default function Page() {
           max-width: 78ch;
         }
 
+        .ui-powered {
+          margin-top: 10px;
+          font-size: 12px;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.62);
+          max-width: 78ch;
+        }
+
+        .ui-powered-note {
+          color: rgba(255, 255, 255, 0.42);
+        }
+
         .ui-cta-row {
           display: flex;
           gap: 10px;
@@ -1227,6 +1328,76 @@ export default function Page() {
           font-size: 13px;
           line-height: 1.65;
           color: rgba(255, 255, 255, 0.55);
+        }
+
+        /* ✅ NEW: compliance cards */
+        .ui-compliancegrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        @media (min-width: 820px) {
+          .ui-compliancegrid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+
+        .ui-compliancecard {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 14px;
+        }
+
+        .ui-compliancecard-emph {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .ui-compliancetitle {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 6px;
+        }
+
+        .ui-compliancevalue {
+          font-size: 14px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.92);
+          letter-spacing: -0.01em;
+          margin-bottom: 4px;
+        }
+
+        .ui-compliancesub {
+          font-size: 12px;
+          line-height: 1.55;
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        .ui-callout {
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          padding: 12px 14px;
+        }
+
+        .ui-callouttext {
+          font-size: 12px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.78);
+        }
+
+        .ui-disclaimer {
+          margin-top: 10px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.45);
         }
 
         /* 5. ✅ REPLACED .ui-faq */
@@ -1505,6 +1676,28 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
+        .ui-list {
+          display: grid;
+          gap: 8px;
+        }
+
+        .ui-listitem {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.78);
+        }
+
+        .ui-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.5);
+          flex-shrink: 0;
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+        }
+
         .ui-bubble {
           border: none !important;
           background: transparent !important;
@@ -1630,7 +1823,12 @@ export default function Page() {
           inset: -1px;
           border-radius: 18px;
           padding: 1px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.15),
+            rgba(255, 255, 255, 0.02),
+            rgba(255, 255, 255, 0.08)
+          );
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
