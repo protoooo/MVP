@@ -1,4 +1,3 @@
-// app/api/chat/route.js - OPTIMIZED V3: Washtenaw County Priority with Hardcoded Authority
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -11,7 +10,6 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// Lazy load heavy dependencies
 let Anthropic = null
 let searchDocuments = null
 
@@ -39,10 +37,6 @@ const ANSWER_TIMEOUT_MS = 40000
 const TOPK = 25
 const PRIORITY_TOPK = 8
 
-// ============================================================================
-// HARDCODED WASHTENAW COUNTY AUTHORITY (from official documents)
-// These are injected directly so the model ALWAYS has correct classification
-// ============================================================================
 const WASHTENAW_VIOLATION_TYPES = `
 ## WASHTENAW COUNTY VIOLATION CLASSIFICATION SYSTEM
 Source: Violation Types | Washtenaw County, MI (Official)
@@ -122,9 +116,7 @@ Per Michigan Administrative Procedures Act, license holders get 3 opportunities:
 → May request Formal Hearing before Washtenaw County Environmental Health Food Service Board to appeal
 `
 
-// Source priority - Washtenaw County docs ALWAYS come first
 const SOURCE_PRIORITY = {
-  // Tier 1: Washtenaw County specific (highest priority)
   washtenaw: [
     /washtenaw/i,
     /violation\s*types/i,
@@ -132,18 +124,15 @@ const SOURCE_PRIORITY = {
     /inspection.*program/i,
     /food\s*allergy.*washtenaw/i,
   ],
-  // Tier 2: Michigan state regulations
   michigan: [
     /mi.*modified.*food.*code/i,
     /michigan.*food/i,
     /mcl.*act.*92/i,
     /procedures.*administration.*enforcement.*michigan/i,
   ],
-  // Tier 3: FDA Food Code (federal baseline)
   fda: [
     /fda.*food.*code/i,
   ],
-  // Tier 4: Topic-specific guides
   guides: [
     /cooking.*temp/i,
     /cooling.*foods/i,
@@ -158,7 +147,6 @@ const SOURCE_PRIORITY = {
   ],
 }
 
-// Topic detection for smarter retrieval
 const TOPIC_KEYWORDS = {
   temperature: ['temp', 'cold', 'hot', 'holding', 'cooling', 'cooking', 'thaw', 'refrigerat', '41', '135', '165', 'thermometer', 'danger zone'],
   sanitation: ['clean', 'sanitiz', 'wash', 'dirty', 'soil', 'debris', 'pest', 'rodent', 'insect', 'roach', 'mouse', 'rat'],
@@ -231,11 +219,8 @@ function detectTopics(text) {
 
 function enrichQuery(originalQuery, visionContext = '', detectedTopics = []) {
   const parts = [originalQuery]
-  
-  // Always include Washtenaw County context
   parts.push('Washtenaw County Michigan food service violation')
   
-  // Topic-specific enrichment
   if (detectedTopics.includes('temperature')) {
     parts.push('temperature TCS 41F 135F cold holding hot holding')
   }
@@ -290,9 +275,8 @@ function dedupeByText(items) {
 }
 
 function buildContextString(docs) {
-  const MAX_CHARS = 55000 // Reduced since we have hardcoded authority docs
+  const MAX_CHARS = 55000
   
-  // Group by tier
   const tiers = {
     1: docs.filter(d => getSourceTier(d.source) === 1),
     2: docs.filter(d => getSourceTier(d.source) === 2),
@@ -303,7 +287,6 @@ function buildContextString(docs) {
   
   let buf = ''
   
-  // Tier 1: Washtenaw County
   if (tiers[1].length > 0) {
     buf += '═══════════════════════════════════════════════════════════\n'
     buf += '📍 WASHTENAW COUNTY SPECIFIC REGULATIONS\n'
@@ -315,7 +298,6 @@ function buildContextString(docs) {
     }
   }
   
-  // Tier 2: Michigan State
   if (tiers[2].length > 0 && buf.length < MAX_CHARS * 0.6) {
     buf += '\n═══════════════════════════════════════════════════════════\n'
     buf += '📋 MICHIGAN STATE FOOD CODE\n'
@@ -327,7 +309,6 @@ function buildContextString(docs) {
     }
   }
   
-  // Tier 3 & 4: FDA and Guides
   const remaining = [...tiers[3], ...tiers[4], ...tiers[5]]
   if (remaining.length > 0 && buf.length < MAX_CHARS * 0.85) {
     buf += '\n═══════════════════════════════════════════════════════════\n'
@@ -344,22 +325,18 @@ function buildContextString(docs) {
 }
 
 function calculateConfidence(docs, visionIssues, hasImage) {
-  let score = 50 // Base score since we have hardcoded authority
+  let score = 50
   
-  // Washtenaw docs boost
   const washtenawCount = docs.filter(d => getSourceTier(d.source) === 1).length
   if (washtenawCount >= 2) score += 20
   else if (washtenawCount >= 1) score += 10
   
-  // Michigan docs
   const michiganCount = docs.filter(d => getSourceTier(d.source) === 2).length
   if (michiganCount >= 2) score += 15
   
-  // Total context
   if (docs.length >= 12) score += 10
   else if (docs.length >= 6) score += 5
   
-  // Vision quality
   if (hasImage && visionIssues.length >= 2) score += 15
   else if (hasImage && visionIssues.length === 1) score += 10
   else if (hasImage && visionIssues.length === 0) score -= 5
@@ -415,20 +392,22 @@ export async function POST(request) {
 
     let userId = null
     try {
-      const cookieStore = cookies()
+      // ✅ FIXED: await cookies()
+      const cookieStore = await cookies()
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         {
           cookies: {
-            get(name) {
-              return cookieStore.get(name)?.value
+            getAll() {
+              return cookieStore.getAll()
             },
-            set(name, value, options) {
-              cookieStore.set({ name, value, ...options })
-            },
-            remove(name, options) {
-              cookieStore.set({ name, value: '', ...options })
+            setAll(cookiesToSet) {
+              try {
+                cookiesToSet.forEach(({ name, value, options }) =>
+                  cookieStore.set(name, value, options)
+                )
+              } catch {}
             },
           },
         }
@@ -451,9 +430,6 @@ export async function POST(request) {
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // ========================================================================
-    // PHASE 1: VISION ANALYSIS
-    // ========================================================================
     let visionSummary = ''
     let visionSearchTerms = ''
     let visionIssues = []
@@ -535,7 +511,6 @@ Be specific. If you see "45°F" on a cooler thermometer, say that.`,
               })).filter(i => i.issue)
             }
             
-            // Add to topics for retrieval
             visionIssues.forEach(i => {
               if (i.category && !detectedTopics.includes(i.category)) {
                 detectedTopics.push(i.category)
@@ -555,9 +530,6 @@ Be specific. If you see "45°F" on a cooler thermometer, say that.`,
       }
     }
 
-    // ========================================================================
-    // PHASE 2: DOCUMENT RETRIEVAL
-    // ========================================================================
     const retrievalQuery = enrichQuery(effectiveUserPrompt, visionSearchTerms, detectedTopics)
 
     logger.info('Searching documents', { topics: detectedTopics, queryLen: retrievalQuery.length })
@@ -565,7 +537,6 @@ Be specific. If you see "45°F" on a cooler thermometer, say that.`,
     let docs = await searchDocumentsFn(retrievalQuery, county, TOPK)
     docs = dedupeByText(docs || [])
 
-    // Ensure Washtenaw docs are present
     const washtenawHits = docs.filter(d => getSourceTier(d.source) === 1).length
     if (washtenawHits < 2) {
       logger.warn('Low Washtenaw docs, fetching more', { hits: washtenawHits })
@@ -579,7 +550,6 @@ Be specific. If you see "45°F" on a cooler thermometer, say that.`,
       }
     }
 
-    // Sort by tier, then score
     docs.sort((a, b) => {
       const tierA = getSourceTier(a.source)
       const tierB = getSourceTier(b.source)
@@ -590,9 +560,6 @@ Be specific. If you see "45°F" on a cooler thermometer, say that.`,
     const retrievedContext = buildContextString(docs)
     const confidence = calculateConfidence(docs, visionIssues, hasImage)
 
-    // ========================================================================
-    // PHASE 3: GENERATE RESPONSE
-    // ========================================================================
     const systemPrompt = `You are ProtocolLM, the AI compliance assistant for Washtenaw County, Michigan food service establishments.
 
 YOUR JOB: Help operators catch violations BEFORE the health inspector arrives.
@@ -686,7 +653,6 @@ ${WASHTENAW_ENFORCEMENT}
 
 Remember: One avoided Priority violation saves them $200-500+. Be helpful, be accurate, be fast.`
 
-    // Build issues list for prompt
     let issuesText = ''
     if (visionIssues.length > 0) {
       issuesText = '\n\n**Issues spotted in photo:**\n'
@@ -748,7 +714,6 @@ ${retrievedContext || '[No additional context retrieved]'}`
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
       
-      // Graceful fallback
       if (visionSummary && visionIssues.length > 0) {
         const fallback = visionIssues.map(v => {
           const sev = v.severity === 'critical' ? '[P]' : v.severity === 'serious' ? '[Pf]' : '[C]'
