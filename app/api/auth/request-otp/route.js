@@ -1,4 +1,4 @@
-// app/api/auth/request-otp/route.js - OTP request with reCAPTCHA verification
+// app/api/auth/request-otp/route.js - FIXED for Next.js 15
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyCaptcha } from '@/lib/captchaVerification'
@@ -12,8 +12,8 @@ const otpAttempts = new Map()
 const MAX_ATTEMPTS_PER_HOUR = 5
 const HOUR_MS = 60 * 60 * 1000
 
-function getClientIp(request) {
-  const headersList = headers()
+async function getClientIp(request) {
+  const headersList = await headers()
   const forwarded = headersList.get('x-forwarded-for')
   return forwarded ? forwarded.split(',')[0].trim() : headersList.get('x-real-ip') || 'unknown'
 }
@@ -38,7 +38,7 @@ function checkRateLimit(ip) {
 }
 
 export async function POST(request) {
-  const ip = getClientIp(request)
+  const ip = await getClientIp(request)
   
   try {
     // Parse body
