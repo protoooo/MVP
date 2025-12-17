@@ -15,20 +15,18 @@ const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// ✅ SECURITY FIX: Removed client-side admin check
-// Admin features now only accessible via /admin routes with server-side validation
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
   ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
       <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
@@ -44,14 +42,14 @@ const Icons = {
     </svg>
   ),
   LogOut: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
   Settings: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
@@ -63,19 +61,19 @@ const Icons = {
     </svg>
   ),
   Shield: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
       <path d="M9 12l2 2 4-5" />
     </svg>
   ),
   Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <rect x="4" y="11" width="16" height="10" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </svg>
   ),
   Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
       <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
       <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
     </svg>
@@ -85,13 +83,44 @@ const Icons = {
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  ArrowRight: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Star: () => (
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+    </svg>
+  ),
+  Zap: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
+  ),
+  Eye: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  FileText: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+    </svg>
+  ),
+  CheckCircle: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
 }
 
-/* -----------------------------
-   Framer-like reveals + countup
------------------------------- */
-
-function useInViewOnce({ threshold = 0.18, rootMargin = '0px 0px -10% 0px' } = {}) {
+function useInViewOnce({ threshold = 0.15, rootMargin = '0px 0px -8% 0px' } = {}) {
   const ref = useRef(null)
   const [inView, setInView] = useState(false)
 
@@ -121,16 +150,20 @@ function useInViewOnce({ threshold = 0.18, rootMargin = '0px 0px -10% 0px' } = {
   return [ref, inView]
 }
 
-function Reveal({ children, className = '', delay = 0 }) {
+function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   const [ref, inView] = useInViewOnce()
   return (
-    <div ref={ref} className={`rv ${inView ? 'is-inview' : ''} ${className}`} style={{ '--d': `${delay}ms` }}>
+    <div
+      ref={ref}
+      className={`rv ${inView ? 'is-inview' : ''} rv-${direction} ${className}`}
+      style={{ '--d': `${delay}ms` }}
+    >
       {children}
     </div>
   )
 }
 
-function CountUp({ value, prefix = '', suffix = '', duration = 900, className = '' }) {
+function CountUp({ value, prefix = '', suffix = '', duration = 1200, className = '' }) {
   const [ref, inView] = useInViewOnce({ threshold: 0.35 })
   const [n, setN] = useState(0)
 
@@ -143,7 +176,7 @@ function CountUp({ value, prefix = '', suffix = '', duration = 900, className = 
 
     const tick = (t) => {
       const p = Math.min(1, (t - start) / duration)
-      const eased = 1 - Math.pow(1 - p, 3)
+      const eased = 1 - Math.pow(1 - p, 4)
       const next = Math.round(from + (to - from) * eased)
       setN(next)
       if (p < 1) raf = requestAnimationFrame(tick)
@@ -162,11 +195,6 @@ function CountUp({ value, prefix = '', suffix = '', duration = 900, className = 
   )
 }
 
-/**
- * ✅ Smooth progress bar (never goes backwards / no stutter)
- * - Holds at ~94–96% while waiting
- * - Jumps to 100% when request completes, then fades out
- */
 function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   const [visible, setVisible] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -241,14 +269,17 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   if (!visible) return null
 
   return (
-    <div className="w-full px-1 pb-2">
-      <div className={`flex items-center justify-between text-[11px] text-white/60 mb-2 ${inter.className}`}>
-        <span className="truncate">{phase}</span>
-        <span className="tabular-nums">{progress}%</span>
+    <div className="w-full px-1 pb-3">
+      <div className={`flex items-center justify-between text-[11px] mb-2 ${inter.className}`}>
+        <span className="truncate text-white/50">{phase}</span>
+        <span className="tabular-nums text-white/40">{progress}%</span>
       </div>
 
-      <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-        <div className="h-full rounded-full bg-white/60" style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }} />
+      <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-white/40 to-white/60"
+          style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }}
+        />
       </div>
     </div>
   )
@@ -256,15 +287,15 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
 
 function FAQItem({ q, a, isOpen, onToggle }) {
   return (
-    <div className="ui-faqitem">
-      <button type="button" onClick={onToggle} className="ui-faqbtn" aria-expanded={isOpen}>
-        <span className={`ui-faqq ${inter.className}`}>{q}</span>
-        <span className={`ui-faqchev ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
+    <div className="faq-item">
+      <button type="button" onClick={onToggle} className="faq-btn" aria-expanded={isOpen}>
+        <span className={`faq-q ${inter.className}`}>{q}</span>
+        <span className={`faq-chevron ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
           <Icons.ChevronDown />
         </span>
       </button>
-      <div className={`ui-faqpanel ${isOpen ? 'is-open' : ''}`} role="region">
-        <div className={`ui-faqa ${inter.className}`}>{a}</div>
+      <div className={`faq-panel ${isOpen ? 'is-open' : ''}`} role="region">
+        <div className={`faq-a ${inter.className}`}>{a}</div>
       </div>
     </div>
   )
@@ -272,44 +303,6 @@ function FAQItem({ q, a, isOpen, onToggle }) {
 
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
-
-  const pricing = useMemo(() => ({ monthly: 200, annual: 2000 }), [])
-
-  const complianceCostCards = useMemo(
-    () => [
-      {
-        title: 'Monetary fines',
-        range: '$200–$2,500+ per violation',
-        detail: 'In some situations, daily penalties can apply while a violation remains unresolved.',
-        right: 'One serious issue can outweigh months of software.',
-      },
-      {
-        title: 'Mandatory re-inspections',
-        range: '$150–$350+ per re-inspection',
-        detail: 'A failed inspection can trigger multiple paid follow-ups until issues are corrected.',
-        right: 'A single failure can compound quickly.',
-      },
-      {
-        title: 'Labor and remediation',
-        range: 'Hundreds to thousands',
-        detail: 'Deep cleaning, rework, pest control, repairs, and operational disruption add up fast.',
-        right: 'Prevention is cheaper than recovery.',
-      },
-      {
-        title: 'Revenue loss from closure',
-        range: 'Tens of thousands',
-        detail: 'Full or partial shutdown can wipe out revenue while payroll and fixed costs continue.',
-        right: 'This is the catastrophic outcome to avoid.',
-      },
-      {
-        title: 'Reputation damage',
-        range: 'Hard to quantify',
-        detail: 'Lost repeat customers and long-term brand impact can linger well after reopening.',
-        right: 'Protect the public record and the brand.',
-      },
-    ],
-    []
-  )
 
   const faqs = useMemo(
     () => [
@@ -319,11 +312,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       },
       {
         q: 'What should my team upload for photo checks?',
-        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
+        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
       },
       {
         q: 'How should we use the document side?',
-        a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
+        a: 'Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.',
       },
       {
         q: 'Is usage limited?',
@@ -331,7 +324,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       },
       {
         q: 'Will it replace training or a manager?',
-        a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
+        a: 'No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
       },
       {
         q: 'How often should my team use it?',
@@ -341,270 +334,376 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     []
   )
 
+  const features = useMemo(
+    () => [
+      {
+        icon: <Icons.Eye />,
+        title: 'Visual Analysis',
+        description: 'Upload photos of any station and get instant feedback on potential violations before inspectors arrive.',
+      },
+      {
+        icon: <Icons.FileText />,
+        title: 'Local Intelligence',
+        description: 'Search Washtenaw County enforcement patterns alongside Michigan Food Code requirements.',
+      },
+      {
+        icon: <Icons.Zap />,
+        title: 'Real-time Guidance',
+        description: 'Get actionable fixes in plain language, not legal jargon. Built for line staff and managers.',
+      },
+    ],
+    []
+  )
+
+  const complianceRisks = useMemo(
+    () => [
+      { label: 'Monetary fines', range: '$200 – $2,500+', note: 'Per violation, daily penalties possible' },
+      { label: 'Re-inspections', range: '$150 – $350+', note: 'Each failed follow-up' },
+      { label: 'Remediation', range: '$1,000+', note: 'Labor, repairs, pest control' },
+      { label: 'Closure impact', range: '$10,000+', note: 'Lost revenue during shutdown' },
+    ],
+    []
+  )
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
-      <div className="max-w-6xl w-full">
-        <div className="ui-shell lp-shell">
-          {/* HERO */}
-          <section className="ui-hero lp-hero">
-            <Reveal>
-              <div className={`lp-eyebrow ${inter.className}`}>Washtenaw County food safety copilot</div>
+    <div className="landing-wrapper">
+      {/* Gradient orbs */}
+      <div className="gradient-orb gradient-orb-1" />
+      <div className="gradient-orb gradient-orb-2" />
+      <div className="gradient-orb gradient-orb-3" />
 
-              <h1 className={`ui-title lp-title ${outfit.className}`}>Catch violations before the inspector</h1>
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <Reveal delay={0}>
+            <div className="hero-badge">
+              <span className="hero-badge-dot" />
+              <span className={inter.className}>Washtenaw County Food Safety</span>
+            </div>
+          </Reveal>
 
-              <p className={`ui-subtitle lp-subtitle ${inter.className}`}>
-                Photo checks and regulation search designed for how Washtenaw County inspections actually happen.
-              </p>
+          <Reveal delay={100}>
+            <h1 className={`hero-title ${outfit.className}`}>
+              Catch violations
+              <br />
+              <span className="hero-title-accent">before the inspector</span>
+            </h1>
+          </Reveal>
 
-              <p className={`ui-body lp-body ${inter.className}`}>
-                Snap a photo of any station, get likely issues and fixes fast, and keep a searchable reference for your team. Built for operators who
-                want cleaner passes and fewer surprises.
-              </p>
+          <Reveal delay={200}>
+            <p className={`hero-subtitle ${inter.className}`}>
+              AI-powered photo analysis and regulation search designed for how
+              Washtenaw County inspections actually happen.
+            </p>
+          </Reveal>
 
-              <div className="ui-cta-row lp-cta">
-                <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                  <span className="ui-btn-inner">Start trial</span>
-                </button>
+          <Reveal delay={300}>
+            <div className="hero-cta-group">
+              <button onClick={onShowPricing} className="btn-primary">
+                <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
+                <Icons.ArrowRight />
+              </button>
+              <button onClick={onShowAuth} className="btn-secondary">
+                <span className={`btn-text ${inter.className}`}>Sign in</span>
+              </button>
+            </div>
+          </Reveal>
 
-                <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                  <span className="ui-btn-inner">Sign in</span>
-                </button>
-              </div>
-
-              <div className="lp-metricrow">
-                <div className="fx-card fx-card-strong">
-                  <div className={`fx-kicker ${inter.className}`}>Site license</div>
-                  <div className={`fx-number ${outfit.className}`}>
-                    <CountUp value={pricing.monthly} prefix="$" className="tabular-nums" />
-                    <span className="fx-unit">/month</span>
-                  </div>
-                  <div className={`fx-sub ${inter.className}`}>Unlimited usage for one location.</div>
-                </div>
-
-                <div className="fx-card">
-                  <div className={`fx-kicker ${inter.className}`}>Annual option</div>
-                  <div className={`fx-number ${outfit.className}`}>
-                    <CountUp value={pricing.annual} prefix="$" className="tabular-nums" />
-                    <span className="fx-unit">/year</span>
-                  </div>
-                  <div className={`fx-sub ${inter.className}`}>Equivalent to $166.67/month.</div>
-                </div>
-
-                <div className="fx-card">
-                  <div className={`fx-kicker ${inter.className}`}>Designed for speed</div>
-                  <div className={`fx-number fx-number-sm ${outfit.className}`}>Photo checks</div>
-                  <div className={`fx-sub ${inter.className}`}>Fast, operational feedback without hunting through PDFs.</div>
-                </div>
-              </div>
-            </Reveal>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* FEATURES */}
-          <section className="ui-section lp-section">
-            <Reveal delay={60}>
-              <div className="lp-sectionhead">
-                <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>Built for real kitchen moments</h2>
-                <p className={`ui-p lp-p ${inter.className}`}>
-                  Not a generic chatbot. Purpose-built flows for photo checks, quick answers, and consistent compliance habits.
-                </p>
-              </div>
-
-              <div className="fx-grid">
-                <div className="fx-card fx-card-hover">
-                  <div className="fx-cardtop">
-                    <span className="fx-icon" aria-hidden="true">
-                      <Icons.Camera />
-                    </span>
-                    <div className={`fx-title ${inter.className}`}>Photo analysis</div>
-                  </div>
-                  <div className={`fx-copy ${inter.className}`}>
-                    Upload walk-ins, prep, dish, storage, labels, and holding temps. Get likely issues and the “why” in plain language.
-                  </div>
-                </div>
-
-                <div className="fx-card fx-card-hover">
-                  <div className="fx-cardtop">
-                    <span className="fx-icon" aria-hidden="true">
-                      <Icons.Lock />
-                    </span>
-                    <div className={`fx-title ${inter.className}`}>Washtenaw-backed answers</div>
-                  </div>
-                  <div className={`fx-copy ${inter.className}`}>
-                    Search local enforcement patterns plus Michigan Modified Food Code and FDA guidance—organized for operators, not lawyers.
-                  </div>
-                </div>
-
-                <div className="fx-card fx-card-hover">
-                  <div className="fx-cardtop">
-                    <span className="fx-icon" aria-hidden="true">
-                      <Icons.Shield />
-                    </span>
-                    <div className={`fx-title ${inter.className}`}>Pre-inspection routine</div>
-                  </div>
-                  <div className={`fx-copy ${inter.className}`}>
-                    Run quick checks before inspection windows, during onboarding, or whenever something feels off. Build consistency without extra meetings.
-                  </div>
-                </div>
-              </div>
-
-              <div className={`lp-footnote ${inter.className}`}>
-                Uses Anthropic and Cohere APIs for language and retrieval. Not affiliated with or endorsed by Anthropic or Cohere.
-              </div>
-            </Reveal>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* COST OF NON-COMPLIANCE */}
-          <section className="ui-section lp-section">
-            <Reveal delay={40}>
-              <div className="lp-sectionhead">
-                <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>Cost of non-compliance</h2>
-                <p className={`ui-p lp-p ${inter.className}`}>
-                  These ranges are common examples used in industry discussions. Actual outcomes vary by jurisdiction and situation.
-                </p>
-              </div>
-
-              <div className="lp-costgrid">
-                {complianceCostCards.map((c, i) => (
-                  <div key={i} className="fx-card fx-card-hover">
-                    <div className={`lp-costtitle ${inter.className}`}>{c.title}</div>
-                    <div className={`lp-costrange ${outfit.className}`}>{c.range}</div>
-                    <div className={`lp-costdetail ${inter.className}`}>{c.detail}</div>
-                    <div className="lp-costdivider" />
-                    <div className={`lp-costright ${inter.className}`}>{c.right}</div>
-                  </div>
+          <Reveal delay={400}>
+            <div className="hero-trust">
+              <div className="hero-trust-stars">
+                {[...Array(5)].map((_, i) => (
+                  <Icons.Star key={i} />
                 ))}
               </div>
-
-              <div className={`lp-legal ${inter.className}`}>
-                Illustrative ranges only. protocolLM provides compliance assistance, not legal advice.
-              </div>
-            </Reveal>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* PRICING STRIP */}
-          <section className="ui-section lp-section">
-            <Reveal delay={30}>
-              <div className="lp-pricing">
-                <div>
-                  <div className={`ui-tag ${inter.className}`}>Single location license</div>
-                  <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>One plan. Unlimited usage.</h2>
-                  <p className={`ui-p lp-p ${inter.className}`}>
-                    Unlimited photo checks and questions for your licensed location. Built for daily use by managers and line staff.
-                  </p>
-
-                  <div className="lp-bench">
-                    <div className={`lp-benchlabel ${inter.className}`}>Typical compliance SaaS benchmarks</div>
-                    <div className={`lp-benchrow ${inter.className}`}>
-                      <span>Basic: $79–$149/month</span>
-                      <span>Standard: $199–$399/month</span>
-                      <span>Enterprise: $499+/month</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="fx-card fx-card-strong lp-pricingcard">
-                  <div className="lp-priceTop">
-                    <div className={`lp-priceName ${inter.className}`}>protocolLM</div>
-                    <div className={`lp-priceMain ${outfit.className}`}>
-                      <CountUp value={pricing.monthly} prefix="$" className="tabular-nums" />
-                      <span className="lp-priceUnit">/month</span>
-                    </div>
-                    <div className={`lp-priceSub ${inter.className}`}>Or ${pricing.annual.toLocaleString()}/year.</div>
-                  </div>
-
-                  <div className="lp-features">
-                    <div className={`lp-feature ${inter.className}`}>Unlimited photo checks</div>
-                    <div className={`lp-feature ${inter.className}`}>Unlimited text questions</div>
-                    <div className={`lp-feature ${inter.className}`}>Washtenaw-focused guidance</div>
-                    <div className={`lp-feature ${inter.className}`}>Owner / GM friendly</div>
-                  </div>
-
-                  <div className="lp-pricingcta">
-                    <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
-                      <span className="ui-btn-inner">Start trial</span>
-                    </button>
-                    <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full">
-                      <span className="ui-btn-inner">Sign in</span>
-                    </button>
-                  </div>
-
-                  <div className={`lp-smallprint ${inter.className}`}>One site license per restaurant. Cancel anytime.</div>
-                </div>
-              </div>
-            </Reveal>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* FAQ */}
-          <section className="ui-section lp-section">
-            <Reveal delay={20}>
-              <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>FAQ</h2>
-              <div className="ui-faq">
-                {faqs.map((f, i) => (
-                  <FAQItem key={i} q={f.q} a={f.a} isOpen={openFaq === i} onToggle={() => setOpenFaq((v) => (v === i ? null : i))} />
-                ))}
-              </div>
-            </Reveal>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* FINAL CTA */}
-          <section className="ui-final lp-final">
-            <Reveal>
-              <div className="ui-finalinner">
-                <div>
-                  <h3 className={`ui-h2 ${outfit.className}`}>Start your 7-day trial</h3>
-                  <p className={`ui-p ${inter.className}`}>Set up takes minutes. Give your team a faster way to verify issues and fix them early.</p>
-                </div>
-
-                <div className="ui-cta-row">
-                  <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                    <span className="ui-btn-inner">Start trial</span>
-                  </button>
-                  <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                    <span className="ui-btn-inner">Sign in</span>
-                  </button>
-                </div>
-              </div>
-            </Reveal>
-          </section>
-
-          <div className={`ui-footerline ${inter.className}`}>
-            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
-          </div>
+              <span className={`hero-trust-text ${inter.className}`}>
+                Built for operators who want cleaner passes
+              </span>
+            </div>
+          </Reveal>
         </div>
 
-        <footer className={`pt-8 text-[13px] text-white/80 ${inter.className}`}>
-          <div className="flex flex-wrap gap-5 justify-center">
-            <Link href="/terms" className="hover:text-white transition-colors">
-              Terms
-            </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">
-              Privacy
-            </Link>
-            <Link href="/contact" className="hover:text-white transition-colors">
-              Contact
-            </Link>
+        {/* Hero visual */}
+        <Reveal delay={500} direction="scale">
+          <div className="hero-visual">
+            <div className="hero-visual-inner">
+              <div className="hero-visual-header">
+                <div className="hero-visual-dots">
+                  <span /><span /><span />
+                </div>
+                <span className={`hero-visual-title ${inter.className}`}>Photo Analysis</span>
+              </div>
+              <div className="hero-visual-content">
+                <div className="hero-visual-preview">
+                  <Icons.Camera />
+                  <span className={inter.className}>Drop kitchen photo here</span>
+                </div>
+                <div className="hero-visual-result">
+                  <div className="hero-visual-result-header">
+                    <Icons.CheckCircle />
+                    <span className={`${inter.className}`}>Analysis Complete</span>
+                  </div>
+                  <div className={`hero-visual-result-items ${inter.className}`}>
+                    <div className="result-item result-item-warn">
+                      <span className="result-dot warn" />
+                      Temperature log visibility
+                    </div>
+                    <div className="result-item result-item-ok">
+                      <span className="result-dot ok" />
+                      Proper food storage order
+                    </div>
+                    <div className="result-item result-item-ok">
+                      <span className="result-dot ok" />
+                      Date labels present
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </Reveal>
+      </section>
 
-          <div className="mt-4 text-center text-[11px] text-white/45">
-            Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
+      {/* Stats bar */}
+      <section className="stats-section">
+        <Reveal>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <div className={`stat-value ${outfit.className}`}>
+                <CountUp value={200} prefix="$" />
+              </div>
+              <div className={`stat-label ${inter.className}`}>per month</div>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat-item">
+              <div className={`stat-value ${outfit.className}`}>Unlimited</div>
+              <div className={`stat-label ${inter.className}`}>photo checks</div>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat-item">
+              <div className={`stat-value ${outfit.className}`}>24/7</div>
+              <div className={`stat-label ${inter.className}`}>availability</div>
+            </div>
+            <div className="stat-divider" />
+            <div className="stat-item">
+              <div className={`stat-value ${outfit.className}`}>7 days</div>
+              <div className={`stat-label ${inter.className}`}>free trial</div>
+            </div>
           </div>
-        </footer>
-      </div>
+        </Reveal>
+      </section>
+
+      {/* Features Section */}
+      <section className="features-section">
+        <Reveal>
+          <div className="section-header">
+            <span className={`section-eyebrow ${inter.className}`}>Capabilities</span>
+            <h2 className={`section-title ${outfit.className}`}>
+              Built for real kitchen moments
+            </h2>
+            <p className={`section-subtitle ${inter.className}`}>
+              Not a generic chatbot. Purpose-built flows for photo checks, quick answers,
+              and consistent compliance habits.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="features-grid">
+          {features.map((feature, i) => (
+            <Reveal key={i} delay={i * 100}>
+              <div className="feature-card">
+                <div className="feature-icon">{feature.icon}</div>
+                <h3 className={`feature-title ${inter.className}`}>{feature.title}</h3>
+                <p className={`feature-description ${inter.className}`}>{feature.description}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Risk Section */}
+      <section className="risk-section">
+        <div className="risk-content">
+          <Reveal>
+            <div className="section-header">
+              <span className={`section-eyebrow ${inter.className}`}>Why it matters</span>
+              <h2 className={`section-title ${outfit.className}`}>
+                The cost of non-compliance
+              </h2>
+              <p className={`section-subtitle ${inter.className}`}>
+                One serious violation can cost more than years of prevention.
+                These are common ranges from industry data.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <div className="risk-grid">
+              {complianceRisks.map((risk, i) => (
+                <div key={i} className="risk-card">
+                  <div className={`risk-label ${inter.className}`}>{risk.label}</div>
+                  <div className={`risk-range ${outfit.className}`}>{risk.range}</div>
+                  <div className={`risk-note ${inter.className}`}>{risk.note}</div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className={`risk-disclaimer ${inter.className}`}>
+              Illustrative ranges only. protocolLM provides compliance assistance, not legal advice.
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="pricing-section">
+        <div className="pricing-content">
+          <Reveal>
+            <div className="pricing-header">
+              <span className={`section-eyebrow ${inter.className}`}>Simple pricing</span>
+              <h2 className={`section-title ${outfit.className}`}>
+                One plan. Unlimited usage.
+              </h2>
+              <p className={`section-subtitle ${inter.className}`}>
+                Full access for your entire team at one location.
+                No per-seat fees. No usage limits.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <div className="pricing-card">
+              <div className="pricing-card-glow" />
+              <div className="pricing-card-content">
+                <div className="pricing-badge">
+                  <Icons.Spark />
+                  <span className={inter.className}>Site License</span>
+                </div>
+
+                <div className="pricing-amount">
+                  <span className={`pricing-currency ${outfit.className}`}>$</span>
+                  <span className={`pricing-value ${outfit.className}`}>
+                    <CountUp value={200} />
+                  </span>
+                  <span className={`pricing-period ${inter.className}`}>/month</span>
+                </div>
+
+                <div className={`pricing-annual ${inter.className}`}>
+                  or $2,000/year (save $400)
+                </div>
+
+                <div className="pricing-features">
+                  {[
+                    'Unlimited photo checks',
+                    'Unlimited text questions',
+                    'Washtenaw-focused guidance',
+                    'Full team access',
+                    '7-day free trial',
+                    'Cancel anytime',
+                  ].map((feature, i) => (
+                    <div key={i} className={`pricing-feature ${inter.className}`}>
+                      <Icons.Check />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pricing-cta">
+                  <button onClick={onShowPricing} className="btn-primary btn-full">
+                    <span className={`btn-text ${inter.className}`}>Start free trial</span>
+                    <Icons.ArrowRight />
+                  </button>
+                </div>
+
+                <p className={`pricing-note ${inter.className}`}>
+                  No credit card required to start trial
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="pricing-comparison">
+              <div className={`comparison-label ${inter.className}`}>
+                Typical compliance software costs $199–$499+/month
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="faq-section">
+        <Reveal>
+          <div className="section-header">
+            <span className={`section-eyebrow ${inter.className}`}>Questions</span>
+            <h2 className={`section-title ${outfit.className}`}>
+              Frequently asked
+            </h2>
+          </div>
+        </Reveal>
+
+        <Reveal delay={100}>
+          <div className="faq-list">
+            {faqs.map((f, i) => (
+              <FAQItem
+                key={i}
+                q={f.q}
+                a={f.a}
+                isOpen={openFaq === i}
+                onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
+              />
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Final CTA */}
+      <section className="final-cta-section">
+        <Reveal>
+          <div className="final-cta-content">
+            <h2 className={`final-cta-title ${outfit.className}`}>
+              Ready to catch issues early?
+            </h2>
+            <p className={`final-cta-subtitle ${inter.className}`}>
+              Set up takes minutes. Give your team a faster way to verify and fix problems
+              before inspection day.
+            </p>
+            <div className="final-cta-buttons">
+              <button onClick={onShowPricing} className="btn-primary btn-lg">
+                <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
+                <Icons.ArrowRight />
+              </button>
+              <button onClick={onShowAuth} className="btn-secondary btn-lg">
+                <span className={`btn-text ${inter.className}`}>Sign in</span>
+              </button>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="landing-footer">
+        <div className="footer-content">
+          <div className="footer-links">
+            <Link href="/terms" className={`footer-link ${inter.className}`}>Terms</Link>
+            <Link href="/privacy" className={`footer-link ${inter.className}`}>Privacy</Link>
+            <Link href="/contact" className={`footer-link ${inter.className}`}>Contact</Link>
+          </div>
+          <p className={`footer-disclaimer ${inter.className}`}>
+            Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
+          </p>
+          <p className={`footer-copyright ${inter.className}`}>
+            © 2024 protocolLM. Made in Washtenaw County.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
 
-// ✅ REPLACED AuthModal (fixed turnstile_unavailable handling)
 function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   const [mode, setMode] = useState(initialMode)
   const [email, setEmail] = useState('')
@@ -697,107 +796,124 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-md ui-modal ui-modal-anim p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <h2 className={`text-lg font-semibold text-white tracking-tight mb-1 ${outfit.className}`}>
-              {mode === 'signin' && 'Sign in'}
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content">
+          <button onClick={onClose} className="modal-close" aria-label="Close">
+            <Icons.X />
+          </button>
+
+          <div className="modal-header">
+            <h2 className={`modal-title ${outfit.className}`}>
+              {mode === 'signin' && 'Welcome back'}
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`text-xs text-white/55 ${inter.className}`}>
-              {mode === 'signin' && 'Use your work email to continue.'}
-              {mode === 'signup' && 'Best with an owner / GM email for your site.'}
-              {mode === 'reset' && "We'll email you a reset link."}
+            <p className={`modal-subtitle ${inter.className}`}>
+              {mode === 'signin' && 'Sign in to access your dashboard'}
+              {mode === 'signup' && 'Start your 7-day free trial'}
+              {mode === 'reset' && "We'll send you a reset link"}
             </p>
           </div>
-          <button onClick={onClose} className="ui-icon-btn" aria-label="Close">
-            <Icons.X />
-          </button>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-white/55 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="gm@restaurant.com"
-              required
-              className={`ui-input ${inter.className}`}
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="modal-form">
+            <div className="form-group">
+              <label className={`form-label ${inter.className}`}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@restaurant.com"
+                required
+                className={`form-input ${inter.className}`}
+              />
+            </div>
 
-          {mode !== 'reset' && (
-            <div>
-              <label className="block text-xs font-semibold text-white/55 mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className={`ui-input pr-16 ${inter.className}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/55 hover:text-white text-xs"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
+            {mode !== 'reset' && (
+              <div className="form-group">
+                <label className={`form-label ${inter.className}`}>Password</label>
+                <div className="form-input-wrapper">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    className={`form-input ${inter.className}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`form-input-toggle ${inter.className}`}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !isLoaded}
+              className="btn-primary btn-full"
+            >
+              {loading && <span className="btn-spinner" />}
+              <span className={`btn-text ${inter.className}`}>
+                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+              </span>
+            </button>
+          </form>
+
+          {message && (
+            <div className={`modal-message ${messageKind}`}>
+              <span className="message-icon">
+                {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
+              </span>
+              <span className={`message-text ${inter.className}`}>{message}</span>
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading || !isLoaded}
-            className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className="ui-btn-inner">
-              {loading && <span className="ui-spinner" aria-hidden="true" />}
-              {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-            </span>
-          </button>
-        </form>
-
-        {message && (
-          <div className={`mt-4 ui-toast ${messageKind === 'err' ? 'ui-toast-err' : messageKind === 'ok' ? 'ui-toast-ok' : ''}`}>
-            <span className="ui-toasticon" aria-hidden="true">
-              {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
-            </span>
-            <span className={`ui-toasttext ${inter.className}`}>{message}</span>
+          <div className="modal-footer">
+            {mode === 'signin' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMode('reset')}
+                  className={`modal-link ${inter.className}`}
+                >
+                  Forgot password?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('signup')}
+                  className={`modal-link ${inter.className}`}
+                >
+                  Need an account? <strong>Sign up</strong>
+                </button>
+              </>
+            )}
+            {mode === 'signup' && (
+              <button
+                type="button"
+                onClick={() => setMode('signin')}
+                className={`modal-link ${inter.className}`}
+              >
+                Already have an account? <strong>Sign in</strong>
+              </button>
+            )}
+            {mode === 'reset' && (
+              <button
+                type="button"
+                onClick={() => setMode('signin')}
+                className={`modal-link ${inter.className}`}
+              >
+                Back to sign in
+              </button>
+            )}
           </div>
-        )}
 
-        <div className="mt-4 text-center space-y-1 text-xs text-white/55">
-          {mode === 'signin' && (
-            <>
-              <button type="button" onClick={() => setMode('reset')} className="block w-full text-white/55 hover:text-white">
-                Forgot password?
-              </button>
-              <button type="button" onClick={() => setMode('signup')} className="block w-full text-white/55 hover:text-white">
-                Need an account? <span className="font-semibold">Sign up</span>
-              </button>
-            </>
-          )}
-          {mode === 'signup' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
-              Already have an account? <span className="font-semibold">Sign in</span>
-            </button>
-          )}
-          {mode === 'reset' && (
-            <button type="button" onClick={() => setMode('signin')} className="text-white/55 hover:text-white">
-              Back to sign in
-            </button>
-          )}
+          <RecaptchaBadge />
         </div>
-
-        <RecaptchaBadge />
       </div>
     </div>
   )
@@ -807,67 +923,62 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[900] ui-backdrop flex items-center justify-center px-4" onClick={onClose}>
-      <div className="w-full max-w-xl ui-modal ui-modal-anim p-6 relative" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="ui-icon-btn absolute right-5 top-5" aria-label="Close pricing">
-          <Icons.X />
-        </button>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-container modal-container-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content">
+          <button onClick={onClose} className="modal-close" aria-label="Close">
+            <Icons.X />
+          </button>
 
-        <div className="mb-5">
-          <div className={`ui-tag ${inter.className}`}>Single site license</div>
-          <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/55 ${inter.className}`}>
-            Unlimited photo checks and document search—built specifically for Washtenaw County operators.
-          </p>
-        </div>
-
-        <div className="ui-pricewrap p-6">
-          <div className="flex items-end justify-between gap-4 flex-wrap">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
-                <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
-              </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Unlimited usage. Includes photo checks and questions.</p>
-            </div>
-
-            <div className={`ui-badge ${inter.className}`}>
+          <div className="modal-header">
+            <div className="pricing-modal-badge">
               <Icons.Shield />
-              Premium
+              <span className={inter.className}>Site License</span>
             </div>
+            <h2 className={`modal-title ${outfit.className}`}>protocolLM Access</h2>
+            <p className={`modal-subtitle ${inter.className}`}>
+              Unlimited photo checks and document search for your location.
+            </p>
           </div>
 
-          <div className="ui-divider my-5" />
+          <div className="pricing-modal-amount">
+            <span className={`pricing-currency ${outfit.className}`}>$</span>
+            <span className={`pricing-value-lg ${outfit.className}`}>200</span>
+            <span className={`pricing-period ${inter.className}`}>/month</span>
+          </div>
 
-          <div className="space-y-3">
+          <div className="pricing-modal-features">
+            {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-focused', 'Full team access'].map((f, i) => (
+              <div key={i} className={`pricing-feature-inline ${inter.className}`}>
+                <Icons.Check />
+                <span>{f}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="pricing-modal-actions">
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading}
-              className="ui-btn ui-btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary btn-full"
             >
-              <span className="ui-btn-inner">
-                {loading === 'monthly' && <span className="ui-spinner" aria-hidden="true" />}
-                Start trial
-              </span>
+              {loading === 'monthly' && <span className="btn-spinner" />}
+              <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading}
-              className="ui-btn ui-btn-secondary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-secondary btn-full"
             >
-              <span className="ui-btn-inner">
-                {loading === 'annual' && <span className="ui-spinner" aria-hidden="true" />}
-                Annual · $2,000/yr
-              </span>
+              {loading === 'annual' && <span className="btn-spinner" />}
+              <span className={`btn-text ${inter.className}`}>Annual · $2,000/year</span>
             </button>
-
-            <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
-              One site license per restaurant · 7-day trial · Cancel anytime
-              <br />
-              <span className="text-white/60">Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.</span>
-            </p>
           </div>
+
+          <p className={`pricing-modal-note ${inter.className}`}>
+            7-day free trial · Cancel anytime · One site license per restaurant
+          </p>
         </div>
       </div>
     </div>
@@ -910,13 +1021,9 @@ export default function Page() {
 
   const isAuthenticated = !!session
 
-  // ✅ NEW: Hide Spline background on chat mode (landing keeps it)
   useEffect(() => {
     if (typeof document === 'undefined') return
-
     document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
-
-    // belt + suspenders: hide the container directly
     const splineContainer = document.getElementById('plm-spline-bg')
     if (splineContainer) {
       splineContainer.style.display = isAuthenticated ? 'none' : 'block'
@@ -1119,7 +1226,7 @@ export default function Page() {
     try {
       loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg'
+      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -1268,8 +1375,8 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="ui-spinner-lg" aria-label="Loading" />
+      <div className="loading-screen">
+        <div className="loading-spinner" />
       </div>
     )
   }
@@ -1277,878 +1384,333 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        html,
-        body {
-          height: 100%;
-          width: 100%;
-          background: transparent !important;
-        }
-
-        /* ✅ Let AmexBackground from layout.js show through */
-        body {
-          overflow: hidden;
-          background: transparent !important;
-          color: rgba(255, 255, 255, 0.94);
-        }
-
-        /* ✅ NEW: subtle veil so the 3D/Amex background is visible behind the whole app */
-        .ui-appveil {
-          background: linear-gradient(180deg, rgba(0, 0, 0, 0.58) 0%, rgba(0, 0, 0, 0.76) 100%);
-        }
-
+        /* ===== BASE RESET & VARIABLES ===== */
         :root {
-          scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
-          scrollbar-width: thin;
+          --color-bg: #050506;
+          --color-surface: rgba(255, 255, 255, 0.02);
+          --color-surface-elevated: rgba(255, 255, 255, 0.04);
+          --color-border: rgba(255, 255, 255, 0.08);
+          --color-border-subtle: rgba(255, 255, 255, 0.05);
+          --color-text: rgba(255, 255, 255, 0.92);
+          --color-text-secondary: rgba(255, 255, 255, 0.6);
+          --color-text-tertiary: rgba(255, 255, 255, 0.4);
+          --color-accent: #ffffff;
+          --color-accent-glow: rgba(255, 255, 255, 0.15);
+          --radius-sm: 8px;
+          --radius-md: 12px;
+          --radius-lg: 16px;
+          --radius-xl: 24px;
+          --radius-2xl: 32px;
+          --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+          --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+          --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.5);
+          --shadow-glow: 0 0 60px rgba(255, 255, 255, 0.08);
+          --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+          --transition-medium: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+          --transition-slow: 500ms cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        html, body {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          background: var(--color-bg);
+          color: var(--color-text);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
+
+        ::selection {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar {
-          width: 9px;
+          width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.12);
-          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.15);
         }
 
-        /* 3. ✅ REPLACED .ui-header */
-        .ui-header {
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(5, 6, 8, 0.7);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-        }
-
-        .ui-logo {
-          display: inline-flex;
-          align-items: baseline;
-          gap: 0;
-          user-select: none;
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-        }
-        .ui-logo-protocol {
-          font-size: 17px;
-          font-weight: 900;
-          letter-spacing: -0.04em;
-          color: rgba(255, 255, 255, 0.92);
-          line-height: 1;
-        }
-        .ui-logo-lm {
-          font-size: 17px;
-          font-weight: 950;
-          letter-spacing: -0.04em;
-          color: rgba(255, 255, 255, 0.92);
-          line-height: 1;
-        }
-        @media (min-width: 640px) {
-          .ui-logo-protocol,
-          .ui-logo-lm {
-            font-size: 18px;
-          }
-        }
-
-        /* 1. ✅ REPLACED .ui-shell */
-        .ui-shell {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px) saturate(180%);
-          -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border-radius: 22px;
-          overflow: hidden;
-          box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7);
-          position: relative;
-        }
-
-        .ui-shell::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          pointer-events: none;
-          background: radial-gradient(700px 240px at 20% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
-          opacity: 0.8;
-        }
-
-        .ui-hero {
-          padding: 32px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-title {
-          font-size: clamp(32px, 4vw, 52px);
-          line-height: 1.05;
-          letter-spacing: -0.05em;
-          margin-bottom: 10px;
-          color: rgba(255, 255, 255, 0.96);
-        }
-
-        .ui-subtitle {
-          font-size: 16px;
-          line-height: 1.4;
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 10px;
-          max-width: 70ch;
-        }
-
-        .ui-body {
-          font-size: 13px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
-          max-width: 78ch;
-        }
-
-        .ui-cta-row {
+        /* ===== LOADING SCREEN ===== */
+        .loading-screen {
+          position: fixed;
+          inset: 0;
           display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-          margin-top: 18px;
-        }
-
-        .ui-section-divider {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.08);
-        }
-
-        .ui-section {
-          padding: 28px 32px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-final {
-          padding: 28px 32px 26px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .ui-finalinner {
-          display: flex;
-          gap: 18px;
-          align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-        }
-
-        .ui-h2 {
-          font-size: 20px;
-          letter-spacing: -0.02em;
-          color: rgba(255, 255, 255, 0.94);
-          margin-bottom: 8px;
-        }
-
-        .ui-p {
-          font-size: 13px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
-          max-width: 72ch;
-        }
-
-        /* 4. ✅ REPLACED .ui-stepcard */
-        .ui-stepcard {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          padding: 12px;
-        }
-
-        /* 5. ✅ REPLACED .ui-faq */
-        .ui-faq {
-          margin-top: 12px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          overflow: hidden;
-        }
-
-        .ui-faqitem {
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .ui-faqitem:first-child {
-          border-top: none;
-        }
-
-        .ui-faqbtn {
-          width: 100%;
-          text-align: left;
-          padding: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          background: transparent;
-          color: rgba(255, 255, 255, 0.92);
-          outline: none;
-        }
-
-        .ui-faqbtn:hover {
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .ui-faqq {
-          font-size: 12px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.9);
-        }
-
-        .ui-faqchev {
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          display: inline-flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
-          transition: transform 140ms ease;
-          flex-shrink: 0;
-        }
-        .ui-faqchev.is-open {
-          transform: rotate(180deg);
+          background: var(--color-bg);
         }
 
-        .ui-faqpanel {
-          max-height: 0px;
-          overflow: hidden;
-          transition: max-height 180ms ease;
-        }
-        .ui-faqpanel.is-open {
-          max-height: 260px;
-        }
-
-        .ui-faqa {
-          padding: 0 12px 12px;
-          font-size: 12px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 2px solid var(--color-border);
+          border-top-color: var(--color-text);
+          border-radius: 50%;
+          animation: spin 800ms linear infinite;
         }
 
-        .ui-footerline {
-          padding: 14px 22px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 13px;
-        }
-
-        .ui-btn {
-          border-radius: 12px;
-          padding: 11px 14px;
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, color 120ms ease,
-            opacity 120ms ease;
-          user-select: none;
-        }
-
-        .ui-btn-inner {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-        }
-
-        .ui-btn:hover {
-          transform: scale(1.02);
-        }
-        .ui-btn:active {
-          transform: scale(1.01);
-        }
-
-        .ui-btn-primary {
-          background: #ffffff;
-          color: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-        }
-        .ui-btn-primary:hover {
-          box-shadow: 0 26px 80px rgba(0, 0, 0, 0.58);
-        }
-
-        .ui-btn-secondary {
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .ui-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .ui-btn:focus-visible,
-        .ui-icon-btn:focus-visible,
-        .ui-faqbtn:focus-visible,
-        .ui-input:focus-visible,
-        .ui-menuitem:focus-visible,
-        .ui-avatar-btn:focus-visible {
-          outline: 2px solid rgba(255, 255, 255, 0.22);
-          outline-offset: 2px;
-        }
-
-        .ui-icon-btn {
-          width: 44px;
-          height: 44px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.82);
-          transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
-        }
-        .ui-icon-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.95);
-          transform: scale(1.02);
-        }
-
-        .ui-backdrop {
-          background: rgba(0, 0, 0, 0.72);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-        }
-
-        .ui-modal {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          box-shadow: 0 36px 120px rgba(0, 0, 0, 0.75);
-        }
-
-        .ui-modal-anim {
-          animation: uiPop 180ms ease-out both;
-          transform-origin: 50% 40%;
-        }
-        @keyframes uiPop {
-          from {
-            opacity: 0;
-            transform: scale(0.96);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .ui-input {
-          width: 100%;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.94);
-          outline: none;
-          transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
-        }
-        .ui-input::placeholder {
-          color: rgba(255, 255, 255, 0.4);
-        }
-        .ui-input:focus {
-          border-color: rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
-        }
-
-        .ui-toast {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          border-radius: 12px;
-          padding: 10px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .ui-toast-ok {
-          border-color: rgba(34, 197, 94, 0.35);
-        }
-        .ui-toast-err {
-          border-color: rgba(239, 68, 68, 0.35);
-        }
-        .ui-toasticon {
-          margin-top: 1px;
-          color: rgba(255, 255, 255, 0.75);
-        }
-        .ui-toasttext {
-          font-size: 12px;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .ui-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.7);
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          width: fit-content;
-        }
-
-        .ui-pricewrap {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .ui-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .ui-divider {
-          height: 1px;
-          width: 100%;
-          background: rgba(255, 255, 255, 0.08);
-        }
-
-        /* Chat bubble cleanup */
-        .ui-bubble {
-          border: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-          color: rgba(255, 255, 255, 0.94);
-        }
-
-        .ui-bubble-user {
-          border: none !important;
-          background: transparent !important;
-          color: rgba(255, 255, 255, 0.94) !important;
-          padding: 0 !important;
-          border-radius: 0 !important;
-          font-weight: 600;
-        }
-
-        .ui-chatimgwrap {
-          border: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          border-radius: 16px;
-          overflow: hidden;
-          margin-bottom: 10px;
-        }
-        .ui-chatimg {
-          display: block;
-          width: 100%;
-          border: none !important;
-          outline: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          border-radius: 0 !important;
-          max-height: 280px;
-          object-fit: contain;
-        }
-
-        .ui-thinking {
-          border: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-
-        .ui-emptywrap {
-          border: none !important;
-          background: rgba(255, 255, 255, 0.03) !important;
-          backdrop-filter: blur(16px) !important;
-          -webkit-backdrop-filter: blur(16px) !important;
-          border-radius: 18px;
-          padding: 16px;
-          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
-          max-width: 520px;
-          width: 100%;
-        }
-
-        .ui-attachpill {
-          border: none !important;
-          background: rgba(255, 255, 255, 0.04) !important;
-          border-radius: 14px;
-          padding: 10px 12px;
-          color: rgba(255, 255, 255, 0.75);
-        }
-
-        .ui-spinner {
-          width: 14px;
-          height: 14px;
-          border-radius: 999px;
-          border: 2px solid rgba(0, 0, 0, 0.18);
-          border-top-color: rgba(0, 0, 0, 0.65);
-          animation: spin 700ms linear infinite;
-        }
-        .ui-spinner-lg {
-          width: 34px;
-          height: 34px;
-          border-radius: 999px;
-          border: 2px solid rgba(255, 255, 255, 0.16);
-          border-top-color: rgba(255, 255, 255, 0.75);
-          animation: spin 700ms linear infinite;
-        }
         @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          to { transform: rotate(360deg); }
         }
 
-        /* -----------------------------
-           Landing: Framer-esque reveals
-        ------------------------------ */
-        .rv {
-          opacity: 0;
-          transform: translateY(14px);
-          filter: blur(8px);
-          transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1),
-            filter 700ms cubic-bezier(0.16, 1, 0.3, 1);
-          transition-delay: var(--d, 0ms);
-          will-change: opacity, transform, filter;
-        }
-        .rv.is-inview {
-          opacity: 1;
-          transform: translateY(0);
-          filter: blur(0);
-        }
-
-        .lp-eyebrow {
-          display: inline-flex;
-          width: fit-content;
-          padding: 6px 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          margin-bottom: 12px;
-        }
-
-        .lp-metricrow {
-          margin-top: 18px;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-        @media (min-width: 860px) {
-          .lp-metricrow {
-            grid-template-columns: 1.2fr 1fr 1fr;
-          }
-        }
-
-        .fx-card {
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(14px) saturate(180%);
-          -webkit-backdrop-filter: blur(14px) saturate(180%);
-          padding: 14px;
-          position: relative;
-          overflow: hidden;
-        }
-        .fx-card::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          pointer-events: none;
-          background: radial-gradient(600px 180px at 10% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
-          opacity: 0.8;
-        }
-        .fx-card-strong {
-          background: rgba(255, 255, 255, 0.03);
-        }
-        .fx-card-hover {
-          transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, background 180ms ease;
-        }
-        .fx-card-hover:hover {
-          transform: translateY(-2px);
-          border-color: rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .fx-kicker {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.55);
-          margin-bottom: 8px;
-        }
-
-        .fx-number {
-          font-size: 34px;
-          letter-spacing: -0.04em;
-          color: rgba(255, 255, 255, 0.95);
-          line-height: 1.05;
-        }
-        .fx-number-sm {
-          font-size: 18px;
-          letter-spacing: -0.02em;
-        }
-        .fx-unit {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.45);
-          margin-left: 8px;
-        }
-        .fx-sub {
-          margin-top: 8px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
-          line-height: 1.5;
-          max-width: 60ch;
-        }
-
-        .fx-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          margin-top: 12px;
-        }
-        @media (min-width: 980px) {
-          .fx-grid {
-            grid-template-columns: 1fr 1fr 1fr;
-          }
-        }
-        .fx-cardtop {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
-          position: relative;
-          z-index: 1;
-        }
-        .fx-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
-          flex-shrink: 0;
-        }
-        .fx-title {
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
-        }
-        .fx-copy {
-          font-size: 13px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
-          position: relative;
-          z-index: 1;
-        }
-
-        .lp-footnote {
-          margin-top: 12px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.45);
-        }
-
-        .lp-costgrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          margin-top: 12px;
-        }
-        @media (min-width: 980px) {
-          .lp-costgrid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        .lp-costtitle {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.7);
-          position: relative;
-          z-index: 1;
-        }
-        .lp-costrange {
-          font-size: 20px;
-          letter-spacing: -0.03em;
-          color: rgba(255, 255, 255, 0.94);
-          margin-top: 6px;
-          position: relative;
-          z-index: 1;
-        }
-        .lp-costdetail {
-          margin-top: 8px;
-          font-size: 13px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.55);
-          position: relative;
-          z-index: 1;
-        }
-        .lp-costdivider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.08);
-          margin: 10px 0;
-          position: relative;
-          z-index: 1;
-        }
-        .lp-costright {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.7);
-          position: relative;
-          z-index: 1;
-        }
-        .lp-legal {
-          margin-top: 10px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.45);
-        }
-
-        .lp-pricing {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 12px;
-          align-items: start;
-        }
-        @media (min-width: 980px) {
-          .lp-pricing {
-            grid-template-columns: 1.2fr 0.8fr;
-          }
-        }
-
-        .lp-bench {
-          margin-top: 12px;
-          padding: 12px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-        }
-        .lp-benchlabel {
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.55);
-          margin-bottom: 8px;
-        }
-        .lp-benchrow {
+        /* ===== APP CONTAINER ===== */
+        .app-container {
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
-          gap: 6px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.65);
+          position: relative;
         }
 
-        .lp-pricingcard {
-          padding: 16px;
+        /* ===== HEADER ===== */
+        .app-header {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          background: rgba(5, 5, 6, 0.8);
+          backdrop-filter: blur(20px) saturate(180%);
+          -webkit-backdrop-filter: blur(20px) saturate(180%);
+          border-bottom: 1px solid var(--color-border-subtle);
         }
-        .lp-priceName {
-          font-size: 12px;
+
+        .header-inner {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 16px 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        @media (max-width: 640px) {
+          .header-inner {
+            padding: 12px 16px;
+          }
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .logo {
+          display: flex;
+          align-items: baseline;
+          gap: 0;
+          text-decoration: none;
+        }
+
+        .logo-text {
+          font-size: 18px;
           font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.65);
+          letter-spacing: -0.03em;
+          color: var(--color-text);
         }
-        .lp-priceMain {
-          margin-top: 6px;
-          font-size: 42px;
-          letter-spacing: -0.05em;
-          color: rgba(255, 255, 255, 0.95);
-          line-height: 1.05;
+
+        .logo-accent {
+          font-weight: 900;
         }
-        .lp-priceUnit {
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.45);
-          margin-left: 10px;
+
+        .header-meta {
+          display: none;
         }
-        .lp-priceSub {
-          margin-top: 8px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.55);
+
+        @media (min-width: 768px) {
+          .header-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+
+          .header-meta-primary {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+          }
+
+          .header-meta-secondary {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+          }
         }
-        .lp-features {
-          margin-top: 12px;
-          display: grid;
-          gap: 8px;
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
-        .lp-feature {
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          padding: 10px 12px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.75);
-        }
-        .lp-pricingcta {
-          margin-top: 12px;
-          display: grid;
-          gap: 10px;
-        }
-        .lp-smallprint {
-          margin-top: 10px;
+
+        .header-status {
+          display: none;
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.45);
-          text-align: center;
+          color: var(--color-text-tertiary);
         }
 
-        /* =========================
-           PREMIUM USER MENU STYLES
-           ========================= */
-        .ui-usermenu {
+        @media (min-width: 1024px) {
+          .header-status {
+            display: block;
+          }
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 24px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
+        }
+
+        .btn-primary:active {
+          transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .btn-secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 24px;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .btn-secondary:hover {
+          background: var(--color-surface-elevated);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-secondary:active {
+          transform: scale(0.98);
+        }
+
+        .btn-text {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-full {
+          width: 100%;
+        }
+
+        .btn-lg {
+          padding: 16px 32px;
+          font-size: 15px;
+        }
+
+        .btn-icon {
+          width: 44px;
+          height: 44px;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          color: var(--color-text-secondary);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .btn-icon:hover {
+          background: var(--color-surface-elevated);
+          color: var(--color-text);
+        }
+
+        .btn-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(0, 0, 0, 0.2);
+          border-top-color: rgba(0, 0, 0, 0.8);
+          border-radius: 50%;
+          animation: spin 600ms linear infinite;
+        }
+
+        /* ===== AVATAR & USER MENU ===== */
+        .avatar-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: var(--radius-md);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+          border: 1px solid var(--color-border);
+          color: var(--color-text);
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .avatar-btn:hover {
+          transform: scale(1.05);
+          border-color: rgba(255, 255, 255, 0.15);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .user-menu-wrapper {
+          position: relative;
+        }
+
+        .user-menu {
           position: absolute;
-          right: 0;
           top: calc(100% + 8px);
-          width: 280px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.98));
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-            0 20px 80px rgba(0, 0, 0, 0.7);
+          right: 0;
+          width: 260px;
+          background: rgba(10, 10, 12, 0.95);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
           overflow: hidden;
-          animation: uiMenuSlide 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+          animation: menuSlide 200ms cubic-bezier(0.16, 1, 0.3, 1);
           transform-origin: top right;
-          z-index: 1000;
         }
 
-        @keyframes uiMenuSlide {
+        @keyframes menuSlide {
           from {
             opacity: 0;
             transform: translateY(-8px) scale(0.96);
@@ -2159,180 +1721,1359 @@ export default function Page() {
           }
         }
 
-        .ui-usermenu::before {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          border-radius: 18px;
-          padding: 1px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          pointer-events: none;
-          opacity: 0.6;
+        .user-menu-header {
+          padding: 16px;
+          border-bottom: 1px solid var(--color-border-subtle);
         }
 
-        .ui-menuheader {
-          padding: 16px 18px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
-        }
-
-        .ui-useremail {
+        .user-menu-email {
           font-size: 13px;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.95);
-          margin-bottom: 4px;
-          letter-spacing: -0.01em;
-          word-break: break-word;
+          color: var(--color-text);
+          word-break: break-all;
         }
 
-        .ui-userstatus {
+        .user-menu-status {
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
+          color: var(--color-text-tertiary);
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-weight: 600;
+          letter-spacing: 0.05em;
+          margin-top: 4px;
         }
 
-        .ui-menudivider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.08);
-          margin: 8px 0;
-        }
-
-        .ui-menuitem {
+        .user-menu-item {
           width: 100%;
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px 18px;
-          text-align: left;
+          padding: 12px 16px;
+          background: none;
+          border: none;
+          color: var(--color-text-secondary);
           font-size: 13px;
           font-weight: 500;
-          color: rgba(255, 255, 255, 0.85);
-          transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
-          position: relative;
-          overflow: hidden;
-          background: transparent;
-          border: none;
           cursor: pointer;
+          transition: all var(--transition-fast);
+          text-align: left;
         }
 
-        .ui-menuitem::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 3px;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
-          transform: translateX(-3px);
-          transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
+        .user-menu-item:hover {
+          background: var(--color-surface-elevated);
+          color: var(--color-text);
         }
 
-        .ui-menuitem:hover {
-          background: rgba(255, 255, 255, 0.06);
-          color: rgba(255, 255, 255, 0.98);
-          transform: translateX(2px);
-        }
-
-        .ui-menuitem:hover::before {
-          transform: translateX(0);
-        }
-
-        .ui-menuitem:active {
-          transform: translateX(2px) scale(0.99);
-        }
-
-        .ui-menuitem-icon {
-          width: 20px;
-          height: 20px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+        .user-menu-item-icon {
           opacity: 0.7;
-          transition: opacity 140ms ease;
         }
 
-        .ui-menuitem:hover .ui-menuitem-icon {
-          opacity: 1;
+        .user-menu-item-danger {
+          color: rgba(239, 68, 68, 0.8);
         }
 
-        .ui-menuitem-logout {
-          color: rgba(239, 68, 68, 0.85);
-        }
-
-        .ui-menuitem-logout:hover {
-          background: rgba(239, 68, 68, 0.08);
+        .user-menu-item-danger:hover {
+          background: rgba(239, 68, 68, 0.1);
           color: rgba(239, 68, 68, 0.95);
         }
 
-        .ui-menuitem-logout::before {
-          background: linear-gradient(180deg, rgba(239, 68, 68, 0.8), rgba(239, 68, 68, 0.5));
+        .user-menu-divider {
+          height: 1px;
+          background: var(--color-border-subtle);
+          margin: 4px 0;
         }
 
-        .ui-menufooter {
-          padding: 12px 18px 14px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(0, 0, 0, 0.3);
+        .user-menu-footer {
+          padding: 12px 16px;
+          border-top: 1px solid var(--color-border-subtle);
         }
 
-        .ui-menuhelp {
+        .user-menu-hint {
           font-size: 10px;
-          color: rgba(255, 255, 255, 0.4);
+          color: var(--color-text-tertiary);
           text-align: center;
-          letter-spacing: 0.04em;
         }
 
-        .ui-avatar-btn {
-          width: 44px;
-          height: 44px;
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-          color: rgba(255, 255, 255, 0.9);
+        /* ===== LANDING PAGE ===== */
+        .landing-wrapper {
+          flex: 1;
+          position: relative;
+          overflow-x: hidden;
+        }
+
+        /* Gradient orbs */
+        .gradient-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          pointer-events: none;
+          opacity: 0.4;
+        }
+
+        .gradient-orb-1 {
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+          top: -200px;
+          left: -200px;
+        }
+
+        .gradient-orb-2 {
+          width: 500px;
+          height: 500px;
+          background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+          top: 400px;
+          right: -150px;
+        }
+
+        .gradient-orb-3 {
+          width: 400px;
+          height: 400px;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+          bottom: 200px;
+          left: 10%;
+        }
+
+        /* Reveal animations */
+        .rv {
+          opacity: 0;
+          transition: 
+            opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
+            transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
+            filter 800ms cubic-bezier(0.16, 1, 0.3, 1);
+          transition-delay: var(--d, 0ms);
+          will-change: opacity, transform, filter;
+        }
+
+        .rv-up {
+          transform: translateY(30px);
+          filter: blur(4px);
+        }
+
+        .rv-scale {
+          transform: scale(0.95);
+          filter: blur(4px);
+        }
+
+        .rv.is-inview {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0);
+        }
+
+        /* Hero Section */
+        .hero-section {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 80px 24px 120px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 60px;
+          align-items: center;
+          position: relative;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-section {
+            grid-template-columns: 1fr 1fr;
+            padding: 100px 48px 140px;
+            gap: 80px;
+          }
+        }
+
+        .hero-content {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .hero-badge {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          font-size: 15px;
-          font-weight: 700;
-          transition: all 140ms cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+          gap: 8px;
+          padding: 8px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: 100px;
+          width: fit-content;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          letter-spacing: 0.02em;
+        }
+
+        .hero-badge-dot {
+          width: 6px;
+          height: 6px;
+          background: #22c55e;
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .hero-title {
+          font-size: clamp(40px, 6vw, 64px);
+          font-weight: 800;
+          line-height: 1.05;
+          letter-spacing: -0.04em;
+          color: var(--color-text);
+          margin: 0;
+        }
+
+        .hero-title-accent {
+          background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.6) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .hero-subtitle {
+          font-size: 18px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          max-width: 500px;
+          margin: 0;
+        }
+
+        .hero-cta-group {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+          margin-top: 8px;
+        }
+
+        .hero-trust {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 16px;
+        }
+
+        .hero-trust-stars {
+          display: flex;
+          gap: 2px;
+          color: #fbbf24;
+        }
+
+        .hero-trust-text {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+        }
+
+        /* Hero Visual */
+        .hero-visual {
           position: relative;
+        }
+
+        .hero-visual-inner {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
           overflow: hidden;
-          user-select: none;
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
-        .ui-avatar-btn::before {
-          content: '';
+        .hero-visual-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 20px;
+          background: rgba(255, 255, 255, 0.02);
+          border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        .hero-visual-dots {
+          display: flex;
+          gap: 6px;
+        }
+
+        .hero-visual-dots span {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: var(--color-border);
+        }
+
+        .hero-visual-title {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-tertiary);
+        }
+
+        .hero-visual-content {
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .hero-visual-preview {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: 40px;
+          background: var(--color-surface);
+          border: 2px dashed var(--color-border);
+          border-radius: var(--radius-lg);
+          color: var(--color-text-tertiary);
+          font-size: 13px;
+        }
+
+        .hero-visual-result {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          padding: 16px;
+        }
+
+        .hero-visual-result-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          color: #22c55e;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .hero-visual-result-items {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .result-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13px;
+          color: var(--color-text-secondary);
+        }
+
+        .result-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .result-dot.ok {
+          background: #22c55e;
+        }
+
+        .result-dot.warn {
+          background: #f59e0b;
+        }
+
+        /* Stats Section */
+        .stats-section {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px 100px;
+        }
+
+        .stats-grid {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 24px;
+          padding: 32px 40px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+        }
+
+        .stat-item {
+          text-align: center;
+          padding: 0 24px;
+        }
+
+        .stat-value {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--color-text);
+        }
+
+        .stat-label {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+          margin-top: 4px;
+        }
+
+        .stat-divider {
+          width: 1px;
+          height: 48px;
+          background: var(--color-border);
+          display: none;
+        }
+
+        @media (min-width: 768px) {
+          .stat-divider {
+            display: block;
+          }
+        }
+
+        /* Section styles */
+        .section-header {
+          text-align: center;
+          max-width: 600px;
+          margin: 0 auto 48px;
+        }
+
+        .section-eyebrow {
+          display: inline-block;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--color-text-tertiary);
+          margin-bottom: 16px;
+        }
+
+        .section-title {
+          font-size: clamp(28px, 4vw, 40px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: var(--color-text);
+          margin: 0 0 16px;
+          line-height: 1.1;
+        }
+
+        .section-subtitle {
+          font-size: 16px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          margin: 0;
+        }
+
+        /* Features Section */
+        .features-section {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 80px 24px;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+          .features-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        .feature-card {
+          padding: 32px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+          transition: all var(--transition-medium);
+        }
+
+        .feature-card:hover {
+          background: var(--color-surface-elevated);
+          border-color: rgba(255, 255, 255, 0.12);
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-md);
+        }
+
+        .feature-icon {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          color: var(--color-text);
+          margin-bottom: 20px;
+        }
+
+        .feature-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--color-text);
+          margin: 0 0 8px;
+        }
+
+        .feature-description {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          margin: 0;
+        }
+
+        /* Risk Section */
+        .risk-section {
+          padding: 100px 24px;
+          background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.01) 50%, transparent 100%);
+        }
+
+        .risk-content {
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+
+        .risk-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+          margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+          .risk-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+
+        .risk-card {
+          padding: 24px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          text-align: center;
+        }
+
+        .risk-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-tertiary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 8px;
+        }
+
+        .risk-range {
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--color-text);
+          margin-bottom: 4px;
+        }
+
+        .risk-note {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+        }
+
+        .risk-disclaimer {
+          text-align: center;
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+          padding: 100px 24px;
+        }
+
+        .pricing-content {
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
+        .pricing-header {
+          text-align: center;
+          margin-bottom: 40px;
+        }
+
+        .pricing-card {
+          position: relative;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          overflow: hidden;
+        }
+
+        .pricing-card-glow {
           position: absolute;
+          inset: -1px;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
+          border-radius: var(--radius-2xl);
+          pointer-events: none;
+        }
+
+        .pricing-card-content {
+          position: relative;
+          padding: 40px;
+        }
+
+        .pricing-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background: var(--color-surface-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          margin-bottom: 24px;
+        }
+
+        .pricing-amount {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 4px;
+          margin-bottom: 8px;
+        }
+
+        .pricing-currency {
+          font-size: 28px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+        }
+
+        .pricing-value {
+          font-size: 64px;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          color: var(--color-text);
+          line-height: 1;
+        }
+
+        .pricing-value-lg {
+          font-size: 72px;
+        }
+
+        .pricing-period {
+          font-size: 16px;
+          color: var(--color-text-tertiary);
+          margin-left: 4px;
+        }
+
+        .pricing-annual {
+          text-align: center;
+          font-size: 14px;
+          color: var(--color-text-tertiary);
+          margin-bottom: 32px;
+        }
+
+        .pricing-features {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 32px;
+        }
+
+        .pricing-feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 14px;
+          color: var(--color-text-secondary);
+        }
+
+        .pricing-feature svg {
+          color: #22c55e;
+          flex-shrink: 0;
+        }
+
+        .pricing-feature-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: var(--color-text-secondary);
+        }
+
+        .pricing-feature-inline svg {
+          color: #22c55e;
+          width: 16px;
+          height: 16px;
+        }
+
+        .pricing-cta {
+          margin-bottom: 16px;
+        }
+
+        .pricing-note {
+          text-align: center;
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          margin: 0;
+        }
+
+        .pricing-comparison {
+          text-align: center;
+          margin-top: 32px;
+        }
+
+        .comparison-label {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+        }
+
+        /* FAQ Section */
+        .faq-section {
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 80px 24px;
+        }
+
+        .faq-list {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          background: var(--color-border-subtle);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+          overflow: hidden;
+        }
+
+        .faq-item {
+          background: var(--color-bg);
+        }
+
+        .faq-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 20px 24px;
+          background: none;
+          border: none;
+          color: var(--color-text);
+          cursor: pointer;
+          transition: background var(--transition-fast);
+          text-align: left;
+        }
+
+        .faq-btn:hover {
+          background: var(--color-surface);
+        }
+
+        .faq-q {
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .faq-chevron {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          color: var(--color-text-tertiary);
+          flex-shrink: 0;
+          transition: transform var(--transition-fast);
+        }
+
+        .faq-chevron.is-open {
+          transform: rotate(180deg);
+        }
+
+        .faq-panel {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height var(--transition-medium);
+        }
+
+        .faq-panel.is-open {
+          max-height: 200px;
+        }
+
+        .faq-a {
+          padding: 0 24px 20px;
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+        }
+
+        /* Final CTA Section */
+        .final-cta-section {
+          padding: 100px 24px;
+          text-align: center;
+        }
+
+        .final-cta-content {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .final-cta-title {
+          font-size: clamp(28px, 4vw, 40px);
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          color: var(--color-text);
+          margin: 0 0 16px;
+        }
+
+        .final-cta-subtitle {
+          font-size: 16px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          margin: 0 0 32px;
+        }
+
+        .final-cta-buttons {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        /* Footer */
+        .landing-footer {
+          padding: 48px 24px;
+          border-top: 1px solid var(--color-border-subtle);
+        }
+
+        .footer-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          text-align: center;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 24px;
+          justify-content: center;
+          margin-bottom: 16px;
+        }
+
+        .footer-link {
+          font-size: 13px;
+          color: var(--color-text-secondary);
+          text-decoration: none;
+          transition: color var(--transition-fast);
+        }
+
+        .footer-link:hover {
+          color: var(--color-text);
+        }
+
+        .footer-disclaimer {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          margin: 0 0 8px;
+        }
+
+        .footer-copyright {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          margin: 0;
+        }
+
+        /* ===== MODALS ===== */
+        .modal-backdrop {
+          position: fixed;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-          opacity: 0;
-          transition: opacity 140ms ease;
+          z-index: 1000;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
         }
 
-        .ui-avatar-btn:hover {
-          transform: scale(1.04);
+        .modal-container {
+          width: 100%;
+          max-width: 420px;
+          background: rgba(10, 10, 12, 0.98);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-lg);
+          animation: modalPop 250ms cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-container-lg {
+          max-width: 480px;
+        }
+
+        @keyframes modalPop {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .modal-content {
+          padding: 32px;
+          position: relative;
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          color: var(--color-text-tertiary);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+          background: var(--color-surface-elevated);
+          color: var(--color-text);
+        }
+
+        .modal-header {
+          margin-bottom: 24px;
+        }
+
+        .modal-title {
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--color-text);
+          margin: 0 0 8px;
+        }
+
+        .modal-subtitle {
+          font-size: 14px;
+          color: var(--color-text-secondary);
+          margin: 0;
+        }
+
+        .modal-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .form-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 12px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          color: var(--color-text);
+          font-size: 14px;
+          transition: all var(--transition-fast);
+          outline: none;
+        }
+
+        .form-input::placeholder {
+          color: var(--color-text-tertiary);
+        }
+
+        .form-input:focus {
           border-color: rgba(255, 255, 255, 0.2);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
 
-        .ui-avatar-btn:hover::before {
-          opacity: 1;
+        .form-input-wrapper {
+          position: relative;
         }
 
-        .ui-avatar-btn:active {
-          transform: scale(1.02);
+        .form-input-toggle {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: var(--color-text-tertiary);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: color var(--transition-fast);
         }
 
+        .form-input-toggle:hover {
+          color: var(--color-text);
+        }
+
+        .modal-message {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 12px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          margin-top: 16px;
+        }
+
+        .modal-message.ok {
+          border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .modal-message.err {
+          border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .message-icon {
+          flex-shrink: 0;
+          color: var(--color-text-secondary);
+        }
+
+        .modal-message.ok .message-icon {
+          color: #22c55e;
+        }
+
+        .modal-message.err .message-icon {
+          color: #ef4444;
+        }
+
+        .message-text {
+          font-size: 13px;
+          color: var(--color-text-secondary);
+        }
+
+        .modal-footer {
+          margin-top: 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .modal-link {
+          background: none;
+          border: none;
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+          cursor: pointer;
+          transition: color var(--transition-fast);
+        }
+
+        .modal-link:hover {
+          color: var(--color-text);
+        }
+
+        .modal-link strong {
+          color: var(--color-text);
+          font-weight: 600;
+        }
+
+        /* Pricing Modal */
+        .pricing-modal-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: 100px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          margin-bottom: 16px;
+        }
+
+        .pricing-modal-amount {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+          gap: 4px;
+          margin-bottom: 24px;
+        }
+
+        .pricing-modal-features {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px 24px;
+          justify-content: center;
+          margin-bottom: 24px;
+          padding: 20px;
+          background: var(--color-surface);
+          border-radius: var(--radius-lg);
+        }
+
+        .pricing-modal-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .pricing-modal-note {
+          text-align: center;
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          margin: 0;
+        }
+
+        /* ===== CHAT INTERFACE ===== */
+        .chat-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        .chat-messages {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+        }
+
+        .chat-empty {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+        }
+
+        .chat-empty-content {
+          max-width: 440px;
+          width: 100%;
+          text-align: center;
+          padding: 40px 32px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+        }
+
+        .chat-empty-icon {
+          width: 56px;
+          height: 56px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          color: var(--color-text);
+          margin: 0 auto 20px;
+        }
+
+        .chat-empty-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--color-text);
+          margin: 0 0 8px;
+        }
+
+        .chat-empty-text {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--color-text-secondary);
+          margin: 0 0 24px;
+        }
+
+        .chat-empty-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .chat-history {
+          max-width: 800px;
+          margin: 0 auto;
+          width: 100%;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .chat-message {
+          display: flex;
+          width: 100%;
+        }
+
+        .chat-message-user {
+          justify-content: flex-end;
+        }
+
+        .chat-message-assistant {
+          justify-content: flex-start;
+        }
+
+        .chat-bubble {
+          max-width: 75%;
+          padding: 16px 20px;
+          border-radius: var(--radius-lg);
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .chat-bubble-user {
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble-assistant {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          color: var(--color-text);
+          border-bottom-left-radius: 4px;
+        }
+
+        .chat-bubble-image {
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          margin-bottom: 12px;
+        }
+
+        .chat-bubble-image img {
+          display: block;
+          max-width: 100%;
+          max-height: 280px;
+          object-fit: contain;
+        }
+
+        .chat-thinking {
+          color: var(--color-text-tertiary);
+          font-style: italic;
+        }
+
+        /* Chat Input */
+        .chat-input-area {
+          flex-shrink: 0;
+          background: rgba(5, 5, 6, 0.9);
+          backdrop-filter: blur(20px);
+          border-top: 1px solid var(--color-border-subtle);
+        }
+
+        .chat-input-inner {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 16px 24px;
+          padding-bottom: max(16px, env(safe-area-inset-bottom));
+        }
+
+        .chat-attachment {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          font-size: 12px;
+          color: var(--color-text-secondary);
+          margin-bottom: 12px;
+        }
+
+        .chat-input-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 12px;
+        }
+
+        .chat-textarea {
+          flex: 1;
+          min-height: 48px;
+          max-height: 160px;
+          padding: 14px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          color: var(--color-text);
+          font-size: 14px;
+          resize: none;
+          outline: none;
+          transition: all var(--transition-fast);
+        }
+
+        .chat-textarea::placeholder {
+          color: var(--color-text-tertiary);
+        }
+
+        .chat-textarea:focus {
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .chat-send-btn {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-accent);
+          border: none;
+          border-radius: var(--radius-md);
+          color: var(--color-bg);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          flex-shrink: 0;
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+          transform: scale(1.05);
+        }
+
+        .chat-send-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .chat-disclaimer {
+          margin-top: 12px;
+          text-align: center;
+          font-size: 11px;
+          color: var(--color-text-tertiary);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+          .chat-input-inner {
+            padding: 12px 16px;
+          }
+
+          .chat-bubble {
+            max-width: 85%;
+          }
+
+          .hero-section {
+            padding: 48px 16px 80px;
+          }
+
+          .features-section,
+          .faq-section,
+          .risk-section,
+          .pricing-section,
+          .final-cta-section {
+            padding: 60px 16px;
+          }
+        }
+
+        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-          * {
-            scroll-behavior: auto !important;
-            animation: none !important;
-            transition: none !important;
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
           }
         }
       `}</style>
@@ -2340,197 +3081,178 @@ export default function Page() {
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
 
-      <div className="h-[100dvh] min-h-0 flex flex-col ui-appveil">
-        <header className="sticky top-0 z-40 flex-shrink-0 ui-header">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`ui-logo ${outfit.className}`}>
-                  <span className="ui-logo-protocol">protocol</span>
-                  <span className="ui-logo-lm">LM</span>
-                </div>
-
-                <div className="hidden md:flex flex-col leading-tight">
-                  <span className={`text-[12px] text-white/80 ${inter.className}`}>Washtenaw Compliance Database</span>
-                  <span className={`text-[12px] text-white/55 ${inter.className}`}>Additional Counties Coming 2026</span>
-                </div>
-
-                {hasActiveSubscription && <span className={`hidden lg:inline-flex text-[11px] text-white/45 ${inter.className}`}>Active · site license</span>}
+      <div className="app-container">
+        {/* Header */}
+        <header className="app-header">
+          <div className="header-inner">
+            <div className="header-left">
+              <div className={`logo ${outfit.className}`}>
+                <span className="logo-text">protocol</span>
+                <span className="logo-text logo-accent">LM</span>
               </div>
 
-              {!isAuthenticated && (
-                <div className={`absolute left-1/2 -translate-x-1/2 hidden md:block text-[12px] text-white/65 ${inter.className}`}>
-                  Made in Washtenaw County for Washtenaw County.
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                {!isAuthenticated ? (
-                  <button
-                    onClick={() => {
-                      setAuthInitialMode('signin')
-                      setShowAuthModal(true)
-                    }}
-                    className="ui-btn ui-btn-secondary"
-                  >
-                    <span className="ui-btn-inner">Sign in</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleNewChat} className="ui-btn ui-btn-secondary hidden sm:inline-flex items-center gap-2">
-                      <Icons.Plus />
-                      <span className="ui-btn-inner" style={{ gap: 8 }}>
-                        New chat
-                      </span>
-                    </button>
-
-                    <div className="relative" ref={userMenuRef}>
-                      <button
-                        onClick={() => setShowUserMenu((v) => !v)}
-                        className="ui-avatar-btn"
-                        aria-label="User menu"
-                        title={session?.user?.email || 'User'}
-                      >
-                        <span>{session?.user?.email?.[0]?.toUpperCase() || 'U'}</span>
-                      </button>
-
-                      {showUserMenu && (
-                        <div className="ui-usermenu">
-                          <div className="ui-menuheader">
-                            <div className={`ui-useremail ${inter.className}`}>{session?.user?.email || 'Signed in'}</div>
-                            <div className={`ui-userstatus ${inter.className}`}>{hasActiveSubscription ? '● Active Premium' : 'Free Account'}</div>
-                          </div>
-
-                          <div>
-                            {hasActiveSubscription ? (
-                              <button onClick={handleManageBilling} className={`ui-menuitem ${inter.className}`}>
-                                <span className="ui-menuitem-icon">
-                                  <Icons.Settings />
-                                </span>
-                                <span>Manage Billing</span>
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  setShowPricingModal(true)
-                                  setShowUserMenu(false)
-                                }}
-                                className={`ui-menuitem ${inter.className}`}
-                              >
-                                <span className="ui-menuitem-icon">
-                                  <Icons.Settings />
-                                </span>
-                                <span>Start Trial</span>
-                              </button>
-                            )}
-
-                            <button
-                              onClick={() => {
-                                window.open('/privacy', '_blank')
-                                setShowUserMenu(false)
-                              }}
-                              className={`ui-menuitem ${inter.className}`}
-                            >
-                              <span className="ui-menuitem-icon">
-                                <Icons.Shield />
-                              </span>
-                              <span>Privacy & Security</span>
-                            </button>
-
-                            <div className="ui-menudivider" />
-
-                            <button
-                              onClick={() => {
-                                setShowUserMenu(false)
-                                handleSignOut()
-                              }}
-                              className={`ui-menuitem ui-menuitem-logout ${inter.className}`}
-                            >
-                              <span className="ui-menuitem-icon">
-                                <Icons.LogOut />
-                              </span>
-                              <span>Sign Out</span>
-                            </button>
-                          </div>
-
-                          <div className="ui-menufooter">
-                            <div className={`ui-menuhelp ${inter.className}`}>Press ESC to close</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+              <div className={`header-meta ${inter.className}`}>
+                <span className="header-meta-primary">Washtenaw Compliance Database</span>
+                <span className="header-meta-secondary">Additional Counties Coming 2026</span>
               </div>
             </div>
 
-            {!isAuthenticated && (
-              <div className={`md:hidden pt-2 text-center text-[12px] text-white/65 ${inter.className}`}>
-                Made in Washtenaw County for Washtenaw County.
-              </div>
-            )}
+            <div className="header-right">
+              {hasActiveSubscription && (
+                <span className={`header-status ${inter.className}`}>Active · Site License</span>
+              )}
+
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    setAuthInitialMode('signin')
+                    setShowAuthModal(true)
+                  }}
+                  className="btn-secondary"
+                >
+                  <span className={`btn-text ${inter.className}`}>Sign in</span>
+                </button>
+              ) : (
+                <>
+                  <button onClick={handleNewChat} className="btn-secondary" style={{ display: 'none' }}>
+                    <Icons.Plus />
+                    <span className={`btn-text ${inter.className}`}>New chat</span>
+                  </button>
+
+                  <div className="user-menu-wrapper" ref={userMenuRef}>
+                    <button
+                      onClick={() => setShowUserMenu((v) => !v)}
+                      className={`avatar-btn ${inter.className}`}
+                      aria-label="User menu"
+                    >
+                      {session?.user?.email?.[0]?.toUpperCase() || 'U'}
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="user-menu">
+                        <div className="user-menu-header">
+                          <div className={`user-menu-email ${inter.className}`}>
+                            {session?.user?.email || 'Signed in'}
+                          </div>
+                          <div className={`user-menu-status ${inter.className}`}>
+                            {hasActiveSubscription ? '● Active Premium' : 'Free Account'}
+                          </div>
+                        </div>
+
+                        {hasActiveSubscription ? (
+                          <button onClick={handleManageBilling} className={`user-menu-item ${inter.className}`}>
+                            <span className="user-menu-item-icon"><Icons.Settings /></span>
+                            Manage Billing
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setShowPricingModal(true)
+                              setShowUserMenu(false)
+                            }}
+                            className={`user-menu-item ${inter.className}`}
+                          >
+                            <span className="user-menu-item-icon"><Icons.Spark /></span>
+                            Start Trial
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            window.open('/privacy', '_blank')
+                            setShowUserMenu(false)
+                          }}
+                          className={`user-menu-item ${inter.className}`}
+                        >
+                          <span className="user-menu-item-icon"><Icons.Shield /></span>
+                          Privacy & Security
+                        </button>
+
+                        <div className="user-menu-divider" />
+
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            handleSignOut()
+                          }}
+                          className={`user-menu-item user-menu-item-danger ${inter.className}`}
+                        >
+                          <span className="user-menu-item-icon"><Icons.LogOut /></span>
+                          Sign Out
+                        </button>
+
+                        <div className="user-menu-footer">
+                          <span className={`user-menu-hint ${inter.className}`}>Press ESC to close</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 flex flex-col">
+        {/* Main Content */}
+        <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {!isAuthenticated ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <LandingPage
-                onShowPricing={() => setShowPricingModal(true)}
-                onShowAuth={() => {
-                  setAuthInitialMode('signin')
-                  setShowAuthModal(true)
-                }}
-              />
-            </div>
+            <LandingPage
+              onShowPricing={() => setShowPricingModal(true)}
+              onShowAuth={() => {
+                setAuthInitialMode('signin')
+                setShowAuthModal(true)
+              }}
+            />
           ) : (
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex-1 min-h-0 overflow-y-auto"
-                style={{ overscrollBehavior: 'contain', scrollbarGutter: 'stable', paddingBottom: '2px' }}
-              >
+            <div className="chat-container">
+              <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
                 {messages.length === 0 ? (
-                  <div className="h-full flex items-center justify-center px-4">
-                    <div className="ui-emptywrap text-left">
-                      <div className="ui-emptyicon" aria-hidden="true">
+                  <div className="chat-empty">
+                    <div className="chat-empty-content">
+                      <div className="chat-empty-icon">
                         <Icons.Shield />
                       </div>
-                      <div className={`ui-emptytitle ${inter.className}`}>Upload a photo or ask a question.</div>
-                      <div className={`ui-emptytext ${inter.className}`}>
-                        Use photo checks to spot likely issues fast—or search the Washtenaw-backed database when you need a clear answer.
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-btn ui-btn-secondary">
-                          <span className="ui-btn-inner">
-                            <Icons.Camera />
-                            Attach photo
-                          </span>
+                      <h2 className={`chat-empty-title ${inter.className}`}>
+                        Upload a photo or ask a question
+                      </h2>
+                      <p className={`chat-empty-text ${inter.className}`}>
+                        Use photo checks to spot likely issues fast—or search the Washtenaw-backed
+                        database when you need a clear answer.
+                      </p>
+                      <div className="chat-empty-actions">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="btn-secondary"
+                        >
+                          <Icons.Camera />
+                          <span className={`btn-text ${inter.className}`}>Attach photo</span>
                         </button>
-
-                        <button type="button" onClick={() => textAreaRef.current?.focus()} className="ui-btn ui-btn-secondary">
-                          <span className="ui-btn-inner">Ask a question</span>
+                        <button
+                          onClick={() => textAreaRef.current?.focus()}
+                          className="btn-secondary"
+                        >
+                          <span className={`btn-text ${inter.className}`}>Ask a question</span>
                         </button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
+                  <div className="chat-history">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[78%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
+                      <div
+                        key={idx}
+                        className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
+                      >
+                        <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'} ${inter.className}`}>
                           {msg.image && (
-                            <div className="ui-chatimgwrap">
-                              <img src={msg.image} alt="Uploaded" className="ui-chatimg" />
+                            <div className="chat-bubble-image">
+                              <img src={msg.image} alt="Uploaded" />
                             </div>
                           )}
-
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>Working…</div>
+                            <span className="chat-thinking">Working…</span>
                           ) : (
-                            <span className="whitespace-pre-wrap">{msg.content}</span>
+                            <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
                           )}
                         </div>
                       </div>
@@ -2539,39 +3261,49 @@ export default function Page() {
                 )}
               </div>
 
-              <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+              <div className="chat-input-area">
+                <div className="chat-input-inner">
                   <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
                   {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
+                    <div className={`chat-attachment ${inter.className}`}>
                       <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="ui-icon-btn !w-10 !h-10"
-                        aria-label="Remove image"
-                        title="Remove"
+                        className="btn-icon"
+                        style={{ width: 28, height: 28 }}
+                        aria-label="Remove"
                       >
                         <Icons.X />
                       </button>
                     </div>
                   )}
 
-                  <div className="flex items-end gap-2">
-                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
+                  <div className="chat-input-row">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
 
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn-icon"
+                      aria-label="Attach image"
+                    >
                       <Icons.Camera />
                     </button>
 
-                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
+                    <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', gap: 12 }}>
                       <textarea
                         ref={textAreaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="Ask a question or attach a photo…"
                         rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
+                        className={`chat-textarea ${inter.className}`}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault()
@@ -2583,16 +3315,16 @@ export default function Page() {
                       <button
                         type="submit"
                         disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        className="chat-send-btn"
                         aria-label="Send"
                       >
-                        {isSending ? <div className="ui-spinner-lg" /> : <Icons.ArrowUp />}
+                        {isSending ? <div className="loading-spinner" style={{ width: 20, height: 20 }} /> : <Icons.ArrowUp />}
                       </button>
                     </form>
                   </div>
 
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
-                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
+                  <p className={`chat-disclaimer ${inter.className}`}>
+                    protocolLM may make mistakes. Confirm critical decisions with official regulations.
                   </p>
                 </div>
               </div>
@@ -2603,12 +3335,3 @@ export default function Page() {
     </>
   )
 }
-
-/**
- * ✅ NOTE (globals.css):
- * Add these there (NOT in page.js):
- *
- * .ui-emptyicon { ... }
- * .ui-emptytitle { ... }
- * .ui-emptytext { ... }
- */
