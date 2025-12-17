@@ -160,54 +160,57 @@ function WaveBackground() {
       <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.04" />
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
           </linearGradient>
           <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
           </linearGradient>
           <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.05" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.03" />
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
           </linearGradient>
         </defs>
         
+        {/* Wave 1 - starts higher, flows through hero */}
         <path className="wave wave-1" fill="url(#wave-gradient-1)">
           <animate
             attributeName="d"
             dur="25s"
             repeatCount="indefinite"
             values="
-              M0,400 C150,350 350,450 500,400 C650,350 750,300 900,350 C1050,400 1150,450 1300,400 C1450,350 1440,400 1440,400 L1440,800 L0,800 Z;
-              M0,350 C150,400 350,350 500,400 C650,450 750,400 900,350 C1050,300 1150,350 1300,400 C1450,450 1440,350 1440,350 L1440,800 L0,800 Z;
-              M0,400 C150,350 350,450 500,400 C650,350 750,300 900,350 C1050,400 1150,450 1300,400 C1450,350 1440,400 1440,400 L1440,800 L0,800 Z
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
+              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
             "
           />
         </path>
         
+        {/* Wave 2 - middle layer */}
         <path className="wave wave-2" fill="url(#wave-gradient-2)">
           <animate
             attributeName="d"
             dur="20s"
             repeatCount="indefinite"
             values="
-              M0,500 C200,450 400,550 600,500 C800,450 1000,400 1200,450 C1400,500 1440,450 1440,450 L1440,800 L0,800 Z;
-              M0,450 C200,500 400,450 600,500 C800,550 1000,500 1200,450 C1400,400 1440,500 1440,500 L1440,800 L0,800 Z;
-              M0,500 C200,450 400,550 600,500 C800,450 1000,400 1200,450 C1400,500 1440,450 1440,450 L1440,800 L0,800 Z
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
+              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
             "
           />
         </path>
         
+        {/* Wave 3 - lower layer */}
         <path className="wave wave-3" fill="url(#wave-gradient-3)">
           <animate
             attributeName="d"
             dur="30s"
             repeatCount="indefinite"
             values="
-              M0,600 C180,550 360,650 540,600 C720,550 900,500 1080,550 C1260,600 1440,550 1440,5500,800 Z;
-              M0,550 C180,600 360,550 540,600 C720,650 900,600 1080,550 C1260,500 1440,600 1440,600 L1440,800 L0,800 Z;
-              M0,600 C180,550 360,650 540,600 C720,550 900,500 1080,550 C1260,600 1440,550 1440,550 L1440,800 L0,800 Z
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
+              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
             "
           />
         </path>
@@ -262,11 +265,15 @@ function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   )
 }
 
-function CountUp({ value, prefix = '', suffix = '', duration = 2000, className = '' }) {
+function CountUp({ value, prefix = '', suffix = '', duration = 2000, className = '', animate = true }) {
   const [ref, inView] = useInViewOnce({ threshold: 0.3 })
-  const [n, setN] = useState(0)
+  const [n, setN] = useState(animate ? 0 : value)
 
   useEffect(() => {
+    if (!animate) {
+      setN(value)
+      return
+    }
     if (!inView) return
     let raf = 0
     const start = performance.now()
@@ -283,7 +290,7 @@ function CountUp({ value, prefix = '', suffix = '', duration = 2000, className =
 
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [inView, value, duration])
+  }, [inView, value, duration, animate])
 
   return (
     <span ref={ref} className={className}>
@@ -463,7 +470,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         value: 500, 
         prefix: '$',
         suffix: '+',
-        note: 'FDA Model Food Code enforcement data',
         icon: <Icons.DollarSign />
       },
       { 
@@ -471,7 +477,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         value: 75000, 
         prefix: '$',
         suffix: '',
-        note: 'CDC economic burden estimates, 2024',
         icon: <Icons.AlertTriangle />
       },
       { 
@@ -479,7 +484,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         value: 10000, 
         prefix: '$',
         suffix: '+',
-        note: 'Per day average for mid-size operations',
         icon: <Icons.TrendingUp />
       },
       { 
@@ -487,19 +491,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         value: 38, 
         prefix: '',
         suffix: '%',
-        note: 'Without systematic compliance tracking',
         icon: <Icons.Clock />
       },
     ],
     []
   )
 
-  // Removed the $200 price point as requested
   const proofPoints = useMemo(
     () => [
-      { value: 'Unlimited', label: 'photo checks', isText: true },
       { value: '24/7', label: 'availability', isText: true },
       { value: 7, label: 'day free trial' },
+      { value: 'Unlimited', label: 'photo checks', isText: true },
     ],
     []
   )
@@ -530,8 +532,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
             <Reveal delay={200}>
               <p className={`hero-description ${inter.className}`}>
-                Instant image analysis to spot compliance risks in your kitchen. 
-                Simply snap a photo to catch violations and get Washtenaw-specific correction steps.
+                Upload photos of your kitchen and get instant AI analysis that spots potential 
+                violations before they become citations. Built specifically for Washtenaw County 
+                food code requirements.
               </p>
             </Reveal>
 
@@ -552,32 +555,56 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <Reveal delay={400} direction="scale">
             <div className="hero-visual">
-              {/* Glass Desktop Screen emulating Stripe */}
-              <div className="desktop-glass">
-                <div className="glass-header">
-                  <div className="glass-dot red" />
-                  <div className="glass-dot yellow" />
-                  <div className="glass-dot green" />
-                </div>
-                <div className="glass-content">
-                  <div className="glass-sidebar" />
-                  <div className="glass-main">
-                    <div className="glass-bar-chart">
-                      <div className="bar" style={{ height: '40%' }} />
-                      <div className="bar" style={{ height: '70%' }} />
-                      <div className="bar" style={{ height: '55%' }} />
-                      <div className="bar active" style={{ height: '85%' }} />
-                      <div className="bar" style={{ height: '60%' }} />
+              {/* Desktop Glass Panel */}
+              <div className="hero-desktop">
+                <div className="desktop-frame">
+                  <div className="desktop-header">
+                    <div className="desktop-dots">
+                      <span className="desktop-dot red" />
+                      <span className="desktop-dot yellow" />
+                      <span className="desktop-dot green" />
                     </div>
-                    <div className="glass-lines">
-                      <div className="glass-line" />
-                      <div className="glass-line" style={{ width: '80%' }} />
-                      <div className="glass-line" style={{ width: '60%' }} />
+                    <div className={`desktop-title ${inter.className}`}>protocolLM Dashboard</div>
+                    <div className="desktop-spacer" />
+                  </div>
+                  <div className="desktop-content">
+                    <div className="desktop-sidebar">
+                      <div className={`sidebar-label ${inter.className}`}>Recent Checks</div>
+                      <div className="sidebar-item active">
+                        <Icons.Camera />
+                        <span>Walk-in Cooler</span>
+                      </div>
+                      <div className="sidebar-item">
+                        <Icons.Camera />
+                        <span>Prep Station</span>
+                      </div>
+                      <div className="sidebar-item">
+                        <Icons.Document />
+                        <span>Temp Logs</span>
+                      </div>
+                    </div>
+                    <div className="desktop-main">
+                      <div className={`desktop-stat-row ${inter.className}`}>
+                        <div className="desktop-stat">
+                          <span className="stat-value">12</span>
+                          <span className="stat-label">Checks Today</span>
+                        </div>
+                        <div className="desktop-stat">
+                          <span className="stat-value success">0</span>
+                          <span className="stat-label">Open Issues</span>
+                        </div>
+                      </div>
+                      <div className={`desktop-alert ${inter.className}`}>
+                        <Icons.CheckCircle />
+                        <span>All stations compliant</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="desktop-glow" />
               </div>
 
+              {/* Phone Mockup */}
               <div className="hero-phone">
                 <div className="phone-frame">
                   <div className="phone-notch" />
@@ -612,36 +639,23 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                           <div className="phone-result-items">
                             <div className="phone-result-item warning">
                               <span className="result-indicator" />
-                              <span>Raw chicken stored above ready-to-eat items - violation risk</span>
+                              <span>Raw chicken stored above ready-to-eat items</span>
                             </div>
                             <div className="phone-result-item warning">
                               <span className="result-indicator" />
-                              <span>Missing date label on prep container (back left shelf)</span>
+                              <span>Missing date label on prep container</span>
                             </div>
                           </div>
                           
                           <div className="phone-remediation">
-                            <strong>Remediation:</strong> Move raw poultry to bottom shelf. Add date labels showing prep date + 7-day discard.
+                            <strong>Fix:</strong> Move raw poultry to bottom shelf. Add date labels.
                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="phone-message phone-message-user">
-                        <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
-                          What's the temperature requirement for hot holding?
-                        </div>
-                      </div>
-                      
-                      <div className="phone-message phone-message-assistant">
-                        <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
-                          Per Washtenaw County enforcement: Hot held foods must maintain <strong>135°F or above</strong>. Document temps every 2 hours. Foods below 135°F for over 4 hours must be discarded.
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="phone-glow" />
-                <div className="phone-reflection" />
               </div>
             </div>
           </Reveal>
@@ -714,7 +728,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               </h2>
               <p className={`section-description ${inter.className}`}>
                 One serious violation can cost more than years of prevention. 
-                These figures represent documented industry averages from FDA and CDC data.
+                These figures represent documented industry averages.
               </p>
             </div>
           </Reveal>
@@ -741,13 +755,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             ))}
           </div>
 
-          {/* Sources removed from card and placed below */}
           <Reveal delay={400}>
-            <div className={`risk-sources-text ${inter.className}`}>
-              <Icons.Shield style={{ width: 14, height: 14, display: 'inline', marginRight: 6 }} />
+            <p className={`risk-sources ${inter.className}`}>
               Sources: FDA Model Food Code (2022), CDC Foodborne Illness Economic Burden Report (2024), 
-              National Restaurant Association compliance surveys. Figures are industry averages and may vary by jurisdiction.
-            </div>
+              National Restaurant Association compliance surveys
+            </p>
           </Reveal>
         </div>
       </section>
@@ -781,10 +793,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
                 <div className="pricing-amount">
                   <span className={`pricing-currency ${inter.className}`}>$</span>
-                  <span className={`pricing-number ${outfit.className}`}>
-                    {/* No CountUp animation here */}
-                    200
-                  </span>
+                  <span className={`pricing-number ${outfit.className}`}>200</span>
                   <span className={`pricing-period ${inter.className}`}>/month</span>
                 </div>
 
@@ -899,7 +908,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             Powered by Anthropic Claude and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
           </p>
           <p className={`footer-copyright ${inter.className}`}>
-            © 2025 protocolLM. made in Washtenaw for Washtenaw.
+            © 2025 protocolLM. Made in Washtenaw for Washtenaw.
           </p>
         </div>
       </footer>
@@ -1643,6 +1652,7 @@ export default function Page() {
           --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
           --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
           --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
+          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
           
           /* Radii */
           --radius-xs: 4px;
@@ -1844,7 +1854,7 @@ export default function Page() {
 
         .logo-accent {
           font-weight: 800;
-          color: #000; /* Changed to black as requested */
+          color: var(--color-text);
         }
 
         .header-meta {
@@ -2094,7 +2104,7 @@ export default function Page() {
 
         .user-menu-header {
           padding: 16px 20px;
-          border-bottom: 1px solid var(--color-border-subtle);
+          border-bottom:-border-subtle);
           background: var(--color-card);
         }
 
@@ -2228,7 +2238,7 @@ export default function Page() {
 
         @media (min-width: 1024px) {
           .hero-container {
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1.1fr;
             gap: 64px;
           }
         }
@@ -2237,6 +2247,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          position: relative;
+          z-index: 2;
         }
 
         .hero-badge {
@@ -2302,138 +2314,220 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Phone Mockup & Glass Desktop ─── */
+        /* ─── Hero Visual with Desktop + Phone ─── */
         .hero-visual {
           display: flex;
           justify-content: center;
           align-items: center;
           position: relative;
-          perspective: 1000px;
-          /* Adjusted to give space for the desktop */
-          padding-right: 40px; 
+          min-height: 500px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1023px) {
           .hero-visual {
-            padding-right: 0;
-            margin-top: 40px;
+            min-height: 400px;
           }
         }
 
-        /* Glass Desktop Styles */
-        .desktop-glass {
+        /* Desktop Glass Panel */
+        .hero-desktop {
           position: absolute;
+          right: 0;
           top: 50%;
-          left: 50%;
-          transform: translate(-30%, -45%) rotateY(-5deg) rotateX(2deg);
-          width: 500px;
-          height: 380px;
-          background: rgba(255, 255, 255, 0.65);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          border-radius: 20px;
-          box-shadow: 
-            0 20px 40px -10px rgba(0, 0, 0, 0.1),
-            inset 0 0 0 1px rgba(255, 255, 255, 0.4);
-          z-index: 0;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
+          transform: translateY(-50%);
+          z-index: 1;
         }
 
-        @media (max-width: 640px) {
-          .desktop-glass {
-            width: 300px;
-            height: 240px;
-            transform: translate(-20%, -40%);
+        @media (max-width: 1023px) {
+          .hero-desktop {
+            display: none;
           }
         }
 
-        .glass-header {
-          height: 40px;
-          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        .desktop-frame {
+          width: 420px;
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          border-radius: var(--radius-2xl);
+          box-shadow: var(--shadow-glass);
+          overflow: hidden;
+        }
+
+        .desktop-header {
           display: flex;
           align-items: center;
-          padding: 0 16px;
-          gap: 8px;
+          gap: 10px;
+          padding: 14px 18px;
+          background: rgba(255, 255, 255, 0.5);
+          border-bottom: 1px solid rgba(215, 230, 226, 0.5);
         }
 
-        .glass-dot {
-          width: 8px;
-          height: 8px;
+        .desktop-dots {
+          display: flex;
+          gap: 6px;
+        }
+
+        .desktop-dot {
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
         }
 
-        .glass-dot.red { background: #FF5F56; }
-        .glass-dot.yellow { background: #FFBD2E; }
-        .glass-dot.green { background: #27C93F; }
+        .desktop-dot.red { background: #FF5F57; }
+        .desktop-dot.yellow { background: #FEBC2E; }
+        .desktop-dot.green { background: #28C840; }
 
-        .glass-content {
+        .desktop-title {
           flex: 1;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+        }
+
+        .desktop-spacer {
+          width: 52px;
+        }
+
+        .desktop-content {
           display: flex;
+          min-height: 280px;
         }
 
-        .glass-sidebar {
-          width: 100px;
-          border-right: 1px solid rgba(0, 0, 0, 0.05);
-          background: rgba(0, 0, 0, 0.02);
+        .desktop-sidebar {
+          width: 140px;
+          padding: 16px 12px;
+          background: rgba(242, 251, 247, 0.6);
+          border-right: 1px solid rgba(215, 230, 226, 0.5);
         }
 
-        .glass-main {
+        .sidebar-label {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--color-text-muted);
+          margin-bottom: 10px;
+          padding: 0 8px;
+        }
+
+        .sidebar-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          border-radius: var(--radius-md);
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          margin-bottom: 4px;
+          transition: all var(--duration-fast) var(--ease-out-expo);
+        }
+
+        .sidebar-item svg {
+          width: 14px;
+          height: 14px;
+          opacity: 0.6;
+        }
+
+        .sidebar-item.active {
+          background: var(--color-surface);
+          color: var(--color-text);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .sidebar-item.active svg {
+          opacity: 1;
+          color: var(--color-primary);
+        }
+
+        .desktop-main {
           flex: 1;
-          padding: 30px;
+          padding: 20px;
           display: flex;
           flex-direction: column;
-          justify-content: center;
-          gap: 20px;
-        }
-
-        .glass-bar-chart {
-          display: flex;
-          align-items: flex-end;
           gap: 16px;
-          height: 120px;
-          border-bottom: 2px solid rgba(0, 0, 0, 0.05);
-          padding-bottom: 1px;
         }
 
-        .glass-bar-chart .bar {
-          flex: 1;
-          background: rgba(47, 93, 138, 0.1);
-          border-radius: 4px 4px 0 0;
-        }
-
-        .glass-bar-chart .bar.active {
-          background: var(--color-primary);
-        }
-
-        .glass-lines {
+        .desktop-stat-row {
           display: flex;
-          flex-direction: column;
+          gap: 16px;
+        }
+
+        .desktop-stat {
+          flex: 1;
+          padding: 14px;
+          background: var(--color-surface);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 28px;
+          font-weight: 700;
+          color: var(--color-text);
+          line-height: 1;
+          margin-bottom: 4px;
+        }
+
+        .stat-value.success {
+          color: var(--color-success);
+        }
+
+        .stat-label {
+          font-size: 11px;
+          color: var(--color-text-muted);
+        }
+
+        .desktop-alert {
+          display: flex;
+          align-items: center;
           gap: 10px;
+          padding: 12px 14px;
+          background: var(--color-success-bg);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: var(--radius-md);
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-success);
         }
 
-        .glass-line {
-          height: 8px;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 4px;
-          width: 100%;
+        .desktop-alert svg {
+          width: 16px;
+          height: 16px;
         }
 
+        .desktop-glow {
+          position: absolute;
+          inset: -60px;
+          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.12) 0%, transparent 70%);
+          z-index: -1;
+          filter: blur(40px);
+        }
+
+        /* Phone Mockup */
         .hero-phone {
           position: relative;
           z-index: 2;
-          transform: rotateY(-8deg) rotateX(2deg);
-          box-shadow: -20px 20px 50px rgba(0,0,0,0.15);
+        }
+
+        @media (min-width: 1024px) {
+          .hero-phone {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+          }
         }
 
         .phone-frame {
-          width: 320px;
-          height: 660px;
+          width: 280px;
+          height: 580px;
           background: linear-gradient(145deg, #1a1a1c 0%, #0d0d0e 100%);
-          border-radius: 48px;
-          padding: 12px;
+          border-radius: 44px;
+          padding: 10px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 
             var(--shadow-xl),
@@ -2444,21 +2538,21 @@ export default function Page() {
 
         @media (max-width: 640px) {
           .phone-frame {
-            width: 280px;
-            height: 580px;
+            width: 260px;
+            height: 540px;
             border-radius: 40px;
           }
         }
 
         .phone-notch {
           position: absolute;
-          top: 12px;
+          top: 10px;
           left: 50%;
           transform: translateX(-50%);
-          width: 110px;
-          height: 32px;
+          width: 100px;
+          height: 28px;
           background: #000;
-          border-radius: 20px;
+          border-radius: 16px;
           z-index: 10;
         }
 
@@ -2466,7 +2560,7 @@ export default function Page() {
           width: 100%;
           height: 100%;
           background: var(--color-bg);
-          border-radius: 38px;
+          border-radius: 36px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
@@ -2482,26 +2576,26 @@ export default function Page() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 16px 24px 8px;
-          font-size: 13px;
+          padding: 14px 20px 6px;
+          font-size: 12px;
           font-weight: 600;
           color: var(--color-text);
         }
 
         .phone-status-icons {
           display: flex;
-          gap: 6px;
-          font-size: 11px;
+          gap: 5px;
+          font-size: 10px;
           color: var(--color-text-secondary);
         }
 
         .phone-app-header {
-          padding: 8px 20px 14px;
+          padding: 6px 18px 12px;
           border-bottom: 1px solid var(--color-border-subtle);
         }
 
         .phone-app-title {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 700;
           letter-spacing: -0.02em;
           color: var(--color-text);
@@ -2509,10 +2603,10 @@ export default function Page() {
 
         .phone-content {
           flex: 1;
-          padding: 16px;
+          padding: 14px;
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
           overflow-y: auto;
         }
 
@@ -2530,11 +2624,11 @@ export default function Page() {
         }
 
         .phone-bubble {
-          max-width: 88%;
-          padding: 12px 14px;
+          max-width: 90%;
+          padding: 10px 12px;
           border-radius: var(--radius-lg);
-          font-size: 12px;
-          line-height: 1.5;
+          font-size: 11px;
+          line-height: 1.45;
         }
 
         .phone-bubble-user {
@@ -2553,40 +2647,40 @@ export default function Page() {
         .phone-result-header {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 5px;
           color: var(--color-warning);
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .phone-result-header svg {
-          width: 14px;
-          height: 14px;
+          width: 13px;
+          height: 13px;
         }
 
         .phone-result-items {
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          margin-bottom: 10px;
+          gap: 6px;
+          margin-bottom: 8px;
         }
 
         .phone-result-item {
           display: flex;
           align-items: flex-start;
-          gap: 8px;
-          font-size: 11px;
+          gap: 6px;
+          font-size: 10px;
           color: var(--color-text-secondary);
-          line-height: 1.4;
+          line-height: 1.35;
         }
 
         .result-indicator {
-          width: 6px;
-          height: 6px;
+          width: 5px;
+          height: 5px;
           border-radius: 50%;
           flex-shrink: 0;
-          margin-top: 4px;
+          margin-top: 3px;
         }
 
         .phone-result-item.warning .result-indicator {
@@ -2598,11 +2692,11 @@ export default function Page() {
         }
 
         .phone-remediation {
-          font-size: 11px;
+          font-size: 10px;
           color: var(--color-text-secondary);
-          padding-top: 10px;
+          padding-top: 8px;
           border-top: 1px solid var(--color-border-subtle);
-          line-height: 1.5;
+          line-height: 1.4;
         }
 
         .phone-remediation strong {
@@ -2611,8 +2705,8 @@ export default function Page() {
 
         .phone-glow {
           position: absolute;
-          inset: -40px;
-          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.15) 0%, transparent 70%);
+          inset: -50px;
+          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
           z-index: -1;
           filter: blur(40px);
         }
@@ -2638,13 +2732,12 @@ export default function Page() {
         }
 
         .proof-container {
-          max-width: 1000px;
+          max-width: 800px;
           margin: 0 auto;
         }
 
         .proof-grid {
           display: grid;
-          /* Adjusted for 3 items since one was removed */
           grid-template-columns: repeat(3, 1fr);
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -2663,14 +2756,17 @@ export default function Page() {
           border-right: none;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 640px) {
           .proof-grid {
             grid-template-columns: 1fr;
           }
+          
           .proof-item {
             border-right: none;
             border-bottom: 1px solid var(--color-border-subtle);
+            padding: 20px;
           }
+          
           .proof-item:last-child {
             border-bottom: none;
           }
@@ -2755,7 +2851,6 @@ export default function Page() {
 
         .feature-card {
           position: relative;
-          height: 100%;
           padding: 32px 28px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -2763,6 +2858,9 @@ export default function Page() {
           transition: all var(--duration-slow) var(--ease-out-expo);
           overflow: hidden;
           box-shadow: var(--shadow-card);
+          display: flex;
+          flex-direction: column;
+          min-height: 220px;
         }
 
         .feature-card-border {
@@ -2816,6 +2914,7 @@ export default function Page() {
           font-size: 14px;
           line-height: 1.65;
           color: var(--color-text-secondary);
+          flex: 1;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -2850,7 +2949,6 @@ export default function Page() {
 
         .risk-card {
           position: relative;
-          height: 100%;
           padding: 24px 20px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -2861,7 +2959,7 @@ export default function Page() {
           box-shadow: var(--shadow-card);
           display: flex;
           flex-direction: column;
-          align-items: center;
+          min-height: 180px;
         }
 
         .risk-card-border {
@@ -2914,18 +3012,17 @@ export default function Page() {
           font-size: 12px;
           font-weight: 500;
           color: var(--color-text-secondary);
-          margin-bottom: 6px;
           line-height: 1.4;
+          flex: 1;
         }
 
-        /* New class for the sources text that is no longer in a card */
-        .risk-sources-text {
-          font-size: 12px;
-          color: var(--color-text-tertiary);
+        .risk-sources {
           text-align: center;
-          max-width: 800px;
-          margin: 0 auto;
+          font-size: 12px;
+          color: var(--color-text-muted);
           line-height: 1.6;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3251,8 +3348,6 @@ export default function Page() {
           color: var(--color-text);
           margin-bottom: 16px;
           line-height: 1.2;
-          /* Improved text balancing */
-          text-wrap: balance; 
         }
 
         .cta-description {
@@ -4079,7 +4174,7 @@ export default function Page() {
               </div>
 
               <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Washtenaw County Compliance centered with protocol LM</span>
+                <span className="header-meta-primary">Washtenaw County Compliance</span>
               </div>
             </div>
 
