@@ -13,7 +13,7 @@ export const metadata = {
 }
 
 export default async function AdminLayout({ children }) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()  // ✅ FIXED: Added await
   
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
