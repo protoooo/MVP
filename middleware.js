@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server'
 export async function middleware(request) {
   const { pathname } = request.nextUrl
   
-  // Add security headers to all responses
+  // Create response with security headers
   const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
   
-  // Add additional runtime security headers
+  // Add runtime security headers
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   response.headers.set('X-XSS-Protection', '1; mode=block')
@@ -54,13 +54,6 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, etc.)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
