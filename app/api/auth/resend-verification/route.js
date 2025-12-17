@@ -1,4 +1,4 @@
-// app/api/auth/resend-verification/route.js - Resend email verification
+// app/api/auth/resend-verification/route.js - FIXED for Next.js 15
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
