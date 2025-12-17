@@ -9,8 +9,6 @@ import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 // 1. TYPOGRAPHY SETUP
-// Outfit for headings (Sharp, modern sans/serif hybrid feel)
-// Inter for body text (Clean, editorial)
 const outfit = Outfit({ subsets: ['latin'], weight: ['400', '500', '600'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
@@ -20,7 +18,7 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 // eslint-disable-next-line no-unused-vars
 const isAdmin = false
 
-// 2. FULL ICON SET (Restored completely)
+// 2. FULL ICON SET
 const Icons = {
   Camera: () => (
     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -157,16 +155,12 @@ const Icons = {
 }
 
 // 3. BACKGROUND COMPONENT
-// Swapped "WaveBackground" for "GradientBlurBackground" to match the Cohere blurred-blob aesthetic.
 function GradientBlurBackground() {
   return (
     <div className="gradient-bg-container">
-      {/* Three organic blobs floating in background */}
       <div className="gradient-blob blob-1" />
       <div className="gradient-blob blob-2" />
       <div className="gradient-blob blob-3" />
-      
-      {/* Noise overlay for texture */}
       <div className="noise-overlay" />
     </div>
   )
@@ -179,7 +173,6 @@ function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {
   useEffect(() => {
     const el = ref.current
     if (!el || inView) return
-
     const obs = new IntersectionObserver(
       (entries) => {
         const e = entries?.[0]
@@ -190,7 +183,6 @@ function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {
       },
       { threshold, rootMargin }
     )
-
     obs.observe(el)
     return () => {
       try {
@@ -198,7 +190,6 @@ function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {
       } catch {}
     }
   }, [inView, threshold, rootMargin])
-
   return [ref, inView]
 }
 
@@ -358,7 +349,127 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
   )
 }
 
-// 4. LANDING PAGE COMPONENT (Updated with Video & New Text Styles)
+// 4. ANIMATED APP DEMO SIMULATION (The "Cohere-like" Video Replacement)
+function AppSimulation() {
+  // Steps: 0=Start, 1=Scanning, 2=Detected, 3=Thinking, 4=Answer
+  const [step, setStep] = useState(0)
+
+  useEffect(() => {
+    // Loop the simulation forever
+    const times = [0, 2000, 4500, 6000, 7500] // Timeline in ms
+    let timeoutId
+    
+    const runSequence = () => {
+      setStep(0)
+      timeoutId = setTimeout(() => setStep(1), times[1]) // Start Scan
+      setTimeout(() => setStep(2), times[2]) // Detect Violation
+      setTimeout(() => setStep(3), times[3]) // User asks
+      setTimeout(() => setStep(4), times[4]) // AI Answers
+      
+      // Reset loop after 14s
+      setTimeout(runSequence, 14000)
+    }
+
+    runSequence()
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  return (
+    <div className="app-sim-container">
+      {/* Simulation Window Frame */}
+      <div className="sim-window">
+        <div className="sim-header">
+          <div className="sim-dots">
+            <div className="sim-dot red" />
+            <div className="sim-dot yellow" />
+            <div className="sim-dot green" />
+          </div>
+          <div className={`sim-title ${inter.className}`}>protocolLM Analysis Console</div>
+        </div>
+
+        <div className="sim-body">
+          {/* Left: Vision Analysis */}
+          <div className="sim-view-left">
+            <div className="sim-camera-feed">
+               {/* This represents the "Image" being analyzed */}
+               <div className="sim-image-placeholder">
+                  <div className={`sim-scan-line ${step >= 1 ? 'scanning' : ''}`} />
+                  <Icons.Camera />
+                  <span className={inter.className}>Walk-In Cooler #2</span>
+
+                  {/* Detected Box (appears at step 2) */}
+                  <div className={`sim-detection-box ${step >= 2 ? 'visible' : ''}`}>
+                    <div className="sim-detection-label">
+                      <Icons.AlertTriangle />
+                      <span>Temp Risk</span>
+                    </div>
+                  </div>
+               </div>
+            </div>
+            <div className="sim-camera-stats">
+               <div className="sim-stat">
+                 <span className="label">Status</span>
+                 <span className={`value ${step >= 2 ? 'risk' : 'ok'}`}>
+                   {step >= 2 ? 'VIOLATION FOUND' : 'Monitoring'}
+                 </span>
+               </div>
+               <div className="sim-stat">
+                 <span className="label">Code Set</span>
+                 <span className="value">Washtenaw/FDA</span>
+               </div>
+            </div>
+          </div>
+
+          {/* Right: Text / Compliance Logic */}
+          <div className="sim-view-right">
+             <div className="sim-chat-feed">
+                {/* 1. Initial State */}
+                <div className={`sim-chat-bubble ai ${step >= 0 ? 'visible' : ''}`}>
+                   <div className="sim-avatar">AI</div>
+                   <div className="sim-text">
+                     Analyzing walk-in cooler image for Washtenaw County compliance...
+                   </div>
+                </div>
+
+                {/* 2. Detection Alert */}
+                <div className={`sim-chat-bubble system ${step >= 2 ? 'visible' : ''}`}>
+                   <Icons.AlertTriangle />
+                   <div className="sim-text">
+                     <strong>Priority Violation Detected</strong><br/>
+                     Raw animal foods stored above ready-to-eat produce.
+                   </div>
+                </div>
+
+                {/* 3. Suggested Fix */}
+                <div className={`sim-chat-bubble ai ${step >= 4 ? 'visible' : ''}`}>
+                   <div className="sim-avatar">AI</div>
+                   <div className="sim-text">
+                     <strong>Corrective Action:</strong> Move raw chicken to the bottom shelf immediately to prevent cross-contamination.<br/><br/>
+                     <span className="sim-citation">Ref: Washtenaw Enf. 3-302.11 / MI Food Code</span>
+                   </div>
+                </div>
+             </div>
+             
+             {/* Mock Input */}
+             <div className="sim-input-area">
+                <div className="sim-input-placeholder">
+                   {step < 3 ? 'Analyzing image...' : step === 3 ? 'Generating fix...' : 'Analysis complete'}
+                </div>
+                <div className="sim-send-icon">
+                   <Icons.ArrowUp />
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Background Glow for Video Container */}
+      <div className="sim-glow" />
+    </div>
+  )
+}
+
+// 5. LANDING PAGE COMPONENT
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
@@ -413,7 +524,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     []
   )
 
-  // Real data from FDA, CDC, and industry sources
   const complianceRisks = useMemo(
     () => [
       { 
@@ -459,7 +569,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
   return (
     <div className="landing-wrapper">
-      {/* Animated wave background */}
       <GradientBlurBackground />
 
       {/* Hero Section */}
@@ -504,43 +613,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={400} direction="scale">
-            {/* 
-               UPDATED VISUAL:
-               Replaced the complex "Phone/Desktop" mockups with the Video Container 
-               as requested ("Demo Video").
-            */}
+            {/* Replaced static video tag with the AppSimulation component */}
             <div className="hero-video-wrapper">
-              <div className="video-container">
-                 {/* 
-                     VIDEO ELEMENT:
-                     Replace '/demo-video.mp4' with your actual file path. 
-                     We use a 'poster' for the loading state.
-                 */}
-                 <video 
-                    className="demo-video"
-                    autoPlay 
-                    loop 
-                    muted 
-                    playsInline
-                    poster="/video-poster.jpg"
-                 >
-                   <source src="/demo-video.mp4" type="video/mp4" />
-                   {/* Fallback visual if video fails */}
-                   <div className="video-fallback">
-                      <Icons.Camera />
-                   </div>
-                 </video>
-                 
-                 {/* Floating Card for "Analysis Complete" Effect */}
-                 <div className="video-overlay-card">
-                    <div className="overlay-icon"><Icons.CheckCircle /></div>
-                    <div className={`overlay-text ${inter.className}`}>
-                       <strong>Walk-in Cooler</strong><br/>
-                       Analysis Complete
-                    </div>
-                 </div>
-              </div>
-              <div className="video-glow" />
+               <AppSimulation />
             </div>
           </Reveal>
         </div>
@@ -1479,7 +1554,6 @@ export default function Page() {
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
            COHERE-INSPIRED THEME (Sand / Charcoal / Coral)
-           Updated from Mint/Blue to match requested style
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
@@ -1524,9 +1598,8 @@ export default function Page() {
           --shadow-xl: 0 20px 40px rgba(0,0,0,0.1);
           --shadow-card: 0 4px 20px rgba(0,0,0,0.04);
           --shadow-card-hover: 0 12px 32px rgba(0,0,0,0.08);
-          --shadow-glass: 0 8px 32px rgba(0,0,0,0.12);
           
-          /* Radii - More organic/pill shapes mixed with clean corners */
+          /* Radii */
           --radius-xs: 4px;
           --radius-sm: 8px;
           --radius-md: 10px;
@@ -1723,31 +1796,6 @@ export default function Page() {
           color: var(--color-text);
         }
 
-        .logo-accent {
-          font-weight: 800;
-          color: var(--color-text);
-        }
-
-        .header-meta {
-          display: none;
-        }
-
-        @media (min-width: 768px) {
-          .header-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            padding-left: 20px;
-            border-left: 1px solid var(--color-border);
-          }
-
-          .header-meta-primary {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-          }
-        }
-
         .header-right {
           display: flex;
           align-items: center;
@@ -1782,7 +1830,7 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           BUTTONS (Updated to Pill/Sharp Style)
+           BUTTONS
            ═══════════════════════════════════════════════════════════════════════ */
         .btn-hero-primary {
           display: inline-flex;
@@ -1794,7 +1842,7 @@ export default function Page() {
           background: var(--color-primary);
           color: white;
           border: none;
-          border-radius: 100px; /* Pill shape */
+          border-radius: 100px;
           font-size: 15px;
           font-weight: 500;
           cursor: pointer;
@@ -1818,7 +1866,7 @@ export default function Page() {
           background: transparent;
           color: var(--color-text);
           border: 1px solid var(--color-border-hover);
-          border-radius: 100px; /* Pill shape */
+          border-radius: 100px;
           font-size: 15px;
           font-weight: 500;
           cursor: pointer;
@@ -2021,7 +2069,7 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           LANDING PAGE
+           LANDING PAGE ANIMATIONS
            ═══════════════════════════════════════════════════════════════════════ */
         .landing-wrapper {
           flex: 1;
@@ -2029,7 +2077,6 @@ export default function Page() {
           overflow-x: hidden;
         }
 
-        /* ─── Reveal Animations ─── */
         .rv {
           opacity: 0;
           transition: 
@@ -2082,7 +2129,7 @@ export default function Page() {
 
         @media (min-width: 1024px) {
           .hero-container {
-            grid-template-columns: 1fr 1.2fr; /* More space for video */
+            grid-template-columns: 1fr 1.2fr;
             gap: 80px;
           }
         }
@@ -2100,7 +2147,7 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           padding: 6px 14px;
-          background: #EEEAE4; /* Specific warm grey */
+          background: #EEEAE4;
           border-radius: 100px;
           width: fit-content;
           font-size: 13px;
@@ -2142,78 +2189,299 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Hero Video (New Style) ─── */
+        /* ═══════════════════════════════════════════════════════════════════════
+           SIMULATED APP DEMO (THE "VIDEO" REPLACEMENT)
+           ═══════════════════════════════════════════════════════════════════════ */
         .hero-video-wrapper {
           position: relative;
           width: 100%;
         }
 
-        .video-container {
+        .app-sim-container {
           position: relative;
-          background: #000;
-          border-radius: 20px;
-          overflow: hidden;
-          box-shadow: var(--shadow-xl);
-          aspect-ratio: 16/10; /* Clean landscape ratio */
-          border: 4px solid #fff; /* White bezel for clean look */
-        }
-
-        .demo-video {
           width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
+          aspect-ratio: 16/10;
+          border-radius: 20px;
+          background: #000;
+          padding: 16px;
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: var(--shadow-xl);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
         }
 
-        .video-fallback {
+        .sim-glow {
           position: absolute;
-          inset: 0;
+          inset: -40px;
+          background: radial-gradient(circle at center, rgba(232, 107, 88, 0.15) 0%, transparent 70%);
+          z-index: -1;
+          filter: blur(40px);
+        }
+
+        .sim-window {
+          background: #191919;
+          border-radius: 12px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sim-header {
+          height: 40px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          padding: 0 16px;
+          gap: 16px;
+        }
+
+        .sim-dots {
+          display: flex;
+          gap: 6px;
+        }
+
+        .sim-dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.8; }
+        .sim-dot.red { background: #FF5F56; }
+        .sim-dot.yellow { background: #FFBD2E; }
+        .sim-dot.green { background: #27C93F; }
+
+        .sim-title {
+          font-size: 12px;
+          color: rgba(255,255,255,0.4);
+        }
+
+        .sim-body {
+          flex: 1;
+          display: flex;
+        }
+
+        /* Sim Left: Camera */
+        .sim-view-left {
+          flex: 1;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          flex-direction: column;
+          background: #111;
+        }
+
+        .sim-camera-feed {
+          flex: 1;
+          position: relative;
+          padding: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #111;
-          color: #555;
         }
 
-        /* The floating card over the video */
-        .video-overlay-card {
-           position: absolute;
-           bottom: 24px;
-           left: 24px;
-           background: rgba(255,255,255,0.95);
-           backdrop-filter: blur(8px);
-           -webkit-backdrop-filter: blur(8px);
-           padding: 12px 16px;
-           border-radius: 12px;
-           display: flex;
-           align-items: center;
-           gap: 12px;
-           box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-           animation: slideUp 0.8s var(--ease-out-expo) 1s backwards;
-        }
-        
-        .overlay-icon { 
-          color: var(--color-success);
+        .sim-image-placeholder {
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #222 0%, #333 100%);
+          border-radius: 8px;
           display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255,255,255,0.2);
+          font-size: 14px;
+          gap: 12px;
+          position: relative;
+          overflow: hidden;
         }
 
-        .overlay-text {
-          font-size: 12px;
-          line-height: 1.3;
-          color: var(--color-text);
-        }
-        
-        @keyframes slideUp { 
-          from { opacity:0; transform:translateY(10px); } 
-          to { opacity:1; transform:translateY(0); }
-        }
-
-        .video-glow {
+        .sim-scan-line {
           position: absolute;
-          inset: -60px;
-          background: radial-gradient(circle at center, rgba(232, 107, 88, 0.2) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: var(--color-accent);
+          box-shadow: 0 0 10px var(--color-accent);
+          opacity: 0;
+          z-index: 10;
+        }
+
+        .sim-scan-line.scanning {
+          opacity: 1;
+          animation: scanMove 2s linear infinite;
+        }
+
+        @keyframes scanMove {
+          0% { top: 0; }
+          100% { top: 100%; }
+        }
+
+        .sim-detection-box {
+          position: absolute;
+          top: 30%;
+          left: 40%;
+          width: 30%;
+          height: 20%;
+          border: 2px solid var(--color-error);
+          border-radius: 4px;
+          opacity: 0;
+          transform: scale(0.9);
+          transition: all 0.4s var(--ease-out-expo);
+        }
+
+        .sim-detection-box.visible {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .sim-detection-label {
+          position: absolute;
+          top: -24px;
+          left: -2px;
+          background: var(--color-error);
+          color: white;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-weight: 600;
+        }
+
+        .sim-camera-stats {
+          height: 48px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          padding: 0 16px;
+          gap: 24px;
+          background: #151515;
+        }
+
+        .sim-stat {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .sim-stat .label { font-size: 9px; color: rgba(255,255,255,0.4); text-transform: uppercase; }
+        .sim-stat .value { font-size: 12px; color: white; font-weight: 500; }
+        .sim-stat .value.risk { color: var(--color-error); }
+        .sim-stat .value.ok { color: var(--color-success); }
+
+        /* Sim Right: Chat */
+        .sim-view-right {
+          width: 45%;
+          display: flex;
+          flex-direction: column;
+          background: #191919;
+        }
+
+        .sim-chat-feed {
+          flex: 1;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          overflow-y: auto;
+        }
+
+        .sim-chat-bubble {
+          padding: 10px 12px;
+          border-radius: 10px;
+          font-size: 12px;
+          line-height: 1.5;
+          opacity: 0;
+          transform: translateY(10px);
+          transition: all 0.5s var(--ease-out-expo);
+          display: flex;
+          gap: 10px;
+        }
+
+        .sim-chat-bubble.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .sim-chat-bubble.ai {
+          background: rgba(255,255,255,0.05);
+          color: #eee;
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sim-chat-bubble.system {
+          background: rgba(239, 68, 68, 0.15);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          color: #fca5a5;
+        }
+
+        .sim-avatar {
+          width: 20px;
+          height: 20px;
+          background: var(--color-accent);
+          border-radius: 4px;
+          font-size: 9px;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+
+        .sim-citation {
+          display: block;
+          margin-top: 8px;
+          font-size: 10px;
+          color: rgba(255,255,255,0.4);
+          border-top: 1px solid rgba(255,255,255,0.1);
+          padding-top: 6px;
+        }
+
+        .sim-input-area {
+          padding: 12px 16px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .sim-input-placeholder {
+          flex: 1;
+          height: 32px;
+          background: rgba(255,255,255,0.05);
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          padding: 0 10px;
+          font-size: 12px;
+          color: rgba(255,255,255,0.3);
+        }
+
+        .sim-send-icon {
+          width: 32px;
+          height: 32px;
+          background: var(--color-accent);
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+
+        @media (max-width: 640px) {
+           .app-sim-container {
+             aspect-ratio: 9/16;
+           }
+           .sim-body {
+             flex-direction: column;
+           }
+           .sim-view-right {
+             width: 100%;
+             height: 50%;
+           }
+           .sim-view-left {
+             border-right: none;
+             border-bottom: 1px solid rgba(255,255,255,0.08);
+           }
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -2246,7 +2514,7 @@ export default function Page() {
 
         .proof-value {
           font-size: 36px;
-          font-weight: 400; /* Lighter weight for modern look */
+          font-weight: 400; 
           letter-spacing: -0.02em;
           color: var(--color-text);
           margin-bottom: 4px;
@@ -2376,7 +2644,7 @@ export default function Page() {
           position: relative;
           z-index: 1;
           padding: 100px 24px;
-          background: var(--color-card); /* Slightly different bg */
+          background: var(--color-card);
         }
 
         .risk-container {
@@ -2591,7 +2859,7 @@ export default function Page() {
           background: var(--color-primary);
           color: white;
           border: none;
-          border-radius: 12px; /* Slight round, consistent with sharp theme */
+          border-radius: 12px;
           font-size: 16px;
           font-weight: 500;
           cursor: pointer;
@@ -2846,7 +3114,7 @@ export default function Page() {
           position: fixed;
           inset: 0;
           z-index: var(--z-modal);
-          background: rgba(0, 0, 0, 0.4); /* Darker dim for sharp contrast */
+          background: rgba(0, 0, 0, 0.4);
           backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
@@ -3223,7 +3491,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: #FAFAFA; /* Slightly cleaner bg for chat */
+          background: #FAFAFA;
         }
 
         .chat-messages {
@@ -3625,4 +3893,3 @@ export default function Page() {
     </>
   )
 }
-
