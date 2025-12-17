@@ -1,4 +1,4 @@
-// app/auth/callback/route.js - Fixed redirect logic
+// app/auth/callback/route.js - FIXED for Next.js 15
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -30,7 +30,7 @@ export async function GET(request) {
     return NextResponse.redirect(`${baseUrl}/?error=no_code`)
   }
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()  // ✅ NOW AWAITED
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
