@@ -3,10 +3,10 @@ nixPkgs = ['nodejs_20', 'python3']
 
 [phases.install]
 cmds = [
-  'echo "🧹 Cleaning..."',
-  'rm -rf node_modules .next package-lock.json',
-  'echo "📦 Installing with npm install..."',
-  'npm ci --legacy-peer-deps --no-audit --prefer-offline'
+  'echo "🧹 Cleaning build artifacts..."',
+  'rm -rf node_modules .next',
+  'echo "📦 Installing dependencies..."',
+  'npm install --legacy-peer-deps --no-audit --prefer-offline'
 ]
 
 [phases.build]
