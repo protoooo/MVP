@@ -9,19 +9,6 @@
   margin: 0;
 }
 
-/* ✅ SPLINE BACKGROUND CONTROL - CRITICAL */
-html[data-view='chat'] #plm-spline-bg {
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-html[data-view='landing'] #plm-spline-bg {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
 /* ✅ Kill white/gray flashes + make form controls dark */
 :root { color-scheme: dark; }
 
@@ -37,14 +24,14 @@ body {
   background: #000;
 }
 
-/* Chat gets solid black */
+/* Chat gets solid black background */
 html[data-view='chat'] body {
   background: #000 !important;
 }
 
-/* Landing gets transparent to show Spline */
+/* Landing gets solid black background */
 html[data-view='landing'] body {
-  background: transparent !important;
+  background: #000 !important;
 }
 
 body {
