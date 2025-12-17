@@ -1,4 +1,4 @@
-// app/api/auth/signup/route.js - UPDATED: Better verification flow
+// app/api/auth/signup/route.js - FIXED for Next.js 15
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -8,14 +8,14 @@ import { headers } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
-function getClientIp() {
-  const headersList = headers()
+async function getClientIp() {
+  const headersList = await headers()
   const forwarded = headersList.get('x-forwarded-for')
   return forwarded ? forwarded.split(',')[0].trim() : headersList.get('x-real-ip')
 }
 
 export async function POST(request) {
-  const ip = getClientIp()
+  const ip = await getClientIp()
   
   try {
     const body = await request.json()
@@ -44,7 +44,7 @@ export async function POST(request) {
       )
     }
 
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     
     const supabaseAuth = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
