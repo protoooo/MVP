@@ -494,9 +494,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     []
   )
 
+  // Removed the $200 price point as requested
   const proofPoints = useMemo(
     () => [
-      { value: 200, label: 'per month', prefix: '$' },
       { value: 'Unlimited', label: 'photo checks', isText: true },
       { value: '24/7', label: 'availability', isText: true },
       { value: 7, label: 'day free trial' },
@@ -530,9 +530,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
             <Reveal delay={200}>
               <p className={`hero-description ${inter.className}`}>
-                Photo analysis and regulation search built specifically for 
-                referencing Washtenaw County food regulation documents. Give your team a faster way to 
-                verify compliance and fix issues in real-time.
+                Instant image analysis to spot compliance risks in your kitchen. 
+                Simply snap a photo to catch violations and get Washtenaw-specific correction steps.
               </p>
             </Reveal>
 
@@ -553,6 +552,32 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <Reveal delay={400} direction="scale">
             <div className="hero-visual">
+              {/* Glass Desktop Screen emulating Stripe */}
+              <div className="desktop-glass">
+                <div className="glass-header">
+                  <div className="glass-dot red" />
+                  <div className="glass-dot yellow" />
+                  <div className="glass-dot green" />
+                </div>
+                <div className="glass-content">
+                  <div className="glass-sidebar" />
+                  <div className="glass-main">
+                    <div className="glass-bar-chart">
+                      <div className="bar" style={{ height: '40%' }} />
+                      <div className="bar" style={{ height: '70%' }} />
+                      <div className="bar" style={{ height: '55%' }} />
+                      <div className="bar active" style={{ height: '85%' }} />
+                      <div className="bar" style={{ height: '60%' }} />
+                    </div>
+                    <div className="glass-lines">
+                      <div className="glass-line" />
+                      <div className="glass-line" style={{ width: '80%' }} />
+                      <div className="glass-line" style={{ width: '60%' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="hero-phone">
                 <div className="phone-frame">
                   <div className="phone-notch" />
@@ -711,19 +736,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                     />
                   </div>
                   <div className={`risk-label ${inter.className}`}>{risk.label}</div>
-                  <div className={`risk-source ${inter.className}`}>{risk.note}</div>
                 </div>
               </Reveal>
             ))}
           </div>
 
+          {/* Sources removed from card and placed below */}
           <Reveal delay={400}>
-            <div className={`risk-footnote ${inter.className}`}>
-              <Icons.Shield />
-              <span>
-                Sources: FDA Model Food Code (2022), CDC Foodborne Illness Economic Burden Report (2024), 
-                National Restaurant Association compliance surveys. Figures are industry averages and may vary by jurisdiction.
-              </span>
+            <div className={`risk-sources-text ${inter.className}`}>
+              <Icons.Shield style={{ width: 14, height: 14, display: 'inline', marginRight: 6 }} />
+              Sources: FDA Model Food Code (2022), CDC Foodborne Illness Economic Burden Report (2024), 
+              National Restaurant Association compliance surveys. Figures are industry averages and may vary by jurisdiction.
             </div>
           </Reveal>
         </div>
@@ -759,7 +782,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <div className="pricing-amount">
                   <span className={`pricing-currency ${inter.className}`}>$</span>
                   <span className={`pricing-number ${outfit.className}`}>
-                    <CountUp value={200} duration={1500} />
+                    {/* No CountUp animation here */}
+                    200
                   </span>
                   <span className={`pricing-period ${inter.className}`}>/month</span>
                 </div>
@@ -841,7 +865,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <Reveal>
             <div className="cta-content">
               <h2 className={`cta-title ${outfit.className}`}>
-                Ready to catch issues before they cost you?
+                Ready to catch issues before&nbsp;they&nbsp;cost&nbsp;you?
               </h2>
               <p className={`cta-description ${inter.className}`}>
                 Setup takes less than 2 minutes. Give your team a faster way to 
@@ -875,7 +899,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             Powered by Anthropic Claude and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
           </p>
           <p className={`footer-copyright ${inter.className}`}>
-            © 2024 protocolLM. Made with care in Washtenaw County, Michigan.
+            © 2025 protocolLM. made in Washtenaw for Washtenaw.
           </p>
         </div>
       </footer>
@@ -1820,7 +1844,7 @@ export default function Page() {
 
         .logo-accent {
           font-weight: 800;
-          color: var(--color-primary);
+          color: #000; /* Changed to black as requested */
         }
 
         .header-meta {
@@ -2278,16 +2302,130 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Phone Mockup ─── */
+        /* ─── Phone Mockup & Glass Desktop ─── */
         .hero-visual {
           display: flex;
           justify-content: center;
           align-items: center;
           position: relative;
+          perspective: 1000px;
+          /* Adjusted to give space for the desktop */
+          padding-right: 40px; 
+        }
+
+        @media (max-width: 768px) {
+          .hero-visual {
+            padding-right: 0;
+            margin-top: 40px;
+          }
+        }
+
+        /* Glass Desktop Styles */
+        .desktop-glass {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-30%, -45%) rotateY(-5deg) rotateX(2deg);
+          width: 500px;
+          height: 380px;
+          background: rgba(255, 255, 255, 0.65);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          border-radius: 20px;
+          box-shadow: 
+            0 20px 40px -10px rgba(0, 0, 0, 0.1),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+          z-index: 0;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @media (max-width: 640px) {
+          .desktop-glass {
+            width: 300px;
+            height: 240px;
+            transform: translate(-20%, -40%);
+          }
+        }
+
+        .glass-header {
+          height: 40px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+          display: flex;
+          align-items: center;
+          padding: 0 16px;
+          gap: 8px;
+        }
+
+        .glass-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .glass-dot.red { background: #FF5F56; }
+        .glass-dot.yellow { background: #FFBD2E; }
+        .glass-dot.green { background: #27C93F; }
+
+        .glass-content {
+          flex: 1;
+          display: flex;
+        }
+
+        .glass-sidebar {
+          width: 100px;
+          border-right: 1px solid rgba(0, 0, 0, 0.05);
+          background: rgba(0, 0, 0, 0.02);
+        }
+
+        .glass-main {
+          flex: 1;
+          padding: 30px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 20px;
+        }
+
+        .glass-bar-chart {
+          display: flex;
+          align-items: flex-end;
+          gap: 16px;
+          height: 120px;
+          border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+          padding-bottom: 1px;
+        }
+
+        .glass-bar-chart .bar {
+          flex: 1;
+          background: rgba(47, 93, 138, 0.1);
+          border-radius: 4px 4px 0 0;
+        }
+
+        .glass-bar-chart .bar.active {
+          background: var(--color-primary);
+        }
+
+        .glass-lines {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .glass-line {
+          height: 8px;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 4px;
+          width: 100%;
         }
 
         .hero-phone {
           position: relative;
+          z-index: 2;
+          transform: rotateY(-8deg) rotateX(2deg);
+          box-shadow: -20px 20px 50px rgba(0,0,0,0.15);
         }
 
         .phone-frame {
@@ -2506,7 +2644,8 @@ export default function Page() {
 
         .proof-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          /* Adjusted for 3 items since one was removed */
+          grid-template-columns: repeat(3, 1fr);
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
@@ -2514,34 +2653,26 @@ export default function Page() {
           box-shadow: var(--shadow-card);
         }
 
-        @media (min-width: 768px) {
-          .proof-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-        }
-
         .proof-item {
           padding: 28px 24px;
           text-align: center;
           border-right: 1px solid var(--color-border-subtle);
-          border-bottom: 1px solid var(--color-border-subtle);
         }
 
-        .proof-item:nth-child(2n) {
+        .proof-item:last-child {
           border-right: none;
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 768px) {
+          .proof-grid {
+            grid-template-columns: 1fr;
+          }
           .proof-item {
-            border-bottom: none;
-          }
-          
-          .proof-item:nth-child(2n) {
-            border-right: 1px solid var(--color-border-subtle);
-          }
-          
-          .proof-item:last-child {
             border-right: none;
+            border-bottom: 1px solid var(--color-border-subtle);
+          }
+          .proof-item:last-child {
+            border-bottom: none;
           }
         }
 
@@ -2624,6 +2755,7 @@ export default function Page() {
 
         .feature-card {
           position: relative;
+          height: 100%;
           padding: 32px 28px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -2718,6 +2850,7 @@ export default function Page() {
 
         .risk-card {
           position: relative;
+          height: 100%;
           padding: 24px 20px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
@@ -2726,6 +2859,9 @@ export default function Page() {
           transition: all var(--duration-normal) var(--ease-out-expo);
           overflow: hidden;
           box-shadow: var(--shadow-card);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .risk-card-border {
@@ -2782,28 +2918,14 @@ export default function Page() {
           line-height: 1.4;
         }
 
-        .risk-source {
-          position: relative;
-          font-size: 10px;
-          color: var(--color-text-muted);
-        }
-
-        .risk-footnote {
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 18px 20px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+        /* New class for the sources text that is no longer in a card */
+        .risk-sources-text {
           font-size: 12px;
           color: var(--color-text-tertiary);
+          text-align: center;
+          max-width: 800px;
+          margin: 0 auto;
           line-height: 1.6;
-        }
-
-        .risk-footnote svg {
-          flex-shrink: 0;
-          color: var(--color-text-muted);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3129,6 +3251,8 @@ export default function Page() {
           color: var(--color-text);
           margin-bottom: 16px;
           line-height: 1.2;
+          /* Improved text balancing */
+          text-wrap: balance; 
         }
 
         .cta-description {
@@ -3955,8 +4079,7 @@ export default function Page() {
               </div>
 
               <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Washtenaw County Compliance</span>
-                <span className="header-meta-secondary">Additional Counties · 2026</span>
+                <span className="header-meta-primary">Washtenaw County Compliance centered with protocol LM</span>
               </div>
             </div>
 
