@@ -1,7 +1,7 @@
 // app/page.js
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -85,6 +85,81 @@ const Icons = {
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+}
+
+/* -----------------------------
+   Framer-like reveals + countup
+------------------------------ */
+
+function useInViewOnce({ threshold = 0.18, rootMargin = '0px 0px -10% 0px' } = {}) {
+  const ref = useRef(null)
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el || inView) return
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const e = entries?.[0]
+        if (e?.isIntersecting) {
+          setInView(true)
+          obs.disconnect()
+        }
+      },
+      { threshold, rootMargin }
+    )
+
+    obs.observe(el)
+    return () => {
+      try {
+        obs.disconnect()
+      } catch {}
+    }
+  }, [inView, threshold, rootMargin])
+
+  return [ref, inView]
+}
+
+function Reveal({ children, className = '', delay = 0 }) {
+  const [ref, inView] = useInViewOnce()
+  return (
+    <div ref={ref} className={`rv ${inView ? 'is-inview' : ''} ${className}`} style={{ '--d': `${delay}ms` }}>
+      {children}
+    </div>
+  )
+}
+
+function CountUp({ value, prefix = '', suffix = '', duration = 900, className = '' }) {
+  const [ref, inView] = useInViewOnce({ threshold: 0.35 })
+  const [n, setN] = useState(0)
+
+  useEffect(() => {
+    if (!inView) return
+    let raf = 0
+    const start = performance.now()
+    const from = 0
+    const to = Number(value || 0)
+
+    const tick = (t) => {
+      const p = Math.min(1, (t - start) / duration)
+      const eased = 1 - Math.pow(1 - p, 3)
+      const next = Math.round(from + (to - from) * eased)
+      setN(next)
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, value, duration])
+
+  return (
+    <span ref={ref} className={className}>
+      {prefix}
+      {n.toLocaleString()}
+      {suffix}
+    </span>
+  )
 }
 
 /**
@@ -198,184 +273,312 @@ function FAQItem({ q, a, isOpen, onToggle }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
-  const faqs = [
-    {
-      q: 'Is this only for Washtenaw County?',
-      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
-    },
-    {
-      q: 'What should my team upload for photo checks?',
-      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
-    },
-    {
-      q: 'How should we use the document side?',
-      a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
-    },
-    {
-      q: 'Will it replace training or a manager?',
-      a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
-    },
-    {
-      q: 'How often should my team use it?',
-      a: 'Smart teams run quick checks before health inspection windows (usually 9am-2pm weekdays), after training new staff, and whenever something looks "off" during a shift. Takes 30 seconds per check.',
-    },
-  ]
+  const pricing = useMemo(() => ({ monthly: 200, annual: 2000 }), [])
+
+  const complianceCostCards = useMemo(
+    () => [
+      {
+        title: 'Monetary fines',
+        range: '$200–$2,500+ per violation',
+        detail: 'In some situations, daily penalties can apply while a violation remains unresolved.',
+        right: 'One serious issue can outweigh months of software.',
+      },
+      {
+        title: 'Mandatory re-inspections',
+        range: '$150–$350+ per re-inspection',
+        detail: 'A failed inspection can trigger multiple paid follow-ups until issues are corrected.',
+        right: 'A single failure can compound quickly.',
+      },
+      {
+        title: 'Labor and remediation',
+        range: 'Hundreds to thousands',
+        detail: 'Deep cleaning, rework, pest control, repairs, and operational disruption add up fast.',
+        right: 'Prevention is cheaper than recovery.',
+      },
+      {
+        title: 'Revenue loss from closure',
+        range: 'Tens of thousands',
+        detail: 'Full or partial shutdown can wipe out revenue while payroll and fixed costs continue.',
+        right: 'This is the catastrophic outcome to avoid.',
+      },
+      {
+        title: 'Reputation damage',
+        range: 'Hard to quantify',
+        detail: 'Lost repeat customers and long-term brand impact can linger well after reopening.',
+        right: 'Protect the public record and the brand.',
+      },
+    ],
+    []
+  )
+
+  const faqs = useMemo(
+    () => [
+      {
+        q: 'Is this only for Washtenaw County?',
+        a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
+      },
+      {
+        q: 'What should my team upload for photo checks?',
+        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any “does this look right?” moments mid-shift.',
+      },
+      {
+        q: 'How should we use the document side?',
+        a: 'Ask short, operational questions. You’ll get answers grounded in local enforcement actions plus the relevant food-code sources.',
+      },
+      {
+        q: 'Is usage limited?',
+        a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
+      },
+      {
+        q: 'Will it replace training or a manager?',
+        a: 'No. It’s a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
+      },
+      {
+        q: 'How often should my team use it?',
+        a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
+      },
+    ],
+    []
+  )
 
   return (
     <div className="flex-1 flex flex-col items-center justify-start px-4 py-10">
       <div className="max-w-6xl w-full">
-        <div className="ui-shell">
-          <section className="ui-hero">
-            <h1 className={`ui-title ${outfit.className}`}>Catch Violations Before the Inspector</h1>
+        <div className="ui-shell lp-shell">
+          {/* HERO */}
+          <section className="ui-hero lp-hero">
+            <Reveal>
+              <div className={`lp-eyebrow ${inter.className}`}>Washtenaw County food safety copilot</div>
 
-            <p className={`ui-subtitle ${inter.className}`}>
-              Take a photo of any station. Get fast alerts for likely Washtenaw County violations. Pass inspections with confidence.
-            </p>
+              <h1 className={`ui-title lp-title ${outfit.className}`}>Catch violations before the inspector</h1>
 
-            <p className={`ui-body ${inter.className}`}>
-              Built specifically for Washtenaw County restaurants. Photo analysis + regulation search in about 30 seconds. One avoided violation can pay for months.
-            </p>
+              <p className={`ui-subtitle lp-subtitle ${inter.className}`}>
+                Photo checks and regulation search designed for how Washtenaw County inspections actually happen.
+              </p>
 
-            <p className={`ui-powered ${inter.className}`}>
-              Built using leading AI models (Anthropic + Cohere).{' '}
-              <span className="ui-powered-note">
-                Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.
-              </span>
-            </p>
+              <p className={`ui-body lp-body ${inter.className}`}>
+                Snap a photo of any station, get likely issues and fixes fast, and keep a searchable reference for your team. Built for operators who
+                want cleaner passes and fewer surprises.
+              </p>
 
-            <div className="ui-cta-row">
-              <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
-                <span className="ui-btn-inner">Start trial</span>
-              </button>
-
-              <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
-                <span className="ui-btn-inner">Sign in</span>
-              </button>
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          <section className="ui-section">
-            <div className="ui-featuregrid">
-              <div className="ui-stepcard">
-                <div className="ui-stephead">
-                  <span className="ui-stepicon" aria-hidden="true">
-                    <Icons.Camera />
-                  </span>
-                  <div className={`ui-steptitle ${inter.className}`}>Photo analysis</div>
-                </div>
-                <div className={`ui-stepbody ${inter.className}`}>
-                  Take a picture. Cross-check against Washtenaw County requirements for likely violations to verify.
-                </div>
-              </div>
-
-              <div className="ui-stepcard">
-                <div className="ui-stephead">
-                  <span className="ui-stepicon" aria-hidden="true">
-                    <Icons.Lock />
-                  </span>
-                  <div className={`ui-steptitle ${inter.className}`}>Document search</div>
-                </div>
-                <div className={`ui-stepbody ${inter.className}`}>
-                  Washtenaw enforcement actions + Michigan Modified Food Code + FDA guidance—organized for quick answers.
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          {/* ✅ NEW: Cost of Non-Compliance section (cards only — no screenshots) */}
-          <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>Cost of Non-Compliance (Examples)</h2>
-            <p className={`ui-p ${inter.className}`}>
-              These are common cost buckets operators run into after a bad inspection outcome. Estimates vary by situation, but the pattern is consistent.
-            </p>
-
-            <div className="ui-compliancegrid mt-4">
-              <div className="ui-compliancecard">
-                <div className={`ui-compliancetitle ${inter.className}`}>Monetary fines</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>$200 to $2,500+ per violation</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Minor → serious; can be higher if ongoing.</div>
-              </div>
-
-              <div className="ui-compliancecard">
-                <div className={`ui-compliancetitle ${inter.className}`}>Follow-up inspection fees</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>$150 to $350+ per re-inspection</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Multiple re-checks add up fast.</div>
-              </div>
-
-              <div className="ui-compliancecard">
-                <div className={`ui-compliancetitle ${inter.className}`}>Labor / remediation</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>Hundreds to thousands of dollars</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Deep cleaning, repairs, pest control, retraining.</div>
-              </div>
-
-              <div className="ui-compliancecard">
-                <div className={`ui-compliancetitle ${inter.className}`}>Revenue loss from closure</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>Tens of thousands of dollars</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Partial or full shutdown impact.</div>
-              </div>
-
-              <div className="ui-compliancecard">
-                <div className={`ui-compliancetitle ${inter.className}`}>Reputation damage</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>Hard to quantify</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Slower return of customers + long-term loss.</div>
-              </div>
-
-              <div className="ui-compliancecard ui-compliancecard-emph">
-                <div className={`ui-compliancetitle ${inter.className}`}>Simple comparison</div>
-                <div className={`ui-compliancevalue ${inter.className}`}>$200/month = $2,000/year</div>
-                <div className={`ui-compliancesub ${inter.className}`}>Less than the cost of a single serious issue.</div>
-              </div>
-            </div>
-
-            <div className="ui-callout mt-4">
-              <div className={`ui-callouttext ${inter.className}`}>
-                At <span className="font-semibold">$200/month</span>, this is <span className="font-semibold">$2,000/year</span> — less than the cost of a
-                single serious issue.
-              </div>
-            </div>
-
-            <div className={`ui-disclaimer ${inter.className}`}>Estimates vary by jurisdiction and situation; shown for context.</div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          <section className="ui-section">
-            <h2 className={`ui-h2 ${outfit.className}`}>FAQ</h2>
-            <div className="ui-faq">
-              {faqs.map((f, i) => (
-                <FAQItem key={i} q={f.q} a={f.a} isOpen={openFaq === i} onToggle={() => setOpenFaq((v) => (v === i ? null : i))} />
-              ))}
-            </div>
-          </section>
-
-          <div className="ui-section-divider" />
-
-          <section className="ui-final">
-            <div className="ui-finalinner">
-              <div>
-                <h3 className={`ui-h2 ${outfit.className}`}>Start Your 7-Day Trial Today</h3>
-                <p className={`ui-p ${inter.className}`}>
-                  No credit card required. Takes 2 minutes to set up. Start catching violations before the inspector does.
-                </p>
-              </div>
-
-              <div className="ui-cta-row">
+              <div className="ui-cta-row lp-cta">
                 <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
                   <span className="ui-btn-inner">Start trial</span>
                 </button>
+
                 <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
                   <span className="ui-btn-inner">Sign in</span>
                 </button>
               </div>
-            </div>
+
+              <div className="lp-metricrow">
+                <div className="fx-card fx-card-strong">
+                  <div className={`fx-kicker ${inter.className}`}>Site license</div>
+                  <div className={`fx-number ${outfit.className}`}>
+                    <CountUp value={pricing.monthly} prefix="$" className="tabular-nums" />
+                    <span className="fx-unit">/month</span>
+                  </div>
+                  <div className={`fx-sub ${inter.className}`}>Unlimited usage for one location.</div>
+                </div>
+
+                <div className="fx-card">
+                  <div className={`fx-kicker ${inter.className}`}>Annual option</div>
+                  <div className={`fx-number ${outfit.className}`}>
+                    <CountUp value={pricing.annual} prefix="$" className="tabular-nums" />
+                    <span className="fx-unit">/year</span>
+                  </div>
+                  <div className={`fx-sub ${inter.className}`}>Equivalent to $166.67/month.</div>
+                </div>
+
+                <div className="fx-card">
+                  <div className={`fx-kicker ${inter.className}`}>Designed for speed</div>
+                  <div className={`fx-number fx-number-sm ${outfit.className}`}>Photo checks</div>
+                  <div className={`fx-sub ${inter.className}`}>Fast, operational feedback without hunting through PDFs.</div>
+                </div>
+              </div>
+            </Reveal>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* FEATURES */}
+          <section className="ui-section lp-section">
+            <Reveal delay={60}>
+              <div className="lp-sectionhead">
+                <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>Built for real kitchen moments</h2>
+                <p className={`ui-p lp-p ${inter.className}`}>
+                  Not a generic chatbot. Purpose-built flows for photo checks, quick answers, and consistent compliance habits.
+                </p>
+              </div>
+
+              <div className="fx-grid">
+                <div className="fx-card fx-card-hover">
+                  <div className="fx-cardtop">
+                    <span className="fx-icon" aria-hidden="true">
+                      <Icons.Camera />
+                    </span>
+                    <div className={`fx-title ${inter.className}`}>Photo analysis</div>
+                  </div>
+                  <div className={`fx-copy ${inter.className}`}>
+                    Upload walk-ins, prep, dish, storage, labels, and holding temps. Get likely issues and the “why” in plain language.
+                  </div>
+                </div>
+
+                <div className="fx-card fx-card-hover">
+                  <div className="fx-cardtop">
+                    <span className="fx-icon" aria-hidden="true">
+                      <Icons.Lock />
+                    </span>
+                    <div className={`fx-title ${inter.className}`}>Washtenaw-backed answers</div>
+                  </div>
+                  <div className={`fx-copy ${inter.className}`}>
+                    Search local enforcement patterns plus Michigan Modified Food Code and FDA guidance—organized for operators, not lawyers.
+                  </div>
+                </div>
+
+                <div className="fx-card fx-card-hover">
+                  <div className="fx-cardtop">
+                    <span className="fx-icon" aria-hidden="true">
+                      <Icons.Shield />
+                    </span>
+                    <div className={`fx-title ${inter.className}`}>Pre-inspection routine</div>
+                  </div>
+                  <div className={`fx-copy ${inter.className}`}>
+                    Run quick checks before inspection windows, during onboarding, or whenever something feels off. Build consistency without extra meetings.
+                  </div>
+                </div>
+              </div>
+
+              <div className={`lp-footnote ${inter.className}`}>
+                Uses Anthropic and Cohere APIs for language and retrieval. Not affiliated with or endorsed by Anthropic or Cohere.
+              </div>
+            </Reveal>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* COST OF NON-COMPLIANCE */}
+          <section className="ui-section lp-section">
+            <Reveal delay={40}>
+              <div className="lp-sectionhead">
+                <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>Cost of non-compliance</h2>
+                <p className={`ui-p lp-p ${inter.className}`}>
+                  These ranges are common examples used in industry discussions. Actual outcomes vary by jurisdiction and situation.
+                </p>
+              </div>
+
+              <div className="lp-costgrid">
+                {complianceCostCards.map((c, i) => (
+                  <div key={i} className="fx-card fx-card-hover">
+                    <div className={`lp-costtitle ${inter.className}`}>{c.title}</div>
+                    <div className={`lp-costrange ${outfit.className}`}>{c.range}</div>
+                    <div className={`lp-costdetail ${inter.className}`}>{c.detail}</div>
+                    <div className="lp-costdivider" />
+                    <div className={`lp-costright ${inter.className}`}>{c.right}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={`lp-legal ${inter.className}`}>
+                Illustrative ranges only. protocolLM provides compliance assistance, not legal advice.
+              </div>
+            </Reveal>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* PRICING STRIP */}
+          <section className="ui-section lp-section">
+            <Reveal delay={30}>
+              <div className="lp-pricing">
+                <div>
+                  <div className={`ui-tag ${inter.className}`}>Single location license</div>
+                  <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>One plan. Unlimited usage.</h2>
+                  <p className={`ui-p lp-p ${inter.className}`}>
+                    Unlimited photo checks and questions for your licensed location. Built for daily use by managers and line staff.
+                  </p>
+
+                  <div className="lp-bench">
+                    <div className={`lp-benchlabel ${inter.className}`}>Typical compliance SaaS benchmarks</div>
+                    <div className={`lp-benchrow ${inter.className}`}>
+                      <span>Basic: $79–$149/month</span>
+                      <span>Standard: $199–$399/month</span>
+                      <span>Enterprise: $499+/month</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="fx-card fx-card-strong lp-pricingcard">
+                  <div className="lp-priceTop">
+                    <div className={`lp-priceName ${inter.className}`}>protocolLM</div>
+                    <div className={`lp-priceMain ${outfit.className}`}>
+                      <CountUp value={pricing.monthly} prefix="$" className="tabular-nums" />
+                      <span className="lp-priceUnit">/month</span>
+                    </div>
+                    <div className={`lp-priceSub ${inter.className}`}>Or ${pricing.annual.toLocaleString()}/year.</div>
+                  </div>
+
+                  <div className="lp-features">
+                    <div className={`lp-feature ${inter.className}`}>Unlimited photo checks</div>
+                    <div className={`lp-feature ${inter.className}`}>Unlimited text questions</div>
+                    <div className={`lp-feature ${inter.className}`}>Washtenaw-focused guidance</div>
+                    <div className={`lp-feature ${inter.className}`}>Owner / GM friendly</div>
+                  </div>
+
+                  <div className="lp-pricingcta">
+                    <button onClick={onShowPricing} className="ui-btn ui-btn-primary w-full">
+                      <span className="ui-btn-inner">Start trial</span>
+                    </button>
+                    <button onClick={onShowAuth} className="ui-btn ui-btn-secondary w-full">
+                      <span className="ui-btn-inner">Sign in</span>
+                    </button>
+                  </div>
+
+                  <div className={`lp-smallprint ${inter.className}`}>One site license per restaurant. Cancel anytime.</div>
+                </div>
+              </div>
+            </Reveal>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* FAQ */}
+          <section className="ui-section lp-section">
+            <Reveal delay={20}>
+              <h2 className={`ui-h2 lp-h2 ${outfit.className}`}>FAQ</h2>
+              <div className="ui-faq">
+                {faqs.map((f, i) => (
+                  <FAQItem key={i} q={f.q} a={f.a} isOpen={openFaq === i} onToggle={() => setOpenFaq((v) => (v === i ? null : i))} />
+                ))}
+              </div>
+            </Reveal>
+          </section>
+
+          <div className="ui-section-divider" />
+
+          {/* FINAL CTA */}
+          <section className="ui-final lp-final">
+            <Reveal>
+              <div className="ui-finalinner">
+                <div>
+                  <h3 className={`ui-h2 ${outfit.className}`}>Start your 7-day trial</h3>
+                  <p className={`ui-p ${inter.className}`}>Set up takes minutes. Give your team a faster way to verify issues and fix them early.</p>
+                </div>
+
+                <div className="ui-cta-row">
+                  <button onClick={onShowPricing} className="ui-btn ui-btn-primary">
+                    <span className="ui-btn-inner">Start trial</span>
+                  </button>
+                  <button onClick={onShowAuth} className="ui-btn ui-btn-secondary">
+                    <span className="ui-btn-inner">Sign in</span>
+                  </button>
+                </div>
+              </div>
+            </Reveal>
           </section>
 
           <div className={`ui-footerline ${inter.className}`}>
-            <span>One site license per restaurant · 7-day trial · Unlimited usage · Cancel anytime</span>
+            <span>One site license per restaurant · 7-day trial · Cancel anytime</span>
           </div>
         </div>
 
@@ -392,8 +595,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </Link>
           </div>
 
-          <div className="pt-4 text-center text-[11px] text-white/45">
-            Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.
+          <div className="mt-4 text-center text-[11px] text-white/45">
+            Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
           </div>
         </footer>
       </div>
@@ -462,21 +665,21 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
 
       if (mode === 'reset') {
         setMessageKind('ok')
-        setMessage('✅ Check your email for reset instructions.')
+        setMessage('Check your email for reset instructions.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else if (mode === 'signup') {
         setMessageKind('ok')
-        setMessage('✅ Account created. Check your email to verify.')
+        setMessage('Account created. Check your email to verify.')
         setTimeout(() => {
           setMode('signin')
           setMessage('')
         }, 2000)
       } else {
         setMessageKind('ok')
-        setMessage('✅ Signed in. Redirecting…')
+        setMessage('Signed in. Redirecting…')
         setTimeout(() => {
           onClose()
           window.location.reload()
@@ -613,7 +816,9 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         <div className="mb-5">
           <div className={`ui-tag ${inter.className}`}>Single site license</div>
           <h3 className={`text-2xl font-semibold text-white mb-2 tracking-tight ${outfit.className}`}>protocolLM Access</h3>
-          <p className={`text-sm text-white/55 ${inter.className}`}>Photo checks + document search—built specifically for Washtenaw County operators.</p>
+          <p className={`text-sm text-white/55 ${inter.className}`}>
+            Unlimited photo checks and document search—built specifically for Washtenaw County operators.
+          </p>
         </div>
 
         <div className="ui-pricewrap p-6">
@@ -623,31 +828,12 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
                 <span className={`text-5xl font-semibold text-white tracking-tight ${outfit.className}`}>$200</span>
                 <span className="text-xs font-medium uppercase tracking-[0.18em] text-white/40">/ month</span>
               </div>
-              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>
-                Unlimited usage (images + text). <span className="text-white/45">Fair-use applies.</span>
-              </p>
+              <p className={`text-xs text-white/55 mt-2 ${inter.className}`}>Unlimited usage. Includes photo checks and questions.</p>
             </div>
 
             <div className={`ui-badge ${inter.className}`}>
               <Icons.Shield />
-              Unlimited tier
-            </div>
-          </div>
-
-          <div className="ui-divider my-5" />
-
-          <div className="ui-list">
-            <div className={`ui-listitem ${inter.className}`}>
-              <span className="ui-dot" aria-hidden="true" />
-              Unlimited image checks
-            </div>
-            <div className={`ui-listitem ${inter.className}`}>
-              <span className="ui-dot" aria-hidden="true" />
-              Unlimited text questions
-            </div>
-            <div className={`ui-listitem ${inter.className}`}>
-              <span className="ui-dot" aria-hidden="true" />
-              Washtenaw County-focused compliance guidance
+              Premium
             </div>
           </div>
 
@@ -679,9 +865,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <p className={`text-[12px] text-white/80 text-center ${inter.className}`}>
               One site license per restaurant · 7-day trial · Cancel anytime
               <br />
-              <span className="text-white/55">Built using leading AI models (Anthropic + Cohere).</span>
-              <br />
-              <span className="text-white/45">Anthropic and Cohere are trademarks of their respective owners. No affiliation or endorsement.</span>
+              <span className="text-white/60">Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.</span>
             </p>
           </div>
         </div>
@@ -739,11 +923,11 @@ export default function Page() {
     }
   }, [isAuthenticated])
 
-  const scrollToBottom = (behavior = 'auto') => {
+  const scrollToBottom = useCallback((behavior = 'auto') => {
     const el = scrollRef.current
     if (!el) return
     el.scrollTo({ top: el.scrollHeight, behavior })
-  }
+  }, [])
 
   const handleScroll = () => {
     const el = scrollRef.current
@@ -760,7 +944,7 @@ export default function Page() {
 
   useEffect(() => {
     if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [messages])
+  }, [messages, scrollToBottom])
 
   useEffect(() => {
     const showPricing = searchParams?.get('showPricing')
@@ -1217,18 +1401,6 @@ export default function Page() {
           max-width: 78ch;
         }
 
-        .ui-powered {
-          margin-top: 10px;
-          font-size: 12px;
-          line-height: 1.5;
-          color: rgba(255, 255, 255, 0.62);
-          max-width: 78ch;
-        }
-
-        .ui-powered-note {
-          color: rgba(255, 255, 255, 0.42);
-        }
-
         .ui-cta-row {
           display: flex;
           gap: 10px;
@@ -1276,17 +1448,6 @@ export default function Page() {
           max-width: 72ch;
         }
 
-        .ui-featuregrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-        @media (min-width: 980px) {
-          .ui-featuregrid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-
         /* 4. ✅ REPLACED .ui-stepcard */
         .ui-stepcard {
           border-radius: 16px;
@@ -1295,109 +1456,6 @@ export default function Page() {
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           padding: 12px;
-        }
-
-        .ui-stephead {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
-        }
-
-        .ui-stepicon {
-          width: 36px;
-          height: 36px;
-          border-radius: 12px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          color: rgba(255, 255, 255, 0.7);
-          flex-shrink: 0;
-        }
-
-        .ui-steptitle {
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: 0.02em;
-          color: rgba(255, 255, 255, 0.92);
-        }
-
-        .ui-stepbody {
-          font-size: 13px;
-          line-height: 1.65;
-          color: rgba(255, 255, 255, 0.55);
-        }
-
-        /* ✅ NEW: compliance cards */
-        .ui-compliancegrid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-        @media (min-width: 820px) {
-          .ui-compliancegrid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-
-        .ui-compliancecard {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.02);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          padding: 14px;
-        }
-
-        .ui-compliancecard-emph {
-          background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.16);
-        }
-
-        .ui-compliancetitle {
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 6px;
-        }
-
-        .ui-compliancevalue {
-          font-size: 14px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.92);
-          letter-spacing: -0.01em;
-          margin-bottom: 4px;
-        }
-
-        .ui-compliancesub {
-          font-size: 12px;
-          line-height: 1.55;
-          color: rgba(255, 255, 255, 0.55);
-        }
-
-        .ui-callout {
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          padding: 12px 14px;
-        }
-
-        .ui-callouttext {
-          font-size: 12px;
-          line-height: 1.6;
-          color: rgba(255, 255, 255, 0.78);
-        }
-
-        .ui-disclaimer {
-          margin-top: 10px;
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.45);
         }
 
         /* 5. ✅ REPLACED .ui-faq */
@@ -1464,7 +1522,7 @@ export default function Page() {
           transition: max-height 180ms ease;
         }
         .ui-faqpanel.is-open {
-          max-height: 240px;
+          max-height: 260px;
         }
 
         .ui-faqa {
@@ -1676,28 +1734,7 @@ export default function Page() {
           background: rgba(255, 255, 255, 0.08);
         }
 
-        .ui-list {
-          display: grid;
-          gap: 8px;
-        }
-
-        .ui-listitem {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.78);
-        }
-
-        .ui-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.5);
-          flex-shrink: 0;
-          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
-        }
-
+        /* Chat bubble cleanup */
         .ui-bubble {
           border: none !important;
           background: transparent !important;
@@ -1784,10 +1821,315 @@ export default function Page() {
           }
         }
 
+        /* -----------------------------
+           Landing: Framer-esque reveals
+        ------------------------------ */
+        .rv {
+          opacity: 0;
+          transform: translateY(14px);
+          filter: blur(8px);
+          transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1),
+            filter 700ms cubic-bezier(0.16, 1, 0.3, 1);
+          transition-delay: var(--d, 0ms);
+          will-change: opacity, transform, filter;
+        }
+        .rv.is-inview {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+
+        .lp-eyebrow {
+          display: inline-flex;
+          width: fit-content;
+          padding: 6px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          font-weight: 800;
+          margin-bottom: 12px;
+        }
+
+        .lp-metricrow {
+          margin-top: 18px;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        @media (min-width: 860px) {
+          .lp-metricrow {
+            grid-template-columns: 1.2fr 1fr 1fr;
+          }
+        }
+
+        .fx-card {
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(14px) saturate(180%);
+          -webkit-backdrop-filter: blur(14px) saturate(180%);
+          padding: 14px;
+          position: relative;
+          overflow: hidden;
+        }
+        .fx-card::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          pointer-events: none;
+          background: radial-gradient(600px 180px at 10% 0%, rgba(255, 255, 255, 0.06), transparent 60%);
+          opacity: 0.8;
+        }
+        .fx-card-strong {
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .fx-card-hover {
+          transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, background 180ms ease;
+        }
+        .fx-card-hover:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.03);
+        }
+
+        .fx-kicker {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.55);
+          margin-bottom: 8px;
+        }
+
+        .fx-number {
+          font-size: 34px;
+          letter-spacing: -0.04em;
+          color: rgba(255, 255, 255, 0.95);
+          line-height: 1.05;
+        }
+        .fx-number-sm {
+          font-size: 18px;
+          letter-spacing: -0.02em;
+        }
+        .fx-unit {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.45);
+          margin-left: 8px;
+        }
+        .fx-sub {
+          margin-top: 8px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+          line-height: 1.5;
+          max-width: 60ch;
+        }
+
+        .fx-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 12px;
+        }
+        @media (min-width: 980px) {
+          .fx-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+          }
+        }
+        .fx-cardtop {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 8px;
+          position: relative;
+          z-index: 1;
+        }
+        .fx-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          color: rgba(255, 255, 255, 0.7);
+          flex-shrink: 0;
+        }
+        .fx-title {
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+          color: rgba(255, 255, 255, 0.92);
+        }
+        .fx-copy {
+          font-size: 13px;
+          line-height: 1.65;
+          color: rgba(255, 255, 255, 0.55);
+          position: relative;
+          z-index: 1;
+        }
+
+        .lp-footnote {
+          margin-top: 12px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.45);
+        }
+
+        .lp-costgrid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 12px;
+        }
+        @media (min-width: 980px) {
+          .lp-costgrid {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        .lp-costtitle {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.7);
+          position: relative;
+          z-index: 1;
+        }
+        .lp-costrange {
+          font-size: 20px;
+          letter-spacing: -0.03em;
+          color: rgba(255, 255, 255, 0.94);
+          margin-top: 6px;
+          position: relative;
+          z-index: 1;
+        }
+        .lp-costdetail {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.55);
+          position: relative;
+          z-index: 1;
+        }
+        .lp-costdivider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+          margin: 10px 0;
+          position: relative;
+          z-index: 1;
+        }
+        .lp-costright {
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.7);
+          position: relative;
+          z-index: 1;
+        }
+        .lp-legal {
+          margin-top: 10px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.45);
+        }
+
+        .lp-pricing {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          align-items: start;
+        }
+        @media (min-width: 980px) {
+          .lp-pricing {
+            grid-template-columns: 1.2fr 0.8fr;
+          }
+        }
+
+        .lp-bench {
+          margin-top: 12px;
+          padding: 12px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .lp-benchlabel {
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          font-weight: 800;
+          color: rgba(255, 255, 255, 0.55);
+          margin-bottom: 8px;
+        }
+        .lp-benchrow {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.65);
+        }
+
+        .lp-pricingcard {
+          padding: 16px;
+        }
+        .lp-priceName {
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.65);
+        }
+        .lp-priceMain {
+          margin-top: 6px;
+          font-size: 42px;
+          letter-spacing: -0.05em;
+          color: rgba(255, 255, 255, 0.95);
+          line-height: 1.05;
+        }
+        .lp-priceUnit {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.45);
+          margin-left: 10px;
+        }
+        .lp-priceSub {
+          margin-top: 8px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.55);
+        }
+        .lp-features {
+          margin-top: 12px;
+          display: grid;
+          gap: 8px;
+        }
+        .lp-feature {
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 10px 12px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.75);
+        }
+        .lp-pricingcta {
+          margin-top: 12px;
+          display: grid;
+          gap: 10px;
+        }
+        .lp-smallprint {
+          margin-top: 10px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.45);
+          text-align: center;
+        }
+
         /* =========================
            PREMIUM USER MENU STYLES
            ========================= */
-
         .ui-usermenu {
           position: absolute;
           right: 0;
@@ -1823,12 +2165,7 @@ export default function Page() {
           inset: -1px;
           border-radius: 18px;
           padding: 1px;
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.15),
-            rgba(255, 255, 255, 0.02),
-            rgba(255, 255, 255, 0.08)
-          );
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;
@@ -2182,96 +2519,4 @@ export default function Page() {
                 ) : (
                   <div className="max-w-4xl mx-auto w-full px-4 py-5 space-y-3">
                     {messages.map((msg, idx) => (
-                      <div key={idx} className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[78%] ui-bubble ${msg.role === 'user' ? 'ui-bubble-user' : ''}`}>
-                          {msg.image && (
-                            <div className="ui-chatimgwrap">
-                              <img src={msg.image} alt="Uploaded" className="ui-chatimg" />
-                            </div>
-                          )}
-
-                          {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <div className={`ui-thinking ${inter.className} text-[12px] text-white/55`}>Working…</div>
-                          ) : (
-                            <span className="whitespace-pre-wrap">{msg.content}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-shrink-0 ui-header border-t border-white/10">
-                <div className="max-w-4xl mx-auto w-full px-3 sm:px-4 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-                  <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-                  {selectedImage && (
-                    <div className="mb-2 inline-flex items-center gap-2 ui-attachpill text-[12px]">
-                      <span>Image attached</span>
-                      <button
-                        onClick={() => setSelectedImage(null)}
-                        className="ui-icon-btn !w-10 !h-10"
-                        aria-label="Remove image"
-                        title="Remove"
-                      >
-                        <Icons.X />
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex items-end gap-2">
-                    <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleImageChange} />
-
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="ui-icon-btn" aria-label="Attach image">
-                      <Icons.Camera />
-                    </button>
-
-                    <form onSubmit={handleSend} className="flex-1 flex items-end gap-2">
-                      <textarea
-                        ref={textAreaRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask a question or attach a photo…"
-                        rows={1}
-                        className={`ui-input flex-1 max-h-32 min-h-[44px] resize-none ${inter.className}`}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault()
-                            handleSend(e)
-                          }
-                        }}
-                      />
-
-                      <button
-                        type="submit"
-                        disabled={(!input.trim() && !selectedImage) || isSending}
-                        className={`ui-icon-btn ${(!input.trim() && !selectedImage) || isSending ? 'opacity-40 cursor-not-allowed' : ''}`}
-                        aria-label="Send"
-                      >
-                        {isSending ? <div className="ui-spinner-lg" /> : <Icons.ArrowUp />}
-                      </button>
-                    </form>
-                  </div>
-
-                  <p className={`mt-2 text-[11px] text-center text-white/40 ${inter.className}`}>
-                    protocolLM may make mistakes. Confirm critical decisions with official regulations and your local health department.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </>
-  )
-}
-
-/**
- * ✅ NOTE (globals.css):
- * Add these there (NOT in page.js):
- *
- * .ui-emptyicon { ... }
- * .ui-emptytitle { ... }
- * .ui-emptytext { ... }
- */
+                      <div
