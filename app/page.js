@@ -153,6 +153,22 @@ const Icons = {
   ),
 }
 
+// Animated gradient mesh background component
+function GradientMesh() {
+  return (
+    <div className="gradient-mesh-container">
+      <div className="gradient-mesh">
+        <div className="mesh-gradient mesh-gradient-1" />
+        <div className="mesh-gradient mesh-gradient-2" />
+        <div className="mesh-gradient mesh-gradient-3" />
+        <div className="mesh-gradient mesh-gradient-4" />
+        <div className="mesh-gradient mesh-gradient-5" />
+      </div>
+      <div className="mesh-noise" />
+    </div>
+  )
+}
+
 function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
   const ref = useRef(null)
   const [inView, setInView] = useState(false)
@@ -443,13 +459,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
   return (
     <div className="landing-wrapper">
-      {/* Ambient background */}
-      <div className="ambient-bg">
-        <div className="ambient-orb ambient-orb-1" />
-        <div className="ambient-orb ambient-orb-2" />
-        <div className="ambient-orb ambient-orb-3" />
-        <div className="ambient-grid" />
-      </div>
+      {/* Animated gradient mesh background */}
+      <GradientMesh />
 
       {/* Hero Section */}
       <section className="hero-section">
@@ -597,6 +608,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       {/* Features Section */}
       <section className="features-section">
+        <div className="section-glow section-glow-features" />
         <div className="features-container">
           <Reveal>
             <div className="section-header">
@@ -615,6 +627,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             {features.map((feature, i) => (
               <Reveal key={i} delay={i * 120}>
                 <div className="feature-card">
+                  <div className="feature-card-bg" />
                   <div className={`feature-icon-wrapper bg-gradient-to-br ${feature.gradient}`}>
                     {feature.icon}
                   </div>
@@ -629,6 +642,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       {/* Risk/Value Section */}
       <section className="risk-section">
+        <div className="section-glow section-glow-risk" />
         <div className="risk-container">
           <Reveal>
             <div className="section-header">
@@ -647,6 +661,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             {complianceRisks.map((risk, i) => (
               <Reveal key={i} delay={i * 100}>
                 <div className="risk-card">
+                  <div className="risk-card-bg" />
                   <div className="risk-icon">
                     {risk.icon}
                   </div>
@@ -679,6 +694,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       {/* Pricing Section */}
       <section className="pricing-section">
+        <div className="section-glow section-glow-pricing" />
         <div className="pricing-container">
           <Reveal>
             <div className="section-header">
@@ -695,6 +711,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <Reveal delay={150}>
             <div className="pricing-card">
+              <div className="pricing-card-bg" />
               <div className="pricing-card-inner">
                 <div className="pricing-badge-wrapper">
                   <div className="pricing-badge">
@@ -785,6 +802,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       {/* Final CTA Section */}
       <section className="cta-section">
+        <div className="cta-glow" />
         <div className="cta-container">
           <Reveal>
             <div className="cta-content">
@@ -807,7 +825,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </Reveal>
         </div>
-        <div className="cta-gradient" />
       </section>
 
       {/* Footer */}
@@ -927,6 +944,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
         <div className="modal-card">
+          <div className="modal-card-bg" />
           <button onClick={onClose} className="modal-close-btn" aria-label="Close">
             <Icons.X />
           </button>
@@ -1059,6 +1077,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-wrapper modal-wrapper-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-card">
+          <div className="modal-card-bg" />
           <button onClick={onClose} className="modal-close-btn" aria-label="Close">
             <Icons.X />
           </button>
@@ -1694,6 +1713,150 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
+           ANIMATED GRADIENT MESH BACKGROUND - Stripe-style
+           ═══════════════════════════════════════════════════════════════════════ */
+        .gradient-mesh-container {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          overflow: hidden;
+        }
+
+        .gradient-mesh {
+          position: absolute;
+          inset: -50%;
+          width: 200%;
+          height: 200%;
+        }
+
+        .mesh-gradient {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: 0.6;
+          mix-blend-mode: normal;
+          will-change: transform;
+        }
+
+        .mesh-gradient-1 {
+          width: 80vmax;
+          height: 80vmax;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+          top: -20%;
+          left: -20%;
+          animation: meshFloat1 25s ease-in-out infinite;
+        }
+
+        .mesh-gradient-2 {
+          width: 70vmax;
+          height: 70vmax;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0) 70%);
+          top: 20%;
+          right: -15%;
+          animation: meshFloat2 30s ease-in-out infinite;
+        }
+
+        .mesh-gradient-3 {
+          width: 60vmax;
+          height: 60vmax;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0) 70%);
+          bottom: -10%;
+          left: 20%;
+          animation: meshFloat3 28s ease-in-out infinite;
+        }
+
+        .mesh-gradient-4 {
+          width: 50vmax;
+          height: 50vmax;
+          background: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0) 70%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          animation: meshFloat4 35s ease-in-out infinite;
+        }
+
+        .mesh-gradient-5 {
+          width: 40vmax;
+          height: 40vmax;
+          background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0) 70%);
+          bottom: 20%;
+          right: 10%;
+          animation: meshFloat5 32s ease-in-out infinite;
+        }
+
+        @keyframes meshFloat1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(5%, 10%) scale(1.05); }
+          50% { transform: translate(10%, 5%) scale(0.95); }
+          75% { transform: translate(3%, -5%) scale(1.02); }
+        }
+
+        @keyframes meshFloat2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(-8%, 5%) scale(0.98); }
+          50% { transform: translate(-5%, 12%) scale(1.04); }
+          75% { transform: translate(3%, 8%) scale(0.96); }
+        }
+
+        @keyframes meshFloat3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(8%, -8%) scale(1.06); }
+          66% { transform: translate(-5%, -3%) scale(0.94); }
+        }
+
+        @keyframes meshFloat4 {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          25% { transform: translate(-45%, -55%) scale(1.08); }
+          50% { transform: translate(-55%, -48%) scale(0.92); }
+          75% { transform: translate(-48%, -52%) scale(1.04); }
+        }
+
+        @keyframes meshFloat5 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-10%, 5%) scale(1.05); }
+          66% { transform: translate(5%, -8%) scale(0.95); }
+        }
+
+        /* Subtle noise overlay for texture */
+        .mesh-noise {
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          opacity: 0.02;
+          mix-blend-mode: overlay;
+        }
+
+        /* Section-specific glow effects */
+        .section-glow {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .section-glow-features {
+          background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+        }
+
+        .section-glow-risk {
+          background: radial-gradient(ellipse 50% 50% at 30% 50%, rgba(239, 68, 68, 0.04) 0%, transparent 60%),
+                      radial-gradient(ellipse 50% 50% at 70% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 60%);
+        }
+
+        .section-glow-pricing {
+          background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+        }
+
+        .cta-glow {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 100% 80% at 50% 120%, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+          pointer-events: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
            HEADER
            ═══════════════════════════════════════════════════════════════════════ */
         .app-header {
@@ -2077,67 +2240,6 @@ export default function Page() {
           overflow-x: hidden;
         }
 
-        /* ─── Ambient Background ─── */
-        .ambient-bg {
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          overflow: hidden;
-          z-index: 0;
-        }
-
-        .ambient-orb {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(120px);
-          opacity: 0.5;
-          animation: float 20s ease-in-out infinite;
-        }
-
-        .ambient-orb-1 {
-          width: 800px;
-          height: 800px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
-          top: -300px;
-          left: -200px;
-          animation-delay: 0s;
-        }
-
-        .ambient-orb-2 {
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
-          top: 30%;
-          right: -150px;
-          animation-delay: -7s;
-        }
-
-        .ambient-orb-3 {
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-          bottom: 10%;
-          left: 10%;
-          animation-delay: -14s;
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(30px, -30px) scale(1.05); }
-          66% { transform: translate(-20px, 20px) scale(0.95); }
-        }
-
-        .ambient-grid {
-          position: absolute;
-          inset: 0;
-          background-image: 
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 40%, transparent 100%);
-          -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 40%, transparent 100%);
-        }
-
         /* ─── Reveal Animations ─── */
         .rv {
           opacity: 0;
@@ -2292,7 +2394,7 @@ export default function Page() {
           color: var(--color-text-tertiary);
         }
 
-        /* ─── Hero Phone Mockup ─── */
+        /* Phone Mockup ─── */
         .hero-visual {
           display: flex;
           justify-content: center;
@@ -2545,6 +2647,8 @@ export default function Page() {
           text-align: center;
           max-width: 640px;
           margin: 0 auto 56px;
+          position: relative;
+          z-index: 1;
         }
 
         .section-label {
@@ -2584,6 +2688,8 @@ export default function Page() {
         .features-container {
           max-width: 1200px;
           margin: 0 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .features-grid {
@@ -2599,17 +2705,16 @@ export default function Page() {
         }
 
         .feature-card {
+          position: relative;
           padding: 36px 32px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           transition: all var(--duration-slow) var(--ease-out-expo);
-          position: relative;
           overflow: hidden;
         }
 
-        .feature-card::before {
-          content: '';
+        .feature-card-bg {
           position: absolute;
           inset: 0;
           background: var(--gradient-surface);
@@ -2623,7 +2728,7 @@ export default function Page() {
           box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
-        .feature-card:hover::before {
+        .feature-card:hover .feature-card-bg {
           opacity: 1;
         }
 
@@ -2661,12 +2766,13 @@ export default function Page() {
           position: relative;
           z-index: 1;
           padding: 100px 24px;
-          background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.01) 50%, transparent 100%);
         }
 
         .risk-container {
           max-width: 1100px;
           margin: 0 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .risk-grid {
@@ -2683,12 +2789,22 @@ export default function Page() {
         }
 
         .risk-card {
+          position: relative;
           padding: 28px 24px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-xl);
           text-align: center;
           transition: all var(--duration-normal) var(--ease-out-expo);
+          overflow: hidden;
+        }
+
+        .risk-card-bg {
+          position: absolute;
+          inset: 0;
+          background: var(--gradient-surface);
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
         }
 
         .risk-card:hover {
@@ -2696,7 +2812,12 @@ export default function Page() {
           transform: translateY(-4px);
         }
 
+        .risk-card:hover .risk-card-bg {
+          opacity: 1;
+        }
+
         .risk-icon {
+          position: relative;
           width: 44px;
           height: 44px;
           display: flex;
@@ -2709,6 +2830,7 @@ export default function Page() {
         }
 
         .risk-value {
+          position: relative;
           font-size: 28px;
           font-weight: 700;
           letter-spacing: -0.02em;
@@ -2717,6 +2839,7 @@ export default function Page() {
         }
 
         .risk-label {
+          position: relative;
           font-size: 13px;
           font-weight: 500;
           color: var(--color-text-secondary);
@@ -2725,6 +2848,7 @@ export default function Page() {
         }
 
         .risk-source {
+          position: relative;
           font-size: 11px;
           color: var(--color-text-muted);
         }
@@ -2759,6 +2883,8 @@ export default function Page() {
         .pricing-container {
           max-width: 520px;
           margin: 0 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .pricing-card {
@@ -2767,6 +2893,12 @@ export default function Page() {
           border: 1px solid var(--color-border);
           border-radius: var(--radius-3xl);
           overflow: hidden;
+        }
+
+        .pricing-card-bg {
+          position: absolute;
+          inset: 0;
+          background: var(--gradient-surface);
         }
 
         .pricing-card-inner {
@@ -2784,7 +2916,7 @@ export default function Page() {
         .pricing-glow {
           position: absolute;
           inset: -1px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.03) 100%);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.04) 100%);
           border-radius: var(--radius-3xl);
           pointer-events: none;
         }
@@ -3108,16 +3240,6 @@ export default function Page() {
           border-color: var(--color-border-hover);
         }
 
-        .cta-gradient {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 400px;
-          background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
         /* ═══════════════════════════════════════════════════════════════════════
            FOOTER
            ═══════════════════════════════════════════════════════════════════════ */
@@ -3215,12 +3337,20 @@ export default function Page() {
         }
 
         .modal-card {
+          position: relative;
           background: rgba(17, 17, 19, 0.98);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           box-shadow: var(--shadow-xl);
           padding: 36px;
-          position: relative;
+          overflow: hidden;
+        }
+
+        .modal-card-bg {
+          position: absolute;
+          inset: 0;
+          background: var(--gradient-surface);
+          z-index: 0;
         }
 
         @media (max-width: 480px) {
@@ -3244,6 +3374,7 @@ export default function Page() {
           color: var(--color-text-tertiary);
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out-expo);
+          z-index: 10;
         }
 
         .modal-close-btn:hover {
@@ -3255,6 +3386,8 @@ export default function Page() {
         .modal-header {
           text-align: center;
           margin-bottom: 28px;
+          position: relative;
+          z-index: 1;
         }
 
         .modal-icon {
@@ -3288,6 +3421,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 20px;
+          position: relative;
+          z-index: 1;
         }
 
         .form-field {
@@ -3383,6 +3518,8 @@ export default function Page() {
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
           margin-top: 20px;
+          position: relative;
+          z-index: 1;
         }
 
         .modal-alert.ok {
@@ -3420,6 +3557,8 @@ export default function Page() {
           flex-direction: column;
           align-items: center;
           gap: 10px;
+          position: relative;
+          z-index: 1;
         }
 
         .modal-link {
@@ -3461,6 +3600,8 @@ export default function Page() {
           justify-content: center;
           gap: 4px;
           margin-bottom: 28px;
+          position: relative;
+          z-index: 1;
         }
 
         .pricing-modal-features {
@@ -3472,6 +3613,8 @@ export default function Page() {
           padding: 24px;
           background: var(--color-surface);
           border-radius: var(--radius-lg);
+          position: relative;
+          z-index: 1;
         }
 
         .pricing-modal-feature {
@@ -3493,6 +3636,8 @@ export default function Page() {
           flex-direction: column;
           gap: 12px;
           margin-bottom: 20px;
+          position: relative;
+          z-index: 1;
         }
 
         .btn-pricing-modal-primary {
@@ -3563,6 +3708,8 @@ export default function Page() {
           text-align: center;
           font-size: 13px;
           color: var(--color-text-muted);
+          position: relative;
+          z-index: 1;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -3849,6 +3996,10 @@ export default function Page() {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
+          }
+          
+          .mesh-gradient {
+            animation: none !important;
           }
         }
       `}</style>
