@@ -305,34 +305,34 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
   const faqs = useMemo(
-    () => [
-      {
-        q: 'Is this only for Washtenaw County?',
-        a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
-      },
-      {
-        q: 'What should my team upload for photo checks?',
-        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
-      },
-      {
-        q: 'How should we use the document side?',
-        a: 'Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.',
-      },
-      {
-        q: 'Is usage limited?',
-        a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
-      },
-      {
-        q: 'Will it replace training or a manager?',
-        a: 'No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.',
-      },
-      {
-        q: 'How often should my team use it?',
-        a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
-      },
-    ],
-    []
-  )
+  () => [
+    {
+      q: 'Is this only for Washtenaw County?',
+      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
+    },
+    {
+      q: 'What should my team upload for photo checks?',
+      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
+    },
+    {
+      q: 'How should we use the document side?',
+      a: "Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.",
+    },
+    {
+      q: 'Is usage limited?',
+      a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
+    },
+    {
+      q: 'Will it replace training or a manager?',
+      a: "No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.",
+    },
+    {
+      q: 'How often should my team use it?',
+      a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
+    },
+  ],
+  []
+)
 
   const features = useMemo(
     () => [
