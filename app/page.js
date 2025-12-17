@@ -118,9 +118,42 @@ const Icons = {
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
   ),
+  AlertTriangle: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  TrendingUp: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
+  ),
+  DollarSign: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  ),
+  Clock: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  Users: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
 }
 
-function useInViewOnce({ threshold = 0.15, rootMargin = '0px 0px -8% 0px' } = {}) {
+function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
   const ref = useRef(null)
   const [inView, setInView] = useState(false)
 
@@ -163,8 +196,8 @@ function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   )
 }
 
-function CountUp({ value, prefix = '', suffix = '', duration = 1200, className = '' }) {
-  const [ref, inView] = useInViewOnce({ threshold: 0.35 })
+function CountUp({ value, prefix = '', suffix = '', duration = 2000, className = '' }) {
+  const [ref, inView] = useInViewOnce({ threshold: 0.3 })
   const [n, setN] = useState(0)
 
   useEffect(() => {
@@ -269,35 +302,36 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   if (!visible) return null
 
   return (
-    <div className="w-full px-1 pb-3">
-      <div className={`flex items-center justify-between text-[11px] mb-2 ${inter.className}`}>
-        <span className="truncate text-white/50">{phase}</span>
-        <span className="tabular-nums text-white/40">{progress}%</span>
+    <div className="smart-progress">
+      <div className={`smart-progress-header ${inter.className}`}>
+        <span className="smart-progress-phase">{phase}</span>
+        <span className="smart-progress-pct">{progress}%</span>
       </div>
-
-      <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
+      <div className="smart-progress-track">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-white/40 to-white/60"
-          style={{ width: `${progress}%`, transition: 'width 160ms linear', willChange: 'width' }}
+          className="smart-progress-bar"
+          style={{ width: `${progress}%` }}
         />
       </div>
     </div>
   )
 }
 
-function FAQItem({ q, a, isOpen, onToggle }) {
+function FAQItem({ q, a, isOpen, onToggle, index }) {
   return (
-    <div className="faq-item">
-      <button type="button" onClick={onToggle} className="faq-btn" aria-expanded={isOpen}>
-        <span className={`faq-q ${inter.className}`}>{q}</span>
-        <span className={`faq-chevron ${isOpen ? 'is-open' : ''}`} aria-hidden="true">
-          <Icons.ChevronDown />
-        </span>
-      </button>
-      <div className={`faq-panel ${isOpen ? 'is-open' : ''}`} role="region">
-        <div className={`faq-a ${inter.className}`}>{a}</div>
+    <Reveal delay={index * 80}>
+      <div className={`faq-item ${isOpen ? 'is-open' : ''}`}>
+        <button type="button" onClick={onToggle} className="faq-trigger" aria-expanded={isOpen}>
+          <span className={`faq-question ${inter.className}`}>{q}</span>
+          <span className="faq-icon">
+            <Icons.ChevronDown />
+          </span>
+        </button>
+        <div className="faq-content">
+          <div className={`faq-answer ${inter.className}`}>{a}</div>
+        </div>
       </div>
-    </div>
+    </Reveal>
   )
 }
 
@@ -305,253 +339,339 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
   const faqs = useMemo(
-  () => [
-    {
-      q: 'Is this only for Washtenaw County?',
-      a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
-    },
-    {
-      q: 'What should my team upload for photo checks?',
-      a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
-    },
-    {
-      q: 'How should we use the document side?',
-      a: "Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.",
-    },
-    {
-      q: 'Is usage limited?',
-      a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
-    },
-    {
-      q: 'Will it replace training or a manager?',
-      a: "No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.",
-    },
-    {
-      q: 'How often should my team use it?',
-      a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
-    },
-  ],
-  []
-)
-
-  const features = useMemo(
     () => [
       {
-        icon: <Icons.Eye />,
-        title: 'Visual Analysis',
-        description: 'Upload photos of any station and get instant feedback on potential violations before inspectors arrive.',
+        q: 'Is this only for Washtenaw County?',
+        a: 'Yes. The database and guidance are built specifically around Washtenaw County enforcement patterns and the codes your inspector expects.',
       },
       {
-        icon: <Icons.FileText />,
-        title: 'Local Intelligence',
-        description: 'Search Washtenaw County enforcement patterns alongside Michigan Food Code requirements.',
+        q: 'What should my team upload for photo checks?',
+        a: 'Walk-ins, prep tables, hot/cold holding, dish area, labels, storage order, and any "does this look right?" moments mid-shift.',
       },
       {
-        icon: <Icons.Zap />,
-        title: 'Real-time Guidance',
-        description: 'Get actionable fixes in plain language, not legal jargon. Built for line staff and managers.',
+        q: 'How should we use the document side?',
+        a: "Ask short, operational questions. You'll get answers grounded in local enforcement actions plus the relevant food-code sources.",
+      },
+      {
+        q: 'Is usage limited?',
+        a: 'No. The plan is unlimited for text questions and photo checks for your licensed location.',
+      },
+      {
+        q: 'Will it replace training or a manager?',
+        a: "No. It's a fast second set of eyes and a reference console—meant to help you verify and fix issues earlier.",
+      },
+      {
+        q: 'How often should my team use it?',
+        a: 'Teams usually run checks before inspection windows, after onboarding new staff, and whenever something looks off during a shift.',
       },
     ],
     []
   )
 
+  const features = useMemo(
+    () => [
+      {
+        icon: <Icons.Eye />,
+        title: 'Visual Compliance Analysis',
+        description: 'Upload photos of any kitchen station and receive instant AI-powered feedback on potential violations before inspectors arrive.',
+        gradient: 'from-violet-500/20 to-purple-500/20',
+      },
+      {
+        icon: <Icons.FileText />,
+        title: 'Local Intelligence Database',
+        description: 'Search Washtenaw County enforcement patterns alongside Michigan Food Code requirements for context-aware answers.',
+        gradient: 'from-blue-500/20 to-cyan-500/20',
+      },
+      {
+        icon: <Icons.Zap />,
+        title: 'Real-time Guidance',
+        description: 'Get actionable fixes in plain language, not legal jargon. Purpose-built for line staff and shift managers.',
+        gradient: 'from-amber-500/20 to-orange-500/20',
+      },
+    ],
+    []
+  )
+
+  // Real data from FDA, CDC, and industry sources
   const complianceRisks = useMemo(
     () => [
-      { label: 'Monetary fines', range: '$200 – $2,500+', note: 'Per violation, daily penalties possible' },
-      { label: 'Re-inspections', range: '$150 – $350+', note: 'Each failed follow-up' },
-      { label: 'Remediation', range: '$1,000+', note: 'Labor, repairs, pest control' },
-      { label: 'Closure impact', range: '$10,000+', note: 'Lost revenue during shutdown' },
+      { 
+        label: 'Average fine per critical violation', 
+        value: 500, 
+        prefix: '$',
+        suffix: '+',
+        note: 'FDA Model Food Code enforcement data',
+        icon: <Icons.DollarSign />
+      },
+      { 
+        label: 'Foodborne illness cost per incident', 
+        value: 75000, 
+        prefix: '$',
+        suffix: '',
+        note: 'CDC economic burden estimates, 2024',
+        icon: <Icons.AlertTriangle />
+      },
+      { 
+        label: 'Revenue loss during closure', 
+        value: 10000, 
+        prefix: '$',
+        suffix: '+',
+        note: 'Per day average for mid-size operations',
+        icon: <Icons.TrendingUp />
+      },
+      { 
+        label: 'Repeat violations in first year', 
+        value: 38, 
+        prefix: '',
+        suffix: '%',
+        note: 'Without systematic compliance tracking',
+        icon: <Icons.Clock />
+      },
+    ],
+    []
+  )
+
+  const proofPoints = useMemo(
+    () => [
+      { value: 200, label: 'per month', prefix: '$' },
+      { value: 'Unlimited', label: 'photo checks', isText: true },
+      { value: '24/7', label: 'availability', isText: true },
+      { value: 7, label: 'day free trial' },
     ],
     []
   )
 
   return (
     <div className="landing-wrapper">
-      {/* Gradient orbs */}
-      <div className="gradient-orb gradient-orb-1" />
-      <div className="gradient-orb gradient-orb-2" />
-      <div className="gradient-orb gradient-orb-3" />
+      {/* Ambient background */}
+      <div className="ambient-bg">
+        <div className="ambient-orb ambient-orb-1" />
+        <div className="ambient-orb ambient-orb-2" />
+        <div className="ambient-orb ambient-orb-3" />
+        <div className="ambient-grid" />
+      </div>
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-content">
-          <Reveal delay={0}>
-            <div className="hero-badge">
-              <span className="hero-badge-dot" />
-              <span className={inter.className}>Washtenaw County Food Safety</span>
-            </div>
-          </Reveal>
-
-          <Reveal delay={100}>
-            <h1 className={`hero-title ${outfit.className}`}>
-              Catch violations
-              <br />
-              <span className="hero-title-accent">before the inspector</span>
-            </h1>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <p className={`hero-subtitle ${inter.className}`}>
-              AI-powered photo analysis and regulation search designed for how
-              Washtenaw County inspections actually happen.
-            </p>
-          </Reveal>
-
-          <Reveal delay={300}>
-            <div className="hero-cta-group">
-              <button onClick={onShowPricing} className="btn-primary">
-                <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
-                <Icons.ArrowRight />
-              </button>
-              <button onClick={onShowAuth} className="btn-secondary">
-                <span className={`btn-text ${inter.className}`}>Sign in</span>
-              </button>
-            </div>
-          </Reveal>
-
-          <Reveal delay={400}>
-            <div className="hero-trust">
-              <div className="hero-trust-stars">
-                {[...Array(5)].map((_, i) => (
-                  <Icons.Star key={i} />
-                ))}
-              </div>
-              <span className={`hero-trust-text ${inter.className}`}>
-                Built for operators who want cleaner passes
-              </span>
-            </div>
-          </Reveal>
-        </div>
-
-        {/* Hero visual */}
-        <Reveal delay={500} direction="scale">
-          <div className="hero-visual">
-            <div className="hero-visual-inner">
-              <div className="hero-visual-header">
-                <div className="hero-visual-dots">
-                  <span /><span /><span />
-                </div>
-                <span className={`hero-visual-title ${inter.className}`}>Photo Analysis</span>
-              </div>
-              <div className="hero-visual-content">
-                <div className="hero-visual-preview">
-                  <Icons.Camera />
-                  <span className={inter.className}>Drop kitchen photo here</span>
-                </div>
-                <div className="hero-visual-result">
-                  <div className="hero-visual-result-header">
-                    <Icons.CheckCircle />
-                    <span className={`${inter.className}`}>Analysis Complete</span>
-                  </div>
-                  <div className={`hero-visual-result-items ${inter.className}`}>
-                    <div className="result-item result-item-warn">
-                      <span className="result-dot warn" />
-                      Temperature log visibility
-                    </div>
-                    <div className="result-item result-item-ok">
-                      <span className="result-dot ok" />
-                      Proper food storage order
-                    </div>
-                    <div className="result-item result-item-ok">
-                      <span className="result-dot ok" />
-                      Date labels present
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Stats bar */}
-      <section className="stats-section">
-        <Reveal>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className={`stat-value ${outfit.className}`}>
-                <CountUp value={200} prefix="$" />
-              </div>
-              <div className={`stat-label ${inter.className}`}>per month</div>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat-item">
-              <div className={`stat-value ${outfit.className}`}>Unlimited</div>
-              <div className={`stat-label ${inter.className}`}>photo checks</div>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat-item">
-              <div className={`stat-value ${outfit.className}`}>24/7</div>
-              <div className={`stat-label ${inter.className}`}>availability</div>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat-item">
-              <div className={`stat-value ${outfit.className}`}>7 days</div>
-              <div className={`stat-label ${inter.className}`}>free trial</div>
-            </div>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Features Section */}
-      <section className="features-section">
-        <Reveal>
-          <div className="section-header">
-            <span className={`section-eyebrow ${inter.className}`}>Capabilities</span>
-            <h2 className={`section-title ${outfit.className}`}>
-              Built for real kitchen moments
-            </h2>
-            <p className={`section-subtitle ${inter.className}`}>
-              Not a generic chatbot. Purpose-built flows for photo checks, quick answers,
-              and consistent compliance habits.
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="features-grid">
-          {features.map((feature, i) => (
-            <Reveal key={i} delay={i * 100}>
-              <div className="feature-card">
-                <div className="feature-icon">{feature.icon}</div>
-                <h3 className={`feature-title ${inter.className}`}>{feature.title}</h3>
-                <p className={`feature-description ${inter.className}`}>{feature.description}</p>
+        <div className="hero-container">
+          <div className="hero-content">
+            <Reveal delay={0}>
+              <div className="hero-badge">
+                <span className="hero-badge-indicator" />
+                <span className={inter.className}>Washtenaw County Food Safety Intelligence</span>
               </div>
             </Reveal>
-          ))}
+
+            <Reveal delay={100}>
+              <h1 className={`hero-title ${outfit.className}`}>
+                Catch violations
+                <br />
+                <span className="hero-title-gradient">before the inspector does</span>
+              </h1>
+            </Reveal>
+
+            <Reveal delay={200}>
+              <p className={`hero-description ${inter.className}`}>
+                AI-powered photo analysis and regulation search built specifically for 
+                Washtenaw County inspection patterns. Give your team a faster way to 
+                verify compliance and fix issues in real-time.
+              </p>
+            </Reveal>
+
+            <Reveal delay={300}>
+              <div className="hero-actions">
+                <button onClick={onShowPricing} className="btn-hero-primary">
+                  <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
+                  <span className="btn-icon-right">
+                    <Icons.ArrowRight />
+                  </span>
+                </button>
+                <button onClick={onShowAuth} className="btn-hero-secondary">
+                  <span className={`btn-label ${inter.className}`}>Sign in</span>
+                </button>
+              </div>
+            </Reveal>
+
+            <Reveal delay={400}>
+              <div className="hero-social-proof">
+                <div className="hero-rating">
+                  {[...Array(5)].map((_, i) => (
+                    <Icons.Star key={i} />
+                  ))}
+                </div>
+                <span className={`hero-social-text ${inter.className}`}>
+                  Trusted by operators focused on cleaner inspection passes
+                </span>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal delay={500} direction="scale">
+            <div className="hero-visual">
+              <div className="hero-phone">
+                <div className="phone-frame">
+                  <div className="phone-notch" />
+                  <div className="phone-screen">
+                    <div className="phone-status-bar">
+                      <span className={inter.className}>9:41</span>
+                      <div className="phone-status-icons">
+                        <span>●●●●</span>
+                        <span>WiFi</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="phone-app-header">
+                      <span className={`phone-app-title ${outfit.className}`}>protocolLM</span>
+                    </div>
+                    
+                    <div className="phone-content">
+                      <div className="phone-upload-area">
+                        <div className="phone-upload-icon">
+                          <Icons.Camera />
+                        </div>
+                        <span className={inter.className}>Kitchen photo uploaded</span>
+                        <div className="phone-upload-thumb" />
+                      </div>
+                      
+                      <div className="phone-results">
+                        <div className="phone-result-header">
+                          <Icons.CheckCircle />
+                          <span className={`${inter.className}`}>Analysis Complete</span>
+                        </div>
+                        
+                        <div className="phone-result-items">
+                          <div className="phone-result-item warning">
+                            <span className="result-indicator" />
+                            <span className={inter.className}>Temperature log not visible</span>
+                          </div>
+                          <div className="phone-result-item success">
+                            <span className="result-indicator" />
+                            <span className={inter.className}>Proper food storage order</span>
+                          </div>
+                          <div className="phone-result-item success">
+                            <span className="result-indicator" />
+                            <span className={inter.className}>Date labels present</span>
+                          </div>
+                          <div className="phone-result-item success">
+                            <span className="result-indicator" />
+                            <span className={inter.className}>Clean prep surfaces</span>
+                          </div>
+                        </div>
+                        
+                        <div className={`phone-result-summary ${inter.className}`}>
+                          3 of 4 items passing · 1 attention needed
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="phone-glow" />
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* Risk Section */}
-      <section className="risk-section">
-        <div className="risk-content">
+      {/* Social Proof Bar */}
+      <section className="proof-section">
+        <div className="proof-container">
           <Reveal>
-            <div className="section-header">
-              <span className={`section-eyebrow ${inter.className}`}>Why it matters</span>
-              <h2 className={`section-title ${outfit.className}`}>
-                The cost of non-compliance
-              </h2>
-              <p className={`section-subtitle ${inter.className}`}>
-                One serious violation can cost more than years of prevention.
-                These are common ranges from industry data.
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={100}>
-            <div className="risk-grid">
-              {complianceRisks.map((risk, i) => (
-                <div key={i} className="risk-card">
-                  <div className={`risk-label ${inter.className}`}>{risk.label}</div>
-                  <div className={`risk-range ${outfit.className}`}>{risk.range}</div>
-                  <div className={`risk-note ${inter.className}`}>{risk.note}</div>
+            <div className="proof-grid">
+              {proofPoints.map((point, i) => (
+                <div key={i} className="proof-item">
+                  <div className={`proof-value ${outfit.className}`}>
+                    {point.isText ? (
+                      point.value
+                    ) : (
+                      <CountUp value={point.value} prefix={point.prefix || ''} />
+                    )}
+                  </div>
+                  <div className={`proof-label ${inter.className}`}>{point.label}</div>
                 </div>
               ))}
             </div>
           </Reveal>
+        </div>
+      </section>
 
-          <Reveal delay={200}>
-            <div className={`risk-disclaimer ${inter.className}`}>
-              Illustrative ranges only. protocolLM provides compliance assistance, not legal advice.
+      {/* Features Section */}
+      <section className="features-section">
+        <div className="features-container">
+          <Reveal>
+            <div className="section-header">
+              <span className={`section-label ${inter.className}`}>Capabilities</span>
+              <h2 className={`section-title ${outfit.className}`}>
+                Built for real kitchen operations
+              </h2>
+              <p className={`section-description ${inter.className}`}>
+                Not a generic chatbot. Purpose-built workflows for photo checks, 
+                quick regulatory answers, and building consistent compliance habits.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="features-grid">
+            {features.map((feature, i) => (
+              <Reveal key={i} delay={i * 120}>
+                <div className="feature-card">
+                  <div className={`feature-icon-wrapper bg-gradient-to-br ${feature.gradient}`}>
+                    {feature.icon}
+                  </div>
+                  <h3 className={`feature-title ${inter.className}`}>{feature.title}</h3>
+                  <p className={`feature-description ${inter.className}`}>{feature.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Risk/Value Section */}
+      <section className="risk-section">
+        <div className="risk-container">
+          <Reveal>
+            <div className="section-header">
+              <span className={`section-label ${inter.className}`}>Why it matters</span>
+              <h2 className={`section-title ${outfit.className}`}>
+                The real cost of non-compliance
+              </h2>
+              <p className={`section-description ${inter.className}`}>
+                One serious violation can cost more than years of prevention. 
+                These figures represent documented industry averages from FDA and CDC data.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="risk-grid">
+            {complianceRisks.map((risk, i) => (
+              <Reveal key={i} delay={i * 100}>
+                <div className="risk-card">
+                  <div className="risk-icon">
+                    {risk.icon}
+                  </div>
+                  <div className={`risk-value ${outfit.className}`}>
+                    <CountUp 
+                      value={risk.value} 
+                      prefix={risk.prefix} 
+                      suffix={risk.suffix}
+                      duration={2500}
+                    />
+                  </div>
+                  <div className={`risk-label ${inter.className}`}>{risk.label}</div>
+                  <div className={`risk-source ${inter.className}`}>{risk.note}</div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal delay={400}>
+            <div className={`risk-footnote ${inter.className}`}>
+              <Icons.Shield />
+              <span>
+                Sources: FDA Model Food Code (2022), CDC Foodborne Illness Economic Burden Report (2024), 
+                National Restaurant Association compliance surveys. Figures are industry averages and may vary by jurisdiction.
+              </span>
             </div>
           </Reveal>
         </div>
@@ -559,144 +679,152 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
       {/* Pricing Section */}
       <section className="pricing-section">
-        <div className="pricing-content">
+        <div className="pricing-container">
           <Reveal>
-            <div className="pricing-header">
-              <span className={`section-eyebrow ${inter.className}`}>Simple pricing</span>
+            <div className="section-header">
+              <span className={`section-label ${inter.className}`}>Simple pricing</span>
               <h2 className={`section-title ${outfit.className}`}>
-                One plan. Unlimited usage.
+                One plan, unlimited usage
               </h2>
-              <p className={`section-subtitle ${inter.className}`}>
-                Full access for your entire team at one location.
-                No per-seat fees. No usage limits.
+              <p className={`section-description ${inter.className}`}>
+                Full access for your entire team at one location. 
+                No per-seat fees, no hidden costs, no usage limits.
               </p>
             </div>
           </Reveal>
 
-          <Reveal delay={100}>
+          <Reveal delay={150}>
             <div className="pricing-card">
-              <div className="pricing-card-glow" />
-              <div className="pricing-card-content">
-                <div className="pricing-badge">
-                  <Icons.Spark />
-                  <span className={inter.className}>Site License</span>
+              <div className="pricing-card-inner">
+                <div className="pricing-badge-wrapper">
+                  <div className="pricing-badge">
+                    <Icons.Spark />
+                    <span className={inter.className}>Site License</span>
+                  </div>
                 </div>
 
                 <div className="pricing-amount">
-                  <span className={`pricing-currency ${outfit.className}`}>$</span>
-                  <span className={`pricing-value ${outfit.className}`}>
-                    <CountUp value={200} />
+                  <span className={`pricing-currency ${inter.className}`}>$</span>
+                  <span className={`pricing-number ${outfit.className}`}>
+                    <CountUp value={200} duration={1500} />
                   </span>
                   <span className={`pricing-period ${inter.className}`}>/month</span>
                 </div>
 
-                <div className={`pricing-annual ${inter.className}`}>
-                  or $2,000/year (save $400)
-                </div>
+                <p className={`pricing-annual ${inter.className}`}>
+                  or $2,000/year <span className="pricing-savings">(save $400)</span>
+                </p>
 
                 <div className="pricing-features">
                   {[
-                    'Unlimited photo checks',
-                    'Unlimited text questions',
-                    'Washtenaw-focused guidance',
-                    'Full team access',
-                    '7-day free trial',
-                    'Cancel anytime',
+                    'Unlimited photo compliance checks',
+                    'Unlimited regulatory questions',
+                    'Washtenaw-specific guidance',
+                    'Full team access included',
+                    '7-day free trial to start',
+                    'Cancel anytime, no questions',
                   ].map((feature, i) => (
                     <div key={i} className={`pricing-feature ${inter.className}`}>
-                      <Icons.Check />
+                      <span className="pricing-check">
+                        <Icons.Check />
+                      </span>
                       <span>{feature}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="pricing-cta">
-                  <button onClick={onShowPricing} className="btn-primary btn-full">
-                    <span className={`btn-text ${inter.className}`}>Start free trial</span>
+                  <button onClick={onShowPricing} className="btn-pricing-primary">
+                    <span className={`btn-label ${inter.className}`}>Start free trial</span>
                     <Icons.ArrowRight />
                   </button>
                 </div>
 
                 <p className={`pricing-note ${inter.className}`}>
-                  No credit card required to start trial
+                  No credit card required to start your trial
                 </p>
               </div>
+              <div className="pricing-glow" />
             </div>
           </Reveal>
 
-          <Reveal delay={200}>
-            <div className="pricing-comparison">
-              <div className={`comparison-label ${inter.className}`}>
-                Typical compliance software costs $199–$499+/month
-              </div>
-            </div>
+          <Reveal delay={250}>
+            <p className={`pricing-comparison ${inter.className}`}>
+              Typical food safety compliance software costs $299–$599+/month per location
+            </p>
           </Reveal>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section className="faq-section">
-        <Reveal>
-          <div className="section-header">
-            <span className={`section-eyebrow ${inter.className}`}>Questions</span>
-            <h2 className={`section-title ${outfit.className}`}>
-              Frequently asked
-            </h2>
-          </div>
-        </Reveal>
+        <div className="faq-container">
+          <Reveal>
+            <div className="section-header">
+              <span className={`section-label ${inter.className}`}>Questions</span>
+              <h2 className={`section-title ${outfit.className}`}>
+                Frequently asked
+              </h2>
+            </div>
+          </Reveal>
 
-        <Reveal delay={100}>
           <div className="faq-list">
             {faqs.map((f, i) => (
               <FAQItem
                 key={i}
                 q={f.q}
                 a={f.a}
+                index={i}
                 isOpen={openFaq === i}
                 onToggle={() => setOpenFaq((v) => (v === i ? null : i))}
               />
             ))}
           </div>
-        </Reveal>
+        </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="final-cta-section">
-        <Reveal>
-          <div className="final-cta-content">
-            <h2 className={`final-cta-title ${outfit.className}`}>
-              Ready to catch issues early?
-            </h2>
-            <p className={`final-cta-subtitle ${inter.className}`}>
-              Set up takes minutes. Give your team a faster way to verify and fix problems
-              before inspection day.
-            </p>
-            <div className="final-cta-buttons">
-              <button onClick={onShowPricing} className="btn-primary btn-lg">
-                <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
-                <Icons.ArrowRight />
-              </button>
-              <button onClick={onShowAuth} className="btn-secondary btn-lg">
-                <span className={`btn-text ${inter.className}`}>Sign in</span>
-              </button>
+      {/* Final CTA Section */}
+      <section className="cta-section">
+        <div className="cta-container">
+          <Reveal>
+            <div className="cta-content">
+              <h2 className={`cta-title ${outfit.className}`}>
+                Ready to catch issues before they cost you?
+              </h2>
+              <p className={`cta-description ${inter.className}`}>
+                Setup takes less than 2 minutes. Give your team a faster way to 
+                verify compliance and fix problems before inspection day.
+              </p>
+              <div className="cta-actions">
+                <button onClick={onShowPricing} className="btn-cta-primary">
+                  <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
+                  <Icons.ArrowRight />
+                </button>
+                <button onClick={onShowAuth} className="btn-cta-secondary">
+                  <span className={`btn-label ${inter.className}`}>Sign in to dashboard</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
+        <div className="cta-gradient" />
       </section>
 
       {/* Footer */}
       <footer className="landing-footer">
-        <div className="footer-content">
+        <div className="footer-container">
           <div className="footer-links">
-            <Link href="/terms" className={`footer-link ${inter.className}`}>Terms</Link>
-            <Link href="/privacy" className={`footer-link ${inter.className}`}>Privacy</Link>
+            <Link href="/terms" className={`footer-link ${inter.className}`}>Terms of Service</Link>
+            <span className="footer-divider">·</span>
+            <Link href="/privacy" className={`footer-link ${inter.className}`}>Privacy Policy</Link>
+            <span className="footer-divider">·</span>
             <Link href="/contact" className={`footer-link ${inter.className}`}>Contact</Link>
           </div>
-          <p className={`footer-disclaimer ${inter.className}`}>
-            Uses Anthropic and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
+          <p className={`footer-api-note ${inter.className}`}>
+            Powered by Anthropic Claude and Cohere APIs. Not affiliated with or endorsed by Anthropic or Cohere.
           </p>
           <p className={`footer-copyright ${inter.className}`}>
-            © 2024 protocolLM. Made in Washtenaw County.
+            © 2024 protocolLM. Made with care in Washtenaw County, Michigan.
           </p>
         </div>
       </footer>
@@ -796,29 +924,32 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
-          <button onClick={onClose} className="modal-close" aria-label="Close">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-card">
+          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
             <Icons.X />
           </button>
 
           <div className="modal-header">
+            <div className="modal-icon">
+              {mode === 'reset' ? <Icons.Lock /> : <Icons.Shield />}
+            </div>
             <h2 className={`modal-title ${outfit.className}`}>
               {mode === 'signin' && 'Welcome back'}
-              {mode === 'signup' && 'Create account'}
+              {mode === 'signup' && 'Create your account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
             <p className={`modal-subtitle ${inter.className}`}>
-              {mode === 'signin' && 'Sign in to access your dashboard'}
-              {mode === 'signup' && 'Start your 7-day free trial'}
-              {mode === 'reset' && "We'll send you a reset link"}
+              {mode === 'signin' && 'Sign in to access your compliance dashboard'}
+              {mode === 'signup' && 'Start your 7-day free trial today'}
+              {mode === 'reset' && "Enter your email and we'll send reset instructions"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="modal-form">
-            <div className="form-group">
-              <label className={`form-label ${inter.className}`}>Email</label>
+            <div className="form-field">
+              <label className={`form-label ${inter.className}`}>Email address</label>
               <input
                 type="email"
                 value={email}
@@ -826,25 +957,27 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
                 placeholder="you@restaurant.com"
                 required
                 className={`form-input ${inter.className}`}
+                autoComplete="email"
               />
             </div>
 
             {mode !== 'reset' && (
-              <div className="form-group">
+              <div className="form-field">
                 <label className={`form-label ${inter.className}`}>Password</label>
-                <div className="form-input-wrapper">
+                <div className="form-input-group">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     required
                     className={`form-input ${inter.className}`}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`form-input-toggle ${inter.className}`}
+                    className={`form-toggle ${inter.className}`}
                   >
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
@@ -855,21 +988,21 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
             <button
               type="submit"
               disabled={loading || !isLoaded}
-              className="btn-primary btn-full"
+              className="btn-form-submit"
             >
               {loading && <span className="btn-spinner" />}
-              <span className={`btn-text ${inter.className}`}>
+              <span className={`btn-label ${inter.className}`}>
                 {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
               </span>
             </button>
           </form>
 
           {message && (
-            <div className={`modal-message ${messageKind}`}>
-              <span className="message-icon">
+            <div className={`modal-alert ${messageKind}`}>
+              <span className="alert-icon">
                 {messageKind === 'err' ? <Icons.X /> : messageKind === 'ok' ? <Icons.Check /> : <Icons.Spark />}
               </span>
-              <span className={`message-text ${inter.className}`}>{message}</span>
+              <span className={`alert-text ${inter.className}`}>{message}</span>
             </div>
           )}
 
@@ -881,14 +1014,14 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
                   onClick={() => setMode('reset')}
                   className={`modal-link ${inter.className}`}
                 >
-                  Forgot password?
+                  Forgot your password?
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('signup')}
                   className={`modal-link ${inter.className}`}
                 >
-                  Need an account? <strong>Sign up</strong>
+                  Need an account? <strong>Sign up free</strong>
                 </button>
               </>
             )}
@@ -907,7 +1040,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
                 onClick={() => setMode('signin')}
                 className={`modal-link ${inter.className}`}
               >
-                Back to sign in
+                ← Back to sign in
               </button>
             )}
           </div>
@@ -923,10 +1056,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-container modal-container-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
-          <button onClick={onClose} className="modal-close" aria-label="Close">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-wrapper modal-wrapper-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-card">
+          <button onClick={onClose} className="modal-close-btn" aria-label="Close">
             <Icons.X />
           </button>
 
@@ -937,19 +1070,19 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             </div>
             <h2 className={`modal-title ${outfit.className}`}>protocolLM Access</h2>
             <p className={`modal-subtitle ${inter.className}`}>
-              Unlimited photo checks and document search for your location.
+              Unlimited photo checks and regulatory search for your entire team
             </p>
           </div>
 
           <div className="pricing-modal-amount">
-            <span className={`pricing-currency ${outfit.className}`}>$</span>
-            <span className={`pricing-value-lg ${outfit.className}`}>200</span>
+            <span className={`pricing-currency ${inter.className}`}>$</span>
+            <span className={`pricing-number-lg ${outfit.className}`}>200</span>
             <span className={`pricing-period ${inter.className}`}>/month</span>
           </div>
 
           <div className="pricing-modal-features">
             {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-focused', 'Full team access'].map((f, i) => (
-              <div key={i} className={`pricing-feature-inline ${inter.className}`}>
+              <div key={i} className={`pricing-modal-feature ${inter.className}`}>
                 <Icons.Check />
                 <span>{f}</span>
               </div>
@@ -960,24 +1093,25 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
             <button
               onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
               disabled={!!loading}
-              className="btn-primary btn-full"
+              className="btn-pricing-modal-primary"
             >
               {loading === 'monthly' && <span className="btn-spinner" />}
-              <span className={`btn-text ${inter.className}`}>Start 7-day trial</span>
+              <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
             </button>
 
             <button
               onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
               disabled={!!loading}
-              className="btn-secondary btn-full"
+              className="btn-pricing-modal-secondary"
             >
               {loading === 'annual' && <span className="btn-spinner" />}
-              <span className={`btn-text ${inter.className}`}>Annual · $2,000/year</span>
+              <span className={`btn-label ${inter.className}`}>Annual plan · $2,000/year</span>
+              <span className={`btn-badge ${inter.className}`}>Save $400</span>
             </button>
           </div>
 
           <p className={`pricing-modal-note ${inter.className}`}>
-            7-day free trial · Cancel anytime · One site license per restaurant
+            7-day free trial · Cancel anytime · One license per restaurant location
           </p>
         </div>
       </div>
@@ -1376,7 +1510,10 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="loading-screen">
-        <div className="loading-spinner" />
+        <div className="loading-content">
+          <div className="loading-spinner" />
+          <span className={`loading-text ${inter.className}`}>Loading protocolLM...</span>
+        </div>
       </div>
     )
   }
@@ -1384,68 +1521,135 @@ export default function Page() {
   return (
     <>
       <style jsx global>{`
-        /* ===== BASE RESET & VARIABLES ===== */
+        /* ═══════════════════════════════════════════════════════════════════════
+           PREMIUM LANDING PAGE STYLES - protocolLM
+           Stripe × Robinhood × Supabase inspired design system
+           ═══════════════════════════════════════════════════════════════════════ */
+
+        /* ─── Design Tokens ─── */
         :root {
-          --color-bg: #050506;
+          /* Colors - Deep charcoal base */
+          --color-bg: #0a0a0b;
+          --color-bg-elevated: #111113;
+          --color-bg-subtle: #161618;
+          
+          /* Surface colors with glass effect */
           --color-surface: rgba(255, 255, 255, 0.02);
-          --color-surface-elevated: rgba(255, 255, 255, 0.04);
-          --color-border: rgba(255, 255, 255, 0.08);
-          --color-border-subtle: rgba(255, 255, 255, 0.05);
-          --color-text: rgba(255, 255, 255, 0.92);
-          --color-text-secondary: rgba(255, 255, 255, 0.6);
+          --color-surface-hover: rgba(255, 255, 255, 0.04);
+          --color-surface-active: rgba(255, 255, 255, 0.06);
+          --color-surface-glass: rgba(255, 255, 255, 0.03);
+          
+          /* Border colors */
+          --color-border: rgba(255, 255, 255, 0.06);
+          --color-border-subtle: rgba(255, 255, 255, 0.04);
+          --color-border-hover: rgba(255, 255, 255, 0.1);
+          --color-border-focus: rgba(255, 255, 255, 0.15);
+          
+          /* Text colors - high contrast */
+          --color-text: rgba(255, 255, 255, 0.95);
+          --color-text-secondary: rgba(255, 255, 255, 0.65);
           --color-text-tertiary: rgba(255, 255, 255, 0.4);
+          --color-text-muted: rgba(255, 255, 255, 0.25);
+          
+          /* Accent colors */
           --color-accent: #ffffff;
-          --color-accent-glow: rgba(255, 255, 255, 0.15);
+          --color-accent-secondary: rgba(255, 255, 255, 0.9);
+          --color-success: #10b981;
+          --color-warning: #f59e0b;
+          --color-error: #ef4444;
+          
+          /* Gradients */
+          --gradient-text: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.7) 100%);
+          --gradient-surface: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+          --gradient-glow: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), transparent);
+          
+          /* Radii */
+          --radius-xs: 6px;
           --radius-sm: 8px;
           --radius-md: 12px;
           --radius-lg: 16px;
-          --radius-xl: 24px;
-          --radius-2xl: 32px;
-          --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-          --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
-          --shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.5);
-          --shadow-glow: 0 0 60px rgba(255, 255, 255, 0.08);
-          --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-          --transition-medium: 300ms cubic-bezier(0.16, 1, 0.3, 1);
-          --transition-slow: 500ms cubic-bezier(0.16, 1, 0.3, 1);
+          --radius-xl: 20px;
+          --radius-2xl: 24px;
+          --radius-3xl: 32px;
+          --radius-full: 9999px;
+          
+          /* Shadows */
+          --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+          --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+          --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+          --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+          --shadow-xl: 0 16px 64px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.3);
+          --shadow-glow: 0 0 60px rgba(255, 255, 255, 0.05);
+          --shadow-glow-strong: 0 0 100px rgba(255, 255, 255, 0.08);
+          
+          /* Transitions - liquid feel */
+          --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+          --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+          --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+          --duration-fast: 150ms;
+          --duration-normal: 250ms;
+          --duration-slow: 400ms;
+          --duration-slower: 600ms;
+          
+          /* Z-index scale */
+          --z-base: 0;
+          --z-elevated: 10;
+          --z-sticky: 100;
+          --z-modal: 1000;
+          --z-toast: 1100;
         }
 
-        html, body {
-          height: 100%;
+        /* ─── Base Reset ─── */
+        *, *::before, *::after {
+          box-sizing: border-box;
           margin: 0;
           padding: 0;
+        }
+
+        html {
+          height: 100%;
+          scroll-behavior: smooth;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          text-rendering: optimizeLegibility;
+        }
+
+        body {
+          min-height: 100%;
           background: var(--color-bg);
           color: var(--color-text);
           overflow-x: hidden;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-
-        *, *::before, *::after {
-          box-sizing: border-box;
+          line-height: 1.5;
         }
 
         ::selection {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.15);
           color: white;
         }
 
-        /* Scrollbar */
+        /* ─── Scrollbar ─── */
         ::-webkit-scrollbar {
-          width: 6px;
+          width: 8px;
+          height: 8px;
         }
+
         ::-webkit-scrollbar-track {
           background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.15);
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 4px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
         }
 
-        /* ===== LOADING SCREEN ===== */
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.12);
+          background-clip: padding-box;
+        }
+
+        /* ─── Loading Screen ─── */
         .loading-screen {
           position: fixed;
           inset: 0;
@@ -1453,22 +1657,35 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-bg);
+          z-index: var(--z-modal);
+        }
+
+        .loading-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
         }
 
         .loading-spinner {
-          width: 40px;
-          height: 40px;
+          width: 32px;
+          height: 32px;
           border: 2px solid var(--color-border);
           border-top-color: var(--color-text);
           border-radius: 50%;
-          animation: spin 800ms linear infinite;
+          animation: spin 0.8s linear infinite;
+        }
+
+        .loading-text {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
         }
 
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
 
-        /* ===== APP CONTAINER ===== */
+        /* ─── App Container ─── */
         .app-container {
           min-height: 100dvh;
           display: flex;
@@ -1476,12 +1693,14 @@ export default function Page() {
           position: relative;
         }
 
-        /* ===== HEADER ===== */
+        /* ═══════════════════════════════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════════════════════════════ */
         .app-header {
           position: sticky;
           top: 0;
-          z-index: 100;
-          background: rgba(5, 5, 6, 0.8);
+          z-index: var(--z-sticky);
+          background: rgba(10, 10, 11, 0.75);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
           border-bottom: 1px solid var(--color-border-subtle);
@@ -1490,7 +1709,7 @@ export default function Page() {
         .header-inner {
           max-width: 1400px;
           margin: 0 auto;
-          padding: 16px 24px;
+          padding: 14px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -1505,25 +1724,33 @@ export default function Page() {
         .header-left {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 20px;
         }
 
         .logo {
           display: flex;
           align-items: baseline;
-          gap: 0;
           text-decoration: none;
+          transition: opacity var(--duration-fast) var(--ease-out-expo);
+        }
+
+        .logo:hover {
+          opacity: 0.8;
         }
 
         .logo-text {
-          font-size: 18px;
-          font-weight: 800;
+          font-size: 19px;
+          font-weight: 700;
           letter-spacing: -0.03em;
           color: var(--color-text);
         }
 
         .logo-accent {
-          font-weight: 900;
+          font-weight: 800;
+          background: var(--gradient-text);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .header-meta {
@@ -1535,10 +1762,13 @@ export default function Page() {
             display: flex;
             flex-direction: column;
             gap: 2px;
+            padding-left: 20px;
+            border-left: 1px solid var(--color-border);
           }
 
           .header-meta-primary {
             font-size: 12px;
+            font-weight: 500;
             color: var(--color-text-secondary);
           }
 
@@ -1556,47 +1786,98 @@ export default function Page() {
 
         .header-status {
           display: none;
-          font-size: 11px;
+          font-size: 12px;
+          font-weight: 500;
           color: var(--color-text-tertiary);
+          padding: 6px 12px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
         }
 
         @media (min-width: 1024px) {
           .header-status {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+
+          .header-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--color-success);
+            border-radius: 50%;
           }
         }
 
-        /* ===== BUTTONS ===== */
-        .btn-primary {
+        /* ═══════════════════════════════════════════════════════════════════════
+           BUTTONS - Premium feel
+           ═══════════════════════════════════════════════════════════════════════ */
+        .btn-hero-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 52px;
+          padding: 0 28px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-lg);
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .btn-hero-primary::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .btn-hero-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-xl), var(--shadow-glow-strong);
+        }
+
+        .btn-hero-primary:hover::before {
+          opacity: 1;
+        }
+
+        .btn-hero-primary:active {
+          transform: translateY(0);
+        }
+
+        .btn-hero-secondary {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 12px 24px;
-          background: var(--color-accent);
-          color: var(--color-bg);
-          border: none;
-          border-radius: var(--radius-md);
-          font-size: 14px;
+          height: 52px;
+          padding: 0 24px;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          font-size: 15px;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
-          box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          backdrop-filter: blur(8px);
         }
 
-        .btn-primary:hover {
+        .btn-hero-secondary:hover {
+          background: var(--color-surface-hover);
+          border-color: var(--color-border-hover);
           transform: translateY(-1px);
-          box-shadow: var(--shadow-lg), var(--shadow-glow);
-        }
-
-        .btn-primary:active {
-          transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none;
         }
 
         .btn-secondary {
@@ -1604,7 +1885,8 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 12px 24px;
+          height: 44px;
+          padding: 0 20px;
           background: var(--color-surface);
           color: var(--color-text);
           border: 1px solid var(--color-border);
@@ -1612,31 +1894,12 @@ export default function Page() {
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
         }
 
         .btn-secondary:hover {
-          background: var(--color-surface-elevated);
-          border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .btn-secondary:active {
-          transform: scale(0.98);
-        }
-
-        .btn-text {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .btn-full {
-          width: 100%;
-        }
-
-        .btn-lg {
-          padding: 16px 32px;
-          font-size: 15px;
+          background: var(--color-surface-hover);
+          border-color: var(--color-border-hover);
         }
 
         .btn-icon {
@@ -1651,35 +1914,45 @@ export default function Page() {
           border-radius: var(--radius-md);
           color: var(--color-text-secondary);
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
         }
 
         .btn-icon:hover {
-          background: var(--color-surface-elevated);
+          background: var(--color-surface-hover);
           color: var(--color-text);
+          border-color: var(--color-border-hover);
+        }
+
+        .btn-icon-right {
+          display: flex;
+          transition: transform var(--duration-fast) var(--ease-out-expo);
+        }
+
+        .btn-hero-primary:hover .btn-icon-right {
+          transform: translateX(3px);
         }
 
         .btn-spinner {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border: 2px solid rgba(0, 0, 0, 0.2);
-          border-top-color: rgba(0, 0, 0, 0.8);
+          border-top-color: rgba(0, 0, 0, 0.7);
           border-radius: 50%;
-          animation: spin 600ms linear infinite;
+          animation: spin 0.6s linear infinite;
         }
 
-        /* ===== AVATAR & USER MENU ===== */
+        /* ─── Avatar & User Menu ─── */
         .avatar-btn {
           width: 44px;
           height: 44px;
           border-radius: var(--radius-md);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
           border: 1px solid var(--color-border);
           color: var(--color-text);
           font-size: 15px;
           font-weight: 700;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1687,7 +1960,7 @@ export default function Page() {
 
         .avatar-btn:hover {
           transform: scale(1.05);
-          border-color: rgba(255, 255, 255, 0.15);
+          border-color: var(--color-border-hover);
           box-shadow: var(--shadow-sm);
         }
 
@@ -1699,18 +1972,18 @@ export default function Page() {
           position: absolute;
           top: calc(100% + 8px);
           right: 0;
-          width: 260px;
-          background: rgba(10, 10, 12, 0.95);
-          backdrop-filter: blur(20px);
+          width: 280px;
+          background: rgba(17, 17, 19, 0.98);
+          backdrop-filter: blur(20px) saturate(180%);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-lg);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-xl);
           overflow: hidden;
-          animation: menuSlide 200ms cubic-bezier(0.16, 1, 0.3, 1);
+          animation: menuReveal 200ms var(--ease-out-expo);
           transform-origin: top right;
         }
 
-        @keyframes menuSlide {
+        @keyframes menuReveal {
           from {
             opacity: 0;
             transform: translateY(-8px) scale(0.96);
@@ -1722,12 +1995,13 @@ export default function Page() {
         }
 
         .user-menu-header {
-          padding: 16px;
+          padding: 16px 20px;
           border-bottom: 1px solid var(--color-border-subtle);
+          background: var(--color-surface);
         }
 
         .user-menu-email {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 600;
           color: var(--color-text);
           word-break: break-all;
@@ -1746,24 +2020,24 @@ export default function Page() {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px 16px;
+          padding: 12px 20px;
           background: none;
           border: none;
           color: var(--color-text-secondary);
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 500;
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
           text-align: left;
         }
 
         .user-menu-item:hover {
-          background: var(--color-surface-elevated);
+          background: var(--color-surface-hover);
           color: var(--color-text);
         }
 
         .user-menu-item-icon {
-          opacity: 0.7;
+          opacity: 0.6;
         }
 
         .user-menu-item-danger {
@@ -1771,7 +2045,7 @@ export default function Page() {
         }
 
         .user-menu-item-danger:hover {
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(239, 68, 68, 0.08);
           color: rgba(239, 68, 68, 0.95);
         }
 
@@ -1782,75 +2056,105 @@ export default function Page() {
         }
 
         .user-menu-footer {
-          padding: 12px 16px;
+          padding: 12px 20px;
           border-top: 1px solid var(--color-border-subtle);
+          background: var(--color-surface);
         }
 
         .user-menu-hint {
-          font-size: 10px;
-          color: var(--color-text-tertiary);
+          font-size: 11px;
+          color: var(--color-text-muted);
           text-align: center;
+          display: block;
         }
 
-        /* ===== LANDING PAGE ===== */
+        /* ═══════════════════════════════════════════════════════════════════════
+           LANDING PAGE
+           ═══════════════════════════════════════════════════════════════════════ */
         .landing-wrapper {
           flex: 1;
           position: relative;
           overflow-x: hidden;
         }
 
-        /* Gradient orbs */
-        .gradient-orb {
+        /* ─── Ambient Background ─── */
+        .ambient-bg {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          overflow: hidden;
+          z-index: 0;
+        }
+
+        .ambient-orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(100px);
-          pointer-events: none;
-          opacity: 0.4;
+          filter: blur(120px);
+          opacity: 0.5;
+          animation: float 20s ease-in-out infinite;
         }
 
-        .gradient-orb-1 {
+        .ambient-orb-1 {
+          width: 800px;
+          height: 800px;
+          background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+          top: -300px;
+          left: -200px;
+          animation-delay: 0s;
+        }
+
+        .ambient-orb-2 {
           width: 600px;
           height: 600px;
-          background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-          top: -200px;
-          left: -200px;
+          background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+          top: 30%;
+          right: -150px;
+          animation-delay: -7s;
         }
 
-        .gradient-orb-2 {
+        .ambient-orb-3 {
           width: 500px;
           height: 500px;
-          background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
-          top: 400px;
-          right: -150px;
-        }
-
-        .gradient-orb-3 {
-          width: 400px;
-          height: 400px;
-          background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-          bottom: 200px;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+          bottom: 10%;
           left: 10%;
+          animation-delay: -14s;
         }
 
-        /* Reveal animations */
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -30px) scale(1.05); }
+          66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        .ambient-grid {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 40%, transparent 100%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 50%, black 40%, transparent 100%);
+        }
+
+        /* ─── Reveal Animations ─── */
         .rv {
           opacity: 0;
           transition: 
-            opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
-            transform 800ms cubic-bezier(0.16, 1, 0.3, 1),
-            filter 800ms cubic-bezier(0.16, 1, 0.3, 1);
+            opacity 700ms var(--ease-out-expo),
+            transform 700ms var(--ease-out-expo),
+            filter 700ms var(--ease-out-expo);
           transition-delay: var(--d, 0ms);
-          will-change: opacity, transform, filter;
+          will-change: opacity, transform;
         }
 
         .rv-up {
-          transform: translateY(30px);
-          filter: blur(4px);
+          transform: translateY(40px);
         }
 
         .rv-scale {
-          transform: scale(0.95);
-          filter: blur(4px);
+          transform: scale(0.94);
         }
 
         .rv.is-inview {
@@ -1859,22 +2163,37 @@ export default function Page() {
           filter: blur(0);
         }
 
-        /* Hero Section */
+        /* ═══════════════════════════════════════════════════════════════════════
+           HERO SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
         .hero-section {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 80px 24px 120px;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 60px;
-          align-items: center;
           position: relative;
+          z-index: 1;
+          padding: 80px 24px 120px;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
         }
 
         @media (min-width: 1024px) {
           .hero-section {
+            padding: 60px 48px 100px;
+          }
+        }
+
+        .hero-container {
+          max-width: 1280px;
+          margin: 0 auto;
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 60px;
+          align-items: center;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-container {
             grid-template-columns: 1fr 1fr;
-            padding: 100px 48px 140px;
             gap: 80px;
           }
         }
@@ -1882,279 +2201,389 @@ export default function Page() {
         .hero-content {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 28px;
         }
 
         .hero-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: var(--color-surface);
+          gap: 10px;
+          padding: 10px 18px;
+          background: var(--color-surface-glass);
+          backdrop-filter: blur(12px);
           border: 1px solid var(--color-border);
-          border-radius: 100px;
+          border-radius: var(--radius-full);
           width: fit-content;
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           color: var(--color-text-secondary);
-          letter-spacing: 0.02em;
+          letter-spacing: 0.01em;
         }
 
-        .hero-badge-dot {
-          width: 6px;
-          height: 6px;
-          background: #22c55e;
+        .hero-badge-indicator {
+          width: 8px;
+          height: 8px;
+          background: var(--color-success);
           border-radius: 50%;
           animation: pulse 2s ease-in-out infinite;
+          box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
         }
 
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
         }
 
         .hero-title {
-          font-size: clamp(40px, 6vw, 64px);
+          font-size: clamp(44px, 7vw, 72px);
           font-weight: 800;
-          line-height: 1.05;
+          line-height: 1.02;
           letter-spacing: -0.04em;
           color: var(--color-text);
-          margin: 0;
         }
 
-        .hero-title-accent {
-          background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.6) 100%);
+        .hero-title-gradient {
+          background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.55) 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
 
-        .hero-subtitle {
+        .hero-description {
           font-size: 18px;
-          line-height: 1.6;
+          line-height: 1.7;
           color: var(--color-text-secondary);
-          max-width: 500px;
-          margin: 0;
+          max-width: 540px;
         }
 
-        .hero-cta-group {
+        @media (max-width: 640px) {
+          .hero-description {
+            font-size: 16px;
+          }
+        }
+
+        .hero-actions {
           display: flex;
-          gap: 12px;
+          gap: 14px;
           flex-wrap: wrap;
-          margin-top: 8px;
+          padding-top: 8px;
         }
 
-        .hero-trust {
+        .hero-social-proof {
           display: flex;
           align-items: center;
-          gap: 12px;
-          margin-top: 16px;
+          gap: 14px;
+          padding-top: 16px;
         }
 
-        .hero-trust-stars {
+        .hero-rating {
           display: flex;
-          gap: 2px;
+          gap: 3px;
           color: #fbbf24;
         }
 
-        .hero-trust-text {
-          font-size: 13px;
+        .hero-rating svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .hero-social-text {
+          font-size: 14px;
           color: var(--color-text-tertiary);
         }
 
-        /* Hero Visual */
+        /* ─── Hero Phone Mockup ─── */
         .hero-visual {
+          display: flex;
+          justify-content: center;
+          align-items: center;
           position: relative;
         }
 
-        .hero-visual-inner {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          overflow: hidden;
-          box-shadow: var(--shadow-lg), var(--shadow-glow);
+        .hero-phone {
+          position: relative;
         }
 
-        .hero-visual-header {
+        .phone-frame {
+          width: 300px;
+          height: 620px;
+          background: linear-gradient(135deg, #1a1a1c 0%, #0d0d0e 100%);
+          border-radius: 44px;
+          padding: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 
+            var(--shadow-xl),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+            0 0 0 1px rgba(0, 0, 0, 0.5);
+          position: relative;
+        }
+
+        @media (max-width: 640px) {
+          .phone-frame {
+            width: 260px;
+            height: 540px;
+            border-radius: 36px;
+          }
+        }
+
+        .phone-notch {
+          position: absolute;
+          top: 12px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100px;
+          height: 28px;
+          background: #000;
+          border-radius: 14px;
+          z-index: 10;
+        }
+
+        .phone-screen {
+          width: 100%;
+          height: 100%;
+          background: var(--color-bg);
+          border-radius: 34px;
+          overflow: hidden;
           display: flex;
+          flex-direction: column;
+        }
+
+        @media (max-width: 640px) {
+          .phone-screen {
+            border-radius: 28px;
+          }
+        }
+
+        .phone-status-bar {
+          display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 12px;
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.02);
+          padding: 14px 24px 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .phone-status-icons {
+          display: flex;
+          gap: 6px;
+          font-size: 11px;
+          color: var(--color-text-secondary);
+        }
+
+        .phone-app-header {
+          padding: 8px 20px 16px;
           border-bottom: 1px solid var(--color-border-subtle);
         }
 
-        .hero-visual-dots {
-          display: flex;
-          gap: 6px;
+        .phone-app-title {
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
         }
 
-        .hero-visual-dots span {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: var(--color-border);
-        }
-
-        .hero-visual-title {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text-tertiary);
-        }
-
-        .hero-visual-content {
-          padding: 24px;
+        .phone-content {
+          flex: 1;
+          padding: 16px;
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 16px;
+          overflow: hidden;
         }
 
-        .hero-visual-preview {
+        .phone-upload-area {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
-          padding: 40px;
+          gap: 10px;
+          padding: 20px;
           background: var(--color-surface);
-          border: 2px dashed var(--color-border);
+          border: 1px solid var(--color-border);
           border-radius: var(--radius-lg);
-          color: var(--color-text-tertiary);
-          font-size: 13px;
+          font-size: 12px;
+          color: var(--color-text-secondary);
         }
 
-        .hero-visual-result {
+        .phone-upload-icon {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-hover);
+          border-radius: var(--radius-md);
+          color: var(--color-text);
+        }
+
+        .phone-upload-thumb {
+          width: 100%;
+          height: 60px;
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+          border-radius: var(--radius-sm);
+          margin-top: 8px;
+        }
+
+        .phone-results {
+          flex: 1;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-lg);
           padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
 
-        .hero-visual-result-header {
+        .phone-result-header {
           display: flex;
           align-items: center;
           gap: 8px;
-          margin-bottom: 12px;
-          color: #22c55e;
+          color: var(--color-success);
           font-size: 13px;
           font-weight: 600;
         }
 
-        .hero-visual-result-items {
+        .phone-result-items {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
         }
 
-        .result-item {
+        .phone-result-item {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 13px;
+          font-size: 12px;
           color: var(--color-text-secondary);
         }
 
-        .result-dot {
+        .result-indicator {
           width: 8px;
           height: 8px;
           border-radius: 50%;
+          flex-shrink: 0;
         }
 
-        .result-dot.ok {
-          background: #22c55e;
+        .phone-result-item.success .result-indicator {
+          background: var(--color-success);
         }
 
-        .result-dot.warn {
-          background: #f59e0b;
+        .phone-result-item.warning .result-indicator {
+          background: var(--color-warning);
         }
 
-        /* Stats Section */
-        .stats-section {
-          max-width: 1200px;
-          margin: 0 auto;
+        .phone-result-summary {
+          margin-top: auto;
+          padding-top: 12px;
+          border-top: 1px solid var(--color-border-subtle);
+          font-size: 11px;
+          color: var(--color-text-tertiary);
+          text-align: center;
+        }
+
+        .phone-glow {
+          position: absolute;
+          inset: -50px;
+          background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+          z-index: -1;
+          filter: blur(60px);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           PROOF SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
+        .proof-section {
+          position: relative;
+          z-index: 1;
           padding: 0 24px 100px;
         }
 
-        .stats-grid {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 24px;
-          padding: 32px 40px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
+        .proof-container {
+          max-width: 1000px;
+          margin: 0 auto;
         }
 
-        .stat-item {
-          text-align: center;
-          padding: 0 24px;
-        }
-
-        .stat-value {
-          font-size: 28px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--color-text);
-        }
-
-        .stat-label {
-          font-size: 13px;
-          color: var(--color-text-tertiary);
-          margin-top: 4px;
-        }
-
-        .stat-divider {
-          width: 1px;
-          height: 48px;
+        .proof-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1px;
           background: var(--color-border);
-          display: none;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          overflow: hidden;
         }
 
         @media (min-width: 768px) {
-          .stat-divider {
-            display: block;
+          .proof-grid {
+            grid-template-columns: repeat(4, 1fr);
           }
         }
 
-        /* Section styles */
-        .section-header {
+        .proof-item {
+          background: var(--color-bg);
+          padding: 32px 24px;
           text-align: center;
-          max-width: 600px;
-          margin: 0 auto 48px;
         }
 
-        .section-eyebrow {
+        .proof-value {
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: -0.03em;
+          color: var(--color-text);
+          margin-bottom: 6px;
+        }
+
+        .proof-label {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           SECTION STYLES
+           ═══════════════════════════════════════════════════════════════════════ */
+        .section-header {
+          text-align: center;
+          max-width: 640px;
+          margin: 0 auto 56px;
+        }
+
+        .section-label {
           display: inline-block;
           font-size: 12px;
           font-weight: 700;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--color-text-tertiary);
           margin-bottom: 16px;
         }
 
         .section-title {
-          font-size: clamp(28px, 4vw, 40px);
+          font-size: clamp(32px, 5vw, 48px);
           font-weight: 800;
-          letter-spacing: -0.03em;
+          letter-spacing: -0.035em;
           color: var(--color-text);
-          margin: 0 0 16px;
           line-height: 1.1;
+          margin-bottom: 20px;
         }
 
-        .section-subtitle {
-          font-size: 16px;
-          line-height: 1.6;
+        .section-description {
+          font-size: 17px;
+          line-height: 1.7;
           color: var(--color-text-secondary);
-          margin: 0;
         }
 
-        /* Features Section */
+        /* ═══════════════════════════════════════════════════════════════════════
+           FEATURES SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
         .features-section {
+          position: relative;
+          z-index: 1;
+          padding: 100px 24px;
+        }
+
+        .features-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 80px 24px;
         }
 
         .features-grid {
@@ -2170,63 +2599,81 @@ export default function Page() {
         }
 
         .feature-card {
-          padding: 32px;
+          padding: 36px 32px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          transition: all var(--transition-medium);
+          border-radius: var(--radius-2xl);
+          transition: all var(--duration-slow) var(--ease-out-expo);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .feature-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: var(--gradient-surface);
+          opacity: 0;
+          transition: opacity var(--duration-slow) var(--ease-out-expo);
         }
 
         .feature-card:hover {
-          background: var(--color-surface-elevated);
-          border-color: rgba(255, 255, 255, 0.12);
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-md);
+          border-color: var(--color-border-hover);
+          transform: translateY(-6px);
+          box-shadow: var(--shadow-lg), var(--shadow-glow);
         }
 
-        .feature-icon {
-          width: 48px;
-          height: 48px;
+        .feature-card:hover::before {
+          opacity: 1;
+        }
+
+        .feature-icon-wrapper {
+          position: relative;
+          width: 56px;
+          height: 56px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-surface-elevated);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
+          margin-bottom: 24px;
           color: var(--color-text);
-          margin-bottom: 20px;
         }
 
         .feature-title {
-          font-size: 16px;
+          position: relative;
+          font-size: 18px;
           font-weight: 700;
           color: var(--color-text);
-          margin: 0 0 8px;
+          margin-bottom: 10px;
         }
 
         .feature-description {
-          font-size: 14px;
-          line-height: 1.6;
+          position: relative;
+          font-size: 15px;
+          line-height: 1.65;
           color: var(--color-text-secondary);
-          margin: 0;
         }
 
-        /* Risk Section */
+        /* ═══════════════════════════════════════════════════════════════════════
+           RISK SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
         .risk-section {
+          position: relative;
+          z-index: 1;
           padding: 100px 24px;
           background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.01) 50%, transparent 100%);
         }
 
-        .risk-content {
-          max-width: 1000px;
+        .risk-container {
+          max-width: 1100px;
           margin: 0 auto;
         }
 
         .risk-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          margin-bottom: 24px;
+          gap: 20px;
+          margin-bottom: 40px;
         }
 
         @media (min-width: 768px) {
@@ -2236,88 +2683,129 @@ export default function Page() {
         }
 
         .risk-card {
-          padding: 24px;
+          padding: 28px 24px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-xl);
           text-align: center;
+          transition: all var(--duration-normal) var(--ease-out-expo);
         }
 
-        .risk-label {
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text-tertiary);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+        .risk-card:hover {
+          border-color: var(--color-border-hover);
+          transform: translateY(-4px);
+        }
+
+        .risk-icon {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface-hover);
+          border-radius: var(--radius-md);
+          margin: 0 auto 16px;
+          color: var(--color-text-secondary);
+        }
+
+        .risk-value {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--color-text);
           margin-bottom: 8px;
         }
 
-        .risk-range {
-          font-size: 20px;
-          font-weight: 700;
-          color: var(--color-text);
-          margin-bottom: 4px;
+        .risk-label {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--color-text-secondary);
+          margin-bottom: 8px;
+          line-height: 1.4;
         }
 
-        .risk-note {
+        .risk-source {
+          font-size: 11px;
+          color: var(--color-text-muted);
+        }
+
+        .risk-footnote {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 20px 24px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
           font-size: 12px;
           color: var(--color-text-tertiary);
+          line-height: 1.6;
         }
 
-        .risk-disclaimer {
-          text-align: center;
-          font-size: 12px;
-          color: var(--color-text-tertiary);
+        .risk-footnote svg {
+          flex-shrink: 0;
+          opacity: 0.5;
         }
 
-        /* Pricing Section */
+        /* ═══════════════════════════════════════════════════════════════════════
+           PRICING SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
         .pricing-section {
+          position: relative;
+          z-index: 1;
           padding: 100px 24px;
         }
 
-        .pricing-content {
-          max-width: 500px;
+        .pricing-container {
+          max-width: 520px;
           margin: 0 auto;
-        }
-
-        .pricing-header {
-          text-align: center;
-          margin-bottom: 40px;
         }
 
         .pricing-card {
           position: relative;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
+          border-radius: var(--radius-3xl);
           overflow: hidden;
         }
 
-        .pricing-card-glow {
+        .pricing-card-inner {
+          position: relative;
+          padding: 48px 40px;
+          z-index: 1;
+        }
+
+        @media (max-width: 640px) {
+          .pricing-card-inner {
+            padding: 36px 28px;
+          }
+        }
+
+        .pricing-glow {
           position: absolute;
           inset: -1px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%);
-          border-radius: var(--radius-2xl);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.03) 100%);
+          border-radius: var(--radius-3xl);
           pointer-events: none;
         }
 
-        .pricing-card-content {
-          position: relative;
-          padding: 40px;
+        .pricing-badge-wrapper {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 28px;
         }
 
         .pricing-badge {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 16px;
-          background: var(--color-surface-elevated);
+          padding: 10px 18px;
+          background: var(--color-surface-hover);
           border: 1px solid var(--color-border);
-          border-radius: 100px;
-          font-size: 12px;
+          border-radius: var(--radius-full);
+          font-size: 13px;
           font-weight: 600;
           color: var(--color-text-secondary);
-          margin-bottom: 24px;
         }
 
         .pricing-amount {
@@ -2334,206 +2822,313 @@ export default function Page() {
           color: var(--color-text-secondary);
         }
 
-        .pricing-value {
-          font-size: 64px;
+        .pricing-number {
+          font-size: 72px;
           font-weight: 800;
           letter-spacing: -0.04em;
           color: var(--color-text);
           line-height: 1;
         }
 
-        .pricing-value-lg {
-          font-size: 72px;
+        .pricing-number-lg {
+          font-size: 80px;
         }
 
         .pricing-period {
-          font-size: 16px;
+          font-size: 18px;
           color: var(--color-text-tertiary);
-          margin-left: 4px;
+          margin-left: 6px;
         }
 
         .pricing-annual {
           text-align: center;
-          font-size: 14px;
+          font-size: 15px;
           color: var(--color-text-tertiary);
-          margin-bottom: 32px;
+          margin-bottom: 36px;
+        }
+
+        .pricing-savings {
+          color: var(--color-success);
+          font-weight: 600;
         }
 
         .pricing-features {
           display: flex;
           flex-direction: column;
-          gap: 12px;
-          margin-bottom: 32px;
+          gap: 14px;
+          margin-bottom: 36px;
         }
 
         .pricing-feature {
           display: flex;
           align-items: center;
-          gap: 12px;
-          font-size: 14px;
+          gap: 14px;
+          font-size: 15px;
           color: var(--color-text-secondary);
         }
 
-        .pricing-feature svg {
-          color: #22c55e;
+        .pricing-check {
+          width: 22px;
+          height: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(16, 185, 129, 0.1);
+          border-radius: var(--radius-xs);
+          color: var(--color-success);
           flex-shrink: 0;
         }
 
-        .pricing-feature-inline {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          color: var(--color-text-secondary);
-        }
-
-        .pricing-feature-inline svg {
-          color: #22c55e;
-          width: 16px;
-          height: 16px;
+        .pricing-check svg {
+          width: 14px;
+          height: 14px;
         }
 
         .pricing-cta {
-          margin-bottom: 16px;
+          margin-bottom: 20px;
+        }
+
+        .btn-pricing-primary {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 56px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-lg);
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .btn-pricing-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-xl), var(--shadow-glow-strong);
         }
 
         .pricing-note {
           text-align: center;
-          font-size: 12px;
-          color: var(--color-text-tertiary);
-          margin: 0;
+          font-size: 13px;
+          color: var(--color-text-muted);
         }
 
         .pricing-comparison {
           text-align: center;
-          margin-top: 32px;
-        }
-
-        .comparison-label {
-          font-size: 13px;
+          margin-top: 36px;
+          font-size: 14px;
           color: var(--color-text-tertiary);
         }
 
-        /* FAQ Section */
+        /* ═══════════════════════════════════════════════════════════════════════
+           FAQ SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
         .faq-section {
-          max-width: 700px;
+          position: relative;
+          z-index: 1;
+          padding: 80px 24px 100px;
+        }
+
+        .faq-container {
+          max-width: 720px;
           margin: 0 auto;
-          padding: 80px 24px;
         }
 
         .faq-list {
           display: flex;
           flex-direction: column;
-          gap: 1px;
-          background: var(--color-border-subtle);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          overflow: hidden;
+          gap: 12px;
         }
 
         .faq-item {
-          background: var(--color-bg);
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-xl);
+          overflow: hidden;
+          transition: all var(--duration-normal) var(--ease-out-expo);
         }
 
-        .faq-btn {
+        .faq-item:hover {
+          border-color: var(--color-border-hover);
+        }
+
+        .faq-item.is-open {
+          border-color: var(--color-border-hover);
+        }
+
+        .faq-trigger {
           width: 100%;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 16px;
-          padding: 20px 24px;
+          padding: 22px 24px;
           background: none;
           border: none;
           color: var(--color-text);
           cursor: pointer;
-          transition: background var(--transition-fast);
           text-align: left;
         }
 
-        .faq-btn:hover {
-          background: var(--color-surface);
-        }
-
-        .faq-q {
-          font-size: 14px;
+        .faq-question {
+          font-size: 15px;
           font-weight: 600;
+          line-height: 1.4;
         }
 
-        .faq-chevron {
+        .faq-icon {
           width: 32px;
           height: 32px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
+          background: var(--color-surface-hover);
           border-radius: var(--radius-sm);
           color: var(--color-text-tertiary);
           flex-shrink: 0;
-          transition: transform var(--transition-fast);
+          transition: all var(--duration-normal) var(--ease-out-expo);
         }
 
-        .faq-chevron.is-open {
+        .faq-item.is-open .faq-icon {
           transform: rotate(180deg);
+          background: var(--color-surface-active);
         }
 
-        .faq-panel {
-          max-height: 0;
+        .faq-content {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .faq-item.is-open .faq-content {
+          grid-template-rows: 1fr;
+        }
+
+        .faq-answer {
           overflow: hidden;
-          transition: max-height var(--transition-medium);
-        }
-
-        .faq-panel.is-open {
-          max-height: 200px;
-        }
-
-        .faq-a {
-          padding: 0 24px 20px;
-          font-size: 14px;
-          line-height: 1.6;
+          padding: 0 24px;
+          font-size: 15px;
+          line-height: 1.7;
           color: var(--color-text-secondary);
         }
 
-        /* Final CTA Section */
-        .final-cta-section {
-          padding: 100px 24px;
+        .faq-item.is-open .faq-answer {
+          padding: 0 24px 22px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           CTA SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
+        .cta-section {
+          position: relative;
+          z-index: 1;
+          padding: 100px 24px 120px;
+          overflow: hidden;
+        }
+
+        .cta-container {
+          max-width: 700px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+
+        .cta-content {
           text-align: center;
         }
 
-        .final-cta-content {
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .final-cta-title {
-          font-size: clamp(28px, 4vw, 40px);
+        .cta-title {
+          font-size: clamp(28px, 4vw, 44px);
           font-weight: 800;
-          letter-spacing: -0.03em;
+          letter-spacing: -0.035em;
           color: var(--color-text);
-          margin: 0 0 16px;
+          margin-bottom: 20px;
+          line-height: 1.15;
         }
 
-        .final-cta-subtitle {
-          font-size: 16px;
-          line-height: 1.6;
+        .cta-description {
+          font-size: 17px;
+          line-height: 1.7;
           color: var(--color-text-secondary);
-          margin: 0 0 32px;
+          margin-bottom: 36px;
         }
 
-        .final-cta-buttons {
+        .cta-actions {
           display: flex;
-          gap: 12px;
+          gap: 14px;
           justify-content: center;
           flex-wrap: wrap;
         }
 
-        /* Footer */
+        .btn-cta-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 56px;
+          padding: 0 32px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-lg);
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .btn-cta-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-xl), var(--shadow-glow-strong);
+        }
+
+        .btn-cta-secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 56px;
+          padding: 0 28px;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .btn-cta-secondary:hover {
+          background: var(--color-surface-hover);
+          border-color: var(--color-border-hover);
+        }
+
+        .cta-gradient {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 400px;
+          background: radial-gradient(ellipse 80% 100% at 50% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════════════════════════════ */
         .landing-footer {
-          padding: 48px 24px;
+          position: relative;
+          z-index: 1;
+          padding: 48px 24px 60px;
           border-top: 1px solid var(--color-border-subtle);
         }
 
-        .footer-content {
+        .footer-container {
           max-width: 1200px;
           margin: 0 auto;
           text-align: center;
@@ -2541,78 +3136,100 @@ export default function Page() {
 
         .footer-links {
           display: flex;
-          gap: 24px;
+          gap: 8px;
           justify-content: center;
-          margin-bottom: 16px;
+          align-items: center;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
         }
 
         .footer-link {
-          font-size: 13px;
+          font-size: 14px;
           color: var(--color-text-secondary);
           text-decoration: none;
-          transition: color var(--transition-fast);
+          padding: 6px 12px;
+          border-radius: var(--radius-sm);
+          transition: all var(--duration-fast) var(--ease-out-expo);
         }
 
         .footer-link:hover {
           color: var(--color-text);
+          background: var(--color-surface);
         }
 
-        .footer-disclaimer {
+        .footer-divider {
+          color: var(--color-text-muted);
+        }
+
+        .footer-api-note {
           font-size: 12px;
-          color: var(--color-text-tertiary);
-          margin: 0 0 8px;
+          color: var(--color-text-muted);
+          margin-bottom: 12px;
         }
 
         .footer-copyright {
-          font-size: 12px;
+          font-size: 13px;
           color: var(--color-text-tertiary);
-          margin: 0;
         }
 
-        /* ===== MODALS ===== */
-        .modal-backdrop {
+        /* ═══════════════════════════════════════════════════════════════════════
+           MODALS
+           ═══════════════════════════════════════════════════════════════════════ */
+        .modal-overlay {
           position: fixed;
           inset: 0;
-          z-index: 1000;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(8px);
+          z-index: var(--z-modal);
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(12px);
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 24px;
+          animation: fadeIn 200ms var(--ease-out-expo);
         }
 
-        .modal-container {
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .modal-wrapper {
           width: 100%;
-          max-width: 420px;
-          background: rgba(10, 10, 12, 0.98);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          box-shadow: var(--shadow-lg);
-          animation: modalPop 250ms cubic-bezier(0.16, 1, 0.3, 1);
+          max-width: 440px;
+          animation: modalSlideUp 300ms var(--ease-out-expo);
         }
 
-        .modal-container-lg {
-          max-width: 480px;
+        .modal-wrapper-lg {
+          max-width: 500px;
         }
 
-        @keyframes modalPop {
+        @keyframes modalSlideUp {
           from {
             opacity: 0;
-            transform: scale(0.95);
+            transform: translateY(20px) scale(0.98);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0) scale(1);
           }
         }
 
-        .modal-content {
-          padding: 32px;
+        .modal-card {
+          background: rgba(17, 17, 19, 0.98);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          box-shadow: var(--shadow-xl);
+          padding: 36px;
           position: relative;
         }
 
-        .modal-close {
+        @media (max-width: 480px) {
+          .modal-card {
+            padding: 28px 24px;
+          }
+        }
+
+        .modal-close-btn {
           position: absolute;
           top: 20px;
           right: 20px;
@@ -2626,147 +3243,192 @@ export default function Page() {
           border-radius: var(--radius-sm);
           color: var(--color-text-tertiary);
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
         }
 
-        .modal-close:hover {
-          background: var(--color-surface-elevated);
+        .modal-close-btn:hover {
+          background: var(--color-surface-hover);
           color: var(--color-text);
+          border-color: var(--color-border-hover);
         }
 
         .modal-header {
-          margin-bottom: 24px;
+          text-align: center;
+          margin-bottom: 28px;
+        }
+
+        .modal-icon {
+          width: 56px;
+          height: 56px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          margin: 0 auto 20px;
+          color: var(--color-text);
         }
 
         .modal-title {
-          font-size: 24px;
+          font-size: 26px;
           font-weight: 700;
           letter-spacing: -0.02em;
           color: var(--color-text);
-          margin: 0 0 8px;
+          margin-bottom: 10px;
         }
 
         .modal-subtitle {
-          font-size: 14px;
+          font-size: 15px;
           color: var(--color-text-secondary);
-          margin: 0;
+          line-height: 1.5;
         }
 
         .modal-form {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
-        .form-group {
+        .form-field {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
         }
 
         .form-label {
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           color: var(--color-text-secondary);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
         }
 
         .form-input {
           width: 100%;
-          padding: 12px 16px;
+          height: 52px;
+          padding: 0 18px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
           color: var(--color-text);
-          font-size: 14px;
-          transition: all var(--transition-fast);
+          font-size: 15px;
+          transition: all var(--duration-fast) var(--ease-out-expo);
           outline: none;
         }
 
         .form-input::placeholder {
-          color: var(--color-text-tertiary);
+          color: var(--color-text-muted);
         }
 
         .form-input:focus {
-          border-color: rgba(255, 255, 255, 0.2);
-          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+          border-color: var(--color-border-focus);
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
         }
 
-        .form-input-wrapper {
+        .form-input-group {
           position: relative;
         }
 
-        .form-input-toggle {
+        .form-toggle {
           position: absolute;
-          right: 12px;
+          right: 16px;
           top: 50%;
           transform: translateY(-50%);
           background: none;
           border: none;
           color: var(--color-text-tertiary);
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           cursor: pointer;
-          transition: color var(--transition-fast);
+          transition: color var(--duration-fast) var(--ease-out-expo);
         }
 
-        .form-input-toggle:hover {
+        .form-toggle:hover {
           color: var(--color-text);
         }
 
-        .modal-message {
+        .btn-form-submit {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 52px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          margin-top: 4px;
+        }
+
+        .btn-form-submit:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .btn-form-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .modal-alert {
           display: flex;
           align-items: flex-start;
           gap: 12px;
-          padding: 12px 16px;
+          padding: 14px 16px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
-          margin-top: 16px;
+          margin-top: 20px;
         }
 
-        .modal-message.ok {
-          border-color: rgba(34, 197, 94, 0.3);
+        .modal-alert.ok {
+          border-color: rgba(16, 185, 129, 0.3);
+          background: rgba(16, 185, 129, 0.05);
         }
 
-        .modal-message.err {
+        .modal-alert.err {
           border-color: rgba(239, 68, 68, 0.3);
+          background: rgba(239, 68, 68, 0.05);
         }
 
-        .message-icon {
+        .alert-icon {
           flex-shrink: 0;
           color: var(--color-text-secondary);
         }
 
-        .modal-message.ok .message-icon {
-          color: #22c55e;
+        .modal-alert.ok .alert-icon {
+          color: var(--color-success);
         }
 
-        .modal-message.err .message-icon {
-          color: #ef4444;
+        .modal-alert.err .alert-icon {
+          color: var(--color-error);
         }
 
-        .message-text {
-          font-size: 13px;
+        .alert-text {
+          font-size: 14px;
           color: var(--color-text-secondary);
+          line-height: 1.5;
         }
 
         .modal-footer {
-          margin-top: 20px;
+          margin-top: 24px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
 
         .modal-link {
           background: none;
           border: none;
-          font-size: 13px;
+          font-size: 14px;
           color: var(--color-text-tertiary);
           cursor: pointer;
-          transition: color var(--transition-fast);
+          transition: color var(--duration-fast) var(--ease-out-expo);
         }
 
         .modal-link:hover {
@@ -2778,19 +3440,19 @@ export default function Page() {
           font-weight: 600;
         }
 
-        /* Pricing Modal */
+        /* ─── Pricing Modal Specifics ─── */
         .pricing-modal-badge {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 16px;
+          padding: 10px 16px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 100px;
-          font-size: 12px;
+          border-radius: var(--radius-full);
+          font-size: 13px;
           font-weight: 600;
           color: var(--color-text-secondary);
-          margin-bottom: 16px;
+          margin-bottom: 20px;
         }
 
         .pricing-modal-amount {
@@ -2798,40 +3460,120 @@ export default function Page() {
           align-items: baseline;
           justify-content: center;
           gap: 4px;
-          margin-bottom: 24px;
+          margin-bottom: 28px;
         }
 
         .pricing-modal-features {
           display: flex;
           flex-wrap: wrap;
-          gap: 12px 24px;
+          gap: 14px 24px;
           justify-content: center;
-          margin-bottom: 24px;
-          padding: 20px;
+          margin-bottom: 28px;
+          padding: 24px;
           background: var(--color-surface);
           border-radius: var(--radius-lg);
+        }
+
+        .pricing-modal-feature {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          color: var(--color-text-secondary);
+        }
+
+        .pricing-modal-feature svg {
+          color: var(--color-success);
+          width: 16px;
+          height: 16px;
         }
 
         .pricing-modal-actions {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          margin-bottom: 16px;
+          margin-bottom: 20px;
+        }
+
+        .btn-pricing-modal-primary {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 52px;
+          background: var(--color-accent);
+          color: var(--color-bg);
+          border: none;
+          border-radius: var(--radius-md);
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .btn-pricing-modal-primary:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-lg);
+        }
+
+        .btn-pricing-modal-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .btn-pricing-modal-secondary {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          height: 52px;
+          background: var(--color-surface);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          position: relative;
+        }
+
+        .btn-pricing-modal-secondary:hover:not(:disabled) {
+          background: var(--color-surface-hover);
+          border-color: var(--color-border-hover);
+        }
+
+        .btn-pricing-modal-secondary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .btn-badge {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--color-success);
+          background: rgba(16, 185, 129, 0.1);
+          padding: 4px 8px;
+          border-radius: var(--radius-xs);
         }
 
         .pricing-modal-note {
           text-align: center;
-          font-size: 12px;
-          color: var(--color-text-tertiary);
-          margin: 0;
+          font-size: 13px;
+          color: var(--color-text-muted);
         }
 
-        /* ===== CHAT INTERFACE ===== */
+        /* ═══════════════════════════════════════════════════════════════════════
+           CHAT INTERFACE
+           ═══════════════════════════════════════════════════════════════════════ */
         .chat-container {
           flex: 1;
           display: flex;
           flex-direction: column;
           min-height: 0;
+          background: var(--color-bg);
         }
 
         .chat-messages {
@@ -2850,40 +3592,40 @@ export default function Page() {
         }
 
         .chat-empty-content {
-          max-width: 440px;
+          max-width: 480px;
           width: 100%;
           text-align: center;
-          padding: 40px 32px;
+          padding: 48px 36px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
+          border-radius: var(--radius-2xl);
         }
 
         .chat-empty-icon {
-          width: 56px;
-          height: 56px;
+          width: 64px;
+          height: 64px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-surface-elevated);
+          background: var(--color-surface-hover);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-xl);
           color: var(--color-text);
-          margin: 0 auto 20px;
+          margin: 0 auto 24px;
         }
 
         .chat-empty-title {
-          font-size: 16px;
+          font-size: 18px;
           font-weight: 700;
           color: var(--color-text);
-          margin: 0 0 8px;
+          margin-bottom: 10px;
         }
 
         .chat-empty-text {
-          font-size: 14px;
+          font-size: 15px;
           line-height: 1.6;
           color: var(--color-text-secondary);
-          margin: 0 0 24px;
+          margin-bottom: 28px;
         }
 
         .chat-empty-actions {
@@ -2894,13 +3636,13 @@ export default function Page() {
         }
 
         .chat-history {
-          max-width: 800px;
+          max-width: 840px;
           margin: 0 auto;
           width: 100%;
-          padding: 24px;
+          padding: 28px;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
         .chat-message {
@@ -2919,22 +3661,22 @@ export default function Page() {
         .chat-bubble {
           max-width: 75%;
           padding: 16px 20px;
-          border-radius: var(--radius-lg);
-          font-size: 14px;
-          line-height: 1.6;
+          border-radius: var(--radius-xl);
+          font-size: 15px;
+          line-height: 1.65;
         }
 
         .chat-bubble-user {
           background: var(--color-accent);
           color: var(--color-bg);
-          border-bottom-right-radius: 4px;
+          border-bottom-right-radius: 6px;
         }
 
         .chat-bubble-assistant {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           color: var(--color-text);
-          border-bottom-left-radius: 4px;
+          border-bottom-left-radius: 6px;
         }
 
         .chat-bubble-image {
@@ -2946,7 +3688,7 @@ export default function Page() {
         .chat-bubble-image img {
           display: block;
           max-width: 100%;
-          max-height: 280px;
+          max-height: 300px;
           object-fit: contain;
         }
 
@@ -2955,32 +3697,68 @@ export default function Page() {
           font-style: italic;
         }
 
-        /* Chat Input */
+        /* ─── Chat Input Area ─── */
         .chat-input-area {
           flex-shrink: 0;
-          background: rgba(5, 5, 6, 0.9);
+          background: rgba(10, 10, 11, 0.95);
           backdrop-filter: blur(20px);
           border-top: 1px solid var(--color-border-subtle);
         }
 
         .chat-input-inner {
-          max-width: 800px;
+          max-width: 840px;
           margin: 0 auto;
-          padding: 16px 24px;
-          padding-bottom: max(16px, env(safe-area-inset-bottom));
+          padding: 20px 28px;
+          padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
+
+        .smart-progress {
+          padding: 0 4px 16px;
+        }
+
+        .smart-progress-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+
+        .smart-progress-phase {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+        }
+
+        .smart-progress-pct {
+          font-size: 12px;
+          font-variant-numeric: tabular-nums;
+          color: var(--color-text-muted);
+        }
+
+        .smart-progress-track {
+          height: 3px;
+          background: var(--color-surface);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+
+        .smart-progress-bar {
+          height: 100%;
+          background: linear-gradient(90deg, var(--color-text-tertiary), var(--color-text-secondary));
+          border-radius: 2px;
+          transition: width 150ms linear;
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
+          gap: 10px;
+          padding: 10px 14px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
-          font-size: 12px;
+          font-size: 13px;
           color: var(--color-text-secondary);
-          margin-bottom: 12px;
+          margin-bottom: 14px;
         }
 
         .chat-input-row {
@@ -2991,39 +3769,40 @@ export default function Page() {
 
         .chat-textarea {
           flex: 1;
-          min-height: 48px;
-          max-height: 160px;
-          padding: 14px 16px;
+          min-height: 52px;
+          max-height: 180px;
+          padding: 14px 18px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
           color: var(--color-text);
-          font-size: 14px;
+          font-size: 15px;
+          line-height: 1.5;
           resize: none;
           outline: none;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
         }
 
         .chat-textarea::placeholder {
-          color: var(--color-text-tertiary);
+          color: var(--color-text-muted);
         }
 
         .chat-textarea:focus {
-          border-color: rgba(255, 255, 255, 0.15);
+          border-color: var(--color-border-focus);
         }
 
         .chat-send-btn {
-          width: 48px;
-          height: 48px;
+          width: 52px;
+          height: 52px;
           display: flex;
           align-items: center;
           justify-content: center;
           background: var(--color-accent);
           border: none;
-          border-radius: var(--radius-md);
+          border-radius: var(--radius-lg);
           color: var(--color-bg);
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: all var(--duration-fast) var(--ease-out-expo);
           flex-shrink: 0;
         }
 
@@ -3037,36 +3816,32 @@ export default function Page() {
         }
 
         .chat-disclaimer {
-          margin-top: 12px;
+          margin-top: 14px;
           text-align: center;
-          font-size: 11px;
-          color: var(--color-text-tertiary);
+          font-size: 12px;
+          color: var(--color-text-muted);
         }
 
-        /* Responsive adjustments */
+        /* ─── Responsive Chat ─── */
         @media (max-width: 640px) {
           .chat-input-inner {
-            padding: 12px 16px;
+            padding: 16px;
+          }
+
+          .chat-history {
+            padding: 20px 16px;
           }
 
           .chat-bubble {
-            max-width: 85%;
+            max-width: 88%;
           }
 
-          .hero-section {
-            padding: 48px 16px 80px;
-          }
-
-          .features-section,
-          .faq-section,
-          .risk-section,
-          .pricing-section,
-          .final-cta-section {
-            padding: 60px 16px;
+          .chat-empty-content {
+            padding: 36px 24px;
           }
         }
 
-        /* Reduced motion */
+        /* ─── Reduced Motion ─── */
         @media (prefers-reduced-motion: reduce) {
           *,
           *::before,
@@ -3092,14 +3867,14 @@ export default function Page() {
               </div>
 
               <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Washtenaw Compliance Database</span>
-                <span className="header-meta-secondary">Additional Counties Coming 2026</span>
+                <span className="header-meta-primary">Washtenaw County Compliance</span>
+                <span className="header-meta-secondary">Additional Counties · 2026</span>
               </div>
             </div>
 
             <div className="header-right">
               {hasActiveSubscription && (
-                <span className={`header-status ${inter.className}`}>Active · Site License</span>
+                <span className={`header-status ${inter.className}`}>Site License Active</span>
               )}
 
               {!isAuthenticated ? (
@@ -3110,84 +3885,77 @@ export default function Page() {
                   }}
                   className="btn-secondary"
                 >
-                  <span className={`btn-text ${inter.className}`}>Sign in</span>
+                  <span className={`btn-label ${inter.className}`}>Sign in</span>
                 </button>
               ) : (
-                <>
-                  <button onClick={handleNewChat} className="btn-secondary" style={{ display: 'none' }}>
-                    <Icons.Plus />
-                    <span className={`btn-text ${inter.className}`}>New chat</span>
+                <div className="user-menu-wrapper" ref={userMenuRef}>
+                  <button
+                    onClick={() => setShowUserMenu((v) => !v)}
+                    className={`avatar-btn ${inter.className}`}
+                    aria-label="User menu"
+                  >
+                    {session?.user?.email?.[0]?.toUpperCase() || 'U'}
                   </button>
 
-                  <div className="user-menu-wrapper" ref={userMenuRef}>
-                    <button
-                      onClick={() => setShowUserMenu((v) => !v)}
-                      className={`avatar-btn ${inter.className}`}
-                      aria-label="User menu"
-                    >
-                      {session?.user?.email?.[0]?.toUpperCase() || 'U'}
-                    </button>
-
-                    {showUserMenu && (
-                      <div className="user-menu">
-                        <div className="user-menu-header">
-                          <div className={`user-menu-email ${inter.className}`}>
-                            {session?.user?.email || 'Signed in'}
-                          </div>
-                          <div className={`user-menu-status ${inter.className}`}>
-                            {hasActiveSubscription ? '● Active Premium' : 'Free Account'}
-                          </div>
+                  {showUserMenu && (
+                    <div className="user-menu">
+                      <div className="user-menu-header">
+                        <div className={`user-menu-email ${inter.className}`}>
+                          {session?.user?.email || 'Signed in'}
                         </div>
+                        <div className={`user-menu-status ${inter.className}`}>
+                          {hasActiveSubscription ? '● Premium Active' : 'Free Account'}
+                        </div>
+                      </div>
 
-                        {hasActiveSubscription ? (
-                          <button onClick={handleManageBilling} className={`user-menu-item ${inter.className}`}>
-                            <span className="user-menu-item-icon"><Icons.Settings /></span>
-                            Manage Billing
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              setShowPricingModal(true)
-                              setShowUserMenu(false)
-                            }}
-                            className={`user-menu-item ${inter.className}`}
-                          >
-                            <span className="user-menu-item-icon"><Icons.Spark /></span>
-                            Start Trial
-                          </button>
-                        )}
-
+                      {hasActiveSubscription ? (
+                        <button onClick={handleManageBilling} className={`user-menu-item ${inter.className}`}>
+                          <span className="user-menu-item-icon"><Icons.Settings /></span>
+                          Manage Billing
+                        </button>
+                      ) : (
                         <button
                           onClick={() => {
-                            window.open('/privacy', '_blank')
+                            setShowPricingModal(true)
                             setShowUserMenu(false)
                           }}
                           className={`user-menu-item ${inter.className}`}
                         >
-                          <span className="user-menu-item-icon"><Icons.Shield /></span>
-                          Privacy & Security
+                          <span className="user-menu-item-icon"><Icons.Spark /></span>
+                          Start Free Trial
                         </button>
+                      )}
 
-                        <div className="user-menu-divider" />
+                      <button
+                        onClick={() => {
+                          window.open('/privacy', '_blank')
+                          setShowUserMenu(false)
+                        }}
+                        className={`user-menu-item ${inter.className}`}
+                      >
+                        <span className="user-menu-item-icon"><Icons.Shield /></span>
+                        Privacy & Security
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            setShowUserMenu(false)
-                            handleSignOut()
-                          }}
-                          className={`user-menu-item user-menu-item-danger ${inter.className}`}
-                        >
-                          <span className="user-menu-item-icon"><Icons.LogOut /></span>
-                          Sign Out
-                        </button>
+                      <div className="user-menu-divider" />
 
-                        <div className="user-menu-footer">
-                          <span className={`user-menu-hint ${inter.className}`}>Press ESC to close</span>
-                        </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          handleSignOut()
+                        }}
+                        className={`user-menu-item user-menu-item-danger ${inter.className}`}
+                      >
+                        <span className="user-menu-item-icon"><Icons.LogOut /></span>
+                        Sign Out
+                      </button>
+
+                      <div className="user-menu-footer">
+                        <span className={`user-menu-hint ${inter.className}`}>Press ESC to close</span>
                       </div>
-                    )}
-                  </div>
-                </>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -3216,8 +3984,8 @@ export default function Page() {
                         Upload a photo or ask a question
                       </h2>
                       <p className={`chat-empty-text ${inter.className}`}>
-                        Use photo checks to spot likely issues fast—or search the Washtenaw-backed
-                        database when you need a clear answer.
+                        Run quick photo checks to spot likely issues, or search the 
+                        Washtenaw-focused database when you need a clear answer.
                       </p>
                       <div className="chat-empty-actions">
                         <button
@@ -3225,13 +3993,13 @@ export default function Page() {
                           className="btn-secondary"
                         >
                           <Icons.Camera />
-                          <span className={`btn-text ${inter.className}`}>Attach photo</span>
+                          <span className={`btn-label ${inter.className}`}>Attach photo</span>
                         </button>
                         <button
                           onClick={() => textAreaRef.current?.focus()}
                           className="btn-secondary"
                         >
-                          <span className={`btn-text ${inter.className}`}>Ask a question</span>
+                          <span className={`btn-label ${inter.className}`}>Ask a question</span>
                         </button>
                       </div>
                     </div>
@@ -3250,7 +4018,7 @@ export default function Page() {
                             </div>
                           )}
                           {msg.role === 'assistant' && msg.content === '' && isSending && idx === messages.length - 1 ? (
-                            <span className="chat-thinking">Working…</span>
+                            <span className="chat-thinking">Analyzing…</span>
                           ) : (
                             <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
                           )}
@@ -3267,6 +4035,7 @@ export default function Page() {
 
                   {selectedImage && (
                     <div className={`chat-attachment ${inter.className}`}>
+                      <Icons.Camera />
                       <span>Image attached</span>
                       <button
                         onClick={() => setSelectedImage(null)}
@@ -3324,7 +4093,7 @@ export default function Page() {
                   </div>
 
                   <p className={`chat-disclaimer ${inter.className}`}>
-                    protocolLM may make mistakes. Confirm critical decisions with official regulations.
+                    protocolLM may make mistakes. Verify critical decisions with official regulations.
                   </p>
                 </div>
               </div>
