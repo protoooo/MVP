@@ -408,6 +408,202 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
   )
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handleChange = () => setReduced(mediaQuery.matches)
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  return reduced
+}
+
+function HeroDemoBox() {
+  const scenarios = useMemo(
+    () => [
+      {
+        prompt: 'Walk-in cooler photo attached. Is the storage order correct?',
+        progressLabel: 'Analyzing shelving + labels',
+        cardTitle: 'Walk-in cooler',
+        headerAccent: 'Walk-in cooler • Photo + code match',
+        responseSteps: [
+          { badge: 'Scan', tone: 'info', text: 'Found raw poultry above ready-to-eat produce' },
+          { badge: 'Fix', tone: 'success', text: 'Move poultry to bottom shelf + relabel pans' },
+          { badge: 'Document', tone: 'neutral', text: 'Add date marks + log temp 38°F' },
+        ],
+      },
+      {
+        prompt: 'How long can soup sit between 41°F-135°F?',
+        progressLabel: 'Verifying time/temperature controls',
+        cardTitle: 'Hot holding question',
+        headerAccent: 'Hot holding • Time/temperature rule',
+        responseSteps: [
+          { badge: 'Rule', tone: 'info', text: '4 hours max between 41°F-135°F without discard plan' },
+          { badge: 'Action', tone: 'success', text: 'Reheat to 165°F or discard after 4 hours' },
+          { badge: 'Note', tone: 'neutral', text: 'Keep logs visible for inspectors' },
+        ],
+      },
+      {
+        prompt: 'Do these prep pans need date marks before service?',
+        progressLabel: 'Matching prep tags to policy',
+        cardTitle: 'Date marking',
+        headerAccent: 'Date marks • 7-day rule',
+        responseSteps: [
+          { badge: 'Rule', tone: 'info', text: '7-day rule when held at 41°F or below' },
+          { badge: 'Issue', tone: 'warning', text: 'Missing prep dates on 2 pans of sauces' },
+          { badge: 'Fix', tone: 'success', text: 'Label prep date + discard date, verify daily' },
+        ],
+      },
+    ],
+    []
+  )
+
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [displayedUser, setDisplayedUser] = useState('')
+  const [assistantLines, setAssistantLines] = useState([])
+  const [progress, setProgress] = useState(0)
+  const [showProgress, setShowProgress] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const reducedMotion = usePrefersReducedMotion()
+  const timers = useRef([])
+  const containerRef = useRef(null)
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((id) => clearTimeout(id))
+    timers.current = []
+  }, [])
+
+  const schedule = useCallback((fn, delay) => {
+    const id = setTimeout(fn, delay)
+    timers.current.push(id)
+  }, [])
+
+  useEffect(() => clearTimers, [clearTimers])
+
+  useEffect(() => {
+    const scenario = scenarios[scenarioIndex]
+    clearTimers()
+    setAssistantLines([])
+    setDisplayedUser('')
+    setProgress(0)
+    setShowProgress(false)
+    setIsResetting(true)
+
+    const nextScenario = () => setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+    const resetDelay = reducedMotion ? 80 : 260
+    schedule(() => setIsResetting(false), resetDelay)
+
+    if (reducedMotion) {
+      setDisplayedUser(scenario.prompt)
+      setAssistantLines(scenario.responseSteps)
+      schedule(nextScenario, 6500)
+      return
+    }
+
+    let cursor = 120
+    scenario.prompt.split('').forEach((char, idx) => {
+      const pause = char === '.' || char === '?' ? 150 : char === ',' ? 90 : 36 + (idx % 6 === 0 ? 12 : 0)
+      cursor += pause
+      schedule(() => setDisplayedUser(scenario.prompt.slice(0, idx + 1)), cursor)
+    })
+
+    const uploadStart = cursor + 240
+    schedule(() => {
+      setShowProgress(true)
+      setProgress(14)
+    }, uploadStart)
+    schedule(() => setProgress(48), uploadStart + 420)
+    schedule(() => setProgress(78), uploadStart + 880)
+    schedule(() => setProgress(100), uploadStart + 1300)
+    schedule(() => setShowProgress(false), uploadStart + 1680)
+
+    const responseStart = uploadStart + 1850
+    scenario.responseSteps.forEach((line, idx) => {
+      schedule(
+        () => setAssistantLines((prev) => [...prev, line]),
+        responseStart + idx * 520
+      )
+    })
+
+    schedule(nextScenario, responseStart + scenario.responseSteps.length * 520 + 2300)
+  }, [scenarioIndex, scenarios, clearTimers, schedule, reducedMotion])
+
+  const scenario = scenarios[scenarioIndex]
+
+  return (
+    <div className="hero-visual">
+      <div
+        className={`hero-demo-shell ${reducedMotion ? 'is-reduced' : ''}`}
+        ref={containerRef}
+        onMouseMove={(e) => {
+          if (reducedMotion) return
+          const rect = containerRef.current?.getBoundingClientRect()
+          if (!rect) return
+          const x = ((e.clientY - rect.top) / rect.height - 0.5) * 6
+          const y = ((e.clientX - rect.left) / rect.width - 0.5) * 8
+          setTilt({ x, y })
+        }}
+        onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+      >
+        <div className="hero-ambient" aria-hidden="true" />
+        <div
+          className="demo-box"
+          style={{
+            transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          }}
+        >
+          <div className="demo-box-header">
+            <div className="demo-live">
+              <span className="demo-live-dot" />
+              Live demo
+            </div>
+            <div className="demo-meta">
+              <span className="demo-meta-title">{scenario.cardTitle}</span>
+              <span className="demo-meta-sub">{scenario.headerAccent}</span>
+            </div>
+            <span className="demo-chip">{scenario.progressLabel}</span>
+          </div>
+
+          <div className={`demo-thread ${isResetting ? 'is-resetting' : ''}`} aria-live="polite">
+            <div className="demo-user-line">
+              <div className="demo-user-bubble">{displayedUser || ' '}</div>
+            </div>
+
+            {showProgress && (
+              <div className="demo-progress" role="status" aria-label="Analyzing upload">
+                <div className="demo-progress-head">
+                  <span className="demo-progress-label">{scenario.progressLabel}</span>
+                  <span className="demo-progress-value">{Math.round(progress)}%</span>
+                </div>
+                <div className="demo-progress-track">
+                  <div className="demo-progress-bar" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            )}
+
+            {assistantLines.map((line, idx) => (
+              <div key={`${line.badge}-${idx}`} className="demo-assistant-line">
+                <div className="demo-assistant-bubble">
+                  <div className="demo-response-top">
+                    <span className={`demo-response-pill ${line.tone}`}>{line.badge}</span>
+                    <span className="demo-response-meta">protocolLM • Local code</span>
+                  </div>
+                  <div className="demo-response-line">{line.text}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
@@ -554,110 +750,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={400} direction="scale">
-            <div className="hero-visual">
-              {/* Desktop Glass Panel */}
-              <div className="hero-desktop">
-                <div className="desktop-frame">
-                  <div className="desktop-header">
-                    <div className="desktop-dots">
-                      <span className="desktop-dot red" />
-                      <span className="desktop-dot yellow" />
-                      <span className="desktop-dot green" />
-                    </div>
-                    <div className={`desktop-title ${inter.className}`}>protocolLM Dashboard</div>
-                    <div className="desktop-spacer" />
-                  </div>
-                  <div className="desktop-content">
-                    <div className="desktop-sidebar">
-                      <div className={`sidebar-label ${inter.className}`}>Recent Checks</div>
-                      <div className="sidebar-item active">
-                        <Icons.Camera />
-                        <span>Walk-in Cooler</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Camera />
-                        <span>Prep Station</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Document />
-                        <span>Temp Logs</span>
-                      </div>
-                    </div>
-                    <div className="desktop-main">
-                      <div className={`desktop-stat-row ${inter.className}`}>
-                        <div className="desktop-stat">
-                          <span className="stat-value">12</span>
-                          <span className="stat-label">Checks Today</span>
-                        </div>
-                        <div className="desktop-stat">
-                          <span className="stat-value success">0</span>
-                          <span className="stat-label">Open Issues</span>
-                        </div>
-                      </div>
-                      <div className={`desktop-alert ${inter.className}`}>
-                        <Icons.CheckCircle />
-                        <span>All stations compliant</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="desktop-glow" />
-              </div>
-
-              {/* Phone Mockup */}
-              <div className="hero-phone">
-                <div className="phone-frame">
-                  <div className="phone-notch" />
-                  <div className="phone-screen">
-                    <div className="phone-status-bar">
-                      <span className={inter.className}>9:41</span>
-                      <div className="phone-status-icons">
-                        <span>●●●●</span>
-                        <span>WiFi</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="phone-app-header">
-                      <span className={`phone-app-title ${outfit.className}`}>protocolLM</span>
-                    </div>
-                    
-                    <div className="phone-content">
-                      <div className="phone-message phone-message-user">
-                        <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
-                          Walk-in cooler photo attached. Is the storage order correct?
-                        </div>
-                      </div>
-                      
-                      <div className="phone-message phone-message-assistant">
-                        <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
-                          <div className="phone-result-header">
-                            <Icons.AlertTriangle />
-                            <span>2 Issues Found</span>
-                          </div>
-                          
-                          <div className="phone-result-items">
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Raw chicken stored above ready-to-eat items</span>
-                            </div>
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Missing date label on prep container</span>
-                            </div>
-                          </div>
-                          
-                          <div className="phone-remediation">
-                            <strong>Fix:</strong> Move raw poultry to bottom shelf. Add date labels.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="phone-glow" />
-              </div>
-            </div>
+            <HeroDemoBox />
           </Reveal>
         </div>
       </section>
@@ -2314,412 +2407,254 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Hero Visual with Desktop + Phone ─── */
+        /* ─── Hero Visual with Demo Phone ─── */
         .hero-visual {
           display: flex;
           justify-content: center;
           align-items: center;
           position: relative;
-          min-height: 500px;
+          min-height: 460px;
+          perspective: 1200px;
         }
 
         @media (max-width: 1023px) {
           .hero-visual {
-            min-height: 400px;
+            min-height: 420px;
           }
         }
 
-        /* Desktop Glass Panel */
-        .hero-desktop {
+        .hero-demo-shell {
+          position: relative;
+          width: 100%;
+          max-width: 720px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 16px;
+        }
+
+        .hero-demo-shell.is-reduced {
+          perspective: none;
+        }
+
+        .hero-ambient {
           position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 1;
+          inset: -18% -8%;
+          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.22), transparent 60%);
+          filter: blur(76px);
+          opacity: 0.9;
+          z-index: 0;
+          animation: glowPulse 12s ease-in-out infinite;
         }
 
-        @media (max-width: 1023px) {
-          .hero-desktop {
-            display: none;
+        .demo-box {
+          position: relative;
+          z-index: 2;
+          width: min(640px, 100%);
+          background: rgba(11, 14, 18, 0.92);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          padding: 18px 18px 20px;
+          box-shadow: var(--shadow-card-hover);
+          transform-style: preserve-3d;
+          transition: transform var(--duration-slow) var(--ease-out-expo), box-shadow var(--duration-slow) var(--ease-out-expo);
+        }
+
+        @media (max-width: 640px) {
+          .demo-box {
+            padding: 16px;
           }
         }
 
-        .desktop-frame {
-          width: 420px;
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-glass);
+        .demo-box-header {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        .demo-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .demo-meta-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--color-text);
+          letter-spacing: -0.02em;
+        }
+
+        .demo-meta-sub {
+          font-size: 12px;
+          color: var(--color-text-muted);
+        }
+
+        .demo-chip {
+          padding: 8px 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
+          text-align: right;
+        }
+
+        .demo-thread {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 14px;
+          transition: opacity 320ms var(--ease-out-expo), transform 320ms var(--ease-out-expo);
+        }
+
+        .demo-thread.is-resetting {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        .demo-user-line {
+          display: flex;
+          justify-content: flex-start;
+        }
+
+        .demo-user-bubble {
+          max-width: 100%;
+          padding: 12px 14px;
+          border-radius: var(--radius-lg);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+          color: white;
+          font-size: 12px;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .demo-assistant-line {
+          display: flex;
+          justify-content: flex-start;
+        }
+
+        .demo-assistant-bubble {
+          width: 100%;
+          padding: 12px;
+          border-radius: var(--radius-lg);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--color-border-subtle);
+          color: var(--color-text);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .demo-live {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: var(--color-success);
+          text-transform: uppercase;
+        }
+
+        .demo-live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--color-success);
+          box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14);
+        }
+
+        .demo-progress {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-border-subtle);
+          border-radius: var(--radius-lg);
+          padding: 10px 10px 12px;
+          box-shadow: var(--shadow-xs);
+        }
+
+        .demo-progress-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          margin-bottom: 8px;
+        }
+
+        .demo-progress-track {
+          position: relative;
+          width: 100%;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
           overflow: hidden;
         }
 
-        .desktop-header {
+        .demo-progress-bar {
+          position: absolute;
+          inset: 0;
+          width: 0;
+          background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+          border-radius: 999px;
+          transition: width 380ms var(--ease-out-expo);
+        }
+
+        .demo-progress-value {
+          color: var(--color-text);
+          font-weight: 700;
+        }
+
+        .demo-response-top {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 14px 18px;
-          background: rgba(255, 255, 255, 0.5);
-          border-bottom: 1px solid rgba(215, 230, 226, 0.5);
+          gap: 8px;
+          margin-bottom: 8px;
         }
 
-        .desktop-dots {
-          display: flex;
-          gap: 6px;
-        }
-
-        .desktop-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .desktop-dot.red { background: #FF5F57; }
-        .desktop-dot.yellow { background: #FEBC2E; }
-        .desktop-dot.green { background: #28C840; }
-
-        .desktop-title {
-          flex: 1;
-          text-align: center;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-        }
-
-        .desktop-spacer {
-          width: 52px;
-        }
-
-        .desktop-content {
-          display: flex;
-          min-height: 280px;
-        }
-
-        .desktop-sidebar {
-          width: 140px;
-          padding: 16px 12px;
-          background: rgba(242, 251, 247, 0.6);
-          border-right: 1px solid rgba(215, 230, 226, 0.5);
-        }
-
-        .sidebar-label {
+        .demo-response-pill {
+          padding: 4px 8px;
+          border-radius: var(--radius-full);
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--color-text-muted);
-          margin-bottom: 10px;
-          padding: 0 8px;
-        }
-
-        .sidebar-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px;
-          border-radius: var(--radius-md);
-          font-size: 11px;
-          color: var(--color-text-secondary);
-          margin-bottom: 4px;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .sidebar-item svg {
-          width: 14px;
-          height: 14px;
-          opacity: 0.6;
-        }
-
-        .sidebar-item.active {
-          background: var(--color-surface);
-          color: var(--color-text);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .sidebar-item.active svg {
-          opacity: 1;
-          color: var(--color-primary);
-        }
-
-        .desktop-main {
-          flex: 1;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .desktop-stat-row {
-          display: flex;
-          gap: 16px;
-        }
-
-        .desktop-stat {
-          flex: 1;
-          padding: 14px;
-          background: var(--color-surface);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .stat-value {
-          display: block;
-          font-size: 28px;
-          font-weight: 700;
-          color: var(--color-text);
-          line-height: 1;
-          margin-bottom: 4px;
-        }
-
-        .stat-value.success {
-          color: var(--color-success);
-        }
-
-        .stat-label {
-          font-size: 11px;
-          color: var(--color-text-muted);
-        }
-
-        .desktop-alert {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 14px;
-          background: var(--color-success-bg);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: var(--radius-md);
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-success);
-        }
-
-        .desktop-alert svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .desktop-glow {
-          position: absolute;
-          inset: -60px;
-          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.12) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
-        }
-
-        /* Phone Mockup */
-        .hero-phone {
-          position: relative;
-          z-index: 2;
-        }
-
-        @media (min-width: 1024px) {
-          .hero-phone {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-          }
-        }
-
-        .phone-frame {
-          width: 280px;
-          height: 580px;
-          background: linear-gradient(145deg, #1a1a1c 0%, #0d0d0e 100%);
-          border-radius: 44px;
-          padding: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 
-            var(--shadow-xl),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05),
-            0 0 0 1px rgba(0, 0, 0, 0.1);
-          position: relative;
-        }
-
-        @media (max-width: 640px) {
-          .phone-frame {
-            width: 260px;
-            height: 540px;
-            border-radius: 40px;
-          }
-        }
-
-        .phone-notch {
-          position: absolute;
-          top: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100px;
-          height: 28px;
-          background: #000;
-          border-radius: 16px;
-          z-index: 10;
-        }
-
-        .phone-screen {
-          width: 100%;
-          height: 100%;
-          background: var(--color-bg);
-          border-radius: 36px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-
-        @media (max-width: 640px) {
-          .phone-screen {
-            border-radius: 32px;
-          }
-        }
-
-        .phone-status-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 20px 6px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text);
-        }
-
-        .phone-status-icons {
-          display: flex;
-          gap: 5px;
-          font-size: 10px;
-          color: var(--color-text-secondary);
-        }
-
-        .phone-app-header {
-          padding: 6px 18px 12px;
-          border-bottom: 1px solid var(--color-border-subtle);
-        }
-
-        .phone-app-title {
-          font-size: 16px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--color-text);
-        }
-
-        .phone-content {
-          flex: 1;
-          padding: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          overflow-y: auto;
-        }
-
-        .phone-message {
-          display: flex;
-          width: 100%;
-        }
-
-        .phone-message-user {
-          justify-content: flex-end;
-        }
-
-        .phone-message-assistant {
-          justify-content: flex-start;
-        }
-
-        .phone-bubble {
-          max-width: 90%;
-          padding: 10px 12px;
-          border-radius: var(--radius-lg);
-          font-size: 11px;
-          line-height: 1.45;
-        }
-
-        .phone-bubble-user {
-          background: var(--color-primary);
-          color: white;
-          border-bottom-right-radius: 4px;
-        }
-
-        .phone-bubble-assistant {
-          background: var(--color-surface);
+          background: rgba(255, 255, 255, 0.06);
           border: 1px solid var(--color-border);
+        }
+
+        .demo-response-pill.success { color: var(--color-success); border-color: rgba(16, 185, 129, 0.3); }
+        .demo-response-pill.warning { color: #fbbf24; border-color: rgba(251, 191, 36, 0.35); }
+        .demo-response-pill.info { color: var(--color-primary); border-color: rgba(85, 214, 178, 0.35); }
+        .demo-response-pill.neutral { color: var(--color-text-secondary); }
+
+        .demo-response-meta {
+          font-size: 10px;
+          color: var(--color-text-muted);
+          letter-spacing: 0.03em;
+        }
+
+        .demo-response-line {
+          font-size: 12px;
           color: var(--color-text);
-          border-bottom-left-radius: 4px;
+          line-height: 1.5;
         }
 
-        .phone-result-header {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: var(--color-warning);
-          font-size: 11px;
-          font-weight: 600;
-          margin-bottom: 8px;
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.8; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.04); }
         }
 
-        .phone-result-header svg {
-          width: 13px;
-          height: 13px;
-        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-ambient {
+            animation: none;
+          }
 
-        .phone-result-items {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-
-        .phone-result-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 6px;
-          font-size: 10px;
-          color: var(--color-text-secondary);
-          line-height: 1.35;
-        }
-
-        .result-indicator {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          margin-top: 3px;
-        }
-
-        .phone-result-item.warning .result-indicator {
-          background: var(--color-warning);
-        }
-
-        .phone-result-item.success .result-indicator {
-          background: var(--color-success);
-        }
-
-        .phone-remediation {
-          font-size: 10px;
-          color: var(--color-text-secondary);
-          padding-top: 8px;
-          border-top: 1px solid var(--color-border-subtle);
-          line-height: 1.4;
-        }
-
-        .phone-remediation strong {
-          color: var(--color-success);
-        }
-
-        .phone-glow {
-          position: absolute;
-          inset: -50px;
-          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
-        }
-
-        .phone-reflection {
-          position: absolute;
-          top: 10px;
-          left: 10%;
-          right: 10%;
-          height: 30%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
-          border-radius: 48px 48px 100px 100px;
-          pointer-events: none;
+          .demo-box {
+            transform: none !important;
+          }
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -4409,4 +4344,4 @@ export default function Page() {
       </div>
     </>
   )
-  }
+}
