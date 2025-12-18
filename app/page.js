@@ -1437,56 +1437,56 @@ export default function Page() {
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #FAFAFA;
-          --color-surface: #FFFFFF;
-          --color-card: #FFFFFF;
-          --color-border: #D0D0D0;
-          --color-border-subtle: #E8E8E8;
-          --color-border-hover: #2A2A2A;
-          --color-border-focus: #2A2A2A;
+          --color-bg: #0A0A0A;
+          --color-surface: #121212;
+          --color-card: #1A1A1A;
+          --color-border: #2A2A2A;
+          --color-border-subtle: #1F1F1F;
+          --color-border-hover: #3A3A3A;
+          --color-border-focus: #00FF41;
 
           /* Text Colors */
-          --color-text: #1A1A1A;
-          --color-text-secondary: #4A4A4A;
-          --color-text-tertiary: #6A6A6A;
-          --color-text-muted: #8A8A8A;
+            --color-text: #E0E0E0;
+            --color-text-secondary: #B0B0B0;
+            --color-text-tertiary: #808080;
+            --color-text-muted: #606060;
+            --color-primary: #00FF41;
+            --color-primary-hover: #00CC33;
+            --color-accent: #00FF41;
+            --color-accent-hover: #00CC33;
+            --color-accent-light: #1F1F1F;
 
-          /* Accent / Status Colors */
-          --color-primary: #2A2A2A;
-          --color-primary-hover: #1A1A1A;
-          --color-accent: #2A2A2A;
-          --color-accent-hover: #1A1A1A;
-          --color-accent-light: #E0E0E0;
-          --color-success: #2D5F2E;
-          --color-success-bg: #F5F5F5;
-          --color-warning: #8B6914;
-          --color-warning-bg: #F8F3E3;
-          --color-error: #8B2E2E;
-          --color-error-bg: #F7EAEA;
-          --color-code-bg: #F5F5F5;
-          --color-code-text: #1A1A1A;
+          /* Status Colors */
+          --color-success: #00FF41;
+          --color-success-bg: #0F0F0F;
+          --color-warning: #FFAA00;
+          --color-warning-bg: #0F0F0F;
+          --color-error: #FF3B30;
+          --color-error-bg: #0F0F0F;
+          --color-code-bg: #0F0F0F;
+          --color-code-text: #E0E0E0;
 
           /* Typography */
-          --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+          --font-mono: 'IBM Plex Mono', 'Courier New', Consolas, Monaco, monospace;
 
           /* Shadows (minimal) */
-          --shadow-xs: 0 0 0 1px var(--color-border);
-          --shadow-sm: 0 0 0 1px var(--color-border);
-          --shadow-md: 0 0 0 1.5px var(--color-border);
-          --shadow-lg: 0 0 0 2px var(--color-border);
-          --shadow-xl: 0 0 0 2px var(--color-border-hover);
-          --shadow-card: 0 0 0 1px var(--color-border);
-          --shadow-card-hover: 0 0 0 2px var(--color-border-hover);
-          --shadow-glass: 0 0 0 1px var(--color-border);
+          --shadow-xs: none;
+          --shadow-sm: none;
+          --shadow-md: none;
+          --shadow-lg: none;
+          --shadow-xl: none;
+          --shadow-card: none;
+          --shadow-card-hover: none;
+          --shadow-glass: none;
 
           /* Radii */
           --radius-xs: 0px;
           --radius-sm: 0px;
           --radius-md: 0px;
           --radius-lg: 0px;
-          --radius-xl: 2px;
-          --radius-2xl: 2px;
-          --radius-3xl: 2px;
+          --radius-xl: 0px;
+          --radius-2xl: 0px;
+          --radius-3xl: 0px;
           --radius-full: 0px;
 
           /* Transitions */
@@ -1495,6 +1495,14 @@ export default function Page() {
           --duration-fast: 50ms;
           --duration-normal: 75ms;
           --duration-slow: 100ms;
+
+          /* Spacing */
+          --space-xs: 4px;
+          --space-sm: 8px;
+          --space-md: 16px;
+          --space-lg: 24px;
+          --space-xl: 32px;
+          --space-2xl: 48px;
 
           /* Z-index */
           --z-base: 0;
@@ -1604,10 +1612,10 @@ export default function Page() {
           position: fixed;
           inset: 0;
           background:
-            linear-gradient(#E8E8E8 1px, transparent 1px),
-            linear-gradient(90deg, #E8E8E8 1px, transparent 1px);
-          background-size: 40px 40px;
-          opacity: 0.5;
+            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+          background-size: 20px 20px;
+          opacity: 1;
           pointer-events: none;
           z-index: 0;
         }
@@ -1736,9 +1744,9 @@ export default function Page() {
           gap: 10px;
           height: 48px;
           padding: 0 24px;
-          background: var(--color-surface);
-          color: var(--color-primary);
-          border: 2px solid var(--color-primary);
+          background: transparent;
+          color: var(--color-accent);
+          border: 2px solid var(--color-accent);
           border-radius: 0;
           font-size: 13px;
           font-weight: 700;
@@ -1756,9 +1764,9 @@ export default function Page() {
           gap: 8px;
           height: 48px;
           padding: 0 22px;
-          background: var(--color-surface);
+          background: transparent;
           color: var(--color-text);
-          border: 2px solid var(--color-border);
+          border: 1px solid var(--color-border);
           border-radius: 0;
           font-size: 13px;
           font-weight: 700;
@@ -1776,9 +1784,9 @@ export default function Page() {
           gap: 8px;
           height: 44px;
           padding: 0 18px;
-          background: var(--color-surface);
+          background: transparent;
           color: var(--color-text);
-          border: 2px solid var(--color-border);
+          border: 1px solid var(--color-border);
           border-radius: 0;
           font-size: 12px;
           font-weight: 700;
@@ -1796,8 +1804,8 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-surface);
-          border: 2px solid var(--color-border);
+          background: transparent;
+          border: 1px solid var(--color-border);
           border-radius: 0;
           color: var(--color-text-secondary);
           cursor: pointer;
@@ -1807,11 +1815,15 @@ export default function Page() {
 
         .btn-icon-right {
           display: flex;
-          transition: transform var(--duration-fast) var(--ease-out-expo);
+          transition: none;
         }
 
-        .btn-hero-primary:hover .btn-icon-right {
-          transform: translateX(3px);
+        .btn-hero-primary:hover,
+        .btn-cta-primary:hover,
+        .btn-pricing-primary:hover {
+          background: var(--color-accent);
+          color: #000;
+          border-color: var(--color-accent);
         }
 
         .btn-spinner {
@@ -2051,10 +2063,7 @@ export default function Page() {
         }
 
         .hero-title-gradient {
-          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: var(--color-accent);
         }
 
         .hero-description {
@@ -2098,9 +2107,8 @@ export default function Page() {
           grid-template-columns: repeat(3, 1fr);
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
+          border-radius: 0;
           overflow: hidden;
-          box-shadow: var(--shadow-card);
         }
 
         .proof-item {
@@ -2211,10 +2219,9 @@ export default function Page() {
           padding: 32px 28px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          transition: all var(--duration-slow) var(--ease-out-expo);
+          border-radius: 0;
+          transition: border-color var(--duration-normal) linear;
           overflow: hidden;
-          box-shadow: var(--shadow-card);
           display: flex;
           flex-direction: column;
           min-height: 220px;
@@ -2223,21 +2230,14 @@ export default function Page() {
         .feature-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-2xl);
-          padding: 1px;
-          background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--color-accent) 100%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity var(--duration-slow) var(--ease-out-expo);
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          opacity: 1;
         }
 
         .feature-card:hover {
-          border-color: var(--color-border-hover);
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-card-hover);
+          border-color: var(--color-accent);
         }
 
         .feature-card:hover .feature-card-border {
@@ -2309,11 +2309,10 @@ export default function Page() {
           padding: 24px 20px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
+          border-radius: 0;
           text-align: center;
-          transition: all var(--duration-normal) var(--ease-out-expo);
+          transition: border-color var(--duration-normal) linear;
           overflow: hidden;
-          box-shadow: var(--shadow-card);
           display: flex;
           flex-direction: column;
           min-height: 180px;
@@ -2322,20 +2321,14 @@ export default function Page() {
         .risk-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-xl);
-          padding: 1px;
-          background: linear-gradient(180deg, var(--color-accent) 0%, transparent 50%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity var(--duration-normal) var(--ease-out-expo);
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          opacity: 1;
         }
 
         .risk-card:hover {
-          border-color: var(--color-border-hover);
-          transform: translateY(-3px);
+          border-color: var(--color-accent);
         }
 
         .risk-card:hover .risk-card-border {
@@ -2402,29 +2395,17 @@ export default function Page() {
           position: relative;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
+          border-radius: 0;
           overflow: hidden;
-          box-shadow: var(--shadow-lg);
+          box-shadow: none;
         }
 
         .pricing-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-3xl);
-          padding: 2px;
-          background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 50%, var(--color-accent) 100%);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          animation: borderRotate 8s linear infinite;
-          background-size: 300% 300%;
-        }
-
-        @keyframes borderRotate {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
         }
 
         .pricing-card-inner {
@@ -2432,7 +2413,7 @@ export default function Page() {
           padding: 44px 36px;
           z-index: 1;
           background: var(--color-surface);
-          border-radius: var(--radius-3xl);
+          border-radius: 0;
         }
 
         @media (max-width: 640px) {
@@ -3239,9 +3220,9 @@ export default function Page() {
           align-items: stretch;
           padding: 16px 12px 12px;
           gap: 0;
-          border-top: 1px solid var(--color-border);
-          border-bottom: 1px solid var(--color-border);
-          background: var(--color-surface);
+          border-top: 1px solid var(--color-border-subtle);
+          border-bottom: 1px solid var(--color-border-subtle);
+          background: var(--color-bg);
         }
 
         .chat-empty {
@@ -3261,8 +3242,8 @@ export default function Page() {
           padding: 32px 28px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          box-shadow: var(--shadow-card);
+          border-radius: 0;
+          box-shadow: none;
         }
 
         .chat-empty-icon {
@@ -3273,7 +3254,7 @@ export default function Page() {
           justify-content: center;
           background: var(--color-code-bg);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
+          border-radius: 0;
           color: var(--color-primary);
           margin: 0 auto 16px;
         }
@@ -3308,9 +3289,7 @@ export default function Page() {
           padding: 0;
           display: flex;
           flex-direction: column;
-          border-left: 1px solid var(--color-border);
-          border-right: 1px solid var(--color-border);
-          background: var(--color-surface);
+          background: transparent;
         }
 
         .chat-message {
@@ -3365,7 +3344,7 @@ export default function Page() {
           overflow: hidden;
           margin: 0;
           background: var(--color-code-bg);
-          border: 1px solid var(--color-border);
+          border: 1px solid var(--color-border-subtle);
         }
 
         .chat-bubble-image img {
@@ -3467,7 +3446,7 @@ export default function Page() {
           line-height: 1.4;
           resize: none;
           outline: none;
-          transition: border-color var(--duration-fast) var(--ease-out-expo);
+          transition: border-color var(--duration-fast) linear;
           box-shadow: none;
         }
 
@@ -3476,7 +3455,7 @@ export default function Page() {
         }
 
         .chat-textarea:focus {
-          border-color: var(--color-border-hover);
+          border-color: var(--color-border-focus);
           box-shadow: none;
         }
 
@@ -3486,10 +3465,10 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-surface);
-          border: 2px solid var(--color-primary);
+          background: transparent;
+          border: 2px solid var(--color-accent);
           border-radius: 0;
-          color: var(--color-primary);
+          color: var(--color-accent);
           cursor: pointer;
           transition: none;
           flex-shrink: 0;
@@ -3497,8 +3476,8 @@ export default function Page() {
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          background: var(--color-primary);
-          color: #fff;
+          background: var(--color-accent);
+          color: #000;
         }
 
         .chat-send-btn:disabled {
