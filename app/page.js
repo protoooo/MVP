@@ -7,11 +7,12 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter } from 'next/font/google'
+import { IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
-const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
-const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const outfit = plexMono
+const inter = plexMono
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
@@ -154,73 +155,9 @@ const Icons = {
   ),
 }
 
-// Subtle animated wave background - light theme
-function WaveBackground() {
-  return (
-    <div className="wave-bg-container">
-      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        
-        {/* Wave 1 - starts higher, flows through hero */}
-        <path className="wave wave-1" fill="url(#wave-gradient-1)">
-          <animate
-            attributeName="d"
-            dur="25s"
-            repeatCount="indefinite"
-            values="
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
-              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 2 - middle layer */}
-        <path className="wave wave-2" fill="url(#wave-gradient-2)">
-          <animate
-            attributeName="d"
-            dur="20s"
-            repeatCount="indefinite"
-            values="
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
-              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 3 - lower layer */}
-        <path className="wave wave-3" fill="url(#wave-gradient-3)">
-          <animate
-            attributeName="d"
-            dur="30s"
-            repeatCount="indefinite"
-            values="
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
-              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-      </svg>
-      
-      {/* Subtle grid overlay */}
-      <div className="grid-overlay" />
-    </div>
-  )
+// Terminal grid background
+function GridBackground() {
+  return <div className="terminal-grid" />
 }
 
 function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
@@ -510,7 +447,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className="landing-wrapper">
       {/* Animated wave background */}
-      <WaveBackground />
+      <GridBackground />
 
       {/* Hero Section */}
       <section className="hero-section">
@@ -1493,71 +1430,72 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
-           PREMIUM LIGHT THEME - protocolLM
-           Modern Government Tech × FinTech × Health Tech Design
-           Color Palette: Spearmint + Matte Blue
+           TERMINAL LIGHT THEME
+           Utilitarian, data-dense, IBM Plex Mono everywhere
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #F6FAF9;
+          --color-bg: #FAFAFA;
           --color-surface: #FFFFFF;
-          --color-card: #F2FBF7;
-          --color-border: #D7E6E2;
-          --color-border-subtle: #E8F0ED;
-          --color-border-hover: #B8CFC8;
-          --color-border-focus: #55D6B2;
-          
+          --color-card: #FFFFFF;
+          --color-border: #D0D0D0;
+          --color-border-subtle: #E8E8E8;
+          --color-border-hover: #2A2A2A;
+          --color-border-focus: #2A2A2A;
+
           /* Text Colors */
-          --color-text: #0B1220;
-          --color-text-secondary: #3D4F5F;
-          --color-text-tertiary: #52637A;
-          --color-text-muted: #8A9BAD;
-          
-          /* Brand Colors */
-          --color-primary: #2F5D8A;
-          --color-primary-hover: #1F4E7A;
-          --color-primary-light: #3A6B99;
-          --color-accent: #55D6B2;
-          --color-accent-hover: #45C6A2;
-          --color-accent-light: #E8FAF4;
-          
-          /* Status Colors */
-          --color-success: #10B981;
-          --color-success-bg: #ECFDF5;
-          --color-warning: #F59E0B;
-          --color-warning-bg: #FFFBEB;
-          --color-error: #EF4444;
-          --color-error-bg: #FEF2F2;
-          
-          /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-md: 0 4px 6px -1px rgba(11, 18, 32, 0.06), 0 2px 4px -1px rgba(11, 18, 32, 0.04);
-          --shadow-lg: 0 10px 15px -3px rgba(11, 18, 32, 0.08), 0 4px 6px -2px rgba(11, 18, 32, 0.04);
-          --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
-          --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
-          --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
-          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
-          
+          --color-text: #1A1A1A;
+          --color-text-secondary: #4A4A4A;
+          --color-text-tertiary: #6A6A6A;
+          --color-text-muted: #8A8A8A;
+
+          /* Accent / Status Colors */
+          --color-primary: #2A2A2A;
+          --color-primary-hover: #1A1A1A;
+          --color-accent: #2A2A2A;
+          --color-accent-hover: #1A1A1A;
+          --color-accent-light: #E0E0E0;
+          --color-success: #2D5F2E;
+          --color-success-bg: #F5F5F5;
+          --color-warning: #8B6914;
+          --color-warning-bg: #F8F3E3;
+          --color-error: #8B2E2E;
+          --color-error-bg: #F7EAEA;
+          --color-code-bg: #F5F5F5;
+          --color-code-text: #1A1A1A;
+
+          /* Typography */
+          --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+          /* Shadows (minimal) */
+          --shadow-xs: 0 0 0 1px var(--color-border);
+          --shadow-sm: 0 0 0 1px var(--color-border);
+          --shadow-md: 0 0 0 1.5px var(--color-border);
+          --shadow-lg: 0 0 0 2px var(--color-border);
+          --shadow-xl: 0 0 0 2px var(--color-border-hover);
+          --shadow-card: 0 0 0 1px var(--color-border);
+          --shadow-card-hover: 0 0 0 2px var(--color-border-hover);
+          --shadow-glass: 0 0 0 1px var(--color-border);
+
           /* Radii */
-          --radius-xs: 4px;
-          --radius-sm: 6px;
-          --radius-md: 8px;
-          --radius-lg: 12px;
-          --radius-xl: 16px;
-          --radius-2xl: 20px;
-          --radius-3xl: 24px;
-          --radius-full: 9999px;
-          
+          --radius-xs: 0px;
+          --radius-sm: 0px;
+          --radius-md: 0px;
+          --radius-lg: 0px;
+          --radius-xl: 2px;
+          --radius-2xl: 2px;
+          --radius-3xl: 2px;
+          --radius-full: 0px;
+
           /* Transitions */
-          --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-          --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-          --duration-fast: 150ms;
-          --duration-normal: 250ms;
-          --duration-slow: 400ms;
-          
+          --ease-out-expo: linear;
+          --ease-out-quint: linear;
+          --duration-fast: 50ms;
+          --duration-normal: 75ms;
+          --duration-slow: 100ms;
+
           /* Z-index */
           --z-base: 0;
           --z-elevated: 10;
@@ -1585,11 +1523,14 @@ export default function Page() {
           background: var(--color-bg);
           color: var(--color-text);
           overflow-x: hidden;
-          line-height: 1.6;
+          line-height: 1.5;
+          font-family: var(--font-mono);
+          letter-spacing: 0.03em;
+          text-transform: none;
         }
 
         ::selection {
-          background: rgba(85, 214, 178, 0.25);
+          background: #E0E0E0;
           color: var(--color-text);
         }
 
@@ -1657,35 +1598,18 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           WAVE BACKGROUND
+           GRID BACKGROUND
            ═══════════════════════════════════════════════════════════════════════ */
-        .wave-bg-container {
+        .terminal-grid {
           position: fixed;
           inset: 0;
+          background:
+            linear-gradient(#E8E8E8 1px, transparent 1px),
+            linear-gradient(90deg, #E8E8E8 1px, transparent 1px);
+          background-size: 40px 40px;
+          opacity: 0.5;
           pointer-events: none;
           z-index: 0;
-          overflow: hidden;
-        }
-
-        .wave-svg {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
-        }
-
-        .wave {
-          opacity: 1;
-        }
-
-        .grid-overlay {
-          position: absolute;
-          inset: 0;
-          background-image: 
-            linear-gradient(rgba(47, 93, 138, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -1695,10 +1619,8 @@ export default function Page() {
           position: sticky;
           top: 0;
           z-index: var(--z-sticky);
-          background: rgba(246, 250, 249, 0.85);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          border-bottom: 1px solid var(--color-border-subtle);
+          background: var(--color-surface);
+          border-bottom: 2px solid var(--color-border);
         }
 
         .header-inner {
@@ -1778,13 +1700,14 @@ export default function Page() {
 
         .header-status {
           display: none;
-          font-size: 12px;
-          font-weight: 600;
+          font-size: 11px;
+          font-weight: 700;
           color: var(--color-success);
           padding: 6px 14px;
-          background: var(--color-success-bg);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: var(--radius-full);
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: 0;
+          letter-spacing: 0.06em;
         }
 
         @media (min-width: 1024px) {
@@ -1799,7 +1722,7 @@ export default function Page() {
             width: 6px;
             height: 6px;
             background: var(--color-success);
-            border-radius: 50%;
+            border-radius: 0;
           }
         }
 
@@ -1811,42 +1734,19 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          height: 52px;
-          padding: 0 28px;
-          background: var(--color-primary);
-          color: white;
-          border: none;
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
+          height: 48px;
+          padding: 0 24px;
+          background: var(--color-surface);
+          color: var(--color-primary);
+          border: 2px solid var(--color-primary);
+          border-radius: 0;
+          font-size: 13px;
+          font-weight: 700;
           cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 93, 138, 0.1);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .btn-hero-primary::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
-          opacity: 0;
-          transition: opacity var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .btn-hero-primary:hover {
-          background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47, 93, 138, 0.15);
-        }
-
-        .btn-hero-primary:hover::before {
-          opacity: 1;
-        }
-
-        .btn-hero-primary:active {
-          transform: translateY(0);
+          transition: none;
+          box-shadow: none;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
         .btn-hero-secondary {
@@ -1854,24 +1754,19 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          height: 52px;
-          padding: 0 24px;
+          height: 48px;
+          padding: 0 22px;
           background: var(--color-surface);
           color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
+          border: 2px solid var(--color-border);
+          border-radius: 0;
+          font-size: 13px;
+          font-weight: 700;
           cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-hero-secondary:hover {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-sm);
+          transition: none;
+          box-shadow: none;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
         .btn-secondary {
@@ -1880,21 +1775,18 @@ export default function Page() {
           justify-content: center;
           gap: 8px;
           height: 44px;
-          padding: 0 20px;
+          padding: 0 18px;
           background: var(--color-surface);
           color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          font-size: 14px;
-          font-weight: 600;
+          border: 2px solid var(--color-border);
+          border-radius: 0;
+          font-size: 12px;
+          font-weight: 700;
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-secondary:hover {
-          background: var(--color-card);
-          border-color: var(--color-border-hover);
+          transition: none;
+          box-shadow: none;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
         }
 
         .btn-icon {
@@ -1905,18 +1797,12 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
+          border: 2px solid var(--color-border);
+          border-radius: 0;
           color: var(--color-text-secondary);
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .btn-icon:hover {
-          background: var(--color-card);
-          color: var(--color-text);
-          border-color: var(--color-border-hover);
+          transition: none;
+          box-shadow: none;
         }
 
         .btn-icon-right {
@@ -1941,24 +1827,23 @@ export default function Page() {
         .avatar-btn {
           width: 44px;
           height: 44px;
-          border-radius: var(--radius-md);
-          background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-card) 100%);
-          border: 1px solid var(--color-border);
-          color: var(--color-primary);
-          font-size: 15px;
+          border-radius: 0;
+          background: var(--color-surface);
+          border: 2px solid var(--color-border);
+          color: var(--color-text);
+          font-size: 13px;
           font-weight: 700;
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
+          transition: none;
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: var(--shadow-xs);
+          box-shadow: none;
         }
 
         .avatar-btn:hover {
-          transform: scale(1.05);
-          border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm);
+          transform: none;
+          border-color: var(--color-border-hover);
         }
 
         .user-menu-wrapper {
@@ -3341,9 +3226,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
-                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
-                      var(--color-bg);
+          background: var(--color-bg);
         }
 
         .chat-messages {
@@ -3354,8 +3237,11 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: stretch;
-          padding: 18px 12px 14px;
-          gap: 10px;
+          padding: 16px 12px 12px;
+          gap: 0;
+          border-top: 1px solid var(--color-border);
+          border-bottom: 1px solid var(--color-border);
+          background: var(--color-surface);
         }
 
         .chat-empty {
@@ -3372,12 +3258,11 @@ export default function Page() {
           max-width: 560px;
           width: 100%;
           text-align: center;
-          padding: 48px 38px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
+          padding: 32px 28px;
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
-          box-shadow: var(--shadow-card-hover);
-          backdrop-filter: blur(16px);
+          border-radius: var(--radius-sm);
+          box-shadow: var(--shadow-card);
         }
 
         .chat-empty-icon {
@@ -3386,25 +3271,27 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
-          border-radius: var(--radius-xl);
+          background: var(--color-code-bg);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
           color: var(--color-primary);
-          margin: 0 auto 20px;
+          margin: 0 auto 16px;
         }
 
         .chat-empty-title {
-          font-size: 18px;
+          font-size: 15px;
           font-weight: 700;
           color: var(--color-text);
-          margin-bottom: 8px;
+          margin-bottom: 6px;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
         }
 
         .chat-empty-text {
-          font-size: 14px;
-          line-height: 1.6;
+          font-size: 13px;
+          line-height: 1.5;
           color: var(--color-text-secondary);
-          margin-bottom: 24px;
+          margin-bottom: 20px;
         }
 
         .chat-empty-actions {
@@ -3418,68 +3305,67 @@ export default function Page() {
           max-width: 880px;
           margin: 0 auto;
           width: 100%;
-          padding: 8px 4px 28px;
+          padding: 0;
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          background: transparent;
-          border: none;
-          border-radius: 0;
-          box-shadow: none;
-          backdrop-filter: none;
+          border-left: 1px solid var(--color-border);
+          border-right: 1px solid var(--color-border);
+          background: var(--color-surface);
         }
 
         .chat-message {
           display: flex;
+          flex-direction: column;
           width: 100%;
-          padding: 0 6px;
+          padding: 14px 16px;
+          gap: 6px;
+          border-bottom: 1px solid var(--color-border-subtle);
         }
 
         .chat-message-user {
-          justify-content: flex-end;
+          background: var(--color-surface);
         }
 
         .chat-message-assistant {
-          justify-content: flex-start;
+          background: var(--color-surface);
         }
 
         .chat-bubble {
-          max-width: min(780px, 100%);
-          padding: 12px 16px;
-          border-radius: 18px;
-          font-size: 15px;
-          line-height: 1.65;
-          position: relative;
-          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
-          background: rgba(255, 255, 255, 0.72);
-          box-shadow: 0 6px 24px rgba(11, 18, 32, 0.08);
+          width: 100%;
+          padding: 0;
+          border-radius: 0;
+          font-size: 13px;
+          line-height: 1.5;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          background: transparent;
+        }
+
+        .chat-line-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--color-text-tertiary);
         }
 
         .chat-bubble-user {
-          background: linear-gradient(135deg, var(--color-primary), #0c718f);
-          color: white;
-          border-bottom-right-radius: 6px;
-          box-shadow: 0 8px 26px rgba(14, 116, 144, 0.22);
+          color: var(--color-text);
         }
 
         .chat-bubble-assistant {
-          background: rgba(255, 255, 255, 0.82);
-          color: var(--color-text);
-          border-bottom-left-radius: 6px;
-          box-shadow: 0 10px 30px rgba(11, 18, 32, 0.08);
-        }
-
-        .chat-message:hover .chat-bubble {
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-card-hover);
+          color: var(--color-text-secondary);
         }
 
         .chat-bubble-image {
-          border-radius: 16px;
+          border-radius: 0;
           overflow: hidden;
-          margin: 0 -4px 12px;
-          background: transparent;
-          box-shadow: none;
+          margin: 0;
+          background: var(--color-code-bg);
+          border: 1px solid var(--color-border);
         }
 
         .chat-bubble-image img {
@@ -3491,17 +3377,18 @@ export default function Page() {
         }
 
         .chat-thinking {
-          color: var(--color-text-tertiary);
-          font-style: italic;
+          color: var(--color-text-secondary);
+          font-size: 12px;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
         }
 
         /* ─── Chat Input Area ─── */
         .chat-input-area {
           flex-shrink: 0;
-          background: rgba(246, 250, 249, 0.92);
-          backdrop-filter: blur(12px);
-          border-top: 1px solid var(--color-border-subtle);
-          box-shadow: 0 -8px 24px rgba(11, 18, 32, 0.08);
+          background: var(--color-surface);
+          border-top: 2px solid var(--color-border);
+          box-shadow: none;
         }
 
         .chat-input-inner {
@@ -3536,29 +3423,29 @@ export default function Page() {
         .smart-progress-track {
           height: 3px;
           background: var(--color-border);
-          border-radius: 2px;
+          border-radius: 0;
           overflow: hidden;
         }
 
         .smart-progress-bar {
           height: 100%;
-          background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
-          border-radius: 2px;
-          transition: width 150ms linear;
+          background: var(--color-primary);
+          border-radius: 0;
+          transition: width 75ms linear;
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 14px;
-          background: var(--color-surface);
+          padding: 10px 12px;
+          background: var(--color-code-bg);
           border: 1px solid var(--color-border);
-          border-radius: 14px;
-          font-size: 13px;
+          border-radius: 0;
+          font-size: 12px;
           color: var(--color-text-secondary);
           margin-bottom: 12px;
-          box-shadow: var(--shadow-xs);
+          box-shadow: none;
         }
 
         .chat-input-row {
@@ -3574,14 +3461,14 @@ export default function Page() {
           padding: 12px 16px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: 0;
           color: var(--color-text);
-          font-size: 15px;
-          line-height: 1.5;
+          font-size: 13px;
+          line-height: 1.4;
           resize: none;
           outline: none;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
+          transition: border-color var(--duration-fast) var(--ease-out-expo);
+          box-shadow: none;
         }
 
         .chat-textarea::placeholder {
@@ -3589,8 +3476,8 @@ export default function Page() {
         }
 
         .chat-textarea:focus {
-          border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
+          border-color: var(--color-border-hover);
+          box-shadow: none;
         }
 
         .chat-send-btn {
@@ -3599,51 +3486,53 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-primary);
-          border: none;
-          border-radius: var(--radius-lg);
-          color: white;
+          background: var(--color-surface);
+          border: 2px solid var(--color-primary);
+          border-radius: 0;
+          color: var(--color-primary);
           cursor: pointer;
-          transition: all var(--duration-fast) var(--ease-out-expo);
+          transition: none;
           flex-shrink: 0;
-          box-shadow: var(--shadow-sm);
+          box-shadow: none;
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          background: var(--color-primary-hover);
-          transform: scale(1.05);
+          background: var(--color-primary);
+          color: #fff;
         }
 
         .chat-send-btn:disabled {
-          opacity: 0.4;
+          opacity: 0.3;
           cursor: not-allowed;
         }
 
         .chat-disclaimer {
           margin-top: 12px;
           text-align: center;
-          font-size: 12px;
+          font-size: 11px;
           color: var(--color-text-muted);
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
         }
 
         /* ─── Responsive Chat ─── */
         @media (max-width: 640px) {
           .chat-messages {
-            padding: 12px 10px 10px;
-            gap: 10px;
+            padding: 10px 8px 8px;
+            gap: 0;
           }
 
           .chat-input-inner {
-            padding: 14px 16px;
+            padding: 14px 12px;
           }
 
           .chat-history {
-            padding: 4px 0 22px;
+            padding: 0;
           }
 
           .chat-bubble {
             max-width: 100%;
-            padding: 12px 14px;
+            padding: 0;
           }
 
           .chat-empty-content {
@@ -3659,10 +3548,6 @@ export default function Page() {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
-          }
-          
-          .wave path {
-            animation: none !important;
           }
         }
       `}</style>
@@ -3825,6 +3710,9 @@ export default function Page() {
                         className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
                       >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'} ${inter.className}`}>
+                          <div className="chat-line-meta">
+                            <span>[{msg.role === 'user' ? 'USER' : 'PROTOCOL-LM'}]</span>
+                          </div>
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
