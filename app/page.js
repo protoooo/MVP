@@ -422,55 +422,14 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
-function HeroCompanionCard({ scenario, assistantLines, showProgress, progress, reducedMotion }) {
-  const topFindings = assistantLines.slice(-2).reverse()
-
-  return (
-    <div className={`hero-companion ${reducedMotion ? 'is-static' : ''}`} aria-hidden="true">
-      <div className="hero-companion-glow" />
-      <div className="hero-companion-inner">
-        <div className="hero-companion-header">
-          <span className="hero-companion-pill">Inspection-ready</span>
-          <span className="hero-companion-meta">Local docs</span>
-        </div>
-        <div className="hero-companion-title">{scenario.cardTitle}</div>
-        <div className="hero-companion-items">
-          <div className={`hero-companion-item ${showProgress ? 'is-live' : ''}`}>
-            <div className="hero-companion-dot" />
-            <div className="hero-companion-copy">
-              <div className="hero-companion-label">{scenario.progressLabel}</div>
-              <div className="hero-companion-desc">Photo QA + policy match</div>
-            </div>
-            <span className="hero-companion-value">{showProgress ? `${progress}%` : 'done'}</span>
-          </div>
-          {topFindings.length === 0 ? (
-            <div className="hero-companion-placeholder">Awaiting findings…</div>
-          ) : (
-            topFindings.map((item, idx) => (
-              <div key={idx} className="hero-companion-item">
-                <div className={`hero-companion-dot ${item.tone}`} />
-                <div className="hero-companion-copy">
-                  <div className="hero-companion-label">{item.badge}</div>
-                  <div className="hero-companion-desc">{item.text}</div>
-                </div>
-                <span className="hero-companion-value subtle">{item.meta || 'check'}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function HeroDemoPhone() {
+function HeroDemoBox() {
   const scenarios = useMemo(
     () => [
       {
         prompt: 'Walk-in cooler photo attached. Is the storage order correct?',
         progressLabel: 'Analyzing shelving + labels',
         cardTitle: 'Walk-in cooler',
-        headerAccent: 'Photo check + Washtenaw rules',
+        headerAccent: 'Walk-in cooler • Photo + code match',
         responseSteps: [
           { badge: 'Scan', tone: 'info', text: 'Found raw poultry above ready-to-eat produce' },
           { badge: 'Fix', tone: 'success', text: 'Move poultry to bottom shelf + relabel pans' },
@@ -478,10 +437,10 @@ function HeroDemoPhone() {
         ],
       },
       {
-        prompt: "What's the max time for food in the danger zone?",
+        prompt: 'How long can soup sit between 41°F-135°F?',
         progressLabel: 'Verifying time/temperature controls',
         cardTitle: 'Hot holding question',
-        headerAccent: 'Local code + corrective action',
+        headerAccent: 'Hot holding • Time/temperature rule',
         responseSteps: [
           { badge: 'Rule', tone: 'info', text: '4 hours max between 41°F-135°F without discard plan' },
           { badge: 'Action', tone: 'success', text: 'Reheat to 165°F or discard after 4 hours' },
@@ -489,10 +448,10 @@ function HeroDemoPhone() {
         ],
       },
       {
-        prompt: 'Are date marks required on prepped items?',
+        prompt: 'Do these prep pans need date marks before service?',
         progressLabel: 'Matching prep tags to policy',
         cardTitle: 'Date marking',
-        headerAccent: 'Checklist + policy cite',
+        headerAccent: 'Date marks • 7-day rule',
         responseSteps: [
           { badge: 'Rule', tone: 'info', text: '7-day rule when held at 41°F or below' },
           { badge: 'Issue', tone: 'warning', text: 'Missing prep dates on 2 pans of sauces' },
@@ -511,6 +470,8 @@ function HeroDemoPhone() {
   const [isResetting, setIsResetting] = useState(false)
   const reducedMotion = usePrefersReducedMotion()
   const timers = useRef([])
+  const containerRef = useRef(null)
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
 
   const clearTimers = useCallback(() => {
     timers.current.forEach((id) => clearTimeout(id))
@@ -576,77 +537,67 @@ function HeroDemoPhone() {
 
   return (
     <div className="hero-visual">
-      <div className="hero-demo-shell">
+      <div
+        className={`hero-demo-shell ${reducedMotion ? 'is-reduced' : ''}`}
+        ref={containerRef}
+        onMouseMove={(e) => {
+          if (reducedMotion) return
+          const rect = containerRef.current?.getBoundingClientRect()
+          if (!rect) return
+          const x = ((e.clientY - rect.top) / rect.height - 0.5) * 6
+          const y = ((e.clientX - rect.left) / rect.width - 0.5) * 8
+          setTilt({ x, y })
+        }}
+        onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+      >
         <div className="hero-ambient" aria-hidden="true" />
-        <HeroCompanionCard
-          scenario={scenario}
-          assistantLines={assistantLines}
-          showProgress={showProgress}
-          progress={progress}
-          reducedMotion={reducedMotion}
-        />
-        <div className={`hero-phone ${reducedMotion ? 'is-reduced' : ''}`}>
-          <div className="phone-frame">
-            <div className="phone-notch" />
-            <div className={`phone-screen ${isResetting ? 'is-resetting' : ''}`}>
-              <div className="phone-status-bar">
-                <span className={inter.className}>9:41</span>
-                <div className="phone-status-icons">
-                  <span>LTE</span>
-                  <span>●●●</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              <div className="phone-app-header">
-                <div className="demo-live">
-                  <span className="demo-live-dot" />
-                  Live demo
-                </div>
-                <div className="demo-app-meta">
-                  <span className={outfit.className}>{scenario.cardTitle}</span>
-                  <span className={`demo-meta-sub ${inter.className}`}>{scenario.headerAccent}</span>
-                </div>
-                <div className="demo-tag">{scenario.progressLabel}</div>
-              </div>
-
-              <div className="phone-content demo-content" aria-live="polite">
-                <div className={`demo-thread ${isResetting ? 'is-resetting' : ''}`}>
-                  <div className="phone-message phone-message-user">
-                    <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
-                      {displayedUser || ' '}
-                    </div>
-                  </div>
-
-                  {showProgress && (
-                    <div className="demo-progress" role="status" aria-label="Analyzing upload">
-                      <div className="demo-progress-head">
-                        <span className={`demo-progress-label ${inter.className}`}>{scenario.progressLabel}</span>
-                        <span className={`demo-progress-value ${inter.className}`}>{Math.round(progress)}%</span>
-                      </div>
-                      <div className="demo-progress-track">
-                        <div className="demo-progress-bar" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                  )}
-
-                  {assistantLines.map((line, idx) => (
-                    <div key={`${line.badge}-${idx}`} className="phone-message phone-message-assistant">
-                      <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
-                        <div className="demo-response-top">
-                          <span className={`demo-response-pill ${line.tone}`}>{line.badge}</span>
-                          <span className="demo-response-meta">protocolLM • Local code</span>
-                        </div>
-                        <div className="demo-response-line">{line.text}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        <div
+          className="demo-box"
+          style={{
+            transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          }}
+        >
+          <div className="demo-box-header">
+            <div className="demo-live">
+              <span className="demo-live-dot" />
+              Live demo
             </div>
+            <div className="demo-meta">
+              <span className="demo-meta-title">{scenario.cardTitle}</span>
+              <span className="demo-meta-sub">{scenario.headerAccent}</span>
+            </div>
+            <span className="demo-chip">{scenario.progressLabel}</span>
           </div>
-          <div className="phone-glow" />
-          <div className="phone-reflection" />
+
+          <div className={`demo-thread ${isResetting ? 'is-resetting' : ''}`} aria-live="polite">
+            <div className="demo-user-line">
+              <div className="demo-user-bubble">{displayedUser || ' '}</div>
+            </div>
+
+            {showProgress && (
+              <div className="demo-progress" role="status" aria-label="Analyzing upload">
+                <div className="demo-progress-head">
+                  <span className="demo-progress-label">{scenario.progressLabel}</span>
+                  <span className="demo-progress-value">{Math.round(progress)}%</span>
+                </div>
+                <div className="demo-progress-track">
+                  <div className="demo-progress-bar" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            )}
+
+            {assistantLines.map((line, idx) => (
+              <div key={`${line.badge}-${idx}`} className="demo-assistant-line">
+                <div className="demo-assistant-bubble">
+                  <div className="demo-response-top">
+                    <span className={`demo-response-pill ${line.tone}`}>{line.badge}</span>
+                    <span className="demo-response-meta">protocolLM • Local code</span>
+                  </div>
+                  <div className="demo-response-line">{line.text}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -799,7 +750,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={400} direction="scale">
-            <HeroDemoPhone />
+            <HeroDemoBox />
           </Reveal>
         </div>
       </section>
@@ -2462,36 +2413,33 @@ export default function Page() {
           justify-content: center;
           align-items: center;
           position: relative;
-          min-height: 520px;
+          min-height: 460px;
           perspective: 1200px;
         }
 
         @media (max-width: 1023px) {
           .hero-visual {
-            min-height: 440px;
+            min-height: 420px;
           }
         }
 
         .hero-demo-shell {
           position: relative;
           width: 100%;
-          max-width: 760px;
+          max-width: 720px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 18px;
-          flex-wrap: wrap;
+          padding: 16px;
         }
 
-        @media (max-width: 640px) {
-          .hero-demo-shell {
-            gap: 14px;
-          }
+        .hero-demo-shell.is-reduced {
+          perspective: none;
         }
 
         .hero-ambient {
           position: absolute;
-          inset: -22% -10%;
+          inset: -18% -8%;
           background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.22), transparent 60%);
           filter: blur(76px);
           opacity: 0.9;
@@ -2499,174 +2447,104 @@ export default function Page() {
           animation: glowPulse 12s ease-in-out infinite;
         }
 
-        /* Phone Mockup */
-        .hero-phone {
+        .demo-box {
           position: relative;
           z-index: 2;
+          width: min(640px, 100%);
+          background: rgba(11, 14, 18, 0.92);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          padding: 18px 18px 20px;
+          box-shadow: var(--shadow-card-hover);
           transform-style: preserve-3d;
           transition: transform var(--duration-slow) var(--ease-out-expo), box-shadow var(--duration-slow) var(--ease-out-expo);
-          animation: phoneFloat 16s ease-in-out infinite;
-        }
-
-        .hero-phone.is-reduced {
-          animation: none;
-        }
-
-        @media (min-width: 1024px) {
-          .hero-phone:hover {
-            transform: translateY(-12px) rotateX(8deg) rotateY(-6deg);
-          }
-        }
-
-        .phone-frame {
-          width: 280px;
-          height: 580px;
-          background: linear-gradient(155deg, #0e1116 0%, #0a0c10 48%, #121722 100%);
-          border-radius: 44px;
-          padding: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 
-            var(--shadow-xl),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05),
-            0 0 0 1px rgba(0, 0, 0, 0.15);
-          position: relative;
-          overflow: hidden;
         }
 
         @media (max-width: 640px) {
-          .phone-frame {
-            width: 260px;
-            height: 540px;
-            border-radius: 40px;
+          .demo-box {
+            padding: 16px;
           }
         }
 
-        .phone-notch {
-          position: absolute;
-          top: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100px;
-          height: 28px;
-          background: #000;
-          border-radius: 16px;
-          z-index: 10;
-        }
-
-        .phone-screen {
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle at 30% 30%, rgba(85, 214, 178, 0.06), transparent 40%), var(--color-bg);
-          border-radius: 36px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          transition: transform 600ms var(--ease-out-expo), opacity 450ms var(--ease-out-expo);
-        }
-
-        .phone-screen.is-resetting {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-
-        @media (max-width: 640px) {
-          .phone-screen {
-            border-radius: 32px;
-          }
-        }
-
-        .phone-status-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 20px 6px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text);
-          letter-spacing: 0.01em;
-        }
-
-        .phone-status-icons {
-          display: flex;
-          gap: 5px;
-          font-size: 10px;
-          color: var(--color-text-secondary);
-        }
-
-        .phone-app-header {
-          padding: 10px 18px 12px;
-          border-bottom: 1px solid var(--color-border-subtle);
+        .demo-box-header {
           display: grid;
           grid-template-columns: auto 1fr auto;
           align-items: center;
           gap: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--color-border-subtle);
         }
 
-        .phone-app-title {
-          font-size: 16px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--color-text);
-        }
-
-        .phone-content {
-          flex: 1;
-          padding: 14px 14px 18px;
+        .demo-meta {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          overflow: hidden;
+          gap: 2px;
+          min-width: 0;
         }
 
-        .demo-content {
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 100%);
+        .demo-meta-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--color-text);
+          letter-spacing: -0.02em;
+        }
+
+        .demo-meta-sub {
+          font-size: 12px;
+          color: var(--color-text-muted);
+        }
+
+        .demo-chip {
+          padding: 8px 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
+          text-align: right;
         }
 
         .demo-thread {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          transition: opacity 380ms var(--ease-out-expo), transform 380ms var(--ease-out-expo);
+          margin-top: 14px;
+          transition: opacity 320ms var(--ease-out-expo), transform 320ms var(--ease-out-expo);
         }
 
         .demo-thread.is-resetting {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(8px);
         }
 
-        .phone-message {
+        .demo-user-line {
           display: flex;
-          width: 100%;
-        }
-
-        .phone-message-user {
-          justify-content: flex-end;
-        }
-
-        .phone-message-assistant {
           justify-content: flex-start;
         }
 
-        .phone-bubble {
-          max-width: 90%;
-          padding: 11px 13px;
+        .demo-user-bubble {
+          max-width: 100%;
+          padding: 12px 14px;
           border-radius: var(--radius-lg);
-          font-size: 11px;
-          line-height: 1.45;
-        }
-
-        .phone-bubble-user {
           background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
           color: white;
-          border-bottom-right-radius: 4px;
+          font-size: 12px;
           box-shadow: var(--shadow-sm);
         }
 
-        .phone-bubble-assistant {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
+        .demo-assistant-line {
+          display: flex;
+          justify-content: flex-start;
+        }
+
+        .demo-assistant-bubble {
+          width: 100%;
+          padding: 12px;
+          border-radius: var(--radius-lg);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid var(--color-border-subtle);
           color: var(--color-text);
-          border-bottom-left-radius: 4px;
           box-shadow: var(--shadow-xs);
         }
 
@@ -2687,30 +2565,6 @@ export default function Page() {
           border-radius: 50%;
           background: var(--color-success);
           box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14);
-        }
-
-        .demo-app-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-
-        .demo-meta-sub {
-          font-size: 11px;
-          color: var(--color-text-muted);
-          letter-spacing: 0.01em;
-        }
-
-        .demo-tag {
-          justify-self: end;
-          padding: 8px 10px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-full);
-          font-size: 11px;
-          color: var(--color-text-secondary);
-          box-shadow: var(--shadow-xs);
         }
 
         .demo-progress {
@@ -2788,188 +2642,18 @@ export default function Page() {
           line-height: 1.5;
         }
 
-        .phone-glow {
-          position: absolute;
-          inset: -50px;
-          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
-          animation: glowPulse 14s ease-in-out infinite;
-        }
-
-        .hero-companion {
-          position: relative;
-          z-index: 3;
-          width: 220px;
-          padding: 1px;
-          border-radius: var(--radius-2xl);
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(85, 214, 178, 0.25));
-          box-shadow: var(--shadow-card-hover);
-          animation: cardDrift 18s ease-in-out infinite;
-        }
-
-        .hero-companion.is-static {
-          animation: none;
-        }
-
-        @media (max-width: 900px) {
-          .hero-companion {
-            order: -1;
-            width: 100%;
-            max-width: 320px;
-          }
-        }
-
-        .hero-companion-inner {
-          background: rgba(10, 12, 16, 0.92);
-          border-radius: var(--radius-2xl);
-          padding: 14px 16px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .hero-companion-glow {
-          position: absolute;
-          inset: -20%;
-          background: radial-gradient(circle at 40% 30%, rgba(85, 214, 178, 0.2), transparent 55%);
-          filter: blur(40px);
-          opacity: 0.7;
-          z-index: -1;
-        }
-
-        .hero-companion-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .hero-companion-pill {
-          padding: 6px 10px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-full);
-          font-size: 11px;
-          color: var(--color-text);
-        }
-
-        .hero-companion-meta {
-          font-size: 11px;
-          color: var(--color-text-muted);
-          letter-spacing: 0.03em;
-        }
-
-        .hero-companion-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--color-text);
-          margin-bottom: 10px;
-        }
-
-        .hero-companion-items {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .hero-companion-item {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          align-items: center;
-          gap: 10px;
-          padding: 10px;
-          border-radius: var(--radius-lg);
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid var(--color-border-subtle);
-        }
-
-        .hero-companion-item.is-live {
-          border-color: rgba(85, 214, 178, 0.4);
-          box-shadow: 0 0 0 1px rgba(85, 214, 178, 0.18);
-        }
-
-        .hero-companion-dot {
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: var(--color-primary);
-        }
-
-        .hero-companion-dot.success { background: var(--color-success); }
-        .hero-companion-dot.warning { background: #fbbf24; }
-        .hero-companion-dot.info { background: var(--color-primary); }
-        .hero-companion-dot.neutral { background: var(--color-text-muted); }
-
-        .hero-companion-copy {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .hero-companion-label {
-          font-size: 11px;
-          color: var(--color-text);
-          letter-spacing: 0.02em;
-        }
-
-        .hero-companion-desc {
-          font-size: 11px;
-          color: var(--color-text-muted);
-        }
-
-        .hero-companion-value {
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--color-text);
-        }
-
-        .hero-companion-value.subtle {
-          color: var(--color-text-muted);
-        }
-
-        .hero-companion-placeholder {
-          font-size: 12px;
-          color: var(--color-text-muted);
-          padding: 6px 0;
-        }
-
-        .phone-reflection {
-          position: absolute;
-          top: 10px;
-          left: 10%;
-          right: 10%;
-          height: 30%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
-          border-radius: 48px 48px 100px 100px;
-          pointer-events: none;
-        }
-
         @keyframes glowPulse {
           0%, 100% { opacity: 0.8; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.04); }
         }
 
-        @keyframes phoneFloat {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-
-        @keyframes cardDrift {
-          0%, 100% { transform: translate3d(0, -6px, 0); }
-          50% { transform: translate3d(0, 6px, 0); }
-        }
-
         @media (prefers-reduced-motion: reduce) {
-          .hero-phone,
-          .phone-glow,
-          .hero-companion,
           .hero-ambient {
             animation: none;
           }
 
-          .hero-companion,
-          .hero-phone {
-            transform: none;
+          .demo-box {
+            transform: none !important;
           }
         }
 
