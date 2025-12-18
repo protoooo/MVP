@@ -10,6 +10,7 @@ export default {
       colors: {
         paper: 'var(--paper)',
         surface: 'var(--surface)',
+        clay: 'var(--clay)',
         accent: 'var(--accent)',
         ink: 'var(--ink)',
         'ink-80': 'var(--ink-80)',
