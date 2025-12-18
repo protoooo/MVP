@@ -1,4 +1,4 @@
-
+// app/page.js
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
@@ -6,1025 +6,57 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
+import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
-const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// ---------- tiny icon set (keep clean + consistent) ----------
-const Icons = {
-  Camera: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M4 7h3l2-2h6l2 2h3v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" />
-      <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-    </svg>
-  ),
-  Shield: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 2 20 6v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4Z" />
-      <path d="M9 12l2 2 4-4" />
-    </svg>
-  ),
-  FileText: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8" />
-      <path d="M8 17h8" />
-      <path d="M8 9h4" />
-    </svg>
-  ),
-  AlertTriangle: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M10.3 3.2 2.3 17a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-13.8a2 2 0 0 0-3.4 0Z" />
-      <path d="M12 9v4" />
-      <path d="M12 17h.01" />
-    </svg>
-  ),
-  Plus: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 5v14" />
-      <path d="M5 12h14" />
-    </svg>
-  ),
-  Settings: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
-      <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l-2.1.8a6.2 6.2 0 0 0-1.2-1.2l.8-2.1a7.9 7.9 0 0 0-6-.1l.1 2.2a6.2 6.2 0 0 0-1.7.7L7.8 7.7a7.9 7.9 0 0 0-2.9 5.2l2.1.8c0 .6.1 1.2.3 1.7l-1.7 1.4a7.9 7.9 0 0 0 4.6 3.8l.8-2.1c.6.1 1.2.1 1.8 0l.8 2.1a7.9 7.9 0 0 0 5.2-2.9l-1.4-1.7c.3-.5.6-1.1.8-1.6l2.2.1Z" />
-    </svg>
-  ),
-  LogOut: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <path d="M16 17l5-5-5-5" />
-      <path d="M21 12H9" />
-    </svg>
-  ),
-  X: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M18 6 6 18" />
-      <path d="M6 6l12 12" />
-    </svg>
-  ),
-  Check: (props) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  ),
-}
-
-// ---------- small helpers ----------
-function cn(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
-
-function clamp(n, min, max) {
-  return Math.min(max, Math.max(min, n))
-}
-
-// ---------- doc index (from your Supabase screenshots) ----------
-const DOC_INDEX = [
-  '3-Compartment Sink',
-  'Consumer Advisory',
-  'Cooling Foods',
-  'Cross Contamination',
-  'Date Marking Guide',
-  'Enforcement Action — Washtenaw County, MI',
-  'FDA Food Code 2022',
-  'FOG',
-  'Food Allergy Information — Washtenaw County, MI',
-  'Food Service Inspection Program — Washtenaw County, MI',
-  'Food Labeling Guide',
-  'Food Temperatures',
-  'Inspection Report Types — Washtenaw County, MI',
-  'Internal Cooking Temperatures',
-  'Michigan Act 92 of 2000',
-  'Michigan Modified Food Code',
-  'New Business Information Packet',
-  'Norovirus Environmental Cleaning',
-  'Procedures for Administration & Enforcement — Michigan Food Code',
-  'Retail Food Establishments Emergency Action Plan',
-  'Minimum Cooking Temperatures & Holding Times',
-  'USDA Safe Minimum Internal Temperature Chart',
-  'Violation Types — Washtenaw County, MI',
-]
-
-// ---------- UI tokens ----------
-const UI = {
-  bg: 'bg-[#fffeff]',
-  shell: 'bg-[#f3f3f1]',
-  ink: 'text-[#111111]',
-  ink2: 'text-[#333333]',
-  hair: 'border-black/10',
-  hair2: 'border-black/15',
-  shadow: 'shadow-[0_18px_60px_rgba(0,0,0,0.08)]',
-  shadow2: 'shadow-[0_10px_30px_rgba(0,0,0,0.08)]',
-  radius: 'rounded-[16px]',
-  radius2: 'rounded-[14px]',
-}
-
-function GlobalStyles() {
-  return (
-    <style jsx global>{`
-      :root {
-        --plm-doc-duration: 34s;
-      }
-      @keyframes plm-doc-scroll {
-        0% { transform: translateY(0); }
-        100% { transform: translateY(-50%); }
-      }
-      .plm-doc-scroll {
-        animation: plm-doc-scroll var(--plm-doc-duration) linear infinite;
-        will-change: transform;
-      }
-      @keyframes plm-soft-pulse {
-        0%, 100% { opacity: 0.55; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.06); }
-      }
-      .plm-soft-pulse { animation: plm-soft-pulse 2.4s ease-in-out infinite; }
-      .plm-scanlines {
-        background-image: repeating-linear-gradient(
-          to bottom,
-          rgba(0,0,0,0.05),
-          rgba(0,0,0,0.05) 1px,
-          rgba(0,0,0,0) 3px,
-          rgba(0,0,0,0) 7px
-        );
-      }
-    `}</style>
-  )
-}
-
-// ---------- typewriter ----------
-function useTypewriter(lines, speed = 18, lineDelay = 220) {
-  const [lineIndex, setLineIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
-  const [done, setDone] = useState(false)
-
-  useEffect(() => {
-    if (!lines?.length) return
-    if (done) return
-
-    const current = lines[lineIndex] ?? ''
-    if (charIndex >= current.length) {
-      if (lineIndex >= lines.length - 1) {
-        const t = setTimeout(() => setDone(true), lineDelay)
-        return () => clearTimeout(t)
-      }
-      const t = setTimeout(() => {
-        setLineIndex((v) => v + 1)
-        setCharIndex(0)
-      }, lineDelay)
-      return () => clearTimeout(t)
-    }
-
-    const t = setTimeout(() => setCharIndex((v) => v + 1), speed)
-    return () => clearTimeout(t)
-  }, [lines, lineIndex, charIndex, speed, lineDelay, done])
-
-  const currentLineFull = lines?.[lineIndex] ?? ''
-  const currentLineTyped = currentLineFull.slice(0, charIndex)
-
-  const history = useMemo(() => {
-    const h = []
-    for (let i = 0; i < lineIndex; i++) h.push(lines[i])
-    return h
-  }, [lineIndex, lines])
-
-  return { history, currentLineTyped, done }
-}
-
-function StatusPill({ label = 'READY', pulse = true }) {
-  return (
-    <span className={cn('inline-flex items-center gap-2 rounded-full border border-black/15 bg-white/70 px-2.5 py-1 text-[11px] tracking-[0.14em] text-black/70', plexMono.className)}>
-      <span className={cn('h-1.5 w-1.5 rounded-full bg-black/70', pulse && 'plm-soft-pulse')} />
-      <span>{label}</span>
-    </span>
-  )
-}
-
-function Panel({ label, title, children, right }) {
-  return (
-    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70', UI.shadow2)}>
-      <div className={cn('flex items-start justify-between gap-4 border-b', UI.hair, 'px-4 py-3')}>
-        <div>
-          <div className={cn('text-[10px] tracking-[0.22em] text-black/50', plexMono.className)}>{label}</div>
-          <div className={cn('mt-0.5 text-[13px] font-semibold text-black/80', outfit.className)}>{title}</div>
-        </div>
-        {right ? <div className="pt-0.5">{right}</div> : null}
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  )
-}
-
-function DotGridBg() {
-  return (
-    <div className="pointer-events-none absolute inset-0">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.06)_1px,transparent_0)] [background-size:18px_18px] opacity-70" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white/70" />
-    </div>
-  )
-}
-
-function Shell({ children }) {
-  return (
-    <div className={cn('relative overflow-hidden border', UI.hair, UI.radius, UI.shell, UI.shadow)}>
-      <DotGridBg />
-      <div className="relative">{children}</div>
-    </div>
-  )
-}
-
-// ---------- boot ----------
-function BootLine({ line }) {
-  const idx = line.indexOf('READY')
-  if (idx === -1) return <span>{line}</span>
-  const left = line.slice(0, idx)
-  const right = line.slice(idx + 'READY'.length)
-  return (
-    <span>
-      {left}
-      <span className="ml-1 inline-flex items-center gap-2">
-        <span className="plm-soft-pulse inline-block h-1.5 w-1.5 rounded-full bg-black/80" />
-        <span className="font-semibold tracking-[0.12em] text-black/70">READY</span>
-      </span>
-      {right}
-    </span>
-  )
-}
-
-function BootPanel({ onDone, collapsed }) {
-  const bootLines = useMemo(
-    () => [
-      '[ protocolLM v1.0 ]',
-      'Initializing shell…',
-      'Connecting: Washtenaw corpus…',
-      'Index: documents table…',
-      'Image analysis module: READY',
-      'Compliance Q&A module: READY',
-      'Local rules module: READY',
-      'License module: READY',
-      'System: ONLINE',
-    ],
-    []
-  )
-
-  const { history, currentLineTyped, done } = useTypewriter(bootLines, 16, 210)
-
-  useEffect(() => {
-    if (!done) return
-    const t = setTimeout(() => onDone?.(), 600)
-    return () => clearTimeout(t)
-  }, [done, onDone])
-
-  if (collapsed) {
-    return (
-      <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/75', 'p-4', UI.shadow2)}>
-        <div className={cn('text-[12px] text-black/70', plexMono.className)}>[ protocolLM v1.0 ]</div>
-        <div className="mt-2 h-1.5 w-28 rounded-full bg-black/10">
-          <div className="h-full w-20 rounded-full bg-black/35" />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/75', 'overflow-hidden', UI.shadow2)}>
-      <div className={cn('flex items-center justify-between border-b', UI.hair, 'px-4 py-3')}>
-        <div className={cn('text-[10px] tracking-[0.22em] text-black/50', plexMono.className)}>SYSTEM BOOT</div>
-        <div className={cn('text-[10px] tracking-[0.22em] text-black/40', plexMono.className)}>SHELL</div>
-      </div>
-      <div className={cn('relative p-4', plexMono.className)}>
-        <div className="pointer-events-none absolute inset-0 plm-scanlines opacity-40" />
-        <div className="relative space-y-1 text-[12px] leading-5 text-black/70">
-          {history.map((l, i) => (
-            <div key={i}>
-              <BootLine line={l} />
-            </div>
-          ))}
-          {!done ? <div>{currentLineTyped}<Cursor /></div> : null}
-          {done ? (
-            <div className="pt-2 text-black/60">
-              Press <span className="font-semibold text-black/70">ENTER</span> to continue…
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Cursor() {
-  return <span className="ml-0.5 inline-block h-[12px] w-[8px] translate-y-[2px] animate-pulse rounded-[2px] bg-black/50" />
-}
-
-// ---------- doc scroller ----------
-function DocDatabase({ titles }) {
-  const rows = useMemo(() => {
-    const uniq = Array.from(new Set((titles || []).map((t) => (t || '').trim()).filter(Boolean)))
-    return uniq.map((t, i) => ({
-      id: String(i + 1).padStart(3, '0'),
-      title: t,
-      status: 'LOADED',
-    }))
-  }, [titles])
-
-  const doubled = useMemo(() => rows.concat(rows), [rows])
-
-  const duration = useMemo(() => {
-    // slower as list grows; clamp to feel calm
-    const seconds = clamp(rows.length * 2.1, 28, 70)
-    return `${seconds}s`
-  }, [rows.length])
-
-  return (
-    <div
-      className={cn(
-        UI.radius2,
-        'relative overflow-hidden border',
-        UI.hair,
-        'bg-[#0f0f10] text-white/80',
-        'shadow-[0_10px_30px_rgba(0,0,0,0.25)]'
-      )}
-      style={{ ['--plm-doc-duration']: duration }}
-    >
-      <div className="pointer-events-none absolute inset-0 opacity-25 plm-scanlines" />
-      <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/70 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
-
-      <div className={cn('flex items-center justify-between border-b border-white/10 px-4 py-3', plexMono.className)}>
-        <div className="text-[10px] tracking-[0.22em] text-white/50">DOCUMENTS</div>
-        <div className="text-[10px] tracking-[0.22em] text-white/35">INDEX</div>
-      </div>
-
-      <div className="relative h-[220px] overflow-hidden">
-        <div className={cn('plm-doc-scroll flex flex-col', plexMono.className)}>
-          {doubled.map((r, idx) => (
-            <div
-              key={`${r.id}-${idx}`}
-              className="flex items-center gap-3 border-b border-white/10 px-4 py-2 text-[12px]"
-            >
-              <span className="w-10 text-white/35">{r.id}</span>
-              <span className="flex-1 truncate">{r.title}</span>
-              <span className="text-white/30">{r.status}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ---------- Landing ----------
-function LandingPage({ onStartAuth }) {
-  const modules = useMemo(
-    () => [
-      {
-        label: 'Visual Scan',
-        icon: <Icons.Camera className="h-4 w-4" />,
-        desc: 'Snap a photo, flag risks, get fixes.',
-        status: 'READY',
-      },
-      {
-        label: 'Compliance Q&A',
-        icon: <Icons.Shield className="h-4 w-4" />,
-        desc: 'Ask in plain English, cite your corpus.',
-        status: 'READY',
-      },
-      {
-        label: 'Local Rules',
-        icon: <Icons.FileText className="h-4 w-4" />,
-        desc: 'Washtenaw-first requirements and enforcement.',
-        status: 'READY',
-      },
-      {
-        label: 'Licensing',
-        icon: <Icons.AlertTriangle className="h-4 w-4" />,
-        desc: 'Know what you need before you open.',
-        status: 'READY',
-      },
-    ],
-    []
-  )
-
-  const docs = useMemo(() => Array.from(new Set(DOC_INDEX)), [])
-
-  return (
-    <div className="w-full">
-      <div className="mx-auto max-w-6xl px-5 pb-16 pt-10">
-        <Shell>
-          <div className="border-b border-black/10 px-6 py-5">
-            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <div className={cn('text-[11px] tracking-[0.22em] text-black/45', plexMono.className)}>PROTOCOLLM</div>
-                <h1 className={cn('mt-1 text-2xl font-semibold text-black/90 md:text-3xl', outfit.className)}>
-                  A local compliance console for food service
-                </h1>
-                <p className={cn('mt-2 max-w-2xl text-[14px] leading-6 text-black/60', inter.className)}>
-                  Built for Washtenaw County workflows: documents you trust, answers you can act on, scans that help staff catch issues
-                  before the inspector does.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={onStartAuth}
-                  className={cn(
-                    UI.radius2,
-                    'inline-flex items-center gap-2 border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white',
-                    'transition hover:bg-black/90'
-                  )}
-                >
-                  <Icons.Plus className="h-4 w-4" />
-                  Start 7-day trial
-                </button>
-                <a
-                  href="#pricing"
-                  className={cn(UI.radius2, 'inline-flex items-center border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
-                >
-                  View pricing
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 p-6 md:grid-cols-12">
-            <div className="md:col-span-7">
-              <Panel
-                label="MODULE DIRECTORY"
-                title="Loaded modules"
-                right={<StatusPill label="SYSTEM READY" pulse />}
-              >
-                <div className="space-y-2">
-                  {modules.map((m) => (
-                    <div key={m.label} className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 px-4 py-3')}>
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white">
-                            {m.icon}
-                          </span>
-                          <div>
-                            <div className={cn('text-[12px] font-semibold text-black/80', outfit.className)}>{m.label}</div>
-                            <div className={cn('text-[12px] text-black/55', inter.className)}>{m.desc}</div>
-                          </div>
-                        </div>
-                        <StatusPill label={m.status} pulse />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <Panel label="TRIAL" title="Simple, one plan">
-                  <div className={cn('text-[12px] leading-6 text-black/65', inter.className)}>
-                    Unlimited usage under one price point. Designed for small teams that just want answers fast.
-                  </div>
-                  <div className="mt-4 flex items-end justify-between gap-3">
-                    <div>
-                      <div className={cn('text-[24px] font-semibold text-black', outfit.className)}>$100</div>
-                      <div className={cn('text-[12px] text-black/55', inter.className)}>per month</div>
-                    </div>
-                    <div className="text-right">
-                      <div className={cn('text-[12px] text-black/55', inter.className)}>$1,000 / year</div>
-                      <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>ANNUAL</div>
-                    </div>
-                  </div>
-                </Panel>
-
-                <Panel label="OUTPUT" title="Citable answers">
-                  <div className={cn('text-[12px] leading-6 text-black/65', inter.className)}>
-                    Q&A responses are grounded in your Washtenaw + Michigan corpus. This keeps the tool useful and predictable for staff.
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-[12px] text-black/60">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white">
-                      <Icons.FileText className="h-4 w-4" />
-                    </span>
-                    <span className={cn(plexMono.className, 'tracking-[0.12em]')}>SOURCES INCLUDED</span>
-                  </div>
-                </Panel>
-              </div>
-            </div>
-
-            <div className="md:col-span-5">
-              <Panel label="DOCUMENTATION" title="Scrolling index">
-                <div className={cn('mb-3 text-[12px] text-black/60', inter.className)}>
-                  Live view of what the system is trained on (de-duplicated, extension-free).
-                </div>
-                <DocDatabase titles={docs} />
-                <div className={cn('mt-3 text-[11px] text-black/45', inter.className)}>
-                  Add / rename documents anytime—this landing list can be wired to your DB later.
-                </div>
-              </Panel>
-            </div>
-
-            <div className="md:col-span-12" id="pricing">
-              <Panel label="PRICING" title="One tier, no surprises">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
-                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>MONTHLY</div>
-                    <div className={cn('mt-1 text-[26px] font-semibold text-black', outfit.className)}>$100</div>
-                    <div className={cn('text-[12px] text-black/55', inter.className)}>Unlimited usage</div>
-                  </div>
-                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
-                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>ANNUAL</div>
-                    <div className={cn('mt-1 text-[26px] font-semibold text-black', outfit.className)}>$1,000</div>
-                    <div className={cn('text-[12px] text-black/55', inter.className)}>Save two months</div>
-                  </div>
-                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
-                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>INCLUDES</div>
-                    <ul className={cn('mt-2 space-y-2 text-[12px] text-black/65', inter.className)}>
-                      {['Visual scan', 'Compliance Q&A', 'Washtenaw-first corpus', 'Unlimited usage'].map((t) => (
-                        <li key={t} className="flex items-center gap-2">
-                          <Icons.Check className="h-4 w-4 text-black/60" />
-                          {t}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </Panel>
-            </div>
-          </div>
-        </Shell>
-      </div>
-    </div>
-  )
-}
-
-// ---------- Auth UI ----------
-function MonoInput({ label, helper, error, right, ...props }) {
-  return (
-    <div>
-      {label ? <div className={cn('mb-2 text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>{label}</div> : null}
-      <div className={cn(UI.radius2, 'flex items-stretch gap-2 border', error ? 'border-red-400/50' : UI.hair, 'bg-white/75')}>
-        <input
-          {...props}
-          className={cn(
-            plexMono.className,
-            'min-w-0 flex-1 bg-transparent px-4 py-3 text-[13px] text-black/80 outline-none placeholder:text-black/35'
-          )}
-        />
-        {right ? <div className="flex items-center pr-3">{right}</div> : null}
-      </div>
-      {helper ? <div className={cn('mt-2 text-[12px] text-black/45', inter.className)}>{helper}</div> : null}
-      {error ? <div className={cn('mt-2 text-[12px] text-red-600/80', inter.className)}>{error}</div> : null}
-    </div>
-  )
-}
-
-function AuthCard({ mode, email, setEmail, code, setCode, onRequestCode, onVerify, onBack, loading, error }) {
-  return (
-    <div className="mx-auto max-w-md px-5 pb-16 pt-10">
-      <Shell>
-        <div className="border-b border-black/10 px-6 py-5">
-          <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>AUTH</div>
-          <div className={cn('mt-1 text-[18px] font-semibold text-black/85', outfit.className)}>
-            {mode === 'email' ? 'Request login code' : 'Enter verification code'}
-          </div>
-          <div className={cn('mt-1 text-[12px] text-black/55', inter.className)}>
-            {mode === 'email'
-              ? 'We’ll email a 6‑digit code. No passwords.'
-              : 'Check your inbox and enter the 6‑digit code to continue.'}
-          </div>
-        </div>
-
-        <div className="p-6">
-          {mode === 'email' ? (
-            <div className="space-y-4">
-              <MonoInput
-                label="EMAIL"
-                placeholder="you@restaurant.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={error}
-              />
-              <button
-                onClick={onRequestCode}
-                disabled={loading || !email}
-                className={cn(
-                  UI.radius2,
-                  'w-full border border-black/15 bg-black px-4 py-3 text-[12px] font-semibold text-white transition hover:bg-black/90 disabled:opacity-50'
-                )}
-              >
-                {loading ? 'Sending…' : 'Send code'}
-              </button>
-              <button
-                onClick={onBack}
-                className={cn(UI.radius2, 'w-full border border-black/15 bg-white/70 px-4 py-3 text-[12px] font-semibold text-black/70 hover:bg-white')}
-              >
-                Back
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <MonoInput
-                label="CODE"
-                placeholder="123456"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                error={error}
-              />
-              <button
-                onClick={onVerify}
-                disabled={loading || code.length < 6}
-                className={cn(
-                  UI.radius2,
-                  'w-full border border-black/15 bg-black px-4 py-3 text-[12px] font-semibold text-white transition hover:bg-black/90 disabled:opacity-50'
-                )}
-              >
-                {loading ? 'Verifying…' : 'Verify'}
-              </button>
-              <button
-                onClick={onBack}
-                className={cn(UI.radius2, 'w-full border border-black/15 bg-white/70 px-4 py-3 text-[12px] font-semibold text-black/70 hover:bg-white')}
-              >
-                Back
-              </button>
-            </div>
-          )}
-        </div>
-      </Shell>
-    </div>
-  )
-}
-
-// ---------- App (chat / scan) ----------
-function SourcePill({ text }) {
-  return (
-    <span className={cn('inline-flex items-center rounded-full border border-black/15 bg-white/70 px-2 py-1 text-[11px] text-black/70', plexMono.className)}>
-      {text}
-    </span>
-  )
-}
-
-function TypingIndicator() {
-  return (
-    <div className={cn('inline-flex items-center gap-1', plexMono.className)}>
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45 [animation-delay:-0.2s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45 [animation-delay:-0.1s]" />
-      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45" />
-    </div>
-  )
-}
-
-function MessageBlock({ role, ts, content, sources, image }) {
-  const [imgUrl, setImgUrl] = useState(null)
-
-  useEffect(() => {
-    if (!image) return
-    if (typeof image === 'string') {
-      setImgUrl(image)
-      return
-    }
-    try {
-      const url = URL.createObjectURL(image)
-      setImgUrl(url)
-      return () => URL.revokeObjectURL(url)
-    } catch {
-      // ignore
-    }
-  }, [image])
-
-  const isUser = role === 'user'
-  return (
-    <div className={cn('space-y-2', isUser ? 'text-black/80' : 'text-black/80')}>
-      <div className={cn(UI.radius2, 'border', UI.hair, isUser ? 'bg-white/70' : 'bg-[#f6f6f4]', 'p-4')}>
-        <div className={cn('mb-2 flex items-center justify-between text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
-          <span>{isUser ? 'USER' : 'PROTOCOLLM'}</span>
-          <span className="text-black/35">{ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
-        </div>
-        <div className={cn('whitespace-pre-wrap text-[13px] leading-6', inter.className)}>{content}</div>
-
-        {imgUrl ? (
-          <div className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white">
-            <img src={imgUrl} alt="attached" className="h-48 w-full object-cover" />
-            <div className={cn('border-t border-black/10 px-3 py-2 text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
-              ATTACHED IMAGE
-            </div>
-          </div>
-        ) : null}
-
-        {sources?.length ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {sources.map((s, idx) => (
-              <SourcePill key={`${s}-${idx}`} text={s} />
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
-function ChatComposer({ value, setValue, onSend, disabled, onPickImage, imageLabel, onClearImage }) {
-  return (
-    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-3')}>
-      <div className="flex items-center justify-between gap-2">
-        <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>COMMAND</div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPickImage}
-            className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white px-3 py-1.5 text-[11px] font-semibold text-black/70 hover:bg-white/90')}
-            type="button"
-          >
-            <Icons.Camera className="h-4 w-4" />
-            Attach
-          </button>
-          <button
-            onClick={onSend}
-            disabled={disabled}
-            className={cn(UI.radius2, 'inline-flex items-center border border-black/15 bg-black px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-black/90 disabled:opacity-50')}
-            type="button"
-          >
-            Run
-          </button>
-        </div>
-      </div>
-
-      {imageLabel ? (
-        <div className="mt-2 flex items-center justify-between rounded-xl border border-black/10 bg-white/70 px-3 py-2">
-          <div className={cn('text-[11px] text-black/60', inter.className)}>
-            <span className={cn('mr-2', plexMono.className)}>IMAGE:</span> {imageLabel}
-          </div>
-          <button onClick={onClearImage} className="p-1 text-black/45 hover:text-black/70" type="button">
-            <Icons.X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : null}
-
-      <div className="mt-3">
-        <textarea
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          rows={3}
-          placeholder="plm> describe the situation, ask a question, or attach a photo…"
-          className={cn(
-            UI.radius2,
-            plexMono.className,
-            'w-full resize-none border border-black/10 bg-white/80 px-4 py-3 text-[13px] text-black/80 outline-none placeholder:text-black/35 focus:border-black/20'
-          )}
-        />
-      </div>
-    </div>
-  )
-}
-
-function AppShell({ user, supabase, onSignOut, onOpenPortal, onStartCheckout, isSubscribed, subscriptionLoading }) {
-  const fileRef = useRef(null)
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [selectedImageName, setSelectedImageName] = useState('')
-  const [error, setError] = useState('')
-  const [sourcesByMsgIndex, setSourcesByMsgIndex] = useState({})
-  const [chatId, setChatId] = useState(null)
-
-  const send = useCallback(async () => {
-    if (sending) return
-    if (!input.trim() && !selectedImage) return
-    if (!isSubscribed) {
-      setError('Start your trial to use the console.')
-      return
-    }
-
-    setSending(true)
-    setError('')
-
-    const newUser = { role: 'user', ts: Date.now(), content: input.trim() || '(image)', image: selectedImage || null }
-    const outgoing = [...messages, newUser]
-    setMessages(outgoing)
-    setInput('')
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: outgoing, image: selectedImage, chatId }),
-      })
-
-      const json = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(json?.error || 'Request failed')
-
-      const assistant = { role: 'assistant', ts: Date.now(), content: json?.message || 'OK.' }
-      setMessages((m) => [...m, assistant])
-
-      if (json?.chatId) setChatId(json.chatId)
-      if (json?.sources) {
-        setSourcesByMsgIndex((prev) => ({ ...prev, [outgoing.length]: json.sources }))
-      }
-    } catch (e) {
-      setMessages((m) => [...m, { role: 'assistant', ts: Date.now(), content: `Error: ${e.message || 'failed'}` }])
-    } finally {
-      setSending(false)
-      setSelectedImage(null)
-      setSelectedImageName('')
-    }
-  }, [sending, input, selectedImage, isSubscribed, messages, chatId])
-
-  const pickImage = useCallback(() => fileRef.current?.click(), [])
-  const clearImage = useCallback(() => {
-    setSelectedImage(null)
-    setSelectedImageName('')
-    if (fileRef.current) fileRef.current.value = ''
-  }, [])
-
-  const onFile = useCallback(async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      const compressed = await compressImage(file)
-      setSelectedImage(compressed)
-      setSelectedImageName(file.name)
-    } catch (err) {
-      setError('Could not process image.')
-    }
-  }, [])
-
-  return (
-    <div className="mx-auto max-w-6xl px-5 pb-16 pt-10">
-      <Shell>
-        <div className="border-b border-black/10 px-6 py-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <div className={cn('text-[12px] tracking-[0.22em] text-black/45', plexMono.className)}>protocolLM shell</div>
-              <StatusPill label={subscriptionLoading ? 'CHECKING…' : isSubscribed ? 'READY' : 'LOCKED'} pulse={isSubscribed} />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {!isSubscribed ? (
-                <button
-                  onClick={onStartCheckout}
-                  className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white hover:bg-black/90')}
-                >
-                  Start trial
-                </button>
-              ) : (
-                <button
-                  onClick={onOpenPortal}
-                  className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
-                >
-                  <Icons.Settings className="h-4 w-4" />
-                  Billing
-                </button>
-              )}
-              <button
-                onClick={onSignOut}
-                className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
-              >
-                <Icons.LogOut className="h-4 w-4" />
-                Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 p-6 md:grid-cols-12">
-          <div className="md:col-span-4">
-            <Panel label="SESSION" title="Account">
-              <div className={cn('space-y-2 text-[12px] text-black/65', inter.className)}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className={cn('text-black/45', plexMono.className)}>USER</span>
-                  <span className="truncate text-right">{user?.email}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className={cn('text-black/45', plexMono.className)}>PLAN</span>
-                  <span className="text-right">{isSubscribed ? 'Unlimited' : 'Trial required'}</span>
-                </div>
-              </div>
-
-              {!isSubscribed ? (
-                <div className="mt-4 rounded-xl border border-black/10 bg-white/60 p-3">
-                  <div className={cn('text-[12px] font-semibold text-black/75', outfit.className)}>Unlock the console</div>
-                  <div className={cn('mt-1 text-[12px] text-black/55', inter.className)}>
-                    Start your 7‑day trial to run scans and ask questions.
-                  </div>
-                  <button
-                    onClick={onStartCheckout}
-                    className={cn(UI.radius2, 'mt-3 w-full border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white hover:bg-black/90')}
-                  >
-                    Start trial
-                  </button>
-                </div>
-              ) : null}
-            </Panel>
-
-            <div className="mt-4">
-              <Panel label="MODULES" title="Status">
-                <div className="space-y-2">
-                  {[
-                    ['Visual Scan', true],
-                    ['Compliance Q&A', true],
-                    ['Local Rules', true],
-                    ['Licensing', true],
-                  ].map(([name, ok]) => (
-                    <div key={name} className={cn('flex items-center justify-between rounded-xl border border-black/10 bg-white/70 px-3 py-2')}>
-                      <div className={cn('text-[12px] text-black/70', inter.className)}>{name}</div>
-                      <StatusPill label={ok ? 'READY' : 'OFFLINE'} pulse={ok} />
-                    </div>
-                  ))}
-                </div>
-              </Panel>
-            </div>
-          </div>
-
-          <div className="md:col-span-8">
-            <Panel
-              label="CONSOLE"
-              title="Ask or scan"
-              right={
-                <div className={cn('text-[10px] tracking-[0.22em] text-black/40', plexMono.className)}>
-                  {messages.length ? `${messages.length} LOGS` : 'NO LOGS'}
-                </div>
-              }
-            >
-              <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/60 p-3')}>
-                <div className="max-h-[420px] space-y-3 overflow-auto pr-1">
-                  {messages.length ? (
-                    messages.map((m, idx) => (
-                      <MessageBlock
-                        key={idx}
-                        role={m.role}
-                        ts={m.ts}
-                        content={m.content}
-                        image={m.image}
-                        sources={sourcesByMsgIndex[idx] || null}
-                      />
-                    ))
-                  ) : (
-                    <div className={cn('p-4 text-[13px] leading-6 text-black/60', inter.className)}>
-                      Try: “What are the top critical violations the inspector flags?” or attach a walk‑in cooler photo and type: “scan this”.
-                    </div>
-                  )}
-                  {sending ? (
-                    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
-                      <TypingIndicator />
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <ChatComposer
-                  value={input}
-                  setValue={setInput}
-                  onSend={send}
-                  disabled={sending || (!input.trim() && !selectedImage) || !isSubscribed}
-                  onPickImage={pickImage}
-                  imageLabel={selectedImageName}
-                  onClearImage={clearImage}
-                />
-                {error ? <div className={cn('mt-2 text-[12px] text-red-600/80', inter.className)}>{error}</div> : null}
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
-              </div>
-            </Panel>
-          </div>
-        </div>
-      </Shell>
-    </div>
-  )
-}
-
-// ---------- Page ----------
 export default function Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
 
-  const [bootDone, setBootDone] = useState(false)
-  const [bootCollapsed, setBootCollapsed] = useState(false)
-
-  const [authMode, setAuthMode] = useState('landing') // landing | email | code | app
-  const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
-
+  const [session, setSession] = useState(null)
   const [user, setUser] = useState(null)
-  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
-  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [initializing, setInitializing] = useState(true)
 
-  const { token: recaptchaToken, executeRecaptcha, resetRecaptcha } = useRecaptcha()
+  // Auth modal
+  const [authOpen, setAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('signin') // 'signin' | 'signup'
 
-  // session bootstrap
+  // Optional query param to open auth
+  useEffect(() => {
+    const open = searchParams?.get('auth')
+    if (open === '1') {
+      setAuthOpen(true)
+      setAuthMode(searchParams?.get('mode') === 'signup' ? 'signup' : 'signin')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     let mounted = true
-    ;(async () => {
-      const { data } = await supabase.auth.getUser()
-      if (!mounted) return
-      setUser(data?.user ?? null)
-      setAuthMode(data?.user ? 'app' : 'landing')
-    })()
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setAuthMode(session?.user ? 'app' : 'landing')
+    async function bootstrap() {
+      try {
+        const { data } = await supabase.auth.getSession()
+        if (!mounted) return
+        setSession(data?.session ?? null)
+        setUser(data?.session?.user ?? null)
+      } finally {
+        if (mounted) setInitializing(false)
+      }
+    }
+
+    bootstrap()
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setUser(newSession?.user ?? null)
     })
 
     return () => {
@@ -1033,201 +65,1492 @@ export default function Page() {
     }
   }, [supabase])
 
-  // handle stripe redirect flags
-  useEffect(() => {
-    const success = searchParams.get('success')
-    const canceled = searchParams.get('canceled')
-    if (success || canceled) {
-      // strip params
-      router.replace('/', { scroll: false })
-    }
-  }, [searchParams, router])
-
-  // subscription state
-  const fetchSubscription = useCallback(async () => {
-    setSubscriptionLoading(true)
-    try {
-      const res = await fetch('/api/subscription/status', { method: 'GET' })
-      const json = await res.json().catch(() => null)
-      setIsSubscribed(Boolean(json?.active))
-    } catch {
-      setIsSubscribed(false)
-    } finally {
-      setSubscriptionLoading(false)
-    }
+  const openSignIn = useCallback(() => {
+    setAuthMode('signin')
+    setAuthOpen(true)
   }, [])
 
-  useEffect(() => {
-    if (!user) {
-      setIsSubscribed(false)
-      setSubscriptionLoading(false)
-      return
-    }
-    fetchSubscription()
-  }, [user, fetchSubscription])
-
-  // auth flows
-  const startAuth = useCallback(() => {
-    setAuthError('')
-    setEmail('')
-    setCode('')
-    setAuthMode('email')
+  const openSignUp = useCallback(() => {
+    setAuthMode('signup')
+    setAuthOpen(true)
   }, [])
-
-  const requestCode = useCallback(async () => {
-    setAuthError('')
-    setAuthLoading(true)
-    try {
-      let token = null
-      if (executeRecaptcha) {
-        try {
-          token = await executeRecaptcha('login_code')
-        } catch {
-          token = null
-        }
-      }
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true, captchaToken: token || undefined },
-      })
-
-      if (error) throw error
-      setAuthMode('code')
-      resetRecaptcha?.()
-    } catch (e) {
-      setAuthError(e?.message || 'Could not send code.')
-    } finally {
-      setAuthLoading(false)
-    }
-  }, [email, supabase, executeRecaptcha, resetRecaptcha])
-
-  const verifyCode = useCallback(async () => {
-    setAuthError('')
-    setAuthLoading(true)
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: 'email',
-      })
-      if (error) throw error
-      setUser(data?.user || null)
-      setAuthMode('app')
-    } catch (e) {
-      setAuthError(e?.message || 'Invalid code.')
-    } finally {
-      setAuthLoading(false)
-    }
-  }, [email, code, supabase])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
-    setUser(null)
-    setAuthMode('landing')
   }, [supabase])
 
-  const openPortal = useCallback(async () => {
-    try {
-      const res = await fetch('/api/stripe/portal', { method: 'POST' })
-      const json = await res.json().catch(() => null)
-      if (json?.url) window.location.href = json.url
-    } catch {
-      // ignore
-    }
-  }, [])
+  // You can keep a separate “App view” for authenticated users.
+  // If you want the landing page always, remove this conditional.
+  if (initializing) {
+    return (
+      <div className="page">
+        <div className="boot">
+          <div className={`boot-title ${outfit.className}`}>protocolLM</div>
+          <div className={`boot-sub ${inter.className}`}>Loading…</div>
+        </div>
+        <GlobalStyles />
+      </div>
+    )
+  }
+
+  return (
+    <div className="page">
+      <Header
+        user={user}
+        onSignIn={openSignIn}
+        onSignUp={openSignUp}
+        onSignOut={signOut}
+      />
+
+      {/* If signed in, you can route to an internal app screen or keep the landing + add a “Launch Console” section */}
+      {!user ? (
+        <LandingPage onSignIn={openSignIn} onSignUp={openSignUp} />
+      ) : (
+        <AuthedHome user={user} onSignOut={signOut} />
+      )}
+
+      <AuthModal
+        open={authOpen}
+        mode={authMode}
+        onClose={() => setAuthOpen(false)}
+        setMode={setAuthMode}
+        supabase={supabase}
+      />
+
+      <RecaptchaBadge />
+      <GlobalStyles />
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Header
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function Header({ user, onSignIn, onSignUp, onSignOut }) {
+  return (
+    <header className="header">
+      <div className="header-inner">
+        <Link href="/" className="logo" aria-label="protocolLM home">
+          <span className={`logo-text ${outfit.className}`}>protocolLM</span>
+        </Link>
+
+        <nav className="nav">
+          <a className={`nav-link ${inter.className}`} href="#features">
+            Features
+          </a>
+          <a className={`nav-link ${inter.className}`} href="#console">
+            Console
+          </a>
+          <a className={`nav-link ${inter.className}`} href="#pricing">
+            Pricing
+          </a>
+        </nav>
+
+        <div className="header-actions">
+          {!user ? (
+            <>
+              <button className={`btn btn-ghost ${inter.className}`} onClick={onSignIn}>
+                Sign in
+              </button>
+              <button className={`btn btn-solid ${inter.className}`} onClick={onSignUp}>
+                Get started
+              </button>
+            </>
+          ) : (
+            <>
+              <div className={`user-pill ${inter.className}`}>
+                {user?.email ?? 'Signed in'}
+              </div>
+              <button className={`btn btn-ghost ${inter.className}`} onClick={onSignOut}>
+                Sign out
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="header-glow" aria-hidden="true" />
+    </header>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Landing Page (light, terminal-clean, not “vibe-coded”)
+   - No redundant “protocolLM” headline above the header
+   - “Compliance Console” section includes:
+     • Output card
+     • Documentation scroller (forced LIGHT)
+     • Loaded Modules (no icons, no “Ready”)
+   - Fixes right-side dead space with a structured 2-col grid on desktop
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function LandingPage({ onSignIn, onSignUp }) {
+  return (
+    <main className="main">
+      <Hero onSignIn={onSignIn} onSignUp={onSignUp} />
+      <Features />
+      <ConsolePreview />
+      <Pricing />
+      <Footer />
+    </main>
+  )
+}
+
+function Hero({ onSignIn, onSignUp }) {
+  return (
+    <section className="hero">
+      <div className="hero-bg" aria-hidden="true" />
+      <div className="hero-inner">
+        <div className="hero-left">
+          <div className={`hero-kicker ${inter.className}`}>Food safety, enforced locally.</div>
+
+          <h1 className={`hero-title ${outfit.className}`}>
+            Instant compliance answers your team can actually use.
+          </h1>
+
+          <p className={`hero-subtitle ${inter.className}`}>
+            ProtocolLM helps food-service staff resolve common violations fast—grounded in the documents
+            inspectors care about, with practical corrective actions.
+          </p>
+
+          <div className="hero-cta">
+            <button className={`btn btn-solid ${inter.className}`} onClick={onSignUp}>
+              Start free trial
+            </button>
+            <button className={`btn btn-ghost ${inter.className}`} onClick={onSignIn}>
+              Sign in
+            </button>
+          </div>
+
+          <div className="hero-stats">
+            <div className="stat">
+              <div className={`stat-value ${outfit.className}`}>Washtenaw</div>
+              <div className={`stat-label ${inter.className}`}>local grounding</div>
+            </div>
+            <div className="stat">
+              <div className={`stat-value ${outfit.className}`}>Images + Q&A</div>
+              <div className={`stat-label ${inter.className}`}>photo checks</div>
+            </div>
+            <div className="stat">
+              <div className={`stat-value ${outfit.className}`}>Citations</div>
+              <div className={`stat-label ${inter.className}`}>verifiable sources</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-right" aria-hidden="true">
+          <TerminalCard />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function TerminalCard() {
+  return (
+    <div className="terminal-wrap">
+      <div className="terminal-border" />
+      <div className="terminal">
+        <div className="terminal-top">
+          <span className="dot dot-r" />
+          <span className="dot dot-y" />
+          <span className="dot dot-g" />
+          <span className={`terminal-title ${inter.className}`}>protocolLM — console</span>
+        </div>
+
+        <div className={`terminal-body ${inter.className}`}>
+          <div className="tline">
+            <span className="tdim">$</span> load knowledge: washtenaw/public
+          </div>
+          <div className="tline">
+            <span className="tdim">→</span> parsing enforcement procedures…
+          </div>
+          <div className="tline">
+            <span className="tdim">→</span> indexing food code excerpts…
+          </div>
+          <div className="tline">
+            <span className="tdim">→</span> enabling photo checks…
+          </div>
+
+          <div className="tspacer" />
+
+          <div className="tline">
+            <span className="tdim">Q:</span> How long can RTE TCS food be held after opening?
+          </div>
+          <div className="tline">
+            <span className="tdim">A:</span> Use date marking and discard by the allowed timeframe; label clearly.
+          </div>
+          <div className="tline">
+            <span className="tdim">Next:</span> Upload a station photo to identify likely violations.
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Features() {
+  const items = [
+    {
+      title: 'Grounded answers',
+      desc: 'Responses are based on your curated documents, with citations your managers can verify.',
+    },
+    {
+      title: 'Photo checks',
+      desc: 'Snap a walk-in, prep table, or dish station. Get likely issues and concrete fixes.',
+    },
+    {
+      title: 'Shift-ready guidance',
+      desc: 'Designed for real service speed—short, actionable, repeatable steps.',
+    },
+    {
+      title: 'Local-first',
+      desc: 'Aligned with what inspectors actually flag in your area, not generic advice.',
+    },
+  ]
+
+  return (
+    <section className="features" id="features">
+      <div className="container">
+        <div className="section-head">
+          <span className={`section-label ${inter.className}`}>Core</span>
+          <h2 className={`section-title ${outfit.className}`}>Built for the way restaurants actually run.</h2>
+          <p className={`section-desc ${inter.className}`}>
+            Clean interface. Fast workflows. No fluff. Your team gets clarity in seconds.
+          </p>
+        </div>
+
+        <div className="feature-grid">
+          {items.map((x, idx) => (
+            <Reveal key={idx} delay={idx * 80}>
+              <div className="feature-card">
+                <div className="feature-card-border" />
+                <div className="feature-card-inner">
+                  <div className={`feature-title ${outfit.className}`}>{x.title}</div>
+                  <div className={`feature-desc ${inter.className}`}>{x.desc}</div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Compliance Console Preview Section
+   - Forced LIGHT docs scroller (even if you later add darker sections elsewhere)
+   - No icons and no "Ready" lines in Loaded Modules
+   - Tight grid to remove dead space on desktop
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function ConsolePreview() {
+  const docLines = useMemo(
+    () => [
+      'Time/temperature control: cold holding requirements and corrective actions.',
+      'Date marking: ready-to-eat TCS foods opened/held in refrigeration.',
+      'Hand sink accessibility: blocked sinks and required supplies.',
+      'Sanitizer concentration: verification steps and common failure points.',
+      'Food storage order: raw animal products below ready-to-eat foods.',
+      'Dish machine / 3-compartment: wash–rinse–sanitize workflow expectations.',
+      'Wiping cloth storage: sanitizer bucket rules during service.',
+      'Allergen controls: separation, labeling, and training expectations.',
+    ],
+    []
+  )
+
+  const modules = useMemo(
+    () => [
+      {
+        name: 'Washtenaw Enforcement Patterns',
+        desc: 'Local expectations, common citations, and corrective actions written for daily operations.',
+      },
+      {
+        name: 'Michigan Food Code Context',
+        desc: 'Relevant excerpts translated into plain language so staff understand what to do next.',
+      },
+      {
+        name: 'Photo Check Workflow',
+        desc: 'Fast scan → likely issues → step-by-step fixes to correct problems before inspection.',
+      },
+      {
+        name: 'Citation Builder',
+        desc: 'Returns the most relevant document excerpts so managers can verify and train confidently.',
+      },
+    ],
+    []
+  )
+
+  return (
+    <section className="console" id="console">
+      <div className="container">
+        <Reveal>
+          <div className="section-head">
+            <span className={`section-label ${inter.className}`}>Preview</span>
+            <h2 className={`section-title ${outfit.className}`}>Compliance Console</h2>
+            <p className={`section-desc ${inter.className}`}>
+              A focused workspace for quick answers, photo checks, and grounded citations—built for real shifts.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="console-grid">
+          {/* Output */}
+          <Reveal delay={80}>
+            <div className="console-card console-output">
+              <div className="console-card-border" />
+              <div className="console-card-inner">
+                <div className="console-topline">
+                  <span className={`console-kicker ${inter.className}`}>Output</span>
+                  <span className={`console-pill ${inter.className}`}>Washtenaw-mode</span>
+                </div>
+
+                <div className={`console-window ${inter.className}`}>
+                  <div className="cline">
+                    <span className="cdim">Q:</span> Is this walk-in shelf setup okay?
+                  </div>
+                  <div className="cline">
+                    <span className="cdim">A:</span> Check raw-over-ready-to-eat separation, labeling, and container coverage.
+                  </div>
+                  <div className="cline">
+                    <span className="cdim">Fix:</span> Move raw poultry below RTE foods. Label open containers with prep/expire.
+                  </div>
+                  <div className="cline">
+                    <span className="cdim">Citations:</span> Washtenaw enforcement patterns + MI Food Code excerpts.
+                  </div>
+
+                  <div className="console-divider" />
+
+                  <div className="cline">
+                    <span className="cdim">Photo check:</span> Identify likely issues in 10–20 seconds.
+                  </div>
+                  <div className="cline">
+                    <span className="cdim">Next:</span> Upload a station photo → get actionable steps.
+                  </div>
+                </div>
+
+                <div className={`console-footnote ${inter.className}`}>
+                  Designed for clarity: short answers, practical actions, and sources you can verify.
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Documentation (forced light) */}
+          <Reveal delay={140}>
+            <div className="console-card console-docs">
+              <div className="console-card-border" />
+              <div className="console-card-inner">
+                <div className="console-topline">
+                  <span className={`console-kicker ${inter.className}`}>Documentation</span>
+                  <span className={`console-subtle ${inter.className}`}>Grounded excerpts · searchable</span>
+                </div>
+
+                <div className="doc-scroller" aria-hidden="true">
+                  <div className="doc-track">
+                    {docLines.map((t, i) => (
+                      <div key={i} className={`doc-item ${inter.className}`}>
+                        {t}
+                      </div>
+                    ))}
+                    {/* duplicate for seamless loop */}
+                    {docLines.map((t, i) => (
+                      <div key={`d2-${i}`} className={`doc-item ${inter.className}`}>
+                        {t}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className={`console-footnote ${inter.className}`}>
+                  Excerpts are curated to match what inspectors flag—and to give staff clear corrective steps.
+                </p>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Loaded Modules (no icons, no “Ready”) */}
+          <Reveal delay={200}>
+            <div className="console-card console-modules">
+              <div className="console-card-border" />
+              <div className="console-card-inner">
+                <div className="console-topline">
+                  <span className={`console-kicker ${inter.className}`}>Loaded Modules</span>
+                  <span className={`console-subtle ${inter.className}`}>What the console uses</span>
+                </div>
+
+                <div className="modules-list">
+                  {modules.map((m, i) => (
+                    <div key={i} className="module-row">
+                      <div className={`module-name ${inter.className}`}>{m.name}</div>
+                      <div className={`module-desc ${inter.className}`}>{m.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className={`console-footnote ${inter.className}`}>
+                  Everything is built to be quick, repeatable, and easy to act on—without clutter.
+                </p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Pricing
+   - No count-up animation (static values)
+   - Uses environment variables for Stripe price IDs
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function Pricing() {
+  const [billing, setBilling] = useState('monthly') // monthly | annual
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+
+  const priceId = billing === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE
 
   const startCheckout = useCallback(async () => {
+    setErr('')
+    setLoading(true)
     try {
-      const res = await fetch('/api/stripe/checkout', {
+      if (!priceId) throw new Error('Missing Stripe price ID env var for this plan.')
+
+      // This assumes you have an API route that creates a Stripe checkout session.
+      // If your route path differs, change it here (still only page.js).
+      const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: MONTHLY_PRICE }),
+        body: JSON.stringify({ priceId }),
       })
-      const json = await res.json().catch(() => null)
-      if (json?.url) window.location.href = json.url
-    } catch {
-      // ignore
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Checkout request failed.')
+      }
+
+      const data = await res.json()
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL returned.')
+      }
+    } catch (e) {
+      setErr(e?.message || 'Unable to start checkout.')
+    } finally {
+      setLoading(false)
     }
+  }, [priceId])
+
+  return (
+    <section className="pricing" id="pricing">
+      <div className="container">
+        <div className="section-head">
+          <span className={`section-label ${inter.className}`}>Pricing</span>
+          <h2 className={`section-title ${outfit.className}`}>Simple, single-tier.</h2>
+          <p className={`section-desc ${inter.className}`}>
+            Unlimited usage for one location. Built to be easy to buy, easy to train, and easy to use.
+          </p>
+        </div>
+
+        <div className="billing-toggle">
+          <button
+            className={`toggle ${billing === 'monthly' ? 'active' : ''} ${inter.className}`}
+            onClick={() => setBilling('monthly')}
+            type="button"
+          >
+            Monthly
+          </button>
+          <button
+            className={`toggle ${billing === 'annual' ? 'active' : ''} ${inter.className}`}
+            onClick={() => setBilling('annual')}
+            type="button"
+          >
+            Annual
+          </button>
+        </div>
+
+        <div className="pricing-grid">
+          <div className="price-card">
+            <div className="price-card-border" />
+            <div className="price-card-inner">
+              <div className={`price-title ${outfit.className}`}>ProtocolLM</div>
+              <div className={`price-sub ${inter.className}`}>One location · unlimited usage</div>
+
+              <div className="price-amount">
+                <span className={`price-dollar ${outfit.className}`}>$</span>
+                <span className={`price-number ${outfit.className}`}>
+                  {billing === 'monthly' ? '100' : '1000'}
+                </span>
+                <span className={`price-term ${inter.className}`}>
+                  {billing === 'monthly' ? '/month' : '/year'}
+                </span>
+              </div>
+
+              <ul className={`price-list ${inter.className}`}>
+                <li>Photo checks for common violations</li>
+                <li>Grounded Q&amp;A with citations</li>
+                <li>Local-first compliance guidance</li>
+                <li>Fast workflows designed for shifts</li>
+              </ul>
+
+              <button className={`btn btn-solid w-full ${inter.className}`} onClick={startCheckout} disabled={loading}>
+                {loading ? 'Starting checkout…' : 'Subscribe'}
+              </button>
+
+              {err ? <div className={`price-error ${inter.className}`}>{err}</div> : null}
+
+              <div className={`price-note ${inter.className}`}>
+                If your Stripe route name differs, update <span className="mono">/api/stripe/create-checkout-session</span> in page.js.
+              </div>
+            </div>
+          </div>
+
+          <div className="price-side">
+            <div className="side-card">
+              <div className="side-card-border" />
+              <div className="side-card-inner">
+                <div className={`side-title ${outfit.className}`}>What you get</div>
+                <p className={`side-desc ${inter.className}`}>
+                  This is a compliance tool, not a generic chatbot. It’s designed to reduce inspector risk by turning local
+                  documents into clear actions your team can follow.
+                </p>
+
+                <div className="side-grid">
+                  <div className="side-item">
+                    <div className={`side-k ${outfit.className}`}>Capture</div>
+                    <div className={`side-v ${inter.className}`}>Use a quick photo to spot likely issues.</div>
+                  </div>
+                  <div className="side-item">
+                    <div className={`side-k ${outfit.className}`}>Cross-check</div>
+                    <div className={`side-v ${inter.className}`}>Get grounded guidance with citations.</div>
+                  </div>
+                  <div className="side-item">
+                    <div className={`side-k ${outfit.className}`}>Correct</div>
+                    <div className={`side-v ${inter.className}`}>Follow step-by-step fixes during service.</div>
+                  </div>
+                </div>
+
+                <div className={`side-foot ${inter.className}`}>
+                  Built to train new staff, reduce repeat violations, and keep managers confident.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  )
+}
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="container footer-inner">
+        <div className={`footer-left ${inter.className}`}>
+          <div className={`footer-brand ${outfit.className}`}>protocolLM</div>
+          <div className="footer-sub">Local-first compliance workflows for food service.</div>
+        </div>
+        <div className={`footer-right ${inter.className}`}>
+          <a className="footer-link" href="#features">Features</a>
+          <a className="footer-link" href="#console">Console</a>
+          <a className="footer-link" href="#pricing">Pricing</a>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Authenticated Home (simple placeholder)
+   - Keeps sign out
+   - You can swap this with your full app UI later
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function AuthedHome({ user, onSignOut }) {
+  return (
+    <main className="main">
+      <section className="authed">
+        <div className="container">
+          <div className="authed-card">
+            <div className="authed-card-border" />
+            <div className="authed-card-inner">
+              <div className={`authed-title ${outfit.className}`}>Compliance Console</div>
+              <div className={`authed-sub ${inter.className}`}>
+                Signed in as <span className="mono">{user?.email}</span>
+              </div>
+
+              <div className="authed-actions">
+                <Link className={`btn btn-solid ${inter.className}`} href="/app">
+                  Launch Console
+                </Link>
+                <button className={`btn btn-ghost ${inter.className}`} onClick={onSignOut}>
+                  Sign out
+                </button>
+              </div>
+
+              <div className={`authed-note ${inter.className}`}>
+                If your console lives on <span className="mono">/app</span>, this link will take you there.
+                If it’s on a different route, change it here (only page.js).
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Auth Modal
+   - Email/password sign-in + sign-up
+   - Keeps “Sign in” present as requested
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function AuthModal({ open, mode, setMode, onClose, supabase }) {
+  const { executeRecaptcha } = useRecaptcha?.() || {}
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const modalRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    setError('')
+    setBusy(false)
+    setPassword('')
+    // keep email for convenience
+  }, [open])
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') onClose?.()
+    }
+    if (open) window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  const submit = useCallback(
+    async (e) => {
+      e.preventDefault()
+      setError('')
+      setBusy(true)
+
+      try {
+        // optional recaptcha (won't break if your hook returns nothing)
+        if (executeRecaptcha) {
+          try {
+            await executeRecaptcha(mode === 'signup' ? 'signup' : 'signin')
+          } catch {
+            // ignore: fail-open if recaptcha isn't critical
+          }
+        }
+
+        if (!email || !password) {
+          throw new Error('Enter an email and password.')
+        }
+
+        if (mode === 'signin') {
+          const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+          if (err) throw err
+          onClose?.()
+        } else {
+          const { error: err } = await supabase.auth.signUp({ email, password })
+          if (err) throw err
+          onClose?.()
+        }
+      } catch (err) {
+        setError(err?.message || 'Authentication failed.')
+      } finally {
+        setBusy(false)
+      }
+    },
+    [email, password, mode, supabase, executeRecaptcha, onClose]
+  )
+
+  if (!open) return null
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <div className="modal" ref={modalRef}>
+        <div className="modal-header">
+          <div className={`modal-title ${outfit.className}`}>
+            {mode === 'signin' ? 'Sign in' : 'Create account'}
+          </div>
+          <button className="modal-x" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <form className="modal-body" onSubmit={submit}>
+          <label className={`field ${inter.className}`}>
+            <span className="label">Email</span>
+            <input
+              className="input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@restaurant.com"
+              type="email"
+              autoComplete="email"
+            />
+          </label>
+
+          <label className={`field ${inter.className}`}>
+            <span className="label">Password</span>
+            <input
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              type="password"
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            />
+          </label>
+
+          {error ? <div className={`modal-error ${inter.className}`}>{error}</div> : null}
+
+          <button className={`btn btn-solid w-full ${inter.className}`} disabled={busy} type="submit">
+            {busy ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign in' : 'Create account')}
+          </button>
+
+          <div className={`modal-switch ${inter.className}`}>
+            {mode === 'signin' ? (
+              <>
+                New here?{' '}
+                <button type="button" className="linklike" onClick={() => setMode('signup')}>
+                  Create an account
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <button type="button" className="linklike" onClick={() => setMode('signin')}>
+                  Sign in
+                </button>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Reveal (scroll animation)
+   - IntersectionObserver for clean, subtle motion
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function Reveal({ children, delay = 0 }) {
+  const ref = useRef(null)
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setShow(true)
+            obs.disconnect()
+          }
+        })
+      },
+      { threshold: 0.15 }
+    )
+
+    obs.observe(el)
+    return () => obs.disconnect()
   }, [])
 
   return (
-    <div className={cn(UI.bg, UI.ink, inter.className, 'min-h-screen')}>
-      <GlobalStyles />
-      <RecaptchaBadge />
-
-      {/* top bar */}
-      <header className="sticky top-0 z-30 border-b border-black/10 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <span className={cn('text-[13px] font-semibold tracking-tight text-black/85', outfit.className)}>protocolLM</span>
-          </Link>
-          <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
-            WASHTENAW • COMPLIANCE CONSOLE
-          </div>
-        </div>
-      </header>
-
-      {/* boot */}
-      {!bootDone ? (
-        <div className="mx-auto max-w-6xl px-5 pb-8 pt-10">
-          <BootPanel
-            collapsed={bootCollapsed}
-            onDone={() => {
-              setBootDone(true)
-              setTimeout(() => setBootCollapsed(true), 200)
-            }}
-          />
-        </div>
-      ) : null}
-
-      {/* main */}
-      {authMode === 'landing' ? <LandingPage onStartAuth={startAuth} /> : null}
-      {authMode === 'email' ? (
-        <AuthCard
-          mode="email"
-          email={email}
-          setEmail={setEmail}
-          code={code}
-          setCode={setCode}
-          onRequestCode={requestCode}
-          onVerify={verifyCode}
-          onBack={() => setAuthMode('landing')}
-          loading={authLoading}
-          error={authError}
-        />
-      ) : null}
-      {authMode === 'code' ? (
-        <AuthCard
-          mode="code"
-          email={email}
-          setEmail={setEmail}
-          code={code}
-          setCode={setCode}
-          onRequestCode={requestCode}
-          onVerify={verifyCode}
-          onBack={() => setAuthMode('email')}
-          loading={authLoading}
-          error={authError}
-        />
-      ) : null}
-      {authMode === 'app' && user ? (
-        <AppShell
-          user={user}
-          supabase={supabase}
-          onSignOut={signOut}
-          onOpenPortal={openPortal}
-          onStartCheckout={startCheckout}
-          isSubscribed={isSubscribed}
-          subscriptionLoading={subscriptionLoading}
-        />
-      ) : null}
-
-      <footer className="border-t border-black/10 bg-white/70">
-        <div className={cn('mx-auto max-w-6xl px-5 py-6 text-[11px] text-black/45', inter.className)}>
-          © {new Date().getFullYear()} protocolLM · Built for Washtenaw County food service teams.
-        </div>
-      </footer>
+    <div
+      ref={ref}
+      className={`reveal ${show ? 'in' : ''}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
     </div>
+  )
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Global Styles
+   - Fixes: logo sizing + broken border-bottom in user menu header (kept for safety)
+   - Console docs scroller forced LIGHT
+   ────────────────────────────────────────────────────────────────────────────── */
+
+function GlobalStyles() {
+  return (
+    <style jsx global>{`
+      :root {
+        --bg: #ffffff;
+        --ink: #111111;
+        --muted: rgba(17, 17, 17, 0.65);
+
+        --card: rgba(255, 255, 255, 0.72);
+        --card-strong: rgba(255, 255, 255, 0.92);
+        --border: rgba(17, 17, 17, 0.10);
+        --border-strong: rgba(17, 17, 17, 0.18);
+
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.10);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+        --radius: 18px;
+        --radius-lg: 22px;
+
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { padding: 0; margin: 0; background: var(--bg); color: var(--ink); }
+      a { color: inherit; text-decoration: none; }
+      button { font: inherit; }
+      .mono { font-family: var(--mono); }
+
+      .page {
+        min-height: 100vh;
+        background: radial-gradient(1200px 600px at 20% -10%, rgba(0,0,0,0.06), transparent 60%),
+                    radial-gradient(900px 500px at 90% 10%, rgba(0,0,0,0.05), transparent 60%),
+                    linear-gradient(#ffffff, #fbfbfb);
+      }
+
+      /* Boot */
+      .boot {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        gap: 10px;
+        text-align: center;
+      }
+      .boot-title { font-size: 28px; letter-spacing: -0.02em; }
+      .boot-sub { color: var(--muted); }
+
+      /* Header */
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        backdrop-filter: blur(14px);
+        background: rgba(255,255,255,0.65);
+        border-bottom: 1px solid rgba(17,17,17,0.06);
+      }
+
+      .header-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .logo { display: inline-flex; align-items: center; gap: 10px; }
+      .logo-text {
+        font-size: 24px; /* bigger top-left protocolLM */
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+
+      .nav {
+        display: none;
+        align-items: center;
+        gap: 18px;
+      }
+      @media (min-width: 900px) {
+        .nav { display: flex; }
+      }
+      .nav-link {
+        color: rgba(17,17,17,0.75);
+        font-size: 14px;
+      }
+      .nav-link:hover { color: rgba(17,17,17,0.95); }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-pill {
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.7);
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        color: rgba(17,17,17,0.75);
+      }
+
+      .header-glow {
+        position: absolute;
+        inset: -40px 0 auto 0;
+        height: 80px;
+        background: radial-gradient(700px 120px at 50% 0%, rgba(0,0,0,0.06), transparent 60%);
+        pointer-events: none;
+      }
+
+      /* Main */
+      .main { padding-bottom: 40px; }
+      .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+      /* Buttons */
+      .btn {
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        will-change: transform;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn-ghost {
+        background: rgba(255,255,255,0.0);
+        border-color: rgba(17,17,17,0.10);
+        color: rgba(17,17,17,0.85);
+      }
+      .btn-ghost:hover {
+        background: rgba(17,17,17,0.03);
+        border-color: rgba(17,17,17,0.16);
+      }
+      .btn-solid {
+        background: rgba(17,17,17,0.92);
+        color: #fff;
+        box-shadow: 0 12px 26px rgba(0,0,0,0.14);
+      }
+      .btn-solid:hover {
+        background: rgba(17,17,17,0.98);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.16);
+      }
+      .w-full { width: 100%; }
+
+      /* Hero */
+      .hero { position: relative; padding: 56px 0 26px; }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(900px 500px at 20% 10%, rgba(0,0,0,0.06), transparent 60%),
+          radial-gradient(700px 400px at 90% 0%, rgba(0,0,0,0.05), transparent 60%);
+        pointer-events: none;
+      }
+      .hero-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 26px;
+        align-items: center;
+      }
+      @media (min-width: 980px) {
+        .hero-inner { grid-template-columns: 1.05fr 0.95fr; }
+      }
+
+      .hero-kicker {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(17,17,17,0.65);
+        margin-bottom: 10px;
+      }
+      .hero-title {
+        font-size: 40px;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 12px;
+      }
+      @media (min-width: 980px) {
+        .hero-title { font-size: 46px; }
+      }
+      .hero-subtitle {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.6;
+        color: rgba(17,17,17,0.70);
+        max-width: 54ch;
+      }
+
+      .hero-cta { display: flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .stat {
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.65);
+        border-radius: 16px;
+        padding: 12px 12px;
+      }
+      .stat-value { font-size: 14px; letter-spacing: -0.01em; }
+      .stat-label { margin-top: 2px; font-size: 12px; color: rgba(17,17,17,0.62); }
+
+      /* Terminal Card */
+      .terminal-wrap { position: relative; }
+      .terminal-border {
+        position: absolute;
+        inset: -1px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, rgba(17,17,17,0.18), rgba(17,17,17,0.06));
+        filter: blur(0px);
+        pointer-events: none;
+      }
+      .terminal {
+        position: relative;
+        border-radius: var(--radius-lg);
+        background: rgba(255,255,255,0.70);
+        border: 1px solid rgba(17,17,17,0.12);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .terminal-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(17,17,17,0.08);
+        background: rgba(255,255,255,0.85);
+      }
+      .dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.85; }
+      .dot-r { background: rgba(255, 80, 80, 0.95); }
+      .dot-y { background: rgba(255, 200, 80, 0.95); }
+      .dot-g { background: rgba(100, 220, 140, 0.95); }
+      .terminal-title { margin-left: 8px; font-size: 12px; color: rgba(17,17,17,0.72); }
+
+      .terminal-body {
+        padding: 14px 14px 16px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.55;
+        color: rgba(17,17,17,0.86);
+      }
+      .tline { margin: 2px 0; }
+      .tdim { color: rgba(17,17,17,0.55); margin-right: 6px; }
+      .tspacer { height: 10px; }
+
+      /* Sections */
+      .section-head { margin-bottom: 18px; }
+      .section-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.70);
+        font-size: 12px;
+        color: rgba(17,17,17,0.70);
+        letter-spacing: 0.03em;
+      }
+      .section-title {
+        margin: 10px 0 8px;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+      .section-desc {
+        margin: 0;
+        color: rgba(17,17,17,0.70);
+        max-width: 65ch;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      /* Features */
+      .features { padding: 60px 0; }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      @media (min-width: 900px) {
+        .feature-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      }
+
+      .feature-card { position: relative; border-radius: var(--radius); overflow: hidden; }
+      .feature-card-border {
+        position: absolute;
+        inset: -1px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(17,17,17,0.16), rgba(17,17,17,0.06));
+        pointer-events: none;
+      }
+      .feature-card-inner {
+        position: relative;
+        border-radius: var(--radius);
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(17,17,17,0.10);
+        box-shadow: var(--shadow-soft);
+        padding: 16px 16px;
+        min-height: 118px;
+      }
+      .feature-title { font-size: 16px; letter-spacing: -0.01em; margin-bottom: 8px; }
+      .feature-desc { font-size: 14px; line-height: 1.55; color: rgba(17,17,17,0.70); }
+
+      /* Console */
+      .console { padding: 64px 0; }
+      .console-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      @media (min-width: 980px) {
+        .console-grid {
+          grid-template-columns: 1.1fr 0.9fr;
+          grid-template-rows: auto auto;
+          align-items: stretch;
+        }
+        .console-output { grid-column: 1; grid-row: 1 / span 2; }
+        .console-docs { grid-column: 2; grid-row: 1; }
+        .console-modules { grid-column: 2; grid-row: 2; }
+      }
+
+      .console-card { position: relative; border-radius: var(--radius); overflow: hidden; }
+      .console-card-border {
+        position: absolute;
+        inset: -1px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(17,17,17,0.16), rgba(17,17,17,0.06));
+        pointer-events: none;
+      }
+      .console-card-inner {
+        position: relative;
+        border-radius: var(--radius);
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(17,17,17,0.10);
+        box-shadow: var(--shadow-soft);
+        padding: 16px 16px;
+      }
+
+      .console-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .console-kicker { font-size: 12px; color: rgba(17,17,17,0.72); }
+      .console-subtle { font-size: 12px; color: rgba(17,17,17,0.55); }
+
+      .console-pill {
+        font-size: 12px;
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.80);
+        color: rgba(17,17,17,0.70);
+        padding: 6px 10px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .console-window {
+        border-radius: 14px;
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.85);
+        padding: 12px 12px;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.6;
+        color: rgba(17,17,17,0.90);
+      }
+      .cline { margin: 4px 0; }
+      .cdim { color: rgba(17,17,17,0.55); margin-right: 6px; }
+
+      .console-divider {
+        height: 1px;
+        background: rgba(17,17,17,0.10);
+        margin: 10px 0;
+      }
+
+      /* Documentation scroller — forced LIGHT */
+      .doc-scroller {
+        position: relative;
+        height: 210px;
+        border-radius: 14px;
+        border: 1px solid rgba(17,17,17,0.10);
+        background: #ffffff; /* forced */
+        overflow: hidden;
+      }
+      .doc-track {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        animation: docScroll 18s linear infinite;
+      }
+      .doc-item {
+        background: rgba(17,17,17,0.03);
+        border: 1px solid rgba(17,17,17,0.08);
+        color: rgba(17,17,17,0.78);
+        border-radius: 12px;
+        padding: 10px 10px;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      @keyframes docScroll {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+      }
+
+      .modules-list { display: grid; gap: 10px; margin-top: 8px; }
+      .module-row {
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.85);
+        border-radius: 14px;
+        padding: 10px 10px;
+      }
+      .module-name { font-size: 13px; letter-spacing: -0.01em; }
+      .module-desc { margin-top: 4px; font-size: 12px; color: rgba(17,17,17,0.68); line-height: 1.5; }
+
+      .console-footnote {
+        margin-top: 10px;
+        color: rgba(17,17,17,0.62);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      /* Pricing */
+      .pricing { padding: 64px 0 72px; }
+      .billing-toggle {
+        display: inline-flex;
+        margin-top: 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.70);
+        overflow: hidden;
+      }
+      .toggle {
+        padding: 10px 14px;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 13px;
+        color: rgba(17,17,17,0.70);
+      }
+      .toggle.active {
+        background: rgba(17,17,17,0.92);
+        color: #fff;
+      }
+
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-top: 18px;
+        align-items: start;
+      }
+      @media (min-width: 980px) {
+        .pricing-grid { grid-template-columns: 0.95fr 1.05fr; }
+      }
+
+      .price-card, .side-card { position: relative; border-radius: var(--radius); overflow: hidden; }
+      .price-card-border, .side-card-border {
+        position: absolute;
+        inset: -1px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(17,17,17,0.16), rgba(17,17,17,0.06));
+        pointer-events: none;
+      }
+      .price-card-inner, .side-card-inner {
+        position: relative;
+        border-radius: var(--radius);
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(17,17,17,0.10);
+        box-shadow: var(--shadow-soft);
+        padding: 18px 18px;
+      }
+
+      .price-title { font-size: 18px; letter-spacing: -0.01em; }
+      .price-sub { margin-top: 4px; color: rgba(17,17,17,0.65); font-size: 13px; }
+      .price-amount {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        margin-top: 14px;
+        margin-bottom: 12px;
+      }
+      .price-dollar { font-size: 18px; }
+      .price-number { font-size: 44px; letter-spacing: -0.03em; line-height: 1; }
+      .price-term { color: rgba(17,17,17,0.65); font-size: 14px; }
+
+      .price-list {
+        margin: 0 0 14px;
+        padding-left: 18px;
+        color: rgba(17,17,17,0.70);
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      .price-error {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(220, 38, 38, 0.20);
+        background: rgba(220, 38, 38, 0.06);
+        color: rgba(220, 38, 38, 0.90);
+        font-size: 13px;
+      }
+
+      .price-note {
+        margin-top: 12px;
+        font-size: 12px;
+        color: rgba(17,17,17,0.55);
+      }
+
+      .side-title { font-size: 18px; letter-spacing: -0.01em; }
+      .side-desc { margin: 10px 0 12px; color: rgba(17,17,17,0.70); line-height: 1.6; font-size: 14px; }
+      .side-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 700px) {
+        .side-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      .side-item {
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.85);
+        border-radius: 14px;
+        padding: 12px 12px;
+      }
+      .side-k { font-size: 14px; }
+      .side-v { margin-top: 6px; color: rgba(17,17,17,0.66); font-size: 13px; line-height: 1.5; }
+      .side-foot { margin-top: 12px; color: rgba(17,17,17,0.60); font-size: 12px; line-height: 1.5; }
+
+      /* Footer */
+      .footer { padding: 34px 0 60px; border-top: 1px solid rgba(17,17,17,0.06); }
+      .footer-inner { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+      .footer-brand { font-size: 16px; letter-spacing: -0.01em; }
+      .footer-sub { margin-top: 6px; color: rgba(17,17,17,0.62); font-size: 13px; }
+      .footer-right { display: flex; gap: 14px; }
+      .footer-link { color: rgba(17,17,17,0.70); font-size: 13px; }
+      .footer-link:hover { color: rgba(17,17,17,0.95); }
+
+      /* Authed */
+      .authed { padding: 70px 0; }
+      .authed-card { position: relative; border-radius: var(--radius); overflow: hidden; }
+      .authed-card-border {
+        position: absolute; inset: -1px; border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(17,17,17,0.16), rgba(17,17,17,0.06));
+        pointer-events: none;
+      }
+      .authed-card-inner {
+        position: relative; border-radius: var(--radius);
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(17,17,17,0.10);
+        box-shadow: var(--shadow-soft);
+        padding: 20px 20px;
+      }
+      .authed-title { font-size: 22px; letter-spacing: -0.02em; margin-bottom: 6px; }
+      .authed-sub { color: rgba(17,17,17,0.70); }
+      .authed-actions { margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap; }
+      .authed-note { margin-top: 12px; color: rgba(17,17,17,0.58); font-size: 12px; line-height: 1.5; }
+
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0,0,0,0.42);
+        display: grid;
+        place-items: center;
+        padding: 22px;
+      }
+      .modal {
+        width: 100%;
+        max-width: 420px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.90);
+        border: 1px solid rgba(17,17,17,0.12);
+        box-shadow: 0 24px 70px rgba(0,0,0,0.22);
+        overflow: hidden;
+      }
+      .modal-header {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(17,17,17,0.08);
+        background: rgba(255,255,255,0.92);
+      }
+      .modal-title { font-size: 18px; letter-spacing: -0.01em; }
+      .modal-x {
+        border: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.65);
+        border-radius: 10px;
+        padding: 6px 8px;
+        cursor: pointer;
+        color: rgba(17,17,17,0.75);
+      }
+      .modal-body { padding: 14px 16px 16px; display: grid; gap: 12px; }
+      .field { display: grid; gap: 6px; }
+      .label { font-size: 12px; color: rgba(17,17,17,0.65); }
+      .input {
+        border-radius: 12px;
+        border: 1px solid rgba(17,17,17,0.12);
+        background: rgba(255,255,255,0.95);
+        padding: 10px 12px;
+        outline: none;
+        color: rgba(17,17,17,0.90);
+      }
+      .input:focus {
+        border-color: rgba(17,17,17,0.22);
+        box-shadow: 0 0 0 4px rgba(17,17,17,0.06);
+      }
+      .modal-error {
+        border-radius: 12px;
+        border: 1px solid rgba(220, 38, 38, 0.20);
+        background: rgba(220, 38, 38, 0.06);
+        color: rgba(220, 38, 38, 0.90);
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+      .modal-switch {
+        margin-top: 2px;
+        font-size: 13px;
+        color: rgba(17,17,17,0.65);
+      }
+      .linklike {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        cursor: pointer;
+        color: rgba(17,17,17,0.90);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      /* Reveal */
+      .reveal {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 520ms ease, transform 520ms ease;
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Safety fix for a common broken CSS line you mentioned elsewhere */
+      .user-menu-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(17,17,17,0.10);
+        background: rgba(255,255,255,0.85);
+      }
+    `}</style>
   )
 }
