@@ -1,7 +1,7 @@
-// app/page.js
+
 'use client'
 
-import { useState, useEffect, useRef, useMemo, useCallback, forwardRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -16,1503 +16,1218 @@ const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 
-// eslint-disable-next-line no-unused-vars
-const isAdmin = false
-
-const UI = {
-  pageBg: `min-h-screen bg-[#f6f5f2] text-[#161616] relative`,
-  gridBg:
-    'pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,rgba(0,0,0,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.10)_1px,transparent_1px)] [background-size:44px_44px]',
-  noiseOverlay:
-    'pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25),rgba(0,0,0,0.25)_1px,transparent_1px,transparent_4px)]',
-  vignette:
-    'pointer-events-none absolute inset-0 opacity-[0.45] [background-image:radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.05)_75%,rgba(0,0,0,0.10)_100%)]',
-  container: 'relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12',
-
-  // Terminal window language
-  win: 'overflow-hidden rounded-[12px] border border-[#cfcfc7] bg-[#f0f0ea] shadow-[0_1px_0_rgba(0,0,0,0.06)]',
-  winHeader:
-    'flex items-center justify-between gap-3 border-b border-[#cfcfc7] bg-[#e9e9e1] px-4 py-3',
-  winLabel: 'text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold',
-  winTitle: 'text-[13px] tracking-tight text-[#161616] font-semibold',
-  winBody: 'relative px-4 py-4',
-  scanlines:
-    'pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.55),rgba(0,0,0,0.55)_1px,transparent_1px,transparent_5px)]',
-  phosphor:
-    'pointer-events-none absolute inset-0 opacity-[0.10] [background-image:radial-gradient(circle_at_center,rgba(0,0,0,0.06),transparent_55%)] [background-size:160%]',
-  mono: plexMono.className,
-  sans: inter.className,
-  heading: outfit.className,
-
-  divider: 'h-px w-full bg-[#cfcfc7]',
-  subtleDivider: 'h-px w-full bg-[#dcdcd4]',
-
-  // Inputs/buttons as “commands”
-  cmdBtn:
-    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#bdbdb4] bg-[#f7f7f2] px-3 py-2 text-[12px] font-semibold tracking-tight text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition hover:bg-[#ffffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-60 disabled:cursor-not-allowed',
-  cmdBtnPrimary:
-    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#161616] bg-[#161616] px-3 py-2 text-[12px] font-semibold tracking-tight text-[#f6f5f2] shadow-[0_1px_0_rgba(0,0,0,0.10)] transition hover:bg-[#0f0f0f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-60 disabled:cursor-not-allowed',
-  cmdBtnGhost:
-    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-transparent bg-transparent px-3 py-2 text-[12px] font-semibold tracking-tight text-[#161616] transition hover:border-[#cfcfc7] hover:bg-[#f7f7f2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-50 disabled:cursor-not-allowed',
-
-  input:
-    'w-full rounded-[10px] border border-[#bdbdb4] bg-[#fbfbf7] px-3 py-2 text-[13px] text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] placeholder:text-[#7a7a7a] focus-visible:border-[#161616] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616]',
-  textarea:
-    'w-full rounded-[10px] border border-[#bdbdb4] bg-[#fbfbf7] px-3 py-2 text-[13px] text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] placeholder:text-[#7a7a7a] focus-visible:border-[#161616] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616]',
-
-  pill:
-    'inline-flex items-center gap-2 rounded-full border border-[#cfcfc7] bg-[#f7f7f2] px-3 py-1 text-[11px] font-semibold text-[#161616]',
-
-  statusDot: 'h-2 w-2 rounded-full bg-[#161616]',
-  statusDotDim: 'h-2 w-2 rounded-full bg-[#6a6a6a]',
-}
-
+// ---------- tiny icon set (keep clean + consistent) ----------
 const Icons = {
-  Camera: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="3.7" />
+  Camera: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M4 7h3l2-2h6l2 2h3v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" />
+      <path d="M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
     </svg>
   ),
-  FileText: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
+  Shield: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 2 20 6v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4Z" />
+      <path d="M9 12l2 2 4-4" />
     </svg>
   ),
-  Shield: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
-      <path d="M9 12l2 2 4-5" />
+  FileText: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h8" />
+      <path d="M8 9h4" />
     </svg>
   ),
-  AlertTriangle: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
+  AlertTriangle: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M10.3 3.2 2.3 17a2 2 0 0 0 1.7 3h16a2 2 0 0 0 1.7-3l-8-13.8a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
     </svg>
   ),
-  Check: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polyline points="20 6 9 17 4 12" />
+  Plus: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
     </svg>
   ),
-  X: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+  Settings: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+      <path d="M19.4 15a7.9 7.9 0 0 0 .1-6l-2.1.8a6.2 6.2 0 0 0-1.2-1.2l.8-2.1a7.9 7.9 0 0 0-6-.1l.1 2.2a6.2 6.2 0 0 0-1.7.7L7.8 7.7a7.9 7.9 0 0 0-2.9 5.2l2.1.8c0 .6.1 1.2.3 1.7l-1.7 1.4a7.9 7.9 0 0 0 4.6 3.8l.8-2.1c.6.1 1.2.1 1.8 0l.8 2.1a7.9 7.9 0 0 0 5.2-2.9l-1.4-1.7c.3-.5.6-1.1.8-1.6l2.2.1Z" />
     </svg>
   ),
-  Plus: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  ),
-  Settings: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  ),
-  LogOut: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+  LogOut: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  ),
+  X: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M18 6 6 18" />
+      <path d="M6 6l12 12" />
+    </svg>
+  ),
+  Check: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M20 6 9 17l-5-5" />
     </svg>
   ),
 }
 
-function nowStamp() {
-  try {
-    return new Date().toISOString()
-  } catch {
-    return String(Date.now())
-  }
+// ---------- small helpers ----------
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ')
 }
 
-function fmtTime(ts) {
-  try {
-    const d = new Date(ts)
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  } catch {
-    return '--:--'
-  }
+function clamp(n, min, max) {
+  return Math.min(max, Math.max(min, n))
 }
 
-function useTypewriter(lines = [], speed = 28) {
-  const [index, setIndex] = useState(0)
-  const [text, setText] = useState('')
+// ---------- doc index (from your Supabase screenshots) ----------
+const DOC_INDEX = [
+  '3-Compartment Sink',
+  'Consumer Advisory',
+  'Cooling Foods',
+  'Cross Contamination',
+  'Date Marking Guide',
+  'Enforcement Action — Washtenaw County, MI',
+  'FDA Food Code 2022',
+  'FOG',
+  'Food Allergy Information — Washtenaw County, MI',
+  'Food Service Inspection Program — Washtenaw County, MI',
+  'Food Labeling Guide',
+  'Food Temperatures',
+  'Inspection Report Types — Washtenaw County, MI',
+  'Internal Cooking Temperatures',
+  'Michigan Act 92 of 2000',
+  'Michigan Modified Food Code',
+  'New Business Information Packet',
+  'Norovirus Environmental Cleaning',
+  'Procedures for Administration & Enforcement — Michigan Food Code',
+  'Retail Food Establishments Emergency Action Plan',
+  'Minimum Cooking Temperatures & Holding Times',
+  'USDA Safe Minimum Internal Temperature Chart',
+  'Violation Types — Washtenaw County, MI',
+]
+
+// ---------- UI tokens ----------
+const UI = {
+  bg: 'bg-[#fffeff]',
+  shell: 'bg-[#f3f3f1]',
+  ink: 'text-[#111111]',
+  ink2: 'text-[#333333]',
+  hair: 'border-black/10',
+  hair2: 'border-black/15',
+  shadow: 'shadow-[0_18px_60px_rgba(0,0,0,0.08)]',
+  shadow2: 'shadow-[0_10px_30px_rgba(0,0,0,0.08)]',
+  radius: 'rounded-[16px]',
+  radius2: 'rounded-[14px]',
+}
+
+function GlobalStyles() {
+  return (
+    <style jsx global>{`
+      :root {
+        --plm-doc-duration: 34s;
+      }
+      @keyframes plm-doc-scroll {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-50%); }
+      }
+      .plm-doc-scroll {
+        animation: plm-doc-scroll var(--plm-doc-duration) linear infinite;
+        will-change: transform;
+      }
+      @keyframes plm-soft-pulse {
+        0%, 100% { opacity: 0.55; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.06); }
+      }
+      .plm-soft-pulse { animation: plm-soft-pulse 2.4s ease-in-out infinite; }
+      .plm-scanlines {
+        background-image: repeating-linear-gradient(
+          to bottom,
+          rgba(0,0,0,0.05),
+          rgba(0,0,0,0.05) 1px,
+          rgba(0,0,0,0) 3px,
+          rgba(0,0,0,0) 7px
+        );
+      }
+    `}</style>
+  )
+}
+
+// ---------- typewriter ----------
+function useTypewriter(lines, speed = 18, lineDelay = 220) {
+  const [lineIndex, setLineIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    if (!lines.length) return
-    const current = lines[index] || ''
-    let i = 0
-    const tick = () => {
-      setText(current.slice(0, i))
-      i += 1
-      if (i <= current.length) {
-        setTimeout(tick, speed)
-      } else if (index < lines.length - 1) {
-        setTimeout(() => setIndex((v) => v + 1), speed * 8)
-      } else {
-        setDone(true)
+    if (!lines?.length) return
+    if (done) return
+
+    const current = lines[lineIndex] ?? ''
+    if (charIndex >= current.length) {
+      if (lineIndex >= lines.length - 1) {
+        const t = setTimeout(() => setDone(true), lineDelay)
+        return () => clearTimeout(t)
       }
+      const t = setTimeout(() => {
+        setLineIndex((v) => v + 1)
+        setCharIndex(0)
+      }, lineDelay)
+      return () => clearTimeout(t)
     }
-    tick()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, lines.join('|')])
 
-  return { text, index, done }
+    const t = setTimeout(() => setCharIndex((v) => v + 1), speed)
+    return () => clearTimeout(t)
+  }, [lines, lineIndex, charIndex, speed, lineDelay, done])
+
+  const currentLineFull = lines?.[lineIndex] ?? ''
+  const currentLineTyped = currentLineFull.slice(0, charIndex)
+
+  const history = useMemo(() => {
+    const h = []
+    for (let i = 0; i < lineIndex; i++) h.push(lines[i])
+    return h
+  }, [lineIndex, lines])
+
+  return { history, currentLineTyped, done }
 }
 
-function TerminalWindow({
-  label,
-  title,
-  right,
-  status = 'ok',
-  actions,
-  children,
-  className = '',
-  bodyClassName = '',
-}) {
-  const dotClass = status === 'dim' ? UI.statusDotDim : UI.statusDot
+function StatusPill({ label = 'READY', pulse = true }) {
   return (
-    <div className={`${UI.win} ${className}`}>
-      <div className={`${UI.winHeader} ${UI.mono}`}>
-        <div className="min-w-0">
-          {label && <div className={UI.winLabel}>{label}</div>}
-          {title && <div className={UI.winTitle}>{title}</div>}
+    <span className={cn('inline-flex items-center gap-2 rounded-full border border-black/15 bg-white/70 px-2.5 py-1 text-[11px] tracking-[0.14em] text-black/70', plexMono.className)}>
+      <span className={cn('h-1.5 w-1.5 rounded-full bg-black/70', pulse && 'plm-soft-pulse')} />
+      <span>{label}</span>
+    </span>
+  )
+}
+
+function Panel({ label, title, children, right }) {
+  return (
+    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70', UI.shadow2)}>
+      <div className={cn('flex items-start justify-between gap-4 border-b', UI.hair, 'px-4 py-3')}>
+        <div>
+          <div className={cn('text-[10px] tracking-[0.22em] text-black/50', plexMono.className)}>{label}</div>
+          <div className={cn('mt-0.5 text-[13px] font-semibold text-black/80', outfit.className)}>{title}</div>
         </div>
-        <div className="flex items-center gap-3">
-          {right && <div className="hidden sm:block text-[12px] text-[#575757]">{right}</div>}
-          <span className={dotClass} />
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
-        </div>
+        {right ? <div className="pt-0.5">{right}</div> : null}
       </div>
-      <div className={`${UI.winBody} ${bodyClassName}`}>
-        <div className={UI.phosphor} />
-        <div className={UI.scanlines} />
-        <div className="relative">{children}</div>
-      </div>
+      <div className="p-4">{children}</div>
     </div>
   )
 }
 
-function MonoButton({ variant = 'primary', className = '', children, ...props }) {
-  const base = variant === 'ghost' ? UI.cmdBtnGhost : variant === 'secondary' ? UI.cmdBtn : UI.cmdBtnPrimary
+function DotGridBg() {
   return (
-    <button className={`${base} ${UI.mono} ${className}`} {...props}>
-      {children}
-    </button>
-  )
-}
-
-const MonoInput = forwardRef(function MonoInput({ component = 'input', className = '', ...props }, ref) {
-  const Comp = component === 'textarea' ? 'textarea' : component === 'select' ? 'select' : 'input'
-  const base = component === 'textarea' ? UI.textarea : UI.input
-  return <Comp ref={ref} className={`${base} ${UI.mono} ${className}`} {...props} />
-})
-
-function AppShell({ children }) {
-  return (
-    <div className={UI.pageBg}>
-      <div className={UI.gridBg} />
-      <div className={UI.noiseOverlay} />
-      <div className={UI.vignette} />
-      <div className={UI.container}>{children}</div>
+    <div className="pointer-events-none absolute inset-0">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.06)_1px,transparent_0)] [background-size:18px_18px] opacity-70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-white/70" />
     </div>
   )
 }
 
-function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
-  const [visible, setVisible] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [phase, setPhase] = useState('Starting…')
-  const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
-  const cfg = useMemo(() => {
-    return mode === 'vision' ? { baseCap: 86, finalCap: 93, k: 0.028 } : { baseCap: 90, finalCap: 96, k: 0.036 }
-  }, [mode])
+function Shell({ children }) {
+  return (
+    <div className={cn('relative overflow-hidden border', UI.hair, UI.radius, UI.shell, UI.shadow)}>
+      <DotGridBg />
+      <div className="relative">{children}</div>
+    </div>
+  )
+}
+
+// ---------- boot ----------
+function BootLine({ line }) {
+  const idx = line.indexOf('READY')
+  if (idx === -1) return <span>{line}</span>
+  const left = line.slice(0, idx)
+  const right = line.slice(idx + 'READY'.length)
+  return (
+    <span>
+      {left}
+      <span className="ml-1 inline-flex items-center gap-2">
+        <span className="plm-soft-pulse inline-block h-1.5 w-1.5 rounded-full bg-black/80" />
+        <span className="font-semibold tracking-[0.12em] text-black/70">READY</span>
+      </span>
+      {right}
+    </span>
+  )
+}
+
+function BootPanel({ onDone, collapsed }) {
+  const bootLines = useMemo(
+    () => [
+      '[ protocolLM v1.0 ]',
+      'Initializing shell…',
+      'Connecting: Washtenaw corpus…',
+      'Index: documents table…',
+      'Image analysis module: READY',
+      'Compliance Q&A module: READY',
+      'Local rules module: READY',
+      'License module: READY',
+      'System: ONLINE',
+    ],
+    []
+  )
+
+  const { history, currentLineTyped, done } = useTypewriter(bootLines, 16, 210)
 
   useEffect(() => {
-    if (refs.current.hideTimer) {
-      clearTimeout(refs.current.hideTimer)
-      refs.current.hideTimer = null
-    }
+    if (!done) return
+    const t = setTimeout(() => onDone?.(), 600)
+    return () => clearTimeout(t)
+  }, [done, onDone])
 
-    if (active) {
-      setVisible(true)
-      setProgress(0)
-      setPhase(mode === 'vision' ? 'IMG → PIPELINE' : 'TX → PIPELINE')
-      refs.current.pct = 0
-      refs.current.startedAt = Date.now()
-      if (refs.current.timer) clearInterval(refs.current.timer)
-      refs.current.timer = setInterval(() => {
-        const elapsed = (Date.now() - refs.current.startedAt) / 1000
-        const cap = elapsed < 1.4 ? cfg.baseCap - 10 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
-        const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
-        refs.current.pct = Math.max(refs.current.pct, next)
-        const pctInt = Math.min(99, Math.floor(refs.current.pct))
-        setProgress(pctInt)
-        if (pctInt < 15) setPhase(mode === 'vision' ? 'HASHING FRAME…' : 'READING INPUT…')
-        else if (pctInt < 45) setPhase('COLLECTING REFERENCES…')
-        else if (pctInt < 70) setPhase('CROSS-CHECKING RULESET…')
-        else if (pctInt < 90) setPhase('COMPOSING RESPONSE…')
-        else setPhase('FINALIZING…')
-      }, 120)
-      return () => {
-        if (refs.current.timer) clearInterval(refs.current.timer)
-        refs.current.timer = null
-      }
-    }
-
-    if (!active && visible) {
-      if (refs.current.timer) clearInterval(refs.current.timer)
-      refs.current.timer = null
-      setProgress(100)
-      setPhase('DONE')
-      refs.current.hideTimer = setTimeout(() => {
-        setVisible(false)
-        setProgress(0)
-      }, 360)
-      return () => {
-        if (refs.current.hideTimer) clearTimeout(refs.current.hideTimer)
-        refs.current.hideTimer = null
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, requestKey, cfg, mode, visible])
-
-  if (!visible) return null
-
-  return (
-    <TerminalWindow label="Pipeline" title="Execution Progress" right={mode === 'vision' ? 'VISION' : 'TEXT'} status="dim">
-      <div className={`${UI.mono} space-y-2`}>
-        <div className="flex items-center justify-between text-[12px] text-[#575757]">
-          <span className="font-semibold">{phase}</span>
-          <span className="font-semibold">{progress}%</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-          <div className="h-full bg-[#161616] transition-all" style={{ width: `${progress}%` }} />
+  if (collapsed) {
+    return (
+      <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/75', 'p-4', UI.shadow2)}>
+        <div className={cn('text-[12px] text-black/70', plexMono.className)}>[ protocolLM v1.0 ]</div>
+        <div className="mt-2 h-1.5 w-28 rounded-full bg-black/10">
+          <div className="h-full w-20 rounded-full bg-black/35" />
         </div>
       </div>
-    </TerminalWindow>
+    )
+  }
+
+  return (
+    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/75', 'overflow-hidden', UI.shadow2)}>
+      <div className={cn('flex items-center justify-between border-b', UI.hair, 'px-4 py-3')}>
+        <div className={cn('text-[10px] tracking-[0.22em] text-black/50', plexMono.className)}>SYSTEM BOOT</div>
+        <div className={cn('text-[10px] tracking-[0.22em] text-black/40', plexMono.className)}>SHELL</div>
+      </div>
+      <div className={cn('relative p-4', plexMono.className)}>
+        <div className="pointer-events-none absolute inset-0 plm-scanlines opacity-40" />
+        <div className="relative space-y-1 text-[12px] leading-5 text-black/70">
+          {history.map((l, i) => (
+            <div key={i}>
+              <BootLine line={l} />
+            </div>
+          ))}
+          {!done ? <div>{currentLineTyped}<Cursor /></div> : null}
+          {done ? (
+            <div className="pt-2 text-black/60">
+              Press <span className="font-semibold text-black/70">ENTER</span> to continue…
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Cursor() {
+  return <span className="ml-0.5 inline-block h-[12px] w-[8px] translate-y-[2px] animate-pulse rounded-[2px] bg-black/50" />
+}
+
+// ---------- doc scroller ----------
+function DocDatabase({ titles }) {
+  const rows = useMemo(() => {
+    const uniq = Array.from(new Set((titles || []).map((t) => (t || '').trim()).filter(Boolean)))
+    return uniq.map((t, i) => ({
+      id: String(i + 1).padStart(3, '0'),
+      title: t,
+      status: 'LOADED',
+    }))
+  }, [titles])
+
+  const doubled = useMemo(() => rows.concat(rows), [rows])
+
+  const duration = useMemo(() => {
+    // slower as list grows; clamp to feel calm
+    const seconds = clamp(rows.length * 2.1, 28, 70)
+    return `${seconds}s`
+  }, [rows.length])
+
+  return (
+    <div
+      className={cn(
+        UI.radius2,
+        'relative overflow-hidden border',
+        UI.hair,
+        'bg-[#0f0f10] text-white/80',
+        'shadow-[0_10px_30px_rgba(0,0,0,0.25)]'
+      )}
+      style={{ ['--plm-doc-duration']: duration }}
+    >
+      <div className="pointer-events-none absolute inset-0 opacity-25 plm-scanlines" />
+      <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/70 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
+
+      <div className={cn('flex items-center justify-between border-b border-white/10 px-4 py-3', plexMono.className)}>
+        <div className="text-[10px] tracking-[0.22em] text-white/50">DOCUMENTS</div>
+        <div className="text-[10px] tracking-[0.22em] text-white/35">INDEX</div>
+      </div>
+
+      <div className="relative h-[220px] overflow-hidden">
+        <div className={cn('plm-doc-scroll flex flex-col', plexMono.className)}>
+          {doubled.map((r, idx) => (
+            <div
+              key={`${r.id}-${idx}`}
+              className="flex items-center gap-3 border-b border-white/10 px-4 py-2 text-[12px]"
+            >
+              <span className="w-10 text-white/35">{r.id}</span>
+              <span className="flex-1 truncate">{r.title}</span>
+              <span className="text-white/30">{r.status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Landing ----------
+function LandingPage({ onStartAuth }) {
+  const modules = useMemo(
+    () => [
+      {
+        label: 'Visual Scan',
+        icon: <Icons.Camera className="h-4 w-4" />,
+        desc: 'Snap a photo, flag risks, get fixes.',
+        status: 'READY',
+      },
+      {
+        label: 'Compliance Q&A',
+        icon: <Icons.Shield className="h-4 w-4" />,
+        desc: 'Ask in plain English, cite your corpus.',
+        status: 'READY',
+      },
+      {
+        label: 'Local Rules',
+        icon: <Icons.FileText className="h-4 w-4" />,
+        desc: 'Washtenaw-first requirements and enforcement.',
+        status: 'READY',
+      },
+      {
+        label: 'Licensing',
+        icon: <Icons.AlertTriangle className="h-4 w-4" />,
+        desc: 'Know what you need before you open.',
+        status: 'READY',
+      },
+    ],
+    []
+  )
+
+  const docs = useMemo(() => Array.from(new Set(DOC_INDEX)), [])
+
+  return (
+    <div className="w-full">
+      <div className="mx-auto max-w-6xl px-5 pb-16 pt-10">
+        <Shell>
+          <div className="border-b border-black/10 px-6 py-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div className={cn('text-[11px] tracking-[0.22em] text-black/45', plexMono.className)}>PROTOCOLLM</div>
+                <h1 className={cn('mt-1 text-2xl font-semibold text-black/90 md:text-3xl', outfit.className)}>
+                  A local compliance console for food service
+                </h1>
+                <p className={cn('mt-2 max-w-2xl text-[14px] leading-6 text-black/60', inter.className)}>
+                  Built for Washtenaw County workflows: documents you trust, answers you can act on, scans that help staff catch issues
+                  before the inspector does.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onStartAuth}
+                  className={cn(
+                    UI.radius2,
+                    'inline-flex items-center gap-2 border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white',
+                    'transition hover:bg-black/90'
+                  )}
+                >
+                  <Icons.Plus className="h-4 w-4" />
+                  Start 7-day trial
+                </button>
+                <a
+                  href="#pricing"
+                  className={cn(UI.radius2, 'inline-flex items-center border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
+                >
+                  View pricing
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 p-6 md:grid-cols-12">
+            <div className="md:col-span-7">
+              <Panel
+                label="MODULE DIRECTORY"
+                title="Loaded modules"
+                right={<StatusPill label="SYSTEM READY" pulse />}
+              >
+                <div className="space-y-2">
+                  {modules.map((m) => (
+                    <div key={m.label} className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 px-4 py-3')}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white">
+                            {m.icon}
+                          </span>
+                          <div>
+                            <div className={cn('text-[12px] font-semibold text-black/80', outfit.className)}>{m.label}</div>
+                            <div className={cn('text-[12px] text-black/55', inter.className)}>{m.desc}</div>
+                          </div>
+                        </div>
+                        <StatusPill label={m.status} pulse />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Panel label="TRIAL" title="Simple, one plan">
+                  <div className={cn('text-[12px] leading-6 text-black/65', inter.className)}>
+                    Unlimited usage under one price point. Designed for small teams that just want answers fast.
+                  </div>
+                  <div className="mt-4 flex items-end justify-between gap-3">
+                    <div>
+                      <div className={cn('text-[24px] font-semibold text-black', outfit.className)}>$100</div>
+                      <div className={cn('text-[12px] text-black/55', inter.className)}>per month</div>
+                    </div>
+                    <div className="text-right">
+                      <div className={cn('text-[12px] text-black/55', inter.className)}>$1,000 / year</div>
+                      <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>ANNUAL</div>
+                    </div>
+                  </div>
+                </Panel>
+
+                <Panel label="OUTPUT" title="Citable answers">
+                  <div className={cn('text-[12px] leading-6 text-black/65', inter.className)}>
+                    Q&A responses are grounded in your Washtenaw + Michigan corpus. This keeps the tool useful and predictable for staff.
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-[12px] text-black/60">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white">
+                      <Icons.FileText className="h-4 w-4" />
+                    </span>
+                    <span className={cn(plexMono.className, 'tracking-[0.12em]')}>SOURCES INCLUDED</span>
+                  </div>
+                </Panel>
+              </div>
+            </div>
+
+            <div className="md:col-span-5">
+              <Panel label="DOCUMENTATION" title="Scrolling index">
+                <div className={cn('mb-3 text-[12px] text-black/60', inter.className)}>
+                  Live view of what the system is trained on (de-duplicated, extension-free).
+                </div>
+                <DocDatabase titles={docs} />
+                <div className={cn('mt-3 text-[11px] text-black/45', inter.className)}>
+                  Add / rename documents anytime—this landing list can be wired to your DB later.
+                </div>
+              </Panel>
+            </div>
+
+            <div className="md:col-span-12" id="pricing">
+              <Panel label="PRICING" title="One tier, no surprises">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
+                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>MONTHLY</div>
+                    <div className={cn('mt-1 text-[26px] font-semibold text-black', outfit.className)}>$100</div>
+                    <div className={cn('text-[12px] text-black/55', inter.className)}>Unlimited usage</div>
+                  </div>
+                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
+                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>ANNUAL</div>
+                    <div className={cn('mt-1 text-[26px] font-semibold text-black', outfit.className)}>$1,000</div>
+                    <div className={cn('text-[12px] text-black/55', inter.className)}>Save two months</div>
+                  </div>
+                  <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
+                    <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>INCLUDES</div>
+                    <ul className={cn('mt-2 space-y-2 text-[12px] text-black/65', inter.className)}>
+                      {['Visual scan', 'Compliance Q&A', 'Washtenaw-first corpus', 'Unlimited usage'].map((t) => (
+                        <li key={t} className="flex items-center gap-2">
+                          <Icons.Check className="h-4 w-4 text-black/60" />
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </Panel>
+            </div>
+          </div>
+        </Shell>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Auth UI ----------
+function MonoInput({ label, helper, error, right, ...props }) {
+  return (
+    <div>
+      {label ? <div className={cn('mb-2 text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>{label}</div> : null}
+      <div className={cn(UI.radius2, 'flex items-stretch gap-2 border', error ? 'border-red-400/50' : UI.hair, 'bg-white/75')}>
+        <input
+          {...props}
+          className={cn(
+            plexMono.className,
+            'min-w-0 flex-1 bg-transparent px-4 py-3 text-[13px] text-black/80 outline-none placeholder:text-black/35'
+          )}
+        />
+        {right ? <div className="flex items-center pr-3">{right}</div> : null}
+      </div>
+      {helper ? <div className={cn('mt-2 text-[12px] text-black/45', inter.className)}>{helper}</div> : null}
+      {error ? <div className={cn('mt-2 text-[12px] text-red-600/80', inter.className)}>{error}</div> : null}
+    </div>
+  )
+}
+
+function AuthCard({ mode, email, setEmail, code, setCode, onRequestCode, onVerify, onBack, loading, error }) {
+  return (
+    <div className="mx-auto max-w-md px-5 pb-16 pt-10">
+      <Shell>
+        <div className="border-b border-black/10 px-6 py-5">
+          <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>AUTH</div>
+          <div className={cn('mt-1 text-[18px] font-semibold text-black/85', outfit.className)}>
+            {mode === 'email' ? 'Request login code' : 'Enter verification code'}
+          </div>
+          <div className={cn('mt-1 text-[12px] text-black/55', inter.className)}>
+            {mode === 'email'
+              ? 'We’ll email a 6‑digit code. No passwords.'
+              : 'Check your inbox and enter the 6‑digit code to continue.'}
+          </div>
+        </div>
+
+        <div className="p-6">
+          {mode === 'email' ? (
+            <div className="space-y-4">
+              <MonoInput
+                label="EMAIL"
+                placeholder="you@restaurant.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={error}
+              />
+              <button
+                onClick={onRequestCode}
+                disabled={loading || !email}
+                className={cn(
+                  UI.radius2,
+                  'w-full border border-black/15 bg-black px-4 py-3 text-[12px] font-semibold text-white transition hover:bg-black/90 disabled:opacity-50'
+                )}
+              >
+                {loading ? 'Sending…' : 'Send code'}
+              </button>
+              <button
+                onClick={onBack}
+                className={cn(UI.radius2, 'w-full border border-black/15 bg-white/70 px-4 py-3 text-[12px] font-semibold text-black/70 hover:bg-white')}
+              >
+                Back
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <MonoInput
+                label="CODE"
+                placeholder="123456"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                error={error}
+              />
+              <button
+                onClick={onVerify}
+                disabled={loading || code.length < 6}
+                className={cn(
+                  UI.radius2,
+                  'w-full border border-black/15 bg-black px-4 py-3 text-[12px] font-semibold text-white transition hover:bg-black/90 disabled:opacity-50'
+                )}
+              >
+                {loading ? 'Verifying…' : 'Verify'}
+              </button>
+              <button
+                onClick={onBack}
+                className={cn(UI.radius2, 'w-full border border-black/15 bg-white/70 px-4 py-3 text-[12px] font-semibold text-black/70 hover:bg-white')}
+              >
+                Back
+              </button>
+            </div>
+          )}
+        </div>
+      </Shell>
+    </div>
+  )
+}
+
+// ---------- App (chat / scan) ----------
+function SourcePill({ text }) {
+  return (
+    <span className={cn('inline-flex items-center rounded-full border border-black/15 bg-white/70 px-2 py-1 text-[11px] text-black/70', plexMono.className)}>
+      {text}
+    </span>
   )
 }
 
 function TypingIndicator() {
   return (
-    <div className={`${UI.mono} flex items-center gap-2 text-[12px] text-[#575757]`}>
-      <span className="h-2 w-2 animate-pulse rounded-full bg-[#161616]" />
-      <span className="h-2 w-2 animate-pulse rounded-full bg-[#3a3a3a] [animation-delay:120ms]" />
-      <span className="h-2 w-2 animate-pulse rounded-full bg-[#6b6b6b] [animation-delay:240ms]" />
-      <span className="ml-1">PROCESSING…</span>
+    <div className={cn('inline-flex items-center gap-1', plexMono.className)}>
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45 [animation-delay:-0.2s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45 [animation-delay:-0.1s]" />
+      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black/45" />
     </div>
   )
 }
 
-function LogRow({ message, index }) {
-  const isUser = message.role === 'user'
-  const ts = fmtTime(message.ts || message.created_at || Date.now())
-  const bg = index % 2 === 0 ? 'bg-[#fbfbf7]' : 'bg-[#f4f4ee]'
-  const tag = isUser ? 'INPUT' : 'PROTOCOL'
-  const tagBg = isUser ? 'bg-[#161616] text-[#f6f5f2]' : 'bg-[#2a2a2a] text-[#f6f5f2]'
+function MessageBlock({ role, ts, content, sources, image }) {
+  const [imgUrl, setImgUrl] = useState(null)
 
+  useEffect(() => {
+    if (!image) return
+    if (typeof image === 'string') {
+      setImgUrl(image)
+      return
+    }
+    try {
+      const url = URL.createObjectURL(image)
+      setImgUrl(url)
+      return () => URL.revokeObjectURL(url)
+    } catch {
+      // ignore
+    }
+  }, [image])
+
+  const isUser = role === 'user'
   return (
-    <div className={`overflow-hidden rounded-[10px] border border-[#cfcfc7] ${bg}`}>
-      <div className={`flex items-center justify-between gap-3 border-b border-[#dcdcd4] px-3 py-2 ${UI.mono}`}>
-        <div className="flex min-w-0 items-center gap-2">
-          <span className={`rounded-[8px] px-2 py-1 text-[11px] font-semibold tracking-tight ${tagBg}`}>{tag}</span>
-          <span className="truncate text-[12px] text-[#575757]">{isUser ? 'COMMAND/QUERY' : 'RULESET RESPONSE'}</span>
+    <div className={cn('space-y-2', isUser ? 'text-black/80' : 'text-black/80')}>
+      <div className={cn(UI.radius2, 'border', UI.hair, isUser ? 'bg-white/70' : 'bg-[#f6f6f4]', 'p-4')}>
+        <div className={cn('mb-2 flex items-center justify-between text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
+          <span>{isUser ? 'USER' : 'PROTOCOLLM'}</span>
+          <span className="text-black/35">{ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-[#575757]">
-          <span>{ts}</span>
-          {message.image && (
-            <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 py-1">
-              <Icons.Camera />
-              <span className="text-[11px] font-semibold">FRAME</span>
-            </span>
-          )}
-        </div>
-      </div>
+        <div className={cn('whitespace-pre-wrap text-[13px] leading-6', inter.className)}>{content}</div>
 
-      <div className="px-3 py-3">
-        <div className={`${UI.mono} whitespace-pre-wrap text-[13px] leading-6 text-[#161616]`}>
-          {message.content || (isUser ? '—' : '…')}
-        </div>
+        {imgUrl ? (
+          <div className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white">
+            <img src={imgUrl} alt="attached" className="h-48 w-full object-cover" />
+            <div className={cn('border-t border-black/10 px-3 py-2 text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
+              ATTACHED IMAGE
+            </div>
+          </div>
+        ) : null}
 
-        {!!message.sources?.length && (
+        {sources?.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
-            {message.sources.map((src, i) => (
-              <span key={i} className={UI.pill}>
-                {src}
-              </span>
+            {sources.map((s, idx) => (
+              <SourcePill key={`${s}-${idx}`} text={s} />
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
 }
 
-function BootPanel({ onComplete }) {
-  const bootLines = [
-    '[ protocolLM v1.0 ]',
-    'Initializing compliance engine…',
-    'Loading Washtenaw County ruleset…',
-    'Indexing enforcement actions…',
-    'Image analysis module: READY',
-    'Q&A module: READY',
-    'License status: TRIAL AVAILABLE',
-  ]
-  const { text, index, done } = useTypewriter(bootLines, 26)
-  const [collapsed, setCollapsed] = useState(false)
-
-  useEffect(() => {
-    if (done) {
-      const t = setTimeout(() => {
-        setCollapsed(true)
-        setTimeout(() => onComplete?.(), 220)
-      }, 520)
-      return () => clearTimeout(t)
-    }
-  }, [done, onComplete])
-
-  const history = bootLines.slice(0, index).map((line) => line)
-  const currentLine = text
-
+function ChatComposer({ value, setValue, onSend, disabled, onPickImage, imageLabel, onClearImage }) {
   return (
-    <div
-      className={`overflow-hidden transition-all ease-linear ${collapsed ? 'max-h-[78px] opacity-85' : 'max-h-[360px]'}`}
-      style={{ transitionDuration: '600ms' }}
-    >
-      <TerminalWindow label="System boot" title="[ protocolLM v1.0 ]" right="WASHTENAW PROFILE" status="dim">
-        <div className={`${UI.mono} space-y-1 text-[13px] leading-6`}>
-          {history.map((line, i) => (
-            <div key={i}>{line}</div>
-          ))}
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <span>{currentLine}</span>
-              <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-[#161616]" />
-            </div>
-          )}
+    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-3')}>
+      <div className="flex items-center justify-between gap-2">
+        <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>COMMAND</div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPickImage}
+            className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white px-3 py-1.5 text-[11px] font-semibold text-black/70 hover:bg-white/90')}
+            type="button"
+          >
+            <Icons.Camera className="h-4 w-4" />
+            Attach
+          </button>
+          <button
+            onClick={onSend}
+            disabled={disabled}
+            className={cn(UI.radius2, 'inline-flex items-center border border-black/15 bg-black px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-black/90 disabled:opacity-50')}
+            type="button"
+          >
+            Run
+          </button>
         </div>
-      </TerminalWindow>
-    </div>
-  )
-}
+      </div>
 
-function LandingPage({ onShowPricing, onShowAuth }) {
-  const [unlocked, setUnlocked] = useState(false)
-
-  const modules = [
-    { code: 'VIS', label: 'Visual Scan', desc: 'Attach kitchen frames for violation detection.', icon: <Icons.Camera /> },
-    { code: 'QNA', label: 'Compliance Q&A', desc: 'Direct questions to the ruleset without jargon.', icon: <Icons.FileText /> },
-    { code: 'LOC', label: 'Local Enforcement Data', desc: 'Cross-reference Washtenaw actions inline.', icon: <Icons.AlertTriangle /> },
-    { code: 'LIC', label: 'Site License', desc: 'Single-location license with unlimited usage.', icon: <Icons.Shield /> },
-  ]
-
-  return (
-    <AppShell>
-      <div className="space-y-8">
-        <BootPanel onComplete={() => setUnlocked(true)} />
-
-        {unlocked && (
-          <div className="space-y-6">
-            <TerminalWindow label="Interface" title="Unlocked" right="protocolLM shell">
-              <div className="space-y-4">
-                <div className={`rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] ${UI.mono}`}>
-                  <div className="flex items-center justify-between border-b border-[#dcdcd4] px-3 py-2">
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                      System message
-                    </div>
-                    <span className={UI.statusDot} />
-                  </div>
-                  <div className="px-3 py-3">
-                    <div className={`${UI.heading} text-[18px] font-semibold tracking-tight text-[#161616]`}>
-                      I’m protocolLM.
-                    </div>
-                    <div className="mt-1 text-[13px] leading-6 text-[#161616]">
-                      I help food service teams identify violations before inspectors do.
-                    </div>
-                    <div className="mt-1 text-[13px] leading-6 text-[#575757]">
-                      Configured for Washtenaw County. Built to run, not to sell.
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] ${UI.mono}`}>
-                  <div className="flex items-center justify-between border-b border-[#dcdcd4] px-3 py-2">
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                      Module directory
-                    </div>
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Status</div>
-                  </div>
-                  <div className="divide-y divide-[#e1e1da]">
-                    {modules.map((m) => (
-                      <div key={m.code} className="flex items-start justify-between gap-4 px-3 py-3">
-                        <div className="flex min-w-0 items-start gap-3">
-                          <div className="mt-[2px] text-[#161616]">{m.icon}</div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 py-1 text-[11px] font-semibold">
-                                {m.code}
-                              </span>
-                              <div className="truncate text-[13px] font-semibold text-[#161616]">{m.label}</div>
-                            </div>
-                            <div className="mt-1 text-[12px] leading-5 text-[#575757]">{m.desc}</div>
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2 pt-1 text-[12px] text-[#575757]">
-                          <span className="h-2 w-2 rounded-full bg-[#161616]" />
-                          READY
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <TerminalWindow label="License" title="Site License" right="single location" status="dim">
-                    <div className={`${UI.mono} space-y-3`}>
-                      <div className="overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-                        <div className="grid grid-cols-3 border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                          <div>Field</div>
-                          <div>Value</div>
-                          <div className="text-right">Notes</div>
-                        </div>
-                        <div className="divide-y divide-[#e1e1da] text-[12px]">
-                          <div className="grid grid-cols-3 px-3 py-2">
-                            <div className="text-[#575757]">PRICE</div>
-                            <div className="font-semibold text-[#161616]">$100 / month</div>
-                            <div className="text-right text-[#575757]">Annual: $1,000</div>
-                          </div>
-                          <div className="grid grid-cols-3 px-3 py-2">
-                            <div className="text-[#575757]">TRIAL</div>
-                            <div className="font-semibold text-[#161616]">7 days</div>
-                            <div className="text-right text-[#575757]">cancel anytime</div>
-                          </div>
-                          <div className="grid grid-cols-3 px-3 py-2">
-                            <div className="text-[#575757]">USAGE</div>
-                            <div className="font-semibold text-[#161616]">Unlimited</div>
-                            <div className="text-right text-[#575757]">text + image</div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw references', 'Team access'].map((t) => (
-                          <span key={t} className={UI.pill}>
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <MonoButton onClick={onShowPricing}>
-                          <Icons.Shield /> Activate license
-                        </MonoButton>
-                        <MonoButton variant="secondary" onClick={onShowAuth}>
-                          Access console
-                        </MonoButton>
-                      </div>
-                    </div>
-                  </TerminalWindow>
-
-                  <TerminalWindow label="Documentation" title="Scope" right="ruleset map" status="dim">
-                    <div className={`${UI.mono} space-y-2 text-[12px]`}>
-                      {[
-                        ['LOCAL', 'Washtenaw County enforcement actions'],
-                        ['CODE', 'Michigan Modified Food Code + FDA 2022'],
-                        ['VISION', 'Line, prep, dish, storage stations'],
-                      ].map(([k, v]) => (
-                        <div
-                          key={k}
-                          className="flex items-center justify-between gap-3 rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] px-3 py-2"
-                        >
-                          <span className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">{k}</span>
-                          <span className="text-right font-semibold text-[#161616]">{v}</span>
-                        </div>
-                      ))}
-
-                      <div className="pt-2 text-[12px] leading-5 text-[#575757]">
-                        Tip: Try <span className="font-semibold text-[#161616]">Visual Scan</span> for station photos (coolers, prep tables, dish).
-                      </div>
-                    </div>
-                  </TerminalWindow>
-                </div>
-              </div>
-            </TerminalWindow>
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className={`${UI.mono} text-[12px] text-[#575757]`}>
-                <span className="font-semibold text-[#161616]">protocolLM</span> · Washtenaw profile · v1.0
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link className={`${UI.mono} text-[12px] font-semibold text-[#161616] underline decoration-[#c0c0b8]`} href="/privacy">
-                  Privacy
-                </Link>
-                <Link className={`${UI.mono} text-[12px] font-semibold text-[#161616] underline decoration-[#c0c0b8]`} href="/terms">
-                  Terms
-                </Link>
-              </div>
-            </div>
+      {imageLabel ? (
+        <div className="mt-2 flex items-center justify-between rounded-xl border border-black/10 bg-white/70 px-3 py-2">
+          <div className={cn('text-[11px] text-black/60', inter.className)}>
+            <span className={cn('mr-2', plexMono.className)}>IMAGE:</span> {imageLabel}
           </div>
-        )}
-      </div>
-    </AppShell>
-  )
-}
+          <button onClick={onClearImage} className="p-1 text-black/45 hover:text-black/70" type="button">
+            <Icons.X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
 
-function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
-  const [mode, setMode] = useState(initialMode)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [messageKind, setMessageKind] = useState('info')
-  const { isLoaded, executeRecaptcha } = useRecaptcha()
-
-  useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode)
-      setMessage('')
-      setMessageKind('info')
-    }
-  }, [isOpen, initialMode])
-
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault()
-    if (loading) return
-    setLoading(true)
-    setMessage('')
-    setMessageKind('info')
-    try {
-      const captchaToken = await executeRecaptcha(mode)
-      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        setMessageKind('err')
-        setMessage('Security verification failed. Please try again.')
-        return
-      }
-
-      let endpoint = ''
-      const body = { email, captchaToken }
-
-      if (mode === 'reset') {
-        endpoint = '/api/auth/reset-password'
-      } else {
-        body.password = password
-        endpoint = mode === 'signup' ? '/api/auth/signup' : '/api/auth/signin'
-      }
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      const data = await res.json().catch(() => ({}))
-
-      if (!res.ok) {
-        setMessageKind('err')
-        setMessage(data.error || 'Authentication failed.')
-        return
-      }
-
-      if (mode === 'reset') {
-        setMessageKind('ok')
-        setMessage('Check your email for reset instructions.')
-        setTimeout(() => {
-          setMode('signin')
-          setMessage('')
-        }, 2000)
-      } else if (mode === 'signup') {
-        setMessageKind('ok')
-        setMessage('Account created. Check your email to verify.')
-        setTimeout(() => {
-          setMode('signin')
-          setMessage('')
-        }, 2000)
-      } else {
-        setMessageKind('ok')
-        setMessage('Signed in. Redirecting…')
-        setTimeout(() => {
-          onClose()
-          window.location.reload()
-        }, 450)
-      }
-    } catch (error) {
-      console.error('Auth error:', error)
-      setMessageKind('err')
-      setMessage('Unexpected issue. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f0f0f]/40 px-4" onClick={onClose}>
-      <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <TerminalWindow
-          label="Access"
-          title={
-            mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Reset password' : 'Access'
-          }
-          right="protocolLM shell"
-          actions={
-            <button onClick={onClose} className={`${UI.cmdBtnGhost} p-2`} aria-label="Close">
-              <Icons.X />
-            </button>
-          }
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className={`${UI.mono} text-[12px] text-[#575757]`}>
-              {mode === 'signin' && 'Enter credentials to continue.'}
-              {mode === 'signup' && 'Start your 7-day trial.'}
-              {mode === 'reset' && 'We will email you a reset link.'}
-            </div>
-
-            <div className="space-y-2">
-              <label className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold block`}>Email</label>
-              <MonoInput
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@restaurant.com"
-                required
-                autoComplete="email"
-              />
-              <div className={`${UI.mono} text-[11px] text-[#575757]`}>Use the address tied to your location.</div>
-            </div>
-
-            {mode !== 'reset' && (
-              <div className="space-y-2">
-                <label className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold block`}>
-                  Password
-                </label>
-                <div className="relative">
-                  <MonoInput
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                    className="pr-16"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className={`${UI.mono} absolute inset-y-0 right-2 my-1 rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 text-[11px] font-semibold text-[#161616]`}
-                  >
-                    {showPassword ? 'HIDE' : 'SHOW'}
-                  </button>
-                </div>
-                <div className={`${UI.mono} text-[11px] text-[#575757]`}>Minimize reuse to keep access secure.</div>
-              </div>
-            )}
-
-            <MonoButton type="submit" disabled={loading || !isLoaded} className="w-full justify-center py-3">
-              {loading && <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#f6f5f2]" />}
-              <span>
-                {mode === 'signin' ? 'EXECUTE SIGN-IN' : mode === 'signup' ? 'CREATE ACCOUNT' : 'SEND RESET LINK'}
-              </span>
-            </MonoButton>
-
-            {message && (
-              <div
-                className={`rounded-[10px] border px-3 py-2 ${UI.mono} text-[12px] ${
-                  messageKind === 'err' ? 'border-[#cfcfc7] bg-[#f4f4ee] text-[#8a0000]' : 'border-[#cfcfc7] bg-[#fbfbf7] text-[#161616]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>{messageKind === 'err' ? <Icons.AlertTriangle /> : <Icons.Check />}</span>
-                  <span>{message}</span>
-                </div>
-              </div>
-            )}
-
-            <div className={`${UI.mono} flex flex-wrap gap-3 text-[12px]`}>
-              {mode === 'signin' && (
-                <>
-                  <button type="button" onClick={() => setMode('reset')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
-                    FORGOT PASSWORD?
-                  </button>
-                  <button type="button" onClick={() => setMode('signup')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
-                    NEED AN ACCOUNT? <span className="font-semibold">CREATE</span>
-                  </button>
-                </>
-              )}
-              {mode === 'signup' && (
-                <button type="button" onClick={() => setMode('signin')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
-                  ALREADY HAVE AN ACCOUNT? <span className="font-semibold">SIGN IN</span>
-                </button>
-              )}
-              {mode === 'reset' && (
-                <button type="button" onClick={() => setMode('signin')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
-                  ← BACK TO SIGN IN
-                </button>
-              )}
-            </div>
-
-            <div className="pt-2">
-              <RecaptchaBadge />
-            </div>
-          </form>
-        </TerminalWindow>
+      <div className="mt-3">
+        <textarea
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          rows={3}
+          placeholder="plm> describe the situation, ask a question, or attach a photo…"
+          className={cn(
+            UI.radius2,
+            plexMono.className,
+            'w-full resize-none border border-black/10 bg-white/80 px-4 py-3 text-[13px] text-black/80 outline-none placeholder:text-black/35 focus:border-black/20'
+          )}
+        />
       </div>
     </div>
   )
 }
 
-function PricingModal({ isOpen, onClose, onCheckout, loading }) {
-  if (!isOpen) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f0f0f]/40 px-4" onClick={onClose}>
-      <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-        <TerminalWindow
-          label="Site license"
-          title="protocolLM Access"
-          right="single location"
-          actions={
-            <button onClick={onClose} className={`${UI.cmdBtnGhost} p-2`} aria-label="Close">
-              <Icons.X />
-            </button>
-          }
-        >
-          <div className={`${UI.mono} space-y-4`}>
-            <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-3">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Pricing</div>
-              <div className="mt-2 flex items-end gap-3">
-                <div className={`${UI.heading} text-3xl font-semibold tracking-tight text-[#161616]`}>$100</div>
-                <div className="pb-1 text-[12px] text-[#575757]">/ month</div>
-              </div>
-              <div className="mt-1 text-[12px] text-[#575757]">Annual: $1,000 (save $200).</div>
-            </div>
-
-            <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-3">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Includes</div>
-              <div className="mt-2 space-y-2 text-[12px] text-[#161616]">
-                {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific guidance', 'Full team access'].map((f) => (
-                  <div key={f} className="flex items-center gap-2">
-                    <Icons.Check />
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <MonoButton
-                onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
-                disabled={!!loading}
-                className="w-full justify-center py-3"
-              >
-                {loading === 'monthly' && (
-                  <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#f6f5f2]" />
-                )}
-                ACTIVATE MONTHLY
-              </MonoButton>
-
-              <MonoButton
-                variant="secondary"
-                onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-                disabled={!!loading}
-                className="w-full justify-center py-3"
-              >
-                {loading === 'annual' && (
-                  <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#161616]" />
-                )}
-                START TRIAL / ANNUAL
-              </MonoButton>
-            </div>
-
-            <div className="text-[11px] text-[#575757]">
-              7-day free trial · Cancel anytime · One license per location
-            </div>
-          </div>
-        </TerminalWindow>
-      </div>
-    </div>
-  )
-}
-
-export default function Page() {
-  const [supabase] = useState(() => createClient())
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { isLoaded: captchaLoaded, executeRecaptcha } = useRecaptcha()
-
-  const [isLoading, setIsLoading] = useState(true)
-  const [session, setSession] = useState(null)
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
-
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authInitialMode, setAuthInitialMode] = useState('signin')
-  const [showPricingModal, setShowPricingModal] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(null)
-
-  const [currentChatId, setCurrentChatId] = useState(null)
+function AppShell({ user, supabase, onSignOut, onOpenPortal, onStartCheckout, isSubscribed, subscriptionLoading }) {
+  const fileRef = useRef(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [isSending, setIsSending] = useState(false)
+  const [sending, setSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedImageName, setSelectedImageName] = useState('')
+  const [error, setError] = useState('')
+  const [sourcesByMsgIndex, setSourcesByMsgIndex] = useState({})
+  const [chatId, setChatId] = useState(null)
 
-  const [sendKey, setSendKey] = useState(0)
-  const [sendMode, setSendMode] = useState('text')
-
-  const [showUserMenu, setShowUserMenu] = useState(false)
-
-  const scrollRef = useRef(null)
-  const fileInputRef = useRef(null)
-  const userMenuRef = useRef(null)
-  const textAreaRef = useRef(null)
-
-  const shouldAutoScrollRef = useRef(true)
-
-  const isAuthenticated = !!session
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return
-    document.documentElement.dataset.view = isAuthenticated ? 'chat' : 'landing'
-    const splineContainer = document.getElementById('plm-spline-bg')
-    if (splineContainer) {
-      splineContainer.style.display = isAuthenticated ? 'none' : 'block'
-    }
-  }, [isAuthenticated])
-
-  const scrollToBottom = useCallback((behavior = 'auto') => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollTo({ top: el.scrollHeight, behavior })
-  }, [])
-
-  const handleScroll = () => {
-    const el = scrollRef.current
-    if (!el) return
-    const threshold = 140
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-    shouldAutoScrollRef.current = distanceFromBottom < threshold
-  }
-
-  useEffect(() => {
-    requestAnimationFrame(() => scrollToBottom('auto'))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (shouldAutoScrollRef.current) requestAnimationFrame(() => scrollToBottom('auto'))
-  }, [messages, scrollToBottom])
-
-  useEffect(() => {
-    const showPricing = searchParams?.get('showPricing')
-    if (showPricing === 'true') setShowPricingModal(true)
-  }, [searchParams])
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadSessionAndSub(s) {
-      if (!isMounted) return
-      setSession(s)
-
-      if (!s) {
-        setHasActiveSubscription(false)
-        setShowPricingModal(false)
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('accepted_terms, accepted_privacy')
-          .eq('id', s.user.id)
-          .maybeSingle()
-
-        if (!profile) {
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        const accepted = !!(profile?.accepted_terms && profile?.accepted_privacy)
-        if (!accepted) {
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-
-        if (profileError) {
-          console.error('❌ Profile check error:', profileError)
-          setHasActiveSubscription(false)
-          setIsLoading(false)
-          router.replace('/accept-terms')
-          return
-        }
-      } catch (e) {
-        console.error('❌ Policy check exception:', e)
-        setHasActiveSubscription(false)
-        setIsLoading(false)
-        router.replace('/accept-terms')
-        return
-      }
-
-      let active = false
-      try {
-        const { data: sub } = await supabase
-          .from('subscriptions')
-          .select('status,current_period_end')
-          .eq('user_id', s.user.id)
-          .in('status', ['active', 'trialing'])
-          .order('current_period_end', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (sub && sub.current_period_end) {
-          const end = new Date(sub.current_period_end)
-          if (end > new Date()) active = true
-        }
-      } catch (e) {
-        console.error('Subscription check error', e)
-      }
-
-      if (!isMounted) return
-      setHasActiveSubscription(active)
-      setIsLoading(false)
+  const send = useCallback(async () => {
+    if (sending) return
+    if (!input.trim() && !selectedImage) return
+    if (!isSubscribed) {
+      setError('Start your trial to use the console.')
+      return
     }
 
-    async function init() {
-      try {
-        const { data } = await supabase.auth.getSession()
-        await loadSessionAndSub(data.session || null)
-      } catch (e) {
-        console.error('Auth init error', e)
-        if (isMounted) setIsLoading(false)
-      }
-    }
+    setSending(true)
+    setError('')
 
-    init()
-
-    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      loadSessionAndSub(newSession)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription?.unsubscribe()
-    }
-  }, [supabase, searchParams, router])
-
-  useEffect(() => {
-    function handleClick(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) setShowUserMenu(false)
-    }
-    function handleKey(event) {
-      if (event.key === 'Escape') setShowUserMenu(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    document.addEventListener('keydown', handleKey)
-    return () => {
-      document.removeEventListener('mousedown', handleClick)
-      document.removeEventListener('keydown', handleKey)
-    }
-  }, [])
-
-  const handleCheckout = async (priceId, planName) => {
-    try {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) {
-        setShowPricingModal(false)
-        setAuthInitialMode('signup')
-        setShowAuthModal(true)
-        return
-      }
-      if (!priceId) {
-        alert('Invalid price selected.')
-        return
-      }
-
-      if (!captchaLoaded) {
-        alert('Security verification is still loading. Please try again in a moment.')
-        return
-      }
-
-      setCheckoutLoading(planName)
-
-      const captchaToken = await executeRecaptcha('checkout')
-      if (!captchaToken || captchaToken === 'turnstile_unavailable') {
-        throw new Error('Security verification failed. Please refresh and try again.')
-      }
-
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${data.session.access_token}`,
-        },
-        body: JSON.stringify({ priceId, captchaToken }),
-        credentials: 'include',
-      })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(payload.error || 'Checkout failed')
-
-      if (payload.url) window.location.href = payload.url
-      else throw new Error('No checkout URL returned')
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to start checkout: ' + (error.message || 'Unknown error'))
-    } finally {
-      setCheckoutLoading(null)
-    }
-  }
-
-  const handleManageBilling = async () => {
-    setShowUserMenu(false)
-
-    let loadingToast = null
-    try {
-      loadingToast = document.createElement('div')
-      loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className =
-        'fixed top-4 right-4 bg-[#161616] text-[#f6f5f2] px-4 py-2 rounded-[10px] z-[9999] font-mono text-[12px]'
-      document.body.appendChild(loadingToast)
-
-      const { data } = await supabase.auth.getSession()
-      const accessToken = data?.session?.access_token
-
-      const res = await fetch('/api/create-portal-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        credentials: 'include',
-      })
-
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        alert(payload.error || 'Failed to open billing portal')
-        return
-      }
-      if (payload.url) window.location.href = payload.url
-      else alert('No billing portal URL returned')
-    } catch (error) {
-      console.error('Billing portal error:', error)
-      alert('Failed to open billing portal')
-    } finally {
-      try {
-        if (loadingToast) document.body.removeChild(loadingToast)
-      } catch {}
-    }
-  }
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (e) {
-      console.error('Sign out error', e)
-    } finally {
-      setMessages([])
-      setCurrentChatId(null)
-      router.replace('/')
-    }
-  }
-
-  const handleNewChat = () => {
-    setMessages([])
+    const newUser = { role: 'user', ts: Date.now(), content: input.trim() || '(image)', image: selectedImage || null }
+    const outgoing = [...messages, newUser]
+    setMessages(outgoing)
     setInput('')
-    setSelectedImage(null)
-    setCurrentChatId(null)
-    shouldAutoScrollRef.current = true
-    requestAnimationFrame(() => scrollToBottom('auto'))
-  }
-
-  const handleSend = async (e) => {
-    if (e) e.preventDefault()
-    if ((!input.trim() && !selectedImage) || isSending) return
-
-    const question = input.trim()
-    const image = selectedImage
-
-    setSendMode(image ? 'vision' : 'text')
-    setSendKey((k) => k + 1)
-
-    const userMsg = { role: 'user', content: question, image, ts: nowStamp() }
-    const placeholder = { role: 'assistant', content: '', ts: nowStamp() }
-
-    setMessages((prev) => [...prev, userMsg, placeholder])
-    setInput('')
-    setSelectedImage(null)
-    setIsSending(true)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-
-    shouldAutoScrollRef.current = true
-
-    let activeChatId = currentChatId
 
     try {
-      if (session && !activeChatId) {
-        const { data: created } = await supabase
-          .from('chats')
-          .insert({
-            user_id: session.user.id,
-            title: (question || 'New session').slice(0, 40),
-          })
-          .select()
-          .single()
-
-        if (created) {
-          activeChatId = created.id
-          setCurrentChatId(created.id)
-        }
-      }
-
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMsg],
-          image,
-          chatId: activeChatId,
-        }),
+        body: JSON.stringify({ messages: outgoing, image: selectedImage, chatId }),
       })
 
-      if (!res.ok) {
-        if (res.status === 402) {
-          setShowPricingModal(true)
-          throw new Error('Subscription required for additional questions.')
-        }
-        if (res.status === 429) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Rate limit exceeded.')
-        }
-        if (res.status === 503) {
-          const data = await res.json().catch(() => ({}))
-          throw new Error(data.error || 'Service temporarily unavailable.')
-        }
-        throw new Error(`Server error (${res.status})`)
+      const json = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(json?.error || 'Request failed')
+
+      const assistant = { role: 'assistant', ts: Date.now(), content: json?.message || 'OK.' }
+      setMessages((m) => [...m, assistant])
+
+      if (json?.chatId) setChatId(json.chatId)
+      if (json?.sources) {
+        setSourcesByMsgIndex((prev) => ({ ...prev, [outgoing.length]: json.sources }))
       }
-
-      const data = await res.json()
-      setMessages((prev) => {
-        const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.', ts: updated[updated.length - 1]?.ts || nowStamp() }
-        return updated
-      })
-    } catch (error) {
-      console.error('Chat error:', error)
-      setMessages((prev) => {
-        const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}`, ts: updated[updated.length - 1]?.ts || nowStamp() }
-        return updated
-      })
+    } catch (e) {
+      setMessages((m) => [...m, { role: 'assistant', ts: Date.now(), content: `Error: ${e.message || 'failed'}` }])
     } finally {
-      setIsSending(false)
+      setSending(false)
+      setSelectedImage(null)
+      setSelectedImageName('')
     }
-  }
+  }, [sending, input, selectedImage, isSubscribed, messages, chatId])
 
-  const handleImageChange = async (e) => {
+  const pickImage = useCallback(() => fileRef.current?.click(), [])
+  const clearImage = useCallback(() => {
+    setSelectedImage(null)
+    setSelectedImageName('')
+    if (fileRef.current) fileRef.current.value = ''
+  }, [])
+
+  const onFile = useCallback(async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const compressed = await compressImage(file)
       setSelectedImage(compressed)
-    } catch (error) {
-      console.error('Image compression error', error)
-      alert('Failed to process image.')
+      setSelectedImageName(file.name)
+    } catch (err) {
+      setError('Could not process image.')
     }
-  }
-
-  const sendExample = (prompt) => {
-    setInput(prompt)
-    setTimeout(() => handleSend(), 10)
-  }
-
-  const onCommandKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f6f5f2] text-[#161616]">
-        <div className={`flex items-center gap-3 rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] px-4 py-3 ${UI.mono}`}>
-          <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#161616]" />
-          <span className="text-[12px] font-semibold">LOADING protocolLM…</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated || !hasActiveSubscription) {
-    return (
-      <>
-        <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-        <PricingModal
-          isOpen={showPricingModal}
-          onClose={() => setShowPricingModal(false)}
-          onCheckout={handleCheckout}
-          loading={checkoutLoading}
-        />
-      </>
-    )
-  }
+  }, [])
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        <TerminalWindow
-          label="Active session"
-          title="protocolLM Session Console"
-          right="Washtenaw profile"
-          actions={
-            <div className="flex items-center gap-2" ref={userMenuRef}>
-              <MonoButton variant="secondary" onClick={handleNewChat}>
-                <Icons.Plus /> NEW
-              </MonoButton>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu((v) => !v)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] text-[12px] font-semibold text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] ${UI.mono}`}
-                >
-                  {(session?.user?.email?.slice(0, 2) || 'ME').toUpperCase()}
-                </button>
-
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-[12px] border border-[#cfcfc7] bg-[#fbfbf7] shadow-lg">
-                    <div className="px-4 py-3">
-                      <div className={`${UI.mono} text-[12px] font-semibold text-[#161616]`}>{session?.user?.email}</div>
-                      <div className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold`}>LICENSED</div>
-                    </div>
-                    <div className={UI.divider} />
-                    <button
-                      onClick={handleManageBilling}
-                      className={`flex w-full items-center gap-2 px-4 py-2 text-[12px] text-[#161616] hover:bg-[#f4f4ee] ${UI.mono}`}
-                    >
-                      <Icons.Settings /> MANAGE BILLING
-                    </button>
-                    <button
-                      onClick={handleSignOut}
-                      className={`flex w-full items-center gap-2 px-4 py-2 text-[12px] text-[#161616] hover:bg-[#f4f4ee] ${UI.mono}`}
-                    >
-                      <Icons.LogOut /> SIGN OUT
-                    </button>
-                  </div>
-                )}
-              </div>
+    <div className="mx-auto max-w-6xl px-5 pb-16 pt-10">
+      <Shell>
+        <div className="border-b border-black/10 px-6 py-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className={cn('text-[12px] tracking-[0.22em] text-black/45', plexMono.className)}>protocolLM shell</div>
+              <StatusPill label={subscriptionLoading ? 'CHECKING…' : isSubscribed ? 'READY' : 'LOCKED'} pulse={isSubscribed} />
             </div>
-          }
-        >
-          <div className="grid gap-6 lg:grid-cols-[340px,1fr]">
-            <TerminalWindow
-              label="Context buffer"
-              title="Controls"
-              right={`CHAT_ID: ${currentChatId ? String(currentChatId).slice(0, 8) : '—'}`}
-              status="dim"
-              className="h-fit lg:sticky lg:top-10"
-              actions={
-                <MonoButton variant="ghost" onClick={() => setShowPricingModal(true)} className="text-[11px]">
-                  LICENSE
-                </MonoButton>
-              }
-            >
-              <div className={`${UI.mono} space-y-4`}>
-                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                    Status
-                  </div>
-                  <div className="px-3 py-3 text-[12px]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#575757]">SUBSCRIPTION</span>
-                      <span className="font-semibold text-[#161616]">ACTIVE</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[#575757]">MODES</span>
-                      <span className="font-semibold text-[#161616]">TEXT / VISION</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                    Quick commands
-                  </div>
-                  <div className="px-3 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        'Show Washtenaw violation thresholds',
-                        'Cooling check for soups',
-                        'Cross-contact checklist',
-                        'Temp log reminder',
-                      ].map((item) => (
-                        <MonoButton
-                          key={item}
-                          variant="ghost"
-                          onClick={() => sendExample(item)}
-                          className="border border-[#cfcfc7] bg-[#f7f7f2]"
-                        >
-                          {item}
-                        </MonoButton>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                    Guidance
-                  </div>
-                  <div className="px-3 py-3 text-[12px] leading-5 text-[#575757]">
-                    Use <span className="font-semibold text-[#161616]">Visual Scan</span> for station photos (walk-in, prep table, dish).
-                    For text, issue a short command. Press <span className="font-semibold text-[#161616]">Enter</span> to execute.
-                  </div>
-                </div>
-              </div>
-            </TerminalWindow>
-
-            <div className="space-y-6">
-              <TerminalWindow label="Session" title="Log" right={`MODE: ${sendMode === 'vision' ? 'VISION' : 'TEXT'}`} status="dim">
-                <div className="space-y-3">
-                  <div
-                    ref={scrollRef}
-                    onScroll={handleScroll}
-                    className="max-h-[56vh] min-h-[280px] overflow-y-auto space-y-3 pr-1"
-                  >
-                    {messages.length === 0 && (
-                      <div className={`rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-4 ${UI.mono}`}>
-                        <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
-                          Session idle
-                        </div>
-                        <div className="mt-2 text-[12px] text-[#575757]">Issue a command to begin.</div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {[
-                            'List likely criticals from this walk-in photo',
-                            'Provide holding temps for hot bar',
-                            'Draft inspection prep checklist',
-                          ].map((p) => (
-                            <MonoButton
-                              key={p}
-                              variant="ghost"
-                              onClick={() => sendExample(p)}
-                              className="border border-[#cfcfc7] bg-[#f7f7f2]"
-                            >
-                              {p}
-                            </MonoButton>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {messages.map((m, idx) => (
-                      <LogRow key={idx} message={m} index={idx} />
-                    ))}
-
-                    {isSending && <TypingIndicator />}
-                  </div>
-                </div>
-              </TerminalWindow>
-
-              {selectedImage && (
-                <TerminalWindow label="Image analysis" title="Scan Dock" right="frame attached" status="dim">
-                  <div className={`${UI.mono} space-y-3`}>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="text-[12px] text-[#575757]">
-                        Frame staged. Execute will run vision pipeline.
-                      </div>
-                      <div className="flex gap-2">
-                        <MonoButton variant="secondary" onClick={() => setSelectedImage(null)}>
-                          DETACH
-                        </MonoButton>
-                        <MonoButton onClick={handleSend} disabled={isSending}>
-                          <Icons.Camera /> ANALYZE
-                        </MonoButton>
-                      </div>
-                    </div>
-                    <div className="overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={URL.createObjectURL(selectedImage)} alt="Selected" className="w-full object-cover" />
-                    </div>
-                  </div>
-                </TerminalWindow>
+            <div className="flex flex-wrap items-center gap-2">
+              {!isSubscribed ? (
+                <button
+                  onClick={onStartCheckout}
+                  className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white hover:bg-black/90')}
+                >
+                  Start trial
+                </button>
+              ) : (
+                <button
+                  onClick={onOpenPortal}
+                  className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
+                >
+                  <Icons.Settings className="h-4 w-4" />
+                  Billing
+                </button>
               )}
-
-              <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-              <TerminalWindow label="Command line" title="Execute" right="Enter = run · Shift+Enter = newline" status="dim">
-                <form onSubmit={handleSend} className={`${UI.mono} space-y-3`}>
-                  <div className="flex items-start gap-2">
-                    <label
-                      className={`${UI.cmdBtn} h-10 w-10 flex items-center justify-center p-0`}
-                      htmlFor="image-upload"
-                      title="Attach image frame"
-                    >
-                      <Icons.Camera />
-                    </label>
-                    <input
-                      id="image-upload"
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`select-none text-[12px] text-[#575757] ${UI.mono}`}>{'>'}</div>
-                        <MonoInput
-                          component="textarea"
-                          rows={3}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={onCommandKeyDown}
-                          placeholder="Describe station… or issue a command (e.g., 'Cooling log for chili')"
-                          className="flex-1"
-                          ref={textAreaRef}
-                        />
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-[11px] text-[#575757]">
-                        <span>ATTACHMENT: {selectedImage ? 'FRAME READY' : 'NONE'}</span>
-                        <span>PIPELINE: {selectedImage ? 'VISION' : 'TEXT'}</span>
-                      </div>
-                    </div>
-
-                    <MonoButton type="submit" disabled={isSending || (!input.trim() && !selectedImage)} className="h-10 px-4">
-                      EXECUTE
-                    </MonoButton>
-                  </div>
-                </form>
-              </TerminalWindow>
+              <button
+                onClick={onSignOut}
+                className={cn(UI.radius2, 'inline-flex items-center gap-2 border border-black/15 bg-white/70 px-4 py-2 text-[12px] font-semibold text-black/70 hover:bg-white')}
+              >
+                <Icons.LogOut className="h-4 w-4" />
+                Sign out
+              </button>
             </div>
           </div>
-        </TerminalWindow>
+        </div>
 
-        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-        <PricingModal
-          isOpen={showPricingModal}
-          onClose={() => setShowPricingModal(false)}
-          onCheckout={handleCheckout}
-          loading={checkoutLoading}
+        <div className="grid gap-4 p-6 md:grid-cols-12">
+          <div className="md:col-span-4">
+            <Panel label="SESSION" title="Account">
+              <div className={cn('space-y-2 text-[12px] text-black/65', inter.className)}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn('text-black/45', plexMono.className)}>USER</span>
+                  <span className="truncate text-right">{user?.email}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className={cn('text-black/45', plexMono.className)}>PLAN</span>
+                  <span className="text-right">{isSubscribed ? 'Unlimited' : 'Trial required'}</span>
+                </div>
+              </div>
+
+              {!isSubscribed ? (
+                <div className="mt-4 rounded-xl border border-black/10 bg-white/60 p-3">
+                  <div className={cn('text-[12px] font-semibold text-black/75', outfit.className)}>Unlock the console</div>
+                  <div className={cn('mt-1 text-[12px] text-black/55', inter.className)}>
+                    Start your 7‑day trial to run scans and ask questions.
+                  </div>
+                  <button
+                    onClick={onStartCheckout}
+                    className={cn(UI.radius2, 'mt-3 w-full border border-black/15 bg-black px-4 py-2 text-[12px] font-semibold text-white hover:bg-black/90')}
+                  >
+                    Start trial
+                  </button>
+                </div>
+              ) : null}
+            </Panel>
+
+            <div className="mt-4">
+              <Panel label="MODULES" title="Status">
+                <div className="space-y-2">
+                  {[
+                    ['Visual Scan', true],
+                    ['Compliance Q&A', true],
+                    ['Local Rules', true],
+                    ['Licensing', true],
+                  ].map(([name, ok]) => (
+                    <div key={name} className={cn('flex items-center justify-between rounded-xl border border-black/10 bg-white/70 px-3 py-2')}>
+                      <div className={cn('text-[12px] text-black/70', inter.className)}>{name}</div>
+                      <StatusPill label={ok ? 'READY' : 'OFFLINE'} pulse={ok} />
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            </div>
+          </div>
+
+          <div className="md:col-span-8">
+            <Panel
+              label="CONSOLE"
+              title="Ask or scan"
+              right={
+                <div className={cn('text-[10px] tracking-[0.22em] text-black/40', plexMono.className)}>
+                  {messages.length ? `${messages.length} LOGS` : 'NO LOGS'}
+                </div>
+              }
+            >
+              <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/60 p-3')}>
+                <div className="max-h-[420px] space-y-3 overflow-auto pr-1">
+                  {messages.length ? (
+                    messages.map((m, idx) => (
+                      <MessageBlock
+                        key={idx}
+                        role={m.role}
+                        ts={m.ts}
+                        content={m.content}
+                        image={m.image}
+                        sources={sourcesByMsgIndex[idx] || null}
+                      />
+                    ))
+                  ) : (
+                    <div className={cn('p-4 text-[13px] leading-6 text-black/60', inter.className)}>
+                      Try: “What are the top critical violations the inspector flags?” or attach a walk‑in cooler photo and type: “scan this”.
+                    </div>
+                  )}
+                  {sending ? (
+                    <div className={cn(UI.radius2, 'border', UI.hair, 'bg-white/70 p-4')}>
+                      <TypingIndicator />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <ChatComposer
+                  value={input}
+                  setValue={setInput}
+                  onSend={send}
+                  disabled={sending || (!input.trim() && !selectedImage) || !isSubscribed}
+                  onPickImage={pickImage}
+                  imageLabel={selectedImageName}
+                  onClearImage={clearImage}
+                />
+                {error ? <div className={cn('mt-2 text-[12px] text-red-600/80', inter.className)}>{error}</div> : null}
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
+              </div>
+            </Panel>
+          </div>
+        </div>
+      </Shell>
+    </div>
+  )
+}
+
+// ---------- Page ----------
+export default function Page() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const supabase = useMemo(() => createClient(), [])
+
+  const [bootDone, setBootDone] = useState(false)
+  const [bootCollapsed, setBootCollapsed] = useState(false)
+
+  const [authMode, setAuthMode] = useState('landing') // landing | email | code | app
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
+
+  const [user, setUser] = useState(null)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  const { token: recaptchaToken, executeRecaptcha, resetRecaptcha } = useRecaptcha()
+
+  // session bootstrap
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const { data } = await supabase.auth.getUser()
+      if (!mounted) return
+      setUser(data?.user ?? null)
+      setAuthMode(data?.user ? 'app' : 'landing')
+    })()
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthMode(session?.user ? 'app' : 'landing')
+    })
+
+    return () => {
+      mounted = false
+      sub?.subscription?.unsubscribe?.()
+    }
+  }, [supabase])
+
+  // handle stripe redirect flags
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const canceled = searchParams.get('canceled')
+    if (success || canceled) {
+      // strip params
+      router.replace('/', { scroll: false })
+    }
+  }, [searchParams, router])
+
+  // subscription state
+  const fetchSubscription = useCallback(async () => {
+    setSubscriptionLoading(true)
+    try {
+      const res = await fetch('/api/subscription/status', { method: 'GET' })
+      const json = await res.json().catch(() => null)
+      setIsSubscribed(Boolean(json?.active))
+    } catch {
+      setIsSubscribed(false)
+    } finally {
+      setSubscriptionLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!user) {
+      setIsSubscribed(false)
+      setSubscriptionLoading(false)
+      return
+    }
+    fetchSubscription()
+  }, [user, fetchSubscription])
+
+  // auth flows
+  const startAuth = useCallback(() => {
+    setAuthError('')
+    setEmail('')
+    setCode('')
+    setAuthMode('email')
+  }, [])
+
+  const requestCode = useCallback(async () => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      let token = null
+      if (executeRecaptcha) {
+        try {
+          token = await executeRecaptcha('login_code')
+        } catch {
+          token = null
+        }
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true, captchaToken: token || undefined },
+      })
+
+      if (error) throw error
+      setAuthMode('code')
+      resetRecaptcha?.()
+    } catch (e) {
+      setAuthError(e?.message || 'Could not send code.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }, [email, supabase, executeRecaptcha, resetRecaptcha])
+
+  const verifyCode = useCallback(async () => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: 'email',
+      })
+      if (error) throw error
+      setUser(data?.user || null)
+      setAuthMode('app')
+    } catch (e) {
+      setAuthError(e?.message || 'Invalid code.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }, [email, code, supabase])
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setAuthMode('landing')
+  }, [supabase])
+
+  const openPortal = useCallback(async () => {
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const json = await res.json().catch(() => null)
+      if (json?.url) window.location.href = json.url
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const startCheckout = useCallback(async () => {
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId: MONTHLY_PRICE }),
+      })
+      const json = await res.json().catch(() => null)
+      if (json?.url) window.location.href = json.url
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  return (
+    <div className={cn(UI.bg, UI.ink, inter.className, 'min-h-screen')}>
+      <GlobalStyles />
+      <RecaptchaBadge />
+
+      {/* top bar */}
+      <header className="sticky top-0 z-30 border-b border-black/10 bg-white/70 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
+          <Link href="/" className="flex items-center gap-2">
+            <span className={cn('text-[13px] font-semibold tracking-tight text-black/85', outfit.className)}>protocolLM</span>
+          </Link>
+          <div className={cn('text-[10px] tracking-[0.22em] text-black/45', plexMono.className)}>
+            WASHTENAW • COMPLIANCE CONSOLE
+          </div>
+        </div>
+      </header>
+
+      {/* boot */}
+      {!bootDone ? (
+        <div className="mx-auto max-w-6xl px-5 pb-8 pt-10">
+          <BootPanel
+            collapsed={bootCollapsed}
+            onDone={() => {
+              setBootDone(true)
+              setTimeout(() => setBootCollapsed(true), 200)
+            }}
+          />
+        </div>
+      ) : null}
+
+      {/* main */}
+      {authMode === 'landing' ? <LandingPage onStartAuth={startAuth} /> : null}
+      {authMode === 'email' ? (
+        <AuthCard
+          mode="email"
+          email={email}
+          setEmail={setEmail}
+          code={code}
+          setCode={setCode}
+          onRequestCode={requestCode}
+          onVerify={verifyCode}
+          onBack={() => setAuthMode('landing')}
+          loading={authLoading}
+          error={authError}
         />
-      </div>
-    </AppShell>
+      ) : null}
+      {authMode === 'code' ? (
+        <AuthCard
+          mode="code"
+          email={email}
+          setEmail={setEmail}
+          code={code}
+          setCode={setCode}
+          onRequestCode={requestCode}
+          onVerify={verifyCode}
+          onBack={() => setAuthMode('email')}
+          loading={authLoading}
+          error={authError}
+        />
+      ) : null}
+      {authMode === 'app' && user ? (
+        <AppShell
+          user={user}
+          supabase={supabase}
+          onSignOut={signOut}
+          onOpenPortal={openPortal}
+          onStartCheckout={startCheckout}
+          isSubscribed={isSubscribed}
+          subscriptionLoading={subscriptionLoading}
+        />
+      ) : null}
+
+      <footer className="border-t border-black/10 bg-white/70">
+        <div className={cn('mx-auto max-w-6xl px-5 py-6 text-[11px] text-black/45', inter.className)}>
+          © {new Date().getFullYear()} protocolLM · Built for Washtenaw County food service teams.
+        </div>
+      </footer>
+    </div>
   )
 }
