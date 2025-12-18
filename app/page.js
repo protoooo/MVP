@@ -455,8 +455,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-content">
             <Reveal delay={0}>
               <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
-                <span className="hero-title-line">Catch violations</span>
-                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
+                <span className="hero-title-line">PROTOCOL_LM // WASHTENAW OPS CONSOLE</span>
+                <span className="hero-title-line hero-title-gradient">Catch violations before the inspector does</span>
               </h1>
             </Reveal>
 
@@ -1430,41 +1430,41 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
-           TERMINAL LIGHT THEME
+           TERMINAL DARK THEME
            Utilitarian, data-dense, IBM Plex Mono everywhere
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #0A0A0A;
-          --color-surface: #121212;
-          --color-card: #1A1A1A;
-          --color-border: #2A2A2A;
-          --color-border-subtle: #1F1F1F;
-          --color-border-hover: #3A3A3A;
-          --color-border-focus: #00FF41;
+          --color-bg: #080808;
+          --color-surface: #101010;
+          --color-card: #131313;
+          --color-border: #202020;
+          --color-border-subtle: #141414;
+          --color-border-hover: #2d2d2d;
+          --color-border-focus: #48e0c2;
 
           /* Text Colors */
-            --color-text: #E0E0E0;
-            --color-text-secondary: #B0B0B0;
-            --color-text-tertiary: #808080;
-            --color-text-muted: #606060;
-            --color-primary: #00FF41;
-            --color-primary-hover: #00CC33;
-            --color-accent: #00FF41;
-            --color-accent-hover: #00CC33;
-            --color-accent-light: #1F1F1F;
+          --color-text: #e6e6e6;
+          --color-text-secondary: #b8b8b8;
+          --color-text-tertiary: #7d7d7d;
+          --color-text-muted: #5a5a5a;
+          --color-primary: #48e0c2;
+          --color-primary-hover: #36c7a8;
+          --color-accent: #48e0c2;
+          --color-accent-hover: #36c7a8;
+          --color-accent-light: #1b2422;
 
           /* Status Colors */
-          --color-success: #00FF41;
-          --color-success-bg: #0F0F0F;
-          --color-warning: #FFAA00;
-          --color-warning-bg: #0F0F0F;
-          --color-error: #FF3B30;
-          --color-error-bg: #0F0F0F;
-          --color-code-bg: #0F0F0F;
-          --color-code-text: #E0E0E0;
+          --color-success: #48e0c2;
+          --color-success-bg: #0d1211;
+          --color-warning: #ffb84d;
+          --color-warning-bg: #141008;
+          --color-error: #ff4d4d;
+          --color-error-bg: #140b0b;
+          --color-code-bg: #0c0c0c;
+          --color-code-text: #e6e6e6;
 
           /* Typography */
           --font-mono: 'IBM Plex Mono', 'Courier New', Consolas, Monaco, monospace;
@@ -1533,7 +1533,7 @@ export default function Page() {
           overflow-x: hidden;
           line-height: 1.5;
           font-family: var(--font-mono);
-          letter-spacing: 0.03em;
+          letter-spacing: 0.02em;
           text-transform: none;
         }
 
@@ -2012,30 +2012,41 @@ export default function Page() {
         }
 
         .hero-container {
-          max-width: 960px;
+          max-width: 1100px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 40px;
-          align-items: center;
-          text-align: center;
+          gap: 32px;
+          align-items: stretch;
         }
 
         .hero-content {
           display: flex;
           flex-direction: column;
-          gap: 24px;
+          gap: 22px;
           position: relative;
           z-index: 2;
-          align-items: center;
+          padding: 32px 32px 28px;
+          border: 1px solid var(--color-border);
+          background: linear-gradient(180deg, rgba(72, 224, 194, 0.04) 0%, rgba(72, 224, 194, 0.01) 70%, transparent 100%), var(--color-surface);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+
+        .hero-content::before {
+          content: '';
+          position: absolute;
+          inset: 8px;
+          border: 1px solid var(--color-border-subtle);
+          pointer-events: none;
+          opacity: 0.7;
         }
 
         .hero-title-animated {
           display: inline-flex;
           flex-direction: column;
           gap: 6px;
-          text-align: center;
+          text-align: left;
         }
 
         .hero-title-line {
@@ -2055,35 +2066,37 @@ export default function Page() {
         }
 
         .hero-title {
-          font-size: clamp(40px, 6vw, 64px);
+          font-size: clamp(36px, 5vw, 56px);
           font-weight: 800;
-          line-height: 1.05;
-          letter-spacing: -0.035em;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
           color: var(--color-text);
+          text-transform: uppercase;
         }
 
         .hero-title-gradient {
           color: var(--color-accent);
+          text-shadow: 0 0 18px rgba(72, 224, 194, 0.28), 0 0 2px rgba(72, 224, 194, 0.6);
         }
 
         .hero-description {
-          font-size: 18px;
-          line-height: 1.7;
+          font-size: 17px;
+          line-height: 1.6;
           color: var(--color-text-secondary);
-          max-width: 520px;
+          max-width: 720px;
         }
 
         @media (max-width: 640px) {
           .hero-description {
-            font-size: 16px;
+            font-size: 15px;
           }
         }
 
         .hero-actions {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           flex-wrap: wrap;
-          padding-top: 8px;
+          padding-top: 6px;
         }
 
         /* Hero visual removed for simplified, centered hero */
@@ -3218,11 +3231,11 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           align-items: stretch;
-          padding: 16px 12px 12px;
+          padding: 18px 12px 12px;
           gap: 0;
-          border-top: 1px solid var(--color-border-subtle);
+          border-top: 1px solid var(--color-border);
           border-bottom: 1px solid var(--color-border-subtle);
-          background: var(--color-bg);
+          background: linear-gradient(180deg, rgba(72, 224, 194, 0.05) 0%, transparent 40%), var(--color-bg);
         }
 
         .chat-empty {
@@ -3296,17 +3309,18 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           width: 100%;
-          padding: 14px 16px;
+          padding: 14px 16px 12px;
           gap: 6px;
           border-bottom: 1px solid var(--color-border-subtle);
+          background: transparent;
         }
 
         .chat-message-user {
-          background: var(--color-surface);
+          background: transparent;
         }
 
         .chat-message-assistant {
-          background: var(--color-surface);
+          background: transparent;
         }
 
         .chat-bubble {
@@ -3326,7 +3340,7 @@ export default function Page() {
           align-items: center;
           gap: 10px;
           font-size: 12px;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
           color: var(--color-text-tertiary);
         }
@@ -3344,7 +3358,7 @@ export default function Page() {
           overflow: hidden;
           margin: 0;
           background: var(--color-code-bg);
-          border: 1px solid var(--color-border-subtle);
+          border: 1px solid var(--color-border);
         }
 
         .chat-bubble-image img {
