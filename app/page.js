@@ -156,73 +156,68 @@ const Icons = {
 function WaveBackground() {
   return (
     <div className="wave-bg-container">
-      <div className="gloss-blob blob-a" />
-      <div className="gloss-blob blob-b" />
-      <div className="gloss-blob blob-c" />
-      <div className="gloss-blob blob-d" />
-      <div className="grain-overlay" />
+      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#578E7E" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#3D3D3D" stopOpacity="0.08" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3D3D3D" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#578E7E" stopOpacity="0.06" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stopColor="#578E7E" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#3D3D3D" stopOpacity="0.06" />
+          </linearGradient>
+        </defs>
+        
+        {/* Wave 1 - starts higher, flows through hero */}
+        <path className="wave wave-1" fill="url(#wave-gradient-1)">
+          <animate
+            attributeName="d"
+            dur="25s"
+            repeatCount="indefinite"
+            values="
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
+              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 2 - middle layer */}
+        <path className="wave wave-2" fill="url(#wave-gradient-2)">
+          <animate
+            attributeName="d"
+            dur="20s"
+            repeatCount="indefinite"
+            values="
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
+              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 3 - lower layer */}
+        <path className="wave wave-3" fill="url(#wave-gradient-3)">
+          <animate
+            attributeName="d"
+            dur="30s"
+            repeatCount="indefinite"
+            values="
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
+              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+      </svg>
+      
+      {/* Subtle grid overlay */}
       <div className="grid-overlay" />
     </div>
-  )
-}
-
-function IsometricHeroArt() {
-  return (
-    <svg viewBox="0 0 320 260" role="img" aria-label="Isometric kitchen compliance scene" className="iso-hero-svg">
-      <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M60 156l94-54 98 56-96 52z" fill="rgba(61,61,61,0.04)" />
-        <path d="M60 156v36l96 52v-40M252 158v34l-96 52" />
-        <path d="M126 120v40l32 18 34-18v-38" />
-        <path d="M120 118l38-22 40 22-40 22z" fill="rgba(61,61,61,0.04)" />
-        <path d="M158 96v22M198 118v22" />
-        <path d="M90 170l28 16 0 18-28-16z" fill="rgba(61,61,61,0.04)" />
-        <path d="M118 186l34 18v18l-34-18zM168 202l32-18v18l-32 18z" />
-        <path d="M200 184l26-14 0 18-26 14z" />
-        <path d="M128 148l-20 12 24 14 20-12zM196 148l20 12-24 14-20-12z" />
-        <path d="M152 168l12 8 12-8" />
-        <path d="M142 110l16 9 0 10-16-9zM182 110l16 9 0 10-16-9z" />
-        <path d="M170 118l-6 4M210 118l-6 4" />
-        <path d="M154 76l26-14 54 30-26 14z" />
-        <path d="M206 92l8-4 32 18-8 4z" />
-        <path d="M140 136l12-6 0 34-12 6zM220 136l-12-6 0 34 12 6z" />
-        <path d="M146 164l10-6 10 6-10 6zM198 164l-10-6-10 6 10 6z" />
-        <path d="M88 132l-18 10 46 26 18-10z" />
-        <path d="M70 142v18l46 26v-18z" />
-        <path d="M118 178l18-10v18l-18 10z" />
-        <path d="M104 142l10-6 22 12-10 6z" />
-        <path d="M214 104l10-6 28 16-10 6z" />
-        <path d="M234 112l4-2 14 8-4 2z" />
-        <rect x="180" y="74" width="42" height="10" rx="2" transform="skewY(-26)" fill="rgba(87,142,126,0.18)" stroke="none" />
-        <path d="M166 70l18-10 36 20-18 10z" />
-        <path d="M182 66l4-2 22 12-4 2z" />
-        <path d="M202 62l4-2 18 10-4 2z" />
-        <path d="M142 198l-12 8v12l12-6 12 6 0-12z" />
-        <path d="M220 200l12 8v12l-12-6-12 6 0-12z" />
-        <path d="M150 214l-8 4v8l8-4 8 4v-8zM212 214l8 4v8l-8-4-8 4v-8z" />
-        <path d="M170 210l-8 4v22l8-4zM190 210l8 4v22l-8-4z" />
-        <path d="M170 226l20 12" />
-        <path d="M154 222l12 8M206 222l-12 8" />
-        <path d="M140 122l36 20-4 8" />
-        <path d="M216 122l-36 20 4 8" />
-        <path d="M168 152l-6 10 18 10 18-10-6-10" />
-        <path d="M170 154l14 8" />
-        <circle cx="160" cy="92" r="2.4" />
-        <circle cx="192" cy="92" r="2.4" />
-        <path d="M170 82l6-4 18 10-6 4z" />
-        <path d="M138 90l8 4M136 96l10 6M136 102l6 4" />
-        <path d="M214 82l8 4M216 88l10 6M216 94l6 4" />
-        <path d="M78 188l8 4v10l-8-4zM90 194l8 4v10l-8-4z" />
-        <path d="M226 182l-8 4v10l8-4zM214 188l-8 4v10l8-4z" />
-        <path d="M128 208l-10 6v6l10-6 10 6v-6z" />
-        <path d="M202 208l10 6v6l-10-6-10 6v-6z" />
-        <path d="M164 238l-6 3.5 12 6.5 12-6.5-6-3.5" />
-        <path d="M84 156l18-10 4 2-18 10zM236 156l-18-10-4 2 18 10z" />
-      </g>
-      <g fill="none" stroke="var(--color-accent)" strokeWidth="2">
-        <path d="M182 132l16-9 6 4-16 9z" />
-        <circle cx="188" cy="132" r="3.5" />
-      </g>
-    </svg>
   )
 }
 
@@ -415,24 +410,6 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
-  useEffect(() => {
-    let raf = null
-    const update = () => {
-      document.documentElement.style.setProperty('--scrollY', String(window.scrollY || 0))
-      raf = null
-    }
-    const onScroll = () => {
-      if (raf) return
-      raf = requestAnimationFrame(update)
-    }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      if (raf) cancelAnimationFrame(raf)
-      window.removeEventListener('scroll', onScroll)
-    }
-  }, [])
-
   const faqs = useMemo(
     () => [
       {
@@ -527,6 +504,37 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     ],
     []
   )
+  const knowledgeSources = useMemo(
+    () => [
+      { title: '3-Comp Sink', tag: 'Sanitation' },
+      { title: 'Consumer Advisory', tag: 'Disclosure' },
+      { title: 'Consumer Advisory (Guide)', tag: 'Disclosure' },
+      { title: 'Cooling Foods', tag: 'Process' },
+      { title: 'Cross Contamination', tag: 'Safety' },
+      { title: 'Date Marking Guide', tag: 'Storage' },
+      { title: 'Enforcement Action | Washtenaw County, MI', tag: 'Local Enforcement' },
+      { title: 'FDA Food Code 2022', tag: 'Federal Code' },
+      { title: 'FOG', tag: 'Grease Control' },
+      { title: 'Food Allergy Information | Washtenaw County, MI', tag: 'Allergens' },
+      { title: 'Food Service Inspection Program | Washtenaw County, MI (Official)', tag: 'Local Program' },
+      { title: 'Food Service Inspection Program | Washtenaw County, MI', tag: 'Local Program' },
+      { title: 'Food Labeling Guide', tag: 'Labeling' },
+      { title: 'Food Temperatures', tag: 'Temp Control' },
+      { title: 'Inspection Report Types | Washtenaw County, MI', tag: 'Inspections' },
+      { title: 'Internal Cooking Temperatures', tag: 'Cooking' },
+      { title: 'Michigan Food Law Act 92 of 2000', tag: 'State Law' },
+      { title: 'Michigan Modified Food Code', tag: 'State Code' },
+      { title: 'New Business Information Packet', tag: 'Onboarding' },
+      { title: 'Norovirus Environmental Cleaning', tag: 'Cleaning' },
+      { title: 'Procedures for Administration & Enforcement of the Michigan Food Law', tag: 'State Procedures' },
+      { title: 'Retail Food Establishments Emergency Action Plan', tag: 'Emergency' },
+      { title: 'Summary Chart: Cooking Temps & Holding Times', tag: 'Temp Control' },
+      { title: 'USDA Safe Minimum Internal Temperature Chart', tag: 'Federal Reference' },
+      { title: 'Violation Types | Washtenaw County, MI', tag: 'Violations' },
+    ],
+    []
+  )
+  const knowledgeLoop = useMemo(() => [...knowledgeSources, ...knowledgeSources], [knowledgeSources])
 
   return (
     <div className="landing-wrapper">
@@ -568,18 +576,43 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={120}>
-            <div className="hero-visual">
+            <div className="hero-visual hero-data-visual">
               <div className="hero-visual-badge">
                 <span className="hero-visual-dot" />
-                <span className={`hero-visual-text ${inter.className}`}>Washtenaw County</span>
+                <span className={`hero-visual-text ${inter.className}`}>Transparent knowledge base</span>
               </div>
-              <div className="hero-visual-frame">
-                <IsometricHeroArt />
+              <div className="hero-data-frame">
+                <div className="hero-data-header">
+                  <div className="hero-data-title">
+                    <span className="hero-data-pip" />
+                    <span className={`hero-data-label ${inter.className}`}>protocolLM training base</span>
+                  </div>
+                  <span className="hero-data-status">Live</span>
+                </div>
+                <div className="hero-data-viewport" role="log" aria-label="protocolLM knowledge base">
+                  <div className="hero-data-loop">
+                    {knowledgeLoop.map((item, idx) => (
+                      <div key={idx} className="hero-data-row">
+                        <div className="hero-data-icon">
+                          <Icons.Document />
+                        </div>
+                        <div className="hero-data-text">
+                          <div className={`hero-data-title-row ${inter.className}`}>{item.title}</div>
+                          <div className={`hero-data-meta ${inter.className}`}>{item.tag}</div>
+                        </div>
+                        <div className="hero-data-chip">Indexed</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
               <div className="hero-visual-metadata">
-                <span className={`hero-meta-label ${inter.className}`}>Live compliance canvas</span>
+                <span className={`hero-meta-label ${inter.className}`}>Live data view · no hidden sources</span>
                 <span className={`hero-meta-pill ${inter.className}`}>
-                  <Icons.Shield /> Localized
+                  <Icons.Eye /> Transparent
+                </span>
+                <span className={`hero-meta-pill ${inter.className}`}>
+                  <Icons.Shield /> County-first
                 </span>
               </div>
             </div>
@@ -1601,7 +1634,6 @@ export default function Page() {
           --z-elevated: 10;
           --z-sticky: 100;
           --z-modal: 1000;
-          --scrollY: 0;
         }
 
         /* ─── Base Reset ─── */
@@ -1696,7 +1728,7 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           STRIPE-STYLE GLOSS BACKGROUND
+           WAVE BACKGROUND
            ═══════════════════════════════════════════════════════════════════════ */
         .wave-bg-container {
           position: fixed;
@@ -1704,83 +1736,28 @@ export default function Page() {
           pointer-events: none;
           z-index: 0;
           overflow: hidden;
-          filter: saturate(105%);
         }
 
-        .gloss-blob {
+        .wave-svg {
           position: absolute;
-          width: 520px;
-          height: 520px;
-          border-radius: 50%;
-          opacity: 0.55;
-          filter: blur(72px);
-          transform: translate3d(0, 0, 0);
-          transition: transform 1200ms var(--ease-out-expo);
-          mix-blend-mode: multiply;
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
         }
 
-        .blob-a {
-          background: radial-gradient(circle at 30% 30%, rgba(87, 142, 126, 0.45), transparent 60%);
-          top: -60px;
-          left: -120px;
-          animation: blobFloat 26s ease-in-out infinite;
-          transform: translateY(calc(var(--scrollY) * -0.02px));
-        }
-
-        .blob-b {
-          background: radial-gradient(circle at 50% 50%, rgba(61, 61, 61, 0.28), transparent 65%);
-          top: 120px;
-          right: -140px;
-          animation: blobFloat 34s ease-in-out infinite reverse;
-          transform: translateY(calc(var(--scrollY) * -0.015px));
-        }
-
-        .blob-c {
-          background: radial-gradient(circle at 40% 40%, rgba(87, 142, 126, 0.32), transparent 62%);
-          bottom: -180px;
-          left: 10%;
-          width: 600px;
-          height: 600px;
-          animation: blobFloat 40s ease-in-out infinite;
-          transform: translateY(calc(var(--scrollY) * 0.01px));
-        }
-
-        .blob-d {
-          background: radial-gradient(circle at 70% 30%, rgba(61, 61, 61, 0.18), transparent 60%);
-          bottom: -120px;
-          right: 4%;
-          width: 540px;
-          height: 540px;
-          animation: blobFloat 32s ease-in-out infinite reverse;
-          transform: translateY(calc(var(--scrollY) * 0.006px));
-        }
-
-        @keyframes blobFloat {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50% { transform: translate3d(24px, -26px, 0); }
-        }
-
-        .grain-overlay {
-          position: absolute;
-          inset: -20%;
-          background-image:
-            repeating-radial-gradient(circle at 10% 20%, rgba(61, 61, 61, 0.05) 0 1px, transparent 1px 12px),
-            repeating-conic-gradient(from 45deg, rgba(61, 61, 61, 0.04) 0deg 10deg, transparent 10deg 25deg);
-          opacity: 0.28;
-          filter: contrast(140%);
-          mix-blend-mode: soft-light;
-          pointer-events: none;
+        .wave {
+          opacity: 1;
         }
 
         .grid-overlay {
           position: absolute;
           inset: 0;
           background-image:
-            linear-gradient(rgba(61, 61, 61, 0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(61, 61, 61, 0.06) 1px, transparent 1px);
-          background-size: 120px 120px;
-          mask-image: radial-gradient(ellipse 90% 65% at 50% 30%, rgba(0,0,0,0.45) 0%, transparent 70%);
-          opacity: 0.4;
+            linear-gradient(rgba(61, 61, 61, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(61, 61, 61, 0.04) 1px, transparent 1px);
+          background-size: 72px 72px;
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
+          opacity: 0.55;
           mix-blend-mode: multiply;
         }
 
@@ -2342,35 +2319,160 @@ export default function Page() {
           box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.16);
         }
 
-        .hero-visual-frame {
+        .hero-data-frame {
           width: 100%;
-          padding: 20px;
+          padding: 18px;
           border-radius: 24px;
-          background: linear-gradient(145deg, rgba(255, 250, 236, 0.82), rgba(245, 236, 213, 0.75));
+          background: linear-gradient(160deg, rgba(255, 250, 236, 0.86), rgba(245, 236, 213, 0.78));
           border: 1px solid var(--color-border);
           box-shadow: var(--shadow-glass);
           position: relative;
           overflow: hidden;
+          backdrop-filter: blur(10px);
         }
 
-        .hero-visual-frame::before {
+        .hero-data-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 8px 10px 12px;
+        }
+
+        .hero-data-title {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          color: var(--color-text);
+        }
+
+        .hero-data-pip {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: var(--color-primary);
+          box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.14), 0 0 0 0.5px rgba(61, 61, 61, 0.14);
+        }
+
+        .hero-data-label {
+          font-weight: 600;
+          letter-spacing: 0.01em;
+        }
+
+        .hero-data-status {
+          font-size: 13px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: var(--color-accent-light);
+          color: var(--color-text);
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .hero-data-viewport {
+          margin-top: 8px;
+          position: relative;
+          height: 320px;
+          overflow: hidden;
+          border-radius: 18px;
+          border: 1px solid var(--color-border);
+          background: linear-gradient(180deg, rgba(245, 236, 213, 0.8), rgba(255, 250, 236, 0.86));
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        .hero-data-viewport::before,
+        .hero-data-viewport::after {
           content: '';
           position: absolute;
+          left: 0;
+          right: 0;
+          height: 34px;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .hero-data-viewport::before {
+          top: 0;
+          background: linear-gradient(180deg, rgba(255, 250, 236, 0.95), transparent);
+        }
+
+        .hero-data-viewport::after {
+          bottom: 0;
+          background: linear-gradient(0deg, rgba(255, 250, 236, 0.95), transparent);
+        }
+
+        .hero-data-loop {
+          position: absolute;
           inset: 0;
-          background: linear-gradient(120deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.2) 40%, transparent 65%);
-          opacity: 0;
-          transition: opacity var(--duration-normal) var(--ease-out-expo);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding: 12px;
+          animation: dataScroll 28s linear infinite;
         }
 
-        .hero-visual-frame:hover::before {
-          opacity: 1;
+        .hero-data-row {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 12px;
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid var(--color-border);
+          border-radius: 14px;
+          box-shadow: var(--shadow-sm);
         }
 
-        .iso-hero-svg {
-          width: 100%;
-          height: auto;
+        .hero-data-icon {
+          width: 32px;
+          height: 32px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          background: rgba(87, 142, 126, 0.12);
           color: var(--color-text);
-          display: block;
+          border: 1px solid var(--color-border);
+        }
+
+        .hero-data-icon svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .hero-data-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .hero-data-title-row {
+          font-weight: 600;
+          color: var(--color-text);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .hero-data-meta {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+        }
+
+        .hero-data-chip {
+          padding: 6px 10px;
+          border-radius: 10px;
+          background: rgba(87, 142, 126, 0.14);
+          color: var(--color-text);
+          font-size: 12px;
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-xs);
+        }
+
+        @keyframes dataScroll {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(-50%); }
         }
 
         .hero-visual-metadata {
@@ -2414,6 +2516,9 @@ export default function Page() {
           }
           .hero-visual-badge {
             margin: 0 auto;
+          }
+          .hero-data-viewport {
+            height: 280px;
           }
         }
 
@@ -3930,7 +4035,7 @@ export default function Page() {
           }
           
           .wave path,
-          .gloss-blob {
+          .hero-data-loop {
             animation: none !important;
           }
 
