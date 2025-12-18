@@ -31,26 +31,36 @@ async function getSearchDocuments() {
 }
 
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+
+// Time budgets
 const VISION_TIMEOUT_MS = 20000
 const ANSWER_TIMEOUT_MS = 35000
+const RETRIEVAL_TIMEOUT_MS = 9000
 
+// Retrieval
 const TOPK = 18
-const PRIORITY_TOPK = 10
+const PINNED_TOPK = 10
 
-// Keep these short. They’re here to enforce Washtenaw-specific framing without bloating output.
+// These two are “always fetch” so they shape every response (text + image).
+const PINNED_QUERIES = [
+  'Washtenaw County Violation Types Priority Priority Foundation Core corrected immediately or within 10 days within 90 days',
+  'Washtenaw County Enforcement Action summary enforcement action imminent health hazard progressive enforcement office conference informal hearing formal hearing appeal',
+]
+
+// Washtenaw framing (kept short, and grounded in your Washtenaw docs)
 const WASHTENAW_RULES = `
-Washtenaw violation classes:
-P (Priority): directly reduces foodborne illness hazard.
-Pf (Priority Foundation): supports P compliance (supplies, facilities, tools).
+Violation classes used by Washtenaw County:
+P (Priority): directly reduces a foodborne illness hazard.
+Pf (Priority Foundation): supports Priority compliance (supplies, equipment, facilities, programs).
 C (Core): general sanitation and facility maintenance.
 
-Correction timing:
-P and Pf: correct immediately at inspection or within 10 days.
+Correction timing used by Washtenaw County:
+P and Pf: correct immediately at inspection or within 10 days. If not permanently corrected at inspection, a follow-up may occur.
 C: correct within 90 days.
 
-Enforcement overview:
-Imminent hazards can trigger immediate closure (summary action): no water/power, uncontained outbreak, severe pests, sewage backup, fire/flood, or immediate public danger.
-Non-imminent issues use progressive enforcement with 3 opportunities: inspection/follow-up, office conference, informal hearing, then license action (with appeal path).
+Enforcement overview in Washtenaw County:
+Summary enforcement action is used for imminent health hazards and can include immediate limitation, suspension, or revocation of a license. Imminent hazards can include no water/power, an uncontained outbreak, severe pests, sewage backup, fire, flood, or other immediate public danger.
+If violations do not pose an imminent hazard, progressive enforcement is used with multiple opportunities to correct (routine/follow-up process, then office conference, then informal hearing, then license action with an appeal option).
 `
 
 const SOURCE_PRIORITY = {
@@ -59,14 +69,15 @@ const SOURCE_PRIORITY = {
     /violation\s*types/i,
     /enforcement\s*action/i,
     /inspection.*program/i,
-    /food\s*allergy.*washtenaw/i,
     /inspection\s*report\s*types/i,
+    /food\s*service\s*inspection/i,
   ],
   michigan: [
     /mi.*modified.*food.*code/i,
     /michigan.*food/i,
     /mcl.*act.*92/i,
     /administration.*enforcement.*michigan/i,
+    /procedures.*administration.*enforcement/i,
   ],
   fda: [/fda.*food.*code/i],
   guides: [
@@ -79,9 +90,12 @@ const SOURCE_PRIORITY = {
     /consumer.*advisory/i,
     /norovirus/i,
     /emergency.*action/i,
-    /3.*comp.*sink/i,
+    /fog/i,
   ],
 }
+
+const ALLOWED_LIKELIHOOD = new Set(['Very likely', 'Likely', 'Possible', 'Unclear'])
+const ALLOWED_CLASS = new Set(['P', 'Pf', 'C', 'Unclear'])
 
 function safeText(x) {
   if (typeof x !== 'string') return ''
@@ -132,6 +146,19 @@ function getLastUserText(messages) {
   return ''
 }
 
+function wantsFullAudit(text) {
+  const t = safeText(text).toLowerCase()
+  if (!t) return false
+  return (
+    t.includes('full audit') ||
+    t.includes('full-audit') ||
+    t.includes('everything you see') ||
+    t.includes('check everything') ||
+    t.includes('scan everything') ||
+    t.includes('complete audit')
+  )
+}
+
 function getSourceTier(source) {
   if (!source) return 5
   for (const p of SOURCE_PRIORITY.washtenaw) if (p.test(source)) return 1
@@ -145,7 +172,7 @@ function dedupeByText(items) {
   const seen = new Set()
   const out = []
   for (const it of items || []) {
-    const key = (it?.text || '').slice(0, 1800)
+    const key = (it?.text || '').slice(0, 1600)
     if (!key) continue
     if (seen.has(key)) continue
     seen.add(key)
@@ -154,44 +181,251 @@ function dedupeByText(items) {
   return out
 }
 
-function buildContextString(docs) {
+function buildExcerptContext(docs) {
+  // We number excerpts internally so the model can cite by excerpt id,
+  // but we DO NOT show excerpt numbers in the user-facing output.
   const MAX_CHARS = 36000
+  const excerpts = []
   let buf = ''
+  let id = 1
+
   for (const d of docs || []) {
     const source = safeText(d?.source || 'Unknown Source')
     const page = d?.page ? ` (p. ${d.page})` : ''
     const text = safeText(d?.text || '')
     if (!text) continue
 
-    const chunk = `SOURCE: ${source}${page}\n${text}\n\n`
-    if ((buf.length + chunk.length) > MAX_CHARS) break
+    const header = `[EXCERPT_${id}] SOURCE: ${source}${page}\n`
+    const chunk = `${header}${text}\n\n`
+    if (buf.length + chunk.length > MAX_CHARS) break
+
+    excerpts.push({
+      id: `EXCERPT_${id}`,
+      source,
+      page: d?.page || null,
+      tier: getSourceTier(source),
+    })
+
     buf += chunk
+    id++
   }
-  return buf.trim()
+
+  return {
+    excerptIndex: excerpts,
+    contextText: buf.trim(),
+  }
 }
 
-function sanitizeModelOutput(text) {
+function sanitizePlainText(text) {
   let out = safeText(text || '')
 
-  // Remove common markdown triggers and “formatting noise”
+  // strip common markdown triggers / formatting noise
   out = out.replace(/[`#*]/g, '')
-  out = out.replace(/_{2,}/g, '_') // reduce underscore runs
+  out = out.replace(/\u2022/g, '') // bullet char
+  out = out.replace(/_{2,}/g, '_')
   out = out.replace(/\n{3,}/g, '\n\n')
 
-  // Remove emoji / pictographs when supported
+  // remove emoji / pictographs when supported
   try {
     out = out.replace(/\p{Extended_Pictographic}/gu, '')
-    out = out.replace(/\uFE0F/gu, '') // variation selector
+    out = out.replace(/\uFE0F/gu, '')
   } catch {}
 
-  // Keep it tight
-  const HARD_LIMIT = 2200
+  // remove numbered-list prefixes at start of lines (keeps temps/times intact)
+  out = out.replace(/^\s*\d+[\)\.\:\-]\s+/gm, '')
+
+  // keep it tight
+  const HARD_LIMIT = 2600
   if (out.length > HARD_LIMIT) {
     out = out.slice(0, HARD_LIMIT).trimEnd()
     out += '\nIf you want, say "full audit" and I will list more items.'
   }
 
   return out.trim()
+}
+
+function extractJsonObject(text) {
+  const raw = safeText(text || '')
+  if (!raw) return null
+
+  // Strip ```json fences if present
+  const unfenced = raw.replace(/```json/gi, '```').replace(/```/g, '')
+
+  const first = unfenced.indexOf('{')
+  const last = unfenced.lastIndexOf('}')
+  if (first === -1 || last === -1 || last <= first) return null
+
+  const candidate = unfenced.slice(first, last + 1)
+  try {
+    return JSON.parse(candidate)
+  } catch {
+    return null
+  }
+}
+
+function computeDeadlineByClass(cls) {
+  if (cls === 'P' || cls === 'Pf') return 'Immediately or within 10 days'
+  if (cls === 'C') return 'Within 90 days'
+  return 'Unclear'
+}
+
+function normalizeLikelihood(x) {
+  const v = safeText(x)
+  if (ALLOWED_LIKELIHOOD.has(v)) return v
+  return 'Unclear'
+}
+
+function normalizeClass(x) {
+  const v = safeText(x)
+  if (ALLOWED_CLASS.has(v)) return v
+  return 'Unclear'
+}
+
+function pickSourcesFromIds(sourceIds, excerptIndex) {
+  const map = new Map(excerptIndex.map((e) => [e.id, e]))
+  const used = []
+  for (const sid of sourceIds || []) {
+    const id = safeText(sid)
+    if (!id) continue
+    const ex = map.get(id)
+    if (!ex) continue
+    used.push(ex)
+  }
+  // de-dupe by source+page
+  const seen = new Set()
+  const out = []
+  for (const u of used) {
+    const k = `${u.source}::${u.page || ''}`
+    if (seen.has(k)) continue
+    seen.add(k)
+    out.push(u)
+  }
+  return out
+}
+
+function renderAuditPlainText(payload, excerptIndex, maxItems) {
+  const opening = sanitizePlainText(payload?.opening_line || '')
+  const findings = Array.isArray(payload?.findings) ? payload.findings : []
+  const questions = Array.isArray(payload?.clarifying_questions)
+    ? payload.clarifying_questions
+    : []
+
+  const status = safeText(payload?.status || '')
+  const out = []
+
+  if (opening) out.push(opening)
+  else out.push('Here is what I can tell from what was provided.')
+
+  if (status === 'clear' || findings.length === 0) {
+    // Keep it satisfying but still professional (UI can color it)
+    // No scoring, no gimmicks.
+    if (!opening) out.push('No clear violations visible from this photo.')
+    // If there are questions, ask them (sometimes “clear” still needs one check).
+    if (questions.length > 0) {
+      out.push('')
+      for (const q of questions.slice(0, 3)) {
+        const qq = sanitizePlainText(q)
+        if (!qq) continue
+        out.push(`Question: ${qq}`)
+      }
+    }
+    return sanitizePlainText(out.join('\n'))
+  }
+
+  const trimmed = findings.slice(0, maxItems)
+
+  for (const f of trimmed) {
+    const cls = normalizeClass(f?.class)
+    const likelihood = normalizeLikelihood(f?.likelihood)
+    const title = sanitizePlainText(f?.title || 'Possible issue')
+    const why = sanitizePlainText(f?.why || '')
+    const fix = sanitizePlainText(f?.fix || '')
+    const deadlineRaw = sanitizePlainText(f?.deadline || '')
+    const deadline = deadlineRaw || computeDeadlineByClass(cls)
+
+    const srcIds = Array.isArray(f?.source_ids) ? f.source_ids : []
+    const sources = pickSourcesFromIds(srcIds, excerptIndex)
+
+    out.push('')
+    out.push(`[${cls}] ${title} (Likelihood: ${likelihood})`)
+    if (why) out.push(`Why: ${why}`)
+    if (fix) out.push(`Fix: ${fix}`)
+    out.push(`Deadline: ${deadline}`)
+
+    if (sources.length > 0) {
+      const srcLine = sources
+        .slice(0, 2)
+        .map((s) => (s.page ? `${s.source} (p. ${s.page})` : `${s.source}`))
+        .join('; ')
+      out.push(`Source: ${srcLine}`)
+    } else {
+      out.push('Source: Unclear (no matching excerpt was provided)')
+    }
+  }
+
+  if (questions.length > 0) {
+    out.push('')
+    for (const q of questions.slice(0, 3)) {
+      const qq = sanitizePlainText(q)
+      if (!qq) continue
+      out.push(`Question: ${qq}`)
+    }
+  }
+
+  return sanitizePlainText(out.join('\n'))
+}
+
+function renderGuidancePlainText(payload, excerptIndex) {
+  const opening = sanitizePlainText(payload?.opening_line || '')
+  const steps = Array.isArray(payload?.guidance_steps) ? payload.guidance_steps : []
+  const vio = Array.isArray(payload?.optional_violation_context)
+    ? payload.optional_violation_context
+    : []
+  const questions = Array.isArray(payload?.clarifying_questions)
+    ? payload.clarifying_questions
+    : []
+
+  const out = []
+  if (opening) out.push(opening)
+  else out.push('Here is the safest way to handle that.')
+
+  for (const s of steps.slice(0, 6)) {
+    const line = sanitizePlainText(s)
+    if (!line) continue
+    out.push(`Do: ${line}`)
+  }
+
+  // Only add violation framing if it truly helps.
+  for (const v of vio.slice(0, 2)) {
+    const cls = normalizeClass(v?.class)
+    const likelihood = normalizeLikelihood(v?.likelihood)
+    const title = sanitizePlainText(v?.title || 'Potential violation')
+    const why = sanitizePlainText(v?.why || '')
+    const srcIds = Array.isArray(v?.source_ids) ? v.source_ids : []
+    const sources = pickSourcesFromIds(srcIds, excerptIndex)
+
+    out.push('')
+    out.push(`If this isn’t followed, it could be flagged as: [${cls}] ${title} (Likelihood: ${likelihood})`)
+    if (why) out.push(`Why: ${why}`)
+    if (sources.length > 0) {
+      const srcLine = sources
+        .slice(0, 2)
+        .map((s) => (s.page ? `${s.source} (p. ${s.page})` : `${s.source}`))
+        .join('; ')
+      out.push(`Source: ${srcLine}`)
+    }
+  }
+
+  if (questions.length > 0) {
+    out.push('')
+    for (const q of questions.slice(0, 3)) {
+      const qq = sanitizePlainText(q)
+      if (!qq) continue
+      out.push(`Question: ${qq}`)
+    }
+  }
+
+  return sanitizePlainText(out.join('\n'))
 }
 
 async function safeLogUsage(payload) {
@@ -238,9 +472,20 @@ export async function POST(request) {
     const imageBase64 = hasImage ? extractBase64FromDataUrl(imageDataUrl) : null
     const imageMediaType = hasImage ? getMediaTypeFromDataUrl(imageDataUrl) : null
 
+    const lastUserText = getLastUserText(messages)
+    const effectiveUserPrompt =
+      lastUserText || (hasImage ? 'Analyze this photo for food safety issues.' : '')
+
+    if (!effectiveUserPrompt && !hasImage) {
+      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
+    }
+
+    const fullAudit = wantsFullAudit(effectiveUserPrompt) || Boolean(body?.fullAudit)
+    const maxFindings = fullAudit ? 10 : 4
+
+    // Auth (non-blocking)
     let userId = null
     try {
-      // keep your current cookie approach to avoid regressions
       const cookieStore = await cookies()
       const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -266,28 +511,25 @@ export async function POST(request) {
       logger.warn('Auth check failed (continuing)', { error: e?.message })
     }
 
-    const lastUserText = getLastUserText(messages)
-    const effectiveUserPrompt =
-      lastUserText || (hasImage ? 'Analyze this photo for food safety issues.' : '')
-
-    if (!effectiveUserPrompt && !hasImage) {
-      return NextResponse.json({ error: 'No input provided.' }, { status: 400 })
-    }
-
     const anthropic = await getAnthropicClient()
     const searchDocumentsFn = await getSearchDocuments()
 
-    // 1) Quick vision pass (only to generate search terms + a short observation list)
-    let visionSummary = ''
-    let visionSearchTerms = ''
-    let visionIssues = []
+    // 1) Conservative vision scan (only: visible facts + conservative “possible issues” + search terms)
+    let vision = {
+      summary: '',
+      search_terms: '',
+      visible_facts: [],
+      possible_issues: [],
+      unclear: [],
+    }
 
     if (hasImage && imageBase64) {
       try {
         const visionResp = await withTimeout(
           anthropic.messages.create({
             model: CLAUDE_MODEL,
-            max_tokens: 450,
+            temperature: 0,
+            max_tokens: 500,
             messages: [
               {
                 role: 'user',
@@ -302,17 +544,23 @@ export async function POST(request) {
                   },
                   {
                     type: 'text',
-                    text: `Analyze the photo for food safety issues.
+                    text: `You are doing a conservative kitchen photo scan.
+Rules:
+- Only describe what is clearly visible.
+- Only list an "issue" if it is visible; otherwise put it in "unclear".
+- Do NOT guess times/temperatures, do NOT assume a violation.
+
 Return ONLY valid JSON:
 {
-  "summary": "1 sentence describing what matters",
+  "summary": "one short sentence about what the photo shows",
   "search_terms": "short keywords for regulation lookup",
-  "issues": [
-    {"issue": "short issue", "category": "temperature/sanitation/storage/equipment/personnel/crosscontam/chemicals", "severity": "critical/serious/minor"}
+  "visible_facts": ["short factual observations (no guesses)"],
+  "possible_issues": [
+    {"issue":"short issue","likelihood":"Possible","needs_check":"what to verify with thermometer/label/test strip/etc"}
   ],
-  "unclear": ["short list of what cannot be confirmed from the photo"]
+  "unclear": ["things you cannot confirm from the photo"]
 }
-Do not use emojis. Keep it brief.`,
+No emojis. No numbered lists.`,
                   },
                 ],
               },
@@ -327,112 +575,168 @@ Do not use emojis. Keep it brief.`,
           .map((b) => b.text)
           .join('')
 
-        const jsonMatch = visionText.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0])
-          visionSummary = safeText(parsed?.summary || '')
-          visionSearchTerms = safeText(parsed?.search_terms || '')
-          if (Array.isArray(parsed?.issues)) {
-            visionIssues = parsed.issues
+        const parsed = extractJsonObject(visionText)
+        if (parsed) {
+          vision.summary = safeText(parsed.summary || '')
+          vision.search_terms = safeText(parsed.search_terms || '')
+          if (Array.isArray(parsed.visible_facts)) {
+            vision.visible_facts = parsed.visible_facts
+              .map((x) => safeText(x))
+              .filter(Boolean)
+              .slice(0, 10)
+          }
+          if (Array.isArray(parsed.possible_issues)) {
+            vision.possible_issues = parsed.possible_issues
               .map((i) => ({
                 issue: safeText(i?.issue || ''),
-                category: safeText(i?.category || ''),
-                severity: safeText(i?.severity || ''),
+                likelihood: 'Possible',
+                needs_check: safeText(i?.needs_check || ''),
               }))
               .filter((i) => i.issue)
-              .slice(0, 6)
+              .slice(0, 8)
+          }
+          if (Array.isArray(parsed.unclear)) {
+            vision.unclear = parsed.unclear.map((x) => safeText(x)).filter(Boolean).slice(0, 8)
           }
         } else {
-          visionSummary = safeText(visionText).slice(0, 220)
+          vision.summary = safeText(visionText).slice(0, 220)
         }
       } catch (e) {
         logger.warn('Vision failed (continuing)', { error: e?.message })
       }
     }
 
-    // 2) Retrieval
+    // 2) Retrieval (main query + pinned Washtenaw shaping docs)
     const retrievalQuery = [
       effectiveUserPrompt,
-      visionSearchTerms,
+      vision.search_terms,
       'Washtenaw County Michigan food service',
     ]
       .filter(Boolean)
       .join(' ')
-      .slice(0, 800)
+      .slice(0, 900)
 
-    let docs = await searchDocumentsFn(retrievalQuery, county, TOPK)
-    docs = dedupeByText(docs || [])
-
-    // If we didn’t pull enough county-specific docs, nudge it.
-    const washtenawHits = docs.filter((d) => getSourceTier(d.source) === 1).length
-    if (washtenawHits < 2) {
-      const extra = await searchDocumentsFn(
-        'Washtenaw County violation types enforcement action inspection food service',
-        county,
-        PRIORITY_TOPK
+    let docs = []
+    try {
+      const main = withTimeout(
+        searchDocumentsFn(retrievalQuery, county, TOPK),
+        RETRIEVAL_TIMEOUT_MS,
+        'RETRIEVAL_TIMEOUT_MAIN'
       )
-      if (extra?.length) docs = dedupeByText([...(extra || []), ...(docs || [])])
+
+      const pinned = Promise.all(
+        PINNED_QUERIES.map((q) =>
+          withTimeout(
+            searchDocumentsFn(q, county, PINNED_TOPK),
+            RETRIEVAL_TIMEOUT_MS,
+            'RETRIEVAL_TIMEOUT_PINNED'
+          ).catch(() => [])
+        )
+      )
+
+      const [mainDocs, pinnedDocsList] = await Promise.all([main.catch(() => []), pinned])
+
+      docs = [...(mainDocs || []), ...((pinnedDocsList || []).flat() || [])]
+      docs = dedupeByText(docs)
+    } catch (e) {
+      logger.warn('Retrieval failed (continuing)', { error: e?.message })
     }
 
+    // Sort by tier (Washtenaw first) then score
     docs.sort((a, b) => {
-      const tierA = getSourceTier(a.source)
-      const tierB = getSourceTier(b.source)
+      const tierA = getSourceTier(a?.source)
+      const tierB = getSourceTier(b?.source)
       if (tierA !== tierB) return tierA - tierB
-      return (b.score || 0) - (a.score || 0)
+      return (b?.score || 0) - (a?.score || 0)
     })
 
-    const retrievedContext = buildContextString(docs)
+    const { excerptIndex, contextText } = buildExcerptContext(docs)
 
-    // 3) Final answer prompt (plain text only, concise, actionable)
+    // 3) Final answer: model returns JSON ONLY, server renders clean plain-text.
     const systemPrompt = `You are ProtocolLM, a compliance assistant for Washtenaw County, Michigan food service establishments.
 
-Goal: Give an actionable, concise answer a busy employee or manager can follow.
-Output must be plain text only. Do not use markdown. Do not use hashtags. Do not use asterisks. Do not use emojis.
-Do not provide confidence percentages.
+Primary goals:
+- Be actionable, concise, and easy for any employee to understand.
+- Be conservative about calling something a violation. If it is not clearly supported by the photo or the excerpts, mark it Unclear and say what to verify.
+- Never claim certainty. Never use confidence percentages.
+- Use these likelihood words only: Very likely, Likely, Possible, Unclear.
+- Plain language. No emojis. No markdown. No hashtags. No asterisks. No numbered lists.
 
-Use these likelihood words only: Very likely, Likely, Possible, Unclear.
-Never claim certainty. Avoid words like "guaranteed", "definitely", "certain", "100%".
+Critical grounding rules:
+- Use ONLY the provided "Relevant excerpts" as your regulatory basis.
+- If something is not in the excerpts, say Unclear and ask a clarifying question or recommend checking with the Person In Charge / local health department.
+- Every finding or violation context MUST cite at least one excerpt id (EXCERPT_#) in "source_ids". If you cannot cite it, mark it Unclear.
 
-Format:
-Start with one short sentence that summarizes the biggest problem(s), or say "No clear violations visible from this photo."
-
-Then list up to 4 items (unless the user explicitly asks for "full audit").
-For each item, use exactly this structure:
-
-[CLASS] Short violation name (Likelihood: ...)
-Why: ...
-Fix: ...
-Deadline: ... (P/Pf = immediately or within 10 days; C = within 90 days)
-Source: document title + page if available
-
-If something cannot be confirmed from the photo, mark it Unclear and say what to check (measure temp, check labels, confirm sanitizer strength, etc).
-
-Classification rules and enforcement context:
+Washtenaw framing:
 ${WASHTENAW_RULES}
 
-Prefer Washtenaw County sources first, then Michigan sources, then FDA/USDA guidance.
-Keep lines short. No paragraphs.`
+Decide response mode:
+- If a photo is provided: mode = "audit"
+- If no photo: mode = "guidance"
 
-    let issuesCompact = ''
-    if (visionIssues.length > 0) {
-      issuesCompact =
-        '\nPhoto flags (from quick scan):\n' +
-        visionIssues
-          .slice(0, 6)
-          .map((v, idx) => `${idx + 1}. ${v.issue}${v.category ? ` (${v.category})` : ''}`)
-          .join('\n')
+Return ONLY valid JSON in this schema (no extra text):
+{
+  "mode": "audit" | "guidance",
+  "opening_line": "one short sentence summarizing the answer",
+  "audit": {
+    "status": "clear" | "findings" | "needs_info",
+    "findings": [
+      {
+        "class": "P" | "Pf" | "C" | "Unclear",
+        "title": "short issue name",
+        "likelihood": "Very likely" | "Likely" | "Possible" | "Unclear",
+        "why": "one short sentence",
+        "fix": "one short sentence",
+        "deadline": "Immediately or within 10 days" | "Within 90 days" | "Unclear",
+        "source_ids": ["EXCERPT_1"]
+      }
+    ]
+  },
+  "guidance_steps": ["short do-this steps"],
+  "optional_violation_context": [
+    {
+      "class":"P"|"Pf"|"C"|"Unclear",
+      "title":"short name",
+      "likelihood":"Possible"|"Unclear"|"Likely"|"Very likely",
+      "why":"one short sentence",
+      "source_ids":["EXCERPT_2"]
     }
+  ],
+  "clarifying_questions": ["up to 3 short questions only if needed"]
+}
+
+Hard caps:
+- In audit mode: max findings = ${maxFindings}
+- Keep everything short.`
+
+    const factsBlock =
+      vision.visible_facts?.length > 0
+        ? `Visible facts from photo (no guesses):\n${vision.visible_facts
+            .map((x) => `- ${x}`)
+            .join('\n')}`
+        : 'Visible facts from photo: None provided.'
+
+    const possibleIssuesBlock =
+      vision.possible_issues?.length > 0
+        ? `Conservative possible issues (need verification):\n${vision.possible_issues
+            .map((x) => `- ${x.issue}${x.needs_check ? ` (Verify: ${x.needs_check})` : ''}`)
+            .join('\n')}`
+        : 'Conservative possible issues: None listed.'
 
     const userPrompt = `User request:
 ${effectiveUserPrompt || (hasImage ? 'Analyze photo.' : '')}
 
 Photo summary:
-${visionSummary || (hasImage ? 'No summary available.' : 'No photo provided.')}${issuesCompact ? `\n${issuesCompact}` : ''}
+${vision.summary || (hasImage ? 'No summary available.' : 'No photo provided.')}
 
-Relevant excerpts:
-${retrievedContext || 'No excerpts retrieved.'}`
+${hasImage ? `${factsBlock}\n\n${possibleIssuesBlock}` : ''}
 
-    let finalText = ''
+Relevant excerpts (cite by EXCERPT id only):
+${contextText || 'No excerpts retrieved.'}`
+
+    let modelText = ''
+    let parsed = null
+
     try {
       const finalMessages = []
 
@@ -458,7 +762,8 @@ ${retrievedContext || 'No excerpts retrieved.'}`
       const answerResp = await withTimeout(
         anthropic.messages.create({
           model: CLAUDE_MODEL,
-          max_tokens: 900,
+          temperature: 0.2,
+          max_tokens: fullAudit ? 1400 : 1000,
           system: systemPrompt,
           messages: finalMessages,
         }),
@@ -466,47 +771,115 @@ ${retrievedContext || 'No excerpts retrieved.'}`
         'ANSWER_TIMEOUT'
       )
 
-      finalText = answerResp.content
+      modelText = answerResp.content
         .filter((b) => b.type === 'text')
         .map((b) => b.text)
         .join('')
+
+      parsed = extractJsonObject(modelText)
     } catch (e) {
       logger.error('Generation failed', { error: e?.message })
-
-      // Fallback: short, still actionable, no markdown / emojis
-      if (hasImage && (visionSummary || visionIssues.length)) {
-        const fallbackIssues = visionIssues
-          .slice(0, 4)
-          .map((v, i) => `${i + 1}. Possible issue: ${v.issue}`)
-          .join('\n')
-
-        const fallback = [
-          'Response timed out. Quick scan only:',
-          visionSummary ? `Summary: ${visionSummary}` : '',
-          fallbackIssues ? `\n${fallbackIssues}` : '',
-          '\nTry again and/or ask for "full audit" if you want more items.',
-        ]
-          .filter(Boolean)
-          .join('\n')
-
-        return NextResponse.json({ message: sanitizeModelOutput(fallback) }, { status: 200 })
-      }
-
-      return NextResponse.json(
-        { message: 'Analysis timed out. Please try again or simplify your request.' },
-        { status: 200 }
-      )
     }
 
-    const message = sanitizeModelOutput(finalText || 'No response generated.')
+    // 4) Render response (server-side) to guarantee clean formatting
+    let message = ''
+    let status = 'unknown'
+
+    if (parsed && parsed.mode === 'audit') {
+      const auditPayload = parsed.audit || {}
+      const audit = {
+        status: safeText(auditPayload.status || 'findings'),
+        opening_line: parsed.opening_line || '',
+        findings: Array.isArray(auditPayload.findings) ? auditPayload.findings : [],
+        clarifying_questions: Array.isArray(parsed.clarifying_questions)
+          ? parsed.clarifying_questions
+          : [],
+      }
+
+      // Enforce caps + enforce sources exist (otherwise downgrade to Unclear)
+      const cleanedFindings = []
+      for (const f of (audit.findings || []).slice(0, maxFindings)) {
+        const sourceIds = Array.isArray(f?.source_ids) ? f.source_ids : []
+        const usableSources = pickSourcesFromIds(sourceIds, excerptIndex)
+        if (!usableSources.length) {
+          cleanedFindings.push({
+            class: 'Unclear',
+            title: safeText(f?.title || 'Possible issue'),
+            likelihood: 'Unclear',
+            why: 'Not enough supporting information in the provided excerpts.',
+            fix: 'Ask the Person In Charge to verify and check the applicable section.',
+            deadline: 'Unclear',
+            source_ids: [],
+          })
+        } else {
+          cleanedFindings.push({
+            class: normalizeClass(f?.class),
+            title: safeText(f?.title || ''),
+            likelihood: normalizeLikelihood(f?.likelihood),
+            why: safeText(f?.why || ''),
+            fix: safeText(f?.fix || ''),
+            deadline: safeText(f?.deadline || ''),
+            source_ids: usableSources.map((s) => {
+              // Keep the model’s ids if valid; this is just a safe fallback
+              // but we still store excerpt ids in output.
+              const match = excerptIndex.find(
+                (e) => e.source === s.source && (e.page || null) === (s.page || null)
+              )
+              return match?.id || ''
+            }).filter(Boolean),
+          })
+        }
+      }
+
+      const opening = safeText(parsed.opening_line || '') || 'No clear violations visible from this photo.'
+      const statusRaw = safeText(audit.status || '')
+      status = statusRaw === 'clear' ? 'clear' : 'findings'
+
+      message = renderAuditPlainText(
+        {
+          status: statusRaw,
+          opening_line: opening,
+          findings: cleanedFindings,
+          clarifying_questions: audit.clarifying_questions,
+        },
+        excerptIndex,
+        maxFindings
+      )
+
+      // If model said clear and we truly have no findings, keep it “satisfying”
+      if ((statusRaw === 'clear' || cleanedFindings.length === 0) && hasImage) {
+        status = 'clear'
+      }
+    } else if (parsed && parsed.mode === 'guidance') {
+      status = 'guidance'
+      message = renderGuidancePlainText(
+        {
+          opening_line: parsed.opening_line || '',
+          guidance_steps: Array.isArray(parsed.guidance_steps) ? parsed.guidance_steps : [],
+          optional_violation_context: Array.isArray(parsed.optional_violation_context)
+            ? parsed.optional_violation_context
+            : [],
+          clarifying_questions: Array.isArray(parsed.clarifying_questions)
+            ? parsed.clarifying_questions
+            : [],
+        },
+        excerptIndex
+      )
+    } else {
+      // Fallback: best-effort clean output
+      status = hasImage ? 'findings' : 'guidance'
+      const fallback = modelText || (hasImage ? 'Analysis timed out. Please try again.' : 'Please try again.')
+      message = sanitizePlainText(fallback)
+    }
 
     logger.info('Response complete', {
-      totalDocsRetrieved: docs.length,
-      washtenawDocsUsed: docs.filter((d) => getSourceTier(d.source) === 1).length,
       hasImage,
-      visionIssues: visionIssues.length,
+      status,
+      totalDocsRetrieved: docs.length,
+      washtenawDocsUsed: docs.filter((d) => getSourceTier(d?.source) === 1).length,
       durationMs: Date.now() - startedAt,
       model: CLAUDE_MODEL,
+      fullAudit,
     })
 
     await safeLogUsage({
@@ -516,13 +889,14 @@ ${retrievedContext || 'No excerpts retrieved.'}`
       durationMs: Date.now() - startedAt,
     })
 
-    // Keep payload minimal; front-end can display `message` only.
     return NextResponse.json(
       {
         message,
         _meta: {
           model: CLAUDE_MODEL,
           hasImage,
+          status, // "clear" | "findings" | "guidance" | "unknown"
+          fullAudit,
           totalDocsRetrieved: docs.length,
           durationMs: Date.now() - startedAt,
         },
