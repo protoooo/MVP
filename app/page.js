@@ -1,3 +1,4 @@
+
 // app/page.js
 'use client'
 
@@ -8,7 +9,6 @@ import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
 import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
-import IsometricIcon from '@/components/IsometricIcon'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
@@ -157,9 +157,68 @@ const Icons = {
 // Subtle animated wave background - light theme
 function WaveBackground() {
   return (
-    <div className="wave-bg-container" aria-hidden>
+    <div className="wave-bg-container">
+      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+        
+        {/* Wave 1 - starts higher, flows through hero */}
+        <path className="wave wave-1" fill="url(#wave-gradient-1)">
+          <animate
+            attributeName="d"
+            dur="25s"
+            repeatCount="indefinite"
+            values="
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
+              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 2 - middle layer */}
+        <path className="wave wave-2" fill="url(#wave-gradient-2)">
+          <animate
+            attributeName="d"
+            dur="20s"
+            repeatCount="indefinite"
+            values="
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
+              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 3 - lower layer */}
+        <path className="wave wave-3" fill="url(#wave-gradient-3)">
+          <animate
+            attributeName="d"
+            dur="30s"
+            repeatCount="indefinite"
+            values="
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
+              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+      </svg>
+      
+      {/* Subtle grid overlay */}
       <div className="grid-overlay" />
-      <div className="grain-overlay" />
     </div>
   )
 }
@@ -386,34 +445,23 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   const features = useMemo(
     () => [
       {
-        icon: 'Camera',
+        icon: <Icons.Eye />,
         title: 'Visual Compliance Analysis',
-        description: 'Upload a prep, storage, or service photo and get quick line-art callouts on what needs to be fixed before the inspector arrives.',
+        description: 'Upload photos of any kitchen station and receive instant feedback on potential violations before inspectors arrive.',
       },
       {
-        icon: 'DocumentStack',
+        icon: <Icons.Document />,
         title: 'Local Regulation Database',
-        description: 'Answers are grounded in Washtenaw County enforcement patterns plus the Michigan Food Code—no generic chatbot fluff.',
+        description: 'Search Washtenaw County food regulation documents alongside Michigan Food Code requirements for context-aware answers.',
       },
       {
-        icon: 'Checklist',
+        icon: <Icons.Zap />,
         title: 'Real-time Guidance',
-        description: 'Get short, plain-language fixes you can hand to a new hire, with checklists that track what to re-verify later.',
+        description: 'Get actionable fixes in plain language, not legal jargon. Purpose-built for line staff and shift managers.',
       },
     ],
     []
   )
-
-  const howSteps = useMemo(
-    () => [
-      { title: 'Capture', description: 'Snap a walk-in, cook line, or dish pit photo.', icon: 'Camera' },
-      { title: 'Cross-check', description: 'protocolLM scans against the local code playbook.', icon: 'CubeStack' },
-      { title: 'Correct', description: 'Get a clear fix list you can delegate right away.', icon: 'Shield' },
-    ],
-    []
-  )
-
-  const trustedBy = useMemo(() => ['Ann Arbor kitchens', 'Multi-unit cafés', 'Campus dining', 'Food trucks', 'Caterers'], [])
 
   // Real data from FDA, CDC, and industry sources
   const complianceRisks = useMemo(
@@ -467,80 +515,151 @@ function LandingPage({ onShowPricing, onShowAuth }) {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-container">
-          <div className="hero-grid">
-            <div className="hero-content">
-              <Reveal delay={0}>
-                <h1 className={`hero-title hero-title-animated ${outfit.className}`}>
-                  <span className="hero-title-line">Catch violations</span>
-                  <span className="hero-title-line hero-title-gradient">before the inspector</span>
-                </h1>
-              </Reveal>
-
-              <Reveal delay={150}>
-                <p className={`hero-description ${inter.className}`}>
-                  Upload photos of your kitchen and get instant AI analysis that spots potential
-                  violations before they become citations. Built specifically for Washtenaw County
-                  food code requirements.
-                </p>
-              </Reveal>
-
-              <Reveal delay={250}>
-                <div className="hero-bullets">
-                  {[
-                    'Photo QA for every station',
-                    'Local enforcement references',
-                    'Actionable checklists, not essays',
-                  ].map((item) => (
-                    <div key={item} className={`hero-chip ${inter.className}`}>
-                      <span className="chip-dot" aria-hidden />
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </Reveal>
-
-              <Reveal delay={350}>
-                <div className="hero-actions">
-                  <button onClick={onShowPricing} className="btn-hero-primary">
-                    <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
-                    <span className="btn-icon-right">
-                      <Icons.ArrowRight />
-                    </span>
-                  </button>
-                  <button onClick={onShowAuth} className="btn-hero-secondary">
-                    <span className={`btn-label ${inter.className}`}>Sign in</span>
-                  </button>
-                </div>
-              </Reveal>
-            </div>
-
-            <div className="hero-illustration" aria-hidden>
-              <div className="hero-illustration-card">
-                <div className="hero-iso-grid">
-                  <div className="hero-iso-icon">
-                    <IsometricIcon variant="Camera" size={96} strokeWidth={1.5} />
-                    <span className={`hero-iso-label ${inter.className}`}>Photo intake</span>
-                  </div>
-                  <div className="hero-iso-icon">
-                    <IsometricIcon variant="CubeStack" size={86} strokeWidth={1.5} />
-                    <span className={`hero-iso-label ${inter.className}`}>Cross-check</span>
-                  </div>
-                  <div className="hero-iso-icon">
-                    <IsometricIcon variant="Checklist" size={86} strokeWidth={1.5} />
-                    <span className={`hero-iso-label ${inter.className}`}>Fix list</span>
-                  </div>
-                </div>
-                <div className="hero-illustration-footer">
-                  <div className="footer-line" />
-                  <div className={`footer-caption ${inter.className}`}>
-                    Built for Washtenaw County inspections
-                  </div>
-                  <div className="footer-line" />
-                </div>
+          <div className="hero-content">
+            <Reveal delay={0}>
+              <div className="hero-badge">
+                <span className="hero-badge-indicator" />
+                <span className={inter.className}>Washtenaw County Food Safety Intelligence</span>
               </div>
-            </div>
+            </Reveal>
+
+            <Reveal delay={100}>
+              <h1 className={`hero-title ${outfit.className}`}>
+                Catch violations
+                <br />
+                <span className="hero-title-gradient">before the inspector does</span>
+              </h1>
+            </Reveal>
+
+            <Reveal delay={200}>
+              <p className={`hero-description ${inter.className}`}>
+                Upload photos of your kitchen and get instant AI analysis that spots potential 
+                violations before they become citations. Built specifically for Washtenaw County 
+                food code requirements.
+              </p>
+            </Reveal>
+
+            <Reveal delay={300}>
+              <div className="hero-actions">
+                <button onClick={onShowPricing} className="btn-hero-primary">
+                  <span className={`btn-label ${inter.className}`}>Start 7-day free trial</span>
+                  <span className="btn-icon-right">
+                    <Icons.ArrowRight />
+                  </span>
+                </button>
+                <button onClick={onShowAuth} className="btn-hero-secondary">
+                  <span className={`btn-label ${inter.className}`}>Sign in</span>
+                </button>
+              </div>
+            </Reveal>
           </div>
 
+          <Reveal delay={400} direction="scale">
+            <div className="hero-visual">
+              {/* Desktop Glass Panel */}
+              <div className="hero-desktop">
+                <div className="desktop-frame">
+                  <div className="desktop-header">
+                    <div className="desktop-dots">
+                      <span className="desktop-dot red" />
+                      <span className="desktop-dot yellow" />
+                      <span className="desktop-dot green" />
+                    </div>
+                    <div className={`desktop-title ${inter.className}`}>protocolLM Dashboard</div>
+                    <div className="desktop-spacer" />
+                  </div>
+                  <div className="desktop-content">
+                    <div className="desktop-sidebar">
+                      <div className={`sidebar-label ${inter.className}`}>Recent Checks</div>
+                      <div className="sidebar-item active">
+                        <Icons.Camera />
+                        <span>Walk-in Cooler</span>
+                      </div>
+                      <div className="sidebar-item">
+                        <Icons.Camera />
+                        <span>Prep Station</span>
+                      </div>
+                      <div className="sidebar-item">
+                        <Icons.Document />
+                        <span>Temp Logs</span>
+                      </div>
+                    </div>
+                    <div className="desktop-main">
+                      <div className={`desktop-stat-row ${inter.className}`}>
+                        <div className="desktop-stat">
+                          <span className="stat-value">12</span>
+                          <span className="stat-label">Checks Today</span>
+                        </div>
+                        <div className="desktop-stat">
+                          <span className="stat-value success">0</span>
+                          <span className="stat-label">Open Issues</span>
+                        </div>
+                      </div>
+                      <div className={`desktop-alert ${inter.className}`}>
+                        <Icons.CheckCircle />
+                        <span>All stations compliant</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="desktop-glow" />
+              </div>
+
+              {/* Phone Mockup */}
+              <div className="hero-phone">
+                <div className="phone-frame">
+                  <div className="phone-notch" />
+                  <div className="phone-screen">
+                    <div className="phone-status-bar">
+                      <span className={inter.className}>9:41</span>
+                      <div className="phone-status-icons">
+                        <span>●●●●</span>
+                        <span>WiFi</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="phone-app-header">
+                      <span className={`phone-app-title ${outfit.className}`}>protocolLM</span>
+                    </div>
+                    
+                    <div className="phone-content">
+                      <div className="phone-message phone-message-user">
+                        <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
+                          Walk-in cooler photo attached. Is the storage order correct?
+                        </div>
+                      </div>
+                      
+                      <div className="phone-message phone-message-assistant">
+                        <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
+                          <div className="phone-result-header">
+                            <Icons.AlertTriangle />
+                            <span>2 Issues Found</span>
+                          </div>
+                          
+                          <div className="phone-result-items">
+                            <div className="phone-result-item warning">
+                              <span className="result-indicator" />
+                              <span>Raw chicken stored above ready-to-eat items</span>
+                            </div>
+                            <div className="phone-result-item warning">
+                              <span className="result-indicator" />
+                              <span>Missing date label on prep container</span>
+                            </div>
+                          </div>
+                          
+                          <div className="phone-remediation">
+                            <strong>Fix:</strong> Move raw poultry to bottom shelf. Add date labels.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="phone-glow" />
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -588,49 +707,12 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                 <div className="feature-card">
                   <div className="feature-card-border" />
                   <div className="feature-icon-wrapper">
-                    <IsometricIcon variant={feature.icon} size={72} strokeWidth={1.4} />
+                    {feature.icon}
                   </div>
                   <h3 className={`feature-title ${inter.className}`}>{feature.title}</h3>
                   <p className={`feature-description ${inter.className}`}>{feature.description}</p>
                 </div>
               </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="how-section">
-        <div className="how-container">
-          <Reveal>
-            <div className="section-header">
-              <span className={`section-label ${inter.className}`}>How it works</span>
-              <h2 className={`section-title ${outfit.className}`}>Capture → Cross-check → Correct</h2>
-            </div>
-          </Reveal>
-          <div className="how-grid">
-            {howSteps.map((step, i) => (
-              <Reveal key={step.title} delay={i * 120}>
-                <div className="how-card">
-                  <div className="how-icon">
-                    <IsometricIcon variant={step.icon} size={72} strokeWidth={1.4} />
-                  </div>
-                  <div className="how-body">
-                    <h3 className={`how-title ${inter.className}`}>{step.title}</h3>
-                    <p className={`how-description ${inter.className}`}>{step.description}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="trusted-section">
-        <div className="trusted-container">
-          <div className={`trusted-label ${inter.className}`}>Trusted by local teams</div>
-          <div className="trusted-chips">
-            {trustedBy.map((item) => (
-              <span key={item} className={`trusted-chip ${inter.className}`}>{item}</span>
             ))}
           </div>
         </div>
@@ -712,12 +794,12 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
                 <div className="pricing-amount">
                   <span className={`pricing-currency ${inter.className}`}>$</span>
-                  <span className={`pricing-number ${outfit.className}`}>100</span>
+                  <span className={`pricing-number ${outfit.className}`}>200</span>
                   <span className={`pricing-period ${inter.className}`}>/month</span>
                 </div>
 
                 <p className={`pricing-annual ${inter.className}`}>
-                  or $1,000/year <span className="pricing-savings">(save $200)</span>
+                  or $2,000/year <span className="pricing-savings">(save $400)</span>
                 </p>
 
                 <div className="pricing-features">
@@ -754,7 +836,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <Reveal delay={250}>
             <p className={`pricing-comparison ${inter.className}`}>
-              
+              Typical food safety compliance software costs $299–$599+/month per location
             </p>
           </Reveal>
         </div>
@@ -1079,7 +1161,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="pricing-modal-amount">
             <span className={`pricing-currency ${inter.className}`}>$</span>
-            <span className={`pricing-number-lg ${outfit.className}`}>100</span>
+            <span className={`pricing-number-lg ${outfit.className}`}>200</span>
             <span className={`pricing-period ${inter.className}`}>/month</span>
           </div>
 
@@ -1108,8 +1190,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               className="btn-pricing-modal-secondary"
             >
               {loading === 'annual' && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>Annual plan · $1,000/year</span>
-              <span className={`btn-badge ${inter.className}`}>Save $200</span>
+              <span className={`btn-label ${inter.className}`}>Annual plan · $2,000/year</span>
+              <span className={`btn-badge ${inter.className}`}>Save $400</span>
             </button>
           </div>
 
@@ -1143,8 +1225,6 @@ export default function Page() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
-  const [memoryEnabled, setMemoryEnabled] = useState(true)
-  const [memoryEntries, setMemoryEntries] = useState([])
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
@@ -1159,10 +1239,6 @@ export default function Page() {
   const shouldAutoScrollRef = useRef(true)
 
   const isAuthenticated = !!session
-  const emptySuggestions = useMemo(
-    () => ['Cold holding temps', 'Handwashing sink', 'Sanitizer ppm', 'Cooling logs', 'Date marking', 'Dish machine rinse'],
-    []
-  )
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -1200,19 +1276,6 @@ export default function Page() {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const stored = localStorage.getItem('plmMemory')
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        if (Array.isArray(parsed)) setMemoryEntries(parsed)
-      } catch {}
-    }
-    const enabled = localStorage.getItem('plmMemoryEnabled')
-    if (enabled === 'false') setMemoryEnabled(false)
-  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -1435,21 +1498,6 @@ export default function Page() {
     requestAnimationFrame(() => scrollToBottom('auto'))
   }
 
-  const persistMemory = (entries) => {
-    try {
-      localStorage.setItem('plmMemory', JSON.stringify(entries))
-    } catch {}
-  }
-
-  const addMemoryEntry = (question, answer) => {
-    if (!memoryEnabled || !question || !answer) return
-    setMemoryEntries((prev) => {
-      const next = [...prev.slice(-8), { question, answer, ts: Date.now() }]
-      persistMemory(next)
-      return next
-    })
-  }
-
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
@@ -1495,7 +1543,6 @@ export default function Page() {
           messages: [...messages, newUserMessage],
           image,
           chatId: activeChatId,
-          memory: memoryEnabled ? memoryEntries.slice(-5) : [],
         }),
       })
 
@@ -1518,9 +1565,7 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        const answer = data.message || 'No response.'
-        updated[updated.length - 1] = { role: 'assistant', content: answer }
-        addMemoryEntry(question, answer)
+        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
         return updated
       })
     } catch (error) {
@@ -1570,45 +1615,45 @@ export default function Page() {
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #F5F5F0;
-          --color-surface: #E6D8C3;
-          --color-card: #EFE6D5;
-          --color-border: rgba(63, 58, 53, 0.26);
-          --color-border-subtle: rgba(63, 58, 53, 0.18);
-          --color-border-hover: rgba(63, 58, 53, 0.34);
-          --color-border-focus: #5D866C;
+          --color-bg: #F6FAF9;
+          --color-surface: #FFFFFF;
+          --color-card: #F2FBF7;
+          --color-border: #D7E6E2;
+          --color-border-subtle: #E8F0ED;
+          --color-border-hover: #B8CFC8;
+          --color-border-focus: #55D6B2;
           
           /* Text Colors */
-          --color-text: #3F3A35;
-          --color-text-secondary: rgba(63, 58, 53, 0.8);
-          --color-text-tertiary: rgba(63, 58, 53, 0.65);
-          --color-text-muted: rgba(63, 58, 53, 0.55);
+          --color-text: #0B1220;
+          --color-text-secondary: #3D4F5F;
+          --color-text-tertiary: #52637A;
+          --color-text-muted: #8A9BAD;
           
           /* Brand Colors */
-          --color-primary: #5D866C;
-          --color-primary-hover: #4D735C;
-          --color-primary-light: #6E9A7F;
-          --color-accent: #5D866C;
-          --color-accent-hover: #4D735C;
-          --color-accent-light: rgba(93, 134, 108, 0.14);
+          --color-primary: #2F5D8A;
+          --color-primary-hover: #1F4E7A;
+          --color-primary-light: #3A6B99;
+          --color-accent: #55D6B2;
+          --color-accent-hover: #45C6A2;
+          --color-accent-light: #E8FAF4;
           
           /* Status Colors */
-          --color-success: #5D866C;
-          --color-success-bg: rgba(93, 134, 108, 0.14);
-          --color-warning: #3F3A35;
-          --color-warning-bg: rgba(63, 58, 53, 0.08);
-          --color-error: #3F3A35;
-          --color-error-bg: rgba(63, 58, 53, 0.1);
+          --color-success: #10B981;
+          --color-success-bg: #ECFDF5;
+          --color-warning: #F59E0B;
+          --color-warning-bg: #FFFBEB;
+          --color-error: #EF4444;
+          --color-error-bg: #FEF2F2;
           
           /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(63, 58, 53, 0.06);
-          --shadow-sm: 0 2px 4px rgba(63, 58, 53, 0.06);
-          --shadow-md: 0 6px 12px rgba(63, 58, 53, 0.08);
-          --shadow-lg: 0 10px 18px rgba(63, 58, 53, 0.1);
-          --shadow-xl: 0 18px 30px rgba(63, 58, 53, 0.12);
-          --shadow-card: 0 0 0 1px rgba(63, 58, 53, 0.18);
-          --shadow-card-hover: 0 4px 12px rgba(63, 58, 53, 0.12);
-          --shadow-glass: 0 12px 26px rgba(63, 58, 53, 0.16);
+          --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
+          --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
+          --shadow-md: 0 4px 6px -1px rgba(11, 18, 32, 0.06), 0 2px 4px -1px rgba(11, 18, 32, 0.04);
+          --shadow-lg: 0 10px 15px -3px rgba(11, 18, 32, 0.08), 0 4px 6px -2px rgba(11, 18, 32, 0.04);
+          --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
+          --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
+          --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
+          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
           
           /* Radii */
           --radius-xs: 4px;
@@ -1646,7 +1691,6 @@ export default function Page() {
           scroll-behavior: smooth;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
-          background: var(--color-bg);
         }
 
         body {
@@ -1658,7 +1702,7 @@ export default function Page() {
         }
 
         ::selection {
-          background: rgba(87, 142, 126, 0.25);
+          background: rgba(85, 214, 178, 0.25);
           color: var(--color-text);
         }
 
@@ -1734,26 +1778,27 @@ export default function Page() {
           pointer-events: none;
           z-index: 0;
           overflow: hidden;
-          background: var(--color-bg);
+        }
+
+        .wave-svg {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
+        }
+
+        .wave {
+          opacity: 1;
         }
 
         .grid-overlay {
           position: absolute;
           inset: 0;
           background-image: 
-            linear-gradient(120deg, rgba(61, 61, 61, 0.06) 1px, transparent 1px),
-            linear-gradient(-60deg, rgba(61, 61, 61, 0.05) 1px, transparent 1px);
-          background-size: 180px 180px;
-          opacity: 0.4;
-          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 65%);
-        }
-
-        .grain-overlay {
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(rgba(61, 61, 61, 0.08) 0.5px, transparent 0.5px);
-          background-size: 2px 2px;
-          opacity: 0.15;
+            linear-gradient(rgba(47, 93, 138, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -1763,10 +1808,10 @@ export default function Page() {
           position: sticky;
           top: 0;
           z-index: var(--z-sticky);
-          background: rgba(255, 250, 236, 0.9);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-bottom: 1px solid var(--color-border);
+          background: rgba(246, 250, 249, 0.85);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border-bottom: 1px solid var(--color-border-subtle);
         }
 
         .header-inner {
@@ -1882,20 +1927,35 @@ export default function Page() {
           height: 52px;
           padding: 0 28px;
           background: var(--color-primary);
-          color: #FFFAEC;
-          border: 1px solid var(--color-border);
+          color: white;
+          border: none;
           border-radius: var(--radius-lg);
           font-size: 15px;
           font-weight: 600;
           cursor: pointer;
           transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-sm);
+          box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 93, 138, 0.1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .btn-hero-primary::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
         }
 
         .btn-hero-primary:hover {
           background: var(--color-primary-hover);
           transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
+          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47, 93, 138, 0.15);
+        }
+
+        .btn-hero-primary:hover::before {
+          opacity: 1;
         }
 
         .btn-hero-primary:active {
@@ -1911,7 +1971,7 @@ export default function Page() {
           padding: 0 24px;
           background: var(--color-surface);
           color: var(--color-text);
-          border: 1px solid var(--color-border-hover);
+          border: 1px solid var(--color-border);
           border-radius: var(--radius-lg);
           font-size: 15px;
           font-weight: 600;
@@ -1948,54 +2008,6 @@ export default function Page() {
         .btn-secondary:hover {
           background: var(--color-card);
           border-color: var(--color-border-hover);
-          transform: translateY(-1px);
-        }
-
-        .btn-accent {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          height: 48px;
-          padding: 0 18px;
-          background: var(--color-primary);
-          color: #FFFAEC;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .btn-accent:hover {
-          background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-        }
-
-        .btn-outline {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          height: 48px;
-          padding: 0 18px;
-          background: transparent;
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          font-size: 15px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-        }
-
-        .btn-outline:hover {
-          border-color: var(--color-border-hover);
-          background: var(--color-card);
-          transform: translateY(-2px);
         }
 
         .btn-icon {
@@ -2203,7 +2215,7 @@ export default function Page() {
         .hero-section {
           position: relative;
           z-index: 1;
-          padding: 72px 24px 96px;
+          padding: 60px 24px 100px;
           min-height: calc(100vh - 80px);
           display: flex;
           align-items: center;
@@ -2211,30 +2223,24 @@ export default function Page() {
 
         @media (min-width: 1024px) {
           .hero-section {
-            padding: 72px 48px 100px;
+            padding: 40px 48px 80px;
           }
         }
 
         .hero-container {
-          max-width: 1180px;
+          max-width: 1280px;
           margin: 0 auto;
           width: 100%;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 32px;
-          align-items: stretch;
-        }
-
-        .hero-grid {
-          display: grid;
-          grid-template-columns: 1.1fr 0.9fr;
-          gap: 32px;
+          gap: 48px;
           align-items: center;
         }
 
-        @media (max-width: 960px) {
-          .hero-grid {
-            grid-template-columns: 1fr;
+        @media (min-width: 1024px) {
+          .hero-container {
+            grid-template-columns: 1fr 1.1fr;
+            gap: 64px;
           }
         }
 
@@ -2244,43 +2250,49 @@ export default function Page() {
           gap: 24px;
           position: relative;
           z-index: 2;
-          align-items: flex-start;
-          text-align: left;
         }
 
-        .hero-title-animated {
+        .hero-badge {
           display: inline-flex;
-          flex-direction: column;
-          gap: 6px;
-          text-align: center;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 16px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
+          width: fit-content;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
         }
 
-        .hero-title-line {
-          display: block;
-          opacity: 0;
-          transform: translateY(18px);
-          animation: titleLift 720ms var(--ease-out-expo) forwards;
+        .hero-badge-indicator {
+          width: 8px;
+          height: 8px;
+          background: var(--color-accent);
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
         }
 
-        .hero-title-line:nth-child(2) {
-          animation-delay: 120ms;
-        }
-
-        @keyframes titleLift {
-          0% { opacity: 0; transform: translateY(18px); }
-          100% { opacity: 1; transform: translateY(0); }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.15); }
         }
 
         .hero-title {
-          font-size: clamp(44px, 6vw, 56px);
+          font-size: clamp(40px, 6vw, 64px);
           font-weight: 800;
           line-height: 1.05;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.035em;
           color: var(--color-text);
         }
 
         .hero-title-gradient {
-          color: var(--color-text);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .hero-description {
@@ -2301,116 +2313,414 @@ export default function Page() {
           gap: 12px;
           flex-wrap: wrap;
           padding-top: 8px;
-          align-items: center;
         }
 
-        .hero-bullets {
+        /* ─── Hero Visual with Desktop + Phone ─── */
+        .hero-visual {
           display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .hero-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 14px;
-          border: 1px solid var(--color-border);
-          border-radius: 999px;
-          background: var(--color-surface);
-          color: var(--color-text-secondary);
-          font-size: 14px;
-          box-shadow: var(--shadow-xs);
-        }
-
-        .chip-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--color-primary);
-          box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.08);
-        }
-
-        .hero-illustration {
-          position: relative;
-          isolation: isolate;
-          display: flex;
-          align-items: center;
           justify-content: center;
-        }
-
-        .hero-illustration-card {
-          width: 100%;
-          max-width: 520px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
-          padding: 28px;
-          box-shadow: var(--shadow-card);
+          align-items: center;
           position: relative;
-          overflow: hidden;
+          min-height: 500px;
         }
 
-        .hero-illustration-card::before {
-          content: '';
+        @media (max-width: 1023px) {
+          .hero-visual {
+            min-height: 400px;
+          }
+        }
+
+        /* Desktop Glass Panel */
+        .hero-desktop {
           position: absolute;
-          inset: 14px;
-          border-radius: var(--radius-2xl);
-          border: 1px dashed rgba(61, 61, 61, 0.22);
-          pointer-events: none;
-        }
-
-        .hero-iso-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 18px;
-          position: relative;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
           z-index: 1;
         }
 
-        .hero-iso-icon {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          align-items: center;
-          justify-content: center;
-          padding: 14px;
-          background: var(--color-card);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-xl);
-          box-shadow: var(--shadow-xs);
-          transition: transform var(--duration-fast) var(--ease-out-expo), border-color var(--duration-fast) var(--ease-out-expo);
+        @media (max-width: 1023px) {
+          .hero-desktop {
+            display: none;
+          }
         }
 
-        .hero-iso-icon:hover {
-          transform: translateY(-2px);
-          border-color: var(--color-border-hover);
+        .desktop-frame {
+          width: 420px;
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.8);
+          border-radius: var(--radius-2xl);
+          box-shadow: var(--shadow-glass);
+          overflow: hidden;
         }
 
-        .hero-iso-label {
-          font-size: 14px;
-          color: var(--color-text-secondary);
-        }
-
-        .hero-illustration-footer {
-          margin-top: 20px;
+        .desktop-header {
           display: flex;
           align-items: center;
           gap: 10px;
-          color: var(--color-text-tertiary);
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
+          padding: 14px 18px;
+          background: rgba(255, 255, 255, 0.5);
+          border-bottom: 1px solid rgba(215, 230, 226, 0.5);
         }
 
-        .footer-line {
+        .desktop-dots {
+          display: flex;
+          gap: 6px;
+        }
+
+        .desktop-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+
+        .desktop-dot.red { background: #FF5F57; }
+        .desktop-dot.yellow { background: #FEBC2E; }
+        .desktop-dot.green { background: #28C840; }
+
+        .desktop-title {
           flex: 1;
-          height: 1px;
-          background: var(--color-border-subtle);
+          text-align: center;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text-secondary);
         }
 
-        .footer-caption {
-          white-space: nowrap;
+        .desktop-spacer {
+          width: 52px;
+        }
+
+        .desktop-content {
+          display: flex;
+          min-height: 280px;
+        }
+
+        .desktop-sidebar {
+          width: 140px;
+          padding: 16px 12px;
+          background: rgba(242, 251, 247, 0.6);
+          border-right: 1px solid rgba(215, 230, 226, 0.5);
+        }
+
+        .sidebar-label {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--color-text-muted);
+          margin-bottom: 10px;
+          padding: 0 8px;
+        }
+
+        .sidebar-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          border-radius: var(--radius-md);
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          margin-bottom: 4px;
+          transition: all var(--duration-fast) var(--ease-out-expo);
+        }
+
+        .sidebar-item svg {
+          width: 14px;
+          height: 14px;
+          opacity: 0.6;
+        }
+
+        .sidebar-item.active {
+          background: var(--color-surface);
+          color: var(--color-text);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .sidebar-item.active svg {
+          opacity: 1;
+          color: var(--color-primary);
+        }
+
+        .desktop-main {
+          flex: 1;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .desktop-stat-row {
+          display: flex;
+          gap: 16px;
+        }
+
+        .desktop-stat {
+          flex: 1;
+          padding: 14px;
+          background: var(--color-surface);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 28px;
+          font-weight: 700;
+          color: var(--color-text);
+          line-height: 1;
+          margin-bottom: 4px;
+        }
+
+        .stat-value.success {
+          color: var(--color-success);
+        }
+
+        .stat-label {
+          font-size: 11px;
+          color: var(--color-text-muted);
+        }
+
+        .desktop-alert {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 14px;
+          background: var(--color-success-bg);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: var(--radius-md);
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-success);
+        }
+
+        .desktop-alert svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .desktop-glow {
+          position: absolute;
+          inset: -60px;
+          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.12) 0%, transparent 70%);
+          z-index: -1;
+          filter: blur(40px);
+        }
+
+        /* Phone Mockup */
+        .hero-phone {
+          position: relative;
+          z-index: 2;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-phone {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        }
+
+        .phone-frame {
+          width: 280px;
+          height: 580px;
+          background: linear-gradient(145deg, #1a1a1c 0%, #0d0d0e 100%);
+          border-radius: 44px;
+          padding: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 
+            var(--shadow-xl),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05),
+            0 0 0 1px rgba(0, 0, 0, 0.1);
+          position: relative;
+        }
+
+        @media (max-width: 640px) {
+          .phone-frame {
+            width: 260px;
+            height: 540px;
+            border-radius: 40px;
+          }
+        }
+
+        .phone-notch {
+          position: absolute;
+          top: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 100px;
+          height: 28px;
+          background: #000;
+          border-radius: 16px;
+          z-index: 10;
+        }
+
+        .phone-screen {
+          width: 100%;
+          height: 100%;
+          background: var(--color-bg);
+          border-radius: 36px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @media (max-width: 640px) {
+          .phone-screen {
+            border-radius: 32px;
+          }
+        }
+
+        .phone-status-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 14px 20px 6px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .phone-status-icons {
+          display: flex;
+          gap: 5px;
+          font-size: 10px;
+          color: var(--color-text-secondary);
+        }
+
+        .phone-app-header {
+          padding: 6px 18px 12px;
+          border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        .phone-app-title {
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: var(--color-text);
+        }
+
+        .phone-content {
+          flex: 1;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          overflow-y: auto;
+        }
+
+        .phone-message {
+          display: flex;
+          width: 100%;
+        }
+
+        .phone-message-user {
+          justify-content: flex-end;
+        }
+
+        .phone-message-assistant {
+          justify-content: flex-start;
+        }
+
+        .phone-bubble {
+          max-width: 90%;
+          padding: 10px 12px;
+          border-radius: var(--radius-lg);
+          font-size: 11px;
+          line-height: 1.45;
+        }
+
+        .phone-bubble-user {
+          background: var(--color-primary);
+          color: white;
+          border-bottom-right-radius: 4px;
+        }
+
+        .phone-bubble-assistant {
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          color: var(--color-text);
+          border-bottom-left-radius: 4px;
+        }
+
+        .phone-result-header {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          color: var(--color-warning);
+          font-size: 11px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .phone-result-header svg {
+          width: 13px;
+          height: 13px;
+        }
+
+        .phone-result-items {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .phone-result-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+          font-size: 10px;
+          color: var(--color-text-secondary);
+          line-height: 1.35;
+        }
+
+        .result-indicator {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          margin-top: 3px;
+        }
+
+        .phone-result-item.warning .result-indicator {
+          background: var(--color-warning);
+        }
+
+        .phone-result-item.success .result-indicator {
+          background: var(--color-success);
+        }
+
+        .phone-remediation {
+          font-size: 10px;
+          color: var(--color-text-secondary);
+          padding-top: 8px;
+          border-top: 1px solid var(--color-border-subtle);
+          line-height: 1.4;
+        }
+
+        .phone-remediation strong {
+          color: var(--color-success);
+        }
+
+        .phone-glow {
+          position: absolute;
+          inset: -50px;
+          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
+          z-index: -1;
+          filter: blur(40px);
+        }
+
+        .phone-reflection {
+          position: absolute;
+          top: 10px;
+          left: 10%;
+          right: 10%;
+          height: 30%;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+          border-radius: 48px 48px 100px 100px;
+          pointer-events: none;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -2558,9 +2868,14 @@ export default function Page() {
           position: absolute;
           inset: 0;
           border-radius: var(--radius-2xl);
-          border: 1px dashed rgba(61, 61, 61, 0.22);
-          opacity: 0.6;
-          transition: border-color var(--duration-slow) var(--ease-out-expo);
+          padding: 1px;
+          background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--color-accent) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity var(--duration-slow) var(--ease-out-expo);
         }
 
         .feature-card:hover {
@@ -2570,7 +2885,7 @@ export default function Page() {
         }
 
         .feature-card:hover .feature-card-border {
-          border-color: rgba(61, 61, 61, 0.34);
+          opacity: 1;
         }
 
         .feature-icon-wrapper {
@@ -2581,15 +2896,10 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid var(--color-border);
+          border: 1px solid rgba(85, 214, 178, 0.2);
           border-radius: var(--radius-lg);
           margin-bottom: 20px;
           color: var(--color-primary);
-          transition: transform var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .feature-card:hover .feature-icon-wrapper {
-          transform: translateY(-3px);
         }
 
         .feature-title {
@@ -2606,113 +2916,6 @@ export default function Page() {
           line-height: 1.65;
           color: var(--color-text-secondary);
           flex: 1;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           HOW IT WORKS
-           ═══════════════════════════════════════════════════════════════════════ */
-        .how-section {
-          padding: 32px 24px 64px;
-          background: var(--color-bg);
-        }
-
-        .how-container {
-          max-width: 1100px;
-          margin: 0 auto;
-        }
-
-        .how-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 18px;
-        }
-
-        .how-card {
-          display: flex;
-          gap: 14px;
-          align-items: center;
-          padding: 16px 14px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-xl);
-          box-shadow: var(--shadow-xs);
-          transition: transform var(--duration-fast) var(--ease-out-expo), border-color var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .how-card:hover {
-          transform: translateY(-2px);
-          border-color: var(--color-border-hover);
-        }
-
-        .how-icon {
-          width: 64px;
-          height: 64px;
-          border-radius: var(--radius-lg);
-          display: grid;
-          place-items: center;
-          color: var(--color-primary);
-        }
-
-        .how-title {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--color-text);
-          margin-bottom: 4px;
-        }
-
-        .how-description {
-          font-size: 14px;
-          color: var(--color-text-secondary);
-          line-height: 1.5;
-        }
-
-        .how-body {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════════════
-           TRUSTED BAR
-           ═══════════════════════════════════════════════════════════════════════ */
-        .trusted-section {
-          padding: 12px 24px 28px;
-        }
-
-        .trusted-container {
-          max-width: 1100px;
-          margin: 0 auto;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          padding: 18px 20px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          box-shadow: var(--shadow-xs);
-        }
-
-        .trusted-label {
-          font-size: 13px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--color-text-tertiary);
-        }
-
-        .trusted-chips {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        .trusted-chip {
-          padding: 8px 12px;
-          border-radius: 999px;
-          border: 1px solid var(--color-border);
-          background: var(--color-card);
-          color: var(--color-text-secondary);
-          font-size: 13px;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -2894,7 +3097,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 16px;
           background: var(--color-accent-light);
-          border: 1px solid var(--color-border);
+          border: 1px solid rgba(85, 214, 178, 0.3);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -3054,7 +3257,7 @@ export default function Page() {
 
         .faq-item.is-open {
           border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(87, 142, 126, 0.12);
+          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(85, 214, 178, 0.1);
         }
 
         .faq-trigger {
@@ -3357,7 +3560,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid var(--color-border);
+          border: 1px solid rgba(85, 214, 178, 0.2);
           border-radius: var(--radius-lg);
           margin: 0 auto 18px;
           color: var(--color-primary);
@@ -3414,7 +3617,7 @@ export default function Page() {
 
         .form-input:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.12);
+          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
         }
 
         .form-input-group {
@@ -3541,7 +3744,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 14px;
           background: var(--color-accent-light);
-          border: 1px solid var(--color-border);
+          border: 1px solid rgba(85, 214, 178, 0.2);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -3670,77 +3873,14 @@ export default function Page() {
           background: var(--color-bg);
         }
 
-        .memory-banner {
-          max-width: 980px;
-          width: 100%;
-          margin: 0 auto;
-          padding: 16px 18px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-          align-items: center;
-          justify-content: space-between;
-          background: var(--color-card);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .memory-meta {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          min-width: 240px;
-        }
-
-        .memory-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 10px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 999px;
-          font-size: 13px;
-          color: var(--color-text);
-          width: fit-content;
-        }
-
-        .memory-pill .dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--color-primary);
-          box-shadow: 0 0 0 6px rgba(93, 134, 108, 0.12);
-        }
-
-        .memory-text {
-          font-size: 13px;
-          color: var(--color-text-secondary);
-          max-width: 640px;
-        }
-
-        .memory-actions {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
         .chat-messages {
           flex: 1;
           min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 32px 16px 22px;
-          gap: 16px;
         }
 
         .chat-empty {
-          width: 100%;
-          max-width: 960px;
           height: 100%;
           display: flex;
           align-items: center;
@@ -3749,108 +3889,63 @@ export default function Page() {
         }
 
         .chat-empty-content {
-          max-width: 640px;
+          max-width: 460px;
           width: 100%;
           text-align: center;
-          padding: 32px 28px;
+          padding: 44px 32px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
+          border-radius: var(--radius-2xl);
           box-shadow: var(--shadow-card);
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-        }
-
-        .chat-empty-visual {
-          position: relative;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding-bottom: 10px;
         }
 
         .chat-empty-icon {
-          display: inline-flex;
+          width: 60px;
+          height: 60px;
+          display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-card);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
+          background: var(--color-accent-light);
+          border: 1px solid rgba(85, 214, 178, 0.2);
+          border-radius: var(--radius-xl);
           color: var(--color-primary);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .chat-empty-icon.primary {
-          width: 120px;
-          height: 120px;
-        }
-
-        .chat-empty-icon.secondary {
-          position: absolute;
-          bottom: -10px;
-          right: 18%;
-          width: 86px;
-          height: 86px;
-          transform: rotate(-4deg);
+          margin: 0 auto 20px;
         }
 
         .chat-empty-title {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: 700;
           color: var(--color-text);
-          margin-bottom: 6px;
+          margin-bottom: 8px;
         }
 
         .chat-empty-text {
-          font-size: 15px;
+          font-size: 14px;
           line-height: 1.6;
           color: var(--color-text-secondary);
-          margin-bottom: 12px;
-        }
-
-        .chat-empty-suggestions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          justify-content: center;
-        }
-
-        .chat-suggestion {
-          padding: 8px 12px;
-          border: 1px solid var(--color-border);
-          background: var(--color-card);
-          border-radius: 999px;
-          font-size: 13px;
-          color: var(--color-text-secondary);
+          margin-bottom: 24px;
         }
 
         .chat-empty-actions {
           display: flex;
-          gap: 12px;
+          gap: 10px;
           justify-content: center;
           flex-wrap: wrap;
-          margin-top: 6px;
         }
 
         .chat-history {
-          max-width: 880px;
+          max-width: 800px;
           margin: 0 auto;
           width: 100%;
-          padding: 20px 18px;
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-3xl);
-          box-shadow: var(--shadow-card);
+          gap: 16px;
         }
 
         .chat-message {
           display: flex;
           width: 100%;
-          padding: 4px 6px;
         }
 
         .chat-message-user {
@@ -3862,34 +3957,25 @@ export default function Page() {
         }
 
         .chat-bubble {
-          max-width: 88%;
-          padding: 16px 18px;
-          border-radius: 18px;
+          max-width: 75%;
+          padding: 14px 18px;
+          border-radius: var(--radius-xl);
           font-size: 15px;
           line-height: 1.65;
-          position: relative;
-          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
         }
 
         .chat-bubble-user {
-          background: rgba(87, 142, 126, 0.16);
-          color: var(--color-text);
-          border: 1px solid var(--color-border-hover);
-          border-bottom-right-radius: 6px;
-          box-shadow: var(--shadow-xs);
+          background: var(--color-primary);
+          color: white;
+          border-bottom-right-radius: 4px;
         }
 
         .chat-bubble-assistant {
           background: var(--color-surface);
           border: 1px solid var(--color-border);
           color: var(--color-text);
-          border-bottom-left-radius: 6px;
+          border-bottom-left-radius: 4px;
           box-shadow: var(--shadow-xs);
-        }
-
-        .chat-message:hover .chat-bubble {
-          transform: translateY(-1px);
-          box-shadow: var(--shadow-sm);
         }
 
         .chat-bubble-image {
@@ -3913,15 +3999,15 @@ export default function Page() {
         /* ─── Chat Input Area ─── */
         .chat-input-area {
           flex-shrink: 0;
-          background: var(--color-surface);
-          border-top: 1px solid var(--color-border);
-          box-shadow: 0 -6px 20px rgba(61, 61, 61, 0.06);
+          background: rgba(246, 250, 249, 0.95);
+          backdrop-filter: blur(16px);
+          border-top: 1px solid var(--color-border-subtle);
         }
 
         .chat-input-inner {
-          max-width: 880px;
+          max-width: 800px;
           margin: 0 auto;
-          padding: 18px 20px;
+          padding: 18px 24px;
           padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
 
@@ -3956,7 +4042,7 @@ export default function Page() {
 
         .smart-progress-bar {
           height: 100%;
-          background: var(--color-primary);
+          background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
           border-radius: 2px;
           transition: width 150ms linear;
         }
@@ -3978,17 +4064,17 @@ export default function Page() {
         .chat-input-row {
           display: flex;
           align-items: flex-end;
-          gap: 12px;
+          gap: 10px;
         }
 
         .chat-textarea {
           flex: 1;
           min-height: 48px;
           max-height: 160px;
-          padding: 14px 16px;
+          padding: 12px 16px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 18px;
+          border-radius: var(--radius-lg);
           color: var(--color-text);
           font-size: 15px;
           line-height: 1.5;
@@ -4004,7 +4090,7 @@ export default function Page() {
 
         .chat-textarea:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.14);
+          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
         }
 
         .chat-send-btn {
@@ -4014,9 +4100,9 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-primary);
-          border: 1px solid var(--color-border);
-          border-radius: 16px;
-          color: #FFFAEC;
+          border: none;
+          border-radius: var(--radius-lg);
+          color: white;
           cursor: pointer;
           transition: all var(--duration-fast) var(--ease-out-expo);
           flex-shrink: 0;
@@ -4194,78 +4280,34 @@ export default function Page() {
             />
           ) : (
             <div className="chat-container">
-              <div className="memory-banner">
-                <div className="memory-meta">
-                  <div className="memory-pill" aria-live="polite">
-                    <span className="dot" />
-                    {memoryEnabled ? `Memory on (${memoryEntries.length} saved)` : 'Memory off'}
-                  </div>
-                  <p className={`memory-text ${inter.className}`}>
-                    Keep recent inspections and fixes so responses improve over time.
-                  </p>
-                </div>
-                <div className="memory-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={() => {
-                      const next = !memoryEnabled
-                      setMemoryEnabled(next)
-                      if (typeof window !== 'undefined') localStorage.setItem('plmMemoryEnabled', String(next))
-                    }}
-                  >
-                    <span className={`btn-label ${inter.className}`}>{memoryEnabled ? 'Disable' : 'Enable'}</span>
-                  </button>
-                  <button
-                    className="btn-outline"
-                    onClick={() => {
-                      setMemoryEntries([])
-                      persistMemory([])
-                    }}
-                  >
-                    <span className={`btn-label ${inter.className}`}>Clear history</span>
-                  </button>
-                </div>
-              </div>
               <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
                 {messages.length === 0 ? (
                   <div className="chat-empty">
                     <div className="chat-empty-content">
-                      <div className="chat-empty-visual">
-                        <div className="chat-empty-icon primary">
-                          <IsometricIcon variant="Camera" size={88} strokeWidth={1.4} />
-                        </div>
-                        <div className="chat-empty-icon secondary">
-                          <IsometricIcon variant="Checklist" size={72} strokeWidth={1.4} />
-                        </div>
+                      <div className="chat-empty-icon">
+                        <Icons.Shield />
                       </div>
-                      <div className="chat-empty-body">
-                        <h2 className={`chat-empty-title ${outfit.className}`}>
-                          Upload a photo or ask a question
-                        </h2>
-                        <p className={`chat-empty-text ${inter.className}`}>
-                          Start with a picture of your station or a short prompt. protocolLM replies with Washtenaw-specific fixes, ready to hand to the team.
-                        </p>
-                        <div className="chat-empty-suggestions">
-                          {emptySuggestions.map((item) => (
-                            <span key={item} className={`chat-suggestion ${inter.className}`}>{item}</span>
-                          ))}
-                        </div>
-                        <div className="chat-empty-actions">
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="btn-accent"
-                          >
-                            <Icons.Camera />
-                            <span className={`btn-label ${inter.className}`}>Attach photo</span>
-                          </button>
-                          <button
-                            onClick={() => textAreaRef.current?.focus()}
-                            className="btn-outline"
-                          >
-                            <Icons.ArrowRight />
-                            <span className={`btn-label ${inter.className}`}>Ask a question</span>
-                          </button>
-                        </div>
+                      <h2 className={`chat-empty-title ${inter.className}`}>
+                        Upload a photo or ask a question
+                      </h2>
+                      <p className={`chat-empty-text ${inter.className}`}>
+                        Run quick photo checks to spot likely issues, or search the 
+                        Washtenaw-focused database when you need a clear answer.
+                      </p>
+                      <div className="chat-empty-actions">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="btn-secondary"
+                        >
+                          <Icons.Camera />
+                          <span className={`btn-label ${inter.className}`}>Attach photo</span>
+                        </button>
+                        <button
+                          onClick={() => textAreaRef.current?.focus()}
+                          className="btn-secondary"
+                        >
+                          <span className={`btn-label ${inter.className}`}>Ask a question</span>
+                        </button>
                       </div>
                     </div>
                   </div>
