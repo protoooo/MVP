@@ -19,37 +19,36 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 const isAdmin = false
 
 const UI = {
-  pageBg: 'min-h-screen bg-zinc-50 text-zinc-900 relative',
+  pageBg: 'min-h-screen bg-[#f8f8f6] text-[#1f1f1f] relative',
   gridBg:
-    'pointer-events-none absolute inset-0 opacity-5 [background-image:linear-gradient(to_right,rgba(0,0,0,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.08)_1px,transparent_1px)] [background-size:48px_48px]',
+    'pointer-events-none absolute inset-0 opacity-5 [background-image:linear-gradient(to_right,rgba(0,0,0,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.08)_1px,transparent_1px)] [background-size:42px_42px]',
   noiseOverlay:
-    'pointer-events-none absolute inset-0 opacity-[0.04] mix-blend-multiply [background-image:repeating-radial-gradient(circle_at_center,rgba(0,0,0,0.28)_0,rgba(0,0,0,0.28)_1px,transparent_1px,transparent_7px)]',
-  container: 'relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14',
-  panel:
-    'bg-white/90 backdrop-blur border border-zinc-200 rounded-3xl shadow-sm shadow-zinc-900/5',
+    'pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-multiply [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.06),rgba(0,0,0,0.06)_1px,transparent_1px,transparent_3px)]',
+  container: 'relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12',
+  panel: 'bg-white/90 backdrop-blur-sm border border-[#d4d4d4] rounded-[18px] shadow-sm shadow-black/5',
   panelHeader:
-    'flex items-center justify-between px-6 py-4 border-b border-zinc-200/80 sticky top-0 bg-white/95 backdrop-blur z-10',
-  panelTitle: `${outfit.className} text-lg md:text-xl font-semibold tracking-tight`,
-  panelBody: 'px-6 py-5 space-y-5',
-  panelHeaderLabel: 'text-[11px] uppercase tracking-[0.18em] text-zinc-500 font-semibold',
+    'flex items-center justify-between px-5 py-3 border-b border-[#d4d4d4] sticky top-0 bg-white/92 backdrop-blur-sm z-10',
+  panelTitle: `${outfit.className} text-[17px] md:text-lg font-semibold tracking-tight`,
+  panelBody: 'px-5 py-4 space-y-4',
+  panelHeaderLabel: 'text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b] font-semibold',
   buttonPrimary:
-    'inline-flex items-center justify-center gap-2 rounded-2xl bg-zinc-900 text-white px-4 py-2.5 text-sm font-semibold tracking-tight shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900',
+    'inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#1f1f1f] text-[#f8f8f6] px-4 py-2.5 text-sm font-semibold tracking-tight shadow-sm transition-all duration-200 ease-out disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
   buttonSecondary:
-    'inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-900 transition shadow-sm hover:border-zinc-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:opacity-60 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-2 rounded-[14px] border border-[#d4d4d4] bg-white text-[#1f1f1f] px-4 py-2.5 text-sm font-semibold tracking-tight shadow-sm transition-all duration-200 ease-out hover:border-[#bfbfbf] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f] disabled:opacity-60 disabled:cursor-not-allowed',
   buttonGhost:
-    'inline-flex items-center justify-center gap-2 rounded-2xl border border-transparent px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-200 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 rounded-[12px] border border-transparent px-3 py-2 text-sm font-medium text-[#1f1f1f] transition-all duration-200 ease-out hover:border-[#d4d4d4] hover:bg-[#f3f3f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f] disabled:opacity-50',
   input:
-    'w-full rounded-2xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-inner shadow-zinc-900/5 placeholder:text-zinc-400 focus-visible:border-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900',
+    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-2.5 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 placeholder:text-[#8a8a8a] focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
   textarea:
-    'w-full rounded-2xl border border-zinc-200 bg-white px-3.5 py-3 text-sm text-zinc-900 shadow-inner shadow-zinc-900/5 placeholder:text-zinc-400 focus-visible:border-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900',
+    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-3 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 placeholder:text-[#8a8a8a] focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
   select:
-    'w-full rounded-2xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-inner shadow-zinc-900/5 focus-visible:border-zinc-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900',
-  pill: 'inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-700',
-  badge: 'inline-flex items-center rounded-full bg-zinc-900 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white',
-  divider: 'h-px w-full bg-zinc-200',
-  card: 'rounded-2xl border border-zinc-200 bg-white shadow-sm shadow-zinc-900/5',
-  cardHover: 'transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-zinc-900/10',
-  focusRing: 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900',
+    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-2.5 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
+  pill: 'inline-flex items-center gap-2 rounded-full border border-[#d4d4d4] bg-white px-3 py-1 text-xs font-semibold text-[#1f1f1f]',
+  badge: 'inline-flex items-center rounded-full bg-[#1f1f1f] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#f8f8f6]',
+  divider: 'h-px w-full bg-[#d4d4d4]',
+  card: 'rounded-[16px] border border-[#d4d4d4] bg-white shadow-sm shadow-black/5',
+  cardHover: 'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/10',
+  focusRing: 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
 }
 
 const Icons = {
@@ -187,7 +186,7 @@ const Icons = {
   ),
 }
 
-function useTypewriter(lines = [], speed = 28) {
+function useTypewriter(lines = [], speed = 32) {
   const [index, setIndex] = useState(0)
   const [text, setText] = useState('')
   const [done, setDone] = useState(false)
@@ -202,7 +201,7 @@ function useTypewriter(lines = [], speed = 28) {
       if (i <= current.length) {
         setTimeout(tick, speed)
       } else if (index < lines.length - 1) {
-        setTimeout(() => setIndex((v) => v + 1), speed * 6)
+        setTimeout(() => setIndex((v) => v + 1), speed * 8)
       } else {
         setDone(true)
       }
@@ -286,10 +285,10 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
         refs.current.pct = Math.max(refs.current.pct, next)
         const pctInt = Math.min(99, Math.floor(refs.current.pct))
         setProgress(pctInt)
-        if (pctInt < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading question…')
-        else if (pctInt < 45) setPhase('Searching excerpts…')
-        else if (pctInt < 70) setPhase('Cross-checking requirements…')
-        else if (pctInt < 90) setPhase('Building the answer…')
+        if (pctInt < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading input…')
+        else if (pctInt < 45) setPhase('Collecting references…')
+        else if (pctInt < 70) setPhase('Cross-checking rules…')
+        else if (pctInt < 90) setPhase('Composing response…')
         else setPhase('Finalizing…')
       }, 120)
       return () => {
@@ -318,28 +317,29 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   if (!visible) return null
 
   return (
-    <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm">
-      <div className="flex items-center justify-between text-xs text-zinc-600">
+    <div className="space-y-2 rounded-[14px] border border-[#d4d4d4] bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-center justify-between text-xs text-[#6b6b6b]">
         <span className="font-semibold">{phase}</span>
         <span className="font-semibold">{progress}%</span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-zinc-100">
-        <div className="h-1.5 rounded-full bg-zinc-900 transition-all" style={{ width: `${progress}%` }} />
+      <div className="h-1.5 w-full rounded-full bg-[#ececea]">
+        <div className="h-1.5 rounded-full bg-[#1f1f1f] transition-all" style={{ width: `${progress}%` }} />
       </div>
     </div>
   )
 }
 
-function MessageBlock({ role, content, sources }) {
+function MessageBlock({ role, content, sources, index = 0 }) {
   const isUser = role === 'user'
+  const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f2]'
   return (
-    <div className={`${UI.card} ${UI.cardHover} border-dashed ${isUser ? 'border-zinc-300 bg-white' : 'border-zinc-200 bg-zinc-50'} p-4`}>
-      <div className="mb-2 flex items-center justify-between text-xs text-zinc-600">
-        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em]">
-          <span className={UI.badge}>{isUser ? 'YOU' : 'PROTOCOL'}</span>
-        </div>
+    <div className={`${UI.card} ${UI.cardHover} ${rowBg} border-[#d4d4d4] p-4`}>
+      <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+        <span className="flex items-center gap-2">
+          <span className={UI.badge}>{isUser ? 'INPUT' : 'PROTOCOL'}</span>
+        </span>
       </div>
-      <div className={`prose prose-zinc max-w-none text-sm leading-relaxed ${inter.className}`}>
+      <div className={`max-w-none text-sm leading-relaxed text-[#1f1f1f] ${inter.className}`}>
         {content || (isUser ? '—' : '…')}
       </div>
       {!!sources?.length && (
@@ -357,10 +357,10 @@ function MessageBlock({ role, content, sources }) {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 text-xs text-zinc-600">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-800" />
-      <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-700 [animation-delay:120ms]" />
-      <span className="h-2 w-2 animate-pulse rounded-full bg-zinc-600 [animation-delay:240ms]" />
+    <div className="flex items-center gap-1 text-xs text-[#6b6b6b]">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-[#1f1f1f]" />
+      <span className="h-2 w-2 animate-pulse rounded-full bg-[#3a3a3a] [animation-delay:120ms]" />
+      <span className="h-2 w-2 animate-pulse rounded-full bg-[#6b6b6b] [animation-delay:240ms]" />
     </div>
   )
 }
@@ -392,11 +392,11 @@ function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {
 
 function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   const [ref, inView] = useInViewOnce()
-  const dirClass = direction === 'left' ? 'translate-x-4' : direction === 'right' ? '-translate-x-4' : 'translate-y-4'
+  const dirClass = direction === 'left' ? 'translate-x-3' : direction === 'right' ? '-translate-x-3' : 'translate-y-3'
   return (
     <div
       ref={ref}
-      className={`${className} transition-all duration-700 ease-out ${inView ? 'opacity-100 translate-y-0 translate-x-0' : `opacity-0 ${dirClass}`}`}
+      className={`${className} transition-all duration-600 ease-out ${inView ? 'opacity-100 translate-y-0 translate-x-0' : `opacity-0 ${dirClass}`}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -404,131 +404,150 @@ function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
   )
 }
 
+function BootPanel({ onComplete }) {
+  const bootLines = [
+    '[ protocolLM v1.0 ]',
+    'Initializing compliance engine…',
+    'Loading Washtenaw County ruleset…',
+    'Indexing enforcement actions…',
+    'Image analysis module: READY',
+    'Q&A module: READY',
+    'License status: TRIAL AVAILABLE',
+  ]
+  const { text, index, done } = useTypewriter(bootLines, 30)
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    if (done) {
+      const t = setTimeout(() => {
+        setCollapsed(true)
+        setTimeout(() => onComplete?.(), 240)
+      }, 520)
+      return () => clearTimeout(t)
+    }
+  }, [done, onComplete])
+
+  const history = bootLines.slice(0, index).map((line) => line)
+  const currentLine = text
+
+  return (
+    <div className={`overflow-hidden transition-all duration-600 ease-linear ${collapsed ? 'max-h-[72px] opacity-80' : 'max-h-[320px]'}`}>
+      <div className="relative rounded-[18px] border border-[#d4d4d4] bg-[#f2f2ef] shadow-inner shadow-black/5">
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.04),transparent_55%)] [background-size:160%]" />
+        <div className="absolute inset-0 pointer-events-none opacity-[0.06] [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.6),rgba(0,0,0,0.6)_1px,transparent_1px,transparent_3px)]" />
+        <div className="relative space-y-2 px-5 py-4">
+          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+            <span>System boot</span>
+            <span>Washtenaw profile</span>
+          </div>
+          <div className="space-y-1 font-mono text-[13px] leading-6 text-[#1f1f1f]">
+            {history.map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+            {!collapsed && (
+              <div className="flex items-center gap-2">
+                <span>{currentLine}</span>
+                <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-[#1f1f1f]" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
-  const heroLines = [
-    'protocolLM v2.3 — status: linked',
-    'listening for violations…',
-    'ready for kitchen intake',
-  ]
-  const { text, done } = useTypewriter(heroLines, 28)
+  const [unlocked, setUnlocked] = useState(false)
+
   const modules = [
-    { title: 'Scan & spot', desc: 'Upload kitchen photos for instant violation checks', icon: <Icons.Eye /> },
-    { title: 'Reference', desc: 'Local code answers without legal jargon', icon: <Icons.Document /> },
-    { title: 'Dispatch', desc: 'Send fixes to staff before inspectors arrive', icon: <Icons.Zap /> },
+    { label: 'Visual Scan', desc: 'Attach kitchen frames for violation detection.', icon: <Icons.Eye /> },
+    { label: 'Compliance Q&A', desc: 'Direct questions to the ruleset without jargon.', icon: <Icons.FileText /> },
+    { label: 'Local Enforcement Data', desc: 'Cross-reference Washtenaw actions in-line.', icon: <Icons.AlertTriangle /> },
+    { label: 'Site License', desc: 'Single-location license with unlimited usage.', icon: <Icons.Shield /> },
   ]
+
+  const systemIntro = (
+    <div className={`${UI.card} border-[#d4d4d4] bg-[#fdfdfb] p-5 shadow-sm`}>
+      <div className={`${UI.panelHeaderLabel} mb-2`}>System message</div>
+      <h2 className={`${outfit.className} text-xl font-semibold tracking-tight text-[#1f1f1f]`}>I’m protocolLM.</h2>
+      <p className={`${inter.className} mt-2 text-sm text-[#1f1f1f]`}>I help food service teams identify violations before inspectors do.</p>
+      <p className={`${inter.className} text-sm text-[#6b6b6b]`}>Configured for Washtenaw County. Built to run, not to sell.</p>
+    </div>
+  )
 
   return (
     <AppShell>
-      <div className="space-y-10">
-        <Panel
-          label="protocolLM"
-          title="Console"
-          actions={
-            <div className="flex items-center gap-2">
-              <span className={`${UI.pill} text-xs font-semibold text-zinc-700`}>
-                <span className="h-2 w-2 rounded-full bg-zinc-900" /> Live
-              </span>
-            </div>
-          }
-        >
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-start">
-            <div className="space-y-6">
-              <div className={`rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 ${inter.className}`}>
-                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                  <span>Terminal</span>
-                  <span>Washtenaw</span>
-                </div>
-                <div className="mt-3 h-32 overflow-hidden text-sm leading-6 text-zinc-900">
-                  <div className="font-mono text-[13px]">{text}<span className="animate-pulse">▌</span></div>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <MonoButton onClick={onShowPricing} className="px-5 py-3 text-base">Start 7-day free trial</MonoButton>
-                <MonoButton variant="secondary" onClick={onShowAuth} className="px-5 py-3 text-base">Sign in</MonoButton>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {modules.map((m, idx) => (
-                  <div key={idx} className={`${UI.card} ${UI.cardHover} p-4 space-y-2`}>
-                    <div className="flex items-center gap-2 text-zinc-700"><span className="text-sm">{m.icon}</span><span className={`text-sm font-semibold ${inter.className}`}>{m.title}</span></div>
-                    <p className={`text-xs text-zinc-500 leading-relaxed ${inter.className}`}>{m.desc}</p>
+      <div className="space-y-8">
+        <BootPanel onComplete={() => setUnlocked(true)} />
+
+        {unlocked && (
+          <div className="space-y-6 transition-all duration-500 ease-linear">
+            {systemIntro}
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {modules.map((m, idx) => (
+                <div key={m.label} className={`${UI.card} ${UI.cardHover} border-[#d4d4d4] p-4`}>
+                  <div className="mb-3 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+                    <span className="flex items-center gap-2 text-[#1f1f1f]">
+                      <span className="text-sm">{m.icon}</span>
+                      <span>{m.label}</span>
+                    </span>
+                    <span className="h-2 w-2 rounded-full bg-[#1f1f1f]" />
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-4">
-              <Panel label="License" title="Site access" className="shadow-none">
-                <div className="flex items-end gap-2">
-                  <div className={`${outfit.className} text-4xl font-semibold`}>$100</div>
-                  <div className={`${inter.className} text-sm text-zinc-600`}>/month</div>
+                  <p className={`${inter.className} text-sm text-[#1f1f1f]`}>{m.desc}</p>
                 </div>
-                <p className={`${inter.className} text-sm text-zinc-600`}>Unlimited questions and scans for one location.</p>
-                <div className="mt-4 flex flex-wrap gap-2 text-sm text-zinc-700">
-                  {['Unlimited photo checks', 'Unlimited questions', 'Local guidance'].map((item) => (
-                    <span key={item} className={UI.pill}>{item}</span>
+              ))}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+              <Panel label="License" title="Site License" className="shadow-none">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-[#fdfdfb]`}>
+                    <div className={`${UI.panelHeaderLabel} mb-1`}>Price</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`${outfit.className} text-3xl font-semibold text-[#1f1f1f]`}>$100</span>
+                      <span className={`${inter.className} text-sm text-[#6b6b6b]`}>per month</span>
+                    </div>
+                    <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Annual: $1,000 (save $200)</p>
+                  </div>
+                  <div className={`${UI.card} p-4 border-[#d4d4d4]`}>
+                    <div className={`${UI.panelHeaderLabel} mb-1`}>Status</div>
+                    <p className={`${inter.className} text-sm text-[#1f1f1f]`}>Trial available · Unlimited usage for one location.</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-sm text-[#1f1f1f]">
+                  {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific references', 'Team access included'].map((item) => (
+                    <span key={item} className={UI.pill}>
+                      {item}
+                    </span>
                   ))}
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <MonoButton onClick={onShowPricing}>Start free trial</MonoButton>
+                  <MonoButton onClick={onShowPricing}>Activate license</MonoButton>
                   <MonoButton variant="secondary" onClick={onShowAuth}>Access console</MonoButton>
                 </div>
               </Panel>
-              {done && (
-                <Panel label="Modules" title="Knowledge base" className="shadow-none">
-                  <div className="flex flex-wrap gap-2 text-xs text-zinc-600">
-                    {['Food code 2022', 'Washtenaw enforcement', 'Cooling & holding', 'Allergen playbooks', 'Inspection prep'].map((tag) => (
-                      <span key={tag} className={UI.pill}>{tag}</span>
-                    ))}
+
+              <Panel label="Documentation" title="Scope" className="shadow-none">
+                <div className="space-y-2 text-sm text-[#1f1f1f]">
+                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
+                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Local</span>
+                    <span className="text-[#1f1f1f]">Washtenaw County enforcement actions</span>
                   </div>
-                </Panel>
-              )}
+                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
+                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Code</span>
+                    <span className="text-[#1f1f1f]">Michigan Modified Food Code + FDA 2022</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
+                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Vision</span>
+                    <span className="text-[#1f1f1f]">Line, prep, dish, storage stations</span>
+                  </div>
+                </div>
+              </Panel>
             </div>
           </div>
-        </Panel>
-
-        <Panel label="Proof" title="Why teams use protocolLM">
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-            {[
-              { icon: <Icons.AlertTriangle />, label: 'Avg fine per violation', value: '$500+' },
-              { icon: <Icons.Clock />, label: 'Repeat violations first year', value: '38%' },
-              { icon: <Icons.Users />, label: 'Unlimited team logins', value: 'Included' },
-              { icon: <Icons.CheckCircle />, label: 'Trial', value: '7 days free' },
-            ].map((item, idx) => (
-              <div key={idx} className={`${UI.card} ${UI.cardHover} p-4 space-y-2`}>
-                <div className="flex items-center gap-2 text-zinc-600">{item.icon}<span className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">{item.label}</span></div>
-                <div className={`${outfit.className} text-2xl font-semibold`}>{item.value}</div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-
-        <Panel label="FAQ" title="What operators ask">
-          <div className="space-y-4">
-            {[
-              ['Is this Washtenaw only?', 'Yes. It is tuned for Washtenaw County inspectors and enforcement patterns.'],
-              ['Do you limit usage?', 'No. Unlimited text and photo questions per licensed location.'],
-              ['Does it replace managers?', 'No. It is a console for quick verification and fixes before inspection.'],
-            ].map(([q, a], idx) => (
-              <Reveal key={q} delay={idx * 80}>
-                <div className={`${UI.card} ${UI.cardHover} p-4 space-y-2`}>
-                  <div className={`${inter.className} text-sm font-semibold text-zinc-800`}>{q}</div>
-                  <div className={`${inter.className} text-sm text-zinc-600`}>{a}</div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </Panel>
-
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-zinc-200 bg-white px-6 py-5 shadow-sm">
-          <div className="space-y-1">
-            <div className={UI.panelHeaderLabel}>Ready</div>
-            <div className={`${outfit.className} text-xl font-semibold`}>Session ready to start</div>
-            <p className={`${inter.className} text-sm text-zinc-600`}>Start a free trial or sign in to open the console.</p>
-          </div>
-          <div className="flex gap-2">
-            <MonoButton onClick={onShowPricing}>Begin</MonoButton>
-            <MonoButton variant="secondary" onClick={onShowAuth}>Sign in</MonoButton>
-          </div>
-        </div>
+        )}
       </div>
     </AppShell>
   )
@@ -624,26 +643,28 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1f1f1f]/40 px-4" onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white shadow-2xl shadow-black/10"
+        className="w-full max-w-md rounded-[18px] border border-[#d4d4d4] bg-white shadow-2xl shadow-black/10"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between px-6 pt-6">
           <div>
             <div className={UI.panelHeaderLabel}>Access</div>
-            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight`}>
+            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>
               {mode === 'signin' && 'Sign in'}
               {mode === 'signup' && 'Create account'}
               {mode === 'reset' && 'Reset password'}
             </h2>
-            <p className={`${inter.className} mt-1 text-sm text-zinc-600`}>
-              {mode === 'signin' && 'Enter your credentials to continue.'}
-              {mode === 'signup' && 'Start your 7-day free trial in under a minute.'}
+            <p className={`${inter.className} mt-1 text-sm text-[#6b6b6b]`}>
+              {mode === 'signin' && 'Enter credentials to continue.'}
+              {mode === 'signup' && 'Start your 7-day trial.'}
               {mode === 'reset' && 'We will email you a reset link.'}
             </p>
           </div>
-          <button onClick={onClose} className={`${UI.buttonGhost} p-2`}> <Icons.X /> </button>
+          <button onClick={onClose} className={`${UI.buttonGhost} p-2`}>
+            <Icons.X />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
@@ -657,7 +678,7 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
               required
               autoComplete="email"
             />
-            <p className={`${inter.className} text-xs text-zinc-500`}>Use the address tied to your location.</p>
+            <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Use the address tied to your location.</p>
           </div>
 
           {mode !== 'reset' && (
@@ -675,32 +696,34 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-zinc-600"
+                  className="absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#6b6b6b]"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-              <p className={`${inter.className} text-xs text-zinc-500`}>Minimize reuse to keep access secure.</p>
+              <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Minimize reuse to keep access secure.</p>
             </div>
           )}
 
           <MonoButton type="submit" disabled={loading || !isLoaded} className="w-full justify-center py-3">
-            {loading && <span className="h-4 w-4 animate-spin rounded-full border border-zinc-200 border-t-zinc-900" />}<span>
+            {loading && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />}<span>
               {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
             </span>
           </MonoButton>
 
           {message && (
-            <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm ${messageKind === 'err' ? 'border-zinc-300 bg-zinc-50 text-red-700' : 'border-zinc-200 bg-white text-zinc-800'}`}>
+            <div className={`flex items-center gap-2 rounded-[14px] border px-3 py-2 text-sm ${messageKind === 'err' ? 'border-[#d4d4d4] bg-[#f5f5f2] text-[#8a0000]' : 'border-[#d4d4d4] bg-white text-[#1f1f1f]'}`}>
               <span>{messageKind === 'err' ? <Icons.AlertTriangle /> : <Icons.Check />}</span>
               <span className={inter.className}>{message}</span>
             </div>
           )}
 
-          <div className="flex flex-wrap gap-3 text-sm text-zinc-700">
+          <div className="flex flex-wrap gap-3 text-sm text-[#1f1f1f]">
             {mode === 'signin' && (
               <>
-                <button type="button" onClick={() => setMode('reset')} className={`${UI.buttonGhost} px-0 py-0`}>Forgot password?</button>
+                <button type="button" onClick={() => setMode('reset')} className={`${UI.buttonGhost} px-0 py-0`}>
+                  Forgot password?
+                </button>
                 <button type="button" onClick={() => setMode('signup')} className={`${UI.buttonGhost} px-0 py-0`}>
                   Need an account? <span className="font-semibold">Create account</span>
                 </button>
@@ -718,7 +741,9 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
             )}
           </div>
         </form>
-        <div className="px-6 pb-5"><RecaptchaBadge /></div>
+        <div className="px-6 pb-5">
+          <RecaptchaBadge />
+        </div>
       </div>
     </div>
   )
@@ -728,17 +753,17 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1f1f1f]/40 px-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-3xl border border-zinc-200 bg-white shadow-2xl shadow-black/10"
+        className="w-full max-w-lg rounded-[18px] border border-[#d4d4d4] bg-white shadow-2xl shadow-black/10"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between px-6 pt-6">
           <div>
-            <div className={UI.panelHeaderLabel}>License</div>
-            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight`}>protocolLM Access</h2>
-            <p className={`${inter.className} mt-1 text-sm text-zinc-600`}>
-              Unlimited photo checks and regulatory search for your location.
+            <div className={UI.panelHeaderLabel}>Site License</div>
+            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>protocolLM Access</h2>
+            <p className={`${inter.className} mt-1 text-sm text-[#6b6b6b]`}>
+              Single-location license. Unlimited text and image sessions.
             </p>
           </div>
           <button onClick={onClose} className={`${UI.buttonGhost} p-2`} aria-label="Close">
@@ -747,14 +772,14 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
         </div>
 
         <div className="space-y-4 px-6 pb-6 pt-4">
-          <div className="flex items-end gap-2">
-            <div className={`${outfit.className} text-4xl font-semibold`}>$100</div>
-            <div className={`${inter.className} text-sm text-zinc-600`}>/month</div>
+          <div className="flex items-end gap-2 text-[#1f1f1f]">
+            <div className={`${outfit.className} text-3xl font-semibold`}>$100</div>
+            <div className={`${inter.className} text-sm text-[#6b6b6b]`}>/ month</div>
           </div>
-          <p className={`${inter.className} text-sm text-zinc-600`}>Annual: $1,000 (save $200).</p>
+          <p className={`${inter.className} text-sm text-[#6b6b6b]`}>Annual: $1,000 (save $200).</p>
           <div className="space-y-2">
             {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific guidance', 'Full team access'].map((f) => (
-              <div key={f} className="flex items-center gap-2 text-sm text-zinc-700">
+              <div key={f} className="flex items-center gap-2 text-sm text-[#1f1f1f]">
                 <Icons.Check />
                 <span className={inter.className}>{f}</span>
               </div>
@@ -762,7 +787,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
           </div>
           <div className="flex flex-col gap-3">
             <MonoButton onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="w-full justify-center py-3 text-base">
-              {loading === 'monthly' && <span className="h-4 w-4 animate-spin rounded-full border border-zinc-200 border-t-zinc-900" />} Start 7-day free trial
+              {loading === 'monthly' && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />} Activate license
             </MonoButton>
             <MonoButton
               variant="secondary"
@@ -770,10 +795,10 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               disabled={!!loading}
               className="w-full justify-center py-3 text-base"
             >
-              {loading === 'annual' && <span className="h-4 w-4 animate-spin rounded-full border border-zinc-200 border-t-zinc-900" />} Annual · $1,000/year
+              {loading === 'annual' && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />} Start trial
             </MonoButton>
           </div>
-          <p className={`${inter.className} text-xs text-zinc-500`}>7-day free trial · Cancel anytime · One license per restaurant location</p>
+          <p className={`${inter.className} text-xs text-[#6b6b6b]`}>7-day free trial · Cancel anytime · One license per location</p>
         </div>
       </div>
     </div>
@@ -1020,7 +1045,7 @@ export default function Page() {
     try {
       loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-black text-white px-4 py-2 rounded-lg z-[9999]'
+      loadingToast.className = 'fixed top-4 right-4 bg-[#1f1f1f] text-[#f8f8f6] px-4 py-2 rounded-lg z-[9999]'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -1100,7 +1125,7 @@ export default function Page() {
           .from('chats')
           .insert({
             user_id: session.user.id,
-            title: (question || 'New chat').slice(0, 40),
+            title: (question || 'New session').slice(0, 40),
           })
           .select()
           .single()
@@ -1174,9 +1199,9 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 text-zinc-800">
-        <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-          <span className="h-4 w-4 animate-spin rounded-full border border-zinc-200 border-t-zinc-900" />
+      <div className="flex min-h-screen items-center justify-center bg-[#f8f8f6] text-[#1f1f1f]">
+        <div className="flex items-center gap-3 rounded-[14px] border border-[#d4d4d4] bg-white px-4 py-3 shadow-sm">
+          <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />
           <span className={`${inter.className} text-sm`}>Loading protocolLM…</span>
         </div>
       </div>
@@ -1195,33 +1220,33 @@ export default function Page() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between pb-6">
+      <div className="flex items_center justify-between pb-6">
         <div>
-          <div className={UI.panelHeaderLabel}>Session</div>
-          <h1 className={`${outfit.className} text-2xl font-semibold tracking-tight`}>protocolLM Console</h1>
+          <div className={UI.panelHeaderLabel}>Active Session</div>
+          <h1 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>protocolLM Session Console</h1>
         </div>
         <div className="flex items-center gap-3" ref={userMenuRef}>
           <MonoButton variant="secondary" onClick={handleNewChat}>
-            <Icons.Plus /> New chat
+            <Icons.Plus /> New session
           </MonoButton>
           <div className="relative">
             <button
               onClick={() => setShowUserMenu((v) => !v)}
-              className="flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white text-sm font-semibold text-zinc-800 shadow-sm"
+              className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#d4d4d4] bg-white text-sm font-semibold text-[#1f1f1f] shadow-sm"
             >
               {session?.user?.email?.slice(0, 2)?.toUpperCase() || 'ME'}
             </button>
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white shadow-lg">
+              <div className="absolute right-0 mt-2 w-56 rounded-[14px] border border-[#d4d4d4] bg-white shadow-lg">
                 <div className="px-4 py-3">
-                  <div className={`${inter.className} text-sm font-semibold text-zinc-900`}>{session?.user?.email}</div>
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Active</div>
+                  <div className={`${inter.className} text-sm font-semibold text-[#1f1f1f]`}>{session?.user?.email}</div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">Licensed</div>
                 </div>
                 <div className={UI.divider} />
-                <button onClick={handleManageBilling} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-800 hover:bg-zinc-50">
+                <button onClick={handleManageBilling} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#1f1f1f] hover:bg-[#f5f5f2]">
                   <Icons.Settings /> Manage billing
                 </button>
-                <button onClick={handleSignOut} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-zinc-800 hover:bg-zinc-50">
+                <button onClick={handleSignOut} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#1f1f1f] hover:bg-[#f5f5f2]">
                   <Icons.LogOut /> Sign out
                 </button>
               </div>
@@ -1230,23 +1255,23 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[360px,1fr]">
+      <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
         <Panel
           label="Context"
-          title="Tools"
+          title="Controls"
           actions={<MonoButton variant="ghost" onClick={() => setShowPricingModal(true)} className="text-xs">License</MonoButton>}
           className="h-fit lg:sticky lg:top-10"
         >
-          <div className="space-y-3 text-sm text-zinc-700">
-            <div className="flex items-center justify-between rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2">
-              <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500`}>Status</span>
-              <span className={UI.pill}>Subscribed</span>
+          <div className="space-y-3 text-sm text-[#1f1f1f]">
+            <div className="flex items-center justify_between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
+              <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Status</span>
+              <span className={UI.pill}>Session attached</span>
             </div>
             <div className="space-y-2">
-              <div className={UI.panelHeaderLabel}>Quick actions</div>
+              <div className={UI.panelHeaderLabel}>Commands</div>
               <div className="flex flex-wrap gap-2">
-                {['Food code excerpt', 'Cooling check', 'Cross-contact', 'Temp logs'].map((item) => (
-                  <MonoButton key={item} variant="ghost" onClick={() => sendExample(item)} className="border border-zinc-200 text-xs">
+                {['Show Washtenaw violation thresholds', 'Cooling check for soups', 'Cross-contact checklist', 'Temp log reminder'].map((item) => (
+                  <MonoButton key={item} variant="ghost" onClick={() => sendExample(item)} className="border border-[#d4d4d4] text-xs">
                     {item}
                   </MonoButton>
                 ))}
@@ -1262,24 +1287,24 @@ export default function Page() {
           </div>
         </Panel>
 
-        <Panel label="Session" title="Conversation">
+        <Panel label="Session" title="Log">
           <div className="flex flex-col gap-4">
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="max-h-[55vh] min-h-[240px] overflow-y-auto space-y-3 pr-1"
+              className="max-h-[55vh] min-h-[260px] overflow-y-auto space-y-3 pr-1"
             >
               {messages.length === 0 && (
-                <div className={`${UI.card} border-dashed border-zinc-300 bg-zinc-50 p-5`}>
-                  <div className={`${UI.panelHeaderLabel} mb-2`}>Session ready</div>
-                  <p className={`${inter.className} text-sm text-zinc-700`}>Try one of the prompts to start.</p>
+                <div className={`${UI.card} border-dashed border-[#d4d4d4] bg-[#f5f5f2] p-5`}>
+                  <div className={`${UI.panelHeaderLabel} mb-2`}>Session idle</div>
+                  <p className={`${inter.className} text-sm text-[#1f1f1f]`}>Use a command to begin.</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {[
                       'List likely criticals from this walk-in photo',
-                      'Give me the holding temps for hot bar',
+                      'Provide holding temps for hot bar',
                       'Draft inspection prep checklist',
                     ].map((p) => (
-                      <MonoButton key={p} variant="ghost" onClick={() => sendExample(p)} className="border border-zinc-200 text-xs">
+                      <MonoButton key={p} variant="ghost" onClick={() => sendExample(p)} className="border border-[#d4d4d4] text-xs">
                         {p}
                       </MonoButton>
                     ))}
@@ -1288,22 +1313,22 @@ export default function Page() {
               )}
 
               {messages.map((m, idx) => (
-                <MessageBlock key={idx} role={m.role} content={m.content} sources={m.sources} />
+                <MessageBlock key={idx} role={m.role} content={m.content} sources={m.sources} index={idx} />
               ))}
 
               {isSending && <TypingIndicator />}
             </div>
 
             {selectedImage && (
-              <div className={`${UI.card} border-zinc-300 bg-zinc-50 p-4`}>
+              <div className={`${UI.card} border-[#d4d4d4] bg-[#f5f5f2] p-4`}>
                 <div className="flex items-center justify-between">
                   <div className={UI.panelHeaderLabel}>Scan input</div>
                   <div className="flex gap-2">
-                    <MonoButton variant="ghost" onClick={() => setSelectedImage(null)}>Remove</MonoButton>
+                    <MonoButton variant="ghost" onClick={() => setSelectedImage(null)}>Detach</MonoButton>
                     <MonoButton onClick={handleSend} disabled={isSending}>Analyze</MonoButton>
                   </div>
                 </div>
-                <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-200">
+                <div className="mt-3 overflow-hidden rounded-[14px] border border-[#d4d4d4]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={URL.createObjectURL(selectedImage)} alt="Selected" className="w-full object-cover" />
                 </div>
@@ -1323,16 +1348,16 @@ export default function Page() {
                   rows={3}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Describe the station or ask a compliance question…"
+                  placeholder="Enter command or describe station…"
                   className={`${inter.className} flex-1`}
                   ref={textAreaRef}
                 />
                 <MonoButton type="submit" disabled={isSending || (!input.trim() && !selectedImage)} className="h-12 px-4">
-                  <Icons.ArrowUp />
+                  Execute
                 </MonoButton>
               </div>
-              <div className="flex items-center justify-between text-xs text-zinc-600">
-                <span className={`${inter.className}`}>Enter to send · Shift+Enter for newline</span>
+              <div className="flex items-center justify-between text-xs text-[#6b6b6b]">
+                <span className={`${inter.className}`}>Enter to execute · Shift+Enter for newline</span>
                 <span className={`${inter.className}`}>{sendMode === 'vision' ? 'Vision' : 'Text'} mode</span>
               </div>
             </form>
