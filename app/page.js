@@ -1160,7 +1160,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="pricing-modal-amount">
             <span className={`pricing-currency ${inter.className}`}>$</span>
-            <span className={`pricing-number-lg ${outfit.className}`}>200</span>
+            <span className={`pricing-number-lg ${outfit.className}`}>100</span>
             <span className={`pricing-period ${inter.className}`}>/month</span>
           </div>
 
