@@ -1189,8 +1189,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               className="btn-pricing-modal-secondary"
             >
               {loading === 'annual' && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>Annual plan · $2,000/year</span>
-              <span className={`btn-badge ${inter.className}`}>Save $400</span>
+              <span className={`btn-label ${inter.className}`}>Annual plan · $1,000/year</span>
+              <span className={`btn-badge ${inter.className}`}>Save $200</span>
             </button>
           </div>
 
