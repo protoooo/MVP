@@ -516,17 +516,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="hero-container">
           <div className="hero-content">
             <Reveal delay={0}>
-              <div className="hero-badge">
-                <span className="hero-badge-indicator" />
-                <span className={inter.className}>Washtenaw County Food Safety Intelligence</span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={100}>
-              <h1 className={`hero-title ${outfit.className}`}>
-                Catch violations
-                <br />
-                <span className="hero-title-gradient">before the inspector does</span>
+              <h1 className={`hero-title ${outfit.className} hero-title-oneline`}>
+                {Array.from('Catch violations before the inspector does').map((char, idx) => (
+                  <span
+                    key={`${char}-${idx}`}
+                    className={`char delay-${idx % 10}`}
+                    aria-hidden="true"
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </span>
+                ))}
+                <span className="sr-only">Catch violations before the inspector does</span>
               </h1>
             </Reveal>
 
@@ -2140,32 +2140,45 @@ export default function Page() {
           align-items: center;
         }
 
-        .hero-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px 16px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-full);
-          width: fit-content;
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-          box-shadow: var(--shadow-xs);
+        .hero-title-oneline {
+          line-height: 1.05;
+          text-align: center;
+          display: inline-block;
+          position: relative;
+          overflow: hidden;
         }
 
-        .hero-badge-indicator {
-          width: 8px;
-          height: 8px;
-          background: var(--color-accent);
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
+        .hero-title-oneline .char {
+          display: inline-block;
+          transform: translateY(22px);
+          opacity: 0;
+          animation: titleRise 850ms var(--ease-out-expo) forwards;
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.15); }
+        .hero-title-oneline .char.delay-0 { animation-delay: 40ms; }
+        .hero-title-oneline .char.delay-1 { animation-delay: 80ms; }
+        .hero-title-oneline .char.delay-2 { animation-delay: 120ms; }
+        .hero-title-oneline .char.delay-3 { animation-delay: 160ms; }
+        .hero-title-oneline .char.delay-4 { animation-delay: 200ms; }
+        .hero-title-oneline .char.delay-5 { animation-delay: 240ms; }
+        .hero-title-oneline .char.delay-6 { animation-delay: 280ms; }
+        .hero-title-oneline .char.delay-7 { animation-delay: 320ms; }
+        .hero-title-oneline .char.delay-8 { animation-delay: 360ms; }
+        .hero-title-oneline .char.delay-9 { animation-delay: 400ms; }
+
+        @keyframes titleRise {
+          0% {
+            transform: translateY(26px) skewY(1deg);
+            opacity: 0;
+          }
+          60% {
+            transform: translateY(-4px);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
         }
 
         .hero-title {
