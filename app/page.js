@@ -516,17 +516,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="hero-container">
           <div className="hero-content">
             <Reveal delay={0}>
-              <div className="hero-badge">
-                <span className="hero-badge-indicator" />
-                <span className={inter.className}>Washtenaw County Food Safety Intelligence</span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={100}>
-              <h1 className={`hero-title ${outfit.className}`}>
-                Catch violations
-                <br />
-                <span className="hero-title-gradient">before the inspector does</span>
+              <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
+                <span className="hero-title-line">Catch violations</span>
+                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
               </h1>
             </Reveal>
 
@@ -553,112 +545,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </Reveal>
           </div>
 
-          <Reveal delay={400} direction="scale">
-            <div className="hero-visual">
-              {/* Desktop Glass Panel */}
-              <div className="hero-desktop">
-                <div className="desktop-frame">
-                  <div className="desktop-header">
-                    <div className="desktop-dots">
-                      <span className="desktop-dot red" />
-                      <span className="desktop-dot yellow" />
-                      <span className="desktop-dot green" />
-                    </div>
-                    <div className={`desktop-title ${inter.className}`}>protocolLM Dashboard</div>
-                    <div className="desktop-spacer" />
-                  </div>
-                  <div className="desktop-content">
-                    <div className="desktop-sidebar">
-                      <div className={`sidebar-label ${inter.className}`}>Recent Checks</div>
-                      <div className="sidebar-item active">
-                        <Icons.Camera />
-                        <span>Walk-in Cooler</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Camera />
-                        <span>Prep Station</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Document />
-                        <span>Temp Logs</span>
-                      </div>
-                    </div>
-                    <div className="desktop-main">
-                      <div className={`desktop-stat-row ${inter.className}`}>
-                        <div className="desktop-stat">
-                          <span className="stat-value">12</span>
-                          <span className="stat-label">Checks Today</span>
-                        </div>
-                        <div className="desktop-stat">
-                          <span className="stat-value success">0</span>
-                          <span className="stat-label">Open Issues</span>
-                        </div>
-                      </div>
-                      <div className={`desktop-alert ${inter.className}`}>
-                        <Icons.CheckCircle />
-                        <span>All stations compliant</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="desktop-glow" />
-              </div>
-
-              {/* Phone Mockup */}
-              <div className="hero-phone">
-                <div className="phone-frame">
-                  <div className="phone-notch" />
-                  <div className="phone-screen">
-                    <div className="phone-status-bar">
-                      <span className={inter.className}>9:41</span>
-                      <div className="phone-status-icons">
-                        <span>●●●●</span>
-                        <span>WiFi</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="phone-app-header">
-                      <span className={`phone-app-title ${outfit.className}`}>protocolLM</span>
-                    </div>
-                    
-                    <div className="phone-content">
-                      <div className="phone-message phone-message-user">
-                        <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
-                          Walk-in cooler photo attached. Is the storage order correct?
-                        </div>
-                      </div>
-                      
-                      <div className="phone-message phone-message-assistant">
-                        <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
-                          <div className="phone-result-header">
-                            <Icons.AlertTriangle />
-                            <span>2 Issues Found</span>
-                          </div>
-                          
-                          <div className="phone-result-items">
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Raw chicken stored above ready-to-eat items</span>
-                            </div>
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Missing date label on prep container</span>
-                            </div>
-                          </div>
-                          
-                          <div className="phone-remediation">
-                            <strong>Fix:</strong> Move raw poultry to bottom shelf. Add date labels.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="phone-glow" />
-              </div>
-            </div>
-          </Reveal>
         </div>
       </section>
 
@@ -1690,6 +1576,7 @@ export default function Page() {
           scroll-behavior: smooth;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          background: var(--color-bg);
         }
 
         body {
@@ -2227,20 +2114,14 @@ export default function Page() {
         }
 
         .hero-container {
-          max-width: 1280px;
+          max-width: 960px;
           margin: 0 auto;
           width: 100%;
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 48px;
+          display: flex;
+          flex-direction: column;
+          gap: 40px;
           align-items: center;
-        }
-
-        @media (min-width: 1024px) {
-          .hero-container {
-            grid-template-columns: 1fr 1.1fr;
-            gap: 64px;
-          }
+          text-align: center;
         }
 
         .hero-content {
@@ -2249,34 +2130,30 @@ export default function Page() {
           gap: 24px;
           position: relative;
           z-index: 2;
-        }
-
-        .hero-badge {
-          display: inline-flex;
           align-items: center;
-          gap: 10px;
-          padding: 8px 16px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-full);
-          width: fit-content;
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-          box-shadow: var(--shadow-xs);
         }
 
-        .hero-badge-indicator {
-          width: 8px;
-          height: 8px;
-          background: var(--color-accent);
-          border-radius: 50%;
-          animation: pulse 2s ease-in-out infinite;
+        .hero-title-animated {
+          display: inline-flex;
+          flex-direction: column;
+          gap: 6px;
+          text-align: center;
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.15); }
+        .hero-title-line {
+          display: block;
+          opacity: 0;
+          transform: translateY(18px);
+          animation: titleLift 720ms var(--ease-out-expo) forwards;
+        }
+
+        .hero-title-line:nth-child(2) {
+          animation-delay: 120ms;
+        }
+
+        @keyframes titleLift {
+          0% { opacity: 0; transform: translateY(18px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
 
         .hero-title {
@@ -2314,413 +2191,7 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Hero Visual with Desktop + Phone ─── */
-        .hero-visual {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          position: relative;
-          min-height: 500px;
-        }
-
-        @media (max-width: 1023px) {
-          .hero-visual {
-            min-height: 400px;
-          }
-        }
-
-        /* Desktop Glass Panel */
-        .hero-desktop {
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 1;
-        }
-
-        @media (max-width: 1023px) {
-          .hero-desktop {
-            display: none;
-          }
-        }
-
-        .desktop-frame {
-          width: 420px;
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-glass);
-          overflow: hidden;
-        }
-
-        .desktop-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 14px 18px;
-          background: rgba(255, 255, 255, 0.5);
-          border-bottom: 1px solid rgba(215, 230, 226, 0.5);
-        }
-
-        .desktop-dots {
-          display: flex;
-          gap: 6px;
-        }
-
-        .desktop-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .desktop-dot.red { background: #FF5F57; }
-        .desktop-dot.yellow { background: #FEBC2E; }
-        .desktop-dot.green { background: #28C840; }
-
-        .desktop-title {
-          flex: 1;
-          text-align: center;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-        }
-
-        .desktop-spacer {
-          width: 52px;
-        }
-
-        .desktop-content {
-          display: flex;
-          min-height: 280px;
-        }
-
-        .desktop-sidebar {
-          width: 140px;
-          padding: 16px 12px;
-          background: rgba(242, 251, 247, 0.6);
-          border-right: 1px solid rgba(215, 230, 226, 0.5);
-        }
-
-        .sidebar-label {
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--color-text-muted);
-          margin-bottom: 10px;
-          padding: 0 8px;
-        }
-
-        .sidebar-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px;
-          border-radius: var(--radius-md);
-          font-size: 11px;
-          color: var(--color-text-secondary);
-          margin-bottom: 4px;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .sidebar-item svg {
-          width: 14px;
-          height: 14px;
-          opacity: 0.6;
-        }
-
-        .sidebar-item.active {
-          background: var(--color-surface);
-          color: var(--color-text);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .sidebar-item.active svg {
-          opacity: 1;
-          color: var(--color-primary);
-        }
-
-        .desktop-main {
-          flex: 1;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .desktop-stat-row {
-          display: flex;
-          gap: 16px;
-        }
-
-        .desktop-stat {
-          flex: 1;
-          padding: 14px;
-          background: var(--color-surface);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .stat-value {
-          display: block;
-          font-size: 28px;
-          font-weight: 700;
-          color: var(--color-text);
-          line-height: 1;
-          margin-bottom: 4px;
-        }
-
-        .stat-value.success {
-          color: var(--color-success);
-        }
-
-        .stat-label {
-          font-size: 11px;
-          color: var(--color-text-muted);
-        }
-
-        .desktop-alert {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 14px;
-          background: var(--color-success-bg);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: var(--radius-md);
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-success);
-        }
-
-        .desktop-alert svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .desktop-glow {
-          position: absolute;
-          inset: -60px;
-          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.12) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
-        }
-
-        /* Phone Mockup */
-        .hero-phone {
-          position: relative;
-          z-index: 2;
-        }
-
-        @media (min-width: 1024px) {
-          .hero-phone {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-          }
-        }
-
-        .phone-frame {
-          width: 280px;
-          height: 580px;
-          background: linear-gradient(145deg, #1a1a1c 0%, #0d0d0e 100%);
-          border-radius: 44px;
-          padding: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          box-shadow: 
-            var(--shadow-xl),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05),
-            0 0 0 1px rgba(0, 0, 0, 0.1);
-          position: relative;
-        }
-
-        @media (max-width: 640px) {
-          .phone-frame {
-            width: 260px;
-            height: 540px;
-            border-radius: 40px;
-          }
-        }
-
-        .phone-notch {
-          position: absolute;
-          top: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 100px;
-          height: 28px;
-          background: #000;
-          border-radius: 16px;
-          z-index: 10;
-        }
-
-        .phone-screen {
-          width: 100%;
-          height: 100%;
-          background: var(--color-bg);
-          border-radius: 36px;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-
-        @media (max-width: 640px) {
-          .phone-screen {
-            border-radius: 32px;
-          }
-        }
-
-        .phone-status-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 14px 20px 6px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text);
-        }
-
-        .phone-status-icons {
-          display: flex;
-          gap: 5px;
-          font-size: 10px;
-          color: var(--color-text-secondary);
-        }
-
-        .phone-app-header {
-          padding: 6px 18px 12px;
-          border-bottom: 1px solid var(--color-border-subtle);
-        }
-
-        .phone-app-title {
-          font-size: 16px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--color-text);
-        }
-
-        .phone-content {
-          flex: 1;
-          padding: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          overflow-y: auto;
-        }
-
-        .phone-message {
-          display: flex;
-          width: 100%;
-        }
-
-        .phone-message-user {
-          justify-content: flex-end;
-        }
-
-        .phone-message-assistant {
-          justify-content: flex-start;
-        }
-
-        .phone-bubble {
-          max-width: 90%;
-          padding: 10px 12px;
-          border-radius: var(--radius-lg);
-          font-size: 11px;
-          line-height: 1.45;
-        }
-
-        .phone-bubble-user {
-          background: var(--color-primary);
-          color: white;
-          border-bottom-right-radius: 4px;
-        }
-
-        .phone-bubble-assistant {
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          color: var(--color-text);
-          border-bottom-left-radius: 4px;
-        }
-
-        .phone-result-header {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: var(--color-warning);
-          font-size: 11px;
-          font-weight: 600;
-          margin-bottom: 8px;
-        }
-
-        .phone-result-header svg {
-          width: 13px;
-          height: 13px;
-        }
-
-        .phone-result-items {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-
-        .phone-result-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 6px;
-          font-size: 10px;
-          color: var(--color-text-secondary);
-          line-height: 1.35;
-        }
-
-        .result-indicator {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          margin-top: 3px;
-        }
-
-        .phone-result-item.warning .result-indicator {
-          background: var(--color-warning);
-        }
-
-        .phone-result-item.success .result-indicator {
-          background: var(--color-success);
-        }
-
-        .phone-remediation {
-          font-size: 10px;
-          color: var(--color-text-secondary);
-          padding-top: 8px;
-          border-top: 1px solid var(--color-border-subtle);
-          line-height: 1.4;
-        }
-
-        .phone-remediation strong {
-          color: var(--color-success);
-        }
-
-        .phone-glow {
-          position: absolute;
-          inset: -50px;
-          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
-        }
-
-        .phone-reflection {
-          position: absolute;
-          top: 10px;
-          left: 10%;
-          right: 10%;
-          height: 30%;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
-          border-radius: 48px 48px 100px 100px;
-          pointer-events: none;
-        }
+        /* Hero visual removed for simplified, centered hero */
 
         /* ═══════════════════════════════════════════════════════════════════════
            PROOF SECTION
@@ -3869,7 +3340,9 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: var(--color-bg);
+          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
+                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
+                      var(--color-bg);
         }
 
         .chat-messages {
@@ -3877,9 +3350,16 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px 16px 18px;
+          gap: 14px;
         }
 
         .chat-empty {
+          width: 100%;
+          max-width: 960px;
           height: 100%;
           display: flex;
           align-items: center;
@@ -3888,14 +3368,15 @@ export default function Page() {
         }
 
         .chat-empty-content {
-          max-width: 460px;
+          max-width: 560px;
           width: 100%;
           text-align: center;
-          padding: 44px 32px;
-          background: var(--color-surface);
+          padding: 48px 38px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-card);
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(16px);
         }
 
         .chat-empty-icon {
@@ -3940,11 +3421,17 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 16px;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(12px);
         }
 
         .chat-message {
           display: flex;
           width: 100%;
+          padding: 2px 4px;
         }
 
         .chat-message-user {
@@ -3956,17 +3443,20 @@ export default function Page() {
         }
 
         .chat-bubble {
-          max-width: 75%;
+          max-width: 90%;
           padding: 14px 18px;
           border-radius: var(--radius-xl);
           font-size: 15px;
           line-height: 1.65;
+          position: relative;
+          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
         }
 
         .chat-bubble-user {
           background: var(--color-primary);
           color: white;
           border-bottom-right-radius: 4px;
+          box-shadow: 0 6px 24px rgba(14, 116, 144, 0.25);
         }
 
         .chat-bubble-assistant {
@@ -3974,7 +3464,12 @@ export default function Page() {
           border: 1px solid var(--color-border);
           color: var(--color-text);
           border-bottom-left-radius: 4px;
-          box-shadow: var(--shadow-xs);
+          box-shadow: 0 10px 30px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(215, 230, 226, 0.6);
+        }
+
+        .chat-message:hover .chat-bubble {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .chat-bubble-image {
@@ -4001,6 +3496,7 @@ export default function Page() {
           background: rgba(246, 250, 249, 0.95);
           backdrop-filter: blur(16px);
           border-top: 1px solid var(--color-border-subtle);
+          box-shadow: 0 -10px 30px rgba(11, 18, 32, 0.08);
         }
 
         .chat-input-inner {
