@@ -159,16 +159,16 @@ function WaveBackground() {
       <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#578E7E" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#3D3D3D" stopOpacity="0.08" />
+            <stop offset="0%" stopColor="#67C090" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#26667F" stopOpacity="0.08" />
           </linearGradient>
           <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3D3D3D" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#578E7E" stopOpacity="0.06" />
+            <stop offset="0%" stopColor="#0F3A63" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#67C090" stopOpacity="0.08" />
           </linearGradient>
           <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#578E7E" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#3D3D3D" stopOpacity="0.06" />
+            <stop offset="0%" stopColor="#26667F" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#0F3A63" stopOpacity="0.07" />
           </linearGradient>
         </defs>
         
@@ -1572,45 +1572,45 @@ export default function Page() {
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #FFFAEC;
-          --color-surface: rgba(255, 250, 236, 0.78);
-          --color-card: #F5ECD5;
-          --color-border: rgba(61, 61, 61, 0.12);
-          --color-border-subtle: rgba(61, 61, 61, 0.08);
-          --color-border-hover: rgba(61, 61, 61, 0.22);
-          --color-border-focus: #3D3D3D;
+          --color-bg: #DDF4E7;
+          --color-surface: rgba(221, 244, 231, 0.9);
+          --color-card: #EAF7F0;
+          --color-border: rgba(15, 58, 99, 0.16);
+          --color-border-subtle: rgba(15, 58, 99, 0.08);
+          --color-border-hover: rgba(15, 58, 99, 0.28);
+          --color-border-focus: #0F3A63;
           
           /* Text Colors */
-          --color-text: #3D3D3D;
-          --color-text-secondary: #515151;
-          --color-text-tertiary: #6B6B6B;
-          --color-text-muted: #8B8B8B;
+          --color-text: #0F2F45;
+          --color-text-secondary: #1F4D63;
+          --color-text-tertiary: #3F6F7F;
+          --color-text-muted: #5C8795;
           
           /* Brand Colors */
-          --color-primary: #578E7E;
-          --color-primary-hover: #4B7C6D;
-          --color-primary-light: #699e8f;
-          --color-accent: #578E7E;
-          --color-accent-hover: #4B7C6D;
-          --color-accent-light: rgba(87, 142, 126, 0.12);
+          --color-primary: #26667F;
+          --color-primary-hover: #1F5670;
+          --color-primary-light: #2E7A99;
+          --color-accent: #67C090;
+          --color-accent-hover: #57A87C;
+          --color-accent-light: rgba(103, 192, 144, 0.16);
           
           /* Status Colors */
-          --color-success: #4B7C6D;
-          --color-success-bg: rgba(87, 142, 126, 0.14);
-          --color-warning: #8C7552;
-          --color-warning-bg: rgba(140, 117, 82, 0.14);
-          --color-error: #9C5A4B;
-          --color-error-bg: rgba(156, 90, 75, 0.12);
+          --color-success: #2F8E6B;
+          --color-success-bg: rgba(103, 192, 144, 0.18);
+          --color-warning: #A77C45;
+          --color-warning-bg: rgba(167, 124, 69, 0.18);
+          --color-error: #A44F4F;
+          --color-error-bg: rgba(164, 79, 79, 0.14);
           
           /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(61, 61, 61, 0.06);
-          --shadow-sm: 0 1px 3px rgba(61, 61, 61, 0.08), 0 1px 2px rgba(61, 61, 61, 0.04);
-          --shadow-md: 0 6px 12px -2px rgba(61, 61, 61, 0.10), 0 2px 6px -2px rgba(61, 61, 61, 0.04);
-          --shadow-lg: 0 14px 28px -6px rgba(61, 61, 61, 0.16), 0 6px 18px -8px rgba(61, 61, 61, 0.08);
-          --shadow-xl: 0 24px 40px -8px rgba(61, 61, 61, 0.18), 0 10px 24px -10px rgba(61, 61, 61, 0.08);
-          --shadow-card: 0 1px 3px rgba(61, 61, 61, 0.06), 0 0 0 1px rgba(61, 61, 61, 0.08);
-          --shadow-card-hover: 0 12px 30px rgba(61, 61, 61, 0.16), 0 0 0 1px rgba(87, 142, 126, 0.18);
-          --shadow-glass: 0 16px 48px rgba(61, 61, 61, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.14);
+          --shadow-xs: 0 1px 2px rgba(15, 58, 99, 0.06);
+          --shadow-sm: 0 1px 3px rgba(15, 58, 99, 0.1), 0 1px 2px rgba(15, 58, 99, 0.05);
+          --shadow-md: 0 6px 12px -2px rgba(15, 58, 99, 0.12), 0 2px 6px -2px rgba(15, 58, 99, 0.06);
+          --shadow-lg: 0 14px 28px -6px rgba(15, 58, 99, 0.18), 0 6px 18px -8px rgba(15, 58, 99, 0.1);
+          --shadow-xl: 0 24px 40px -8px rgba(15, 58, 99, 0.2), 0 10px 24px -10px rgba(15, 58, 99, 0.1);
+          --shadow-card: 0 1px 3px rgba(15, 58, 99, 0.08), 0 0 0 1px rgba(15, 58, 99, 0.1);
+          --shadow-card-hover: 0 12px 30px rgba(15, 58, 99, 0.18), 0 0 0 1px rgba(38, 102, 127, 0.24);
+          --shadow-glass: 0 16px 48px rgba(15, 58, 99, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.14);
           
           /* Radii */
           --radius-xs: 4px;
@@ -1660,7 +1660,7 @@ export default function Page() {
         }
 
         ::selection {
-          background: rgba(87, 142, 126, 0.18);
+          background: rgba(103, 192, 144, 0.22);
           color: var(--color-text);
         }
 
@@ -1768,7 +1768,7 @@ export default function Page() {
           position: sticky;
           top: 0;
           z-index: var(--z-sticky);
-          background: rgba(255, 250, 236, 0.88);
+          background: rgba(221, 244, 231, 0.9);
           backdrop-filter: blur(16px) saturate(180%);
           -webkit-backdrop-filter: blur(16px) saturate(180%);
           border-bottom: 1px solid var(--color-border-subtle);
@@ -1894,7 +1894,7 @@ export default function Page() {
           font-weight: 600;
           cursor: pointer;
           transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md), 0 0 0 1px rgba(87, 142, 126, 0.12);
+          box-shadow: var(--shadow-md), 0 0 0 1px rgba(38, 102, 127, 0.14);
           position: relative;
           overflow: hidden;
         }
@@ -1911,7 +1911,7 @@ export default function Page() {
         .btn-hero-primary:hover {
           background: var(--color-primary-hover);
           transform: translateY(-2px);
-          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(87, 142, 126, 0.18);
+          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(38, 102, 127, 0.2);
         }
 
         .btn-hero-primary:hover::before {
@@ -2316,7 +2316,7 @@ export default function Page() {
           height: 10px;
           border-radius: 999px;
           background: var(--color-accent);
-          box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.16);
+          box-shadow: 0 0 0 6px rgba(103, 192, 144, 0.16);
         }
 
         .hero-data-frame {
@@ -2351,7 +2351,7 @@ export default function Page() {
           height: 10px;
           border-radius: 999px;
           background: var(--color-primary);
-          box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.14), 0 0 0 0.5px rgba(61, 61, 61, 0.14);
+          box-shadow: 0 0 0 6px rgba(38, 102, 127, 0.16), 0 0 0 0.5px rgba(15, 58, 99, 0.16);
         }
 
         .hero-data-label {
@@ -2376,7 +2376,7 @@ export default function Page() {
           overflow: hidden;
           border-radius: 18px;
           border: 1px solid var(--color-border);
-          background: linear-gradient(180deg, rgba(245, 236, 213, 0.8), rgba(255, 250, 236, 0.86));
+          background: linear-gradient(180deg, rgba(221, 244, 231, 0.86), rgba(234, 247, 240, 0.9));
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
@@ -2430,7 +2430,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           border-radius: 10px;
-          background: rgba(87, 142, 126, 0.12);
+          background: rgba(38, 102, 127, 0.12);
           color: var(--color-text);
           border: 1px solid var(--color-border);
         }
@@ -2463,7 +2463,7 @@ export default function Page() {
         .hero-data-chip {
           padding: 6px 10px;
           border-radius: 10px;
-          background: rgba(87, 142, 126, 0.14);
+          background: rgba(103, 192, 144, 0.16);
           color: var(--color-text);
           font-size: 12px;
           border: 1px solid var(--color-border);
@@ -2651,7 +2651,7 @@ export default function Page() {
           left: 8%;
           right: 8%;
           height: 2px;
-          background: linear-gradient(90deg, transparent 0%, rgba(87, 142, 126, 0.25) 20%, rgba(87, 142, 126, 0.45) 50%, rgba(87, 142, 126, 0.25) 80%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, rgba(103, 192, 144, 0.28) 20%, rgba(38, 102, 127, 0.45) 50%, rgba(103, 192, 144, 0.28) 80%, transparent 100%);
           opacity: 0.7;
           mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 70%);
           pointer-events: none;
@@ -2723,7 +2723,7 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(87, 142, 126, 0.12);
+          background: rgba(103, 192, 144, 0.16);
           border: 1px solid rgba(61, 61, 61, 0.12);
           border-radius: var(--radius-lg);
           margin-bottom: 20px;
@@ -2951,7 +2951,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 16px;
           background: var(--color-accent-light);
-          border: 1px solid rgba(87, 142, 126, 0.28);
+          border: 1px solid rgba(103, 192, 144, 0.26);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -3111,7 +3111,7 @@ export default function Page() {
 
         .faq-item.is-open {
           border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(87, 142, 126, 0.12);
+          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(103, 192, 144, 0.14);
         }
 
         .faq-trigger {
@@ -3414,7 +3414,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid rgba(87, 142, 126, 0.24);
+          border: 1px solid rgba(103, 192, 144, 0.26);
           border-radius: var(--radius-lg);
           margin: 0 auto 18px;
           color: var(--color-primary);
@@ -3471,7 +3471,7 @@ export default function Page() {
 
         .form-input:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.14);
+          box-shadow: 0 0 0 3px rgba(103, 192, 144, 0.18);
         }
 
         .form-input-group {
@@ -3598,7 +3598,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 14px;
           background: var(--color-accent-light);
-          border: 1px solid rgba(87, 142, 126, 0.22);
+          border: 1px solid rgba(103, 192, 144, 0.22);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -3724,8 +3724,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(87, 142, 126, 0.08), transparent 32%), 
-                      radial-gradient(circle at 80% 10%, rgba(61, 61, 61, 0.06), transparent 40%),
+          background: radial-gradient(circle at 20% 20%, rgba(103, 192, 144, 0.1), transparent 32%), 
+                      radial-gradient(circle at 80% 10%, rgba(38, 102, 127, 0.08), transparent 40%),
                       var(--color-bg);
         }
 
@@ -3756,7 +3756,7 @@ export default function Page() {
           width: 100%;
           text-align: center;
           padding: 48px 38px;
-          background: linear-gradient(180deg, rgba(255,250,236,0.92), rgba(245,236,213,0.86));
+          background: linear-gradient(180deg, rgba(221,244,231,0.92), rgba(234,247,240,0.9));
           border: 1px solid var(--color-border);
           border-radius: var(--radius-3xl);
           box-shadow: var(--shadow-card-hover);
@@ -3770,7 +3770,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid rgba(87, 142, 126, 0.22);
+          border: 1px solid rgba(103, 192, 144, 0.22);
           border-radius: var(--radius-xl);
           color: var(--color-primary);
           margin: 0 auto 20px;
@@ -3805,7 +3805,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          background: rgba(255, 250, 236, 0.9);
+          background: rgba(221, 244, 231, 0.9);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-3xl);
           box-shadow: var(--shadow-card-hover);
@@ -3969,7 +3969,7 @@ export default function Page() {
 
         .chat-textarea:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.14);
+          box-shadow: 0 0 0 3px rgba(103, 192, 144, 0.18);
         }
 
         .chat-send-btn {
