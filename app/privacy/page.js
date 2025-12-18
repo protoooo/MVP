@@ -134,7 +134,7 @@ export default function PrivacyPolicy() {
             For questions about this Privacy Policy or your data, contact:
             <br />
             <a href="mailto:hello@protocollm.org" className="text-[#2F5D8A] underline-offset-4 hover:text-[#1F4E7A] hover:underline">
-              hello@protocollm.org
+              support@protocollm.org
             </a>
           </p>
           <p className="mt-3 text-[#3D4F5F]">
