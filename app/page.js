@@ -3672,37 +3672,7 @@ export default function Page() {
           ) : (
             <div className="chat-container">
               <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
-                {messages.length === 0 ? (
-                  <div className="chat-empty">
-                    <div className="chat-empty-content">
-                      <div className="chat-empty-icon">
-                        <Icons.Shield />
-                      </div>
-                      <h2 className={`chat-empty-title ${inter.className}`}>
-                        Upload a photo or ask a question
-                      </h2>
-                      <p className={`chat-empty-text ${inter.className}`}>
-                        Run quick photo checks to spot likely issues, or search the 
-                        Washtenaw-focused database when you need a clear answer.
-                      </p>
-                      <div className="chat-empty-actions">
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="btn-secondary"
-                        >
-                          <Icons.Camera />
-                          <span className={`btn-label ${inter.className}`}>Attach photo</span>
-                        </button>
-                        <button
-                          onClick={() => textAreaRef.current?.focus()}
-                          className="btn-secondary"
-                        >
-                          <span className={`btn-label ${inter.className}`}>Ask a question</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
+                {messages.length > 0 && (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
                       <div
