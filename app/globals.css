@@ -11,14 +11,15 @@
 
 :root {
   color-scheme: light;
-  --paper: #FFFAEC;
-  --surface: #F5ECD5;
-  --accent: #578E7E;
-  --ink: #3D3D3D;
-  --ink-80: rgba(61, 61, 61, 0.8);
-  --ink-60: rgba(61, 61, 61, 0.6);
-  --border: rgba(61, 61, 61, 0.28);
-  --border-strong: rgba(61, 61, 61, 0.36);
+  --paper: #F5F5F0;
+  --surface: #E6D8C3;
+  --clay: #C2A68C;
+  --accent: #5D866C;
+  --ink: #3F3A35;
+  --ink-80: rgba(63, 58, 53, 0.8);
+  --ink-60: rgba(63, 58, 53, 0.6);
+  --border: rgba(63, 58, 53, 0.26);
+  --border-strong: rgba(63, 58, 53, 0.34);
   --focus: var(--accent);
 }
 
@@ -34,10 +35,10 @@ body {
   background-color: var(--paper);
   color: var(--ink);
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(61, 61, 61, 0.06), transparent 38%),
-    radial-gradient(circle at 80% 0%, rgba(87, 142, 126, 0.08), transparent 40%),
-    linear-gradient(120deg, rgba(61, 61, 61, 0.04) 0.5px, transparent 0.5px),
-    linear-gradient(210deg, rgba(61, 61, 61, 0.04) 0.5px, transparent 0.5px);
+    radial-gradient(circle at 20% 20%, rgba(63, 58, 53, 0.06), transparent 38%),
+    radial-gradient(circle at 80% 0%, rgba(93, 134, 108, 0.08), transparent 40%),
+    linear-gradient(120deg, rgba(63, 58, 53, 0.04) 0.5px, transparent 0.5px),
+    linear-gradient(210deg, rgba(63, 58, 53, 0.04) 0.5px, transparent 0.5px);
   background-size: 420px 420px, 520px 420px, 42px 42px, 42px 42px;
   background-position: center;
 }
