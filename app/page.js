@@ -448,22 +448,32 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     <div className="landing-wrapper">
       {/* Animated wave background */}
       <GridBackground />
+      <div className="scanline-overlay" aria-hidden />
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-container">
-          <div className="hero-content">
+          <div className="hero-content trace-frame">
             <Reveal delay={0}>
               <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
-                <span className="hero-title-line">PROTOCOL_LM // WASHTENAW OPS CONSOLE</span>
-                <span className="hero-title-line hero-title-gradient">Catch violations before the inspector does</span>
+                <span className="hero-title-line">COMPLIANCE CONSOLE</span>
+                <span className="hero-title-line hero-title-type">Catch violations before the inspector does</span>
               </h1>
             </Reveal>
 
             <Reveal delay={200}>
+              <div className="hero-bootlog">
+                <span className="boot-line">SYSTEM BOOT v2.1.4</span>
+                <span className="boot-line">&gt; Initializing Washtenaw compliance database… [OK]</span>
+                <span className="boot-line">&gt; Mounting inspection analysis engine… [OK]</span>
+                <span className="boot-line">&gt; System ready_</span>
+              </div>
+            </Reveal>
+
+            <Reveal delay={260}>
               <p className={`hero-description ${inter.className}`}>
-                Upload photos of your kitchen and get instant AI analysis that spots potential 
-                violations before they become citations. Built specifically for Washtenaw County 
+                Upload photos of your kitchen and get instant AI analysis that spots potential
+                violations before they become citations. Built specifically for Washtenaw County
                 food code requirements.
               </p>
             </Reveal>
@@ -524,10 +534,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </Reveal>
 
-          <div className="features-grid">
-            {features.map((feature, i) => (
+            <div className="features-grid">
+              {features.map((feature, i) => (
               <Reveal key={i} delay={i * 120}>
-                <div className="feature-card">
+                <div className="feature-card trace-frame">
                   <div className="feature-card-border" />
                   <div className="feature-icon-wrapper">
                     {feature.icon}
@@ -560,7 +570,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="risk-grid">
             {complianceRisks.map((risk, i) => (
               <Reveal key={i} delay={i * 100}>
-                <div className="risk-card">
+                <div className="risk-card trace-frame">
                   <div className="risk-card-border" />
                   <div className="risk-icon">
                     {risk.icon}
@@ -605,7 +615,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </Reveal>
 
           <Reveal delay={150}>
-            <div className="pricing-card">
+            <div className="pricing-card trace-frame">
               <div className="pricing-card-border" />
               <div className="pricing-card-inner">
                 <div className="pricing-badge-wrapper">
@@ -1437,34 +1447,39 @@ export default function Page() {
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #080808;
-          --color-surface: #101010;
-          --color-card: #131313;
-          --color-border: #202020;
-          --color-border-subtle: #141414;
-          --color-border-hover: #2d2d2d;
-          --color-border-focus: #48e0c2;
+          --color-terminal-accent: #00d9ff;
+          --color-terminal-accent-dim: #0099bb;
+          --color-terminal-accent-dark: #001a22;
+          --color-terminal-glow: rgba(0, 217, 255, 0.2);
+
+          --color-bg: #000000;
+          --color-surface: #0a0a0a;
+          --color-card: #121212;
+          --color-border: #333333;
+          --color-border-subtle: #1a1a1a;
+          --color-border-hover: #3a3a3a;
+          --color-border-focus: #00d9ff;
 
           /* Text Colors */
-          --color-text: #e6e6e6;
-          --color-text-secondary: #b8b8b8;
-          --color-text-tertiary: #7d7d7d;
-          --color-text-muted: #5a5a5a;
-          --color-primary: #48e0c2;
-          --color-primary-hover: #36c7a8;
-          --color-accent: #48e0c2;
-          --color-accent-hover: #36c7a8;
-          --color-accent-light: #1b2422;
+          --color-text: #e0e0e0;
+          --color-text-secondary: #b0b0b0;
+          --color-text-tertiary: #808080;
+          --color-text-muted: #606060;
+          --color-primary: var(--color-terminal-accent);
+          --color-primary-hover: var(--color-terminal-accent-dim);
+          --color-accent: var(--color-terminal-accent);
+          --color-accent-hover: var(--color-terminal-accent-dim);
+          --color-accent-light: rgba(0, 217, 255, 0.08);
 
           /* Status Colors */
-          --color-success: #48e0c2;
-          --color-success-bg: #0d1211;
-          --color-warning: #ffb84d;
-          --color-warning-bg: #141008;
-          --color-error: #ff4d4d;
-          --color-error-bg: #140b0b;
-          --color-code-bg: #0c0c0c;
-          --color-code-text: #e6e6e6;
+          --color-success: var(--color-terminal-accent);
+          --color-success-bg: var(--color-terminal-accent-dark);
+          --color-warning: #ffaa00;
+          --color-warning-bg: #241700;
+          --color-error: #ff3b30;
+          --color-error-bg: #1a0808;
+          --color-code-bg: #0f0f0f;
+          --color-code-text: #e0e0e0;
 
           /* Typography */
           --font-mono: 'IBM Plex Mono', 'Courier New', Consolas, Monaco, monospace;
@@ -1480,14 +1495,14 @@ export default function Page() {
           --shadow-glass: none;
 
           /* Radii */
-          --radius-xs: 0px;
-          --radius-sm: 0px;
-          --radius-md: 0px;
-          --radius-lg: 0px;
-          --radius-xl: 0px;
-          --radius-2xl: 0px;
-          --radius-3xl: 0px;
-          --radius-full: 0px;
+          --radius-xs: 4px;
+          --radius-sm: 6px;
+          --radius-md: 8px;
+          --radius-lg: 10px;
+          --radius-xl: 12px;
+          --radius-2xl: 14px;
+          --radius-3xl: 16px;
+          --radius-full: 999px;
 
           /* Transitions */
           --ease-out-expo: linear;
@@ -1620,6 +1635,33 @@ export default function Page() {
           z-index: 0;
         }
 
+        .scanline-overlay {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background: repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.03) 0px,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 3px,
+            transparent 4px
+          );
+          mix-blend-mode: screen;
+          opacity: 0.4;
+          z-index: 1;
+          animation: scan-flicker 6s ease-in-out infinite;
+        }
+
+        @keyframes scan-flicker {
+          0%,
+          100% {
+            opacity: 0.35;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
         /* ═══════════════════════════════════════════════════════════════════════
            HEADER
            ═══════════════════════════════════════════════════════════════════════ */
@@ -1747,7 +1789,7 @@ export default function Page() {
           background: transparent;
           color: var(--color-accent);
           border: 2px solid var(--color-accent);
-          border-radius: 0;
+          border-radius: var(--radius-md);
           font-size: 13px;
           font-weight: 700;
           cursor: pointer;
@@ -1767,7 +1809,7 @@ export default function Page() {
           background: transparent;
           color: var(--color-text);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-md);
           font-size: 13px;
           font-weight: 700;
           cursor: pointer;
@@ -1787,7 +1829,7 @@ export default function Page() {
           background: transparent;
           color: var(--color-text);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-md);
           font-size: 12px;
           font-weight: 700;
           cursor: pointer;
@@ -1806,7 +1848,7 @@ export default function Page() {
           justify-content: center;
           background: transparent;
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-sm);
           color: var(--color-text-secondary);
           cursor: pointer;
           transition: none;
@@ -1993,6 +2035,51 @@ export default function Page() {
           transform: translateY(0) scale(1);
         }
 
+        .trace-frame {
+          position: relative;
+          background: var(--color-card);
+          border: 1px solid rgba(0, 217, 255, 0.28);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+        }
+
+        .trace-frame::after {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(
+            120deg,
+            transparent 0%,
+            var(--color-terminal-accent) 15%,
+            transparent 35%,
+            transparent 60%,
+            var(--color-terminal-accent) 80%,
+            transparent 100%
+          );
+          background-size: 200% 200%;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: trace-edge 3.6s linear infinite;
+          mix-blend-mode: screen;
+          pointer-events: none;
+          opacity: 0.85;
+        }
+
+        @keyframes trace-edge {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
         /* ═══════════════════════════════════════════════════════════════════════
            HERO SECTION
            ═══════════════════════════════════════════════════════════════════════ */
@@ -2029,17 +2116,7 @@ export default function Page() {
           z-index: 2;
           padding: 32px 32px 28px;
           border: 1px solid var(--color-border);
-          background: linear-gradient(180deg, rgba(72, 224, 194, 0.04) 0%, rgba(72, 224, 194, 0.01) 70%, transparent 100%), var(--color-surface);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-        }
-
-        .hero-content::before {
-          content: '';
-          position: absolute;
-          inset: 8px;
-          border: 1px solid var(--color-border-subtle);
-          pointer-events: none;
-          opacity: 0.7;
+          box-shadow: none;
         }
 
         .hero-title-animated {
@@ -2074,9 +2151,46 @@ export default function Page() {
           text-transform: uppercase;
         }
 
-        .hero-title-gradient {
+        .hero-title-type {
           color: var(--color-accent);
-          text-shadow: 0 0 18px rgba(72, 224, 194, 0.28), 0 0 2px rgba(72, 224, 194, 0.6);
+          position: relative;
+          display: inline-block;
+          padding-right: 12px;
+        }
+
+        .hero-title-type::after {
+          content: '_';
+          position: absolute;
+          right: 0;
+          bottom: 4px;
+          color: var(--color-accent);
+          animation: blink 1s steps(2, start) infinite;
+        }
+
+        .hero-bootlog {
+          display: grid;
+          gap: 4px;
+          padding: 12px 14px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border-subtle);
+          border-radius: var(--radius-sm);
+        }
+
+        .boot-line {
+          font-size: 13px;
+          color: var(--color-text-secondary);
+          letter-spacing: 0.02em;
+        }
+
+        @keyframes blink {
+          0%,
+          49% {
+            opacity: 1;
+          }
+          50%,
+          100% {
+            opacity: 0;
+          }
         }
 
         .hero-description {
@@ -2230,9 +2344,9 @@ export default function Page() {
         .feature-card {
           position: relative;
           padding: 32px 28px;
-          background: var(--color-surface);
+          background: var(--color-card);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           transition: border-color var(--duration-normal) linear;
           overflow: hidden;
           display: flex;
@@ -2243,7 +2357,7 @@ export default function Page() {
         .feature-card-border {
           position: absolute;
           inset: 0;
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           padding: 0;
           background: transparent;
           opacity: 1;
@@ -2264,8 +2378,8 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          background: var(--color-terminal-accent-dark);
+          border: 1px solid rgba(0, 217, 255, 0.4);
           border-radius: var(--radius-lg);
           margin-bottom: 20px;
           color: var(--color-primary);
@@ -2320,9 +2434,9 @@ export default function Page() {
         .risk-card {
           position: relative;
           padding: 24px 20px;
-          background: var(--color-surface);
+          background: var(--color-card);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           text-align: center;
           transition: border-color var(--duration-normal) linear;
           overflow: hidden;
@@ -2334,7 +2448,7 @@ export default function Page() {
         .risk-card-border {
           position: absolute;
           inset: 0;
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           padding: 0;
           background: transparent;
           opacity: 1;
@@ -2406,9 +2520,9 @@ export default function Page() {
 
         .pricing-card {
           position: relative;
-          background: var(--color-surface);
+          background: var(--color-card);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           overflow: hidden;
           box-shadow: none;
         }
@@ -2416,7 +2530,7 @@ export default function Page() {
         .pricing-card-border {
           position: absolute;
           inset: 0;
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           padding: 0;
           background: transparent;
         }
@@ -2426,7 +2540,7 @@ export default function Page() {
           padding: 44px 36px;
           z-index: 1;
           background: var(--color-surface);
-          border-radius: 0;
+          border-radius: var(--radius-lg);
         }
 
         @media (max-width: 640px) {
@@ -2729,14 +2843,13 @@ export default function Page() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md);
+          transition: background var(--duration-normal) linear;
+          box-shadow: none;
         }
 
         .btn-cta-primary:hover {
           background: var(--color-primary-hover);
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-lg);
+          transform: none;
         }
 
         .btn-cta-secondary {
@@ -2752,8 +2865,8 @@ export default function Page() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-xs);
+          transition: border-color var(--duration-normal) linear, background var(--duration-normal) linear;
+          box-shadow: none;
         }
 
         .btn-cta-secondary:hover {
@@ -3235,7 +3348,7 @@ export default function Page() {
           gap: 0;
           border-top: 1px solid var(--color-border);
           border-bottom: 1px solid var(--color-border-subtle);
-          background: linear-gradient(180deg, rgba(72, 224, 194, 0.05) 0%, transparent 40%), var(--color-bg);
+          background: linear-gradient(180deg, rgba(0, 217, 255, 0.05) 0%, transparent 40%), var(--color-bg);
         }
 
         .chat-empty {
@@ -3354,7 +3467,7 @@ export default function Page() {
         }
 
         .chat-bubble-image {
-          border-radius: 0;
+          border-radius: var(--radius-md);
           overflow: hidden;
           margin: 0;
           background: var(--color-code-bg);
@@ -3554,12 +3667,12 @@ export default function Page() {
           <div className="header-inner">
             <div className="header-left">
               <div className={`logo ${outfit.className}`}>
-                <span className="logo-text">protocol</span>
-                <span className="logo-text logo-accent">LM</span>
+                <span className="logo-text">Compliance</span>
+                <span className="logo-text logo-accent">Console</span>
               </div>
 
               <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Washtenaw County Compliance</span>
+                <span className="header-meta-primary">Catch violations before the inspector does</span>
               </div>
             </div>
 
