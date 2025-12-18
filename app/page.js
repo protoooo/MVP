@@ -482,12 +482,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <BootPanel onComplete={() => setUnlocked(true)} />
 
         {unlocked && (
-          <div className="space-y-6 transition-all duration-500 ease-linear">
+          <div className="space-y-6 rounded-[18px] border border-[#d4d4d4] bg-[#f4f4f2] p-5 shadow-inner shadow-black/5 transition-all duration-500 ease-linear">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
+              <span>Interface unlocked</span>
+              <span>protocolLM shell</span>
+            </div>
+
             {systemIntro}
 
             <div className="grid gap-3 md:grid-cols-2">
-              {modules.map((m, idx) => (
-                <div key={m.label} className={`${UI.card} ${UI.cardHover} border-[#d4d4d4] p-4`}>
+              {modules.map((m) => (
+                <div key={m.label} className={`${UI.card} border-[#d4d4d4] bg-[#fdfdfb] p-4 shadow-inner shadow-black/5`}>
                   <div className="mb-3 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
                     <span className="flex items-center gap-2 text-[#1f1f1f]">
                       <span className="text-sm">{m.icon}</span>
@@ -503,7 +508,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
               <Panel label="License" title="Site License" className="shadow-none">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-[#fdfdfb]`}>
+                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-[#fdfdfb] shadow-inner shadow-black/5`}>
                     <div className={`${UI.panelHeaderLabel} mb-1`}>Price</div>
                     <div className="flex items-baseline gap-2">
                       <span className={`${outfit.className} text-3xl font-semibold text-[#1f1f1f]`}>$100</span>
@@ -511,7 +516,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                     </div>
                     <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Annual: $1,000 (save $200)</p>
                   </div>
-                  <div className={`${UI.card} p-4 border-[#d4d4d4]`}>
+                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-white`}>
                     <div className={`${UI.panelHeaderLabel} mb-1`}>Status</div>
                     <p className={`${inter.className} text-sm text-[#1f1f1f]`}>Trial available · Unlimited usage for one location.</p>
                   </div>
@@ -1220,7 +1225,7 @@ export default function Page() {
 
   return (
     <AppShell>
-      <div className="flex items_center justify-between pb-6">
+      <div className="flex items-center justify-between pb-6">
         <div>
           <div className={UI.panelHeaderLabel}>Active Session</div>
           <h1 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>protocolLM Session Console</h1>
@@ -1263,7 +1268,7 @@ export default function Page() {
           className="h-fit lg:sticky lg:top-10"
         >
           <div className="space-y-3 text-sm text-[#1f1f1f]">
-            <div className="flex items-center justify_between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
+            <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
               <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Status</span>
               <span className={UI.pill}>Session attached</span>
             </div>
