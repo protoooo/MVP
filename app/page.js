@@ -153,72 +153,76 @@ const Icons = {
   ),
 }
 
-// Subtle animated wave background - light theme
 function WaveBackground() {
   return (
     <div className="wave-bg-container">
-      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
-          </linearGradient>
-          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        
-        {/* Wave 1 - starts higher, flows through hero */}
-        <path className="wave wave-1" fill="url(#wave-gradient-1)">
-          <animate
-            attributeName="d"
-            dur="25s"
-            repeatCount="indefinite"
-            values="
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
-              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
-              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 2 - middle layer */}
-        <path className="wave wave-2" fill="url(#wave-gradient-2)">
-          <animate
-            attributeName="d"
-            dur="20s"
-            repeatCount="indefinite"
-            values="
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
-              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
-              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-        
-        {/* Wave 3 - lower layer */}
-        <path className="wave wave-3" fill="url(#wave-gradient-3)">
-          <animate
-            attributeName="d"
-            dur="30s"
-            repeatCount="indefinite"
-            values="
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
-              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
-              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
-            "
-          />
-        </path>
-      </svg>
-      
-      {/* Subtle grid overlay */}
+      <div className="gloss-blob blob-a" />
+      <div className="gloss-blob blob-b" />
+      <div className="gloss-blob blob-c" />
+      <div className="gloss-blob blob-d" />
+      <div className="grain-overlay" />
       <div className="grid-overlay" />
     </div>
+  )
+}
+
+function IsometricHeroArt() {
+  return (
+    <svg viewBox="0 0 320 260" role="img" aria-label="Isometric kitchen compliance scene" className="iso-hero-svg">
+      <g fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M60 156l94-54 98 56-96 52z" fill="rgba(61,61,61,0.04)" />
+        <path d="M60 156v36l96 52v-40M252 158v34l-96 52" />
+        <path d="M126 120v40l32 18 34-18v-38" />
+        <path d="M120 118l38-22 40 22-40 22z" fill="rgba(61,61,61,0.04)" />
+        <path d="M158 96v22M198 118v22" />
+        <path d="M90 170l28 16 0 18-28-16z" fill="rgba(61,61,61,0.04)" />
+        <path d="M118 186l34 18v18l-34-18zM168 202l32-18v18l-32 18z" />
+        <path d="M200 184l26-14 0 18-26 14z" />
+        <path d="M128 148l-20 12 24 14 20-12zM196 148l20 12-24 14-20-12z" />
+        <path d="M152 168l12 8 12-8" />
+        <path d="M142 110l16 9 0 10-16-9zM182 110l16 9 0 10-16-9z" />
+        <path d="M170 118l-6 4M210 118l-6 4" />
+        <path d="M154 76l26-14 54 30-26 14z" />
+        <path d="M206 92l8-4 32 18-8 4z" />
+        <path d="M140 136l12-6 0 34-12 6zM220 136l-12-6 0 34 12 6z" />
+        <path d="M146 164l10-6 10 6-10 6zM198 164l-10-6-10 6 10 6z" />
+        <path d="M88 132l-18 10 46 26 18-10z" />
+        <path d="M70 142v18l46 26v-18z" />
+        <path d="M118 178l18-10v18l-18 10z" />
+        <path d="M104 142l10-6 22 12-10 6z" />
+        <path d="M214 104l10-6 28 16-10 6z" />
+        <path d="M234 112l4-2 14 8-4 2z" />
+        <rect x="180" y="74" width="42" height="10" rx="2" transform="skewY(-26)" fill="rgba(87,142,126,0.18)" stroke="none" />
+        <path d="M166 70l18-10 36 20-18 10z" />
+        <path d="M182 66l4-2 22 12-4 2z" />
+        <path d="M202 62l4-2 18 10-4 2z" />
+        <path d="M142 198l-12 8v12l12-6 12 6 0-12z" />
+        <path d="M220 200l12 8v12l-12-6-12 6 0-12z" />
+        <path d="M150 214l-8 4v8l8-4 8 4v-8zM212 214l8 4v8l-8-4-8 4v-8z" />
+        <path d="M170 210l-8 4v22l8-4zM190 210l8 4v22l-8-4z" />
+        <path d="M170 226l20 12" />
+        <path d="M154 222l12 8M206 222l-12 8" />
+        <path d="M140 122l36 20-4 8" />
+        <path d="M216 122l-36 20 4 8" />
+        <path d="M168 152l-6 10 18 10 18-10-6-10" />
+        <path d="M170 154l14 8" />
+        <circle cx="160" cy="92" r="2.4" />
+        <circle cx="192" cy="92" r="2.4" />
+        <path d="M170 82l6-4 18 10-6 4z" />
+        <path d="M138 90l8 4M136 96l10 6M136 102l6 4" />
+        <path d="M214 82l8 4M216 88l10 6M216 94l6 4" />
+        <path d="M78 188l8 4v10l-8-4zM90 194l8 4v10l-8-4z" />
+        <path d="M226 182l-8 4v10l8-4zM214 188l-8 4v10l8-4z" />
+        <path d="M128 208l-10 6v6l10-6 10 6v-6z" />
+        <path d="M202 208l10 6v6l-10-6-10 6v-6z" />
+        <path d="M164 238l-6 3.5 12 6.5 12-6.5-6-3.5" />
+        <path d="M84 156l18-10 4 2-18 10zM236 156l-18-10-4 2 18 10z" />
+      </g>
+      <g fill="none" stroke="var(--color-accent)" strokeWidth="2">
+        <path d="M182 132l16-9 6 4-16 9z" />
+        <circle cx="188" cy="132" r="3.5" />
+      </g>
+    </svg>
   )
 }
 
@@ -411,6 +415,24 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
+  useEffect(() => {
+    let raf = null
+    const update = () => {
+      document.documentElement.style.setProperty('--scrollY', String(window.scrollY || 0))
+      raf = null
+    }
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(update)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
   const faqs = useMemo(
     () => [
       {
@@ -545,6 +567,23 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </Reveal>
           </div>
 
+          <Reveal delay={120}>
+            <div className="hero-visual">
+              <div className="hero-visual-badge">
+                <span className="hero-visual-dot" />
+                <span className={`hero-visual-text ${inter.className}`}>Washtenaw County</span>
+              </div>
+              <div className="hero-visual-frame">
+                <IsometricHeroArt />
+              </div>
+              <div className="hero-visual-metadata">
+                <span className={`hero-meta-label ${inter.className}`}>Live compliance canvas</span>
+                <span className={`hero-meta-pill ${inter.className}`}>
+                  <Icons.Shield /> Localized
+                </span>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -1493,52 +1532,52 @@ export default function Page() {
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
            PREMIUM LIGHT THEME - protocolLM
-           Modern Government Tech × FinTech × Health Tech Design
-           Color Palette: Spearmint + Matte Blue
+           Isometric monochrome with subtle moss accent
+           Color Palette: Warm parchment base + Ink + Moss accent
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #F6FAF9;
-          --color-surface: #FFFFFF;
-          --color-card: #F2FBF7;
-          --color-border: #D7E6E2;
-          --color-border-subtle: #E8F0ED;
-          --color-border-hover: #B8CFC8;
-          --color-border-focus: #55D6B2;
+          --color-bg: #FFFAEC;
+          --color-surface: rgba(255, 250, 236, 0.78);
+          --color-card: #F5ECD5;
+          --color-border: rgba(61, 61, 61, 0.12);
+          --color-border-subtle: rgba(61, 61, 61, 0.08);
+          --color-border-hover: rgba(61, 61, 61, 0.22);
+          --color-border-focus: #3D3D3D;
           
           /* Text Colors */
-          --color-text: #0B1220;
-          --color-text-secondary: #3D4F5F;
-          --color-text-tertiary: #52637A;
-          --color-text-muted: #8A9BAD;
+          --color-text: #3D3D3D;
+          --color-text-secondary: #515151;
+          --color-text-tertiary: #6B6B6B;
+          --color-text-muted: #8B8B8B;
           
           /* Brand Colors */
-          --color-primary: #2F5D8A;
-          --color-primary-hover: #1F4E7A;
-          --color-primary-light: #3A6B99;
-          --color-accent: #55D6B2;
-          --color-accent-hover: #45C6A2;
-          --color-accent-light: #E8FAF4;
+          --color-primary: #578E7E;
+          --color-primary-hover: #4B7C6D;
+          --color-primary-light: #699e8f;
+          --color-accent: #578E7E;
+          --color-accent-hover: #4B7C6D;
+          --color-accent-light: rgba(87, 142, 126, 0.12);
           
           /* Status Colors */
-          --color-success: #10B981;
-          --color-success-bg: #ECFDF5;
-          --color-warning: #F59E0B;
-          --color-warning-bg: #FFFBEB;
-          --color-error: #EF4444;
-          --color-error-bg: #FEF2F2;
+          --color-success: #4B7C6D;
+          --color-success-bg: rgba(87, 142, 126, 0.14);
+          --color-warning: #8C7552;
+          --color-warning-bg: rgba(140, 117, 82, 0.14);
+          --color-error: #9C5A4B;
+          --color-error-bg: rgba(156, 90, 75, 0.12);
           
           /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
-          --shadow-md: 0 4px 6px -1px rgba(11, 18, 32, 0.06), 0 2px 4px -1px rgba(11, 18, 32, 0.04);
-          --shadow-lg: 0 10px 15px -3px rgba(11, 18, 32, 0.08), 0 4px 6px -2px rgba(11, 18, 32, 0.04);
-          --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
-          --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
-          --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
-          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
+          --shadow-xs: 0 1px 2px rgba(61, 61, 61, 0.06);
+          --shadow-sm: 0 1px 3px rgba(61, 61, 61, 0.08), 0 1px 2px rgba(61, 61, 61, 0.04);
+          --shadow-md: 0 6px 12px -2px rgba(61, 61, 61, 0.10), 0 2px 6px -2px rgba(61, 61, 61, 0.04);
+          --shadow-lg: 0 14px 28px -6px rgba(61, 61, 61, 0.16), 0 6px 18px -8px rgba(61, 61, 61, 0.08);
+          --shadow-xl: 0 24px 40px -8px rgba(61, 61, 61, 0.18), 0 10px 24px -10px rgba(61, 61, 61, 0.08);
+          --shadow-card: 0 1px 3px rgba(61, 61, 61, 0.06), 0 0 0 1px rgba(61, 61, 61, 0.08);
+          --shadow-card-hover: 0 12px 30px rgba(61, 61, 61, 0.16), 0 0 0 1px rgba(87, 142, 126, 0.18);
+          --shadow-glass: 0 16px 48px rgba(61, 61, 61, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.14);
           
           /* Radii */
           --radius-xs: 4px;
@@ -1562,6 +1601,7 @@ export default function Page() {
           --z-elevated: 10;
           --z-sticky: 100;
           --z-modal: 1000;
+          --scrollY: 0;
         }
 
         /* ─── Base Reset ─── */
@@ -1588,7 +1628,7 @@ export default function Page() {
         }
 
         ::selection {
-          background: rgba(85, 214, 178, 0.25);
+          background: rgba(87, 142, 126, 0.18);
           color: var(--color-text);
         }
 
@@ -1656,7 +1696,7 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           WAVE BACKGROUND
+           STRIPE-STYLE GLOSS BACKGROUND
            ═══════════════════════════════════════════════════════════════════════ */
         .wave-bg-container {
           position: fixed;
@@ -1664,27 +1704,84 @@ export default function Page() {
           pointer-events: none;
           z-index: 0;
           overflow: hidden;
+          filter: saturate(105%);
         }
 
-        .wave-svg {
+        .gloss-blob {
           position: absolute;
-          width: 100%;
-          height: 100%;
-          min-height: 100vh;
+          width: 520px;
+          height: 520px;
+          border-radius: 50%;
+          opacity: 0.55;
+          filter: blur(72px);
+          transform: translate3d(0, 0, 0);
+          transition: transform 1200ms var(--ease-out-expo);
+          mix-blend-mode: multiply;
         }
 
-        .wave {
-          opacity: 1;
+        .blob-a {
+          background: radial-gradient(circle at 30% 30%, rgba(87, 142, 126, 0.45), transparent 60%);
+          top: -60px;
+          left: -120px;
+          animation: blobFloat 26s ease-in-out infinite;
+          transform: translateY(calc(var(--scrollY) * -0.02px));
+        }
+
+        .blob-b {
+          background: radial-gradient(circle at 50% 50%, rgba(61, 61, 61, 0.28), transparent 65%);
+          top: 120px;
+          right: -140px;
+          animation: blobFloat 34s ease-in-out infinite reverse;
+          transform: translateY(calc(var(--scrollY) * -0.015px));
+        }
+
+        .blob-c {
+          background: radial-gradient(circle at 40% 40%, rgba(87, 142, 126, 0.32), transparent 62%);
+          bottom: -180px;
+          left: 10%;
+          width: 600px;
+          height: 600px;
+          animation: blobFloat 40s ease-in-out infinite;
+          transform: translateY(calc(var(--scrollY) * 0.01px));
+        }
+
+        .blob-d {
+          background: radial-gradient(circle at 70% 30%, rgba(61, 61, 61, 0.18), transparent 60%);
+          bottom: -120px;
+          right: 4%;
+          width: 540px;
+          height: 540px;
+          animation: blobFloat 32s ease-in-out infinite reverse;
+          transform: translateY(calc(var(--scrollY) * 0.006px));
+        }
+
+        @keyframes blobFloat {
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50% { transform: translate3d(24px, -26px, 0); }
+        }
+
+        .grain-overlay {
+          position: absolute;
+          inset: -20%;
+          background-image:
+            repeating-radial-gradient(circle at 10% 20%, rgba(61, 61, 61, 0.05) 0 1px, transparent 1px 12px),
+            repeating-conic-gradient(from 45deg, rgba(61, 61, 61, 0.04) 0deg 10deg, transparent 10deg 25deg);
+          opacity: 0.28;
+          filter: contrast(140%);
+          mix-blend-mode: soft-light;
+          pointer-events: none;
         }
 
         .grid-overlay {
           position: absolute;
           inset: 0;
-          background-image: 
-            linear-gradient(rgba(47, 93, 138, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
-          background-size: 60px 60px;
-          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
+          background-image:
+            linear-gradient(rgba(61, 61, 61, 0.06) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(61, 61, 61, 0.06) 1px, transparent 1px);
+          background-size: 120px 120px;
+          mask-image: radial-gradient(ellipse 90% 65% at 50% 30%, rgba(0,0,0,0.45) 0%, transparent 70%);
+          opacity: 0.4;
+          mix-blend-mode: multiply;
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -1694,7 +1791,7 @@ export default function Page() {
           position: sticky;
           top: 0;
           z-index: var(--z-sticky);
-          background: rgba(246, 250, 249, 0.85);
+          background: rgba(255, 250, 236, 0.88);
           backdrop-filter: blur(16px) saturate(180%);
           -webkit-backdrop-filter: blur(16px) saturate(180%);
           border-bottom: 1px solid var(--color-border-subtle);
@@ -1820,7 +1917,7 @@ export default function Page() {
           font-weight: 600;
           cursor: pointer;
           transition: all var(--duration-normal) var(--ease-out-expo);
-          box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 93, 138, 0.1);
+          box-shadow: var(--shadow-md), 0 0 0 1px rgba(87, 142, 126, 0.12);
           position: relative;
           overflow: hidden;
         }
@@ -1837,7 +1934,7 @@ export default function Page() {
         .btn-hero-primary:hover {
           background: var(--color-primary-hover);
           transform: translateY(-2px);
-          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47, 93, 138, 0.15);
+          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(87, 142, 126, 0.18);
         }
 
         .btn-hero-primary:hover::before {
@@ -1991,7 +2088,7 @@ export default function Page() {
 
         .user-menu-header {
           padding: 16px 20px;
-          border-bottom:-border-subtle);
+          border-bottom: 1px solid var(--color-border-subtle);
           background: var(--color-card);
         }
 
@@ -2101,7 +2198,7 @@ export default function Page() {
         .hero-section {
           position: relative;
           z-index: 1;
-          padding: 60px 24px 100px;
+          padding: 80px 24px 120px;
           min-height: calc(100vh - 80px);
           display: flex;
           align-items: center;
@@ -2109,19 +2206,26 @@ export default function Page() {
 
         @media (min-width: 1024px) {
           .hero-section {
-            padding: 40px 48px 80px;
+            padding: 80px 48px 120px;
           }
         }
 
         .hero-container {
-          max-width: 960px;
+          max-width: 1200px;
           margin: 0 auto;
           width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
+          display: grid;
+          gap: 48px;
           align-items: center;
           text-align: center;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-container {
+            grid-template-columns: 1.05fr 0.95fr;
+            text-align: left;
+            align-items: center;
+          }
         }
 
         .hero-content {
@@ -2130,7 +2234,14 @@ export default function Page() {
           gap: 24px;
           position: relative;
           z-index: 2;
-          align-items: center;
+          align-items: flex-start;
+        }
+
+        @media (max-width: 1023px) {
+          .hero-content {
+            align-items: center;
+            text-align: center;
+          }
         }
 
         .hero-title-animated {
@@ -2138,6 +2249,13 @@ export default function Page() {
           flex-direction: column;
           gap: 6px;
           text-align: center;
+        }
+
+        @media (min-width: 1024px) {
+          .hero-title-animated {
+            text-align: left;
+            align-items: flex-start;
+          }
         }
 
         .hero-title-line {
@@ -2160,12 +2278,13 @@ export default function Page() {
           font-size: clamp(40px, 6vw, 64px);
           font-weight: 800;
           line-height: 1.05;
-          letter-spacing: -0.035em;
+          letter-spacing: -0.04em;
           color: var(--color-text);
+          max-width: 640px;
         }
 
         .hero-title-gradient {
-          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
+          background: linear-gradient(135deg, var(--color-text) 0%, var(--color-primary) 45%, var(--color-accent) 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -2175,7 +2294,7 @@ export default function Page() {
           font-size: 18px;
           line-height: 1.7;
           color: var(--color-text-secondary);
-          max-width: 520px;
+          max-width: 540px;
         }
 
         @media (max-width: 640px) {
@@ -2191,7 +2310,112 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* Hero visual removed for simplified, centered hero */
+        .hero-visual {
+          position: relative;
+          width: 100%;
+          max-width: 560px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          align-items: flex-start;
+        }
+
+        .hero-visual-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          background: rgba(245, 236, 213, 0.8);
+          border: 1px solid var(--color-border);
+          border-radius: 999px;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
+          backdrop-filter: blur(8px);
+        }
+
+        .hero-visual-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: var(--color-accent);
+          box-shadow: 0 0 0 6px rgba(87, 142, 126, 0.16);
+        }
+
+        .hero-visual-frame {
+          width: 100%;
+          padding: 20px;
+          border-radius: 24px;
+          background: linear-gradient(145deg, rgba(255, 250, 236, 0.82), rgba(245, 236, 213, 0.75));
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-glass);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-visual-frame::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(120deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.2) 40%, transparent 65%);
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .hero-visual-frame:hover::before {
+          opacity: 1;
+        }
+
+        .iso-hero-svg {
+          width: 100%;
+          height: auto;
+          color: var(--color-text);
+          display: block;
+        }
+
+        .hero-visual-metadata {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .hero-meta-label {
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+          letter-spacing: 0.02em;
+        }
+
+        .hero-meta-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: 14px;
+          font-size: 13px;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .hero-meta-pill svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        @media (max-width: 1023px) {
+          .hero-visual {
+            order: 3;
+            align-items: center;
+          }
+          .hero-visual-metadata {
+            justify-content: center;
+          }
+          .hero-visual-badge {
+            margin: 0 auto;
+          }
+        }
 
         /* ═══════════════════════════════════════════════════════════════════════
            PROOF SECTION
@@ -2312,6 +2536,20 @@ export default function Page() {
           display: grid;
           grid-template-columns: 1fr;
           gap: 20px;
+          position: relative;
+        }
+
+        .features-grid::before {
+          content: '';
+          position: absolute;
+          top: 16px;
+          left: 8%;
+          right: 8%;
+          height: 2px;
+          background: linear-gradient(90deg, transparent 0%, rgba(87, 142, 126, 0.25) 20%, rgba(87, 142, 126, 0.45) 50%, rgba(87, 142, 126, 0.25) 80%, transparent 100%);
+          opacity: 0.7;
+          mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 70%);
+          pointer-events: none;
         }
 
         @media (min-width: 768px) {
@@ -2323,7 +2561,7 @@ export default function Page() {
         .feature-card {
           position: relative;
           padding: 32px 28px;
-          background: var(--color-surface);
+          background: linear-gradient(150deg, rgba(255, 250, 236, 0.85), rgba(245, 236, 213, 0.7));
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           transition: all var(--duration-slow) var(--ease-out-expo);
@@ -2332,6 +2570,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 220px;
+          backdrop-filter: blur(12px);
         }
 
         .feature-card-border {
@@ -2348,14 +2587,28 @@ export default function Page() {
           transition: opacity var(--duration-slow) var(--ease-out-expo);
         }
 
+        .feature-card::before {
+          content: '';
+          position: absolute;
+          inset: -40%;
+          background: linear-gradient(120deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 40%, transparent 60%);
+          transform: translateX(-60%);
+          transition: transform var(--duration-slow) var(--ease-out-expo);
+          pointer-events: none;
+        }
+
         .feature-card:hover {
           border-color: var(--color-border-hover);
-          transform: translateY(-4px);
+          transform: translateY(-4px) rotate3d(1, -1, 0, 6deg);
           box-shadow: var(--shadow-card-hover);
         }
 
         .feature-card:hover .feature-card-border {
           opacity: 1;
+        }
+
+        .feature-card:hover::before {
+          transform: translateX(40%);
         }
 
         .feature-icon-wrapper {
@@ -2365,11 +2618,17 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          background: rgba(87, 142, 126, 0.12);
+          border: 1px solid rgba(61, 61, 61, 0.12);
           border-radius: var(--radius-lg);
           margin-bottom: 20px;
           color: var(--color-primary);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .feature-icon-wrapper svg {
+          width: 22px;
+          height: 22px;
         }
 
         .feature-title {
@@ -2421,7 +2680,7 @@ export default function Page() {
         .risk-card {
           position: relative;
           padding: 24px 20px;
-          background: var(--color-surface);
+          background: linear-gradient(160deg, rgba(255, 250, 236, 0.9), rgba(245, 236, 213, 0.76));
           border: 1px solid var(--color-border);
           border-radius: var(--radius-xl);
           text-align: center;
@@ -2431,6 +2690,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 180px;
+          backdrop-filter: blur(10px);
         }
 
         .risk-card-border {
@@ -2447,13 +2707,27 @@ export default function Page() {
           transition: opacity var(--duration-normal) var(--ease-out-expo);
         }
 
+        .risk-card::before {
+          content: '';
+          position: absolute;
+          inset: -30%;
+          background: linear-gradient(120deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+          transform: translateX(-60%);
+          transition: transform var(--duration-normal) var(--ease-out-expo);
+          pointer-events: none;
+        }
+
         .risk-card:hover {
           border-color: var(--color-border-hover);
-          transform: translateY(-3px);
+          transform: translateY(-3px) rotate3d(1, -1, 0, 4deg);
         }
 
         .risk-card:hover .risk-card-border {
           opacity: 1;
+        }
+
+        .risk-card:hover::before {
+          transform: translateX(40%);
         }
 
         .risk-icon {
@@ -2467,6 +2741,11 @@ export default function Page() {
           border-radius: var(--radius-md);
           margin: 0 auto 14px;
           color: var(--color-text-secondary);
+        }
+
+        .risk-icon svg {
+          width: 20px;
+          height: 20px;
         }
 
         .risk-value {
@@ -2567,7 +2846,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 16px;
           background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.3);
+          border: 1px solid rgba(87, 142, 126, 0.28);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -2727,7 +3006,7 @@ export default function Page() {
 
         .faq-item.is-open {
           border-color: var(--color-accent);
-          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(85, 214, 178, 0.1);
+          box-shadow: var(--shadow-sm), 0 0 0 1px rgba(87, 142, 126, 0.12);
         }
 
         .faq-trigger {
@@ -3030,7 +3309,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          border: 1px solid rgba(87, 142, 126, 0.24);
           border-radius: var(--radius-lg);
           margin: 0 auto 18px;
           color: var(--color-primary);
@@ -3087,7 +3366,7 @@ export default function Page() {
 
         .form-input:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
+          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.14);
         }
 
         .form-input-group {
@@ -3214,7 +3493,7 @@ export default function Page() {
           gap: 8px;
           padding: 8px 14px;
           background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          border: 1px solid rgba(87, 142, 126, 0.22);
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 600;
@@ -3340,8 +3619,8 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
-                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
+          background: radial-gradient(circle at 20% 20%, rgba(87, 142, 126, 0.08), transparent 32%), 
+                      radial-gradient(circle at 80% 10%, rgba(61, 61, 61, 0.06), transparent 40%),
                       var(--color-bg);
         }
 
@@ -3372,7 +3651,7 @@ export default function Page() {
           width: 100%;
           text-align: center;
           padding: 48px 38px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
+          background: linear-gradient(180deg, rgba(255,250,236,0.92), rgba(245,236,213,0.86));
           border: 1px solid var(--color-border);
           border-radius: var(--radius-3xl);
           box-shadow: var(--shadow-card-hover);
@@ -3386,7 +3665,7 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           background: var(--color-accent-light);
-          border: 1px solid rgba(85, 214, 178, 0.2);
+          border: 1px solid rgba(87, 142, 126, 0.22);
           border-radius: var(--radius-xl);
           color: var(--color-primary);
           margin: 0 auto 20px;
@@ -3421,7 +3700,7 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          background: rgba(255, 255, 255, 0.9);
+          background: rgba(255, 250, 236, 0.9);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-3xl);
           box-shadow: var(--shadow-card-hover);
@@ -3585,7 +3864,7 @@ export default function Page() {
 
         .chat-textarea:focus {
           border-color: var(--color-accent);
-          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
+          box-shadow: 0 0 0 3px rgba(87, 142, 126, 0.14);
         }
 
         .chat-send-btn {
@@ -3650,8 +3929,14 @@ export default function Page() {
             transition-duration: 0.01ms !important;
           }
           
-          .wave path {
+          .wave path,
+          .gloss-blob {
             animation: none !important;
+          }
+
+          .feature-card:hover,
+          .risk-card:hover {
+            transform: none !important;
           }
         }
       `}</style>
