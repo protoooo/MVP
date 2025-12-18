@@ -1565,8 +1565,8 @@ export default function Page() {
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
            PREMIUM LIGHT THEME - protocolLM
-           Isometric monochrome with subtle moss accent
-           Color Palette: Warm parchment base + Ink + Moss accent
+           Seafoam + teal stack with deep ink text
+           Color Palette: Cream seafoam base + Teal accent + Deep navy contrast
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
@@ -1574,7 +1574,7 @@ export default function Page() {
           /* Core Colors */
           --color-bg: #DDF4E7;
           --color-surface: rgba(221, 244, 231, 0.9);
-          --color-card: #EAF7F0;
+          --color-card: #DDF4E7;
           --color-border: rgba(15, 58, 99, 0.16);
           --color-border-subtle: rgba(15, 58, 99, 0.08);
           --color-border-hover: rgba(15, 58, 99, 0.28);
