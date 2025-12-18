@@ -793,12 +793,12 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
                 <div className="pricing-amount">
                   <span className={`pricing-currency ${inter.className}`}>$</span>
-                  <span className={`pricing-number ${outfit.className}`}>200</span>
+                  <span className={`pricing-number ${outfit.className}`}>100</span>
                   <span className={`pricing-period ${inter.className}`}>/month</span>
                 </div>
 
                 <p className={`pricing-annual ${inter.className}`}>
-                  or $2,000/year <span className="pricing-savings">(save $400)</span>
+                  or $1,000/year <span className="pricing-savings">(save $200)</span>
                 </p>
 
                 <div className="pricing-features">
@@ -835,7 +835,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
 
           <Reveal delay={250}>
             <p className={`pricing-comparison ${inter.className}`}>
-              Typical food safety compliance software costs $299–$599+/month per location
+              
             </p>
           </Reveal>
         </div>
