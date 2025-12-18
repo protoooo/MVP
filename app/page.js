@@ -593,9 +593,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                   <div className="hero-data-loop">
                     {knowledgeLoop.map((item, idx) => (
                       <div key={idx} className="hero-data-row">
-                        <div className="hero-data-icon">
-                          <Icons.Document />
-                        </div>
                         <div className="hero-data-text">
                           <div className={`hero-data-title-row ${inter.className}`}>{item.title}</div>
                           <div className={`hero-data-meta ${inter.className}`}>{item.tag}</div>
@@ -2323,7 +2320,7 @@ export default function Page() {
           width: 100%;
           padding: 18px;
           border-radius: 24px;
-          background: linear-gradient(160deg, rgba(255, 250, 236, 0.86), rgba(245, 236, 213, 0.78));
+          background: linear-gradient(160deg, #ffffff 0%, rgba(221, 244, 231, 0.9) 100%);
           border: 1px solid var(--color-border);
           box-shadow: var(--shadow-glass);
           position: relative;
@@ -2376,7 +2373,7 @@ export default function Page() {
           overflow: hidden;
           border-radius: 18px;
           border: 1px solid var(--color-border);
-          background: linear-gradient(180deg, rgba(221, 244, 231, 0.86), rgba(234, 247, 240, 0.9));
+          background: linear-gradient(180deg, #ffffff 0%, rgba(221, 244, 231, 0.9) 100%);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
@@ -2393,12 +2390,12 @@ export default function Page() {
 
         .hero-data-viewport::before {
           top: 0;
-          background: linear-gradient(180deg, rgba(255, 250, 236, 0.95), transparent);
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), transparent);
         }
 
         .hero-data-viewport::after {
           bottom: 0;
-          background: linear-gradient(0deg, rgba(255, 250, 236, 0.95), transparent);
+          background: linear-gradient(0deg, rgba(255, 255, 255, 0.98), transparent);
         }
 
         .hero-data-loop {
@@ -2408,12 +2405,12 @@ export default function Page() {
           flex-direction: column;
           gap: 10px;
           padding: 12px;
-          animation: dataScroll 28s linear infinite;
+          animation: dataScroll 24s linear infinite;
         }
 
         .hero-data-row {
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: 1fr auto;
           align-items: center;
           gap: 12px;
           padding: 10px 12px;
@@ -2421,23 +2418,6 @@ export default function Page() {
           border: 1px solid var(--color-border);
           border-radius: 14px;
           box-shadow: var(--shadow-sm);
-        }
-
-        .hero-data-icon {
-          width: 32px;
-          height: 32px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 10px;
-          background: rgba(38, 102, 127, 0.12);
-          color: var(--color-text);
-          border: 1px solid var(--color-border);
-        }
-
-        .hero-data-icon svg {
-          width: 18px;
-          height: 18px;
         }
 
         .hero-data-text {
@@ -2666,7 +2646,7 @@ export default function Page() {
         .feature-card {
           position: relative;
           padding: 32px 28px;
-          background: linear-gradient(150deg, rgba(255, 250, 236, 0.85), rgba(245, 236, 213, 0.7));
+          background: linear-gradient(150deg, #ffffff 0%, rgba(221, 244, 231, 0.85) 100%);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           transition: all var(--duration-slow) var(--ease-out-expo);
@@ -2785,7 +2765,7 @@ export default function Page() {
         .risk-card {
           position: relative;
           padding: 24px 20px;
-          background: linear-gradient(160deg, rgba(255, 250, 236, 0.9), rgba(245, 236, 213, 0.76));
+          background: linear-gradient(160deg, #ffffff 0%, rgba(221, 244, 231, 0.86) 100%);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-xl);
           text-align: center;
