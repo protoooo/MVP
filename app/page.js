@@ -470,14 +470,17 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="hero-grid">
             <div className="hero-content">
               <Reveal delay={0}>
-                <h1 className={`hero-title ${outfit.className}`}>
-                  Protocol-grade compliance on a paper-clean canvas
+                <h1 className={`hero-title hero-title-animated ${outfit.className}`}>
+                  <span className="hero-title-line">Catch violations</span>
+                  <span className="hero-title-line hero-title-gradient">before the inspector</span>
                 </h1>
               </Reveal>
 
               <Reveal delay={150}>
                 <p className={`hero-description ${inter.className}`}>
-                  A monochrome, isometric console for Washtenaw operators. Upload a photo, mark issues, and hand teammates a fix list—before an inspector ever steps in.
+                  Upload photos of your kitchen and get instant AI analysis that spots potential
+                  violations before they become citations. Built specifically for Washtenaw County
+                  food code requirements.
                 </p>
               </Reveal>
 
