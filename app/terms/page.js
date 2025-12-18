@@ -134,7 +134,7 @@ export default function TermsOfService() {
             For questions about these Terms, contact:
             <br />
             <a href="mailto:hello@protocollm.org" className="text-[#2F5D8A] underline-offset-4 hover:text-[#1F4E7A] hover:underline">
-              hello@protocollm.org
+             support@protocollm.org
             </a>
           </p>
         </section>
