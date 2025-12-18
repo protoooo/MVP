@@ -6,11 +6,12 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { Outfit, Inter } from 'next/font/google'
+import { Outfit, Inter, IBM_Plex_Mono } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
 const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
+const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
@@ -19,174 +20,131 @@ const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
 const isAdmin = false
 
 const UI = {
-  pageBg: 'min-h-screen bg-[#f8f8f6] text-[#1f1f1f] relative',
+  pageBg: `min-h-screen bg-[#f6f5f2] text-[#161616] relative`,
   gridBg:
-    'pointer-events-none absolute inset-0 opacity-5 [background-image:linear-gradient(to_right,rgba(0,0,0,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.08)_1px,transparent_1px)] [background-size:42px_42px]',
+    'pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,rgba(0,0,0,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.10)_1px,transparent_1px)] [background-size:44px_44px]',
   noiseOverlay:
-    'pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-multiply [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.06),rgba(0,0,0,0.06)_1px,transparent_1px,transparent_3px)]',
+    'pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-multiply [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25),rgba(0,0,0,0.25)_1px,transparent_1px,transparent_4px)]',
+  vignette:
+    'pointer-events-none absolute inset-0 opacity-[0.45] [background-image:radial-gradient(circle_at_center,transparent_40%,rgba(0,0,0,0.05)_75%,rgba(0,0,0,0.10)_100%)]',
   container: 'relative z-10 mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-12',
-  panel: 'bg-white/90 backdrop-blur-sm border border-[#d4d4d4] rounded-[18px] shadow-sm shadow-black/5',
-  panelHeader:
-    'flex items-center justify-between px-5 py-3 border-b border-[#d4d4d4] sticky top-0 bg-white/92 backdrop-blur-sm z-10',
-  panelTitle: `${outfit.className} text-[17px] md:text-lg font-semibold tracking-tight`,
-  panelBody: 'px-5 py-4 space-y-4',
-  panelHeaderLabel: 'text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b] font-semibold',
-  buttonPrimary:
-    'inline-flex items-center justify-center gap-2 rounded-[14px] bg-[#1f1f1f] text-[#f8f8f6] px-4 py-2.5 text-sm font-semibold tracking-tight shadow-sm transition-all duration-200 ease-out disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
-  buttonSecondary:
-    'inline-flex items-center justify-center gap-2 rounded-[14px] border border-[#d4d4d4] bg-white text-[#1f1f1f] px-4 py-2.5 text-sm font-semibold tracking-tight shadow-sm transition-all duration-200 ease-out hover:border-[#bfbfbf] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f] disabled:opacity-60 disabled:cursor-not-allowed',
-  buttonGhost:
-    'inline-flex items-center justify-center gap-2 rounded-[12px] border border-transparent px-3 py-2 text-sm font-medium text-[#1f1f1f] transition-all duration-200 ease-out hover:border-[#d4d4d4] hover:bg-[#f3f3f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f] disabled:opacity-50',
+
+  // Terminal window language
+  win: 'overflow-hidden rounded-[12px] border border-[#cfcfc7] bg-[#f0f0ea] shadow-[0_1px_0_rgba(0,0,0,0.06)]',
+  winHeader:
+    'flex items-center justify-between gap-3 border-b border-[#cfcfc7] bg-[#e9e9e1] px-4 py-3',
+  winLabel: 'text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold',
+  winTitle: 'text-[13px] tracking-tight text-[#161616] font-semibold',
+  winBody: 'relative px-4 py-4',
+  scanlines:
+    'pointer-events-none absolute inset-0 opacity-[0.08] [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.55),rgba(0,0,0,0.55)_1px,transparent_1px,transparent_5px)]',
+  phosphor:
+    'pointer-events-none absolute inset-0 opacity-[0.10] [background-image:radial-gradient(circle_at_center,rgba(0,0,0,0.06),transparent_55%)] [background-size:160%]',
+  mono: plexMono.className,
+  sans: inter.className,
+  heading: outfit.className,
+
+  divider: 'h-px w-full bg-[#cfcfc7]',
+  subtleDivider: 'h-px w-full bg-[#dcdcd4]',
+
+  // Inputs/buttons as “commands”
+  cmdBtn:
+    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#bdbdb4] bg-[#f7f7f2] px-3 py-2 text-[12px] font-semibold tracking-tight text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] transition hover:bg-[#ffffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-60 disabled:cursor-not-allowed',
+  cmdBtnPrimary:
+    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-[#161616] bg-[#161616] px-3 py-2 text-[12px] font-semibold tracking-tight text-[#f6f5f2] shadow-[0_1px_0_rgba(0,0,0,0.10)] transition hover:bg-[#0f0f0f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-60 disabled:cursor-not-allowed',
+  cmdBtnGhost:
+    'inline-flex items-center justify-center gap-2 rounded-[10px] border border-transparent bg-transparent px-3 py-2 text-[12px] font-semibold tracking-tight text-[#161616] transition hover:border-[#cfcfc7] hover:bg-[#f7f7f2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616] disabled:opacity-50 disabled:cursor-not-allowed',
+
   input:
-    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-2.5 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 placeholder:text-[#8a8a8a] focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
+    'w-full rounded-[10px] border border-[#bdbdb4] bg-[#fbfbf7] px-3 py-2 text-[13px] text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] placeholder:text-[#7a7a7a] focus-visible:border-[#161616] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616]',
   textarea:
-    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-3 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 placeholder:text-[#8a8a8a] focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
-  select:
-    'w-full rounded-[14px] border border-[#d4d4d4] bg-white px-3.5 py-2.5 text-sm text-[#1f1f1f] shadow-inner shadow-black/5 focus-visible:border-[#1f1f1f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
-  pill: 'inline-flex items-center gap-2 rounded-full border border-[#d4d4d4] bg-white px-3 py-1 text-xs font-semibold text-[#1f1f1f]',
-  badge: 'inline-flex items-center rounded-full bg-[#1f1f1f] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#f8f8f6]',
-  divider: 'h-px w-full bg-[#d4d4d4]',
-  card: 'rounded-[16px] border border-[#d4d4d4] bg-white shadow-sm shadow-black/5',
-  cardHover: 'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/10',
-  focusRing: 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1f1f1f]',
+    'w-full rounded-[10px] border border-[#bdbdb4] bg-[#fbfbf7] px-3 py-2 text-[13px] text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] placeholder:text-[#7a7a7a] focus-visible:border-[#161616] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#161616]',
+
+  pill:
+    'inline-flex items-center gap-2 rounded-full border border-[#cfcfc7] bg-[#f7f7f2] px-3 py-1 text-[11px] font-semibold text-[#161616]',
+
+  statusDot: 'h-2 w-2 rounded-full bg-[#161616]',
+  statusDotDim: 'h-2 w-2 rounded-full bg-[#6a6a6a]',
 }
 
 const Icons = {
   Camera: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
-  ),
-  ArrowUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  X: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-  Check: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  LogOut: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  ),
-  Settings: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  ),
-  Plus: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  ),
-  Shield: () => (
-    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
-      <path d="M9 12l2 2 4-5" />
-    </svg>
-  ),
-  Lock: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <rect x="4" y="11" width="16" height="10" rx="2" />
-      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-  ),
-  Spark: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 2l1.6 5.2L19 9l-5.4 1.8L12 16l-1.6-5.2L5 9l5.4-1.8L12 2z" />
-      <path d="M5 14l.8 2.6L8.5 17l-2.7.9L5 20l-.8-2.1L1.5 17l2.7-.4L5 14z" />
-    </svg>
-  ),
-  ChevronDown: () => (
-    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  ArrowRight: () => (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Zap: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  ),
-  Eye: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
+      <circle cx="12" cy="13" r="3.7" />
     </svg>
   ),
   FileText: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
       <line x1="16" y1="17" x2="8" y2="17" />
     </svg>
   ),
-  CheckCircle: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
+  Shield: () => (
+    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+      <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4z" />
+      <path d="M9 12l2 2 4-5" />
     </svg>
   ),
   AlertTriangle: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
-  TrendingUp: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-      <polyline points="17 6 23 6 23 12" />
+  Check: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
-  DollarSign: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <line x1="12" y1="1" x2="12" y2="23" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+  X: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
-  Clock: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
+  Plus: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
-  Users: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  Settings: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   ),
-  Document: () => (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M9 12h6M9 16h6M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  LogOut: () => (
+    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   ),
 }
 
-function useTypewriter(lines = [], speed = 32) {
+function nowStamp() {
+  try {
+    return new Date().toISOString()
+  } catch {
+    return String(Date.now())
+  }
+}
+
+function fmtTime(ts) {
+  try {
+    const d = new Date(ts)
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return '--:--'
+  }
+}
+
+function useTypewriter(lines = [], speed = 28) {
   const [index, setIndex] = useState(0)
   const [text, setText] = useState('')
   const [done, setDone] = useState(false)
@@ -213,28 +171,43 @@ function useTypewriter(lines = [], speed = 32) {
   return { text, index, done }
 }
 
-function Panel({ label, title, actions, children, className = '' }) {
+function TerminalWindow({
+  label,
+  title,
+  right,
+  status = 'ok',
+  actions,
+  children,
+  className = '',
+  bodyClassName = '',
+}) {
+  const dotClass = status === 'dim' ? UI.statusDotDim : UI.statusDot
   return (
-    <div className={`${UI.panel} ${className}`}>
-      {(label || title || actions) && (
-        <div className={UI.panelHeader}>
-          <div className="flex flex-col gap-1">
-            {label && <span className={UI.panelHeaderLabel}>{label}</span>}
-            {title && <h3 className={UI.panelTitle}>{title}</h3>}
-          </div>
+    <div className={`${UI.win} ${className}`}>
+      <div className={`${UI.winHeader} ${UI.mono}`}>
+        <div className="min-w-0">
+          {label && <div className={UI.winLabel}>{label}</div>}
+          {title && <div className={UI.winTitle}>{title}</div>}
+        </div>
+        <div className="flex items-center gap-3">
+          {right && <div className="hidden sm:block text-[12px] text-[#575757]">{right}</div>}
+          <span className={dotClass} />
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
-      )}
-      <div className={UI.panelBody}>{children}</div>
+      </div>
+      <div className={`${UI.winBody} ${bodyClassName}`}>
+        <div className={UI.phosphor} />
+        <div className={UI.scanlines} />
+        <div className="relative">{children}</div>
+      </div>
     </div>
   )
 }
 
 function MonoButton({ variant = 'primary', className = '', children, ...props }) {
-  const base =
-    variant === 'ghost' ? UI.buttonGhost : variant === 'secondary' ? UI.buttonSecondary : UI.buttonPrimary
+  const base = variant === 'ghost' ? UI.cmdBtnGhost : variant === 'secondary' ? UI.cmdBtn : UI.cmdBtnPrimary
   return (
-    <button className={`${base} ${className}`} {...props}>
+    <button className={`${base} ${UI.mono} ${className}`} {...props}>
       {children}
     </button>
   )
@@ -242,8 +215,8 @@ function MonoButton({ variant = 'primary', className = '', children, ...props })
 
 const MonoInput = forwardRef(function MonoInput({ component = 'input', className = '', ...props }, ref) {
   const Comp = component === 'textarea' ? 'textarea' : component === 'select' ? 'select' : 'input'
-  const base = component === 'textarea' ? UI.textarea : component === 'select' ? UI.select : UI.input
-  return <Comp ref={ref} className={`${base} ${className}`} {...props} />
+  const base = component === 'textarea' ? UI.textarea : UI.input
+  return <Comp ref={ref} className={`${base} ${UI.mono} ${className}`} {...props} />
 })
 
 function AppShell({ children }) {
@@ -251,6 +224,7 @@ function AppShell({ children }) {
     <div className={UI.pageBg}>
       <div className={UI.gridBg} />
       <div className={UI.noiseOverlay} />
+      <div className={UI.vignette} />
       <div className={UI.container}>{children}</div>
     </div>
   )
@@ -262,7 +236,7 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   const [phase, setPhase] = useState('Starting…')
   const refs = useRef({ pct: 0, timer: null, startedAt: 0, hideTimer: null })
   const cfg = useMemo(() => {
-    return mode === 'vision' ? { baseCap: 88, finalCap: 94, k: 0.03 } : { baseCap: 90, finalCap: 96, k: 0.04 }
+    return mode === 'vision' ? { baseCap: 86, finalCap: 93, k: 0.028 } : { baseCap: 90, finalCap: 96, k: 0.036 }
   }, [mode])
 
   useEffect(() => {
@@ -274,22 +248,22 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
     if (active) {
       setVisible(true)
       setProgress(0)
-      setPhase(mode === 'vision' ? 'Uploading image…' : 'Sending…')
+      setPhase(mode === 'vision' ? 'IMG → PIPELINE' : 'TX → PIPELINE')
       refs.current.pct = 0
       refs.current.startedAt = Date.now()
       if (refs.current.timer) clearInterval(refs.current.timer)
       refs.current.timer = setInterval(() => {
         const elapsed = (Date.now() - refs.current.startedAt) / 1000
-        const cap = elapsed < 1.5 ? cfg.baseCap - 8 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
+        const cap = elapsed < 1.4 ? cfg.baseCap - 10 : elapsed < 4 ? cfg.baseCap : cfg.finalCap
         const next = refs.current.pct + (cap - refs.current.pct) * cfg.k
         refs.current.pct = Math.max(refs.current.pct, next)
         const pctInt = Math.min(99, Math.floor(refs.current.pct))
         setProgress(pctInt)
-        if (pctInt < 15) setPhase(mode === 'vision' ? 'Analyzing image…' : 'Reading input…')
-        else if (pctInt < 45) setPhase('Collecting references…')
-        else if (pctInt < 70) setPhase('Cross-checking rules…')
-        else if (pctInt < 90) setPhase('Composing response…')
-        else setPhase('Finalizing…')
+        if (pctInt < 15) setPhase(mode === 'vision' ? 'HASHING FRAME…' : 'READING INPUT…')
+        else if (pctInt < 45) setPhase('COLLECTING REFERENCES…')
+        else if (pctInt < 70) setPhase('CROSS-CHECKING RULESET…')
+        else if (pctInt < 90) setPhase('COMPOSING RESPONSE…')
+        else setPhase('FINALIZING…')
       }, 120)
       return () => {
         if (refs.current.timer) clearInterval(refs.current.timer)
@@ -301,11 +275,11 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
       if (refs.current.timer) clearInterval(refs.current.timer)
       refs.current.timer = null
       setProgress(100)
-      setPhase('Done')
+      setPhase('DONE')
       refs.current.hideTimer = setTimeout(() => {
         setVisible(false)
         setProgress(0)
-      }, 320)
+      }, 360)
       return () => {
         if (refs.current.hideTimer) clearTimeout(refs.current.hideTimer)
         refs.current.hideTimer = null
@@ -317,89 +291,71 @@ function SmartProgress({ active, mode = 'text', requestKey = 0 }) {
   if (!visible) return null
 
   return (
-    <div className="space-y-2 rounded-[14px] border border-[#d4d4d4] bg-white px-4 py-3 shadow-sm">
-      <div className="flex items-center justify-between text-xs text-[#6b6b6b]">
-        <span className="font-semibold">{phase}</span>
-        <span className="font-semibold">{progress}%</span>
-      </div>
-      <div className="h-1.5 w-full rounded-full bg-[#ececea]">
-        <div className="h-1.5 rounded-full bg-[#1f1f1f] transition-all" style={{ width: `${progress}%` }} />
-      </div>
-    </div>
-  )
-}
-
-function MessageBlock({ role, content, sources, index = 0 }) {
-  const isUser = role === 'user'
-  const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-[#f5f5f2]'
-  return (
-    <div className={`${UI.card} ${UI.cardHover} ${rowBg} border-[#d4d4d4] p-4`}>
-      <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
-        <span className="flex items-center gap-2">
-          <span className={UI.badge}>{isUser ? 'INPUT' : 'PROTOCOL'}</span>
-        </span>
-      </div>
-      <div className={`max-w-none text-sm leading-relaxed text-[#1f1f1f] ${inter.className}`}>
-        {content || (isUser ? '—' : '…')}
-      </div>
-      {!!sources?.length && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {sources.map((src, i) => (
-            <span key={i} className={`${UI.pill} text-[11px]`}>
-              {src}
-            </span>
-          ))}
+    <TerminalWindow label="Pipeline" title="Execution Progress" right={mode === 'vision' ? 'VISION' : 'TEXT'} status="dim">
+      <div className={`${UI.mono} space-y-2`}>
+        <div className="flex items-center justify-between text-[12px] text-[#575757]">
+          <span className="font-semibold">{phase}</span>
+          <span className="font-semibold">{progress}%</span>
         </div>
-      )}
-    </div>
+        <div className="h-2 w-full overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+          <div className="h-full bg-[#161616] transition-all" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+    </TerminalWindow>
   )
 }
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 text-xs text-[#6b6b6b]">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-[#1f1f1f]" />
+    <div className={`${UI.mono} flex items-center gap-2 text-[12px] text-[#575757]`}>
+      <span className="h-2 w-2 animate-pulse rounded-full bg-[#161616]" />
       <span className="h-2 w-2 animate-pulse rounded-full bg-[#3a3a3a] [animation-delay:120ms]" />
       <span className="h-2 w-2 animate-pulse rounded-full bg-[#6b6b6b] [animation-delay:240ms]" />
+      <span className="ml-1">PROCESSING…</span>
     </div>
   )
 }
 
-function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
-  const ref = useRef(null)
-  const [inView, setInView] = useState(false)
+function LogRow({ message, index }) {
+  const isUser = message.role === 'user'
+  const ts = fmtTime(message.ts || message.created_at || Date.now())
+  const bg = index % 2 === 0 ? 'bg-[#fbfbf7]' : 'bg-[#f4f4ee]'
+  const tag = isUser ? 'INPUT' : 'PROTOCOL'
+  const tagBg = isUser ? 'bg-[#161616] text-[#f6f5f2]' : 'bg-[#2a2a2a] text-[#f6f5f2]'
 
-  useEffect(() => {
-    const el = ref.current
-    if (!el || inView) return
-    const obs = new IntersectionObserver((entries) => {
-      const e = entries?.[0]
-      if (e?.isIntersecting) {
-        setInView(true)
-        obs.disconnect()
-      }
-    }, { threshold, rootMargin })
-    obs.observe(el)
-    return () => {
-      try {
-        obs.disconnect()
-      } catch {}
-    }
-  }, [inView, threshold, rootMargin])
-
-  return [ref, inView]
-}
-
-function Reveal({ children, className = '', delay = 0, direction = 'up' }) {
-  const [ref, inView] = useInViewOnce()
-  const dirClass = direction === 'left' ? 'translate-x-3' : direction === 'right' ? '-translate-x-3' : 'translate-y-3'
   return (
-    <div
-      ref={ref}
-      className={`${className} transition-all duration-600 ease-out ${inView ? 'opacity-100 translate-y-0 translate-x-0' : `opacity-0 ${dirClass}`}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
+    <div className={`overflow-hidden rounded-[10px] border border-[#cfcfc7] ${bg}`}>
+      <div className={`flex items-center justify-between gap-3 border-b border-[#dcdcd4] px-3 py-2 ${UI.mono}`}>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={`rounded-[8px] px-2 py-1 text-[11px] font-semibold tracking-tight ${tagBg}`}>{tag}</span>
+          <span className="truncate text-[12px] text-[#575757]">{isUser ? 'COMMAND/QUERY' : 'RULESET RESPONSE'}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[12px] text-[#575757]">
+          <span>{ts}</span>
+          {message.image && (
+            <span className="inline-flex items-center gap-1 rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 py-1">
+              <Icons.Camera />
+              <span className="text-[11px] font-semibold">FRAME</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="px-3 py-3">
+        <div className={`${UI.mono} whitespace-pre-wrap text-[13px] leading-6 text-[#161616]`}>
+          {message.content || (isUser ? '—' : '…')}
+        </div>
+
+        {!!message.sources?.length && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.sources.map((src, i) => (
+              <span key={i} className={UI.pill}>
+                {src}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -414,14 +370,14 @@ function BootPanel({ onComplete }) {
     'Q&A module: READY',
     'License status: TRIAL AVAILABLE',
   ]
-  const { text, index, done } = useTypewriter(bootLines, 30)
+  const { text, index, done } = useTypewriter(bootLines, 26)
   const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
     if (done) {
       const t = setTimeout(() => {
         setCollapsed(true)
-        setTimeout(() => onComplete?.(), 240)
+        setTimeout(() => onComplete?.(), 220)
       }, 520)
       return () => clearTimeout(t)
     }
@@ -431,28 +387,23 @@ function BootPanel({ onComplete }) {
   const currentLine = text
 
   return (
-    <div className={`overflow-hidden transition-all duration-600 ease-linear ${collapsed ? 'max-h-[72px] opacity-80' : 'max-h-[320px]'}`}>
-      <div className="relative rounded-[18px] border border-[#d4d4d4] bg-[#f2f2ef] shadow-inner shadow-black/5">
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.04),transparent_55%)] [background-size:160%]" />
-        <div className="absolute inset-0 pointer-events-none opacity-[0.06] [background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.6),rgba(0,0,0,0.6)_1px,transparent_1px,transparent_3px)]" />
-        <div className="relative space-y-2 px-5 py-4">
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
-            <span>System boot</span>
-            <span>Washtenaw profile</span>
-          </div>
-          <div className="space-y-1 font-mono text-[13px] leading-6 text-[#1f1f1f]">
-            {history.map((line, i) => (
-              <div key={i}>{line}</div>
-            ))}
-            {!collapsed && (
-              <div className="flex items-center gap-2">
-                <span>{currentLine}</span>
-                <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-[#1f1f1f]" />
-              </div>
-            )}
-          </div>
+    <div
+      className={`overflow-hidden transition-all ease-linear ${collapsed ? 'max-h-[78px] opacity-85' : 'max-h-[360px]'}`}
+      style={{ transitionDuration: '600ms' }}
+    >
+      <TerminalWindow label="System boot" title="[ protocolLM v1.0 ]" right="WASHTENAW PROFILE" status="dim">
+        <div className={`${UI.mono} space-y-1 text-[13px] leading-6`}>
+          {history.map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+          {!collapsed && (
+            <div className="flex items-center gap-2">
+              <span>{currentLine}</span>
+              <span className="inline-block h-4 w-2 animate-pulse rounded-sm bg-[#161616]" />
+            </div>
+          )}
         </div>
-      </div>
+      </TerminalWindow>
     </div>
   )
 }
@@ -461,20 +412,11 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   const [unlocked, setUnlocked] = useState(false)
 
   const modules = [
-    { label: 'Visual Scan', desc: 'Attach kitchen frames for violation detection.', icon: <Icons.Eye /> },
-    { label: 'Compliance Q&A', desc: 'Direct questions to the ruleset without jargon.', icon: <Icons.FileText /> },
-    { label: 'Local Enforcement Data', desc: 'Cross-reference Washtenaw actions in-line.', icon: <Icons.AlertTriangle /> },
-    { label: 'Site License', desc: 'Single-location license with unlimited usage.', icon: <Icons.Shield /> },
+    { code: 'VIS', label: 'Visual Scan', desc: 'Attach kitchen frames for violation detection.', icon: <Icons.Camera /> },
+    { code: 'QNA', label: 'Compliance Q&A', desc: 'Direct questions to the ruleset without jargon.', icon: <Icons.FileText /> },
+    { code: 'LOC', label: 'Local Enforcement Data', desc: 'Cross-reference Washtenaw actions inline.', icon: <Icons.AlertTriangle /> },
+    { code: 'LIC', label: 'Site License', desc: 'Single-location license with unlimited usage.', icon: <Icons.Shield /> },
   ]
-
-  const systemIntro = (
-    <div className={`${UI.card} border-[#d4d4d4] bg-[#fdfdfb] p-5 shadow-sm`}>
-      <div className={`${UI.panelHeaderLabel} mb-2`}>System message</div>
-      <h2 className={`${outfit.className} text-xl font-semibold tracking-tight text-[#1f1f1f]`}>I’m protocolLM.</h2>
-      <p className={`${inter.className} mt-2 text-sm text-[#1f1f1f]`}>I help food service teams identify violations before inspectors do.</p>
-      <p className={`${inter.className} text-sm text-[#6b6b6b]`}>Configured for Washtenaw County. Built to run, not to sell.</p>
-    </div>
-  )
 
   return (
     <AppShell>
@@ -482,74 +424,144 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <BootPanel onComplete={() => setUnlocked(true)} />
 
         {unlocked && (
-          <div className="space-y-6 rounded-[18px] border border-[#d4d4d4] bg-[#f4f4f2] p-5 shadow-inner shadow-black/5 transition-all duration-500 ease-linear">
-            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
-              <span>Interface unlocked</span>
-              <span>protocolLM shell</span>
-            </div>
-
-            {systemIntro}
-
-            <div className="grid gap-3 md:grid-cols-2">
-              {modules.map((m) => (
-                <div key={m.label} className={`${UI.card} border-[#d4d4d4] bg-[#fdfdfb] p-4 shadow-inner shadow-black/5`}>
-                  <div className="mb-3 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">
-                    <span className="flex items-center gap-2 text-[#1f1f1f]">
-                      <span className="text-sm">{m.icon}</span>
-                      <span>{m.label}</span>
-                    </span>
-                    <span className="h-2 w-2 rounded-full bg-[#1f1f1f]" />
-                  </div>
-                  <p className={`${inter.className} text-sm text-[#1f1f1f]`}>{m.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-              <Panel label="License" title="Site License" className="shadow-none">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-[#fdfdfb] shadow-inner shadow-black/5`}>
-                    <div className={`${UI.panelHeaderLabel} mb-1`}>Price</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className={`${outfit.className} text-3xl font-semibold text-[#1f1f1f]`}>$100</span>
-                      <span className={`${inter.className} text-sm text-[#6b6b6b]`}>per month</span>
+          <div className="space-y-6">
+            <TerminalWindow label="Interface" title="Unlocked" right="protocolLM shell">
+              <div className="space-y-4">
+                <div className={`rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] ${UI.mono}`}>
+                  <div className="flex items-center justify-between border-b border-[#dcdcd4] px-3 py-2">
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                      System message
                     </div>
-                    <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Annual: $1,000 (save $200)</p>
+                    <span className={UI.statusDot} />
                   </div>
-                  <div className={`${UI.card} p-4 border-[#d4d4d4] bg-white`}>
-                    <div className={`${UI.panelHeaderLabel} mb-1`}>Status</div>
-                    <p className={`${inter.className} text-sm text-[#1f1f1f]`}>Trial available · Unlimited usage for one location.</p>
+                  <div className="px-3 py-3">
+                    <div className={`${UI.heading} text-[18px] font-semibold tracking-tight text-[#161616]`}>
+                      I’m protocolLM.
+                    </div>
+                    <div className="mt-1 text-[13px] leading-6 text-[#161616]">
+                      I help food service teams identify violations before inspectors do.
+                    </div>
+                    <div className="mt-1 text-[13px] leading-6 text-[#575757]">
+                      Configured for Washtenaw County. Built to run, not to sell.
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2 text-sm text-[#1f1f1f]">
-                  {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific references', 'Team access included'].map((item) => (
-                    <span key={item} className={UI.pill}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <MonoButton onClick={onShowPricing}>Activate license</MonoButton>
-                  <MonoButton variant="secondary" onClick={onShowAuth}>Access console</MonoButton>
-                </div>
-              </Panel>
 
-              <Panel label="Documentation" title="Scope" className="shadow-none">
-                <div className="space-y-2 text-sm text-[#1f1f1f]">
-                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
-                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Local</span>
-                    <span className="text-[#1f1f1f]">Washtenaw County enforcement actions</span>
+                <div className={`overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] ${UI.mono}`}>
+                  <div className="flex items-center justify-between border-b border-[#dcdcd4] px-3 py-2">
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                      Module directory
+                    </div>
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Status</div>
                   </div>
-                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
-                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Code</span>
-                    <span className="text-[#1f1f1f]">Michigan Modified Food Code + FDA 2022</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
-                    <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Vision</span>
-                    <span className="text-[#1f1f1f]">Line, prep, dish, storage stations</span>
+                  <div className="divide-y divide-[#e1e1da]">
+                    {modules.map((m) => (
+                      <div key={m.code} className="flex items-start justify-between gap-4 px-3 py-3">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <div className="mt-[2px] text-[#161616]">{m.icon}</div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 py-1 text-[11px] font-semibold">
+                                {m.code}
+                              </span>
+                              <div className="truncate text-[13px] font-semibold text-[#161616]">{m.label}</div>
+                            </div>
+                            <div className="mt-1 text-[12px] leading-5 text-[#575757]">{m.desc}</div>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 pt-1 text-[12px] text-[#575757]">
+                          <span className="h-2 w-2 rounded-full bg-[#161616]" />
+                          READY
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </Panel>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <TerminalWindow label="License" title="Site License" right="single location" status="dim">
+                    <div className={`${UI.mono} space-y-3`}>
+                      <div className="overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+                        <div className="grid grid-cols-3 border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                          <div>Field</div>
+                          <div>Value</div>
+                          <div className="text-right">Notes</div>
+                        </div>
+                        <div className="divide-y divide-[#e1e1da] text-[12px]">
+                          <div className="grid grid-cols-3 px-3 py-2">
+                            <div className="text-[#575757]">PRICE</div>
+                            <div className="font-semibold text-[#161616]">$100 / month</div>
+                            <div className="text-right text-[#575757]">Annual: $1,000</div>
+                          </div>
+                          <div className="grid grid-cols-3 px-3 py-2">
+                            <div className="text-[#575757]">TRIAL</div>
+                            <div className="font-semibold text-[#161616]">7 days</div>
+                            <div className="text-right text-[#575757]">cancel anytime</div>
+                          </div>
+                          <div className="grid grid-cols-3 px-3 py-2">
+                            <div className="text-[#575757]">USAGE</div>
+                            <div className="font-semibold text-[#161616]">Unlimited</div>
+                            <div className="text-right text-[#575757]">text + image</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw references', 'Team access'].map((t) => (
+                          <span key={t} className={UI.pill}>
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <MonoButton onClick={onShowPricing}>
+                          <Icons.Shield /> Activate license
+                        </MonoButton>
+                        <MonoButton variant="secondary" onClick={onShowAuth}>
+                          Access console
+                        </MonoButton>
+                      </div>
+                    </div>
+                  </TerminalWindow>
+
+                  <TerminalWindow label="Documentation" title="Scope" right="ruleset map" status="dim">
+                    <div className={`${UI.mono} space-y-2 text-[12px]`}>
+                      {[
+                        ['LOCAL', 'Washtenaw County enforcement actions'],
+                        ['CODE', 'Michigan Modified Food Code + FDA 2022'],
+                        ['VISION', 'Line, prep, dish, storage stations'],
+                      ].map(([k, v]) => (
+                        <div
+                          key={k}
+                          className="flex items-center justify-between gap-3 rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] px-3 py-2"
+                        >
+                          <span className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">{k}</span>
+                          <span className="text-right font-semibold text-[#161616]">{v}</span>
+                        </div>
+                      ))}
+
+                      <div className="pt-2 text-[12px] leading-5 text-[#575757]">
+                        Tip: Try <span className="font-semibold text-[#161616]">Visual Scan</span> for station photos (coolers, prep tables, dish).
+                      </div>
+                    </div>
+                  </TerminalWindow>
+                </div>
+              </div>
+            </TerminalWindow>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className={`${UI.mono} text-[12px] text-[#575757]`}>
+                <span className="font-semibold text-[#161616]">protocolLM</span> · Washtenaw profile · v1.0
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link className={`${UI.mono} text-[12px] font-semibold text-[#161616] underline decoration-[#c0c0b8]`} href="/privacy">
+                  Privacy
+                </Link>
+                <Link className={`${UI.mono} text-[12px] font-semibold text-[#161616] underline decoration-[#c0c0b8]`} href="/terms">
+                  Terms
+                </Link>
+              </div>
             </div>
           </div>
         )}
@@ -648,107 +660,115 @@ function AuthModal({ isOpen, onClose, initialMode = 'signin' }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1f1f1f]/40 px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-[18px] border border-[#d4d4d4] bg-white shadow-2xl shadow-black/10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between px-6 pt-6">
-          <div>
-            <div className={UI.panelHeaderLabel}>Access</div>
-            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>
-              {mode === 'signin' && 'Sign in'}
-              {mode === 'signup' && 'Create account'}
-              {mode === 'reset' && 'Reset password'}
-            </h2>
-            <p className={`${inter.className} mt-1 text-sm text-[#6b6b6b]`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f0f0f]/40 px-4" onClick={onClose}>
+      <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <TerminalWindow
+          label="Access"
+          title={
+            mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Reset password' : 'Access'
+          }
+          right="protocolLM shell"
+          actions={
+            <button onClick={onClose} className={`${UI.cmdBtnGhost} p-2`} aria-label="Close">
+              <Icons.X />
+            </button>
+          }
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className={`${UI.mono} text-[12px] text-[#575757]`}>
               {mode === 'signin' && 'Enter credentials to continue.'}
               {mode === 'signup' && 'Start your 7-day trial.'}
               {mode === 'reset' && 'We will email you a reset link.'}
-            </p>
-          </div>
-          <button onClick={onClose} className={`${UI.buttonGhost} p-2`}>
-            <Icons.X />
-          </button>
-        </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
-          <div className="space-y-2">
-            <label className={`${UI.panelHeaderLabel} block`}>Email</label>
-            <MonoInput
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@restaurant.com"
-              required
-              autoComplete="email"
-            />
-            <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Use the address tied to your location.</p>
-          </div>
-
-          {mode !== 'reset' && (
             <div className="space-y-2">
-              <label className={`${UI.panelHeaderLabel} block`}>Password</label>
-              <div className="relative">
-                <MonoInput
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-xs font-semibold text-[#6b6b6b]"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
+              <label className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold block`}>Email</label>
+              <MonoInput
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@restaurant.com"
+                required
+                autoComplete="email"
+              />
+              <div className={`${UI.mono} text-[11px] text-[#575757]`}>Use the address tied to your location.</div>
+            </div>
+
+            {mode !== 'reset' && (
+              <div className="space-y-2">
+                <label className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold block`}>
+                  Password
+                </label>
+                <div className="relative">
+                  <MonoInput
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    className="pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`${UI.mono} absolute inset-y-0 right-2 my-1 rounded-[8px] border border-[#cfcfc7] bg-[#f7f7f2] px-2 text-[11px] font-semibold text-[#161616]`}
+                  >
+                    {showPassword ? 'HIDE' : 'SHOW'}
+                  </button>
+                </div>
+                <div className={`${UI.mono} text-[11px] text-[#575757]`}>Minimize reuse to keep access secure.</div>
               </div>
-              <p className={`${inter.className} text-xs text-[#6b6b6b]`}>Minimize reuse to keep access secure.</p>
-            </div>
-          )}
+            )}
 
-          <MonoButton type="submit" disabled={loading || !isLoaded} className="w-full justify-center py-3">
-            {loading && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />}<span>
-              {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
-            </span>
-          </MonoButton>
+            <MonoButton type="submit" disabled={loading || !isLoaded} className="w-full justify-center py-3">
+              {loading && <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#f6f5f2]" />}
+              <span>
+                {mode === 'signin' ? 'EXECUTE SIGN-IN' : mode === 'signup' ? 'CREATE ACCOUNT' : 'SEND RESET LINK'}
+              </span>
+            </MonoButton>
 
-          {message && (
-            <div className={`flex items-center gap-2 rounded-[14px] border px-3 py-2 text-sm ${messageKind === 'err' ? 'border-[#d4d4d4] bg-[#f5f5f2] text-[#8a0000]' : 'border-[#d4d4d4] bg-white text-[#1f1f1f]'}`}>
-              <span>{messageKind === 'err' ? <Icons.AlertTriangle /> : <Icons.Check />}</span>
-              <span className={inter.className}>{message}</span>
-            </div>
-          )}
+            {message && (
+              <div
+                className={`rounded-[10px] border px-3 py-2 ${UI.mono} text-[12px] ${
+                  messageKind === 'err' ? 'border-[#cfcfc7] bg-[#f4f4ee] text-[#8a0000]' : 'border-[#cfcfc7] bg-[#fbfbf7] text-[#161616]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>{messageKind === 'err' ? <Icons.AlertTriangle /> : <Icons.Check />}</span>
+                  <span>{message}</span>
+                </div>
+              </div>
+            )}
 
-          <div className="flex flex-wrap gap-3 text-sm text-[#1f1f1f]">
-            {mode === 'signin' && (
-              <>
-                <button type="button" onClick={() => setMode('reset')} className={`${UI.buttonGhost} px-0 py-0`}>
-                  Forgot password?
+            <div className={`${UI.mono} flex flex-wrap gap-3 text-[12px]`}>
+              {mode === 'signin' && (
+                <>
+                  <button type="button" onClick={() => setMode('reset')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
+                    FORGOT PASSWORD?
+                  </button>
+                  <button type="button" onClick={() => setMode('signup')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
+                    NEED AN ACCOUNT? <span className="font-semibold">CREATE</span>
+                  </button>
+                </>
+              )}
+              {mode === 'signup' && (
+                <button type="button" onClick={() => setMode('signin')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
+                  ALREADY HAVE AN ACCOUNT? <span className="font-semibold">SIGN IN</span>
                 </button>
-                <button type="button" onClick={() => setMode('signup')} className={`${UI.buttonGhost} px-0 py-0`}>
-                  Need an account? <span className="font-semibold">Create account</span>
+              )}
+              {mode === 'reset' && (
+                <button type="button" onClick={() => setMode('signin')} className={`${UI.cmdBtnGhost} px-0 py-0`}>
+                  ← BACK TO SIGN IN
                 </button>
-              </>
-            )}
-            {mode === 'signup' && (
-              <button type="button" onClick={() => setMode('signin')} className={`${UI.buttonGhost} px-0 py-0`}>
-                Already have an account? <span className="font-semibold">Sign in</span>
-              </button>
-            )}
-            {mode === 'reset' && (
-              <button type="button" onClick={() => setMode('signin')} className={`${UI.buttonGhost} px-0 py-0`}>
-                ← Back to sign in
-              </button>
-            )}
-          </div>
-        </form>
-        <div className="px-6 pb-5">
-          <RecaptchaBadge />
-        </div>
+              )}
+            </div>
+
+            <div className="pt-2">
+              <RecaptchaBadge />
+            </div>
+          </form>
+        </TerminalWindow>
       </div>
     </div>
   )
@@ -758,53 +778,70 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1f1f1f]/40 px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-[18px] border border-[#d4d4d4] bg-white shadow-2xl shadow-black/10"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between px-6 pt-6">
-          <div>
-            <div className={UI.panelHeaderLabel}>Site License</div>
-            <h2 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>protocolLM Access</h2>
-            <p className={`${inter.className} mt-1 text-sm text-[#6b6b6b]`}>
-              Single-location license. Unlimited text and image sessions.
-            </p>
-          </div>
-          <button onClick={onClose} className={`${UI.buttonGhost} p-2`} aria-label="Close">
-            <Icons.X />
-          </button>
-        </div>
-
-        <div className="space-y-4 px-6 pb-6 pt-4">
-          <div className="flex items-end gap-2 text-[#1f1f1f]">
-            <div className={`${outfit.className} text-3xl font-semibold`}>$100</div>
-            <div className={`${inter.className} text-sm text-[#6b6b6b]`}>/ month</div>
-          </div>
-          <p className={`${inter.className} text-sm text-[#6b6b6b]`}>Annual: $1,000 (save $200).</p>
-          <div className="space-y-2">
-            {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific guidance', 'Full team access'].map((f) => (
-              <div key={f} className="flex items-center gap-2 text-sm text-[#1f1f1f]">
-                <Icons.Check />
-                <span className={inter.className}>{f}</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f0f0f]/40 px-4" onClick={onClose}>
+      <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <TerminalWindow
+          label="Site license"
+          title="protocolLM Access"
+          right="single location"
+          actions={
+            <button onClick={onClose} className={`${UI.cmdBtnGhost} p-2`} aria-label="Close">
+              <Icons.X />
+            </button>
+          }
+        >
+          <div className={`${UI.mono} space-y-4`}>
+            <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-3">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Pricing</div>
+              <div className="mt-2 flex items-end gap-3">
+                <div className={`${UI.heading} text-3xl font-semibold tracking-tight text-[#161616]`}>$100</div>
+                <div className="pb-1 text-[12px] text-[#575757]">/ month</div>
               </div>
-            ))}
+              <div className="mt-1 text-[12px] text-[#575757]">Annual: $1,000 (save $200).</div>
+            </div>
+
+            <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-3">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">Includes</div>
+              <div className="mt-2 space-y-2 text-[12px] text-[#161616]">
+                {['Unlimited photo checks', 'Unlimited questions', 'Washtenaw-specific guidance', 'Full team access'].map((f) => (
+                  <div key={f} className="flex items-center gap-2">
+                    <Icons.Check />
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <MonoButton
+                onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')}
+                disabled={!!loading}
+                className="w-full justify-center py-3"
+              >
+                {loading === 'monthly' && (
+                  <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#f6f5f2]" />
+                )}
+                ACTIVATE MONTHLY
+              </MonoButton>
+
+              <MonoButton
+                variant="secondary"
+                onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
+                disabled={!!loading}
+                className="w-full justify-center py-3"
+              >
+                {loading === 'annual' && (
+                  <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#161616]" />
+                )}
+                START TRIAL / ANNUAL
+              </MonoButton>
+            </div>
+
+            <div className="text-[11px] text-[#575757]">
+              7-day free trial · Cancel anytime · One license per location
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <MonoButton onClick={() => onCheckout(MONTHLY_PRICE, 'monthly')} disabled={!!loading} className="w-full justify-center py-3 text-base">
-              {loading === 'monthly' && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />} Activate license
-            </MonoButton>
-            <MonoButton
-              variant="secondary"
-              onClick={() => onCheckout(ANNUAL_PRICE, 'annual')}
-              disabled={!!loading}
-              className="w-full justify-center py-3 text-base"
-            >
-              {loading === 'annual' && <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />} Start trial
-            </MonoButton>
-          </div>
-          <p className={`${inter.className} text-xs text-[#6b6b6b]`}>7-day free trial · Cancel anytime · One license per location</p>
-        </div>
+        </TerminalWindow>
       </div>
     </div>
   )
@@ -863,7 +900,7 @@ export default function Page() {
   const handleScroll = () => {
     const el = scrollRef.current
     if (!el) return
-    const threshold = 120
+    const threshold = 140
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
     shouldAutoScrollRef.current = distanceFromBottom < threshold
   }
@@ -1050,7 +1087,8 @@ export default function Page() {
     try {
       loadingToast = document.createElement('div')
       loadingToast.textContent = 'Opening billing portal...'
-      loadingToast.className = 'fixed top-4 right-4 bg-[#1f1f1f] text-[#f8f8f6] px-4 py-2 rounded-lg z-[9999]'
+      loadingToast.className =
+        'fixed top-4 right-4 bg-[#161616] text-[#f6f5f2] px-4 py-2 rounded-[10px] z-[9999] font-mono text-[12px]'
       document.body.appendChild(loadingToast)
 
       const { data } = await supabase.auth.getSession()
@@ -1113,8 +1151,10 @@ export default function Page() {
     setSendMode(image ? 'vision' : 'text')
     setSendKey((k) => k + 1)
 
-    const newUserMessage = { role: 'user', content: question, image }
-    setMessages((prev) => [...prev, newUserMessage, { role: 'assistant', content: '' }])
+    const userMsg = { role: 'user', content: question, image, ts: nowStamp() }
+    const placeholder = { role: 'assistant', content: '', ts: nowStamp() }
+
+    setMessages((prev) => [...prev, userMsg, placeholder])
     setInput('')
     setSelectedImage(null)
     setIsSending(true)
@@ -1145,7 +1185,7 @@ export default function Page() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, newUserMessage],
+          messages: [...messages, userMsg],
           image,
           chatId: activeChatId,
         }),
@@ -1170,14 +1210,14 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.', ts: updated[updated.length - 1]?.ts || nowStamp() }
         return updated
       })
     } catch (error) {
       console.error('Chat error:', error)
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}` }
+        updated[updated.length - 1] = { role: 'assistant', content: `Error: ${error.message}`, ts: updated[updated.length - 1]?.ts || nowStamp() }
         return updated
       })
     } finally {
@@ -1202,12 +1242,19 @@ export default function Page() {
     setTimeout(() => handleSend(), 10)
   }
 
+  const onCommandKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f8f8f6] text-[#1f1f1f]">
-        <div className="flex items-center gap-3 rounded-[14px] border border-[#d4d4d4] bg-white px-4 py-3 shadow-sm">
-          <span className="h-4 w-4 animate-spin rounded-full border border-[#d4d4d4] border-t-[#1f1f1f]" />
-          <span className={`${inter.className} text-sm`}>Loading protocolLM…</span>
+      <div className="flex min-h-screen items-center justify-center bg-[#f6f5f2] text-[#161616]">
+        <div className={`flex items-center gap-3 rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] px-4 py-3 ${UI.mono}`}>
+          <span className="h-4 w-4 animate-spin rounded-full border border-[#cfcfc7] border-t-[#161616]" />
+          <span className="text-[12px] font-semibold">LOADING protocolLM…</span>
         </div>
       </div>
     )
@@ -1218,160 +1265,254 @@ export default function Page() {
       <>
         <LandingPage onShowPricing={() => setShowPricingModal(true)} onShowAuth={() => setShowAuthModal(true)} />
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-        <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+        <PricingModal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          onCheckout={handleCheckout}
+          loading={checkoutLoading}
+        />
       </>
     )
   }
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between pb-6">
-        <div>
-          <div className={UI.panelHeaderLabel}>Active Session</div>
-          <h1 className={`${outfit.className} text-2xl font-semibold tracking-tight text-[#1f1f1f]`}>protocolLM Session Console</h1>
-        </div>
-        <div className="flex items-center gap-3" ref={userMenuRef}>
-          <MonoButton variant="secondary" onClick={handleNewChat}>
-            <Icons.Plus /> New session
-          </MonoButton>
-          <div className="relative">
-            <button
-              onClick={() => setShowUserMenu((v) => !v)}
-              className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#d4d4d4] bg-white text-sm font-semibold text-[#1f1f1f] shadow-sm"
-            >
-              {session?.user?.email?.slice(0, 2)?.toUpperCase() || 'ME'}
-            </button>
-            {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-56 rounded-[14px] border border-[#d4d4d4] bg-white shadow-lg">
-                <div className="px-4 py-3">
-                  <div className={`${inter.className} text-sm font-semibold text-[#1f1f1f]`}>{session?.user?.email}</div>
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-[#6b6b6b]">Licensed</div>
-                </div>
-                <div className={UI.divider} />
-                <button onClick={handleManageBilling} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#1f1f1f] hover:bg-[#f5f5f2]">
-                  <Icons.Settings /> Manage billing
-                </button>
-                <button onClick={handleSignOut} className="flex w-full items-center gap-2 px-4 py-2 text-sm text-[#1f1f1f] hover:bg-[#f5f5f2]">
-                  <Icons.LogOut /> Sign out
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <div className="space-y-6">
+        <TerminalWindow
+          label="Active session"
+          title="protocolLM Session Console"
+          right="Washtenaw profile"
+          actions={
+            <div className="flex items-center gap-2" ref={userMenuRef}>
+              <MonoButton variant="secondary" onClick={handleNewChat}>
+                <Icons.Plus /> NEW
+              </MonoButton>
 
-      <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
-        <Panel
-          label="Context"
-          title="Controls"
-          actions={<MonoButton variant="ghost" onClick={() => setShowPricingModal(true)} className="text-xs">License</MonoButton>}
-          className="h-fit lg:sticky lg:top-10"
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu((v) => !v)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] text-[12px] font-semibold text-[#161616] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] ${UI.mono}`}
+                >
+                  {(session?.user?.email?.slice(0, 2) || 'ME').toUpperCase()}
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-[12px] border border-[#cfcfc7] bg-[#fbfbf7] shadow-lg">
+                    <div className="px-4 py-3">
+                      <div className={`${UI.mono} text-[12px] font-semibold text-[#161616]`}>{session?.user?.email}</div>
+                      <div className={`${UI.mono} text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold`}>LICENSED</div>
+                    </div>
+                    <div className={UI.divider} />
+                    <button
+                      onClick={handleManageBilling}
+                      className={`flex w-full items-center gap-2 px-4 py-2 text-[12px] text-[#161616] hover:bg-[#f4f4ee] ${UI.mono}`}
+                    >
+                      <Icons.Settings /> MANAGE BILLING
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className={`flex w-full items-center gap-2 px-4 py-2 text-[12px] text-[#161616] hover:bg-[#f4f4ee] ${UI.mono}`}
+                    >
+                      <Icons.LogOut /> SIGN OUT
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          }
         >
-          <div className="space-y-3 text-sm text-[#1f1f1f]">
-            <div className="flex items-center justify-between rounded-[12px] border border-[#d4d4d4] bg-[#f5f5f2] px-3 py-2">
-              <span className={`${inter.className} text-xs font-semibold uppercase tracking-[0.18em] text-[#6b6b6b]`}>Status</span>
-              <span className={UI.pill}>Session attached</span>
-            </div>
-            <div className="space-y-2">
-              <div className={UI.panelHeaderLabel}>Commands</div>
-              <div className="flex flex-wrap gap-2">
-                {['Show Washtenaw violation thresholds', 'Cooling check for soups', 'Cross-contact checklist', 'Temp log reminder'].map((item) => (
-                  <MonoButton key={item} variant="ghost" onClick={() => sendExample(item)} className="border border-[#d4d4d4] text-xs">
-                    {item}
-                  </MonoButton>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className={UI.panelHeaderLabel}>Modes</div>
-              <div className="flex gap-2">
-                <span className={UI.pill}>Text</span>
-                <span className={UI.pill}>Vision</span>
-              </div>
-            </div>
-          </div>
-        </Panel>
-
-        <Panel label="Session" title="Log">
-          <div className="flex flex-col gap-4">
-            <div
-              ref={scrollRef}
-              onScroll={handleScroll}
-              className="max-h-[55vh] min-h-[260px] overflow-y-auto space-y-3 pr-1"
+          <div className="grid gap-6 lg:grid-cols-[340px,1fr]">
+            <TerminalWindow
+              label="Context buffer"
+              title="Controls"
+              right={`CHAT_ID: ${currentChatId ? String(currentChatId).slice(0, 8) : '—'}`}
+              status="dim"
+              className="h-fit lg:sticky lg:top-10"
+              actions={
+                <MonoButton variant="ghost" onClick={() => setShowPricingModal(true)} className="text-[11px]">
+                  LICENSE
+                </MonoButton>
+              }
             >
-              {messages.length === 0 && (
-                <div className={`${UI.card} border-dashed border-[#d4d4d4] bg-[#f5f5f2] p-5`}>
-                  <div className={`${UI.panelHeaderLabel} mb-2`}>Session idle</div>
-                  <p className={`${inter.className} text-sm text-[#1f1f1f]`}>Use a command to begin.</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      'List likely criticals from this walk-in photo',
-                      'Provide holding temps for hot bar',
-                      'Draft inspection prep checklist',
-                    ].map((p) => (
-                      <MonoButton key={p} variant="ghost" onClick={() => sendExample(p)} className="border border-[#d4d4d4] text-xs">
-                        {p}
-                      </MonoButton>
-                    ))}
+              <div className={`${UI.mono} space-y-4`}>
+                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                    Status
+                  </div>
+                  <div className="px-3 py-3 text-[12px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#575757]">SUBSCRIPTION</span>
+                      <span className="font-semibold text-[#161616]">ACTIVE</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-[#575757]">MODES</span>
+                      <span className="font-semibold text-[#161616]">TEXT / VISION</span>
+                    </div>
                   </div>
                 </div>
+
+                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                    Quick commands
+                  </div>
+                  <div className="px-3 py-3">
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Show Washtenaw violation thresholds',
+                        'Cooling check for soups',
+                        'Cross-contact checklist',
+                        'Temp log reminder',
+                      ].map((item) => (
+                        <MonoButton
+                          key={item}
+                          variant="ghost"
+                          onClick={() => sendExample(item)}
+                          className="border border-[#cfcfc7] bg-[#f7f7f2]"
+                        >
+                          {item}
+                        </MonoButton>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+                  <div className="border-b border-[#dcdcd4] px-3 py-2 text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                    Guidance
+                  </div>
+                  <div className="px-3 py-3 text-[12px] leading-5 text-[#575757]">
+                    Use <span className="font-semibold text-[#161616]">Visual Scan</span> for station photos (walk-in, prep table, dish).
+                    For text, issue a short command. Press <span className="font-semibold text-[#161616]">Enter</span> to execute.
+                  </div>
+                </div>
+              </div>
+            </TerminalWindow>
+
+            <div className="space-y-6">
+              <TerminalWindow label="Session" title="Log" right={`MODE: ${sendMode === 'vision' ? 'VISION' : 'TEXT'}`} status="dim">
+                <div className="space-y-3">
+                  <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="max-h-[56vh] min-h-[280px] overflow-y-auto space-y-3 pr-1"
+                  >
+                    {messages.length === 0 && (
+                      <div className={`rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7] p-4 ${UI.mono}`}>
+                        <div className="text-[11px] uppercase tracking-[0.22em] text-[#575757] font-semibold">
+                          Session idle
+                        </div>
+                        <div className="mt-2 text-[12px] text-[#575757]">Issue a command to begin.</div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {[
+                            'List likely criticals from this walk-in photo',
+                            'Provide holding temps for hot bar',
+                            'Draft inspection prep checklist',
+                          ].map((p) => (
+                            <MonoButton
+                              key={p}
+                              variant="ghost"
+                              onClick={() => sendExample(p)}
+                              className="border border-[#cfcfc7] bg-[#f7f7f2]"
+                            >
+                              {p}
+                            </MonoButton>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {messages.map((m, idx) => (
+                      <LogRow key={idx} message={m} index={idx} />
+                    ))}
+
+                    {isSending && <TypingIndicator />}
+                  </div>
+                </div>
+              </TerminalWindow>
+
+              {selectedImage && (
+                <TerminalWindow label="Image analysis" title="Scan Dock" right="frame attached" status="dim">
+                  <div className={`${UI.mono} space-y-3`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="text-[12px] text-[#575757]">
+                        Frame staged. Execute will run vision pipeline.
+                      </div>
+                      <div className="flex gap-2">
+                        <MonoButton variant="secondary" onClick={() => setSelectedImage(null)}>
+                          DETACH
+                        </MonoButton>
+                        <MonoButton onClick={handleSend} disabled={isSending}>
+                          <Icons.Camera /> ANALYZE
+                        </MonoButton>
+                      </div>
+                    </div>
+                    <div className="overflow-hidden rounded-[10px] border border-[#cfcfc7] bg-[#fbfbf7]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={URL.createObjectURL(selectedImage)} alt="Selected" className="w-full object-cover" />
+                    </div>
+                  </div>
+                </TerminalWindow>
               )}
 
-              {messages.map((m, idx) => (
-                <MessageBlock key={idx} role={m.role} content={m.content} sources={m.sources} index={idx} />
-              ))}
+              <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
 
-              {isSending && <TypingIndicator />}
-            </div>
+              <TerminalWindow label="Command line" title="Execute" right="Enter = run · Shift+Enter = newline" status="dim">
+                <form onSubmit={handleSend} className={`${UI.mono} space-y-3`}>
+                  <div className="flex items-start gap-2">
+                    <label
+                      className={`${UI.cmdBtn} h-10 w-10 flex items-center justify-center p-0`}
+                      htmlFor="image-upload"
+                      title="Attach image frame"
+                    >
+                      <Icons.Camera />
+                    </label>
+                    <input
+                      id="image-upload"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
 
-            {selectedImage && (
-              <div className={`${UI.card} border-[#d4d4d4] bg-[#f5f5f2] p-4`}>
-                <div className="flex items-center justify-between">
-                  <div className={UI.panelHeaderLabel}>Scan input</div>
-                  <div className="flex gap-2">
-                    <MonoButton variant="ghost" onClick={() => setSelectedImage(null)}>Detach</MonoButton>
-                    <MonoButton onClick={handleSend} disabled={isSending}>Analyze</MonoButton>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`select-none text-[12px] text-[#575757] ${UI.mono}`}>{'>'}</div>
+                        <MonoInput
+                          component="textarea"
+                          rows={3}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={onCommandKeyDown}
+                          placeholder="Describe station… or issue a command (e.g., 'Cooling log for chili')"
+                          className="flex-1"
+                          ref={textAreaRef}
+                        />
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[11px] text-[#575757]">
+                        <span>ATTACHMENT: {selectedImage ? 'FRAME READY' : 'NONE'}</span>
+                        <span>PIPELINE: {selectedImage ? 'VISION' : 'TEXT'}</span>
+                      </div>
+                    </div>
+
+                    <MonoButton type="submit" disabled={isSending || (!input.trim() && !selectedImage)} className="h-10 px-4">
+                      EXECUTE
+                    </MonoButton>
                   </div>
-                </div>
-                <div className="mt-3 overflow-hidden rounded-[14px] border border-[#d4d4d4]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={URL.createObjectURL(selectedImage)} alt="Selected" className="w-full object-cover" />
-                </div>
-              </div>
-            )}
-
-            <SmartProgress active={isSending} mode={sendMode} requestKey={sendKey} />
-
-            <form onSubmit={handleSend} className={`${UI.card} p-4 space-y-3`}>
-              <div className="flex items-center gap-2">
-                <label className={`${UI.buttonSecondary} h-10 w-10 items-center justify-center p-0`} htmlFor="image-upload">
-                  <Icons.Camera />
-                </label>
-                <input id="image-upload" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-                <MonoInput
-                  component="textarea"
-                  rows={3}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Enter command or describe station…"
-                  className={`${inter.className} flex-1`}
-                  ref={textAreaRef}
-                />
-                <MonoButton type="submit" disabled={isSending || (!input.trim() && !selectedImage)} className="h-12 px-4">
-                  Execute
-                </MonoButton>
-              </div>
-              <div className="flex items-center justify-between text-xs text-[#6b6b6b]">
-                <span className={`${inter.className}`}>Enter to execute · Shift+Enter for newline</span>
-                <span className={`${inter.className}`}>{sendMode === 'vision' ? 'Vision' : 'Text'} mode</span>
-              </div>
-            </form>
+                </form>
+              </TerminalWindow>
+            </div>
           </div>
-        </Panel>
-      </div>
+        </TerminalWindow>
 
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
-      <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} onCheckout={handleCheckout} loading={checkoutLoading} />
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} initialMode={authInitialMode} />
+        <PricingModal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          onCheckout={handleCheckout}
+          loading={checkoutLoading}
+        />
+      </div>
     </AppShell>
   )
 }
