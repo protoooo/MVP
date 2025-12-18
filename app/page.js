@@ -7,12 +7,11 @@ import { createClient } from '@/lib/supabase-browser'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { compressImage } from '@/lib/imageCompression'
-import { IBM_Plex_Mono } from 'next/font/google'
+import { Outfit, Inter } from 'next/font/google'
 import { useRecaptcha, RecaptchaBadge } from '@/components/Captcha'
 
-const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
-const outfit = plexMono
-const inter = plexMono
+const outfit = Outfit({ subsets: ['latin'], weight: ['500', '600', '700', '800'] })
+const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 const MONTHLY_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_MONTHLY
 const ANNUAL_PRICE = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS_ANNUAL
@@ -155,9 +154,73 @@ const Icons = {
   ),
 }
 
-// Terminal grid background
-function GridBackground() {
-  return <div className="terminal-grid" />
+// Subtle animated wave background - light theme
+function WaveBackground() {
+  return (
+    <div className="wave-bg-container">
+      <svg className="wave-svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="wave-gradient-1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.06" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-2" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2F5D8A" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#55D6B2" stopOpacity="0.04" />
+          </linearGradient>
+          <linearGradient id="wave-gradient-3" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%" stopColor="#55D6B2" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#2F5D8A" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+        
+        {/* Wave 1 - starts higher, flows through hero */}
+        <path className="wave wave-1" fill="url(#wave-gradient-1)">
+          <animate
+            attributeName="d"
+            dur="25s"
+            repeatCount="indefinite"
+            values="
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z;
+              M0,150 C150,200 350,150 500,200 C650,250 750,200 900,150 C1050,100 1150,150 1300,200 C1450,250 1440,150 1440,150 L1440,800 L0,800 Z;
+              M0,200 C150,150 350,250 500,200 C650,150 750,100 900,150 C1050,200 1150,250 1300,200 C1450,150 1440,200 1440,200 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 2 - middle layer */}
+        <path className="wave wave-2" fill="url(#wave-gradient-2)">
+          <animate
+            attributeName="d"
+            dur="20s"
+            repeatCount="indefinite"
+            values="
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z;
+              M0,300 C200,350 400,300 600,350 C800,400 1000,350 1200,300 C1400,250 1440,350 1440,350 L1440,800 L0,800 Z;
+              M0,350 C200,300 400,400 600,350 C800,300 1000,250 1200,300 C1400,350 1440,300 1440,300 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+        
+        {/* Wave 3 - lower layer */}
+        <path className="wave wave-3" fill="url(#wave-gradient-3)">
+          <animate
+            attributeName="d"
+            dur="30s"
+            repeatCount="indefinite"
+            values="
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z;
+              M0,450 C180,500 360,450 540,500 C720,550 900,500 1080,450 C1260,400 1440,500 1440,500 L1440,800 L0,800 Z;
+              M0,500 C180,450 360,550 540,500 C720,450 900,400 1080,450 C1260,500 1440,450 1440,450 L1440,800 L0,800 Z
+            "
+          />
+        </path>
+      </svg>
+      
+      {/* Subtle grid overlay */}
+      <div className="grid-overlay" />
+    </div>
+  )
 }
 
 function useInViewOnce({ threshold = 0.1, rootMargin = '0px 0px -50px 0px' } = {}) {
@@ -447,33 +510,23 @@ function LandingPage({ onShowPricing, onShowAuth }) {
   return (
     <div className="landing-wrapper">
       {/* Animated wave background */}
-      <GridBackground />
-      <div className="scanline-overlay" aria-hidden />
+      <WaveBackground />
 
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-container">
-          <div className="hero-content trace-frame">
+          <div className="hero-content">
             <Reveal delay={0}>
               <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
-                <span className="hero-title-line">COMPLIANCE CONSOLE</span>
-                <span className="hero-title-line hero-title-type">Catch violations before the inspector does</span>
+                <span className="hero-title-line">Catch violations</span>
+                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
               </h1>
             </Reveal>
 
             <Reveal delay={200}>
-              <div className="hero-bootlog">
-                <span className="boot-line">SYSTEM BOOT v2.1.4</span>
-                <span className="boot-line">&gt; Initializing Washtenaw compliance database… [OK]</span>
-                <span className="boot-line">&gt; Mounting inspection analysis engine… [OK]</span>
-                <span className="boot-line">&gt; System ready_</span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={260}>
               <p className={`hero-description ${inter.className}`}>
-                Upload photos of your kitchen and get instant AI analysis that spots potential
-                violations before they become citations. Built specifically for Washtenaw County
+                Upload photos of your kitchen and get instant AI analysis that spots potential 
+                violations before they become citations. Built specifically for Washtenaw County 
                 food code requirements.
               </p>
             </Reveal>
@@ -534,10 +587,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             </div>
           </Reveal>
 
-            <div className="features-grid">
-              {features.map((feature, i) => (
+          <div className="features-grid">
+            {features.map((feature, i) => (
               <Reveal key={i} delay={i * 120}>
-                <div className="feature-card trace-frame">
+                <div className="feature-card">
                   <div className="feature-card-border" />
                   <div className="feature-icon-wrapper">
                     {feature.icon}
@@ -570,7 +623,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           <div className="risk-grid">
             {complianceRisks.map((risk, i) => (
               <Reveal key={i} delay={i * 100}>
-                <div className="risk-card trace-frame">
+                <div className="risk-card">
                   <div className="risk-card-border" />
                   <div className="risk-icon">
                     {risk.icon}
@@ -615,7 +668,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </Reveal>
 
           <Reveal delay={150}>
-            <div className="pricing-card trace-frame">
+            <div className="pricing-card">
               <div className="pricing-card-border" />
               <div className="pricing-card-inner">
                 <div className="pricing-badge-wrapper">
@@ -1440,85 +1493,71 @@ export default function Page() {
     <>
       <style jsx global>{`
         /* ═══════════════════════════════════════════════════════════════════════
-           TERMINAL DARK THEME
-           Utilitarian, data-dense, IBM Plex Mono everywhere
+           PREMIUM LIGHT THEME - protocolLM
+           Modern Government Tech × FinTech × Health Tech Design
+           Color Palette: Spearmint + Matte Blue
            ═══════════════════════════════════════════════════════════════════════ */
 
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-terminal-accent: #00d9ff;
-          --color-terminal-accent-dim: #0099bb;
-          --color-terminal-accent-dark: #001a22;
-          --color-terminal-glow: rgba(0, 217, 255, 0.2);
-
-          --color-bg: #000000;
-          --color-surface: #0a0a0a;
-          --color-card: #121212;
-          --color-border: #333333;
-          --color-border-subtle: #1a1a1a;
-          --color-border-hover: #3a3a3a;
-          --color-border-focus: #00d9ff;
-
+          --color-bg: #F6FAF9;
+          --color-surface: #FFFFFF;
+          --color-card: #F2FBF7;
+          --color-border: #D7E6E2;
+          --color-border-subtle: #E8F0ED;
+          --color-border-hover: #B8CFC8;
+          --color-border-focus: #55D6B2;
+          
           /* Text Colors */
-          --color-text: #e0e0e0;
-          --color-text-secondary: #b0b0b0;
-          --color-text-tertiary: #808080;
-          --color-text-muted: #606060;
-          --color-primary: var(--color-terminal-accent);
-          --color-primary-hover: var(--color-terminal-accent-dim);
-          --color-accent: var(--color-terminal-accent);
-          --color-accent-hover: var(--color-terminal-accent-dim);
-          --color-accent-light: rgba(0, 217, 255, 0.08);
-
+          --color-text: #0B1220;
+          --color-text-secondary: #3D4F5F;
+          --color-text-tertiary: #52637A;
+          --color-text-muted: #8A9BAD;
+          
+          /* Brand Colors */
+          --color-primary: #2F5D8A;
+          --color-primary-hover: #1F4E7A;
+          --color-primary-light: #3A6B99;
+          --color-accent: #55D6B2;
+          --color-accent-hover: #45C6A2;
+          --color-accent-light: #E8FAF4;
+          
           /* Status Colors */
-          --color-success: var(--color-terminal-accent);
-          --color-success-bg: var(--color-terminal-accent-dark);
-          --color-warning: #ffaa00;
-          --color-warning-bg: #241700;
-          --color-error: #ff3b30;
-          --color-error-bg: #1a0808;
-          --color-code-bg: #0f0f0f;
-          --color-code-text: #e0e0e0;
-
-          /* Typography */
-          --font-mono: 'IBM Plex Mono', 'Courier New', Consolas, Monaco, monospace;
-
-          /* Shadows (minimal) */
-          --shadow-xs: none;
-          --shadow-sm: none;
-          --shadow-md: none;
-          --shadow-lg: none;
-          --shadow-xl: none;
-          --shadow-card: none;
-          --shadow-card-hover: none;
-          --shadow-glass: none;
-
+          --color-success: #10B981;
+          --color-success-bg: #ECFDF5;
+          --color-warning: #F59E0B;
+          --color-warning-bg: #FFFBEB;
+          --color-error: #EF4444;
+          --color-error-bg: #FEF2F2;
+          
+          /* Shadows */
+          --shadow-xs: 0 1px 2px rgba(11, 18, 32, 0.04);
+          --shadow-sm: 0 1px 3px rgba(11, 18, 32, 0.06), 0 1px 2px rgba(11, 18, 32, 0.04);
+          --shadow-md: 0 4px 6px -1px rgba(11, 18, 32, 0.06), 0 2px 4px -1px rgba(11, 18, 32, 0.04);
+          --shadow-lg: 0 10px 15px -3px rgba(11, 18, 32, 0.08), 0 4px 6px -2px rgba(11, 18, 32, 0.04);
+          --shadow-xl: 0 20px 25px -5px rgba(11, 18, 32, 0.08), 0 10px 10px -5px rgba(11, 18, 32, 0.03);
+          --shadow-card: 0 1px 3px rgba(11, 18, 32, 0.04), 0 0 0 1px rgba(215, 230, 226, 0.5);
+          --shadow-card-hover: 0 8px 24px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(85, 214, 178, 0.3);
+          --shadow-glass: 0 8px 32px rgba(11, 18, 32, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
+          
           /* Radii */
           --radius-xs: 4px;
           --radius-sm: 6px;
           --radius-md: 8px;
-          --radius-lg: 10px;
-          --radius-xl: 12px;
-          --radius-2xl: 14px;
-          --radius-3xl: 16px;
-          --radius-full: 999px;
-
+          --radius-lg: 12px;
+          --radius-xl: 16px;
+          --radius-2xl: 20px;
+          --radius-3xl: 24px;
+          --radius-full: 9999px;
+          
           /* Transitions */
-          --ease-out-expo: linear;
-          --ease-out-quint: linear;
-          --duration-fast: 50ms;
-          --duration-normal: 75ms;
-          --duration-slow: 100ms;
-
-          /* Spacing */
-          --space-xs: 4px;
-          --space-sm: 8px;
-          --space-md: 16px;
-          --space-lg: 24px;
-          --space-xl: 32px;
-          --space-2xl: 48px;
-
+          --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+          --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+          --duration-fast: 150ms;
+          --duration-normal: 250ms;
+          --duration-slow: 400ms;
+          
           /* Z-index */
           --z-base: 0;
           --z-elevated: 10;
@@ -1546,14 +1585,11 @@ export default function Page() {
           background: var(--color-bg);
           color: var(--color-text);
           overflow-x: hidden;
-          line-height: 1.5;
-          font-family: var(--font-mono);
-          letter-spacing: 0.02em;
-          text-transform: none;
+          line-height: 1.6;
         }
 
         ::selection {
-          background: #E0E0E0;
+          background: rgba(85, 214, 178, 0.25);
           color: var(--color-text);
         }
 
@@ -1621,45 +1657,35 @@ export default function Page() {
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
-           GRID BACKGROUND
+           WAVE BACKGROUND
            ═══════════════════════════════════════════════════════════════════════ */
-        .terminal-grid {
+        .wave-bg-container {
           position: fixed;
           inset: 0;
-          background:
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-          background-size: 20px 20px;
-          opacity: 1;
           pointer-events: none;
           z-index: 0;
+          overflow: hidden;
         }
 
-        .scanline-overlay {
-          position: fixed;
+        .wave-svg {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          min-height: 100vh;
+        }
+
+        .wave {
+          opacity: 1;
+        }
+
+        .grid-overlay {
+          position: absolute;
           inset: 0;
-          pointer-events: none;
-          background: repeating-linear-gradient(
-            0deg,
-            rgba(255, 255, 255, 0.03) 0px,
-            rgba(255, 255, 255, 0.03) 1px,
-            transparent 3px,
-            transparent 4px
-          );
-          mix-blend-mode: screen;
-          opacity: 0.4;
-          z-index: 1;
-          animation: scan-flicker 6s ease-in-out infinite;
-        }
-
-        @keyframes scan-flicker {
-          0%,
-          100% {
-            opacity: 0.35;
-          }
-          50% {
-            opacity: 0.5;
-          }
+          background-image: 
+            linear-gradient(rgba(47, 93, 138, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(47, 93, 138, 0.02) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 70%);
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
@@ -1669,8 +1695,10 @@ export default function Page() {
           position: sticky;
           top: 0;
           z-index: var(--z-sticky);
-          background: var(--color-surface);
-          border-bottom: 2px solid var(--color-border);
+          background: rgba(246, 250, 249, 0.85);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border-bottom: 1px solid var(--color-border-subtle);
         }
 
         .header-inner {
@@ -1750,14 +1778,13 @@ export default function Page() {
 
         .header-status {
           display: none;
-          font-size: 11px;
-          font-weight: 700;
+          font-size: 12px;
+          font-weight: 600;
           color: var(--color-success);
           padding: 6px 14px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 0;
-          letter-spacing: 0.06em;
+          background: var(--color-success-bg);
+          border: 1px solid rgba(16, 185, 129, 0.2);
+          border-radius: var(--radius-full);
         }
 
         @media (min-width: 1024px) {
@@ -1772,7 +1799,7 @@ export default function Page() {
             width: 6px;
             height: 6px;
             background: var(--color-success);
-            border-radius: 0;
+            border-radius: 50%;
           }
         }
 
@@ -1784,19 +1811,42 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          height: 48px;
-          padding: 0 24px;
-          background: transparent;
-          color: var(--color-accent);
-          border: 2px solid var(--color-accent);
-          border-radius: var(--radius-md);
-          font-size: 13px;
-          font-weight: 700;
+          height: 52px;
+          padding: 0 28px;
+          background: var(--color-primary);
+          color: white;
+          border: none;
+          border-radius: var(--radius-lg);
+          font-size: 15px;
+          font-weight: 600;
           cursor: pointer;
-          transition: none;
-          box-shadow: none;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-md), 0 0 0 1px rgba(47, 93, 138, 0.1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .btn-hero-primary::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .btn-hero-primary:hover {
+          background: var(--color-primary-hover);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47, 93, 138, 0.15);
+        }
+
+        .btn-hero-primary:hover::before {
+          opacity: 1;
+        }
+
+        .btn-hero-primary:active {
+          transform: translateY(0);
         }
 
         .btn-hero-secondary {
@@ -1804,19 +1854,24 @@ export default function Page() {
           align-items: center;
           justify-content: center;
           gap: 8px;
-          height: 48px;
-          padding: 0 22px;
-          background: transparent;
+          height: 52px;
+          padding: 0 24px;
+          background: var(--color-surface);
           color: var(--color-text);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-md);
-          font-size: 13px;
-          font-weight: 700;
+          border-radius: var(--radius-lg);
+          font-size: 15px;
+          font-weight: 600;
           cursor: pointer;
-          transition: none;
-          box-shadow: none;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .btn-hero-secondary:hover {
+          background: var(--color-card);
+          border-color: var(--color-border-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
         }
 
         .btn-secondary {
@@ -1825,18 +1880,21 @@ export default function Page() {
           justify-content: center;
           gap: 8px;
           height: 44px;
-          padding: 0 18px;
-          background: transparent;
+          padding: 0 20px;
+          background: var(--color-surface);
           color: var(--color-text);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 14px;
+          font-weight: 600;
           cursor: pointer;
-          transition: none;
-          box-shadow: none;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          transition: all var(--duration-fast) var(--ease-out-expo);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .btn-secondary:hover {
+          background: var(--color-card);
+          border-color: var(--color-border-hover);
         }
 
         .btn-icon {
@@ -1846,26 +1904,28 @@ export default function Page() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
+          border-radius: var(--radius-md);
           color: var(--color-text-secondary);
           cursor: pointer;
-          transition: none;
-          box-shadow: none;
+          transition: all var(--duration-fast) var(--ease-out-expo);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .btn-icon:hover {
+          background: var(--color-card);
+          color: var(--color-text);
+          border-color: var(--color-border-hover);
         }
 
         .btn-icon-right {
           display: flex;
-          transition: none;
+          transition: transform var(--duration-fast) var(--ease-out-expo);
         }
 
-        .btn-hero-primary:hover,
-        .btn-cta-primary:hover,
-        .btn-pricing-primary:hover {
-          background: var(--color-accent);
-          color: #000;
-          border-color: var(--color-accent);
+        .btn-hero-primary:hover .btn-icon-right {
+          transform: translateX(3px);
         }
 
         .btn-spinner {
@@ -1881,23 +1941,24 @@ export default function Page() {
         .avatar-btn {
           width: 44px;
           height: 44px;
-          border-radius: 0;
-          background: var(--color-surface);
-          border: 2px solid var(--color-border);
-          color: var(--color-text);
-          font-size: 13px;
+          border-radius: var(--radius-md);
+          background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-card) 100%);
+          border: 1px solid var(--color-border);
+          color: var(--color-primary);
+          font-size: 15px;
           font-weight: 700;
           cursor: pointer;
-          transition: none;
+          transition: all var(--duration-fast) var(--ease-out-expo);
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: none;
+          box-shadow: var(--shadow-xs);
         }
 
         .avatar-btn:hover {
-          transform: none;
-          border-color: var(--color-border-hover);
+          transform: scale(1.05);
+          border-color: var(--color-accent);
+          box-shadow: var(--shadow-sm);
         }
 
         .user-menu-wrapper {
@@ -2035,51 +2096,6 @@ export default function Page() {
           transform: translateY(0) scale(1);
         }
 
-        .trace-frame {
-          position: relative;
-          background: var(--color-card);
-          border: 1px solid rgba(0, 217, 255, 0.28);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-        }
-
-        .trace-frame::after {
-          content: '';
-          position: absolute;
-          inset: -1px;
-          border-radius: inherit;
-          padding: 1px;
-          background: linear-gradient(
-            120deg,
-            transparent 0%,
-            var(--color-terminal-accent) 15%,
-            transparent 35%,
-            transparent 60%,
-            var(--color-terminal-accent) 80%,
-            transparent 100%
-          );
-          background-size: 200% 200%;
-          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          animation: trace-edge 3.6s linear infinite;
-          mix-blend-mode: screen;
-          pointer-events: none;
-          opacity: 0.85;
-        }
-
-        @keyframes trace-edge {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
         /* ═══════════════════════════════════════════════════════════════════════
            HERO SECTION
            ═══════════════════════════════════════════════════════════════════════ */
@@ -2099,31 +2115,30 @@ export default function Page() {
         }
 
         .hero-container {
-          max-width: 1100px;
+          max-width: 960px;
           margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 32px;
-          align-items: stretch;
+          gap: 40px;
+          align-items: center;
+          text-align: center;
         }
 
         .hero-content {
           display: flex;
           flex-direction: column;
-          gap: 22px;
+          gap: 24px;
           position: relative;
           z-index: 2;
-          padding: 32px 32px 28px;
-          border: 1px solid var(--color-border);
-          box-shadow: none;
+          align-items: center;
         }
 
         .hero-title-animated {
           display: inline-flex;
           flex-direction: column;
           gap: 6px;
-          text-align: left;
+          text-align: center;
         }
 
         .hero-title-line {
@@ -2143,74 +2158,38 @@ export default function Page() {
         }
 
         .hero-title {
-          font-size: clamp(36px, 5vw, 56px);
+          font-size: clamp(40px, 6vw, 64px);
           font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -0.02em;
+          line-height: 1.05;
+          letter-spacing: -0.035em;
           color: var(--color-text);
-          text-transform: uppercase;
         }
 
-        .hero-title-type {
-          color: var(--color-accent);
-          position: relative;
-          display: inline-block;
-          padding-right: 12px;
-        }
-
-        .hero-title-type::after {
-          content: '_';
-          position: absolute;
-          right: 0;
-          bottom: 4px;
-          color: var(--color-accent);
-          animation: blink 1s steps(2, start) infinite;
-        }
-
-        .hero-bootlog {
-          display: grid;
-          gap: 4px;
-          padding: 12px 14px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border-subtle);
-          border-radius: var(--radius-sm);
-        }
-
-        .boot-line {
-          font-size: 13px;
-          color: var(--color-text-secondary);
-          letter-spacing: 0.02em;
-        }
-
-        @keyframes blink {
-          0%,
-          49% {
-            opacity: 1;
-          }
-          50%,
-          100% {
-            opacity: 0;
-          }
+        .hero-title-gradient {
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .hero-description {
-          font-size: 17px;
-          line-height: 1.6;
+          font-size: 18px;
+          line-height: 1.7;
           color: var(--color-text-secondary);
-          max-width: 720px;
+          max-width: 520px;
         }
 
         @media (max-width: 640px) {
           .hero-description {
-            font-size: 15px;
+            font-size: 16px;
           }
         }
 
         .hero-actions {
           display: flex;
-          gap: 10px;
+          gap: 12px;
           flex-wrap: wrap;
-          padding-top: 6px;
+          padding-top: 8px;
         }
 
         /* Hero visual removed for simplified, centered hero */
@@ -2234,8 +2213,9 @@ export default function Page() {
           grid-template-columns: repeat(3, 1fr);
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-2xl);
           overflow: hidden;
+          box-shadow: var(--shadow-card);
         }
 
         .proof-item {
@@ -2344,11 +2324,12 @@ export default function Page() {
         .feature-card {
           position: relative;
           padding: 32px 28px;
-          background: var(--color-card);
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-          transition: border-color var(--duration-normal) linear;
+          border-radius: var(--radius-2xl);
+          transition: all var(--duration-slow) var(--ease-out-expo);
           overflow: hidden;
+          box-shadow: var(--shadow-card);
           display: flex;
           flex-direction: column;
           min-height: 220px;
@@ -2357,14 +2338,21 @@ export default function Page() {
         .feature-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-lg);
-          padding: 0;
-          background: transparent;
-          opacity: 1;
+          border-radius: var(--radius-2xl);
+          padding: 1px;
+          background: linear-gradient(135deg, transparent 0%, transparent 50%, var(--color-accent) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity var(--duration-slow) var(--ease-out-expo);
         }
 
         .feature-card:hover {
-          border-color: var(--color-accent);
+          border-color: var(--color-border-hover);
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .feature-card:hover .feature-card-border {
@@ -2378,8 +2366,8 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-terminal-accent-dark);
-          border: 1px solid rgba(0, 217, 255, 0.4);
+          background: var(--color-accent-light);
+          border: 1px solid rgba(85, 214, 178, 0.2);
           border-radius: var(--radius-lg);
           margin-bottom: 20px;
           color: var(--color-primary);
@@ -2434,12 +2422,13 @@ export default function Page() {
         .risk-card {
           position: relative;
           padding: 24px 20px;
-          background: var(--color-card);
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-xl);
           text-align: center;
-          transition: border-color var(--duration-normal) linear;
+          transition: all var(--duration-normal) var(--ease-out-expo);
           overflow: hidden;
+          box-shadow: var(--shadow-card);
           display: flex;
           flex-direction: column;
           min-height: 180px;
@@ -2448,14 +2437,20 @@ export default function Page() {
         .risk-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-lg);
-          padding: 0;
-          background: transparent;
-          opacity: 1;
+          border-radius: var(--radius-xl);
+          padding: 1px;
+          background: linear-gradient(180deg, var(--color-accent) 0%, transparent 50%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity var(--duration-normal) var(--ease-out-expo);
         }
 
         .risk-card:hover {
-          border-color: var(--color-accent);
+          border-color: var(--color-border-hover);
+          transform: translateY(-3px);
         }
 
         .risk-card:hover .risk-card-border {
@@ -2520,19 +2515,31 @@ export default function Page() {
 
         .pricing-card {
           position: relative;
-          background: var(--color-card);
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-3xl);
           overflow: hidden;
-          box-shadow: none;
+          box-shadow: var(--shadow-lg);
         }
 
         .pricing-card-border {
           position: absolute;
           inset: 0;
-          border-radius: var(--radius-lg);
-          padding: 0;
-          background: transparent;
+          border-radius: var(--radius-3xl);
+          padding: 2px;
+          background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-primary) 50%, var(--color-accent) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: borderRotate 8s linear infinite;
+          background-size: 300% 300%;
+        }
+
+        @keyframes borderRotate {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
         }
 
         .pricing-card-inner {
@@ -2540,7 +2547,7 @@ export default function Page() {
           padding: 44px 36px;
           z-index: 1;
           background: var(--color-surface);
-          border-radius: var(--radius-lg);
+          border-radius: var(--radius-3xl);
         }
 
         @media (max-width: 640px) {
@@ -2843,13 +2850,14 @@ export default function Page() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: background var(--duration-normal) linear;
-          box-shadow: none;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-md);
         }
 
         .btn-cta-primary:hover {
           background: var(--color-primary-hover);
-          transform: none;
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg);
         }
 
         .btn-cta-secondary {
@@ -2865,8 +2873,8 @@ export default function Page() {
           font-size: 16px;
           font-weight: 600;
           cursor: pointer;
-          transition: border-color var(--duration-normal) linear, background var(--duration-normal) linear;
-          box-shadow: none;
+          transition: all var(--duration-normal) var(--ease-out-expo);
+          box-shadow: var(--shadow-xs);
         }
 
         .btn-cta-secondary:hover {
@@ -3333,7 +3341,9 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: var(--color-bg);
+          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
+                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
+                      var(--color-bg);
         }
 
         .chat-messages {
@@ -3343,12 +3353,9 @@ export default function Page() {
           overscroll-behavior: contain;
           display: flex;
           flex-direction: column;
-          align-items: stretch;
-          padding: 18px 12px 12px;
-          gap: 0;
-          border-top: 1px solid var(--color-border);
-          border-bottom: 1px solid var(--color-border-subtle);
-          background: linear-gradient(180deg, rgba(0, 217, 255, 0.05) 0%, transparent 40%), var(--color-bg);
+          align-items: center;
+          padding: 24px 16px 18px;
+          gap: 14px;
         }
 
         .chat-empty {
@@ -3365,11 +3372,12 @@ export default function Page() {
           max-width: 560px;
           width: 100%;
           text-align: center;
-          padding: 32px 28px;
-          background: var(--color-surface);
+          padding: 48px 38px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
           border: 1px solid var(--color-border);
-          border-radius: 0;
-          box-shadow: none;
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(16px);
         }
 
         .chat-empty-icon {
@@ -3378,27 +3386,25 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--color-code-bg);
-          border: 1px solid var(--color-border);
-          border-radius: 0;
+          background: var(--color-accent-light);
+          border: 1px solid rgba(85, 214, 178, 0.2);
+          border-radius: var(--radius-xl);
           color: var(--color-primary);
-          margin: 0 auto 16px;
+          margin: 0 auto 20px;
         }
 
         .chat-empty-title {
-          font-size: 15px;
+          font-size: 18px;
           font-weight: 700;
           color: var(--color-text);
-          margin-bottom: 6px;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
+          margin-bottom: 8px;
         }
 
         .chat-empty-text {
-          font-size: 13px;
-          line-height: 1.5;
+          font-size: 14px;
+          line-height: 1.6;
           color: var(--color-text-secondary);
-          margin-bottom: 20px;
+          margin-bottom: 24px;
         }
 
         .chat-empty-actions {
@@ -3409,99 +3415,96 @@ export default function Page() {
         }
 
         .chat-history {
-          max-width: 880px;
+          max-width: 800px;
           margin: 0 auto;
           width: 100%;
-          padding: 0;
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          background: transparent;
+          gap: 16px;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(12px);
         }
 
         .chat-message {
           display: flex;
-          flex-direction: column;
           width: 100%;
-          padding: 14px 16px 12px;
-          gap: 6px;
-          border-bottom: 1px solid var(--color-border-subtle);
-          background: transparent;
+          padding: 2px 4px;
         }
 
         .chat-message-user {
-          background: transparent;
+          justify-content: flex-end;
         }
 
         .chat-message-assistant {
-          background: transparent;
+          justify-content: flex-start;
         }
 
         .chat-bubble {
-          width: 100%;
-          padding: 0;
-          border-radius: 0;
-          font-size: 13px;
-          line-height: 1.5;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          background: transparent;
-        }
-
-        .chat-line-meta {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 12px;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--color-text-tertiary);
+          max-width: 90%;
+          padding: 14px 18px;
+          border-radius: var(--radius-xl);
+          font-size: 15px;
+          line-height: 1.65;
+          position: relative;
+          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
         }
 
         .chat-bubble-user {
-          color: var(--color-text);
+          background: var(--color-primary);
+          color: white;
+          border-bottom-right-radius: 4px;
+          box-shadow: 0 6px 24px rgba(14, 116, 144, 0.25);
         }
 
         .chat-bubble-assistant {
-          color: var(--color-text-secondary);
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          color: var(--color-text);
+          border-bottom-left-radius: 4px;
+          box-shadow: 0 10px 30px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(215, 230, 226, 0.6);
+        }
+
+        .chat-message:hover .chat-bubble {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .chat-bubble-image {
           border-radius: var(--radius-md);
           overflow: hidden;
-          margin: 0;
-          background: var(--color-code-bg);
-          border: 1px solid var(--color-border);
+          margin-bottom: 10px;
         }
 
         .chat-bubble-image img {
           display: block;
-          width: 100%;
-          max-height: 420px;
-          object-fit: cover;
-          border: none;
+          max-width: 100%;
+          max-height: 300px;
+          object-fit: contain;
         }
 
         .chat-thinking {
-          color: var(--color-text-secondary);
-          font-size: 12px;
-          letter-spacing: 0.02em;
-          text-transform: uppercase;
+          color: var(--color-text-tertiary);
+          font-style: italic;
         }
 
         /* ─── Chat Input Area ─── */
         .chat-input-area {
           flex-shrink: 0;
-          background: var(--color-surface);
-          border-top: 2px solid var(--color-border);
-          box-shadow: none;
+          background: rgba(246, 250, 249, 0.95);
+          backdrop-filter: blur(16px);
+          border-top: 1px solid var(--color-border-subtle);
+          box-shadow: 0 -10px 30px rgba(11, 18, 32, 0.08);
         }
 
         .chat-input-inner {
           max-width: 800px;
           margin: 0 auto;
-          padding: 16px 18px;
-          padding-bottom: max(16px, env(safe-area-inset-bottom));
+          padding: 18px 24px;
+          padding-bottom: max(18px, env(safe-area-inset-bottom));
         }
 
         .smart-progress {
@@ -3529,29 +3532,29 @@ export default function Page() {
         .smart-progress-track {
           height: 3px;
           background: var(--color-border);
-          border-radius: 0;
+          border-radius: 2px;
           overflow: hidden;
         }
 
         .smart-progress-bar {
           height: 100%;
-          background: var(--color-primary);
-          border-radius: 0;
-          transition: width 75ms linear;
+          background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+          border-radius: 2px;
+          transition: width 150ms linear;
         }
 
         .chat-attachment {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 12px;
-          background: var(--color-code-bg);
+          padding: 10px 14px;
+          background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 0;
-          font-size: 12px;
+          border-radius: var(--radius-md);
+          font-size: 13px;
           color: var(--color-text-secondary);
           margin-bottom: 12px;
-          box-shadow: none;
+          box-shadow: var(--shadow-xs);
         }
 
         .chat-input-row {
@@ -3567,14 +3570,14 @@ export default function Page() {
           padding: 12px 16px;
           background: var(--color-surface);
           border: 1px solid var(--color-border);
-          border-radius: 0;
+          border-radius: var(--radius-lg);
           color: var(--color-text);
-          font-size: 13px;
-          line-height: 1.4;
+          font-size: 15px;
+          line-height: 1.5;
           resize: none;
           outline: none;
-          transition: border-color var(--duration-fast) linear;
-          box-shadow: none;
+          transition: all var(--duration-fast) var(--ease-out-expo);
+          box-shadow: var(--shadow-xs);
         }
 
         .chat-textarea::placeholder {
@@ -3582,8 +3585,8 @@ export default function Page() {
         }
 
         .chat-textarea:focus {
-          border-color: var(--color-border-focus);
-          box-shadow: none;
+          border-color: var(--color-accent);
+          box-shadow: 0 0 0 3px rgba(85, 214, 178, 0.1);
         }
 
         .chat-send-btn {
@@ -3592,53 +3595,45 @@ export default function Page() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          border: 2px solid var(--color-accent);
-          border-radius: 0;
-          color: var(--color-accent);
+          background: var(--color-primary);
+          border: none;
+          border-radius: var(--radius-lg);
+          color: white;
           cursor: pointer;
-          transition: none;
+          transition: all var(--duration-fast) var(--ease-out-expo);
           flex-shrink: 0;
-          box-shadow: none;
+          box-shadow: var(--shadow-sm);
         }
 
         .chat-send-btn:hover:not(:disabled) {
-          background: var(--color-accent);
-          color: #000;
+          background: var(--color-primary-hover);
+          transform: scale(1.05);
         }
 
         .chat-send-btn:disabled {
-          opacity: 0.3;
+          opacity: 0.4;
           cursor: not-allowed;
         }
 
         .chat-disclaimer {
           margin-top: 12px;
           text-align: center;
-          font-size: 11px;
+          font-size: 12px;
           color: var(--color-text-muted);
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
         }
 
         /* ─── Responsive Chat ─── */
         @media (max-width: 640px) {
-          .chat-messages {
-            padding: 10px 8px 8px;
-            gap: 0;
-          }
-
           .chat-input-inner {
-            padding: 14px 12px;
+            padding: 14px 16px;
           }
 
           .chat-history {
-            padding: 0;
+            padding: 18px 14px;
           }
 
           .chat-bubble {
-            max-width: 100%;
-            padding: 0;
+            max-width: 88%;
           }
 
           .chat-empty-content {
@@ -3655,6 +3650,10 @@ export default function Page() {
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
           }
+          
+          .wave path {
+            animation: none !important;
+          }
         }
       `}</style>
 
@@ -3667,12 +3666,12 @@ export default function Page() {
           <div className="header-inner">
             <div className="header-left">
               <div className={`logo ${outfit.className}`}>
-                <span className="logo-text">Compliance</span>
-                <span className="logo-text logo-accent">Console</span>
+                <span className="logo-text">protocol</span>
+                <span className="logo-text logo-accent">LM</span>
               </div>
 
               <div className={`header-meta ${inter.className}`}>
-                <span className="header-meta-primary">Catch violations before the inspector does</span>
+                <span className="header-meta-primary">Washtenaw County Compliance</span>
               </div>
             </div>
 
@@ -3778,7 +3777,37 @@ export default function Page() {
           ) : (
             <div className="chat-container">
               <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
-                {messages.length > 0 && (
+                {messages.length === 0 ? (
+                  <div className="chat-empty">
+                    <div className="chat-empty-content">
+                      <div className="chat-empty-icon">
+                        <Icons.Shield />
+                      </div>
+                      <h2 className={`chat-empty-title ${inter.className}`}>
+                        Upload a photo or ask a question
+                      </h2>
+                      <p className={`chat-empty-text ${inter.className}`}>
+                        Run quick photo checks to spot likely issues, or search the 
+                        Washtenaw-focused database when you need a clear answer.
+                      </p>
+                      <div className="chat-empty-actions">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="btn-secondary"
+                        >
+                          <Icons.Camera />
+                          <span className={`btn-label ${inter.className}`}>Attach photo</span>
+                        </button>
+                        <button
+                          onClick={() => textAreaRef.current?.focus()}
+                          className="btn-secondary"
+                        >
+                          <span className={`btn-label ${inter.className}`}>Ask a question</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <div className="chat-history">
                     {messages.map((msg, idx) => (
                       <div
@@ -3786,9 +3815,6 @@ export default function Page() {
                         className={`chat-message ${msg.role === 'user' ? 'chat-message-user' : 'chat-message-assistant'}`}
                       >
                         <div className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'} ${inter.className}`}>
-                          <div className="chat-line-meta">
-                            <span>[{msg.role === 'user' ? 'USER' : 'PROTOCOL-LM'}]</span>
-                          </div>
                           {msg.image && (
                             <div className="chat-bubble-image">
                               <img src={msg.image} alt="Uploaded" />
