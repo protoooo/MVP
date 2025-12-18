@@ -516,17 +516,9 @@ function LandingPage({ onShowPricing, onShowAuth }) {
         <div className="hero-container">
           <div className="hero-content">
             <Reveal delay={0}>
-              <h1 className={`hero-title ${outfit.className} hero-title-oneline`}>
-                {Array.from('Catch violations before the inspector does').map((char, idx) => (
-                  <span
-                    key={`${char}-${idx}`}
-                    className={`char delay-${idx % 10}`}
-                    aria-hidden="true"
-                  >
-                    {char === ' ' ? '\u00A0' : char}
-                  </span>
-                ))}
-                <span className="sr-only">Catch violations before the inspector does</span>
+              <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
+                <span className="hero-title-line">Catch violations</span>
+                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
               </h1>
             </Reveal>
 
@@ -1584,6 +1576,7 @@ export default function Page() {
           scroll-behavior: smooth;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          background: var(--color-bg);
         }
 
         body {
@@ -2140,45 +2133,27 @@ export default function Page() {
           align-items: center;
         }
 
-        .hero-title-oneline {
-          line-height: 1.05;
+        .hero-title-animated {
+          display: inline-flex;
+          flex-direction: column;
+          gap: 6px;
           text-align: center;
-          display: inline-block;
-          position: relative;
-          overflow: hidden;
         }
 
-        .hero-title-oneline .char {
-          display: inline-block;
-          transform: translateY(22px);
+        .hero-title-line {
+          display: block;
           opacity: 0;
-          animation: titleRise 850ms var(--ease-out-expo) forwards;
+          transform: translateY(18px);
+          animation: titleLift 720ms var(--ease-out-expo) forwards;
         }
 
-        .hero-title-oneline .char.delay-0 { animation-delay: 40ms; }
-        .hero-title-oneline .char.delay-1 { animation-delay: 80ms; }
-        .hero-title-oneline .char.delay-2 { animation-delay: 120ms; }
-        .hero-title-oneline .char.delay-3 { animation-delay: 160ms; }
-        .hero-title-oneline .char.delay-4 { animation-delay: 200ms; }
-        .hero-title-oneline .char.delay-5 { animation-delay: 240ms; }
-        .hero-title-oneline .char.delay-6 { animation-delay: 280ms; }
-        .hero-title-oneline .char.delay-7 { animation-delay: 320ms; }
-        .hero-title-oneline .char.delay-8 { animation-delay: 360ms; }
-        .hero-title-oneline .char.delay-9 { animation-delay: 400ms; }
+        .hero-title-line:nth-child(2) {
+          animation-delay: 120ms;
+        }
 
-        @keyframes titleRise {
-          0% {
-            transform: translateY(26px) skewY(1deg);
-            opacity: 0;
-          }
-          60% {
-            transform: translateY(-4px);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
+        @keyframes titleLift {
+          0% { opacity: 0; transform: translateY(18px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
 
         .hero-title {
@@ -3365,7 +3340,9 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          background: var(--color-bg);
+          background: radial-gradient(circle at 20% 20%, rgba(85, 214, 178, 0.06), transparent 32%), 
+                      radial-gradient(circle at 80% 10%, rgba(47, 93, 138, 0.06), transparent 40%),
+                      var(--color-bg);
         }
 
         .chat-messages {
@@ -3373,9 +3350,16 @@ export default function Page() {
           min-height: 0;
           overflow-y: auto;
           overscroll-behavior: contain;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px 16px 18px;
+          gap: 14px;
         }
 
         .chat-empty {
+          width: 100%;
+          max-width: 960px;
           height: 100%;
           display: flex;
           align-items: center;
@@ -3384,14 +3368,15 @@ export default function Page() {
         }
 
         .chat-empty-content {
-          max-width: 460px;
+          max-width: 560px;
           width: 100%;
           text-align: center;
-          padding: 44px 32px;
-          background: var(--color-surface);
+          padding: 48px 38px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.86));
           border: 1px solid var(--color-border);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-card);
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(16px);
         }
 
         .chat-empty-icon {
@@ -3436,11 +3421,17 @@ export default function Page() {
           display: flex;
           flex-direction: column;
           gap: 16px;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-3xl);
+          box-shadow: var(--shadow-card-hover);
+          backdrop-filter: blur(12px);
         }
 
         .chat-message {
           display: flex;
           width: 100%;
+          padding: 2px 4px;
         }
 
         .chat-message-user {
@@ -3452,17 +3443,20 @@ export default function Page() {
         }
 
         .chat-bubble {
-          max-width: 75%;
+          max-width: 90%;
           padding: 14px 18px;
           border-radius: var(--radius-xl);
           font-size: 15px;
           line-height: 1.65;
+          position: relative;
+          transition: transform var(--duration-fast) var(--ease-out-expo), box-shadow var(--duration-fast) var(--ease-out-expo);
         }
 
         .chat-bubble-user {
           background: var(--color-primary);
           color: white;
           border-bottom-right-radius: 4px;
+          box-shadow: 0 6px 24px rgba(14, 116, 144, 0.25);
         }
 
         .chat-bubble-assistant {
@@ -3470,7 +3464,12 @@ export default function Page() {
           border: 1px solid var(--color-border);
           color: var(--color-text);
           border-bottom-left-radius: 4px;
-          box-shadow: var(--shadow-xs);
+          box-shadow: 0 10px 30px rgba(11, 18, 32, 0.08), 0 0 0 1px rgba(215, 230, 226, 0.6);
+        }
+
+        .chat-message:hover .chat-bubble {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-card-hover);
         }
 
         .chat-bubble-image {
@@ -3497,6 +3496,7 @@ export default function Page() {
           background: rgba(246, 250, 249, 0.95);
           backdrop-filter: blur(16px);
           border-top: 1px solid var(--color-border-subtle);
+          box-shadow: 0 -10px 30px rgba(11, 18, 32, 0.08);
         }
 
         .chat-input-inner {
