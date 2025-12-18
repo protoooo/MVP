@@ -576,11 +576,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={120}>
-            <div className="hero-visual hero-data-visual">
-              <div className="hero-visual-badge">
-                <span className="hero-visual-dot" />
-                <span className={`hero-visual-text ${inter.className}`}>Transparent knowledge base</span>
-              </div>
+              <div className="hero-visual hero-data-visual">
               <div className="hero-data-frame">
                 <div className="hero-data-header">
                   <div className="hero-data-title">
@@ -597,20 +593,10 @@ function LandingPage({ onShowPricing, onShowAuth }) {
                           <div className={`hero-data-title-row ${inter.className}`}>{item.title}</div>
                           <div className={`hero-data-meta ${inter.className}`}>{item.tag}</div>
                         </div>
-                        <div className="hero-data-chip">Indexed</div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
-              <div className="hero-visual-metadata">
-                <span className={`hero-meta-label ${inter.className}`}>Live data view · no hidden sources</span>
-                <span className={`hero-meta-pill ${inter.className}`}>
-                  <Icons.Eye /> Transparent
-                </span>
-                <span className={`hero-meta-pill ${inter.className}`}>
-                  <Icons.Shield /> County-first
-                </span>
               </div>
             </div>
           </Reveal>
@@ -739,13 +725,6 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <div className="pricing-card">
               <div className="pricing-card-border" />
               <div className="pricing-card-inner">
-                <div className="pricing-badge-wrapper">
-                  <div className="pricing-badge">
-                    <Icons.Spark />
-                    <span className={inter.className}>Site License</span>
-                  </div>
-                </div>
-
                 <div className="pricing-amount">
                   <span className={`pricing-currency ${inter.className}`}>$</span>
                   <span className={`pricing-number ${outfit.className}`}>100</span>
@@ -1570,8 +1549,8 @@ export default function Page() {
         :root {
           /* Core Colors */
           --color-bg: #DDF4E7;
-          --color-surface: rgba(221, 244, 231, 0.9);
-          --color-card: #DDF4E7;
+          --color-surface: #FFFFFF;
+          --color-card: #FFFFFF;
           --color-border: rgba(15, 58, 99, 0.16);
           --color-border-subtle: rgba(15, 58, 99, 0.08);
           --color-border-hover: rgba(15, 58, 99, 0.28);
@@ -2295,27 +2274,6 @@ export default function Page() {
           align-items: flex-start;
         }
 
-        .hero-visual-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 12px;
-          background: rgba(245, 236, 213, 0.8);
-          border: 1px solid var(--color-border);
-          border-radius: 999px;
-          color: var(--color-text-secondary);
-          box-shadow: var(--shadow-xs);
-          backdrop-filter: blur(8px);
-        }
-
-        .hero-visual-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 999px;
-          background: var(--color-accent);
-          box-shadow: 0 0 0 6px rgba(103, 192, 144, 0.16);
-        }
-
         .hero-data-frame {
           width: 100%;
           padding: 18px;
@@ -2405,7 +2363,7 @@ export default function Page() {
           flex-direction: column;
           gap: 10px;
           padding: 12px;
-          animation: dataScroll 24s linear infinite;
+          animation: dataScroll 20s linear infinite;
         }
 
         .hero-data-row {
@@ -2462,40 +2420,10 @@ export default function Page() {
           flex-wrap: wrap;
         }
 
-        .hero-meta-label {
-          font-size: 13px;
-          color: var(--color-text-tertiary);
-          letter-spacing: 0.02em;
-        }
-
-        .hero-meta-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
-          background: var(--color-surface);
-          border: 1px solid var(--color-border);
-          border-radius: 14px;
-          font-size: 13px;
-          color: var(--color-text-secondary);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .hero-meta-pill svg {
-          width: 16px;
-          height: 16px;
-        }
-
         @media (max-width: 1023px) {
           .hero-visual {
             order: 3;
             align-items: center;
-          }
-          .hero-visual-metadata {
-            justify-content: center;
-          }
-          .hero-visual-badge {
-            margin: 0 auto;
           }
           .hero-data-viewport {
             height: 280px;
@@ -2509,6 +2437,7 @@ export default function Page() {
           position: relative;
           z-index: 1;
           padding: 0 24px 80px;
+          background: var(--color-bg);
         }
 
         .proof-container {
@@ -2519,7 +2448,7 @@ export default function Page() {
         .proof-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          background: var(--color-surface);
+          background: #ffffff;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           overflow: hidden;
@@ -2529,6 +2458,7 @@ export default function Page() {
         .proof-item {
           padding: 28px 24px;
           text-align: center;
+          background: #ffffff;
           border-right: 1px solid var(--color-border-subtle);
         }
 
@@ -2646,7 +2576,7 @@ export default function Page() {
         .feature-card {
           position: relative;
           padding: 32px 28px;
-          background: linear-gradient(150deg, #ffffff 0%, rgba(221, 244, 231, 0.85) 100%);
+          background: linear-gradient(150deg, #ffffff 0%, #f5fbf8 100%);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-2xl);
           transition: all var(--duration-slow) var(--ease-out-expo);
@@ -2765,7 +2695,7 @@ export default function Page() {
         .risk-card {
           position: relative;
           padding: 24px 20px;
-          background: linear-gradient(160deg, #ffffff 0%, rgba(221, 244, 231, 0.86) 100%);
+          background: linear-gradient(160deg, #ffffff 0%, #f5fbf8 100%);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-xl);
           text-align: center;
@@ -2922,7 +2852,7 @@ export default function Page() {
         .pricing-badge-wrapper {
           display: flex;
           justify-content: center;
-          margin-bottom: 24px;
+          margin-bottom: 0;
         }
 
         .pricing-badge {
