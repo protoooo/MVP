@@ -411,6 +411,59 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
+  const demoScript = useMemo(
+    () => [
+      {
+        question: 'Predict key trends in digital marketing for 2025',
+        answer:
+          '1) AI-native content workflows will be standard.\n2) Location-aware search will matter more than keywords.\n3) Compliance signals will be table stakes for trust.\n4) Visual search and short video keep leading conversions.',
+      },
+      {
+        question: 'What are the top violations inspectors catch?',
+        answer:
+          'Date marking, cold-holding below 41°F, chemical storage near prep, and missing sanitizer logs are the fastest cites. Fix labeling, temps, and separation first.',
+      },
+    ],
+    []
+  )
+
+  const [demoIndex, setDemoIndex] = useState(0)
+  const [demoPhase, setDemoPhase] = useState('question')
+  const [demoTyped, setDemoTyped] = useState('')
+  const [demoMessages, setDemoMessages] = useState([])
+
+  useEffect(() => {
+    const script = demoScript[demoIndex]
+    if (!script) return
+
+    let timer
+    if (demoPhase === 'question') {
+      if (demoTyped.length < script.question.length) {
+        timer = setTimeout(() => setDemoTyped(script.question.slice(0, demoTyped.length + 1)), 18)
+      } else {
+        setDemoMessages((msgs) => [...msgs, { role: 'user', text: script.question }])
+        setDemoPhase('answer')
+        setDemoTyped('')
+      }
+    } else if (demoPhase === 'answer') {
+      if (demoTyped.length < script.answer.length) {
+        timer = setTimeout(() => setDemoTyped(script.answer.slice(0, demoTyped.length + 2)), 10)
+      } else {
+        setDemoMessages((msgs) => [...msgs, { role: 'assistant', text: script.answer }])
+        setDemoPhase('pause')
+      }
+    } else if (demoPhase === 'pause') {
+      timer = setTimeout(() => {
+        setDemoMessages([])
+        setDemoTyped('')
+        setDemoPhase('question')
+        setDemoIndex((i) => (i + 1) % demoScript.length)
+      }, 2800)
+    }
+
+    return () => clearTimeout(timer)
+  }, [demoPhase, demoTyped, demoIndex, demoScript])
+
   const faqs = useMemo(
     () => [
       {
@@ -510,6 +563,8 @@ function LandingPage({ onShowPricing, onShowAuth }) {
     <div className="landing-wrapper">
       {/* Animated wave background */}
       <WaveBackground />
+      <div className="glossy-ribbon" aria-hidden />
+      <div className="glossy-ribbon ribbon-2" aria-hidden />
 
       {/* Hero Section */}
       <section className="hero-section">
@@ -659,6 +714,61 @@ function LandingPage({ onShowPricing, onShowAuth }) {
               </div>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* Demo Chat Section */}
+      <section className="demo-section">
+        <div className="demo-shell">
+          <div className="demo-shell-header">
+            <div className="demo-pill">Live demo</div>
+            <div className="demo-status">
+              <span className="status-dot" />
+              <span className={inter.className}>Always-on assistant</span>
+            </div>
+          </div>
+          <h3 className={`demo-title ${outfit.className}`}>See protocolLM think in real time</h3>
+          <p className={`demo-subtitle ${inter.className}`}>
+            A guided chat showing how we answer operational questions with grounded, local guidance.
+          </p>
+
+          <div className="demo-abilities">
+            {[
+              'Photo checks',
+              'Regulatory answers',
+              'Local context',
+              'Shift-ready templates',
+            ].map((chip) => (
+              <span key={chip} className={`demo-chip ${inter.className}`}>
+                {chip}
+              </span>
+            ))}
+          </div>
+
+          <div className="demo-chat-window">
+            <div className="demo-gradient" aria-hidden />
+            <div className="demo-chat-inner">
+              {demoMessages.map((msg, idx) => (
+                <div
+                  key={`${msg.role}-${idx}`}
+                  className={`demo-msg demo-msg-${msg.role}`}
+                >
+                  <div className={`demo-bubble ${inter.className}`}>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</span>
+                  </div>
+                </div>
+              ))}
+
+              {(demoPhase === 'question' || demoPhase === 'answer') && (
+                <div className={`demo-msg demo-msg-${demoPhase === 'question' ? 'user' : 'assistant'}`}>
+                  <div className={`demo-bubble is-typing ${inter.className}`}>
+                    <span style={{ whiteSpace: 'pre-wrap' }}>{demoTyped || ' '}</span>
+                    <span className="typing-cursor" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1160,7 +1270,7 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
 
           <div className="pricing-modal-amount">
             <span className={`pricing-currency ${inter.className}`}>$</span>
-            <span className={`pricing-number-lg ${outfit.className}`}>200</span>
+            <span className={`pricing-number-lg ${outfit.className}`}>100</span>
             <span className={`pricing-period ${inter.className}`}>/month</span>
           </div>
 
@@ -1189,8 +1299,8 @@ function PricingModal({ isOpen, onClose, onCheckout, loading }) {
               className="btn-pricing-modal-secondary"
             >
               {loading === 'annual' && <span className="btn-spinner" />}
-              <span className={`btn-label ${inter.className}`}>Annual plan · $2,000/year</span>
-              <span className={`btn-badge ${inter.className}`}>Save $400</span>
+              <span className={`btn-label ${inter.className}`}>Annual plan · $1,000/year</span>
+              <span className={`btn-badge ${inter.className}`}>Save $200</span>
             </button>
           </div>
 
@@ -2184,6 +2294,28 @@ export default function Page() {
           position: relative;
           overflow-x: hidden;
         }
+        
+        .glossy-ribbon {
+          position: absolute;
+          inset: -140px -10%;
+          background: radial-gradient(50% 60% at 15% 20%, rgba(255, 255, 255, 0.18), transparent 60%),
+            radial-gradient(40% 50% at 80% 10%, rgba(255, 109, 167, 0.28), transparent 70%),
+            linear-gradient(120deg, rgba(55, 150, 245, 0.32), rgba(255, 158, 68, 0.28), rgba(110, 236, 198, 0.3));
+          filter: blur(16px);
+          opacity: 0.9;
+          z-index: 0;
+          transform: rotate(-2deg);
+        }
+
+        .glossy-ribbon.ribbon-2 {
+          inset: -60px -15%;
+          background: radial-gradient(45% 55% at 20% 70%, rgba(255, 255, 255, 0.12), transparent 60%),
+            radial-gradient(50% 60% at 80% 70%, rgba(95, 191, 255, 0.2), transparent 70%),
+            linear-gradient(135deg, rgba(255, 217, 112, 0.25), rgba(97, 122, 255, 0.24), rgba(0, 214, 170, 0.22));
+          filter: blur(20px);
+          opacity: 0.8;
+          transform: rotate(3deg);
+        }
 
         /* ─── Reveal Animations ─── */
         .rv {
@@ -2214,15 +2346,19 @@ export default function Page() {
         .hero-section {
           position: relative;
           z-index: 1;
-          padding: 60px 24px 100px;
+          padding: 80px 24px 120px;
           min-height: calc(100vh - 80px);
           display: flex;
           align-items: center;
+          background: radial-gradient(60% 60% at 30% 20%, rgba(255, 255, 255, 0.18), transparent),
+            linear-gradient(140deg, rgba(17, 35, 48, 0.8), rgba(13, 24, 48, 0.9));
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
         }
 
         @media (min-width: 1024px) {
           .hero-section {
-            padding: 40px 48px 80px;
+            padding: 80px 48px 120px;
           }
         }
 
@@ -2288,7 +2424,7 @@ export default function Page() {
         }
 
         .hero-title-gradient {
-          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 50%, var(--color-accent) 100%);
+          background: linear-gradient(120deg, #68e4c2, #5aa8ff 40%, #f7c266 75%, #ff7bc8);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -2298,7 +2434,12 @@ export default function Page() {
           font-size: 18px;
           line-height: 1.7;
           color: var(--color-text-secondary);
-          max-width: 520px;
+          max-width: 680px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          padding: 16px 18px;
+          border-radius: 18px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
         }
 
         @media (max-width: 640px) {
@@ -2720,6 +2861,205 @@ export default function Page() {
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
           border-radius: 48px 48px 100px 100px;
           pointer-events: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════════
+           DEMO SECTION
+           ═══════════════════════════════════════════════════════════════════════ */
+        .demo-section {
+          position: relative;
+          z-index: 1;
+          padding: 40px 24px 100px;
+          background: radial-gradient(50% 50% at 20% 50%, rgba(255, 255, 255, 0.06), transparent 70%),
+            linear-gradient(180deg, rgba(5, 12, 26, 0.8), rgba(8, 16, 33, 0.95));
+        }
+
+        .demo-shell {
+          max-width: 1100px;
+          margin: 0 auto;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 28px;
+          padding: 28px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: 0 30px 100px rgba(0, 0, 0, 0.35);
+          backdrop-filter: blur(20px);
+        }
+
+        .demo-shell::after {
+          content: '';
+          position: absolute;
+          inset: -10% 40% 10% -30%;
+          background: linear-gradient(115deg, rgba(104, 228, 194, 0.24), rgba(90, 168, 255, 0.18), rgba(255, 123, 200, 0.16));
+          filter: blur(36px);
+          opacity: 0.9;
+          pointer-events: none;
+        }
+
+        .demo-shell-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .demo-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.16);
+          color: white;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+          font-size: 12px;
+        }
+
+        .demo-status {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 14px;
+        }
+
+        .status-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #68e4c2;
+          box-shadow: 0 0 0 8px rgba(104, 228, 194, 0.18);
+        }
+
+        .demo-title {
+          position: relative;
+          z-index: 1;
+          font-size: clamp(26px, 3vw, 34px);
+          margin: 14px 0 6px;
+          color: white;
+        }
+
+        .demo-subtitle {
+          position: relative;
+          z-index: 1;
+          color: rgba(255, 255, 255, 0.76);
+          max-width: 700px;
+          font-size: 16px;
+          line-height: 1.6;
+          margin-bottom: 16px;
+        }
+
+        .demo-abilities {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 22px;
+        }
+
+        .demo-chip {
+          padding: 10px 14px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          color: white;
+          font-size: 13px;
+        }
+
+        .demo-chat-window {
+          position: relative;
+          z-index: 1;
+          border-radius: 20px;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .demo-gradient {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(40% 60% at 20% 30%, rgba(255, 123, 200, 0.25), transparent 65%),
+            radial-gradient(45% 60% at 80% 70%, rgba(90, 168, 255, 0.28), transparent 70%),
+            linear-gradient(180deg, rgba(5, 12, 26, 0.4), rgba(5, 12, 26, 0.75));
+          filter: blur(4px);
+        }
+
+        .demo-chat-inner {
+          position: relative;
+          padding: 22px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .demo-msg {
+          display: flex;
+        }
+
+        .demo-msg-user {
+          justify-content: flex-end;
+        }
+
+        .demo-msg-assistant {
+          justify-content: flex-start;
+        }
+
+        .demo-bubble {
+          max-width: 80%;
+          padding: 14px 16px;
+          border-radius: 16px;
+          background: rgba(0, 0, 0, 0.38);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(10px);
+          line-height: 1.6;
+          font-size: 15px;
+        }
+
+        .demo-msg-user .demo-bubble {
+          background: linear-gradient(135deg, rgba(104, 228, 194, 0.9), rgba(90, 168, 255, 0.9));
+          color: #062c2e;
+          font-weight: 600;
+          box-shadow: 0 18px 50px rgba(90, 168, 255, 0.35);
+        }
+
+        .demo-bubble.is-typing {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .typing-cursor {
+          display: inline-block;
+          width: 10px;
+          height: 20px;
+          background: currentColor;
+          border-radius: 4px;
+          animation: blink 1s steps(2, start) infinite;
+          opacity: 0.7;
+        }
+
+        @keyframes blink {
+          0%, 50% { opacity: 0.7; }
+          50.1%, 100% { opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+          .demo-shell {
+            padding: 22px;
+          }
+
+          .demo-bubble {
+            max-width: 100%;
+          }
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
