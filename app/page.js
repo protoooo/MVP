@@ -518,7 +518,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
             <Reveal delay={0}>
               <h1 className={`hero-title ${outfit.className} hero-title-animated`}>
                 <span className="hero-title-line">Catch violations</span>
-                <span className="hero-title-line hero-title-gradient">before the inspector does</span>
+                <span className="hero-title-line hero-title-gradient">before the inspector</span>
               </h1>
             </Reveal>
 
