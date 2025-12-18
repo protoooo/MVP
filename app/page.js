@@ -1143,6 +1143,8 @@ export default function Page() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedImage, setSelectedImage] = useState(null)
+  const [memoryEnabled, setMemoryEnabled] = useState(true)
+  const [memoryEntries, setMemoryEntries] = useState([])
 
   const [sendKey, setSendKey] = useState(0)
   const [sendMode, setSendMode] = useState('text')
@@ -1198,6 +1200,19 @@ export default function Page() {
     const showPricing = searchParams?.get('showPricing')
     if (showPricing === 'true') setShowPricingModal(true)
   }, [searchParams])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem('plmMemory')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) setMemoryEntries(parsed)
+      } catch {}
+    }
+    const enabled = localStorage.getItem('plmMemoryEnabled')
+    if (enabled === 'false') setMemoryEnabled(false)
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -1420,6 +1435,21 @@ export default function Page() {
     requestAnimationFrame(() => scrollToBottom('auto'))
   }
 
+  const persistMemory = (entries) => {
+    try {
+      localStorage.setItem('plmMemory', JSON.stringify(entries))
+    } catch {}
+  }
+
+  const addMemoryEntry = (question, answer) => {
+    if (!memoryEnabled || !question || !answer) return
+    setMemoryEntries((prev) => {
+      const next = [...prev.slice(-8), { question, answer, ts: Date.now() }]
+      persistMemory(next)
+      return next
+    })
+  }
+
   const handleSend = async (e) => {
     if (e) e.preventDefault()
     if ((!input.trim() && !selectedImage) || isSending) return
@@ -1465,6 +1495,7 @@ export default function Page() {
           messages: [...messages, newUserMessage],
           image,
           chatId: activeChatId,
+          memory: memoryEnabled ? memoryEntries.slice(-5) : [],
         }),
       })
 
@@ -1487,7 +1518,9 @@ export default function Page() {
       const data = await res.json()
       setMessages((prev) => {
         const updated = [...prev]
-        updated[updated.length - 1] = { role: 'assistant', content: data.message || 'No response.' }
+        const answer = data.message || 'No response.'
+        updated[updated.length - 1] = { role: 'assistant', content: answer }
+        addMemoryEntry(question, answer)
         return updated
       })
     } catch (error) {
@@ -1537,45 +1570,45 @@ export default function Page() {
         /* ─── Design Tokens ─── */
         :root {
           /* Core Colors */
-          --color-bg: #FFFAEC;
-          --color-surface: #F5ECD5;
-          --color-card: #F7F0DD;
-          --color-border: rgba(61, 61, 61, 0.26);
-          --color-border-subtle: rgba(61, 61, 61, 0.18);
-          --color-border-hover: rgba(61, 61, 61, 0.32);
-          --color-border-focus: #578E7E;
+          --color-bg: #F5F5F0;
+          --color-surface: #E6D8C3;
+          --color-card: #EFE6D5;
+          --color-border: rgba(63, 58, 53, 0.26);
+          --color-border-subtle: rgba(63, 58, 53, 0.18);
+          --color-border-hover: rgba(63, 58, 53, 0.34);
+          --color-border-focus: #5D866C;
           
           /* Text Colors */
-          --color-text: #3D3D3D;
-          --color-text-secondary: rgba(61, 61, 61, 0.8);
-          --color-text-tertiary: rgba(61, 61, 61, 0.65);
-          --color-text-muted: rgba(61, 61, 61, 0.55);
+          --color-text: #3F3A35;
+          --color-text-secondary: rgba(63, 58, 53, 0.8);
+          --color-text-tertiary: rgba(63, 58, 53, 0.65);
+          --color-text-muted: rgba(63, 58, 53, 0.55);
           
           /* Brand Colors */
-          --color-primary: #578E7E;
-          --color-primary-hover: #4B7B6D;
-          --color-primary-light: #6DA594;
-          --color-accent: #578E7E;
-          --color-accent-hover: #4B7B6D;
-          --color-accent-light: rgba(87, 142, 126, 0.12);
+          --color-primary: #5D866C;
+          --color-primary-hover: #4D735C;
+          --color-primary-light: #6E9A7F;
+          --color-accent: #5D866C;
+          --color-accent-hover: #4D735C;
+          --color-accent-light: rgba(93, 134, 108, 0.14);
           
           /* Status Colors */
-          --color-success: #578E7E;
-          --color-success-bg: rgba(87, 142, 126, 0.12);
-          --color-warning: #3D3D3D;
-          --color-warning-bg: rgba(61, 61, 61, 0.08);
-          --color-error: #3D3D3D;
-          --color-error-bg: rgba(61, 61, 61, 0.1);
+          --color-success: #5D866C;
+          --color-success-bg: rgba(93, 134, 108, 0.14);
+          --color-warning: #3F3A35;
+          --color-warning-bg: rgba(63, 58, 53, 0.08);
+          --color-error: #3F3A35;
+          --color-error-bg: rgba(63, 58, 53, 0.1);
           
           /* Shadows */
-          --shadow-xs: 0 1px 2px rgba(61, 61, 61, 0.06);
-          --shadow-sm: 0 2px 4px rgba(61, 61, 61, 0.06);
-          --shadow-md: 0 6px 12px rgba(61, 61, 61, 0.08);
-          --shadow-lg: 0 10px 18px rgba(61, 61, 61, 0.1);
-          --shadow-xl: 0 18px 30px rgba(61, 61, 61, 0.12);
-          --shadow-card: 0 0 0 1px rgba(61, 61, 61, 0.18);
-          --shadow-card-hover: 0 4px 12px rgba(61, 61, 61, 0.12);
-          --shadow-glass: 0 12px 26px rgba(61, 61, 61, 0.16);
+          --shadow-xs: 0 1px 2px rgba(63, 58, 53, 0.06);
+          --shadow-sm: 0 2px 4px rgba(63, 58, 53, 0.06);
+          --shadow-md: 0 6px 12px rgba(63, 58, 53, 0.08);
+          --shadow-lg: 0 10px 18px rgba(63, 58, 53, 0.1);
+          --shadow-xl: 0 18px 30px rgba(63, 58, 53, 0.12);
+          --shadow-card: 0 0 0 1px rgba(63, 58, 53, 0.18);
+          --shadow-card-hover: 0 4px 12px rgba(63, 58, 53, 0.12);
+          --shadow-glass: 0 12px 26px rgba(63, 58, 53, 0.16);
           
           /* Radii */
           --radius-xs: 4px;
@@ -3637,6 +3670,62 @@ export default function Page() {
           background: var(--color-bg);
         }
 
+        .memory-banner {
+          max-width: 980px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 16px 18px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          align-items: center;
+          justify-content: space-between;
+          background: var(--color-card);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-2xl);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .memory-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 240px;
+        }
+
+        .memory-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          background: var(--color-surface);
+          border: 1px solid var(--color-border);
+          border-radius: 999px;
+          font-size: 13px;
+          color: var(--color-text);
+          width: fit-content;
+        }
+
+        .memory-pill .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--color-primary);
+          box-shadow: 0 0 0 6px rgba(93, 134, 108, 0.12);
+        }
+
+        .memory-text {
+          font-size: 13px;
+          color: var(--color-text-secondary);
+          max-width: 640px;
+        }
+
+        .memory-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
         .chat-messages {
           flex: 1;
           min-height: 0;
@@ -4105,6 +4194,38 @@ export default function Page() {
             />
           ) : (
             <div className="chat-container">
+              <div className="memory-banner">
+                <div className="memory-meta">
+                  <div className="memory-pill" aria-live="polite">
+                    <span className="dot" />
+                    {memoryEnabled ? `Memory on (${memoryEntries.length} saved)` : 'Memory off'}
+                  </div>
+                  <p className={`memory-text ${inter.className}`}>
+                    Keep recent inspections and fixes so responses improve over time.
+                  </p>
+                </div>
+                <div className="memory-actions">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      const next = !memoryEnabled
+                      setMemoryEnabled(next)
+                      if (typeof window !== 'undefined') localStorage.setItem('plmMemoryEnabled', String(next))
+                    }}
+                  >
+                    <span className={`btn-label ${inter.className}`}>{memoryEnabled ? 'Disable' : 'Enable'}</span>
+                  </button>
+                  <button
+                    className="btn-outline"
+                    onClick={() => {
+                      setMemoryEntries([])
+                      persistMemory([])
+                    }}
+                  >
+                    <span className={`btn-label ${inter.className}`}>Clear history</span>
+                  </button>
+                </div>
+              </div>
               <div ref={scrollRef} onScroll={handleScroll} className="chat-messages">
                 {messages.length === 0 ? (
                   <div className="chat-empty">
