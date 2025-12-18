@@ -408,6 +408,251 @@ function FAQItem({ q, a, isOpen, onToggle, index }) {
   )
 }
 
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handleChange = () => setReduced(mediaQuery.matches)
+    handleChange()
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  return reduced
+}
+
+function HeroCompanionCard({ scenario, assistantLines, showProgress, progress, reducedMotion }) {
+  const topFindings = assistantLines.slice(-2).reverse()
+
+  return (
+    <div className={`hero-companion ${reducedMotion ? 'is-static' : ''}`} aria-hidden="true">
+      <div className="hero-companion-glow" />
+      <div className="hero-companion-inner">
+        <div className="hero-companion-header">
+          <span className="hero-companion-pill">Inspection-ready</span>
+          <span className="hero-companion-meta">Local docs</span>
+        </div>
+        <div className="hero-companion-title">{scenario.cardTitle}</div>
+        <div className="hero-companion-items">
+          <div className={`hero-companion-item ${showProgress ? 'is-live' : ''}`}>
+            <div className="hero-companion-dot" />
+            <div className="hero-companion-copy">
+              <div className="hero-companion-label">{scenario.progressLabel}</div>
+              <div className="hero-companion-desc">Photo QA + policy match</div>
+            </div>
+            <span className="hero-companion-value">{showProgress ? `${progress}%` : 'done'}</span>
+          </div>
+          {topFindings.length === 0 ? (
+            <div className="hero-companion-placeholder">Awaiting findings…</div>
+          ) : (
+            topFindings.map((item, idx) => (
+              <div key={idx} className="hero-companion-item">
+                <div className={`hero-companion-dot ${item.tone}`} />
+                <div className="hero-companion-copy">
+                  <div className="hero-companion-label">{item.badge}</div>
+                  <div className="hero-companion-desc">{item.text}</div>
+                </div>
+                <span className="hero-companion-value subtle">{item.meta || 'check'}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HeroDemoPhone() {
+  const scenarios = useMemo(
+    () => [
+      {
+        prompt: 'Walk-in cooler photo attached. Is the storage order correct?',
+        progressLabel: 'Analyzing shelving + labels',
+        cardTitle: 'Walk-in cooler',
+        headerAccent: 'Photo check + Washtenaw rules',
+        responseSteps: [
+          { badge: 'Scan', tone: 'info', text: 'Found raw poultry above ready-to-eat produce' },
+          { badge: 'Fix', tone: 'success', text: 'Move poultry to bottom shelf + relabel pans' },
+          { badge: 'Document', tone: 'neutral', text: 'Add date marks + log temp 38°F' },
+        ],
+      },
+      {
+        prompt: "What's the max time for food in the danger zone?",
+        progressLabel: 'Verifying time/temperature controls',
+        cardTitle: 'Hot holding question',
+        headerAccent: 'Local code + corrective action',
+        responseSteps: [
+          { badge: 'Rule', tone: 'info', text: '4 hours max between 41°F-135°F without discard plan' },
+          { badge: 'Action', tone: 'success', text: 'Reheat to 165°F or discard after 4 hours' },
+          { badge: 'Note', tone: 'neutral', text: 'Keep logs visible for inspectors' },
+        ],
+      },
+      {
+        prompt: 'Are date marks required on prepped items?',
+        progressLabel: 'Matching prep tags to policy',
+        cardTitle: 'Date marking',
+        headerAccent: 'Checklist + policy cite',
+        responseSteps: [
+          { badge: 'Rule', tone: 'info', text: '7-day rule when held at 41°F or below' },
+          { badge: 'Issue', tone: 'warning', text: 'Missing prep dates on 2 pans of sauces' },
+          { badge: 'Fix', tone: 'success', text: 'Label prep date + discard date, verify daily' },
+        ],
+      },
+    ],
+    []
+  )
+
+  const [scenarioIndex, setScenarioIndex] = useState(0)
+  const [displayedUser, setDisplayedUser] = useState('')
+  const [assistantLines, setAssistantLines] = useState([])
+  const [progress, setProgress] = useState(0)
+  const [showProgress, setShowProgress] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const reducedMotion = usePrefersReducedMotion()
+  const timers = useRef([])
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((id) => clearTimeout(id))
+    timers.current = []
+  }, [])
+
+  const schedule = useCallback((fn, delay) => {
+    const id = setTimeout(fn, delay)
+    timers.current.push(id)
+  }, [])
+
+  useEffect(() => clearTimers, [clearTimers])
+
+  useEffect(() => {
+    const scenario = scenarios[scenarioIndex]
+    clearTimers()
+    setAssistantLines([])
+    setDisplayedUser('')
+    setProgress(0)
+    setShowProgress(false)
+    setIsResetting(true)
+
+    const nextScenario = () => setScenarioIndex((prev) => (prev + 1) % scenarios.length)
+    const resetDelay = reducedMotion ? 80 : 260
+    schedule(() => setIsResetting(false), resetDelay)
+
+    if (reducedMotion) {
+      setDisplayedUser(scenario.prompt)
+      setAssistantLines(scenario.responseSteps)
+      schedule(nextScenario, 6500)
+      return
+    }
+
+    let cursor = 120
+    scenario.prompt.split('').forEach((char, idx) => {
+      const pause = char === '.' || char === '?' ? 150 : char === ',' ? 90 : 36 + (idx % 6 === 0 ? 12 : 0)
+      cursor += pause
+      schedule(() => setDisplayedUser(scenario.prompt.slice(0, idx + 1)), cursor)
+    })
+
+    const uploadStart = cursor + 240
+    schedule(() => {
+      setShowProgress(true)
+      setProgress(14)
+    }, uploadStart)
+    schedule(() => setProgress(48), uploadStart + 420)
+    schedule(() => setProgress(78), uploadStart + 880)
+    schedule(() => setProgress(100), uploadStart + 1300)
+    schedule(() => setShowProgress(false), uploadStart + 1680)
+
+    const responseStart = uploadStart + 1850
+    scenario.responseSteps.forEach((line, idx) => {
+      schedule(
+        () => setAssistantLines((prev) => [...prev, line]),
+        responseStart + idx * 520
+      )
+    })
+
+    schedule(nextScenario, responseStart + scenario.responseSteps.length * 520 + 2300)
+  }, [scenarioIndex, scenarios, clearTimers, schedule, reducedMotion])
+
+  const scenario = scenarios[scenarioIndex]
+
+  return (
+    <div className="hero-visual">
+      <div className="hero-demo-shell">
+        <div className="hero-ambient" aria-hidden="true" />
+        <HeroCompanionCard
+          scenario={scenario}
+          assistantLines={assistantLines}
+          showProgress={showProgress}
+          progress={progress}
+          reducedMotion={reducedMotion}
+        />
+        <div className={`hero-phone ${reducedMotion ? 'is-reduced' : ''}`}>
+          <div className="phone-frame">
+            <div className="phone-notch" />
+            <div className={`phone-screen ${isResetting ? 'is-resetting' : ''}`}>
+              <div className="phone-status-bar">
+                <span className={inter.className}>9:41</span>
+                <div className="phone-status-icons">
+                  <span>LTE</span>
+                  <span>●●●</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
+              <div className="phone-app-header">
+                <div className="demo-live">
+                  <span className="demo-live-dot" />
+                  Live demo
+                </div>
+                <div className="demo-app-meta">
+                  <span className={outfit.className}>{scenario.cardTitle}</span>
+                  <span className={`demo-meta-sub ${inter.className}`}>{scenario.headerAccent}</span>
+                </div>
+                <div className="demo-tag">{scenario.progressLabel}</div>
+              </div>
+
+              <div className="phone-content demo-content" aria-live="polite">
+                <div className={`demo-thread ${isResetting ? 'is-resetting' : ''}`}>
+                  <div className="phone-message phone-message-user">
+                    <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
+                      {displayedUser || ' '}
+                    </div>
+                  </div>
+
+                  {showProgress && (
+                    <div className="demo-progress" role="status" aria-label="Analyzing upload">
+                      <div className="demo-progress-head">
+                        <span className={`demo-progress-label ${inter.className}`}>{scenario.progressLabel}</span>
+                        <span className={`demo-progress-value ${inter.className}`}>{Math.round(progress)}%</span>
+                      </div>
+                      <div className="demo-progress-track">
+                        <div className="demo-progress-bar" style={{ width: `${progress}%` }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {assistantLines.map((line, idx) => (
+                    <div key={`${line.badge}-${idx}`} className="phone-message phone-message-assistant">
+                      <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
+                        <div className="demo-response-top">
+                          <span className={`demo-response-pill ${line.tone}`}>{line.badge}</span>
+                          <span className="demo-response-meta">protocolLM • Local code</span>
+                        </div>
+                        <div className="demo-response-line">{line.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="phone-glow" />
+          <div className="phone-reflection" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function LandingPage({ onShowPricing, onShowAuth }) {
   const [openFaq, setOpenFaq] = useState(null)
 
@@ -554,110 +799,7 @@ function LandingPage({ onShowPricing, onShowAuth }) {
           </div>
 
           <Reveal delay={400} direction="scale">
-            <div className="hero-visual">
-              {/* Desktop Glass Panel */}
-              <div className="hero-desktop">
-                <div className="desktop-frame">
-                  <div className="desktop-header">
-                    <div className="desktop-dots">
-                      <span className="desktop-dot red" />
-                      <span className="desktop-dot yellow" />
-                      <span className="desktop-dot green" />
-                    </div>
-                    <div className={`desktop-title ${inter.className}`}>protocolLM Dashboard</div>
-                    <div className="desktop-spacer" />
-                  </div>
-                  <div className="desktop-content">
-                    <div className="desktop-sidebar">
-                      <div className={`sidebar-label ${inter.className}`}>Recent Checks</div>
-                      <div className="sidebar-item active">
-                        <Icons.Camera />
-                        <span>Walk-in Cooler</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Camera />
-                        <span>Prep Station</span>
-                      </div>
-                      <div className="sidebar-item">
-                        <Icons.Document />
-                        <span>Temp Logs</span>
-                      </div>
-                    </div>
-                    <div className="desktop-main">
-                      <div className={`desktop-stat-row ${inter.className}`}>
-                        <div className="desktop-stat">
-                          <span className="stat-value">12</span>
-                          <span className="stat-label">Checks Today</span>
-                        </div>
-                        <div className="desktop-stat">
-                          <span className="stat-value success">0</span>
-                          <span className="stat-label">Open Issues</span>
-                        </div>
-                      </div>
-                      <div className={`desktop-alert ${inter.className}`}>
-                        <Icons.CheckCircle />
-                        <span>All stations compliant</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="desktop-glow" />
-              </div>
-
-              {/* Phone Mockup */}
-              <div className="hero-phone">
-                <div className="phone-frame">
-                  <div className="phone-notch" />
-                  <div className="phone-screen">
-                    <div className="phone-status-bar">
-                      <span className={inter.className}>9:41</span>
-                      <div className="phone-status-icons">
-                        <span>●●●●</span>
-                        <span>WiFi</span>
-                        <span>100%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="phone-app-header">
-                      <span className={`phone-app-title ${outfit.className}`}>protocolLM</span>
-                    </div>
-                    
-                    <div className="phone-content">
-                      <div className="phone-message phone-message-user">
-                        <div className={`phone-bubble phone-bubble-user ${inter.className}`}>
-                          Walk-in cooler photo attached. Is the storage order correct?
-                        </div>
-                      </div>
-                      
-                      <div className="phone-message phone-message-assistant">
-                        <div className={`phone-bubble phone-bubble-assistant ${inter.className}`}>
-                          <div className="phone-result-header">
-                            <Icons.AlertTriangle />
-                            <span>2 Issues Found</span>
-                          </div>
-                          
-                          <div className="phone-result-items">
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Raw chicken stored above ready-to-eat items</span>
-                            </div>
-                            <div className="phone-result-item warning">
-                              <span className="result-indicator" />
-                              <span>Missing date label on prep container</span>
-                            </div>
-                          </div>
-                          
-                          <div className="phone-remediation">
-                            <strong>Fix:</strong> Move raw poultry to bottom shelf. Add date labels.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="phone-glow" />
-              </div>
-            </div>
+            <HeroDemoPhone />
           </Reveal>
         </div>
       </section>
@@ -2314,226 +2456,81 @@ export default function Page() {
           padding-top: 8px;
         }
 
-        /* ─── Hero Visual with Desktop + Phone ─── */
+        /* ─── Hero Visual with Demo Phone ─── */
         .hero-visual {
           display: flex;
           justify-content: center;
           align-items: center;
           position: relative;
-          min-height: 500px;
+          min-height: 520px;
+          perspective: 1200px;
         }
 
         @media (max-width: 1023px) {
           .hero-visual {
-            min-height: 400px;
+            min-height: 440px;
           }
         }
 
-        /* Desktop Glass Panel */
-        .hero-desktop {
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 1;
+        .hero-demo-shell {
+          position: relative;
+          width: 100%;
+          max-width: 760px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 18px;
+          flex-wrap: wrap;
         }
 
-        @media (max-width: 1023px) {
-          .hero-desktop {
-            display: none;
+        @media (max-width: 640px) {
+          .hero-demo-shell {
+            gap: 14px;
           }
         }
 
-        .desktop-frame {
-          width: 420px;
-          background: rgba(255, 255, 255, 0.75);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.8);
-          border-radius: var(--radius-2xl);
-          box-shadow: var(--shadow-glass);
-          overflow: hidden;
-        }
-
-        .desktop-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 14px 18px;
-          background: rgba(255, 255, 255, 0.5);
-          border-bottom: 1px solid rgba(215, 230, 226, 0.5);
-        }
-
-        .desktop-dots {
-          display: flex;
-          gap: 6px;
-        }
-
-        .desktop-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .desktop-dot.red { background: #FF5F57; }
-        .desktop-dot.yellow { background: #FEBC2E; }
-        .desktop-dot.green { background: #28C840; }
-
-        .desktop-title {
-          flex: 1;
-          text-align: center;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-text-secondary);
-        }
-
-        .desktop-spacer {
-          width: 52px;
-        }
-
-        .desktop-content {
-          display: flex;
-          min-height: 280px;
-        }
-
-        .desktop-sidebar {
-          width: 140px;
-          padding: 16px 12px;
-          background: rgba(242, 251, 247, 0.6);
-          border-right: 1px solid rgba(215, 230, 226, 0.5);
-        }
-
-        .sidebar-label {
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--color-text-muted);
-          margin-bottom: 10px;
-          padding: 0 8px;
-        }
-
-        .sidebar-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px;
-          border-radius: var(--radius-md);
-          font-size: 11px;
-          color: var(--color-text-secondary);
-          margin-bottom: 4px;
-          transition: all var(--duration-fast) var(--ease-out-expo);
-        }
-
-        .sidebar-item svg {
-          width: 14px;
-          height: 14px;
-          opacity: 0.6;
-        }
-
-        .sidebar-item.active {
-          background: var(--color-surface);
-          color: var(--color-text);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .sidebar-item.active svg {
-          opacity: 1;
-          color: var(--color-primary);
-        }
-
-        .desktop-main {
-          flex: 1;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .desktop-stat-row {
-          display: flex;
-          gap: 16px;
-        }
-
-        .desktop-stat {
-          flex: 1;
-          padding: 14px;
-          background: var(--color-surface);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-xs);
-        }
-
-        .stat-value {
-          display: block;
-          font-size: 28px;
-          font-weight: 700;
-          color: var(--color-text);
-          line-height: 1;
-          margin-bottom: 4px;
-        }
-
-        .stat-value.success {
-          color: var(--color-success);
-        }
-
-        .stat-label {
-          font-size: 11px;
-          color: var(--color-text-muted);
-        }
-
-        .desktop-alert {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 12px 14px;
-          background: var(--color-success-bg);
-          border: 1px solid rgba(16, 185, 129, 0.2);
-          border-radius: var(--radius-md);
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--color-success);
-        }
-
-        .desktop-alert svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .desktop-glow {
+        .hero-ambient {
           position: absolute;
-          inset: -60px;
-          background: radial-gradient(ellipse at center, rgba(85, 214, 178, 0.12) 0%, transparent 70%);
-          z-index: -1;
-          filter: blur(40px);
+          inset: -22% -10%;
+          background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.22), transparent 60%);
+          filter: blur(76px);
+          opacity: 0.9;
+          z-index: 0;
+          animation: glowPulse 12s ease-in-out infinite;
         }
 
         /* Phone Mockup */
         .hero-phone {
           position: relative;
           z-index: 2;
+          transform-style: preserve-3d;
+          transition: transform var(--duration-slow) var(--ease-out-expo), box-shadow var(--duration-slow) var(--ease-out-expo);
+          animation: phoneFloat 16s ease-in-out infinite;
+        }
+
+        .hero-phone.is-reduced {
+          animation: none;
         }
 
         @media (min-width: 1024px) {
-          .hero-phone {
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
+          .hero-phone:hover {
+            transform: translateY(-12px) rotateX(8deg) rotateY(-6deg);
           }
         }
 
         .phone-frame {
           width: 280px;
           height: 580px;
-          background: linear-gradient(145deg, #1a1a1c 0%, #0d0d0e 100%);
+          background: linear-gradient(155deg, #0e1116 0%, #0a0c10 48%, #121722 100%);
           border-radius: 44px;
           padding: 10px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 
             var(--shadow-xl),
             inset 0 1px 0 rgba(255, 255, 255, 0.05),
-            0 0 0 1px rgba(0, 0, 0, 0.1);
+            0 0 0 1px rgba(0, 0, 0, 0.15);
           position: relative;
+          overflow: hidden;
         }
 
         @media (max-width: 640px) {
@@ -2559,11 +2556,17 @@ export default function Page() {
         .phone-screen {
           width: 100%;
           height: 100%;
-          background: var(--color-bg);
+          background: radial-gradient(circle at 30% 30%, rgba(85, 214, 178, 0.06), transparent 40%), var(--color-bg);
           border-radius: 36px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          transition: transform 600ms var(--ease-out-expo), opacity 450ms var(--ease-out-expo);
+        }
+
+        .phone-screen.is-resetting {
+          opacity: 0;
+          transform: translateY(8px);
         }
 
         @media (max-width: 640px) {
@@ -2580,6 +2583,7 @@ export default function Page() {
           font-size: 12px;
           font-weight: 600;
           color: var(--color-text);
+          letter-spacing: 0.01em;
         }
 
         .phone-status-icons {
@@ -2590,8 +2594,12 @@ export default function Page() {
         }
 
         .phone-app-header {
-          padding: 6px 18px 12px;
+          padding: 10px 18px 12px;
           border-bottom: 1px solid var(--color-border-subtle);
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 12px;
         }
 
         .phone-app-title {
@@ -2603,11 +2611,27 @@ export default function Page() {
 
         .phone-content {
           flex: 1;
-          padding: 14px;
+          padding: 14px 14px 18px;
           display: flex;
           flex-direction: column;
           gap: 10px;
-          overflow-y: auto;
+          overflow: hidden;
+        }
+
+        .demo-content {
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 100%);
+        }
+
+        .demo-thread {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          transition: opacity 380ms var(--ease-out-expo), transform 380ms var(--ease-out-expo);
+        }
+
+        .demo-thread.is-resetting {
+          opacity: 0;
+          transform: translateY(10px);
         }
 
         .phone-message {
@@ -2625,16 +2649,17 @@ export default function Page() {
 
         .phone-bubble {
           max-width: 90%;
-          padding: 10px 12px;
+          padding: 11px 13px;
           border-radius: var(--radius-lg);
           font-size: 11px;
           line-height: 1.45;
         }
 
         .phone-bubble-user {
-          background: var(--color-primary);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
           color: white;
           border-bottom-right-radius: 4px;
+          box-shadow: var(--shadow-sm);
         }
 
         .phone-bubble-assistant {
@@ -2642,65 +2667,125 @@ export default function Page() {
           border: 1px solid var(--color-border);
           color: var(--color-text);
           border-bottom-left-radius: 4px;
+          box-shadow: var(--shadow-xs);
         }
 
-        .phone-result-header {
-          display: flex;
+        .demo-live {
+          display: inline-flex;
           align-items: center;
-          gap: 5px;
-          color: var(--color-warning);
+          gap: 6px;
           font-size: 11px;
-          font-weight: 600;
-          margin-bottom: 8px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          color: var(--color-success);
+          text-transform: uppercase;
         }
 
-        .phone-result-header svg {
-          width: 13px;
-          height: 13px;
+        .demo-live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--color-success);
+          box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14);
         }
 
-        .phone-result-items {
+        .demo-app-meta {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .demo-meta-sub {
+          font-size: 11px;
+          color: var(--color-text-muted);
+          letter-spacing: 0.01em;
+        }
+
+        .demo-tag {
+          justify-self: end;
+          padding: 8px 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          box-shadow: var(--shadow-xs);
+        }
+
+        .demo-progress {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-border-subtle);
+          border-radius: var(--radius-lg);
+          padding: 10px 10px 12px;
+          box-shadow: var(--shadow-xs);
+        }
+
+        .demo-progress-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          color: var(--color-text-secondary);
           margin-bottom: 8px;
         }
 
-        .phone-result-item {
+        .demo-progress-track {
+          position: relative;
+          width: 100%;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          overflow: hidden;
+        }
+
+        .demo-progress-bar {
+          position: absolute;
+          inset: 0;
+          width: 0;
+          background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-accent) 100%);
+          border-radius: 999px;
+          transition: width 380ms var(--ease-out-expo);
+        }
+
+        .demo-progress-value {
+          color: var(--color-text);
+          font-weight: 700;
+        }
+
+        .demo-response-top {
           display: flex;
-          align-items: flex-start;
-          gap: 6px;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+        }
+
+        .demo-response-pill {
+          padding: 4px 8px;
+          border-radius: var(--radius-full);
           font-size: 10px;
-          color: var(--color-text-secondary);
-          line-height: 1.35;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--color-border);
         }
 
-        .result-indicator {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          margin-top: 3px;
-        }
+        .demo-response-pill.success { color: var(--color-success); border-color: rgba(16, 185, 129, 0.3); }
+        .demo-response-pill.warning { color: #fbbf24; border-color: rgba(251, 191, 36, 0.35); }
+        .demo-response-pill.info { color: var(--color-primary); border-color: rgba(85, 214, 178, 0.35); }
+        .demo-response-pill.neutral { color: var(--color-text-secondary); }
 
-        .phone-result-item.warning .result-indicator {
-          background: var(--color-warning);
-        }
-
-        .phone-result-item.success .result-indicator {
-          background: var(--color-success);
-        }
-
-        .phone-remediation {
+        .demo-response-meta {
           font-size: 10px;
-          color: var(--color-text-secondary);
-          padding-top: 8px;
-          border-top: 1px solid var(--color-border-subtle);
-          line-height: 1.4;
+          color: var(--color-text-muted);
+          letter-spacing: 0.03em;
         }
 
-        .phone-remediation strong {
-          color: var(--color-success);
+        .demo-response-line {
+          font-size: 12px;
+          color: var(--color-text);
+          line-height: 1.5;
         }
 
         .phone-glow {
@@ -2709,6 +2794,143 @@ export default function Page() {
           background: radial-gradient(ellipse at center, rgba(47, 93, 138, 0.15) 0%, transparent 70%);
           z-index: -1;
           filter: blur(40px);
+          animation: glowPulse 14s ease-in-out infinite;
+        }
+
+        .hero-companion {
+          position: relative;
+          z-index: 3;
+          width: 220px;
+          padding: 1px;
+          border-radius: var(--radius-2xl);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(85, 214, 178, 0.25));
+          box-shadow: var(--shadow-card-hover);
+          animation: cardDrift 18s ease-in-out infinite;
+        }
+
+        .hero-companion.is-static {
+          animation: none;
+        }
+
+        @media (max-width: 900px) {
+          .hero-companion {
+            order: -1;
+            width: 100%;
+            max-width: 320px;
+          }
+        }
+
+        .hero-companion-inner {
+          background: rgba(10, 12, 16, 0.92);
+          border-radius: var(--radius-2xl);
+          padding: 14px 16px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-companion-glow {
+          position: absolute;
+          inset: -20%;
+          background: radial-gradient(circle at 40% 30%, rgba(85, 214, 178, 0.2), transparent 55%);
+          filter: blur(40px);
+          opacity: 0.7;
+          z-index: -1;
+        }
+
+        .hero-companion-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .hero-companion-pill {
+          padding: 6px 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-full);
+          font-size: 11px;
+          color: var(--color-text);
+        }
+
+        .hero-companion-meta {
+          font-size: 11px;
+          color: var(--color-text-muted);
+          letter-spacing: 0.03em;
+        }
+
+        .hero-companion-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--color-text);
+          margin-bottom: 10px;
+        }
+
+        .hero-companion-items {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .hero-companion-item {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          align-items: center;
+          gap: 10px;
+          padding: 10px;
+          border-radius: var(--radius-lg);
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--color-border-subtle);
+        }
+
+        .hero-companion-item.is-live {
+          border-color: rgba(85, 214, 178, 0.4);
+          box-shadow: 0 0 0 1px rgba(85, 214, 178, 0.18);
+        }
+
+        .hero-companion-dot {
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--color-primary);
+        }
+
+        .hero-companion-dot.success { background: var(--color-success); }
+        .hero-companion-dot.warning { background: #fbbf24; }
+        .hero-companion-dot.info { background: var(--color-primary); }
+        .hero-companion-dot.neutral { background: var(--color-text-muted); }
+
+        .hero-companion-copy {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .hero-companion-label {
+          font-size: 11px;
+          color: var(--color-text);
+          letter-spacing: 0.02em;
+        }
+
+        .hero-companion-desc {
+          font-size: 11px;
+          color: var(--color-text-muted);
+        }
+
+        .hero-companion-value {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--color-text);
+        }
+
+        .hero-companion-value.subtle {
+          color: var(--color-text-muted);
+        }
+
+        .hero-companion-placeholder {
+          font-size: 12px;
+          color: var(--color-text-muted);
+          padding: 6px 0;
         }
 
         .phone-reflection {
@@ -2720,6 +2942,35 @@ export default function Page() {
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
           border-radius: 48px 48px 100px 100px;
           pointer-events: none;
+        }
+
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.8; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.04); }
+        }
+
+        @keyframes phoneFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+
+        @keyframes cardDrift {
+          0%, 100% { transform: translate3d(0, -6px, 0); }
+          50% { transform: translate3d(0, 6px, 0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .hero-phone,
+          .phone-glow,
+          .hero-companion,
+          .hero-ambient {
+            animation: none;
+          }
+
+          .hero-companion,
+          .hero-phone {
+            transform: none;
+          }
         }
 
         /* ═══════════════════════════════════════════════════════════════════════
